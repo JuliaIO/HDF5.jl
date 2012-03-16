@@ -1,0 +1,6 @@
+syntax: glob
+
+**.h5
+**.o
+**.so
+**.dylib
