@@ -19,6 +19,13 @@ accesses HDF5 through Julia's ccall function.  The C wrapper must be
 compiled first, using the supplied Makefile. This has been tested on
 MacOS X only.
 
+Since Julia stores arrays in column-major order, like Fortran, wheras
+HDF5 uses C's row-major order, every array's dimensions are inverted
+compared to what you see with tools like h5dump. This is the same
+convention as for the Fortran HDF5 interface. The advantage is
+that no data rearrangement takes place, neither when reading nor
+when writing.
+
 <a name="Resources"/>
 
 - **Julia:** <http://julialang.org>
