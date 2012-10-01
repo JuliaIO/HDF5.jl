@@ -1,8 +1,11 @@
 # HDF5 interface for the Julia language
 
-[HDF5][HDF5] is a file format and library for storing data, commonly
-used for scientific data. This package provides a partial interface
-to the HDF5 library for the [Julia][Julia] language.
+[HDF5][HDF5] is a file format and library for storing and accessing
+data, commonly used for scientific data. HDF5 files can be created and
+read by numerous [programming
+languages](http://www.hdfgroup.org/tools5desc.html).  This package
+provides a partial interface to the HDF5 library for the
+[Julia][Julia] language.
 
 HDF5 is a large library, and this wrapper is not complete. However, it
 already provides useful functionality:
