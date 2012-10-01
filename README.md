@@ -1,32 +1,44 @@
-<a name="HDF5-interface-for-the-Julia-language"/>
+# HDF5 interface for the Julia language
 
-## HDF5 interface for the Julia language
+[HDF5][HDF5] is a file format and library for storing data, commonly
+used for scientific data. This package provides a partial interface
+to the HDF5 library for the [Julia][Julia] language.
 
-This is a first attempt at writing a Julia interface to the HDF5
-library.  At the moment, it only supports accessing groups and
-datasets inside a file, and reading from datasets whose dataspace is
-of type "simple" (meaning arrays). Adding the remaining HDF5 features
-(attributes, compound datatypes, etc.) and of course HDF5 output is
-not particularly difficult, but a lot of work. I probably won't
-continue to work on this until there are better tools for Julia-C
-interfacing.  In fact, I'd rather write such a tool myself than
-continue to do everything manually.
+HDF5 is a large library, and this wrapper is not complete. However, it
+already provides useful functionality:
 
-The interface consists of two parts: (1) a small C wrapper,
-hdf5_wrapper.c, which is necessary because the Julia C interface
-doesn't (yet?) support C structs, and (2) a Julia file, hdf5.jl, which
-accesses HDF5 through Julia's ccall function.  The C wrapper must be
-compiled first, using the supplied Makefile. This has been tested on
-MacOS X only.
+* Opening an HDF5 file for reading or writing (``fid = h5open("name.h5", "w")``)
+* Navigating to "groups" (``groupMyData = fid["MyData"]``) and creating new ones (``group(fid, "MyData")``)
+* Reading and writing array and string data (``write(groupMyData, "AnImage", A)`` and ``A = read(groupMyData, "AnImage")``)
+* Reading subsets of data (``dset = groupMyData["AnImage"]; Asub = dset[1:2:37, 200:300]``)
+* Limited support for HDF5 properties such as compression
+* The ability to write arrays-of-arrays ("cell arrays") preserving their structure
 
-Since Julia stores arrays in column-major order, like Fortran, wheras
-HDF5 uses C's row-major order, every array's dimensions are inverted
-compared to what you see with tools like h5dump. This is the same
-convention as for the Fortran HDF5 interface. The advantage is
-that no data rearrangement takes place, neither when reading nor
-when writing.
+Users who need more comprehensive support for HDF5 are very much
+encouraged to contribute additional functionality.
 
-<a name="Resources"/>
+Julia, like Fortran and Matlab, stores arrays in column-major order.
+HDF5 uses C's row-major order, and consequently every array's
+dimensions are inverted compared to what you see with tools like
+h5dump. This is the same convention as for the Fortran HDF5
+interface. The advantage is that no data rearrangement takes place,
+neither when reading nor when writing.
 
-- **Julia:** <http://julialang.org>
-- **HDF5:** <http://www.hdfgroup.org/HDF5/>
+This library is entirely contained in the file "hdf5.jl", and any routines using it should start in the following way:
+
+```julia
+load("hdf5.jl")
+import HDF5Mod.*
+```
+
+Advanced (unexported) functionality can be accessed by importing ``HDF5Mod``.  This provides access to many constants (e.g., ``H5T_STD_I16BE``), raw dataset, datatype, and dataspace utilities, and wrappers for the direct library calls.
+
+The easiest way to determine whether this will work for you is to load the file "test.jl", which should run without error. This file also contains further examples illustrating how to use the library.
+
+[Julia]: http://julialang.org "Julia"
+[HDF5]: http://www.hdfgroup.org/HDF5/ "HDF5"
+
+## Credits
+
+- [Konrad Hinsen](https://github.com/khinsen/julia_hdf5) initiated Julia support for HDF5
+- [Mike Nolta](https://github.com/nolta/julia_hdf5) and Jameson Nash contributed code or suggestions for improving the handling of HDF5's constants
