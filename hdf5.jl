@@ -220,7 +220,7 @@ type HDF5Type <: HDF5Object
     toclose::Bool
 
     function HDF5Type(id, toclose::Bool)
-        nt = new(id)
+        nt = new(id, toclose)
         finalizer(nt, close)
         nt
     end
@@ -544,6 +544,7 @@ function write(parent::Union(HDF5File, HDF5Group), name::ByteString, A::Abstract
     for i = 1:numel(A)
         write(grp, string(i), A[i])
     end
+    close(grp)
 end
 
 # Reading arrays using ref

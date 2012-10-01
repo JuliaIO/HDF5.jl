@@ -84,4 +84,5 @@ Aref = fidr["Afloat64"]
 sel = (2:3, 1:2:5)
 Asub = Aref[sel...]
 @assert Asub == A[sel...]
+close(Aref)
 close(fidr)
