@@ -547,6 +547,14 @@ function write(parent::Union(HDF5File, HDF5Group), name::ByteString, data::ByteS
     end
     h5o_close(dataset_id)
 end
+function write(parent::Union(HDF5File, HDF5Group), nameval...)
+    if !iseven(length(nameval))
+        error("name, value arguments must come in pairs")
+    end
+    for i = 1:2:length(nameval)
+        write(parent, nameval[i], nameval[i+1])
+    end
+end
 
 # Handle arrays-of-arrays, etc
 function write(parent::Union(HDF5File, HDF5Group), name::ByteString, A::AbstractArray)
