@@ -175,16 +175,13 @@ const hdf5_type_map = {
 
 abstract HDF5Object
 
-const FORMAT_JULIA_V1 = 1
-const FORMAT_MATLAB_V73 = 20
-
 type HDF5File <: HDF5Object
     id::Hid
     filename::String
-    format::Int
+    format::Symbol
     toclose::Bool
 
-   function HDF5File(id, filename, format::Int, toclose::Bool)
+   function HDF5File(id, filename, format::Symbol, toclose::Bool)
        f = new(id, filename, format, toclose)
        finalizer(f, close)
        f
@@ -264,7 +261,7 @@ convert(::Type{C_int}, p::HDF5Properties) = p.id
 
 ### High-level interface ###
 # Open or create an HDF5 file
-function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool, format::Integer)
+function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool, format::Symbol)
     if !rd
         error("HDF5 files have no write-only mode")
     end
@@ -284,9 +281,9 @@ function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bo
     end
     HDF5File(fid, filename, format)
 end
-h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool) = h5open(filename, rd, wr, cr, tr, ff, FORMAT_JULIA_V1)
+h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool) = h5open(filename, rd, wr, cr, tr, ff, :FORMAT_JULIA_V1)
 
-function h5open(filename::String, mode::String, format::Int)
+function h5open(filename::String, mode::String, format::Symbol)
     mode == "r"  ? h5open(filename, true,  false, false, false, false, format) :
     mode == "r+" ? h5open(filename, true,  true , false, false, true, format)  :
     mode == "w"  ? h5open(filename, true,  true , true , true, false, format)  :
@@ -294,7 +291,7 @@ function h5open(filename::String, mode::String, format::Int)
     mode == "a"  ? h5open(filename, true,  true , true , true, true, format)   :
     error("invalid open mode: ", mode)
 end
-h5open(filename::String, mode::String) = h5open(filename, mode, FORMAT_JULIA_V1)
+h5open(filename::String, mode::String) = h5open(filename, mode, :FORMAT_JULIA_V1)
 h5open(filename::String) = h5open(filename, true, false, false, false, false)
 
 # Close a file
@@ -642,6 +639,8 @@ end
 
 # end of high-level interface
 
+
+
 ### HDF5 utilities ###
 # Get the corresponding Julia type
 function jltype(dt::HDF5Type)
@@ -678,6 +677,18 @@ function set_chunk(p::HDF5Properties, dims...)
     end
     h5p_set_chunk(p.id, n, cdims)
 end
+
+
+### Format specifications ###
+
+toextension_map = {
+    :FORMAT_JULIA_V1      => ".h5",
+    :FORMAT_MATLAB_V73    => ".mat",
+}
+#write_map = {
+#    :FORMAT_JULIA_V1      => h5write_julia,
+#    :FORMAT_MATLAB_V73    => h5write_matlab,
+#}
 
 ### Convenience wrappers ###
 # These supply default values where possible
