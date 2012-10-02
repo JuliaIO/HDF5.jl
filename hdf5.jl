@@ -2,6 +2,7 @@
 ## HDF5 interface ##
 ####################
 
+require("strpack.jl")
 module HDF5Mod
 import Base.*
 
@@ -63,9 +64,22 @@ const H5I_DATASPACE    = 4
 const H5I_DATASET      = 5
 const H5I_ATTR         = 6
 const H5I_REFERENCE    = 7
+# Link constants
+const H5L_TYPE_HARD    = 0
+const H5L_TYPE_SOFT    = 1
+const H5L_TYPE_EXTERNAL= 2
+# Object constants
+const H5O_TYPE_GROUP   = 0
+const H5O_TYPE_DATASET = 1
+const H5O_TYPE_NAMED_DATATYPE = 2
 # Property constants
 const H5P_DEFAULT      = 0
 const H5P_DATASET_CREATE = read_const(:H5P_CLS_DATASET_CREATE_g)
+# Reference constants
+const H5R_OBJECT       = 0
+const H5R_DATASET_REGION = 1
+const H5R_OBJ_REF_BUF_SIZE      = 8
+const H5R_DSET_REG_REF_BUF_SIZE = 12
 # Dataspace constants
 const H5S_ALL          = 0
 const H5S_SCALAR       = 0
@@ -97,38 +111,40 @@ const H5T_SGN_2        = 1  # 2's complement
 const H5T_DIR_ASCEND   = 1
 const H5T_DIR_DESCEND  = 2
 # Type_id constants (LE = little endian, I16 = Int16, etc)
-const H5T_STD_I8LE     = read_const(:H5T_STD_I8LE_g)
-const H5T_STD_I8BE     = read_const(:H5T_STD_I8BE_g)
-const H5T_STD_U8LE     = read_const(:H5T_STD_U8LE_g)
-const H5T_STD_U8BE     = read_const(:H5T_STD_U8BE_g)
-const H5T_STD_I16LE    = read_const(:H5T_STD_I16LE_g)
-const H5T_STD_I16BE    = read_const(:H5T_STD_I16BE_g)
-const H5T_STD_U16LE    = read_const(:H5T_STD_U16LE_g)
-const H5T_STD_U16BE    = read_const(:H5T_STD_U16BE_g)
-const H5T_STD_I32LE    = read_const(:H5T_STD_I32LE_g)
-const H5T_STD_I32BE    = read_const(:H5T_STD_I32BE_g)
-const H5T_STD_U32LE    = read_const(:H5T_STD_U32LE_g)
-const H5T_STD_U32BE    = read_const(:H5T_STD_U32BE_g)
-const H5T_STD_I64LE    = read_const(:H5T_STD_I64LE_g)
-const H5T_STD_I64BE    = read_const(:H5T_STD_I64BE_g)
-const H5T_STD_U64LE    = read_const(:H5T_STD_U64LE_g)
-const H5T_STD_U64BE    = read_const(:H5T_STD_U64BE_g)
-const H5T_IEEE_F32LE   = read_const(:H5T_IEEE_F32LE_g)
-const H5T_IEEE_F32BE   = read_const(:H5T_IEEE_F32BE_g)
-const H5T_IEEE_F64LE   = read_const(:H5T_IEEE_F64LE_g)
-const H5T_IEEE_F64BE   = read_const(:H5T_IEEE_F64BE_g)
-const H5T_C_S1         = read_const(:H5T_C_S1_g)
+const H5T_STD_I8LE        = read_const(:H5T_STD_I8LE_g)
+const H5T_STD_I8BE        = read_const(:H5T_STD_I8BE_g)
+const H5T_STD_U8LE        = read_const(:H5T_STD_U8LE_g)
+const H5T_STD_U8BE        = read_const(:H5T_STD_U8BE_g)
+const H5T_STD_I16LE       = read_const(:H5T_STD_I16LE_g)
+const H5T_STD_I16BE       = read_const(:H5T_STD_I16BE_g)
+const H5T_STD_U16LE       = read_const(:H5T_STD_U16LE_g)
+const H5T_STD_U16BE       = read_const(:H5T_STD_U16BE_g)
+const H5T_STD_I32LE       = read_const(:H5T_STD_I32LE_g)
+const H5T_STD_I32BE       = read_const(:H5T_STD_I32BE_g)
+const H5T_STD_U32LE       = read_const(:H5T_STD_U32LE_g)
+const H5T_STD_U32BE       = read_const(:H5T_STD_U32BE_g)
+const H5T_STD_I64LE       = read_const(:H5T_STD_I64LE_g)
+const H5T_STD_I64BE       = read_const(:H5T_STD_I64BE_g)
+const H5T_STD_U64LE       = read_const(:H5T_STD_U64LE_g)
+const H5T_STD_U64BE       = read_const(:H5T_STD_U64BE_g)
+const H5T_IEEE_F32LE      = read_const(:H5T_IEEE_F32LE_g)
+const H5T_IEEE_F32BE      = read_const(:H5T_IEEE_F32BE_g)
+const H5T_IEEE_F64LE      = read_const(:H5T_IEEE_F64LE_g)
+const H5T_IEEE_F64BE      = read_const(:H5T_IEEE_F64BE_g)
+const H5T_C_S1            = read_const(:H5T_C_S1_g)
+const H5T_STD_REF_OBJ     = read_const(:H5T_STD_REF_OBJ_g)
+const H5T_STD_REF_DSETREG = read_const(:H5T_STD_REF_DSETREG_g)
 # Native types
-const H5T_NATIVE_INT8   = read_const(:H5T_NATIVE_INT8_g)
-const H5T_NATIVE_UINT8  = read_const(:H5T_NATIVE_UINT8_g)
-const H5T_NATIVE_INT16  = read_const(:H5T_NATIVE_INT16_g)
-const H5T_NATIVE_UINT16 = read_const(:H5T_NATIVE_UINT16_g)
-const H5T_NATIVE_INT32  = read_const(:H5T_NATIVE_INT32_g)
-const H5T_NATIVE_UINT32 = read_const(:H5T_NATIVE_UINT32_g)
-const H5T_NATIVE_INT64  = read_const(:H5T_NATIVE_INT64_g)
-const H5T_NATIVE_UINT64 = read_const(:H5T_NATIVE_UINT64_g)
-const H5T_NATIVE_FLOAT  = read_const(:H5T_NATIVE_FLOAT_g)
-const H5T_NATIVE_DOUBLE = read_const(:H5T_NATIVE_DOUBLE_g)
+const H5T_NATIVE_INT8     = read_const(:H5T_NATIVE_INT8_g)
+const H5T_NATIVE_UINT8    = read_const(:H5T_NATIVE_UINT8_g)
+const H5T_NATIVE_INT16    = read_const(:H5T_NATIVE_INT16_g)
+const H5T_NATIVE_UINT16   = read_const(:H5T_NATIVE_UINT16_g)
+const H5T_NATIVE_INT32    = read_const(:H5T_NATIVE_INT32_g)
+const H5T_NATIVE_UINT32   = read_const(:H5T_NATIVE_UINT32_g)
+const H5T_NATIVE_INT64    = read_const(:H5T_NATIVE_INT64_g)
+const H5T_NATIVE_UINT64   = read_const(:H5T_NATIVE_UINT64_g)
+const H5T_NATIVE_FLOAT    = read_const(:H5T_NATIVE_FLOAT_g)
+const H5T_NATIVE_DOUBLE   = read_const(:H5T_NATIVE_DOUBLE_g)
 
 hdf5_type_id(::Type{Int8})       = H5T_NATIVE_INT8
 hdf5_type_id(::Type{Uint8})      = H5T_NATIVE_UINT8
@@ -258,6 +274,17 @@ end
 HDF5Properties(id) = HDF5Properties(id, true)
 HDF5Properties() = HDF5Properties(H5P_DEFAULT, false)
 convert(::Type{C_int}, p::HDF5Properties) = p.id
+
+
+# Types to collect information from HDF5
+type H5LInfo
+    linktype::C_int
+    corder_valid::C_unsigned
+    corder::Int64
+    cset::C_int
+    u::Uint64
+end
+H5LInfo() = H5LInfo(int32(0), uint32(0), int64(0), int32(0), uint64(0))
 
 ### High-level interface ###
 # Open or create an HDF5 file
@@ -692,6 +719,7 @@ toextension_map = {
 
 ### Convenience wrappers ###
 # These supply default values where possible
+# See also the "special handling" section below
 h5d_create(loc_id::Hid, name::ByteString, type_id::Hid, space_id::Hid) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
 h5d_open(obj_id::Hid, name::ByteString) = h5d_open(obj_id, name, H5P_DEFAULT)
 h5d_read(dataset_id::Hid, datatype_id::Hid, buf::Array) = h5d_read(dataset_id, datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
@@ -813,13 +841,22 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5f_get_name, :H5Fget_name, Hssize, (Hid, Ptr{Uint8}, C_size_t), (:obj_id, :buf, :buf_size), :(error("Error getting file name"))),
      (:h5f_open, :H5Fopen, Hid, (Ptr{Uint8}, C_unsigned, Hid), (:name, :flags, :fapl_id), :(error("Error opening file ", name))),
      (:h5g_create, :H5Gcreate2, Hid, (Hid, Ptr{Uint8}, Hid, Hid, Hid), (:loc_id, :name, :lcpl_id, :gcpl_id, :gapl_id), :(error("Error creating group ", name))),
-     (:h5g_get_create_plist, :H5Gget_create_plist, Hid, (Hid,), (:group_id,), :(error("Error getting group create property list"))),     
+     (:h5g_get_create_plist, :H5Gget_create_plist, Hid, (Hid,), (:group_id,), :(error("Error getting group create property list"))),
      (:h5g_open, :H5Gopen2, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :name, :gapl_id), :(error("Error opening group ", name))),
      (:h5i_get_type, :H5Iget_type, Htype, (Hid,), (:obj_id,), :(error("Error getting type"))),
+     (:h5l_create_external, :H5Lcreate_hard_external, Herr, (Ptr{Uint8}, Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:target_file_name, :target_obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name))),
+     (:h5l_create_hard, :H5Lcreate_hard, Herr, (Hid, Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:obj_loc_id, :obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating hard link ", link_name, " pointing to ", obj_name))),
+     (:h5l_create_soft, :H5Lcreate_soft, Herr, (Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:target_path, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating soft link ", link_name, " pointing to ", target_path))),
+     (:h5l_exists, :H5Lexists, Htri, (Hid, Ptr{Uint8}, Hid), (:loc_id, :name, :lapl_id), :(error("Cannot determine whether link ", name, " exists, check each item along the path"))),
+     (:h5l_get_info, :H5Lget_info, Herr, (Hid, Ptr{Uint8}, Ptr{Void}, Hid), (:link_loc_id, :link_name, :link_buf, :lapl_id), :(error("Error getting info for link ", link_name))),
      (:h5o_open, :H5Oopen, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :name, :lapl_id), :(error("Error opening object ", name))),
      (:h5p_create, :H5Pcreate, Hid, (Hid,), (:cls_id,), "Error creating property list"),
      (:h5p_get_chunk, :H5Pget_chunk, C_int, (Hid, C_int, Ptr{Hsize}), (:plist_id, :n_dims, :dims), :(error("Error getting chunk size"))),
      (:h5p_get_layout, :H5Pget_layout, C_int, (Hid,), (:plist_id,), :(error("Error getting layout"))),
+     (:h5r_create, :H5Rcreate, Herr, (Ptr{Void}, Hid, Ptr{Uint8}, C_int), (:ref, :loc_id, :name, :ref_type, :space_id), :(error("Error creating reference to object ", name))),
+     (:h5r_dereference, :H5Rdereference, Hid, (Hid, C_int, Ptr{Void}), (:obj_id, :ref_type, :ref), :(error("Error dereferencing object"))),
+     (:h5r_get_obj_type, :H5Rget_obj_type2, Herr, (Hid, C_int, Ptr{Void}, Ptr{C_int}), (:loc_id, :ref_type, :ref, :obj_type), :(error("Error getting object type"))),
+     (:h5r_get_region, :H5Rget_region, Hid, (Hid, C_int, Ptr{Void}), (:loc_id, :ref_type, :ref), :(error("Error getting region from reference"))),
      (:h5s_copy, :H5Scopy, Hid, (Hid,), (:space_id,), :(error("Error copying dataspace"))),
      (:h5s_create, :H5Screate, Hid, (Hclass,), (:class,), :(error("Error creating dataspace"))),
      (:h5s_create_simple, :H5Screate_simple, Hid, (C_int, Ptr{Hsize}, Ptr{Hsize}), (:rank, :current_dims, :maximum_dims), :(error("Error creating simple dataspace"))),
@@ -891,6 +928,15 @@ function h5s_get_simple_extent_dims(space_id::Hid)
     h5s_get_simple_extent_dims(space_id, dims, maxdims)
     return tuple(reverse(dims)...), tuple(reverse(maxdims)...)
 end
+function h5l_get_info(link_loc_id::Hid, link_name::ByteString, lapl_id::Hid)
+    io = IOString()
+    i = H5LInfo()
+    pack(io, i)
+    h5l_get_info(link_loc_id, link_name, io.data, lapl_id)
+    seek(io, 0)
+    unpack(io, H5LInfo)
+end
+
 
 ### Property functions get/set pairs ###
 const hdf5_prop_get_set = {
