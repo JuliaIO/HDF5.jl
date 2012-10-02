@@ -175,44 +175,51 @@ const hdf5_type_map = {
 
 abstract HDF5Object
 
+const FORMAT_JULIA_V1 = 1
+const FORMAT_MATLAB_V73 = 20
+
 type HDF5File <: HDF5Object
     id::Hid
     filename::String
+    format::Int
     toclose::Bool
 
-   function HDF5File(id, filename, toclose::Bool)
-       f = new(id, filename, toclose)
+   function HDF5File(id, filename, format::Int, toclose::Bool)
+       f = new(id, filename, format, toclose)
        finalizer(f, close)
        f
    end
 end
-HDF5File(id, filename) = HDF5File(id, filename, true)
+HDF5File(id, filename, format) = HDF5File(id, filename, format, true)
+HDF5File(id, filename) = HDF5File(id, filename, FORMAT_JULIA, true)
 convert(::Type{C_int}, f::HDF5File) = f.id
 
 type HDF5Group <: HDF5Object
     id::Hid
+    file::HDF5File  # the parent file
     toclose::Bool
 
-    function HDF5Group(id, toclose::Bool)
-        g = new(id, toclose)
+    function HDF5Group(id, file, toclose::Bool)
+        g = new(id, file, toclose)
         finalizer(g, close)
         g
     end
 end
-HDF5Group(id) = HDF5Group(id, true)
+HDF5Group(id, file) = HDF5Group(id, file, true)
 convert(::Type{C_int}, g::HDF5Group) = g.id
 
 type HDF5Dataset <: HDF5Object
     id::Hid
+    file::HDF5File  # the parent file
     toclose::Bool
     
-    function HDF5Dataset(id, toclose::Bool)
-        dset = new(id, toclose)
+    function HDF5Dataset(id, file, toclose::Bool)
+        dset = new(id, file, toclose)
         finalizer(dset, close)
         dset
     end
 end
-HDF5Dataset(id) = HDF5Dataset(id, true)
+HDF5Dataset(id, file) = HDF5Dataset(id, file, true)
 convert(::Type{C_int}, dset::HDF5Dataset) = dset.id
 
 type HDF5Type <: HDF5Object
@@ -257,7 +264,7 @@ convert(::Type{C_int}, p::HDF5Properties) = p.id
 
 ### High-level interface ###
 # Open or create an HDF5 file
-function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool, finalize::Bool)
+function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool, format::Integer)
     if !rd
         error("HDF5 files have no write-only mode")
     end
@@ -275,19 +282,19 @@ function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bo
     else
         fid = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY)
     end
-    HDF5File(fid, filename, finalize)
+    HDF5File(fid, filename, format)
 end
-h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool) = h5open(filename, rd, wr, cr, tr, ff, true)
+h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool) = h5open(filename, rd, wr, cr, tr, ff, FORMAT_JULIA_V1)
 
-function h5open(filename::String, mode::String)
-    mode == "r"  ? h5open(filename, true,  false, false, false, false) :
-    mode == "r+" ? h5open(filename, true,  true , false, false, true)  :
-    mode == "w"  ? h5open(filename, true,  true , true , true, false)  :
-    mode == "w+" ? h5open(filename, true,  true , true , true, false)  :
-    mode == "a"  ? h5open(filename, true,  true , true , true, true)   :
+function h5open(filename::String, mode::String, format::Int)
+    mode == "r"  ? h5open(filename, true,  false, false, false, false, format) :
+    mode == "r+" ? h5open(filename, true,  true , false, false, true, format)  :
+    mode == "w"  ? h5open(filename, true,  true , true , true, false, format)  :
+    mode == "w+" ? h5open(filename, true,  true , true , true, false, format)  :
+    mode == "a"  ? h5open(filename, true,  true , true , true, true, format)   :
     error("invalid open mode: ", mode)
 end
-
+h5open(filename::String, mode::String) = h5open(filename, mode, FORMAT_JULIA_V1)
 h5open(filename::String) = h5open(filename, true, false, false, false, false)
 
 # Close a file
@@ -327,13 +334,18 @@ function close(p::HDF5Properties)
     nothing
 end
 
+# Extract the file
+file(f::HDF5File) = f
+file(g::HDF5Group) = g.file
+file(dset::HDF5Dataset) = dset.file
+
 # Access an object
 function ref(parent::Union(HDF5File, HDF5Group), path::ByteString)
     obj_id   = h5o_open(parent.id, path)
     obj_type = h5i_get_type(obj_id)
-    obj_type == H5I_GROUP ? HDF5Group(obj_id) :
+    obj_type == H5I_GROUP ? HDF5Group(obj_id, file(parent)) :
     obj_type == H5I_DATATYPE ? HDF5NamedType(obj_id) :
-    obj_type == H5I_DATASET ? HDF5Dataset(obj_id) :
+    obj_type == H5I_DATASET ? HDF5Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
 end
 
@@ -343,7 +355,7 @@ root(h5file::HDF5File) = h5file["/"]
 # Create a group
 function group(parent::Union(HDF5File, HDF5Group), path::ByteString)
     group_id = h5g_create(parent.id, path)
-    HDF5Group(group_id)
+    HDF5Group(group_id, file(parent))
 end
 
 # Create a property list
@@ -354,7 +366,7 @@ properties() = HDF5Properties(h5p_create(H5P_DATASET_CREATE))
 # compression. For simple cases, write(parent, "name", val) is easier.
 function dataset(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Type, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties, dapl::HDF5Properties)
     dset_id = h5d_create(parent.id, path, dtype.id, dspace.id, lcpl.id, dcpl.id, dapl.id)
-    HDF5Dataset(dset_id)
+    HDF5Dataset(dset_id, file(parent))
 end
 dataset(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Type, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties) = dataset(parent, path, dtype, dspace, lcpl, dcpl, HDF5Properties())
 dataset(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Type, dspace::HDF5Dataspace, lcpl::HDF5Properties) = dataset(parent, path, dtype, dspace, lcpl, HDF5Properties(), HDF5Properties())
