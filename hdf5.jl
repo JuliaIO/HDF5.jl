@@ -5,6 +5,7 @@
 require("strpack.jl")
 module HDF5Mod
 import Base.*
+load("hdf5_julia.jl")
 
 ## C types
 
@@ -83,6 +84,7 @@ const H5R_DSET_REG_REF_BUF_SIZE = 12
 # Dataspace constants
 const H5S_ALL          = 0
 const H5S_SCALAR       = 0
+const H5S_SIMPLE       = 1
 # Dataspace selection constants
 const H5S_SELECT_SET   = 0
 const H5S_SELECT_OR    = 1
@@ -261,6 +263,19 @@ end
 HDF5Dataspace(id) = HDF5Dataspace(id, true)
 convert(::Type{C_int}, dspace::HDF5Dataspace) = dspace.id
 
+type HDF5Attribute <: HDF5Object
+    id::Hid
+    toclose::Bool
+    
+    function HDF5Attribute(id, toclose::Bool)
+        attr = new(id, toclose)
+        finalizer(attr, close)
+        attr
+    end
+end
+HDF5Attribute(id) = HDF5Attribute(id, true)
+convert(::Type{C_int}, attr::HDF5Attribute) = attr.id
+
 type HDF5Properties <: HDF5Object
     id::Hid
     toclose::Bool
@@ -275,7 +290,6 @@ HDF5Properties(id) = HDF5Properties(id, true)
 HDF5Properties() = HDF5Properties(H5P_DEFAULT, false)
 convert(::Type{C_int}, p::HDF5Properties) = p.id
 
-
 # Types to collect information from HDF5
 type H5LInfo
     linktype::C_int
@@ -286,76 +300,56 @@ type H5LInfo
 end
 H5LInfo() = H5LInfo(int32(0), uint32(0), int64(0), int32(0), uint64(0))
 
+# Object reference type
+type HDF5ReferenceObj; end
+
 ### High-level interface ###
 # Open or create an HDF5 file
 function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool, format::Symbol)
-    if !rd
-        error("HDF5 files have no write-only mode")
-    end
-    if cr && !rd
-        error("Can't create a read-only HDF5 file")
-    end
     if ff && !wr
-        error("Cannot append to a read-only HDF5 file")
+        error("HDF5 does not support appending without writing")
     end
-    if !cr && !isfile(filename)
-        error("File ", filename, " cannot be found")
-    end
-    if wr && cr && tr && !ff
+    if cr && (tr || !isfile(filename))
         fid = h5f_create(filename)
     else
+        if !h5f_is_hdf5(filename)
+            error("This does not appear to be an HDF5 file")
+        end
         fid = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY)
     end
     HDF5File(fid, filename, format)
 end
-h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool) = h5open(filename, rd, wr, cr, tr, ff, :FORMAT_JULIA_V1)
+h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool) = h5open(filename, rd, wr, cr, tr, ff, :FORMAT_UNKNOWN)
 
 function h5open(filename::String, mode::String, format::Symbol)
     mode == "r"  ? h5open(filename, true,  false, false, false, false, format) :
     mode == "r+" ? h5open(filename, true,  true , false, false, true, format)  :
-    mode == "w"  ? h5open(filename, true,  true , true , true, false, format)  :
-    mode == "w+" ? h5open(filename, true,  true , true , true, false, format)  :
-    mode == "a"  ? h5open(filename, true,  true , true , true, true, format)   :
+    mode == "w"  ? h5open(filename, false, true , true , true,  false, format)  :
+    mode == "w+" ? h5open(filename, true,  true , true , true,  false, format)  :
+    mode == "a"  ? h5open(filename, true,  true , true , true,  true, format)   :
     error("invalid open mode: ", mode)
 end
-h5open(filename::String, mode::String) = h5open(filename, mode, :FORMAT_JULIA_V1)
+h5open(filename::String, mode::String) = h5open(filename, mode, :FORMAT_UNKNOWN)
 h5open(filename::String) = h5open(filename, true, false, false, false, false)
 
-# Close a file
-function close(file::HDF5File)
-    if file.toclose
-        h5f_close(file.id)
-        file.toclose = false
+# Close functions
+for (h5type, h5func) in
+    ((HDF5File, :h5f_close),
+     (HDF5Group, :h5o_close),
+     (HDF5Dataset, :h5o_close),
+     (HDF5Type, :h5o_close),
+     (HDF5Dataspace, :h5s_close),
+     (HDF5Attribute, :h5a_close),
+     (HDF5Properties, :h5p_close))
+    @eval begin
+        function close(obj::$h5type)
+            if obj.toclose
+                $h5func(obj.id)
+                obj.toclose = false
+            end
+            nothing
+        end
     end
-    nothing
-end
-
-# Close a group, dataset or datatype
-function close(object::Union(HDF5Group, HDF5Dataset, HDF5Type))
-    if object.toclose
-        h5o_close(object.id)
-        object.toclose = false
-    end
-    nothing
-end
-
-# Close a dataspace
-function close(dspace::HDF5Dataspace)
-    if dspace.toclose
-        h5s_close(dspace.id)
-        dspace.toclose = false
-    end
-    nothing
-end
-
-# Close an attribute
-# Close a property list
-function close(p::HDF5Properties)
-    if p.toclose
-        h5p_close(p.id)
-        p.toclose = false
-    end
-    nothing
 end
 
 # Extract the file
@@ -371,6 +365,11 @@ function ref(parent::Union(HDF5File, HDF5Group), path::ByteString)
     obj_type == H5I_DATATYPE ? HDF5NamedType(obj_id) :
     obj_type == H5I_DATASET ? HDF5Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
+end
+# Access an attribute
+function ref(parent::HDF5Dataset, path::ByteString)
+    attr_id = h5a_open(parent.id, path)
+    HDF5Attribute(attr_id)
 end
 
 # Get the root group
@@ -418,8 +417,10 @@ function exists(parent::Union(HDF5File, HDF5Group), path::ByteString)
     true
 end
 
-# Get the datatype corresponding to a dataset
+# Get the datatype of a dataset
 datatype(dset::HDF5Dataset) = HDF5Type(h5d_get_type(dset.id))
+# Get the datatype of an attribute
+datatype(dset::HDF5Attribute) = HDF5Type(h5a_get_type(dset.id))
 
 # Create a datatype from in-memory types
 datatype{T<:HDF5BitsKind}(A::Array{T}) = HDF5Type(hdf5_type_id(eltype(A)), false)
@@ -429,15 +430,10 @@ function datatype(str::ByteString)
     HDF5Type(type_id)
 end
 
-# Get the dataspace corresponding to a dataset
-function dataspace(dset::HDF5Dataset)
-    space_id = h5d_get_space(dset.id)
-    if !h5s_is_simple(space_id)
-        h5o_close(space_id)
-        error("Non-simple dataspaces are not yet implemented")
-    end
-    HDF5Dataspace(space_id)
-end
+# Get the dataspace of a dataset
+dataspace(dset::HDF5Dataset) = HDF5Dataspace(h5d_get_space(dset.id))
+# Get the dataspace of an attribute
+dataspace(attr::HDF5Attribute) = HDF5DataSpace(h5a_get_space(attr.id))
 
 # Create a dataspace from in-memory types
 function dataspace(A::Array)
@@ -445,76 +441,129 @@ function dataspace(A::Array)
     space_id = h5s_create_simple(length(dims), dims, dims)
     HDF5Dataspace(space_id)
 end
-dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR), false)
+dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
 
 # Get the array dimensions from a dataspace
 # Returns both dims and maxdims
 get_dims(dspace::HDF5Dataspace) = h5s_get_simple_extent_dims(dspace.id)
 
 # Read a dataset (see also "Reading arrays using ref" below)
-function read(dset::HDF5Dataset)
-    local ret
-    dtype = datatype(dset)
-    try
-        T = jltype(dtype)
-        if T == ByteString
-            native_type = h5t_get_native_type(dtype.id)
-            n = h5t_get_size(native_type)
-            buf = Array(Uint8, n)
-            h5d_read(dset.id, dtype.id, buf)
-            ret = bytestring(buf)
-        else
-            dspace = dataspace(dset)
-            try
-                dims, maxdims = get_dims(dspace)
-                data = Array(T, dims...)
-                h5d_read(dset.id, dtype.id, data)
-                ret = data
-            catch err
-                close(dspace)
-                throw(err)
-            end
-            close(dspace)
-        end
-    catch err
-        close(dtype)
-        throw(err)
-    end
-    close(dtype)
-    ret
-end
 function read(parent::Union(HDF5File, HDF5Group), name::ByteString)
     local ret
     obj = parent[name]
-    if isa(obj, HDF5Dataset)
-        try
-            ret = read(obj)
-        catch err
-            close(obj)
-            throw(err)
-        end
-    else
-        if isa(obj, HDF5Group) && exists(obj, "size")
-            # read an array of arrays
-            try
-                sz = read(obj, "size")
-                ret = Array(Any, sz...)
-                for i = 1:numel(ret)
-                    ret[i] = read(obj, string(i))
-                end
-            catch err
-                close(obj)
-                println("Error reading array-of-arrays")
-                throw(err)
-            end
-        else
-            close(obj)
-            error(name, " is not a dataset, but I don't recognize the format")
-        end
+    if !isa(obj, HDF5Dataset)
+        close(obj)
+        error("Must be a dataset to read it")
     end
+#      try
+        ret = read(obj)
+#      catch err
+#          close(obj)
+#          throw(err)
+#      end
     close(obj)
     ret
 end
+# This infers the Julia type from the dataset's attribute(s), when possible, and defaults to the HDF5Type when necessary.
+function read(dset::HDF5Dataset)
+    local T
+    fileformat = dset.file.format
+    if fileformat == :FORMAT_UNKNOWN
+        T = hdf5_to_julia(dset)
+    else
+        # Determine types from the attribute(s)
+        attr = dset[f2attr_typename[fileformat]] # open the typename attribute
+#          try
+            typename = read(attr, ByteString)
+            T = f2typefunction[fileformat](typename)
+#          catch err
+#              close(attr)
+#              throw(err)
+#          end
+        close(attr)
+    end
+    read(dset, T)
+end
+function read(obj::Union(HDF5Dataset, HDF5Attribute), ::Type{ByteString})
+    local ret::ByteString
+    objtype = datatype(obj)
+#      try
+        n = h5t_get_size(objtype.id)
+        buf = Array(Uint8, n)
+        readdata(obj, objtype.id, buf)
+        ret = bytestring(buf)
+#      catch err
+#          close(objtype)
+#          throw(err)
+#      end
+    close(objtype)
+    ret
+end
+readdata(dset::HDF5Dataset, type_id, buf) = h5d_read(dset.id, type_id, buf)
+readdata(attr::HDF5Attribute, type_id, buf) = h5a_read(attr.id, type_id, buf)
+# Reads an array of references
+function read(obj::HDF5Dataset, ::Type{Array{HDF5ReferenceObj}})
+    local refs::Array{Uint8}
+    dspace = dataspace(obj)
+#      try
+        dims, maxdims = get_dims(dspace)
+        refs = Array(Uint8, H5R_OBJ_REF_BUF_SIZE, dims...)
+        h5d_read(obj.id, H5T_STD_REF_OBJ, refs)
+#      catch err
+#          close(dspace)
+#          throw(err)
+#      end
+    close(dspace)
+    refs
+end
+# Reads array of BitsKind
+# Can't use Union because of precedence issues with the function below
+for hdf5type in (HDF5Dataset, HDF5Attribute)
+    @eval begin
+        function read{T<:HDF5BitsKind}(obj::$hdf5type, ::Type{Array{T}})
+            local data
+            dspace = dataspace(obj)
+#              try
+                dims, maxdims = get_dims(dspace)
+                data = Array(T, dims...)
+                readdata(obj, hdf5_type_id(T), data)
+#              catch err
+#                  close(dspace)
+#                  throw(err)
+#              end
+            close(dspace)
+            data
+        end
+    end
+end
+# Reads Array{T} where T is not a BitsKind. This is represented as an array of references to datasets
+function read{T}(obj::HDF5Dataset, ::Type{Array{T}})
+    refs = read(obj, Array{HDF5ReferenceObj})
+    dimsref = size(refs)
+    refsize = dimsref[1]
+    dims = dimsref[2:end]
+    data = Array(T, dims...)
+    p = pointer(refs)
+    for i = 1:numel(data)
+        # while it's not guaranteed this is a reference to a dataset, we can do the following safely
+        refobj = HDF5Dataset(h5r_dereference(obj.id, H5R_OBJECT, p), file(obj))
+#          try
+            # now check to make sure it's a reference to a dataset
+            refobj_type = h5i_get_type(refobj.id)
+            if refobj_type != H5I_DATASET
+                error("When reading an Array{T}, each reference must be to a dataset")
+            end
+            data[i] = read(refobj)
+#          catch err
+#              close(refobj)
+#              throw(err)
+#          end
+        close(refobj)
+        p += refsize
+    end
+    data
+end
+# Read a list of variables    
 function read(parent::Union(HDF5File, HDF5Group), name::ByteString...)
     n = length(name)
     out = Array(Any, n)
@@ -596,7 +645,7 @@ function ref(dset::HDF5Dataset, indices...)
     local ret
     dtype = datatype(dset)
     try
-        T = jltype(dtype)
+        T = hdf5_to_julia(dset)
         if T == ByteString
             error("Cannot read strings using dset[...] syntax")
         end
@@ -667,26 +716,48 @@ end
 # end of high-level interface
 
 
-
 ### HDF5 utilities ###
-# Get the corresponding Julia type
-function jltype(dt::HDF5Type)
-    jltype(dt.id)
-end
-function jltype(type_id::Hid)
-    native_type = h5t_get_native_type(type_id)
-    element_type = h5t_get_class(native_type)
-    element_size = h5t_get_size(native_type)
-    if element_type == H5T_INTEGER
-        is_signed = h5t_get_sign(type_id)
-    else
-        is_signed = nothing
+# Determine Julia "native" type from the class, datatype, and dataspace
+# For datasets, defined file formats should use attributes instead
+function hdf5_to_julia(obj::Union(HDF5Dataset, HDF5Attribute))
+    local T
+    objtype = datatype(obj)
+    try
+        class_id = h5t_get_class(objtype.id)
+        if class_id == H5T_STRING
+            T = ByteString
+        elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
+            native_type = h5t_get_native_type(objtype.id)
+            native_size = h5t_get_size(native_type)
+            if class_id == H5T_INTEGER
+                is_signed = h5t_get_sign(native_type)
+            else
+                is_signed = nothing
+            end
+            T = hdf5_type_map[(class_id, is_signed, native_size)]
+        elseif class_id == H5T_REFERENCE
+            # How to test whether it's a region reference or an object reference??
+            T = HDF5ReferenceObj
+        else
+            error("Class id ", class_id, " is not yet supported")
+        end
+    catch err
+        close(objtype)
+        throw(err)
     end
-    if element_type == H5T_STRING
-        return ByteString
-    else
-        T = hdf5_type_map[(element_type, is_signed, element_size)]
+    close(objtype)
+    # Determine whether it's an array
+    objspace = dataspace(obj)
+    try
+        if h5s_is_simple(objspace.id)
+            T = Array{T}
+        end
+    catch err
+        close(objspace)
+        throw(err)
     end
+    close(objspace)
+    T
 end
 
 # Property manipulation
@@ -708,11 +779,15 @@ end
 
 ### Format specifications ###
 
-toextension_map = {
-    :FORMAT_JULIA_V1      => ".h5",
-    :FORMAT_MATLAB_V73    => ".mat",
-}
-#write_map = {
+#  f2e_map = {
+#      :FORMAT_JULIA_V1      => ".h5",
+#      :FORMAT_MATLAB_V73    => ".mat",
+#  }
+#  e2f_map = {
+#      ".h5"    => :FORMAT_JULIA_V1,
+#      ".mat"   => :FORMAT_MATLAB_V73,
+#  }
+#f2write_map = {
 #    :FORMAT_JULIA_V1      => h5write_julia,
 #    :FORMAT_MATLAB_V73    => h5write_matlab,
 #}
@@ -720,6 +795,7 @@ toextension_map = {
 ### Convenience wrappers ###
 # These supply default values where possible
 # See also the "special handling" section below
+h5a_open(obj_id::Hid, name::ByteString) = h5a_open(obj_id, name, H5P_DEFAULT)
 h5d_create(loc_id::Hid, name::ByteString, type_id::Hid, space_id::Hid) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
 h5d_open(obj_id::Hid, name::ByteString) = h5d_open(obj_id, name, H5P_DEFAULT)
 h5d_read(dataset_id::Hid, datatype_id::Hid, buf::Array) = h5d_read(dataset_id, datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
@@ -827,6 +903,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5a_delete_by_name, :H5delete_by_name, Herr, (Hid, Ptr{Uint8}, Ptr{Uint8}, Hid), (:loc_id, :obj_name, :attr_name, :lapl_id), :(error("Error removing attribute ", attr_name, " from object ", obj_name))),
      (:h5a_get_create_plist, :H5Aget_create_plist, Hid, (Hid,), (:attr_id,), :(error("Cannot get creation property list"))),
      (:h5a_get_name, :H5Aget_name, Hssize, (Hid, C_size_t, Ptr{Uint8}), (:attr_id, :buf_size, :buf), :(error("Error getting attribute name"))),
+     (:h5a_get_space, :H5Aget_space, Hid, (Hid,), (:attr_id,), :(error("Error getting attribute dataspace"))),
      (:h5a_get_type, :H5Aget_type, Hid, (Hid,), (:attr_id,), :(error("Error getting attribute type"))),
      (:h5a_open, :H5Aopen, Hid, (Hid, Ptr{Uint8}, Hid), (:obj_id, :name, :aapl_id), :(error("Error opening attribute ", name))),
      (:h5a_read, :H5Aread, Herr, (Hid, Hid, Ptr{Uint8}), (:attr_id, :mem_type_id, :buf), :(error("Error reading attribute"))),
