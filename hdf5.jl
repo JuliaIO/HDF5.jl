@@ -31,6 +31,7 @@ typealias Hseloper    C_int
 
 ### Load and initialize the HDF library ###
 const libhdf5 = dlopen("libhdf5")
+
 status = ccall(dlsym(libhdf5, :H5open), Herr, ())
 if status < 0
     error("Can't initialize the HDF5 library")
@@ -39,6 +40,19 @@ end
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
 read_const(sym::Symbol) = unsafe_ref(convert(Ptr{C_int}, dlsym(libhdf5, sym)))
+
+# iteration order constants
+const H5_ITER_UNKNOWN = -1 
+const H5_ITER_INC     = 0
+const H5_ITER_DEC     = 1
+const H5_ITER_NATIVE  = 2
+const H5_ITER_N       = 3
+# indexing type constants
+const H5_STD_I8LE        = -1
+const H5_INDEX_UNKNOWN   = 0 
+const H5_INDEX_NAME      = 1
+const H5_INDEX_CRT_ORDER = 2
+const H5_INDEX_N         = 3
 
 # dataset constants
 const H5D_COMPACT      = 0
@@ -221,6 +235,24 @@ end
 HDF5Group(id, file) = HDF5Group(id, file, true)
 convert(::Type{C_int}, g::HDF5Group) = g.id
 
+function length(x::HDF5Group)
+    buf = [int32(0)]
+    h5g_get_num_objs(x.id, buf)
+    buf[1]
+end
+
+function names(x::HDF5Group)
+    n = length(x)
+    res = fill("", n)
+    for i in 1:n
+        len = h5g_get_objname_by_idx(x.id, i - 1, "", 0)
+        buf = Array(Uint8, len+1)
+        len = h5g_get_objname_by_idx(x.id, i - 1, buf, len+1)
+        res[i] = bytestring(buf[1:len])
+    end
+    res
+end
+     
 type HDF5Dataset <: HDF5Object
     id::Hid
     file::HDF5File  # the parent file
@@ -591,6 +623,14 @@ function write(parent::Union(HDF5File, HDF5Group), name::ByteString, A::Abstract
     close(grp)
 end
 
+function size(dset::HDF5Dataset)
+    dspace = dataspace(dset)
+    dims, maxdims = get_dims(dspace)
+    map(int, dims)
+end
+
+length(dset::HDF5Dataset) = prod(size(dset))
+
 # Reading arrays using ref
 function ref(dset::HDF5Dataset, indices...)
     local ret
@@ -844,6 +884,8 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5f_open, :H5Fopen, Hid, (Ptr{Uint8}, C_unsigned, Hid), (:name, :flags, :fapl_id), :(error("Error opening file ", name))),
      (:h5g_create, :H5Gcreate2, Hid, (Hid, Ptr{Uint8}, Hid, Hid, Hid), (:loc_id, :name, :lcpl_id, :gcpl_id, :gapl_id), :(error("Error creating group ", name))),
      (:h5g_get_create_plist, :H5Gget_create_plist, Hid, (Hid,), (:group_id,), :(error("Error getting group create property list"))),
+     (:h5g_get_objname_by_idx, :H5Gget_objname_by_idx, Hid, (Hid, C_int, Ptr{Uint8}, C_int), (:loc_id, :idx, :name, :size), :(error("Error getting group object name ", name))),
+     (:h5g_get_num_objs, :H5Gget_num_objs, Hid, (Hid, Ptr{Uint8}), (:loc_id, :num_obj), :(error("Error getting group length"))),
      (:h5g_open, :H5Gopen2, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :name, :gapl_id), :(error("Error opening group ", name))),
      (:h5i_get_type, :H5Iget_type, Htype, (Hid,), (:obj_id,), :(error("Error getting type"))),
      (:h5l_create_external, :H5Lcreate_hard_external, Herr, (Ptr{Uint8}, Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:target_file_name, :target_obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name))),
@@ -852,6 +894,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5l_exists, :H5Lexists, Htri, (Hid, Ptr{Uint8}, Hid), (:loc_id, :name, :lapl_id), :(error("Cannot determine whether link ", name, " exists, check each item along the path"))),
      (:h5l_get_info, :H5Lget_info, Herr, (Hid, Ptr{Uint8}, Ptr{Void}, Hid), (:link_loc_id, :link_name, :link_buf, :lapl_id), :(error("Error getting info for link ", link_name))),
      (:h5o_open, :H5Oopen, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :name, :lapl_id), :(error("Error opening object ", name))),
+     (:h5o_open_by_idx, :H5Oopen_by_idx, Hid, (Hid, Ptr{Uint8}, Hid, Hid, Hid, Hid), (:loc_id, :group_name, :index_type, :order, :n, :lapl_id), :(error("Error opening object ", group_name))),
      (:h5p_create, :H5Pcreate, Hid, (Hid,), (:cls_id,), "Error creating property list"),
      (:h5p_get_chunk, :H5Pget_chunk, C_int, (Hid, C_int, Ptr{Hsize}), (:plist_id, :n_dims, :dims), :(error("Error getting chunk size"))),
      (:h5p_get_layout, :H5Pget_layout, C_int, (Hid,), (:plist_id,), :(error("Error getting layout"))),
@@ -869,6 +912,8 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5t_get_native_type, :H5Tget_native_type, Hid, (Hid, Hdirection), (:dtype_id, :direction), :(error("Error getting native type"))),
      (:h5t_get_sign, :H5Tget_sign, Hsign, (Hid,), (:dtype_id,), :(error("Error getting sign"))),
      (:h5t_get_size, :H5Tget_size, C_size_t, (Hid,), (:dtype_id,), :(error("Error getting size")))
+     ## The following doesn't work because it's in libhdf5_hl.so.
+     ## (:h5tb_get_field_info, :H5TBget_field_info, Herr, (Hid, Ptr{Uint8}, Ptr{Ptr{Uint8}}, Ptr{Uint8}, Ptr{Uint8}, Ptr{Uint8}), (:loc_id, :table_name, :field_names, :field_sizes, :field_offsets, :type_size), :(error("Error getting field information")))
 )
 
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
