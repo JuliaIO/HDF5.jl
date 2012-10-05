@@ -29,8 +29,7 @@ function close(f::MatlabHDF5File)
         h5f_close(f.id)
         if f.writeheader
             magic = zeros(Uint8, 512)
-            const identifier = "MATLAB 7.3 MAT-file"
-#              identifier = "MATLAB 7.3 MAT-file, Platform: GLNXA64, Created on: Tue Oct  2 04:31:05 2012 HDF5 schema 1.00 .                     "
+            const identifier = "MATLAB 7.3 MAT-file" # minimal but sufficient
             magic[1:length(identifier)] = identifier.data
             magic[126] = 0x02
             magic[127] = 0x49
@@ -105,25 +104,35 @@ function read(dset::HDF5Dataset{MatlabHDF5File})
     # Convert to Julia type
     T = str2type_matlab[mattype]
     # Read the dataset
+    if mattype == "cell"
+        # Represented as an array of refs
+        refs = read(plain(dset), Array{HDF5ReferenceObj})
+        out = Array(Any, size(refs))
+        f = file(dset)
+        for i = 1:numel(refs)
+            out[i] = read(f[refs[i]])
+        end
+        return out
+    end
     read(plain(dset), T)
 end
 
 for (fsym, dsym) in
-    ((:(write{T}), :T),
-     (:(write{T}), :(Array{T})))
+    ((:(write{T<:HDF5BitsKind}), :T),
+     (:(write{T<:HDF5BitsKind}), :(Array{T})))
     @eval begin
         function ($fsym)(parent::Union(MatlabHDF5File, HDF5Group{MatlabHDF5File}), name::ByteString, data::$dsym)
             local typename
             # Determine the Matlab type
-            println($dsym)
-            println(T)
             if has(type2str_matlab, T)
                 typename = type2str_matlab[T]
             else
-                typename = "cell"
-                error("Not (yet) supported")
+                error("Type ", T, " is not (yet) supported")
             end
-            println(typename)
+            # Everything in Matlab is an array
+            if !isa(data, Array)
+                data = [data]
+            end
             # Create the dataset
             dset, dtype = d_create(plain(parent), name, data)
             try
@@ -142,28 +151,67 @@ for (fsym, dsym) in
     end
 end
 
-#  function attr_to_type_matlab(dset::HDF5Dataset)
-#      attr = a_open(dset, name_type_attr_matlab)
-#  #      try
-#          typename = read(attr, ByteString)
-#          T = str2type_matlab[typename]
-#  #      catch err
-#  #          close(attr)
-#  #          throw(err)
-#  #      end
-#      close(attr)
-#  end
-#  
-#  function type_to_attr_matlab{T}(dset::HDF5Dataset, ::Type{T})
-#      typename = string(T)
-#      # Sanity check: will we be able to read this type back?
-#      T2 = str_to_type_matlab(typename)
-#      @assert T == T2
-#      writeattr(dset, name_type_attr_matlab, typename)
-#  end
-#  
-#  attr_to_type_map[:FORMAT_MATLAB_V73] = attr_to_type_matlab
-#  type_to_attr_map[:FORMAT_MATLAB_V73] = type_to_attr_matlab
+# Write cell arrays
+function write{T}(parent::Union(MatlabHDF5File, HDF5Group{MatlabHDF5File}), name::ByteString, data::Array{T})
+    pathrefs = "/#refs#"
+    local g
+    local refs
+    if !exists(parent, pathrefs)
+        g = g_create(file(parent), pathrefs)
+    else
+        g = parent[pathrefs]
+    end
+#    try
+        # If needed, create the "empty" item
+        if !exists(g, "a/MATLAB_empty")
+            if exists(g, "a")
+                error("Must create the empty item, with name a, first")
+            end
+            pg = plain(g)
+            edata = zeros(Uint64, 2)
+            eset, etype = d_create(pg, "a", edata)
+#              try
+                writearray(eset, etype.id, edata)
+                a_write(eset, name_type_attr_matlab, "canonical empty")
+                a_write(eset, "MATLAB_empty", uint8(0))
+#              catch err
+#                  close(etype)
+#                  close(eset)
+#                  throw(err)
+#              end
+            close(etype)
+            close(eset)
+        end
+        # Write the items to the reference group
+        refs = HDF5ReferenceObjArray(size(data)...)
+        l = length(g)-1
+        for i = 1:length(data)
+            itemname = string(l+i)
+            write(g, itemname, data[i])
+            # Extract references
+            tmp = g[itemname]
+            refs[i] = (tmp, pathrefs*"/"*itemname)
+            close(tmp)
+        end
+#      catch err
+#          close(g)
+#          throw(err)
+#      end
+    close(g)
+    # Write the references as the chosen variable
+    cset, ctype = d_create(plain(parent), name, refs)
+#          try
+        writearray(cset, ctype.id, refs.r)
+        a_write(cset, name_type_attr_matlab, "cell")
+#          catch err
+#              close(ctype)
+#              close(cset)
+#              throw(err)
+#          end
+    close(ctype)
+    close(cset)
+end
+
 
 ## Type conversion operations ##
 
@@ -212,34 +260,6 @@ function read(obj::HDF5Object, ::Type{MatlabString})
     else
         return Char(data)
     end
-end
-
-# Reads Array{T} where T is not a BitsKind. This is represented as an array of references to datasets
-function read{T}(obj::HDF5Dataset, ::Type{Array{T}})
-    refs = read(obj, Array{HDF5ReferenceObj})
-    dimsref = size(refs)
-    refsize = dimsref[1]
-    dims = dimsref[2:end]
-    data = Array(T, dims...)
-    p = pointer(refs)
-    for i = 1:numel(data)
-        # while it's not guaranteed this is a reference to a dataset, we can do the following safely
-        refobj = HDF5Dataset(h5r_dereference(obj.id, H5R_OBJECT, p), file(obj))
-#          try
-            # now check to make sure it's a reference to a dataset
-            refobj_type = h5i_get_type(refobj.id)
-            if refobj_type != H5I_DATASET
-                error("When reading an Array{T}, each reference must be to a dataset")
-            end
-            data[i] = read(refobj)
-#          catch err
-#              close(refobj)
-#              throw(err)
-#          end
-        close(refobj)
-        p += refsize
-    end
-    data
 end
 
 

@@ -222,8 +222,8 @@ const hdf5_type_map = {
 # all (like calling hdf5_type_id on BitsKind, which does not open a
 # new resource, or calling h5s_create with H5S_SCALAR).
 
-abstract HDF5Object
-abstract HDF5File <: HDF5Object
+abstract HDF5File
+abstract HDF5Object   # H5O interface
 
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
 type PlainHDF5File <: HDF5File
@@ -294,7 +294,7 @@ end
 HDF5Datatype(id) = HDF5Datatype(id, true)
 convert(::Type{C_int}, dtype::HDF5Datatype) = dtype.id
 
-type HDF5Dataspace <: HDF5Object
+type HDF5Dataspace
     id::Hid
     toclose::Bool
 
@@ -350,8 +350,24 @@ type H5LInfo
 end
 H5LInfo() = H5LInfo(int32(0), uint32(0), int64(0), int32(0), uint64(0))
 
-# Object reference type
-type HDF5ReferenceObj; end
+# Object reference types
+type HDF5ReferenceObj
+    r::Vector{Uint8}
+end
+type HDF5ObjPtr
+    p::Ptr{Uint8}
+end
+type HDF5ReferenceObjArray
+    r::Array{Uint8}
+end
+HDF5ReferenceObjArray(dims::Int...) = HDF5ReferenceObjArray(Array(Uint8, H5R_OBJ_REF_BUF_SIZE, dims...))
+size(a::HDF5ReferenceObjArray) = ntuple(ndims(a.r)-1, i->size(a.r,i+1))
+length(a::HDF5ReferenceObjArray) = prod(size(a))
+ref(a::HDF5ReferenceObjArray, i::Integer) = HDF5ObjPtr(pointer(a.r)+(i-1)*H5R_OBJ_REF_BUF_SIZE)
+function assign(a::HDF5ReferenceObjArray, pname::(Union(HDF5File, HDF5Group, HDF5Dataset), ByteString), i::Integer)
+    ptr = pointer(a.r)+(i-1)*H5R_OBJ_REF_BUF_SIZE
+    h5r_create(ptr, pname[1].id, pname[2], H5R_OBJECT, -1)
+end
 
 # An empty array type
 type EmptyArray{T}; end
@@ -421,7 +437,7 @@ function o_open(parent, path::ByteString)
     obj_id   = h5o_open(parent.id, path)
     obj_type = h5i_get_type(obj_id)
     obj_type == H5I_GROUP ? HDF5Group(obj_id, file(parent)) :
-    obj_type == H5I_DATATYPE ? HDF5NamedType(obj_id) :
+    obj_type == H5I_DATATYPE ? HDF5Datatype(obj_id) :
     obj_type == H5I_DATASET ? HDF5Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
 end
@@ -557,6 +573,7 @@ function datatype(str::ByteString)
     h5t_set_size(type_id, length(str))
     HDF5Datatype(type_id)
 end
+datatype(R::HDF5ReferenceObjArray) = HDF5Datatype(H5T_STD_REF_OBJ, false)
 
 # Get the dataspace of a dataset
 dataspace(dset::HDF5Dataset) = HDF5Dataspace(h5d_get_space(dset.id))
@@ -565,8 +582,8 @@ dataspace(attr::HDF5Attribute) = HDF5Dataspace(h5a_get_space(attr.id))
 
 # Create a dataspace from in-memory types
 dataspace{T<:HDF5BitsKind}(x::T) = HDF5Dataspace(h5s_create(H5S_SCALAR))
-function dataspace(A::Array)
-    dims = convert(Array{Hsize, 1}, [reverse(size(A))...])
+function _dataspace(sz::Int...)
+    dims = convert(Array{Hsize, 1}, [reverse(sz)...])
     if any(dims .== 0)
         space_id = h5s_create(H5S_NULL)
     else
@@ -574,7 +591,9 @@ function dataspace(A::Array)
     end
     HDF5Dataspace(space_id)
 end
+dataspace(A::Array) = _dataspace(size(A)...)
 dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
+dataspace(R::HDF5ReferenceObjArray) = _dataspace(size(R)...)
 
 # Get the array dimensions from a dataspace
 # Returns both dims and maxdims
@@ -673,18 +692,19 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
 end
 # Read an array of references
 function read(obj::HDF5Dataset{PlainHDF5File}, ::Type{Array{HDF5ReferenceObj}})
-    local refs::Array{Uint8}
-    dspace = dataspace(obj)
-#      try
-        dims, maxdims = get_dims(dspace)
-        refs = Array(Uint8, H5R_OBJ_REF_BUF_SIZE, dims...)
-        h5d_read(obj.id, H5T_STD_REF_OBJ, refs)
-#      catch err
-#          close(dspace)
-#          throw(err)
-#      end
-    close(dspace)
+    dims = size(obj)
+    refs = HDF5ReferenceObjArray(dims...)
+    h5d_read(obj.id, H5T_STD_REF_OBJ, refs.r)
     refs
+end
+# Dereference
+function ref(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5ObjPtr)
+    obj_id = h5r_dereference(parent.id, H5R_OBJECT, r.p)
+    obj_type = h5i_get_type(obj_id)
+    obj_type == H5I_GROUP ? HDF5Group(obj_id, file(parent)) :
+    obj_type == H5I_DATATYPE ? HDF5Datatype(obj_id) :
+    obj_type == H5I_DATASET ? HDF5Dataset(obj_id, file(parent)) :
+    error("Invalid object type for path ", path)
 end
 
 # Generic write
@@ -740,6 +760,24 @@ for (privatesym, fsym, ptype) in
         # ByteStrings
         ($fsym)(parent::$ptype, name::ByteString, data::ByteString, plists...) = ($privatesym)(parent, name, data, plists...)
     end
+end
+function d_create(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ByteString, data::HDF5ReferenceObjArray, plists...)
+    local obj
+    dtype = datatype(data)
+    try
+        dspace = dataspace(data)
+        try
+            obj = d_create(parent, name, dtype, dspace, plists...)
+        catch err
+            close(dspace)
+            throw(err)
+        end
+        close(dspace)
+    catch err
+        close(dtype)
+        throw(err)
+    end
+    obj, dtype
 end
 # Create and write, closing the objects upon exit
 for (privatesym, fsym, ptype, crsym) in
@@ -1159,7 +1197,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5p_get_chunk, :H5Pget_chunk, C_int, (Hid, C_int, Ptr{Hsize}), (:plist_id, :n_dims, :dims), :(error("Error getting chunk size"))),
      (:h5p_get_layout, :H5Pget_layout, C_int, (Hid,), (:plist_id,), :(error("Error getting layout"))),
      (:h5p_get_userblock, :H5Pget_layout, Herr, (Hid, Ptr{Hsize}), (:plist_id, :len), :(error("Error getting userblock"))),
-     (:h5r_create, :H5Rcreate, Herr, (Ptr{Void}, Hid, Ptr{Uint8}, C_int), (:ref, :loc_id, :name, :ref_type, :space_id), :(error("Error creating reference to object ", name))),
+     (:h5r_create, :H5Rcreate, Herr, (Ptr{Void}, Hid, Ptr{Uint8}, C_int, Hid), (:ref, :loc_id, :name, :ref_type, :space_id), :(error("Error creating reference to object ", name))),
      (:h5r_dereference, :H5Rdereference, Hid, (Hid, C_int, Ptr{Void}), (:obj_id, :ref_type, :ref), :(error("Error dereferencing object"))),
      (:h5r_get_obj_type, :H5Rget_obj_type2, Herr, (Hid, C_int, Ptr{Void}, Ptr{C_int}), (:loc_id, :ref_type, :ref, :obj_type), :(error("Error getting object type"))),
      (:h5r_get_region, :H5Rget_region, Hid, (Hid, C_int, Ptr{Void}), (:loc_id, :ref_type, :ref), :(error("Error getting region from reference"))),
