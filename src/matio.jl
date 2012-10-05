@@ -23,6 +23,7 @@ H5F_ACC_RDONLY = HDF5.H5F_ACC_RDONLY
 # Functions
 h5f_close  = HDF5.h5f_close
 h5f_create = HDF5.h5f_create
+h5f_open   = HDF5.h5f_open
 writearray = HDF5.writearray
 
 type MatlabHDF5File <: HDF5File
@@ -109,7 +110,7 @@ function matopen(fname::String, mode::String)
     mode == "a+" ? matopen(fname, true , true , true , false, true ) :
     error("invalid open mode: ", mode)
 end
-
+matopen(fname::String) = matopen(fname, "r")
 
 ### Matlab file format specification ###
 
@@ -240,11 +241,11 @@ const str2type_matlab = {
     "uint8"   => Array{Uint8},
     "int16"   => Array{Int16},
     "uint16"  => Array{Uint16},
-    "int32"   => Array{Int64},
-    "uint64"  => Array{Uint64},
-    "single"  => Array{Int32},
+    "int32"   => Array{Int32},
     "uint32"  => Array{Uint32},
-    "int64"   => Array{Float32},
+    "int64"   => Array{Int64},
+    "uint64"  => Array{Uint64},
+    "single"  => Array{Float32},
     "double"  => Array{Float64},
     "cell"    => Array{Any},
     "char"    => MatlabString,
