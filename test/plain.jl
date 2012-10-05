@@ -5,6 +5,9 @@ load("src/hdf5.jl")
 # Create a new file
 fn = "/tmp/test.h5"
 fid = h5open(fn, "w")
+# Write scalars
+fid["Float64"] = 3.2
+fid["Int16"] = int16(4)
 # Create arrays of different types
 A = randn(3,5)
 write(fid, "Afloat64", float64(A))
@@ -21,6 +24,9 @@ write(fid, "Auint64", uint64(Ai))
 # Test strings
 salut = "Hi there"
 write(fid, "salut", salut)
+# Empty arrays
+empty = Array(Uint32, 0)
+write(fid, "empty", empty)
 # Test dataset with compression
 R = randi(20, 200, 400);
 dtype = datatype(R)
@@ -38,6 +44,10 @@ close(fid)
 
 # Read the file back in
 fidr = h5open(fn)
+x = read(fidr, "Float64")
+@assert x == 3.2 && isa(x, Float64)
+y = read(fidr, "Int16")
+@assert y == 4 && isa(y, Int16)
 Af32 = read(fidr, "Afloat32")
 @assert float32(A) == Af32
 @assert eltype(Af32) == Float32
@@ -72,6 +82,8 @@ salutr = read(fidr, "salut")
 @assert salut == salutr
 Rr = read(fidr, "CompressedA")
 @assert Rr == R
+emptyr = read(fidr, "empty")
+@assert isempty(emptyr)
 # Test ref-based reading
 Aref = fidr["Afloat64"]
 sel = (2:3, 1:2:5)

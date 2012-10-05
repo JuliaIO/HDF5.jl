@@ -114,6 +114,7 @@ const H5R_DSET_REG_REF_BUF_SIZE = 12
 const H5S_ALL          = 0
 const H5S_SCALAR       = 0
 const H5S_SIMPLE       = 1
+const H5S_NULL         = 2
 # Dataspace selection constants
 const H5S_SELECT_SET   = 0
 const H5S_SELECT_OR    = 1
@@ -352,6 +353,9 @@ H5LInfo() = H5LInfo(int32(0), uint32(0), int64(0), int32(0), uint64(0))
 # Object reference type
 type HDF5ReferenceObj; end
 
+# An empty array type
+type EmptyArray{T}; end
+
 ### High-level interface ###
 # Open or create an HDF5 file
 function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool, toclose::Bool)
@@ -527,7 +531,11 @@ dataspace(attr::HDF5Attribute) = HDF5DataSpace(h5a_get_space(attr.id))
 dataspace{T<:HDF5BitsKind}(x::T) = HDF5Dataspace(h5s_create(H5S_SCALAR))
 function dataspace(A::Array)
     dims = convert(Array{Hsize, 1}, [reverse(size(A))...])
-    space_id = h5s_create_simple(length(dims), dims, dims)
+    if any(dims .== 0)
+        space_id = h5s_create(H5S_NULL)
+    else
+        space_id = h5s_create_simple(length(dims), dims, dims)
+    end
     HDF5Dataspace(space_id)
 end
 dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
@@ -601,6 +609,10 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
             #              end
                 close(dspace)
                 data
+            end
+            # Empty arrays
+            function read(obj::$objtype, ::Type{EmptyArray{$T}})
+                Array($T, 0)
             end
         end
     end
@@ -869,18 +881,20 @@ function hdf5_to_julia(obj::Union(HDF5Dataset, HDF5Attribute))
         throw(err)
     end
     close(objtype)
-    if T != ByteString
-        # Determine whether it's an array
-        objspace = dataspace(obj)
-        try
-            if h5s_is_simple(objspace.id)
-                T = Array{T}
-            end
-        catch err
-            close(objspace)
-            throw(err)
-        end
+    # Determine whether it's an array
+    local stype
+    objspace = dataspace(obj)
+    try
+        stype = h5s_get_simple_extent_type(objspace.id)
+    catch err
         close(objspace)
+        throw(err)
+    end
+    close(objspace)
+    if stype == H5S_SIMPLE
+        T = Array{T}
+    elseif stype == H5S_NULL
+        T = EmptyArray{T}
     end
     T
 end
@@ -1113,6 +1127,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5s_create_simple, :H5Screate_simple, Hid, (C_int, Ptr{Hsize}, Ptr{Hsize}), (:rank, :current_dims, :maximum_dims), :(error("Error creating simple dataspace"))),
      (:h5s_get_simple_extent_dims, :H5Sget_simple_extent_dims, C_int, (Hid, Ptr{Hsize}, Ptr{Hsize}), (:space_id, :dims, :maxdims), :(error("Error getting the dimensions for a dataspace"))),
      (:h5s_get_simple_extent_ndims, :H5Sget_simple_extent_ndims, C_int, (Hid,), (:space_id,), :(error("Error getting the number of dimensions for a dataspace"))),
+     (:h5s_get_simple_extent_type, :H5Sget_simple_extent_type, C_int, (Hid,), (:space_id,), :(error("Error getting the dataspace type"))),
      (:h5t_copy, :H5Tcopy, Hid, (Hid,), (:dtype_id,), :(error("Error copying datatype"))),
      (:h5t_get_class, :H5Tget_class, Hclass, (Hid,), (:dtype_id,), :(error("Error getting class"))),
      (:h5t_get_native_type, :H5Tget_native_type, Hid, (Hid, Hdirection), (:dtype_id, :direction), :(error("Error getting native type"))),
