@@ -489,20 +489,41 @@ function assign{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ByteStri
 end
 
 # Check existence
-function exists(parent::Union(HDF5File, HDF5Group), path::ByteString, lapl::HDF5Properties)
-    parts = split(path, "/")
-    name = parts[1]
-    i = 1
-    while h5l_exists(parent.id, name, lapl.id) && i < length(parts)
-        i += 1
-        name = name*"/"*parts[i]
+function split1(path::ByteString)
+    m = match(r"/", path)
+    if m == nothing
+        return path, nothing
+    else
+        if m.offset == 1
+            # Matches the root group
+            return "/", path[2:end]
+        else
+            return path[1:m.offset-1], path[m.offset+1:end]
+        end
     end
-    if i < length(parts)
+end
+function exists(parent::Union(HDF5File, HDF5Group), path::ByteString, lapl::HDF5Properties)
+    first, rest = split1(path)
+    if !h5l_exists(parent.id, first, lapl.id)
         return false
     end
-    true
+    ret = true
+    if !(rest === nothing) && !isempty(rest)
+        obj = parent[first]
+        ret = exists(obj, rest, lapl)
+        close(obj)
+    end
+    ret
 end
-exists(parent::Union(HDF5File, HDF5Group), path::ByteString) = exists(parent, path, p_create())
+function exists(parent::HDF5Dataset, path::ByteString, apl::HDF5Properties)
+    # apl is ignored
+    first, rest = split1(path)
+    if !(rest === nothing) && !isempty(rest)
+        error("Cannot descend below attributes")
+    end
+    h5a_exists(parent.id, first)
+end
+exists(parent::Union(HDF5File, HDF5Group), path::ByteString) = exists(parent, path, HDF5Properties())
 
 # Querying items in the file
 function length(x::HDF5Group)
