@@ -3,10 +3,27 @@
 ###########################################
 
 require("hdf5.jl")
-#  module MATIO
-#  import Base.*
-#  import HDF5
-#  import HDF5.*
+module MatIO
+import Base.*
+import HDF5
+import HDF5.*
+
+# Debugging: comment this block out if you un-modulize hdf5.jl
+# Types
+Hid = HDF5.Hid
+HDF5ReferenceObj = HDF5.HDF5ReferenceObj
+HDF5ReferenceObjArray = HDF5.HDF5ReferenceObjArray
+HDF5BitsKind = HDF5.HDF5BitsKind
+# Constants
+H5P_FILE_CREATE = HDF5.H5P_FILE_CREATE
+H5F_ACC_TRUNC = HDF5.H5F_ACC_TRUNC
+H5P_DEFAULT = HDF5.H5P_DEFAULT
+H5F_ACC_RDWR = HDF5.H5F_ACC_RDWR
+H5F_ACC_RDONLY = HDF5.H5F_ACC_RDONLY
+# Functions
+h5f_close  = HDF5.h5f_close
+h5f_create = HDF5.h5f_create
+writearray = HDF5.writearray
 
 type MatlabHDF5File <: HDF5File
     id::Hid
@@ -263,5 +280,10 @@ function read(obj::HDF5Object, ::Type{MatlabString})
 end
 
 
-#  export matopen
-#  end
+export
+    close,
+    matopen,
+    read,
+    write
+    
+end

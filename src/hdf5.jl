@@ -3,9 +3,8 @@
 ####################
 
 require("strpack.jl")
-#module HDF5
+module HDF5
 import Base.*
-#load("hdf5_julia.jl")
 
 ## C types
 
@@ -560,6 +559,14 @@ function names(x::HDF5Group)
     res
 end
 
+function size(dset::HDF5Dataset)
+    dspace = dataspace(dset)
+    dims, maxdims = get_dims(dspace)
+    map(int, dims)
+end
+
+length(dset::HDF5Dataset) = prod(size(dset))
+
 # Get the datatype of a dataset
 datatype(dset::HDF5Dataset) = HDF5Datatype(h5d_get_type(dset.id))
 # Get the datatype of an attribute
@@ -856,14 +863,6 @@ write{T<:HDF5BitsKind}(parent::HDF5Dataset, name::ByteString, data::T, plists...
 write{T<:HDF5BitsKind}(parent::HDF5Dataset, name::ByteString, data::Array{T}, plists...) = a_write(parent, name, data, plists...)
 write(parent::HDF5Dataset, name::ByteString, data::ByteString, plists...) = a_write(parent, name, data, plists...)
 
-
-function size(dset::HDF5Dataset)
-    dspace = dataspace(dset)
-    dims, maxdims = get_dims(dspace)
-    map(int, dims)
-end
-
-length(dset::HDF5Dataset) = prod(size(dset))
 
 # Reading arrays using ref
 function ref(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
@@ -1300,27 +1299,47 @@ const hdf5_prop_get_set = {
 #h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
 export
-    # Types 
-    HDF5Object,
+    # Types
+    HDF5Attribute,
     HDF5File,
     HDF5Group,
     HDF5Dataset,
     HDF5Datatype,
     HDF5Dataspace,
+    HDF5Object,
     HDF5Properties,
+    PlainHDF5File,
     # Functions
+    assign,
+    a_create,
+    a_open,
+    a_read,
+    a_write,
     attribute,
     close,
     create,
-    dataset,
+    d_create,
+    d_open,
+    d_read,
+    d_write,
+    dataspace,
     datatype,
     exists,
-    group,
+    file,
+    g_create,
+    g_open,
     h5open,
-    properties,
+    length,
+    names,
+    o_open,
+    p_create,
+    plain,
     read,
     ref,
     root,
+    size,
+    t_create,
+    t_commit,
     write
 
-#  end  # module
+end  # module

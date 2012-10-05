@@ -1,5 +1,5 @@
 load("src/hdf5.jl")
-#import HDF5.*
+import HDF5.*
 #import HDF5
 
 # Create a new file
