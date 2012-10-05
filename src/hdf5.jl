@@ -465,12 +465,27 @@ p_create(class) = HDF5Properties(h5p_create(class))
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
 assign{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ByteString) = write(parent, path, val)
 assign(dset::HDF5Dataset, val, name::ByteString) = write(dset, name, val)
-
 # Getting and setting properties: p["chunk"] = dims, p["compress"] = 6
 function assign(p::HDF5Properties, val, name::ByteString)
     funcget, funcset = hdf5_prop_get_set[name]
     funcset(p, val...)
     return p
+end
+# Create a dataset with properties: obj[path, prop1, set1, ...] = val
+function assign{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ByteString, prop1::ByteString, val1, pv...)
+    if !iseven(length(pv))
+        error("Properties and values must come in pairs")
+    end
+    p = p_create(H5P_DATASET_CREATE)
+    p[prop1] = val1
+    for i = 1:2:length(pv)
+        thisname = pv[i]
+        if !isa(thisname, ByteString)
+            error("Argument ", i+3, " should be a string, but it's a ", typeof(thisname))
+        end
+        p[thisname] = pv[i+1]
+    end
+    write(parent, path, val, HDF5Properties(), p)
 end
 
 # Check existence
@@ -661,7 +676,7 @@ function write{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name1::ByteString, v
     for i = 1:2:length(nameval)
         thisname = nameval[i]
         if !isa(thisname, ByteString)
-            error("Argument ", i, " should be a string, but it's a ", typeof(thisname))
+            error("Argument ", i+5, " should be a string, but it's a ", typeof(thisname))
         end
         write(parent, thisname, nameval[i+1])
     end
@@ -672,19 +687,20 @@ end
 
 # Create datasets and attributes with "native" types, but don't write the data.
 # The return syntax is: dset, dtype = d_create(parent, name, data)
+# You can also pass in property lists
 for (privatesym, fsym, ptype) in
     ((:_d_create, :d_create, Union(PlainHDF5File, HDF5Group{PlainHDF5File})),
      (:_a_create, :a_create, Union(HDF5Group{PlainHDF5File}, HDF5Dataset{PlainHDF5File})))
     @eval begin
         # Generic create (hidden)
-        function ($privatesym)(parent::$ptype, name::ByteString, data)
+        function ($privatesym)(parent::$ptype, name::ByteString, data, plists...)
             local dtype
             local obj
             dtype = datatype(data)
             try
                 dspace = dataspace(data)
                 try
-                    obj = ($fsym)(parent, name, dtype, dspace)
+                    obj = ($fsym)(parent, name, dtype, dspace, plists...)
                 catch err
                     close(dspace)
                     throw(err)
@@ -697,11 +713,11 @@ for (privatesym, fsym, ptype) in
             obj, dtype
         end
         # Scalar types
-        ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ByteString, data::T) = ($privatesym)(parent, name, data)
+        ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ByteString, data::T, plists...) = ($privatesym)(parent, name, data, plists...)
         # Arrays
-        ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ByteString, data::Array{T}) = ($privatesym)(parent, name, data)
+        ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ByteString, data::Array{T}, plists...) = ($privatesym)(parent, name, data, plists...)
         # ByteStrings
-        ($fsym)(parent::$ptype, name::ByteString, data::ByteString) = ($privatesym)(parent, name, data)
+        ($fsym)(parent::$ptype, name::ByteString, data::ByteString, plists...) = ($privatesym)(parent, name, data, plists...)
     end
 end
 # Create and write, closing the objects upon exit
@@ -710,8 +726,8 @@ for (privatesym, fsym, ptype, crsym) in
      (:_a_write, :a_write, Union(HDF5Group{PlainHDF5File}, HDF5Dataset{PlainHDF5File}), :a_create))
     @eval begin
         # Generic write (hidden)
-        function ($privatesym)(parent::$ptype, name::ByteString, data)
-            obj, dtype = ($crsym)(parent, name, data)
+        function ($privatesym)(parent::$ptype, name::ByteString, data, plists...)
+            obj, dtype = ($crsym)(parent, name, data, plists...)
             try
                 writearray(obj, dtype.id, data)
             catch err
@@ -723,11 +739,11 @@ for (privatesym, fsym, ptype, crsym) in
             close(dtype)
         end
         # Scalar types
-        ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ByteString, data::T) = ($privatesym)(parent, name, data)
+        ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ByteString, data::T, plists...) = ($privatesym)(parent, name, data, plists...)
         # Arrays
-        ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ByteString, data::Array{T}) = ($privatesym)(parent, name, data)
+        ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ByteString, data::Array{T}, plists...) = ($privatesym)(parent, name, data, plists...)
         # ByteStrings
-        ($fsym)(parent::$ptype, name::ByteString, data::ByteString) = ($privatesym)(parent, name, data)
+        ($fsym)(parent::$ptype, name::ByteString, data::ByteString, plists...) = ($privatesym)(parent, name, data, plists...)
     end
 end
 # Write to already-created objects
@@ -773,13 +789,13 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
     end
 end
 # For plain files and groups, let "write(obj, name, val)" mean "d_write"
-write{T<:HDF5BitsKind}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ByteString, data::T) = d_write(parent, name, data)
-write{T<:HDF5BitsKind}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ByteString, data::Array{T}) = d_write(parent, name, data)
-write(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ByteString, data::ByteString) = d_write(parent, name, data)
+write{T<:HDF5BitsKind}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ByteString, data::T, plists...) = d_write(parent, name, data, plists...)
+write{T<:HDF5BitsKind}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ByteString, data::Array{T}, plists...) = d_write(parent, name, data, plists...)
+write(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ByteString, data::ByteString, plists...) = d_write(parent, name, data, plists...)
 # For datasets, "write(dset, name, val)" means "a_write"
-write{T<:HDF5BitsKind}(parent::HDF5Dataset, name::ByteString, data::T) = a_write(parent, name, data)
-write{T<:HDF5BitsKind}(parent::HDF5Dataset, name::ByteString, data::Array{T}) = a_write(parent, name, data)
-write(parent::HDF5Dataset, name::ByteString, data::ByteString) = a_write(parent, name, data)
+write{T<:HDF5BitsKind}(parent::HDF5Dataset, name::ByteString, data::T, plists...) = a_write(parent, name, data, plists...)
+write{T<:HDF5BitsKind}(parent::HDF5Dataset, name::ByteString, data::Array{T}, plists...) = a_write(parent, name, data, plists...)
+write(parent::HDF5Dataset, name::ByteString, data::ByteString, plists...) = a_write(parent, name, data, plists...)
 
 
 function size(dset::HDF5Dataset)

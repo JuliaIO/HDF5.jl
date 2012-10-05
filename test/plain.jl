@@ -36,17 +36,7 @@ close(dset)
 g = g_create(fid, "mygroup")
 # Test dataset with compression
 R = randi(20, 200, 400);
-dtype = datatype(R)
-dspace = dataspace(R)
-p = p_create(H5P_DATASET_CREATE)
-p["chunk"] = (20,20)
-p["compress"] = 9
-dset = d_create(g, "CompressedA", dtype, dspace, HDF5Properties(), p)
-write(dset, R)
-close(dset)
-close(p)
-close(dtype)
-close(dspace)
+g["CompressedA", "chunk", (20,20), "compress", 9] = R
 close(g)
 close(fid)
 
