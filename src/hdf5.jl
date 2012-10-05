@@ -525,7 +525,7 @@ end
 # Get the dataspace of a dataset
 dataspace(dset::HDF5Dataset) = HDF5Dataspace(h5d_get_space(dset.id))
 # Get the dataspace of an attribute
-dataspace(attr::HDF5Attribute) = HDF5DataSpace(h5a_get_space(attr.id))
+dataspace(attr::HDF5Attribute) = HDF5Dataspace(h5a_get_space(attr.id))
 
 # Create a dataspace from in-memory types
 dataspace{T<:HDF5BitsKind}(x::T) = HDF5Dataspace(h5s_create(H5S_SCALAR))
@@ -730,7 +730,7 @@ for (privatesym, fsym, ptype, crsym) in
         ($fsym)(parent::$ptype, name::ByteString, data::ByteString) = ($privatesym)(parent, name, data)
     end
 end
-
+# Write to already-created objects
 for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
     for T in (Int8, Uint8, Int16, Uint16, Int32, Uint32, Int64, Uint64, Float32, Float64)
         @eval begin
@@ -772,11 +772,14 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
         end
     end
 end
-# For plain, let "write" mean "d_write"
+# For plain files and groups, let "write(obj, name, val)" mean "d_write"
 write{T<:HDF5BitsKind}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ByteString, data::T) = d_write(parent, name, data)
 write{T<:HDF5BitsKind}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ByteString, data::Array{T}) = d_write(parent, name, data)
 write(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ByteString, data::ByteString) = d_write(parent, name, data)
-# Write to already-created objects
+# For datasets, "write(dset, name, val)" means "a_write"
+write{T<:HDF5BitsKind}(parent::HDF5Dataset, name::ByteString, data::T) = a_write(parent, name, data)
+write{T<:HDF5BitsKind}(parent::HDF5Dataset, name::ByteString, data::Array{T}) = a_write(parent, name, data)
+write(parent::HDF5Dataset, name::ByteString, data::ByteString) = a_write(parent, name, data)
 
 
 function size(dset::HDF5Dataset)
@@ -788,7 +791,7 @@ end
 length(dset::HDF5Dataset) = prod(size(dset))
 
 # Reading arrays using ref
-function ref(dset::HDF5Dataset{PlainHDF5File}, indices...)
+function ref(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
     local ret
     dtype = datatype(dset)
     try
@@ -984,6 +987,7 @@ end
 h5f_create(filename::ByteString) = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)
 h5f_open(filename::ByteString, mode) = h5f_open(filename, mode, H5P_DEFAULT)
 h5g_create(obj_id::Hid, name::ByteString) = h5g_create(obj_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
+h5g_create(obj_id::Hid, name::ByteString, lcpl_id, gcpl_id) = h5g_create(obj_id, name, lcpl_id, gcpl_id, H5P_DEFAULT)
 h5g_open(file_id::Hid, name::ByteString) = h5g_open(file_id, name, H5P_DEFAULT)
 h5l_exists(loc_id::Hid, name::ByteString) = h5l_exists(loc_id, name, H5P_DEFAULT)
 h5o_open(obj_id::Hid, name::ByteString) = h5o_open(obj_id, name, H5P_DEFAULT)

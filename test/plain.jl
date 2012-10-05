@@ -4,7 +4,7 @@ load("src/hdf5.jl")
 
 # Create a new file
 fn = "/tmp/test.h5"
-fid = h5open(fn, "w")
+fid = h5open(fn, "w+")
 # Write scalars
 fid["Float64"] = 3.2
 fid["Int16"] = int16(4)
@@ -14,7 +14,7 @@ write(fid, "Afloat64", float64(A))
 write(fid, "Afloat32", float32(A))
 Ai = randi(20, 2, 4)
 write(fid, "Aint8", int8(Ai))
-write(fid, "Aint16", int16(Ai))
+fid["Aint16"] = int16(Ai)
 write(fid, "Aint32", int32(Ai))
 write(fid, "Aint64", int64(Ai))
 write(fid, "Auint8", uint8(Ai))
@@ -27,6 +27,13 @@ write(fid, "salut", salut)
 # Empty arrays
 empty = Array(Uint32, 0)
 write(fid, "empty", empty)
+# Attributes
+dset = fid["salut"]
+label = "This is a string"
+dset["typeinfo"] = label
+close(dset)
+# Group
+g = g_create(fid, "mygroup")
 # Test dataset with compression
 R = randi(20, 200, 400);
 dtype = datatype(R)
@@ -34,12 +41,13 @@ dspace = dataspace(R)
 p = p_create(H5P_DATASET_CREATE)
 p["chunk"] = (20,20)
 p["compress"] = 9
-dset = d_create(fid, "CompressedA", dtype, dspace, HDF5Properties(), p)
+dset = d_create(g, "CompressedA", dtype, dspace, HDF5Properties(), p)
 write(dset, R)
 close(dset)
 close(p)
 close(dtype)
 close(dspace)
+close(g)
 close(fid)
 
 # Read the file back in
@@ -80,10 +88,13 @@ Ai64 = read(fidr, "Auint64")
 @assert eltype(Ai64) == Uint64
 salutr = read(fidr, "salut")
 @assert salut == salutr
-Rr = read(fidr, "CompressedA")
+Rr = read(fidr, "mygroup/CompressedA")
 @assert Rr == R
 emptyr = read(fidr, "empty")
 @assert isempty(emptyr)
+dset = fidr["salut"]
+@assert read(dset, "typeinfo") == label
+close(dset)
 # Test ref-based reading
 Aref = fidr["Afloat64"]
 sel = (2:3, 1:2:5)
