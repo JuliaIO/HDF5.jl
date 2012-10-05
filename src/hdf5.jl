@@ -339,24 +339,6 @@ HDF5Properties(id) = HDF5Properties(id, true)
 HDF5Properties() = HDF5Properties(H5P_DEFAULT, false)
 convert(::Type{C_int}, p::HDF5Properties) = p.id
 
-# A Julia type that allows you to specify the intended meaning of a path string
-#
-# ref by name alone can be ambiguous: for example, groups can have both
-# attributes and datasets, and there does not appear to be anything that prevents
-# you from using the same name for one of each.
-#  type HDF5ObjType{T<:HDF5Object}
-#      name::ByteString
-#      properties::HDF5Properties
-#  end
-#  group(path::ByteString, prop::HDF5Properties) = HDF5ObjType{HDF5Group}(path, prop)
-#  group(path::ByteString) = HDF5ObjType{HDF5Group}(path, HDF5Properties())
-#  dataset(path::ByteString, prop::HDF5Properties) = HDF5ObjType{HDF5Dataset}(path, prop)
-#  dataset(path::ByteString) = HDF5ObjType{HDF5Dataset}(path, HDF5Properties())
-#  datatype(path::ByteString, prop::HDF5Properties) = HDF5ObjType{HDF5Datatype}(path, prop)
-#  datatype(path::ByteString) = HDF5ObjType{HDF5Datatype}(path, HDF5Properties())
-#  attribute(path::ByteString, prop::HDF5Properties) = HDF5ObjType{HDF5Attribute}(path, prop)
-#  attribute(path::ByteString) = HDF5ObjType{HDF5Attribute}(path, HDF5Properties())
-
 # Types to collect information from HDF5
 type H5LInfo
     linktype::C_int
@@ -441,6 +423,10 @@ function o_open(parent, path::ByteString)
 end
 # Get the root group
 root(h5file::HDF5File) = g_open(h5file, "/")
+root(obj::Union(HDF5Group, HDF5Dataset)) = g_open(file(obj), "/")
+# ref syntax: obj2 = obj1[path]
+ref(parent::Union(HDF5File, HDF5Group), path::ByteString) = o_open(parent, path)
+ref(dset::HDF5Dataset, name::ByteString) = a_open(dset, name)
 
 # Create objects
 g_create(parent::Union(HDF5File, HDF5Group), path::ByteString, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Group(h5g_create(parent.id, path, lcpl.id, dcpl.id), file(parent))
@@ -470,6 +456,11 @@ function t_commit(parent::Union(HDF5Group, HDF5Dataset), path::ByteString, dtype
 end
 a_create(dset::HDF5Dataset, path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(dset.id, path, dtype.id, dspace.id))
 p_create(class) = HDF5Properties(h5p_create(class))
+
+# Assign syntax: obj[path] = value
+# Creates a dataset unless obj is a dataset, in which case it creates an attribute
+assign{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ByteString) = write(parent, path, val)
+assign(dset::HDF5Dataset, val, name::ByteString) = write(dset, name, val)
 
 # Getting and setting properties: p["chunk"] = dims, p["compress"] = 6
 function assign(p::HDF5Properties, val, name::ByteString)
@@ -565,9 +556,11 @@ for (fsym, osym, ptype) in
         end
     end
 end
-# "read" defaults to d_read
+# For file/group, read(parent, "name") defaults to d_read
+# For dataset, read(parent, "name") uses a_read
 read{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name::ByteString) = d_read(parent, name)
-# Read a list of variables
+read(parent::HDF5Dataset, name::ByteString) = a_read(parent, name)
+# Read a list of variables, read(parent, "A", "B", "x", ...)
 function read{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name::ByteString...)
     n = length(name)
     out = Array(Any, n)
@@ -577,7 +570,7 @@ function read{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name::ByteString...)
     return tuple(out...)
 end
 
-# "Plain" (unformatted) reads. These only work for simple types
+# "Plain" (unformatted) reads. These work only for simple types: scalars, arrays, and strings
 # See also "Reading arrays using ref" below
 # This infers the Julia type from the HDF5Datatype. Specific formats should provide their own read(dset). This one can be used by calling read(plain(dset)).
 function read(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute))
@@ -788,7 +781,6 @@ function ref(dset::HDF5Dataset{PlainHDF5File}, indices...)
     dtype = datatype(dset)
     try
         T = hdf5_to_julia_eltype(dset, dtype)
-        println(T)
         if !(T <: HDF5BitsKind)
             error("Must be a HDF5BitsKind array to use dset[...] syntax")
         end

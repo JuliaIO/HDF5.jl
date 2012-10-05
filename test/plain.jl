@@ -1,4 +1,4 @@
-load("hdf5.jl")
+load("src/hdf5.jl")
 #import HDF5.*
 #import HDF5
 
@@ -23,14 +23,11 @@ salut = "Hi there"
 write(fid, "salut", salut)
 # Test dataset with compression
 R = randi(20, 200, 400);
-#  dtype = HDF5Mod.datatype(R)
-#  dspace = HDF5Mod.dataspace(R)
 dtype = datatype(R)
 dspace = dataspace(R)
 p = p_create(H5P_DATASET_CREATE)
 p["chunk"] = (20,20)
 p["compress"] = 9
-#  dset = HDF5Mod.d_create(fid, "CompressedA", dtype, dspace, HDF5Properties(), p)
 dset = d_create(fid, "CompressedA", dtype, dspace, HDF5Properties(), p)
 write(dset, R)
 close(dset)
@@ -38,8 +35,6 @@ close(p)
 close(dtype)
 close(dspace)
 close(fid)
-
-println("Finished writing")
 
 # Read the file back in
 fidr = h5open(fn)
@@ -78,7 +73,7 @@ salutr = read(fidr, "salut")
 Rr = read(fidr, "CompressedA")
 @assert Rr == R
 # Test ref-based reading
-Aref = d_open(fidr, "Afloat64")
+Aref = fidr["Afloat64"]
 sel = (2:3, 1:2:5)
 Asub = Aref[sel...]
 @assert Asub == A[sel...]
