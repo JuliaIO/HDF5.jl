@@ -222,7 +222,6 @@ const hdf5_type_map = {
 # new resource, or calling h5s_create with H5S_SCALAR).
 
 abstract HDF5File
-abstract HDF5Object   # H5O interface
 
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
 type PlainHDF5File <: HDF5File
@@ -242,7 +241,7 @@ PlainHDF5File(id, filename) = PlainHDF5File(id, filename, true)
 convert(::Type{C_int}, f::HDF5File) = f.id
 plain(f::HDF5File) = PlainHDF5File(f.id, f.filename, false)
 
-type HDF5Group{F<:HDF5File} <: HDF5Object
+type HDF5Group{F<:HDF5File}
     id::Hid
     file::F         # the parent file
     toclose::Bool
@@ -260,7 +259,7 @@ HDF5Group(id, file) = HDF5Group(id, file, true)
 convert(::Type{C_int}, g::HDF5Group) = g.id
 plain(g::HDF5Group) = HDF5Group(g.id, plain(g.file), false)
 
-type HDF5Dataset{F<:HDF5File} <: HDF5Object
+type HDF5Dataset{F<:HDF5File}
     id::Hid
     file::F
     toclose::Bool
@@ -278,7 +277,7 @@ HDF5Dataset(id, file) = HDF5Dataset(id, file, true)
 convert(::Type{C_int}, dset::HDF5Dataset) = dset.id
 plain(dset::HDF5Dataset) = HDF5Dataset(dset.id, plain(dset.file), false)
 
-type HDF5Datatype <: HDF5Object
+type HDF5Datatype
     id::Hid
     toclose::Bool
 
@@ -290,8 +289,13 @@ type HDF5Datatype <: HDF5Object
         nt
     end
 end
+#HDF5Datatype{F<:HDF5File}(id, file::F, toclose::Bool) = HDF5Datatype{F}(id, file, toclose)
 HDF5Datatype(id) = HDF5Datatype(id, true)
 convert(::Type{C_int}, dtype::HDF5Datatype) = dtype.id
+#plain(dtype::HDF5Datatype) = HDF5Datatype(dtype.id, plain(dtype.file), false)
+
+# Define an H5O Object type
+typealias HDF5Object{F} Union(HDF5Group{F}, HDF5Dataset{F}, HDF5Datatype)
 
 type HDF5Dataspace
     id::Hid
@@ -308,7 +312,7 @@ end
 HDF5Dataspace(id) = HDF5Dataspace(id, true)
 convert(::Type{C_int}, dspace::HDF5Dataspace) = dspace.id
 
-type HDF5Attribute <: HDF5Object
+type HDF5Attribute
     id::Hid
     toclose::Bool
     
@@ -323,7 +327,7 @@ end
 HDF5Attribute(id) = HDF5Attribute(id, true)
 convert(::Type{C_int}, attr::HDF5Attribute) = attr.id
 
-type HDF5Properties <: HDF5Object
+type HDF5Properties
     id::Hid
     toclose::Bool
 
@@ -428,10 +432,10 @@ file(dset::HDF5Dataset) = dset.file
 g_open(parent::Union(HDF5File, HDF5Group), name::ByteString) = HDF5Group(h5g_open(parent.id, name, H5P_DEFAULT), file(parent))
 d_open(parent::Union(HDF5File, HDF5Group), name::ByteString, apl::HDF5Properties) = HDF5Dataset(h5d_open(parent.id, name, apl.id), file(parent))
 d_open(parent::Union(HDF5File, HDF5Group), name::ByteString) = HDF5Dataset(h5d_open(parent.id, name, H5P_DEFAULT), file(parent))
-t_open(parent::Union(HDF5Group, HDF5Dataset), name::ByteString, apl::HDF5Properties) = HDF5Datatype(h5t_open(parent.id, name, apl.id))
-t_open(parent::Union(HDF5Group, HDF5Dataset), name::ByteString) = HDF5Datatype(h5t_open(parent.id, name, H5P_DEFAULT))
-a_open(parent::Union(HDF5Group, HDF5Dataset), name::ByteString) = HDF5Attribute(h5a_open(parent.id, name, H5P_DEFAULT))
-# "Generic" (group, named datatype, or dataset) open
+t_open(parent::Union(HDF5File, HDF5Group), name::ByteString, apl::HDF5Properties) = HDF5Datatype(h5t_open(parent.id, name, apl.id))
+t_open(parent::Union(HDF5File, HDF5Group), name::ByteString) = HDF5Datatype(h5t_open(parent.id, name, H5P_DEFAULT))
+a_open(parent::HDF5Object, name::ByteString) = HDF5Attribute(h5a_open(parent.id, name, H5P_DEFAULT))
+# Object (group, named datatype, or dataset) open
 function o_open(parent, path::ByteString)
     obj_id   = h5o_open(parent.id, path)
     obj_type = h5i_get_type(obj_id)
@@ -457,23 +461,23 @@ d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Dataty
 d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Dataset(h5d_create(parent.id, path, dtype.id, dspace.id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT), file(parent))
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 t_create(class_id, sz) = HDF5Datatype(h5t_create(class_id, sz))
-function t_commit(parent::Union(HDF5Group, HDF5Dataset), path::ByteString, dtype::HDF5Datatype, lcpl::HDF5Properties, tcpl::HDF5Properties, tapl::HDF5Properties)
+function t_commit(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, lcpl::HDF5Properties, tcpl::HDF5Properties, tapl::HDF5Properties)
     h5t_commit(parent.id, path, dtype.id, lcpl.id, tcpl.id, tapl.id)
     dtype
 end
-function t_commit(parent::Union(HDF5Group, HDF5Dataset), path::ByteString, dtype::HDF5Datatype, lcpl::HDF5Properties, tcpl::HDF5Properties)
+function t_commit(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, lcpl::HDF5Properties, tcpl::HDF5Properties)
     h5t_commit(parent.id, path, dtype.id, lcpl.id, tcpl.id, H5P_DEFAULT)
     dtype
 end
-function t_commit(parent::Union(HDF5Group, HDF5Dataset), path::ByteString, dtype::HDF5Datatype, lcpl::HDF5Properties)
+function t_commit(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, lcpl::HDF5Properties)
     h5t_commit(parent.id, path, dtype.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT)
     dtype
 end
-function t_commit(parent::Union(HDF5Group, HDF5Dataset), path::ByteString, dtype::HDF5Datatype)
+function t_commit(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype)
     h5t_commit(parent.id, path, dtype.id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
     dtype
 end
-a_create(dset::HDF5Dataset, path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(dset.id, path, dtype.id, dspace.id))
+a_create(parent::Union(HDF5File, HDF5Object), path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(parent.id, path, dtype.id, dspace.id))
 p_create(class) = HDF5Properties(h5p_create(class))
 
 # Assign syntax: obj[path] = value
@@ -789,7 +793,7 @@ end
 # Create and write, closing the objects upon exit
 for (privatesym, fsym, ptype, crsym) in
     ((:_d_write, :d_write, Union(PlainHDF5File, HDF5Group{PlainHDF5File}), :d_create),
-     (:_a_write, :a_write, Union(HDF5Group{PlainHDF5File}, HDF5Dataset{PlainHDF5File}), :a_create))
+     (:_a_write, :a_write, Union(PlainHDF5File, HDF5Object{PlainHDF5File}, HDF5Datatype), :a_create))
     @eval begin
         # Generic write (hidden)
         function ($privatesym)(parent::$ptype, name::ByteString, data, plists...)

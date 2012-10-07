@@ -1,4 +1,4 @@
-load("src/hdf5.jl")
+load("hdf5.jl")
 import HDF5.*
 #import HDF5
 
