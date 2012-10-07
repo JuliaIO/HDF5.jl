@@ -1,5 +1,8 @@
-# Test array of arrays
-comp1 = [1 2; 3 4]
-comp2 = [5 6 7; 8 9 10]
-AB = Array{Int}[comp1, comp2]
+load("matio.jl")
+import MatIO.*
+fid = matopen("/tmp/matwrite.mat","w")
+A = randi(20, 3, 5)
+B = randn(2, 4)
+AB = Any[A, B]
 write(fid, "AB", AB)
+close(fid)
