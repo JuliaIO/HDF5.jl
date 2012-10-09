@@ -7,7 +7,6 @@ module HDF5
 import Base.*
 
 ## C types
-
 typealias C_int Int32
 typealias C_unsigned Uint32
 typealias C_char Uint8
@@ -70,6 +69,10 @@ const H5F_ACC_CREAT    = 0x10
 # other file constants
 const H5F_SCOPE_LOCAL  = 0
 const H5F_SCOPE_GLOBAL = 1
+const H5F_CLOSE_DEFAULT = 0
+const H5F_CLOSE_WEAK    = 1
+const H5F_CLOSE_SEMI    = 2
+const H5F_CLOSE_STRONG  = 3
 # object types (C enum H5Itype_t)
 const H5I_FILE         = 1
 const H5I_GROUP        = 2
@@ -381,14 +384,18 @@ function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bo
     if ff && !wr
         error("HDF5 does not support appending without writing")
     end
+    pa = p_create(H5P_FILE_ACCESS)
+    pa["fclose_degree"] = H5F_CLOSE_STRONG
     if cr && (tr || !isfile(filename))
-        fid = h5f_create(filename)
+        fid = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, pa.id)
+        close(pa)
     else
         if !h5f_is_hdf5(filename)
             error("This does not appear to be an HDF5 file")
         end
-        fid = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY)
+        fid = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
     end
+    close(pa)
     PlainHDF5File(fid, filename, toclose)
 end
 
@@ -404,21 +411,38 @@ h5open(filename::String, mode::String) = h5open(filename, mode, true)
 h5open(filename::String) = h5open(filename, "r")
 
 # Close functions
-for (h5type, h5func) in
-    ((HDF5File, :h5f_close),
-     (HDF5Group, :h5o_close),
-     (HDF5Dataset, :h5o_close),
-     (HDF5Datatype, :h5o_close),
-     (HDF5Dataspace, :h5s_close),
-     (HDF5Attribute, :h5a_close),
-     (HDF5Properties, :h5p_close))
-    @eval begin
-        function close(obj::$h5type)
-            if obj.toclose
-                $h5func(obj.id)
-                obj.toclose = false
+isvalid(obj) = h5i_is_valid(obj.id)
+for (h5type, h5func, checkvalid) in
+    ((HDF5File, :h5f_close, false),
+     (HDF5Group, :h5o_close, true),
+     (HDF5Dataset, :h5o_close, true),
+     (HDF5Datatype, :h5o_close, true),
+     (HDF5Dataspace, :h5s_close, true),
+     (HDF5Attribute, :h5a_close, true),
+     (HDF5Properties, :h5p_close, false))
+    if checkvalid
+        # Close functions that should first check that the object is still valid. The common case is a file that has been closed with CLOSE_STRONG but there are still finalizers that have not run for the datasets, etc, in the file.
+        @eval begin
+            function close(obj::$h5type)
+                if obj.toclose
+                    if isvalid(obj)
+                        $h5func(obj.id)
+                    end
+                    obj.toclose = false
+                end
+                nothing
             end
-            nothing
+        end
+    else
+        # Close functions that should try calling close regardless
+        @eval begin
+            function close(obj::$h5type)
+                if obj.toclose
+                    $h5func(obj.id)
+                    obj.toclose = false
+                end
+                nothing
+            end
         end
     end
 end
@@ -1018,13 +1042,16 @@ function set_chunk(p::HDF5Properties, dims...)
     end
     h5p_set_chunk(p.id, n, cdims)
 end
-#  set_userblock(p::HDF5Properties, len) = h5p_set_userblock(p.id, len)
 function get_userblock(p::HDF5Properties)
     alen = Array(Hsize, 1)
     h5p_get_userblock(p.id, alen)
     alen[1]
 end
- 
+function get_fclose_degree(p::HDF5Properties)
+    out = Array(C_int, 1)
+    h5p_get_fclose_degee(p.id, out)
+    out[1]
+end
 
 ### Format specifications ###
 
@@ -1116,7 +1143,7 @@ end
 
 # Note: use alphabetical order
 
-# Functions that return Herr, pass back nothing to Julia, with simple
+# Functions that return Herr, pass back nothing to Julia (as an output), with simple
 # error messages
 for (jlname, h5name, outtype, argtypes, argsyms, msg) in
     ((:h5_close, :H5close, Herr, (), (), "Error closing the HDF5 resources"),
@@ -1134,7 +1161,10 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5g_close, :H5Gclose, Herr, (Hid,), (:group_id,), "Error closing group"),
      (:h5o_close, :H5Oclose, Herr, (Hid,), (:object_id,), "Error closing object"),
      (:h5p_close, :H5Pclose, Herr, (Hid,), (:id,), "Error closing property list"),
+     (:h5p_get_fclose_degree, :H5Pget_fclose_degree, Herr, (Hid, Ptr{C_int}), (:plist_id, :fc_degree), "Error getting close degree"),
+     (:h5p_get_userblock, :H5Pget_userblock, Herr, (Hid, Ptr{Hsize}), (:plist_id, :len), "Error getting userblock"),
      (:h5p_set_chunk, :H5Pset_chunk, Herr, (Hid, C_int, Ptr{Hsize}), (:plist_id, :ndims, :dims), "Error setting chunk size"),
+     (:h5p_set_fclose_degree, :H5Pset_fclose_degree, Herr, (Hid, C_int), (:plist_id, :fc_degree), "Error setting close degree"),
      (:h5p_set_deflate, :H5Pset_deflate, Herr, (Hid, C_unsigned), (:plist_id, :setting), "Error setting compression method and level (deflate)"),
      (:h5p_set_layout, :H5Pset_layout, Herr, (Hid, C_int), (:plist_id, :setting), "Error setting layout"),
      (:h5p_set_userblock, :H5Pset_userblock, Herr, (Hid, Hsize), (:plist_id, :len), "Error setting userblock"),
@@ -1188,6 +1218,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5g_get_objname_by_idx, :H5Gget_objname_by_idx, Hid, (Hid, C_int, Ptr{Uint8}, C_int), (:loc_id, :idx, :name, :size), :(error("Error getting group object name ", name))),
      (:h5g_get_num_objs, :H5Gget_num_objs, Hid, (Hid, Ptr{Uint8}), (:loc_id, :num_obj), :(error("Error getting group length"))),
      (:h5g_open, :H5Gopen2, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :name, :gapl_id), :(error("Error opening group ", name))),
+     (:h5i_get_ref, :H5Iget_ref, C_int, (Hid,), (:obj_id,), :(error("Error getting reference count"))),
      (:h5i_get_type, :H5Iget_type, Htype, (Hid,), (:obj_id,), :(error("Error getting type"))),
      (:h5l_create_external, :H5Lcreate_hard_external, Herr, (Ptr{Uint8}, Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:target_file_name, :target_obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name))),
      (:h5l_create_hard, :H5Lcreate_hard, Herr, (Hid, Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:obj_loc_id, :obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating hard link ", link_name, " pointing to ", obj_name))),
@@ -1199,7 +1230,6 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5p_create, :H5Pcreate, Hid, (Hid,), (:cls_id,), "Error creating property list"),
      (:h5p_get_chunk, :H5Pget_chunk, C_int, (Hid, C_int, Ptr{Hsize}), (:plist_id, :n_dims, :dims), :(error("Error getting chunk size"))),
      (:h5p_get_layout, :H5Pget_layout, C_int, (Hid,), (:plist_id,), :(error("Error getting layout"))),
-     (:h5p_get_userblock, :H5Pget_layout, Herr, (Hid, Ptr{Hsize}), (:plist_id, :len), :(error("Error getting userblock"))),
      (:h5r_create, :H5Rcreate, Herr, (Ptr{Void}, Hid, Ptr{Uint8}, C_int, Hid), (:ref, :loc_id, :name, :ref_type, :space_id), :(error("Error creating reference to object ", name))),
      (:h5r_dereference, :H5Rdereference, Hid, (Hid, C_int, Ptr{Void}), (:obj_id, :ref_type, :ref), :(error("Error dereferencing object"))),
      (:h5r_get_obj_type, :H5Rget_obj_type2, Herr, (Hid, C_int, Ptr{Void}, Ptr{C_int}), (:loc_id, :ref_type, :ref, :obj_type), :(error("Error getting object type"))),
@@ -1239,6 +1269,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
     ((:h5a_exists, :H5Aexists, Htri, (Hid, Ptr{Uint8}), (:obj_id, :attr_name), :(error("Error checking whether attribute ", attr_name, " exists"))),
      (:h5a_exists_by_name, :H5Aexists_by_name, Htri, (Hid, Ptr{Uint8}, Ptr{Uint8}, Hid), (:loc_id, :obj_name, :attr_name, :lapl_id), :(error("Error checking whether object ", obj_name, " has attribute ", attr_name))),
      (:h5f_is_hdf5, :H5Fis_hdf5, Htri, (Ptr{Uint8},), (:name,), :(error("Cannot access file ", name))),
+     (:h5i_is_valid, :H5Iis_valid, Htri, (Hid,), (:obj_id,), :(error("Cannot determine whether object is valid"))),
      (:h5l_exists, :H5Lexists, Htri, (Hid, Ptr{Uint8}, Hid), (:loc_id, :name, :lapl_id), :(error("Cannot determine whether ", name, " exists"))),
      (:h5s_is_simple, :H5Sis_simple, Htri, (Hid,), (:space_id,), :(error("Error determining whether dataspace is simple")))
 )
@@ -1291,6 +1322,7 @@ end
 ### Property functions get/set pairs ###
 const hdf5_prop_get_set = {
     "chunk"         => (get_chunk, set_chunk),
+    "fclose_degree" => (get_fclose_degree, h5p_set_fclose_degree),
     "compress"      => (nothing, h5p_set_deflate),
     "deflate"       => (nothing, h5p_set_deflate),
     "layout"        => (h5p_get_layout, h5p_set_layout),
@@ -1300,7 +1332,7 @@ const hdf5_prop_get_set = {
 ### Initialize the HDF library ###
 
 # Turn off automatic error printing
-#h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
+# h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
 export
     # Types

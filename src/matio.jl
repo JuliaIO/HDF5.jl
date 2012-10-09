@@ -5,8 +5,8 @@
 require("hdf5.jl")
 module MatIO
 import Base.*
-import HDF5
 import HDF5.*
+import HDF5
 
 # Debugging: comment this block out if you un-modulize hdf5.jl
 # Types
@@ -15,11 +15,13 @@ HDF5ReferenceObj = HDF5.HDF5ReferenceObj
 HDF5ReferenceObjArray = HDF5.HDF5ReferenceObjArray
 HDF5BitsKind = HDF5.HDF5BitsKind
 # Constants
-H5P_FILE_CREATE = HDF5.H5P_FILE_CREATE
-H5F_ACC_TRUNC = HDF5.H5F_ACC_TRUNC
-H5P_DEFAULT = HDF5.H5P_DEFAULT
-H5F_ACC_RDWR = HDF5.H5F_ACC_RDWR
 H5F_ACC_RDONLY = HDF5.H5F_ACC_RDONLY
+H5F_ACC_RDWR = HDF5.H5F_ACC_RDWR
+H5F_ACC_TRUNC = HDF5.H5F_ACC_TRUNC
+H5F_CLOSE_STRONG = HDF5.H5F_CLOSE_STRONG
+H5P_DEFAULT = HDF5.H5P_DEFAULT
+H5P_FILE_ACCESS = HDF5.H5P_FILE_ACCESS
+H5P_FILE_CREATE = HDF5.H5P_FILE_CREATE
 # Functions
 h5f_close  = HDF5.h5f_close
 h5f_create = HDF5.h5f_create
@@ -69,12 +71,14 @@ function matopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
     if !cr && !isfile(filename)
         error("File ", filename, " cannot be found")
     end
+    pa = p_create(H5P_FILE_ACCESS)
+    pa["fclose_degree"] = H5F_CLOSE_STRONG
     if cr && (tr || !isfile(filename))
         # We're truncating, so we don't have to check the format of an existing file
         # Set the user block to 512 bytes, to save room for the header
         p = p_create(H5P_FILE_CREATE)
         p["userblock"] = 512
-        f = h5f_create(filename, H5F_ACC_TRUNC, p.id, H5P_DEFAULT)
+        f = h5f_create(filename, H5F_ACC_TRUNC, p.id, pa.id)
         writeheader = true
     else
         # Test whether this is a MAT file
@@ -91,13 +95,14 @@ function matopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
         magic = read(rawfid, magic)
         close(rawfid)
         if magic == magic_hdf5.data
-            f = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY)
+            f = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
         elseif magic[1:length(magic_matlab)] .== magic_matlab.data
             error("This seems to be a MAT file, but it's not a version 7.3 MAT-file. Not (yet) supported.")
         else
             error("This does not seem to be a MAT file")
         end
     end
+    close(pa)
     MatlabHDF5File(f, filename, true, true)
 end
 
