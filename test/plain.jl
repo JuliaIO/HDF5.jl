@@ -24,6 +24,9 @@ write(fid, "Auint64", uint64(Ai))
 # Test strings
 salut = "Hi there"
 write(fid, "salut", salut)
+# Arrays of strings
+salut_split = ["Hi", "there"]
+write(fid, "salut_split", salut_split)
 # Empty arrays
 empty = Array(Uint32, 0)
 write(fid, "empty", empty)
@@ -35,8 +38,8 @@ close(dset)
 # Group
 g = g_create(fid, "mygroup")
 # Test dataset with compression
-R = randi(20, 200, 400);
-g["CompressedA", "chunk", (20,20), "compress", 9] = R
+R = randi(20, 20, 40);
+g["CompressedA", "chunk", (5,5), "compress", 9] = R
 close(g)
 close(fid)
 
@@ -78,6 +81,8 @@ Ai64 = read(fidr, "Auint64")
 @assert eltype(Ai64) == Uint64
 salutr = read(fidr, "salut")
 @assert salut == salutr
+salut_splitr = read(fidr, "salut_split")
+@assert salut_splitr == salut_split
 Rr = read(fidr, "mygroup/CompressedA")
 @assert Rr == R
 emptyr = read(fidr, "empty")
