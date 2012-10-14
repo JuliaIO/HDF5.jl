@@ -2,9 +2,9 @@
 ## HDF5 interface ##
 ####################
 
-require("strpack.jl")
 module HDF5
 import Base.*
+require("strpack.jl")
 
 ## C types
 typealias C_int Int32
@@ -348,16 +348,6 @@ HDF5Properties(id) = HDF5Properties(id, true)
 HDF5Properties() = HDF5Properties(H5P_DEFAULT, false)
 convert(::Type{C_int}, p::HDF5Properties) = p.id
 
-# Types to collect information from HDF5
-type H5LInfo
-    linktype::C_int
-    corder_valid::C_unsigned
-    corder::Int64
-    cset::C_int
-    u::Uint64
-end
-H5LInfo() = H5LInfo(int32(0), uint32(0), int64(0), int32(0), uint64(0))
-
 # Object reference types
 type HDF5ReferenceObj
     r::Vector{Uint8}
@@ -379,6 +369,31 @@ end
 
 # An empty array type
 type EmptyArray{T}; end
+
+# VLEN objects
+type HDF5Vlen{T}
+end
+
+## Types that correspond to C structs
+# for VLEN
+type Hvl_t
+    len::C_size_t
+    p::Ptr{Void}
+end
+Hvl_t() = Hvl_t(uint64(0), C_NULL)
+io = IOString()
+pack(io, Hvl_t())      # create the pack Struct while in the module context...
+const HVL_SIZE = length(io.data) # and determine the size of the buffer needed
+type H5LInfo
+    linktype::C_int
+    corder_valid::C_unsigned
+    corder::Int64
+    cset::C_int
+    u::Uint64
+end
+H5LInfo() = H5LInfo(int32(0), uint32(0), int64(0), int32(0), uint64(0))
+pack(H5LInfo())
+
 
 ### High-level interface ###
 # Open or create an HDF5 file
@@ -785,6 +800,35 @@ function ref(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5ObjPtr)
     obj_type == H5I_DATASET ? HDF5Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
 end
+# Read VLEN arrays and character arrays
+atype{T<:HDF5BitsKind}(::Type{T}) = Array{T}
+atype(::Type{ASCIIChar}) = ASCIIString
+p2a{T<:HDF5BitsKind}(p::Ptr{T}, len::Int) = pointer_to_array(p, (len,), true)
+p2a(p::Ptr{ASCIIChar}, len::Int) = ascii(convert(Ptr{Uint8}, p), len)
+function read{T<:Union(HDF5BitsKind,ASCIIChar)}(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute), ::Type{Array{HDF5Vlen{T}}})
+    local data
+    sz = size(obj)
+    println("sz = ", sz)
+    println("type = ", T)
+    len = prod(sz)
+    # Read the data
+    structbuf = Array(Uint8, HVL_SIZE*len)
+    memtype_id = h5t_vlen_create(hdf5_type_id(T))
+    readarray(obj, memtype_id, structbuf)
+    h5t_close(memtype_id)
+    println("successfully read the data")
+    # Unpack the data
+    data = Array(atype(T), sz...)
+    io = IOString()
+    for i = 1:len
+        copy_to(io.data, 1, structbuf, (i-1)*HVL_SIZE+1, HVL_SIZE)
+        seek(io, 0)
+        h = unpack(io, Hvl_t)
+        data[i] = p2a(convert(Ptr{T}, h.p), int(h.len))
+    end
+    # FIXME? Ownership of buffer (no need to call reclaim, right?)
+    data
+end
 
 # Generic write
 function write{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name1::ASCIIString, val1, name2::ASCIIString, val2, nameval...)
@@ -1090,6 +1134,10 @@ function hdf5_to_julia_eltype(obj, objtype)
     elseif class_id == H5T_REFERENCE
         # How to test whether it's a region reference or an object reference??
         T = HDF5ReferenceObj
+    elseif class_id == H5T_VLEN
+        super_id = h5t_get_super(objtype.id)
+        T = HDF5Vlen{hdf5_to_julia_eltype(obj, HDF5Datatype(super_id))}
+    # TODO: compound datatypes (when we have immutables)
     else
         error("Class id ", class_id, " is not yet supported")
     end
