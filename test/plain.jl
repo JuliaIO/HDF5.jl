@@ -88,7 +88,7 @@ Rr = read(fidr, "mygroup/CompressedA")
 emptyr = read(fidr, "empty")
 @assert isempty(emptyr)
 dset = fidr["salut"]
-@assert read(dset, "typeinfo") == label
+@assert a_read(dset, "typeinfo") == label
 close(dset)
 # Test ref-based reading
 Aref = fidr["Afloat64"]

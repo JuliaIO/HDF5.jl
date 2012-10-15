@@ -124,9 +124,12 @@ const name_type_attr_matlab = "MATLAB_class"
 
 function read(dset::HDF5Dataset{MatlabHDF5File})
     # Read the MATLAB class
-    mattype = a_read(dset, name_type_attr_matlab)
-    # Convert to Julia type
-    T = str2type_matlab[mattype]
+    mattype = "cell"
+    if exists(dset, name_type_attr_matlab)
+        mattype = a_read(dset, name_type_attr_matlab)
+        # Convert to Julia type
+        T = str2type_matlab[mattype]
+    end
     # Read the dataset
     if mattype == "cell"
         # Represented as an array of refs
@@ -139,6 +142,26 @@ function read(dset::HDF5Dataset{MatlabHDF5File})
         return out
     end
     read(plain(dset), T)
+end
+
+# reading a struct or struct array
+function read(g::HDF5Group{MatlabHDF5File})
+    println(names(g))
+    mattype = a_read(g, name_type_attr_matlab)
+    println(mattype)
+    if mattype != "struct"
+        error("Cannot read from a non-struct group")
+    end
+    if exists(g, "MATLAB_fields")
+        fn = a_read(g, "MATLAB_fields")
+    else
+        fn = names(g)
+    end
+    s = Dict{ASCIIString, Any}()
+    for i = 1:length(fn)
+        s[fn[i]] = read(g, fn[i])
+    end
+    s
 end
 
 for (fsym, dsym) in
@@ -255,6 +278,7 @@ const str2type_matlab = {
     "double"  => Array{Float64},
     "cell"    => Array{Any},
     "char"    => MatlabString,
+    "logical" => Bool,
 }
 # These operate on the element type rather than the whole type
 const type2str_matlab = {

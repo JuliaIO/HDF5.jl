@@ -584,6 +584,7 @@ function exists(parent::HDF5Dataset, path::ASCIIString, apl::HDF5Properties)
     h5a_exists(parent.id, first)
 end
 exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = exists(parent, path, HDF5Properties())
+exists(parent::HDF5Dataset, path::ASCIIString) = exists(parent, path, HDF5Properties())
 
 # Querying items in the file
 function length(x::HDF5Group)
@@ -677,10 +678,13 @@ for (fsym, osym, ptype) in
         end
     end
 end
-# For file/group, read(parent, "name") defaults to d_read
-# For dataset, read(parent, "name") uses a_read
-read{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name::ASCIIString) = d_read(parent, name)
-read(parent::HDF5Dataset, name::ASCIIString) = a_read(parent, name)
+function read{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name::ASCIIString)
+    obj = o_open(parent, name)
+    val = read(obj)
+    close(obj)
+    val
+end
+#read(parent::HDF5Dataset, name::ASCIIString) = a_read(parent, name)
 # Read a list of variables, read(parent, "A", "B", "x", ...)
 function read{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name::ASCIIString...)
     n = length(name)
