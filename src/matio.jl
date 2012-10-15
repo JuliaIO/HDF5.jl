@@ -146,9 +146,7 @@ end
 
 # reading a struct or struct array
 function read(g::HDF5Group{MatlabHDF5File})
-    println(names(g))
     mattype = a_read(g, name_type_attr_matlab)
-    println(mattype)
     if mattype != "struct"
         error("Cannot read from a non-struct group")
     end

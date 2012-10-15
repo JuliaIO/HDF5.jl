@@ -684,7 +684,6 @@ function read{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name::ASCIIString)
     close(obj)
     val
 end
-#read(parent::HDF5Dataset, name::ASCIIString) = a_read(parent, name)
 # Read a list of variables, read(parent, "A", "B", "x", ...)
 function read{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name::ASCIIString...)
     n = length(name)
