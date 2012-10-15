@@ -27,6 +27,7 @@ h5f_close  = HDF5.h5f_close
 h5f_create = HDF5.h5f_create
 h5f_open   = HDF5.h5f_open
 writearray = HDF5.writearray
+hdf5_to_julia = HDF5.hdf5_to_julia
 
 type MatlabHDF5File <: HDF5File
     id::Hid
@@ -272,7 +273,7 @@ const type2str_matlab = {
 
 #  function read(obj::HDF5.HDF5Object, ::Type{MatlabString})
 function read(obj::HDF5Object, ::Type{MatlabString})
-    T = HDF5Mod.hdf5_to_julia(obj)
+    T = hdf5_to_julia(obj)
     data = read(obj, T)
     if size(data, 1) == 1
         sz = size(data)

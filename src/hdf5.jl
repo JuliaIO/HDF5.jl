@@ -804,22 +804,19 @@ end
 atype{T<:HDF5BitsKind}(::Type{T}) = Array{T}
 atype(::Type{ASCIIChar}) = ASCIIString
 p2a{T<:HDF5BitsKind}(p::Ptr{T}, len::Int) = pointer_to_array(p, (len,), true)
-p2a(p::Ptr{ASCIIChar}, len::Int) = ascii(convert(Ptr{Uint8}, p), len)
+p2a(p::Ptr{ASCIIChar}, len::Int) = bytestring(convert(Ptr{Uint8}, p), len)
 function read{T<:Union(HDF5BitsKind,ASCIIChar)}(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute), ::Type{Array{HDF5Vlen{T}}})
     local data
     sz = size(obj)
-    println("sz = ", sz)
-    println("type = ", T)
     len = prod(sz)
     # Read the data
     structbuf = Array(Uint8, HVL_SIZE*len)
     memtype_id = h5t_vlen_create(hdf5_type_id(T))
     readarray(obj, memtype_id, structbuf)
     h5t_close(memtype_id)
-    println("successfully read the data")
     # Unpack the data
     data = Array(atype(T), sz...)
-    io = IOString()
+    io = IOString(); io.data = Array(Uint8, HVL_SIZE)
     for i = 1:len
         copy_to(io.data, 1, structbuf, (i-1)*HVL_SIZE+1, HVL_SIZE)
         seek(io, 0)
