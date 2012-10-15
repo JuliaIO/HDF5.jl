@@ -883,7 +883,7 @@ for (privatesym, fsym, ptype) in
         # ASCIIStrings
         ($fsym)(parent::$ptype, name::ASCIIString, data::ASCIIString, plists...) = ($privatesym)(parent, name, data, plists...)
         # Array{ASCIIString}
-        ($fsym){S<:ASCIIString}(parent::$ptype, name::ByteString, data::Array{S}, plists...) = ($privatesym)(parent, name, data, plists...)        
+        ($fsym)(parent::$ptype, name::ASCIIString, data::Array{ASCIIString}, plists...) = ($privatesym)(parent, name, data, plists...)        
     end
 end
 # ReferenceObjArray
