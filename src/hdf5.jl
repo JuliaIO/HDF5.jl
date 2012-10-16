@@ -799,6 +799,12 @@ function read(obj::HDF5Dataset{PlainHDF5File}, ::Type{Array{HDF5ReferenceObj}})
     h5d_read(obj.id, H5T_STD_REF_OBJ, refs.r)
     refs
 end
+function read(obj::HDF5Attribute, ::Type{Array{HDF5ReferenceObj}})
+    dims = size(obj)
+    refs = HDF5ReferenceObjArray(dims...)
+    h5a_read(obj.id, H5T_STD_REF_OBJ, refs.r)
+    refs
+end
 # Dereference
 function ref(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5ObjPtr)
     obj_id = h5r_dereference(parent.id, H5R_OBJECT, r.p)
