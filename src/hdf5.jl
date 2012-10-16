@@ -758,31 +758,36 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
             objtype = datatype(obj)
         #      try
                 isvar = h5t_is_variable_str(objtype.id)
+                ilen = int(h5t_get_size(objtype.id))
 #             catch err
 #                 close(objtype)
 #                 throw(err)
 #             end
             close(objtype)
+            memtype_id = h5t_copy(H5T_C_S1)
+            ret = Array(ASCIIString, sz...)
             if isvar
+                # Variable-length
                 buf = Array(Ptr{Uint8}, len)
-                memtype_id = h5t_copy(H5T_C_S1)
-    #             try
-                    h5t_set_size(memtype_id, H5T_VARIABLE)
-                    readarray(obj, memtype_id, buf)
-    #                 readarray(obj, memtype_id, convert(Ptr{Ptr{Uint8}}, buf))
-    #             catch err
-    #                 h5t_close(memtype_id)
-    #                 throw(err)
-    #             end
-                h5t_close(memtype_id)
+                h5t_set_size(memtype_id, H5T_VARIABLE)
+                readarray(obj, memtype_id, buf)
                 # FIXME? Who owns the memory for each string? Will Julia free it?
-                ret = Array(ASCIIString, sz...)
                 for i = 1:len
                     ret[i] = bytestring(buf[i])
                 end
             else
-                error("Not yet supported")  # does this even happen??
+                # Fixed length
+                ilen += 1  # for null terminator
+                buf = Array(Uint8, len*ilen)
+                h5t_set_size(memtype_id, ilen)
+                readarray(obj, memtype_id, buf)
+                p = convert(Ptr{Uint8}, buf)
+                for i = 1:len
+                    ret[i] = bytestring(p)
+                    p += ilen
+                end
             end
+            h5t_close(memtype_id)
             ret
         end
     end
