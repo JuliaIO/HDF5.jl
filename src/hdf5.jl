@@ -60,8 +60,8 @@ const H5F_ACC_EXCL     = 0x04
 const H5F_ACC_DEBUG    = 0x08
 const H5F_ACC_CREAT    = 0x10
 # other file constants
-const H5F_SCOPE_LOCAL  = 0
-const H5F_SCOPE_GLOBAL = 1
+const H5F_SCOPE_LOCAL   = 0
+const H5F_SCOPE_GLOBAL  = 1
 const H5F_CLOSE_DEFAULT = 0
 const H5F_CLOSE_WEAK    = 1
 const H5F_CLOSE_SEMI    = 2
@@ -131,6 +131,9 @@ const H5T_REFERENCE    = 7
 const H5T_ENUM         = 8
 const H5T_VLEN         = 9
 const H5T_ARRAY        = 10
+# Character types
+const H5T_CSET_ASCII   = 0
+const H5T_CSET_UTF8    = 1
 # Sign types (C enum H5T_sign_t)
 const H5T_SGN_NONE     = 0  # unsigned
 const H5T_SGN_2        = 1  # 2's complement
@@ -205,11 +208,27 @@ const hdf5_type_map = {
 }
 
 hdf5_type_id{S<:String}(::Type{S})  = H5T_C_S1
-# A single character type
-type ASCIIChar<:String
+
+# Single character types
+# These are needed to safely handle VLEN objects
+abstract CharType <: String
+type ASCIIChar<:CharType
     c::Uint8
 end
 strlen(c::ASCIIChar) = 1
+type UTF8Char<:CharType
+    c::Uint8
+end
+strlen(c::UTF8Char) = 1
+chartype(::Type{ASCIIString}) = ASCIIChar
+chartype(::Type{UTF8String})  = UTF8Char
+stringtype(::Type{ASCIIChar}) = ASCIIString
+stringtype(::Type{UTF8Char})  = UTF8String
+
+cset(::Type{ASCIIString}) = H5T_CSET_ASCII
+cset(::Type{ASCIIChar})   = H5T_CSET_ASCII
+cset(::Type{UTF8String})  = H5T_CSET_UTF8
+cset(::Type{UTF8Char})    = H5T_CSET_UTF8
 
 ## HDF5 uses a plain integer to refer to each file, group, or
 ## dataset. These are wrapped into special types in order to allow
@@ -595,7 +614,7 @@ end
 
 function names(x::HDF5Group)
     n = length(x)
-    res = fill("", n)
+    res = Array(ASCIIString, n)
     for i in 1:n
         len = h5g_get_objname_by_idx(x.id, i - 1, "", 0)
         buf = Array(Uint8, len+1)
@@ -622,14 +641,16 @@ datatype(dset::HDF5Attribute) = HDF5Datatype(h5a_get_type(dset.id))
 # Create a datatype from in-memory types
 datatype{T<:HDF5BitsKind}(x::T) = HDF5Datatype(hdf5_type_id(T), false)
 datatype{T<:HDF5BitsKind}(A::Array{T}) = HDF5Datatype(hdf5_type_id(eltype(A)), false)
-function datatype(str::ASCIIString)
-    type_id = h5t_copy(hdf5_type_id(ASCIIString))
+function datatype{S<:ByteString}(str::S)
+    type_id = h5t_copy(hdf5_type_id(S))
     h5t_set_size(type_id, length(str))
+    h5t_set_cset(type_id, cset(S))
     HDF5Datatype(type_id)
 end
-function datatype(str::Array{ASCIIString})
-    type_id = h5t_copy(hdf5_type_id(ASCIIString))
+function datatype{S<:ByteString}(str::Array{S})
+    type_id = h5t_copy(hdf5_type_id(S))
     h5t_set_size(type_id, H5T_VARIABLE)
+    h5t_set_cset(type_id, cset(S))
     HDF5Datatype(type_id)
 end
 datatype(R::HDF5ReferenceObjArray) = HDF5Datatype(H5T_STD_REF_OBJ, false)
@@ -651,7 +672,7 @@ function _dataspace(sz::Int...)
     HDF5Dataspace(space_id)
 end
 dataspace(A::Array) = _dataspace(size(A)...)
-dataspace(str::ASCIIString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
+dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
 dataspace(R::HDF5ReferenceObjArray) = _dataspace(size(R)...)
 
 # Get the array dimensions from a dataspace
@@ -734,8 +755,8 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
     end
     @eval begin
         # Read string
-        function read(obj::$objtype, ::Type{ASCIIString})
-            local ret::ASCIIString
+        function read{S<:ByteString}(obj::$objtype, ::Type{S})
+            local ret::S
             objtype = datatype(obj)
         #      try
                 n = h5t_get_size(objtype.id)
@@ -750,9 +771,9 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
             ret
         end
         # Read array of strings
-        function read(obj::$objtype, ::Type{Array{ASCIIString}})
+        function read{S<:ByteString}(obj::$objtype, ::Type{Array{S}})
             local isvar::Bool
-            local ret::Array{ASCIIString}
+            local ret::Array{S}
             sz = size(obj)
             len = prod(sz)
             objtype = datatype(obj)
@@ -765,7 +786,7 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
 #             end
             close(objtype)
             memtype_id = h5t_copy(H5T_C_S1)
-            ret = Array(ASCIIString, sz...)
+            ret = Array(S, sz...)
             if isvar
                 # Variable-length
                 buf = Array(Ptr{Uint8}, len)
@@ -816,10 +837,10 @@ function ref(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5ObjPtr)
 end
 # Read VLEN arrays and character arrays
 atype{T<:HDF5BitsKind}(::Type{T}) = Array{T}
-atype(::Type{ASCIIChar}) = ASCIIString
+atype{C<:CharType}(::Type{C}) = stringtype(C)
 p2a{T<:HDF5BitsKind}(p::Ptr{T}, len::Int) = pointer_to_array(p, (len,), true)
-p2a(p::Ptr{ASCIIChar}, len::Int) = bytestring(convert(Ptr{Uint8}, p), len)
-function read{T<:Union(HDF5BitsKind,ASCIIChar)}(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute), ::Type{Array{HDF5Vlen{T}}})
+p2a{C<:CharType}(p::Ptr{C}, len::Int) = convert(stringtype(C), bytestring(convert(Ptr{Uint8}, p), len))
+function read{T<:Union(HDF5BitsKind,CharType)}(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute), ::Type{Array{HDF5Vlen{T}}})
     local data
     sz = size(obj)
     len = prod(sz)
@@ -891,10 +912,10 @@ for (privatesym, fsym, ptype) in
         ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ASCIIString, data::T, plists...) = ($privatesym)(parent, name, data, plists...)
         # Arrays
         ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ASCIIString, data::Array{T}, plists...) = ($privatesym)(parent, name, data, plists...)
-        # ASCIIStrings
-        ($fsym)(parent::$ptype, name::ASCIIString, data::ASCIIString, plists...) = ($privatesym)(parent, name, data, plists...)
-        # Array{ASCIIString}
-        ($fsym)(parent::$ptype, name::ASCIIString, data::Array{ASCIIString}, plists...) = ($privatesym)(parent, name, data, plists...)        
+        # Strings
+        ($fsym)(parent::$ptype, name::ASCIIString, data::ByteString, plists...) = ($privatesym)(parent, name, data, plists...)
+        # Array{String}
+        ($fsym){S<:ByteString}(parent::$ptype, name::ASCIIString, data::Array{S}, plists...) = ($privatesym)(parent, name, data, plists...)        
     end
 end
 # ReferenceObjArray
@@ -938,10 +959,10 @@ for (privatesym, fsym, ptype, crsym) in
         ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ASCIIString, data::T, plists...) = ($privatesym)(parent, name, data, plists...)
         # Arrays
         ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ASCIIString, data::Array{T}, plists...) = ($privatesym)(parent, name, data, plists...)
-        # ASCIIStrings
-        ($fsym)(parent::$ptype, name::ASCIIString, data::ASCIIString, plists...) = ($privatesym)(parent, name, data, plists...)
-        # Array{ASCIIString}
-        ($fsym)(parent::$ptype, name::ASCIIString, data::Array{ASCIIString}, plists...) = ($privatesym)(parent, name, data, plists...)        
+        # Strings
+        ($fsym)(parent::$ptype, name::ASCIIString, data::ByteString, plists...) = ($privatesym)(parent, name, data, plists...)
+        # Array{String}
+        ($fsym){S<:ByteString}(parent::$ptype, name::ASCIIString, data::Array{S}, plists...) = ($privatesym)(parent, name, data, plists...)        
     end
 end
 # Write to already-created objects
@@ -972,9 +993,9 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
             end
         end
     end
-    # ASCIIString
+    # String
     @eval begin
-        function write(obj::$objtype, str::ASCIIString)
+        function write(obj::$objtype, str::ByteString)
             dtype = datatype(str)
 #            try
                 writearray(obj, dtype.id, str)
@@ -985,9 +1006,9 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
             close(dtype)
         end
     end
-    # Array{ASCIIString}
+    # Array{String}
     @eval begin
-        function write(obj::$objtype, strs::Array{ASCIIString})
+        function write{S<:ByteString}(obj::$objtype, strs::Array{S})
             dtype = datatype(strs)
 #            try
                 writearray(obj, dtype.id, strs)
@@ -1002,8 +1023,8 @@ end
 # For plain files and groups, let "write(obj, name, val)" mean "d_write"
 write{T<:HDF5BitsKind}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::T, plists...) = d_write(parent, name, data, plists...)
 write{T<:HDF5BitsKind}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::Array{T}, plists...) = d_write(parent, name, data, plists...)
-write(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::ASCIIString, plists...) = d_write(parent, name, data, plists...)
-write(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::Array{ASCIIString}, plists...) = d_write(parent, name, data, plists...)
+write(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::ByteString, plists...) = d_write(parent, name, data, plists...)
+write{S<:ByteString}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::Array{S}, plists...) = d_write(parent, name, data, plists...)
 # For datasets, "write(dset, name, val)" means "a_write"
 write{T<:HDF5BitsKind}(parent::HDF5Dataset, name::ASCIIString, data::T, plists...) = a_write(parent, name, data, plists...)
 write{T<:HDF5BitsKind}(parent::HDF5Dataset, name::ASCIIString, data::Array{T}, plists...) = a_write(parent, name, data, plists...)
@@ -1127,11 +1148,14 @@ function hdf5_to_julia_eltype(obj, objtype)
     local T
     class_id = h5t_get_class(objtype.id)
     if class_id == H5T_STRING
+        cset = h5t_get_cset(objtype.id)
         n = h5t_get_size(objtype.id)
-        if n == 1
-            T = ASCIIChar
+        if cset == H5T_CSET_ASCII
+            T = (n == 1) ? ASCIIChar : ASCIIString
+        elseif cset == H5T_CSET_UTF8
+            T = (n == 1) ? UTF8Char : UTF8String
         else
-            T = ASCIIString
+            error("character set ", cset, " not recognized")
         end
     elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
         native_type = h5t_get_native_type(objtype.id)
@@ -1159,13 +1183,13 @@ end
 ### Convenience wrappers ###
 # These supply default values where possible
 # See also the "special handling" section below
-h5a_write(attr_id::Hid, mem_type_id::Hid, buf::ASCIIString) = h5a_write(attr_id, mem_type_id, buf.data)
+h5a_write(attr_id::Hid, mem_type_id::Hid, buf::ByteString) = h5a_write(attr_id, mem_type_id, buf.data)
 function h5a_write{T<:HDF5BitsKind}(attr_id::Hid, mem_type_id::Hid, x::T)
     tmp = Array(T, 1)
     tmp[1] = x
     h5a_write(attr_id, mem_type_id, tmp)
 end
-function h5a_write(attr_id::Hid, memtype_id::Hid, strs::Array{ASCIIString})
+function h5a_write{S<:ByteString}(attr_id::Hid, memtype_id::Hid, strs::Array{S})
     len = length(strs)
     p = Array(Ptr{Uint8}, size(strs))
     for i = 1:len
@@ -1179,13 +1203,13 @@ h5d_create(loc_id::Hid, name::ASCIIString, type_id::Hid, space_id::Hid) = h5d_cr
 h5d_open(obj_id::Hid, name::ASCIIString) = h5d_open(obj_id, name, H5P_DEFAULT)
 h5d_read(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
 h5d_write(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
-h5d_write(dataset_id::Hid, memtype_id::Hid, buf::ASCIIString) = h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf.data)
+h5d_write(dataset_id::Hid, memtype_id::Hid, buf::ByteString) = h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf.data)
 function h5d_write{T<:HDF5BitsKind}(dataset_id::Hid, memtype_id::Hid, x::T)
     tmp = Array(T, 1)
     tmp[1] = x
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, tmp)
 end
-function h5d_write(dataset_id::Hid, memtype_id::Hid, strs::Array{ASCIIString})
+function h5d_write{S<:ByteString}(dataset_id::Hid, memtype_id::Hid, strs::Array{S})
     len = length(strs)
     p = Array(Ptr{Uint8}, size(strs))
     for i = 1:len
@@ -1277,6 +1301,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5s_close, :H5Sclose, Herr, (Hid,), (:space_id,), "Error closing dataspace"),
      (:h5s_select_hyperslab, :H5Sselect_hyperslab, Herr, (Hid, C_int, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}), (:dspace_id, :seloper, :start, :stride, :count, :block), "Error selecting hyperslab"),
      (:h5t_close, :H5Tclose, Herr, (Hid,), (:dtype_id,), "Error closing datatype"),
+     (:h5t_set_cset, :H5Tset_cset, Herr, (Hid, C_int), (:dtype_id, :cset), "Error setting character set in datatype"),
      (:h5t_set_size, :H5Tset_size, Herr, (Hid, C_size_t), (:dtype_id, :sz), "Error setting size of datatype"),
     )
 
@@ -1349,6 +1374,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5s_get_simple_extent_type, :H5Sget_simple_extent_type, C_int, (Hid,), (:space_id,), :(error("Error getting the dataspace type"))),
      (:h5t_copy, :H5Tcopy, Hid, (Hid,), (:dtype_id,), :(error("Error copying datatype"))),
      (:h5t_get_class, :H5Tget_class, C_int, (Hid,), (:dtype_id,), :(error("Error getting class"))),
+     (:h5t_get_cset, :H5Tget_cset, C_int, (Hid,), (:dtype_id,), :(error("Error getting character set encoding"))),
      (:h5t_get_native_type, :H5Tget_native_type, Hid, (Hid, C_int), (:dtype_id, :direction), :(error("Error getting native type"))),
      (:h5t_get_sign, :H5Tget_sign, C_int, (Hid,), (:dtype_id,), :(error("Error getting sign"))),
      (:h5t_get_size, :H5Tget_size, C_size_t, (Hid,), (:dtype_id,), :(error("Error getting size"))),
