@@ -1,13 +1,6 @@
 # Check that we can read the official HDF5 example files
 urlbase = "http://www.hdfgroup.org/ftp/HDF5/examples/files/exbyapi/"
 
-# Things that should go in base/file.jl:
-function download_file(url, filename)
-    run(`curl -o $filename $url`)
-    filename
-end
-fullfile(pathname::String, filename::String) = fullfile(pathname, filename, "")
-
 load("hdf5.jl")
 import HDF5.*
 
@@ -24,12 +17,12 @@ vicmp = Array{Int32}[[3,2,1],[1,1,2,3,5,8,13,21,34,55,89,144]]
 
 const savedir = "/tmp/h5"
 if !isdir(savedir)
-    dir_create(savedir)
+    mkdir(savedir)
 end
 function getfile(name)
     file = fullfile(savedir, name)
     if !isfile(file)
-        file = download_file(urlbase*name, fullfile(savedir, name))
+        file = download_file(urlbase*name, file)
     end
     file
 end
