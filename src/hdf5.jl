@@ -606,13 +606,13 @@ exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = exists(parent, p
 exists(parent::HDF5Dataset, path::ASCIIString) = exists(parent, path, HDF5Properties())
 
 # Querying items in the file
-function length(x::HDF5Group)
+function length(x::Union(HDF5Group,HDF5File))
     buf = [int32(0)]
     h5g_get_num_objs(x.id, buf)
     buf[1]
 end
 
-function names(x::HDF5Group)
+function names(x::Union(HDF5Group,HDF5File))
     n = length(x)
     res = Array(ASCIIString, n)
     for i in 1:n
