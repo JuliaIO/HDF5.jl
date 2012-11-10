@@ -101,7 +101,7 @@ const H5P_OBJECT_COPY      = read_const(:H5P_CLS_OBJECT_COPY_g)
 const H5P_LINK_CREATE      = read_const(:H5P_CLS_LINK_CREATE_g)
 const H5P_LINK_ACCESS      = read_const(:H5P_CLS_LINK_ACCESS_g)
 # Reference constants
-const H5R_OBJECT       = 0
+const H5R_OBJECT         = 0
 const H5R_DATASET_REGION = 1
 const H5R_OBJ_REF_BUF_SIZE      = 8
 const H5R_DSET_REG_REF_BUF_SIZE = 12
@@ -117,7 +117,7 @@ const H5S_SELECT_AND   = 2
 const H5S_SELECT_XOR   = 3
 const H5S_SELECT_NOTB  = 4
 const H5S_SELECT_NOTA  = 5
-const H5S_SELECT_APPEND = 6
+const H5S_SELECT_APPEND  = 6
 const H5S_SELECT_PREPEND = 7
 # type classes (C enum H5T_class_t)
 const H5T_INTEGER      = 0
@@ -141,7 +141,7 @@ const H5T_SGN_2        = 1  # 2's complement
 const H5T_DIR_ASCEND   = 1
 const H5T_DIR_DESCEND  = 2
 # Other type constants
-const H5T_VARIABLE     = convert(C_size_t, -1)
+const H5T_VARIABLE     = -1
 # Type_id constants (LE = little endian, I16 = Int16, etc)
 const H5T_STD_I8LE        = read_const(:H5T_STD_I8LE_g)
 const H5T_STD_I8BE        = read_const(:H5T_STD_I8BE_g)
@@ -386,6 +386,12 @@ ref(a::HDF5ReferenceObjArray, i::Integer) = HDF5ObjPtr(pointer(a.r)+(i-1)*H5R_OB
 function assign(a::HDF5ReferenceObjArray, pname::(Union(HDF5File, HDF5Group, HDF5Dataset), ASCIIString), i::Integer)
     ptr = pointer(a.r)+(i-1)*H5R_OBJ_REF_BUF_SIZE
     h5r_create(ptr, pname[1].id, pname[2], H5R_OBJECT, -1)
+end
+
+# Opaque types
+type HDF5Opaque
+    data
+    tag::ASCIIString
 end
 
 # An empty array type
@@ -658,7 +664,7 @@ datatype(dset::HDF5Attribute) = HDF5Datatype(h5a_get_type(dset.id))
 
 # Create a datatype from in-memory types
 datatype{T<:HDF5BitsKind}(x::T) = HDF5Datatype(hdf5_type_id(T), false)
-datatype{T<:HDF5BitsKind}(A::Array{T}) = HDF5Datatype(hdf5_type_id(eltype(A)), false)
+datatype{T<:HDF5BitsKind}(A::Array{T}) = HDF5Datatype(hdf5_type_id(T), false)
 function datatype{S<:ByteString}(str::S)
     type_id = h5t_copy(hdf5_type_id(S))
     h5t_set_size(type_id, length(str))
@@ -861,6 +867,30 @@ function ref(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5ObjPtr)
     obj_type == H5I_DATASET ? HDF5Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
 end
+# Read OPAQUE datasets and attributes
+function read(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute), ::Type{Array{HDF5Opaque}})
+    local buf
+    local len
+    local tag
+    sz = size(obj)
+    objtype = datatype(obj)
+#      try
+        len = h5t_get_size(objtype)
+        buf = Array(Uint8, prod(sz)*len)
+        tag = h5t_get_tag(objtype.id)
+        readarray(obj, objtype.id, buf)
+#     catch err
+#         close(objtype)
+#         throw(err)
+#     end
+    close(objtype)
+    data = Array(Array{Uint8}, sz...)
+    for i = 1:prod(sz)
+        data[i] = buf[(i-1)*len+1:i*len]
+    end
+    HDF5Opaque(data, tag)
+end
+
 # Read VLEN arrays and character arrays
 atype{T<:HDF5BitsKind}(::Type{T}) = Array{T}
 atype{C<:CharType}(::Type{C}) = stringtype(C)
@@ -1217,6 +1247,8 @@ function hdf5_to_julia_eltype(obj, objtype)
     elseif class_id == H5T_REFERENCE
         # How to test whether it's a region reference or an object reference??
         T = HDF5ReferenceObj
+    elseif class_id == H5T_OPAQUE
+        T = HDF5Opaque
     elseif class_id == H5T_VLEN
         super_id = h5t_get_super(objtype.id)
         T = HDF5Vlen{hdf5_to_julia_eltype(obj, HDF5Datatype(super_id))}
@@ -1509,7 +1541,16 @@ function h5l_get_info(link_loc_id::Hid, link_name::ASCIIString, lapl_id::Hid)
     seek(io, 0)
     unpack(io, H5LInfo)
 end
-
+function h5t_get_tag(type_id::Hid)
+    pc = ccall(dlsym(libhdf5, :H5Tget_tag),
+                   Ptr{Uint8},
+                   (Hid,),
+                   type_id)
+    if pc == C_NULL
+        error("Error getting opaque tag")
+    end
+    ascii(bytestring(pc))
+end
 
 function vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5Dataspace)
     sz = Array(Hsize, 1)
