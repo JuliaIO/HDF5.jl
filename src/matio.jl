@@ -257,6 +257,24 @@ function write{T}(parent::Union(MatlabHDF5File, HDF5Group{MatlabHDF5File}), name
     close(cset)
 end
 
+# write a compositekind as a struct
+function write(parent::Union(MatlabHDF5File, HDF5Group{MatlabHDF5File}), name::ByteString, s)
+    T = typeof(s)
+    if !isa(T, CompositeKind)
+        error("This is the write function for CompositeKind, but the input doesn't fit")
+    end
+    g = g_create(parent, name)
+    gplain = plain(g)
+    a_write(gplain, name_type_attr_matlab, "struct")
+    n_fields = length(T.names)
+    fn = Array(ASCIIString, 0)
+    for n in T.names
+        push(fn, string(n))
+        write(g, fn[end], getfield(s, n))
+    end
+    a_write(gplain, "MATLAB_fields", HDF5Vlen(fn))
+end
+
 
 ## Type conversion operations ##
 
