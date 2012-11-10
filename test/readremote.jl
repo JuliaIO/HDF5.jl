@@ -14,6 +14,10 @@ icmp = [0 -1 -2 -3 -4 -5 -6;
     0 2 4 6 8 10 12]'
 scmp = ["Parting", "is such", "sweet", "sorrow."]
 vicmp = Array{Int32}[[3,2,1],[1,1,2,3,5,8,13,21,34,55,89,144]]
+opq = Array{Uint8}[[0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x30],
+                   [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x31],
+                   [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x32],
+                   [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x33]]
 
 const savedir = "/tmp/h5"
 if !isdir(savedir)
@@ -113,4 +117,19 @@ file = getfile("h5ex_t_vlstring.h5")
 fid = h5open(file, "r")
 d = read(fid, "DS1")
 @assert d == scmp
+close(fid)
+
+file = getfile("h5ex_t_opaqueatt.h5")
+fid = h5open(file, "r")
+dset = fid["DS1"]
+a = a_read(dset, "A1")
+@assert a.tag == "Character array"
+@assert a.data == opq
+close(fid)
+
+file = getfile("h5ex_t_opaque.h5")
+fid = h5open(file, "r")
+d = read(fid, "DS1")
+@assert d.tag == "Character array"
+@assert d.data == opq
 close(fid)
