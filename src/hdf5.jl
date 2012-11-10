@@ -230,6 +230,8 @@ cset(::Type{ASCIIChar})   = H5T_CSET_ASCII
 cset(::Type{UTF8String})  = H5T_CSET_UTF8
 cset(::Type{UTF8Char})    = H5T_CSET_UTF8
 
+hdf5_type_id{C<:CharType}(::Type{C})  = H5T_C_S1
+
 ## HDF5 uses a plain integer to refer to each file, group, or
 ## dataset. These are wrapped into special types in order to allow
 ## method dispatch.
@@ -391,10 +393,13 @@ type EmptyArray{T}; end
 
 # VLEN objects
 type HDF5Vlen{T}
+    data
 end
+HDF5Vlen{S<:ByteString}(strs::Array{S}) = HDF5Vlen{chartype(S)}(strs)
+HDF5Vlen{T<:HDF5BitsKind}(A::Array{Array{T}}) = HDF5Vlen{T}(A)
 
-## Types that correspond to C structs
-# for VLEN
+## Types that correspond to C structs and get used for ccall
+# For VLEN
 type Hvl_t
     len::C_size_t
     p::Ptr{Void}
@@ -403,6 +408,19 @@ Hvl_t() = Hvl_t(uint64(0), C_NULL)
 io = IOString()
 pack(io, Hvl_t())      # create the pack Struct while in the module context...
 const HVL_SIZE = length(io.data) # and determine the size of the buffer needed
+function vlenpack{T<:Union(HDF5BitsKind,CharType)}(v::HDF5Vlen{T})
+    len = length(v.data)
+    Tp = t2p(T)  # Ptr{Uint8} or Ptr{T}
+    io = IOString()
+    h = Hvl_t()
+    for i = 1:len
+        h.len = length(v.data[i])
+        h.p = convert(Tp, v.data[i])
+        pack(io, h)
+    end
+    io.data
+end
+# For links
 type H5LInfo
     linktype::C_int
     corder_valid::C_unsigned
@@ -411,7 +429,7 @@ type H5LInfo
     u::Uint64
 end
 H5LInfo() = H5LInfo(int32(0), uint32(0), int64(0), int32(0), uint64(0))
-pack(H5LInfo())
+Struct(H5LInfo)
 
 
 ### High-level interface ###
@@ -654,6 +672,13 @@ function datatype{S<:ByteString}(str::Array{S})
     HDF5Datatype(type_id)
 end
 datatype(R::HDF5ReferenceObjArray) = HDF5Datatype(H5T_STD_REF_OBJ, false)
+datatype{T<:HDF5BitsKind}(A::HDF5Vlen{T}) = HDF5Datatype(h5t_vlen_create(hdf5_type_id(T)))
+function datatype{C<:CharType}(str::HDF5Vlen{C})
+    type_id = h5t_copy(hdf5_type_id(C))
+    h5t_set_size(type_id, 1)
+    h5t_set_cset(type_id, cset(C))
+    HDF5Datatype(h5t_vlen_create(type_id))
+end
 
 # Get the dataspace of a dataset
 dataspace(dset::HDF5Dataset) = HDF5Dataspace(h5d_get_space(dset.id))
@@ -674,6 +699,7 @@ end
 dataspace(A::Array) = _dataspace(size(A)...)
 dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
 dataspace(R::HDF5ReferenceObjArray) = _dataspace(size(R)...)
+dataspace(v::HDF5Vlen) = _dataspace(size(v.data)...)
 
 # Get the array dimensions from a dataspace
 # Returns both dims and maxdims
@@ -840,7 +866,9 @@ atype{T<:HDF5BitsKind}(::Type{T}) = Array{T}
 atype{C<:CharType}(::Type{C}) = stringtype(C)
 p2a{T<:HDF5BitsKind}(p::Ptr{T}, len::Int) = pointer_to_array(p, (len,), true)
 p2a{C<:CharType}(p::Ptr{C}, len::Int) = convert(stringtype(C), bytestring(convert(Ptr{Uint8}, p), len))
-function read{T<:Union(HDF5BitsKind,CharType)}(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute), ::Type{Array{HDF5Vlen{T}}})
+t2p{T<:HDF5BitsKind}(::Type{T}) = Ptr{T}
+t2p{C<:CharType}(::Type{C}) = Ptr{Uint8}
+function read{T<:Union(HDF5BitsKind,CharType)}(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute), ::Type{HDF5Vlen{T}})
     local data
     sz = size(obj)
     len = prod(sz)
@@ -893,19 +921,19 @@ for (privatesym, fsym, ptype) in
             local dtype
             local obj
             dtype = datatype(data)
-            try
+#             try
                 dspace = dataspace(data)
-                try
+#                 try
                     obj = ($fsym)(parent, name, dtype, dspace, plists...)
-                catch err
-                    close(dspace)
-                    throw(err)
-                end
+#                 catch err
+#                     close(dspace)
+#                     throw(err)
+#                 end
                 close(dspace)
-            catch err
-                close(dtype)
-                throw(err)
-            end
+#             catch err
+#                 close(dtype)
+#                 throw(err)
+#             end
             obj, dtype
         end
         # Scalar types
@@ -915,7 +943,9 @@ for (privatesym, fsym, ptype) in
         # Strings
         ($fsym)(parent::$ptype, name::ASCIIString, data::ByteString, plists...) = ($privatesym)(parent, name, data, plists...)
         # Array{String}
-        ($fsym){S<:ByteString}(parent::$ptype, name::ASCIIString, data::Array{S}, plists...) = ($privatesym)(parent, name, data, plists...)        
+        ($fsym){S<:ByteString}(parent::$ptype, name::ASCIIString, data::Array{S}, plists...) = ($privatesym)(parent, name, data, plists...)
+        # VLEN types
+        ($fsym){T<:Union(HDF5BitsKind,CharType)}(parent::$ptype, name::ASCIIString, data::HDF5Vlen{T}, plists...) = ($privatesym)(parent, name, data, plists...)
     end
 end
 # ReferenceObjArray
@@ -945,13 +975,13 @@ for (privatesym, fsym, ptype, crsym) in
         # Generic write (hidden)
         function ($privatesym)(parent::$ptype, name::ASCIIString, data, plists...)
             obj, dtype = ($crsym)(parent, name, data, plists...)
-            try
+#             try
                 writearray(obj, dtype.id, data)
-            catch err
-                close(obj)
-                close(dtype)
-                throw(err)
-            end
+#             catch err
+#                 close(obj)
+#                 close(dtype)
+#                 throw(err)
+#             end
             close(obj)
             close(dtype)
         end
@@ -963,6 +993,8 @@ for (privatesym, fsym, ptype, crsym) in
         ($fsym)(parent::$ptype, name::ASCIIString, data::ByteString, plists...) = ($privatesym)(parent, name, data, plists...)
         # Array{String}
         ($fsym){S<:ByteString}(parent::$ptype, name::ASCIIString, data::Array{S}, plists...) = ($privatesym)(parent, name, data, plists...)        
+        # VLEN types
+        ($fsym){T<:Union(HDF5BitsKind,CharType)}(parent::$ptype, name::ASCIIString, data::HDF5Vlen{T}, plists...) = ($privatesym)(parent, name, data, plists...)
     end
 end
 # Write to already-created objects
@@ -1010,6 +1042,19 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
     @eval begin
         function write{S<:ByteString}(obj::$objtype, strs::Array{S})
             dtype = datatype(strs)
+#            try
+                writearray(obj, dtype.id, strs)
+#              catch err
+#                  close(dtype)
+#                  throw(err)
+#              end
+            close(dtype)
+        end
+    end
+    # VLEN types
+    @eval begin
+        function write{T<:Union(HDF5BitsKind,CharType)}(obj::$objtype, data::HDF5Vlen{T})
+            dtype = datatype(data)
 #            try
                 writearray(obj, dtype.id, strs)
 #              catch err
@@ -1126,6 +1171,9 @@ function hdf5_to_julia(obj::Union(HDF5Dataset, HDF5Attribute))
 #         throw(err)
 #     end
     close(objtype)
+    if T <: HDF5Vlen
+        return T
+    end
     # Determine whether it's an array
     local stype
     objspace = dataspace(obj)
@@ -1195,7 +1243,11 @@ function h5a_write{S<:ByteString}(attr_id::Hid, memtype_id::Hid, strs::Array{S})
     for i = 1:len
         p[i] = convert(Ptr{Uint8}, strs[i])
     end
-    h5d_write(attr_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, p)
+    h5a_write(attr_id, memtype_id, p)
+end
+function h5a_write{T<:Union(HDF5BitsKind,CharType)}(attr_id::Hid, memtype_id::Hid, v::HDF5Vlen{T})
+    vp = vlenpack(v)
+    h5a_write(attr_id, memtype_id, vp)
 end
 h5a_create(loc_id::Hid, name::ASCIIString, type_id::Hid, space_id::Hid) = h5a_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT)
 h5a_open(obj_id::Hid, name::ASCIIString) = h5a_open(obj_id, name, H5P_DEFAULT)
@@ -1216,6 +1268,10 @@ function h5d_write{S<:ByteString}(dataset_id::Hid, memtype_id::Hid, strs::Array{
         p[i] = convert(Ptr{Uint8}, strs[i])
     end
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, p)
+end
+function h5d_write{T<:Union(HDF5BitsKind,CharType)}(dataset_id::Hid, memtype_id::Hid, v::HDF5Vlen{T})
+    vp = vlenpack(v)
+    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, vp)
 end
 h5f_create(filename::ByteString) = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)
 h5f_open(filename::ByteString, mode) = h5f_open(filename, mode, H5P_DEFAULT)
@@ -1510,6 +1566,7 @@ export
     HDF5Dataspace,
     HDF5Object,
     HDF5Properties,
+    HDF5Vlen,
     PlainHDF5File,
     # Functions
     assign,
