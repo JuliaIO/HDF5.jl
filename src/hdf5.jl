@@ -353,6 +353,11 @@ end
 HDF5Attribute(id) = HDF5Attribute(id, true)
 convert(::Type{C_int}, attr::HDF5Attribute) = attr.id
 
+type HDF5Attributes
+    parent::Union(HDF5File, HDF5Group, HDF5Dataset)
+end
+attrs(p::Union(HDF5File, HDF5Group, HDF5Dataset)) = HDF5Attributes(p)
+
 type HDF5Properties
     id::Hid
     toclose::Bool
@@ -628,6 +633,9 @@ function exists(parent::HDF5Dataset, path::ASCIIString, apl::HDF5Properties)
 end
 exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = exists(parent, path, HDF5Properties())
 exists(parent::HDF5Dataset, path::ASCIIString) = exists(parent, path, HDF5Properties())
+has(parent::Union(HDF5File, HDF5Group, HDF5Dataset), path::ASCIIString) = exists(parent, path)
+
+#del(x::HDF5Attributes, path::ByteString) = h5a_delete(x.parent, path)
 
 # Querying items in the file
 function length(x::Union(HDF5Group,HDF5File))
@@ -635,6 +643,16 @@ function length(x::Union(HDF5Group,HDF5File))
     h5g_get_num_objs(x.id, buf)
     buf[1]
 end
+isempty(x::Union(HDF5Group,HDF5File)) = length(x) == 0
+function size(obj::Union(HDF5Dataset, HDF5Attribute))
+    dspace = dataspace(obj)
+    dims, maxdims = get_dims(dspace)
+    close(dspace)
+    map(int, dims)
+end
+size(dset::Union(HDF5Dataset, HDF5Attribute), d) = d > ndims(dset) ? 1 : size(dset)[d]
+length(dset::Union(HDF5Dataset, HDF5Attribute)) = prod(size(dset))
+ndims(dset::Union(HDF5Dataset, HDF5Attribute)) = length(size(dset))
 
 function names(x::Union(HDF5Group,HDF5File))
     n = length(x)
@@ -648,14 +666,49 @@ function names(x::Union(HDF5Group,HDF5File))
     res
 end
 
-function size(obj::Union(HDF5Dataset, HDF5Attribute))
-    dspace = dataspace(obj)
-    dims, maxdims = get_dims(dspace)
-    close(dspace)
-    map(int, dims)
+# It would also be nice to print the first few elements.
+function dump(io::IOStream, x::HDF5Dataset, n::Int, indent)
+    print(io, "HDF5Dataset $(size(x)) : ")
+    length(x) == 1 ? print(read(x)) :
+    # the following is a bit kludgy, but there's no way to do x[1:3] for the multidimensional case
+    ndims(x) == 1 ? Base.show_delim_array(io, x[1:min(5,size(x)[1])], '[', ',', ' ', true) :
+    ndims(x) == 2 ? Base.show_delim_array(io, x[1,1:min(5,size(x)[2])], '[', ',', ' ', true) : ""
+    println()
+end
+function dump(io::IOStream, x::Union(HDF5File, HDF5Group), n::Int, indent)
+    println(typeof(x), " len ", length(x))
+    if n > 0
+        i = 1
+        for k in keys(x)
+            print(io, indent, "  ", k, ": ")
+            v = o_open(x, k)
+            dump(io, v, n - 1, strcat(indent, "  "))
+            close(v)
+            if i > 10
+                println(io, indent, "  ...")
+                break
+            end
+            i += 1
+        end
+    end
+end
+# TODO - move this to base
+function dump(io::IOStream, x::Associative, n::Int, indent)
+    println(typeof(x), " len ", length(x))
+    if n > 0
+        i = 1
+        for (k,v) in x
+            print(io, indent, "  ", k, ": ")
+            dump(io, v, n - 1, strcat(indent, "  "))
+            if i > 10
+                println(io, indent, "  ...")
+                break
+            end
+            i += 1
+        end
+    end
 end
 
-length(dset::HDF5Dataset) = prod(size(dset))
 
 # Get the datatype of a dataset
 datatype(dset::HDF5Dataset) = HDF5Datatype(h5d_get_type(dset.id))
