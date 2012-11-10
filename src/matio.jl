@@ -293,7 +293,6 @@ const type2str_matlab = {
 }
 
 
-#  function read(obj::HDF5.HDF5Object, ::Type{MatlabString})
 function read(obj::HDF5Object, ::Type{MatlabString})
     T = hdf5_to_julia(obj)
     data = read(obj, T)
@@ -307,7 +306,10 @@ function read(obj::HDF5Object, ::Type{MatlabString})
         return Char(data)
     end
 end
-
+function read(obj::HDF5Object, ::Type{Bool})
+    tf = read(obj, Uint8)
+    tf > 0
+end
 
 export
     close,
