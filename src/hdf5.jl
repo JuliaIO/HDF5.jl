@@ -14,7 +14,6 @@ typealias C_unsigned_long_long Uint64
 typealias C_size_t Uint64
 
 ## HDF5 types and constants
-
 typealias Hid         C_int
 typealias Herr        C_int
 typealias Hssize      C_int
@@ -512,10 +511,18 @@ for (h5type, h5func, checkvalid) in
     end
 end
 
+# Testing file type
+ishdf5(name::String) = h5f_is_hdf5(name)
+
 # Extract the file
 file(f::HDF5File) = f
 file(g::HDF5Group) = g.file
 file(dset::HDF5Dataset) = dset.file
+fid(obj::HDF5Object) = h5i_get_file_id(obj.id)
+
+# Flush buffers
+flush(f::Union(HDF5Object, HDF5Attribute, HDF5Datatype), scope) = h5f_flush(f.id, scope)
+flush(f::Union(HDF5Object, HDF5Attribute, HDF5Datatype)) = flush(f, H5F_SCOPE_GLOBAL)
 
 # Open objects
 g_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Group(h5g_open(parent.id, name, H5P_DEFAULT), file(parent))
@@ -539,6 +546,7 @@ root(obj::Union(HDF5Group, HDF5Dataset)) = g_open(file(obj), "/")
 # ref syntax: obj2 = obj1[path]
 ref(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = o_open(parent, path)
 ref(dset::HDF5Dataset, name::ASCIIString) = a_open(dset, name)
+ref(x::HDF5Attributes, name::ASCIIString) = a_open(x.parent, name)
 
 # Create objects
 g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Group(h5g_create(parent.id, path, lcpl.id, dcpl.id), file(parent))
@@ -572,7 +580,8 @@ p_create(class) = HDF5Properties(h5p_create(class))
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
 assign{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ASCIIString) = write(parent, path, val)
-assign(dset::HDF5Dataset, val, name::ASCIIString) = write(dset, name, val)
+assign(dset::HDF5Dataset, val, name::ASCIIString) = a_write(dset, name, val)
+assign(x::HDF5Attributes, val, name::ASCIIString) = a_write(x.parent, name, val)
 # Getting and setting properties: p["chunk"] = dims, p["compress"] = 6
 function assign(p::HDF5Properties, val, name::ASCIIString)
     funcget, funcset = hdf5_prop_get_set[name]
@@ -654,6 +663,25 @@ size(dset::Union(HDF5Dataset, HDF5Attribute), d) = d > ndims(dset) ? 1 : size(ds
 length(dset::Union(HDF5Dataset, HDF5Attribute)) = prod(size(dset))
 ndims(dset::Union(HDF5Dataset, HDF5Attribute)) = length(size(dset))
 
+# filename and name
+for (T, fname, h5name) in
+    ((Union(HDF5File, HDF5Group, HDF5Dataset, HDF5Attribute, HDF5Datatype), :filename, :h5f_get_name),
+     (Union(HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype), :name, :h5i_get_name))
+    @eval begin
+        function ($fname)(obj::($T))
+            len = ($h5name)(obj.id, C_NULL, 0)
+            buf = Array(Uint8, len+1)
+            ($h5name)(obj.id, buf, len+1)
+            ascii(bytestring(buf[1:len]))
+        end
+    end
+end
+function name(attr::HDF5Attribute)
+    len = h5a_get_name(attr.id, 0, C_NULL)
+    buf = Array(Uint8, len+1)
+    h5a_get_name(attr.id, len+1, buf)
+    ascii(bytestring(buf[1:len]))
+end
 function names(x::Union(HDF5Group,HDF5File))
     n = length(x)
     res = Array(ASCIIString, n)
@@ -664,6 +692,20 @@ function names(x::Union(HDF5Group,HDF5File))
         res[i] = bytestring(buf[1:len])
     end
     res
+end
+
+function parent(obj::Union(HDF5File, HDF5Group, HDF5Dataset))
+    f = file(obj)
+    path = name(obj)
+    if length(path) == 1
+        return f
+    end
+    parentname = dirname(path)
+    if !isempty(parentname)
+        return o_open(f, dirname(path))
+    else
+        return root(f)
+    end
 end
 
 # It would also be nice to print the first few elements.
@@ -679,7 +721,7 @@ function dump(io::IOStream, x::Union(HDF5File, HDF5Group), n::Int, indent)
     println(typeof(x), " len ", length(x))
     if n > 0
         i = 1
-        for k in keys(x)
+        for k in names(x)
             print(io, indent, "  ", k, ": ")
             v = o_open(x, k)
             dump(io, v, n - 1, strcat(indent, "  "))
@@ -692,23 +734,6 @@ function dump(io::IOStream, x::Union(HDF5File, HDF5Group), n::Int, indent)
         end
     end
 end
-# TODO - move this to base
-function dump(io::IOStream, x::Associative, n::Int, indent)
-    println(typeof(x), " len ", length(x))
-    if n > 0
-        i = 1
-        for (k,v) in x
-            print(io, indent, "  ", k, ": ")
-            dump(io, v, n - 1, strcat(indent, "  "))
-            if i > 10
-                println(io, indent, "  ...")
-                break
-            end
-            i += 1
-        end
-    end
-end
-
 
 # Get the datatype of a dataset
 datatype(dset::HDF5Dataset) = HDF5Datatype(h5d_get_type(dset.id))
@@ -1483,7 +1508,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5d_read, :H5Dread, Herr, (Hid, Hid, Hid, Hid, Hid, Ptr{Void}), (:dataset_id, :mem_type_id, :mem_space_id, :file_space_id, :xfer_plist_id, :buf), :(error("Error reading dataset"))),
      (:h5f_create, :H5Fcreate, Hid, (Ptr{Uint8}, C_unsigned, Hid, Hid), (:name, :flags, :fcpl_id, :fapl_id), :(error("Error creating file ", name))),
      (:h5f_get_access_plist, :H5Fget_access_plist, Hid, (Hid,), (:file_id,), :(error("Error getting file access property list"))),     
-     (:h5f_get_create_plist, :H5Fget_create_plist, Hid, (Hid,), (:file_id,), :(error("Error getting file create property list"))),     
+     (:h5f_get_create_plist, :H5Fget_create_plist, Hid, (Hid,), (:file_id,), :(error("Error getting file create property list"))),
      (:h5f_get_name, :H5Fget_name, Hssize, (Hid, Ptr{Uint8}, C_size_t), (:obj_id, :buf, :buf_size), :(error("Error getting file name"))),
      (:h5f_open, :H5Fopen, Hid, (Ptr{Uint8}, C_unsigned, Hid), (:name, :flags, :fapl_id), :(error("Error opening file ", name))),
      (:h5g_create, :H5Gcreate2, Hid, (Hid, Ptr{Uint8}, Hid, Hid, Hid), (:loc_id, :name, :lcpl_id, :gcpl_id, :gapl_id), :(error("Error creating group ", name))),
@@ -1491,6 +1516,8 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5g_get_objname_by_idx, :H5Gget_objname_by_idx, Hid, (Hid, C_int, Ptr{Uint8}, C_int), (:loc_id, :idx, :name, :size), :(error("Error getting group object name ", name))),
      (:h5g_get_num_objs, :H5Gget_num_objs, Hid, (Hid, Ptr{Uint8}), (:loc_id, :num_obj), :(error("Error getting group length"))),
      (:h5g_open, :H5Gopen2, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :name, :gapl_id), :(error("Error opening group ", name))),
+     (:h5i_get_file_id, :H5Iget_file_id, Hid, (Hid,), (:obj_id,), :(error("Error getting file identifier"))),
+     (:h5i_get_name, :H5Iget_name, Hssize, (Hid, Ptr{Uint8}, C_size_t), (:obj_id, :buf, :buf_size), :(error("Error getting object name"))),
      (:h5i_get_ref, :H5Iget_ref, C_int, (Hid,), (:obj_id,), :(error("Error getting reference count"))),
      (:h5i_get_type, :H5Iget_type, C_int, (Hid,), (:obj_id,), :(error("Error getting type"))),
      (:h5l_create_external, :H5Lcreate_hard_external, Herr, (Ptr{Uint8}, Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:target_file_name, :target_obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name))),
@@ -1668,7 +1695,7 @@ export
     a_open,
     a_read,
     a_write,
-    attribute,
+    attrs,
     close,
     create,
     d_create,
@@ -1678,14 +1705,20 @@ export
     dataspace,
     datatype,
     exists,
+    fid,
     file,
+    filename,
     g_create,
     g_open,
     h5open,
+    has,
+    ishdf5,
     length,
+    name,
     names,
     o_open,
     p_create,
+    parent,
     plain,
     read,
     ref,
