@@ -574,6 +574,11 @@ end
 a_create(parent::Union(HDF5File, HDF5Object), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(parent.id, path, dtype.id, dspace.id))
 p_create(class) = HDF5Properties(h5p_create(class))
 
+# Delete objects
+a_delete(parent::Union(HDF5File, HDF5Object), path::ASCIIString) = h5a_delete(parent.id, path)
+o_delete(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lapl::HDF5Properties) = h5l_delete(parent.id, path, lapl.id)
+o_delete(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = h5l_delete(parent.id, path, H5P_DEFAULT)
+
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
 assign{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ASCIIString) = write(parent, path, val)
@@ -640,8 +645,6 @@ end
 exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = exists(parent, path, HDF5Properties())
 exists(parent::HDF5Dataset, path::ASCIIString) = exists(parent, path, HDF5Properties())
 has(parent::Union(HDF5File, HDF5Group, HDF5Dataset), path::ASCIIString) = exists(parent, path)
-
-#del(x::HDF5Attributes, path::ByteString) = h5a_delete(x.parent, path)
 
 # Querying items in the file
 function length(x::Union(HDF5Group,HDF5File))
@@ -1533,6 +1536,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5i_get_name, :H5Iget_name, Hssize, (Hid, Ptr{Uint8}, C_size_t), (:obj_id, :buf, :buf_size), :(error("Error getting object name"))),
      (:h5i_get_ref, :H5Iget_ref, C_int, (Hid,), (:obj_id,), :(error("Error getting reference count"))),
      (:h5i_get_type, :H5Iget_type, C_int, (Hid,), (:obj_id,), :(error("Error getting type"))),
+     (:h5l_delete, :H5Ldelete, Herr, (Hid, Ptr{Uint8}, Hid), (:obj_id, :name, :lapl_id), :(error("Error deleting ", name))),
      (:h5l_create_external, :H5Lcreate_hard_external, Herr, (Ptr{Uint8}, Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:target_file_name, :target_obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name))),
      (:h5l_create_hard, :H5Lcreate_hard, Herr, (Hid, Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:obj_loc_id, :obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating hard link ", link_name, " pointing to ", obj_name))),
      (:h5l_create_soft, :H5Lcreate_soft, Herr, (Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:target_path, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating soft link ", link_name, " pointing to ", target_path))),
@@ -1705,6 +1709,7 @@ export
     # Functions
     assign,
     a_create,
+    a_delete,
     a_open,
     a_read,
     a_write,
@@ -1729,6 +1734,7 @@ export
     length,
     name,
     names,
+    o_delete,
     o_open,
     p_create,
     parent,

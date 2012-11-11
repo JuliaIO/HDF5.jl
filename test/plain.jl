@@ -41,6 +41,8 @@ g = g_create(f, "mygroup")
 R = randi(20, 20, 40);
 g["CompressedA", "chunk", (5,5), "compress", 9] = R
 close(g)
+# Create a dataset designed to be deleted
+f["deleteme"] = 17.2
 close(f)
 
 # Read the file back in
@@ -104,4 +106,11 @@ for obj in fr
     n = name(obj)
     p = parent(obj)
 end
+close(fr)
+
+# Test object deletion
+fr = h5open(fn, "r+")
+@assert exists(fr, "deleteme")
+o_delete(fr, "deleteme")
+@assert !exists(fr, "deleteme")
 close(fr)
