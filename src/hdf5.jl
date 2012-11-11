@@ -39,12 +39,9 @@ const H5_ITER_DEC     = 1
 const H5_ITER_NATIVE  = 2
 const H5_ITER_N       = 3
 # indexing type constants
-const H5_STD_I8LE        = -1
-const H5_INDEX_UNKNOWN   = 0 
-const H5_INDEX_NAME      = 1
-const H5_INDEX_CRT_ORDER = 2
-const H5_INDEX_N         = 3
-
+const H5_INDEX_UNKNOWN   = -1
+const H5_INDEX_NAME      = 0
+const H5_INDEX_CRT_ORDER = 1
 # dataset constants
 const H5D_COMPACT      = 0
 const H5D_CONTIGUOUS   = 1
@@ -532,14 +529,14 @@ t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString, apl::HDF5Propertie
 t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Datatype(h5t_open(parent.id, name, H5P_DEFAULT))
 a_open(parent::HDF5Object, name::ASCIIString) = HDF5Attribute(h5a_open(parent.id, name, H5P_DEFAULT))
 # Object (group, named datatype, or dataset) open
-function o_open(parent, path::ASCIIString)
-    obj_id   = h5o_open(parent.id, path)
+function h5object(obj_id::Hid, parent)
     obj_type = h5i_get_type(obj_id)
     obj_type == H5I_GROUP ? HDF5Group(obj_id, file(parent)) :
     obj_type == H5I_DATATYPE ? HDF5Datatype(obj_id) :
     obj_type == H5I_DATASET ? HDF5Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
 end
+o_open(parent, path::ASCIIString) = h5object(h5o_open(parent.id, path), parent)
 # Get the root group
 root(h5file::HDF5File) = g_open(h5file, "/")
 root(obj::Union(HDF5Group, HDF5Dataset)) = g_open(file(obj), "/")
@@ -692,6 +689,22 @@ function names(x::Union(HDF5Group,HDF5File))
         res[i] = bytestring(buf[1:len])
     end
     res
+end
+
+# iteration by objects
+# "next" opens new objects, "done" closes the old one. This prevents resource leaks.
+start(parent::Union(HDF5File, HDF5Group)) = Any[1, nothing]
+function done(parent::Union(HDF5File, HDF5Group), iter::Array{Any})
+    obj = iter[2]
+    if !(obj === nothing)
+        close(obj)
+    end
+    iter[1] > length(parent)
+end
+function next(parent::Union(HDF5File, HDF5Group), iter)
+    iter[2] = h5object(h5o_open_by_idx(parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, iter[1]-1, H5P_DEFAULT), parent)
+    iter[1] += 1
+    (iter[2], iter)
 end
 
 function parent(obj::Union(HDF5File, HDF5Group, HDF5Dataset))
@@ -1526,7 +1539,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5l_exists, :H5Lexists, Htri, (Hid, Ptr{Uint8}, Hid), (:loc_id, :name, :lapl_id), :(error("Cannot determine whether link ", name, " exists, check each item along the path"))),
      (:h5l_get_info, :H5Lget_info, Herr, (Hid, Ptr{Uint8}, Ptr{Void}, Hid), (:link_loc_id, :link_name, :link_buf, :lapl_id), :(error("Error getting info for link ", link_name))),
      (:h5o_open, :H5Oopen, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :name, :lapl_id), :(error("Error opening object ", name))),
-     (:h5o_open_by_idx, :H5Oopen_by_idx, Hid, (Hid, Ptr{Uint8}, Hid, Hid, Hid, Hid), (:loc_id, :group_name, :index_type, :order, :n, :lapl_id), :(error("Error opening object ", group_name))),
+     (:h5o_open_by_idx, :H5Oopen_by_idx, Hid, (Hid, Ptr{Uint8}, C_int, C_int, Hsize, Hid), (:loc_id, :group_name, :index_type, :order, :n, :lapl_id), :(error("Error opening object of index ", n))),
      (:h5p_create, :H5Pcreate, Hid, (Hid,), (:cls_id,), "Error creating property list"),
      (:h5p_get_chunk, :H5Pget_chunk, C_int, (Hid, C_int, Ptr{Hsize}), (:plist_id, :n_dims, :dims), :(error("Error getting chunk size"))),
      (:h5p_get_layout, :H5Pget_layout, C_int, (Hid,), (:plist_id,), :(error("Error getting layout"))),
