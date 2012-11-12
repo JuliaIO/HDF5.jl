@@ -102,9 +102,10 @@ function matopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
         else
             error("This does not seem to be a MAT file")
         end
+        writeheader = false
     end
     close(pa)
-    MatlabHDF5File(f, filename, true, true)
+    MatlabHDF5File(f, filename, true, writeheader)
 end
 
 function matopen(fname::String, mode::String)
