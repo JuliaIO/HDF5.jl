@@ -4,9 +4,9 @@
 
 require("hdf5.jl")
 module MatIO
-import Base.*
-import HDF5.*
-import HDF5
+using HDF5
+# Add methods to...
+import HDF5.close, HDF5.read, HDF5.write
 
 # Debugging: comment this block out if you un-modulize hdf5.jl
 # Types

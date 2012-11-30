@@ -3,8 +3,10 @@
 ####################
 
 module HDF5
-import Base.*
 require("strpack.jl")
+
+## Add methods to...
+import Base.assign, Base.close, Base.convert, Base.done, Base.dump, Base.flush, Base.has, Base.isempty, Base.isvalid, Base.length, Base.names, Base.ndims, Base.next, Base.ref, Base.read, Base.size, Base.start, Base.strlen, Base.write
 
 ## C types
 typealias C_int Int32
@@ -515,7 +517,7 @@ ishdf5(name::String) = h5f_is_hdf5(name)
 file(f::HDF5File) = f
 file(g::HDF5Group) = g.file
 file(dset::HDF5Dataset) = dset.file
-fid(obj::HDF5Object) = h5i_get_file_id(obj.id)
+fd(obj::HDF5Object) = h5i_get_file_id(obj.id)
 
 # Flush buffers
 flush(f::Union(HDF5Object, HDF5Attribute, HDF5Datatype), scope) = h5f_flush(f.id, scope)
@@ -634,16 +636,9 @@ function exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lapl::HDF
     end
     ret
 end
-function exists(parent::HDF5Dataset, path::ASCIIString, apl::HDF5Properties)
-    # apl is ignored
-    first, rest = split1(path)
-    if !(rest === nothing) && !isempty(rest)
-        error("Cannot descend below attributes")
-    end
-    h5a_exists(parent.id, first)
-end
+exists(attr::HDF5Attributes, path::ASCIIString) = h5a_exists(attr.parent.id, path)
+exists(dset::HDF5Dataset, path::ASCIIString) = h5a_exists(dset.id, path)
 exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = exists(parent, path, HDF5Properties())
-exists(parent::HDF5Dataset, path::ASCIIString) = exists(parent, path, HDF5Properties())
 has(parent::Union(HDF5File, HDF5Group, HDF5Dataset), path::ASCIIString) = exists(parent, path)
 
 # Querying items in the file
@@ -672,7 +667,7 @@ for (T, fname, h5name) in
             len = ($h5name)(obj.id, C_NULL, 0)
             buf = Array(Uint8, len+1)
             ($h5name)(obj.id, buf, len+1)
-            ascii(bytestring(buf[1:len]))
+            convert(ASCIIString, buf[1:len])
         end
     end
 end
@@ -680,7 +675,7 @@ function name(attr::HDF5Attribute)
     len = h5a_get_name(attr.id, 0, C_NULL)
     buf = Array(Uint8, len+1)
     h5a_get_name(attr.id, len+1, buf)
-    ascii(bytestring(buf[1:len]))
+    convert(ASCIIString, buf[1:len])
 end
 function names(x::Union(HDF5Group,HDF5File))
     n = length(x)
@@ -689,7 +684,7 @@ function names(x::Union(HDF5Group,HDF5File))
         len = h5g_get_objname_by_idx(x.id, i - 1, "", 0)
         buf = Array(Uint8, len+1)
         len = h5g_get_objname_by_idx(x.id, i - 1, buf, len+1)
-        res[i] = bytestring(buf[1:len])
+        res[i] = convert(ASCIIString, buf[1:len])
     end
     res
 end
@@ -888,7 +883,7 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
                 n = h5t_get_size(objtype.id)
                 buf = Array(Uint8, n)
                 readarray(obj, objtype.id, buf)
-                ret = bytestring(buf)
+                ret = convert(S, buf)
         #      catch err
         #          close(objtype)
         #          throw(err)
@@ -920,7 +915,7 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
                 readarray(obj, memtype_id, buf)
                 # FIXME? Who owns the memory for each string? Will Julia free it?
                 for i = 1:len
-                    ret[i] = bytestring(buf[i])
+                    ret[i] = Base.bytestring(buf[i])
                 end
             else
                 # Fixed length
@@ -930,7 +925,7 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
                 readarray(obj, memtype_id, buf)
                 p = convert(Ptr{Uint8}, buf)
                 for i = 1:len
-                    ret[i] = bytestring(p)
+                    ret[i] = Base.bytestring(p)
                     p += ilen
                 end
             end
@@ -1646,7 +1641,7 @@ function h5t_get_tag(type_id::Hid)
     if pc == C_NULL
         error("Error getting opaque tag")
     end
-    ascii(bytestring(pc))
+    ascii(Base.bytestring(pc))
 end
 
 function vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5Dataspace)
