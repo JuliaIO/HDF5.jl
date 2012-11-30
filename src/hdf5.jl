@@ -915,7 +915,7 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
                 readarray(obj, memtype_id, buf)
                 # FIXME? Who owns the memory for each string? Will Julia free it?
                 for i = 1:len
-                    ret[i] = Base.bytestring(buf[i])
+                    ret[i] = bytestring(buf[i])
                 end
             else
                 # Fixed length
@@ -925,7 +925,7 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
                 readarray(obj, memtype_id, buf)
                 p = convert(Ptr{Uint8}, buf)
                 for i = 1:len
-                    ret[i] = Base.bytestring(p)
+                    ret[i] = bytestring(p)
                     p += ilen
                 end
             end
@@ -1641,7 +1641,7 @@ function h5t_get_tag(type_id::Hid)
     if pc == C_NULL
         error("Error getting opaque tag")
     end
-    ascii(Base.bytestring(pc))
+    ascii(bytestring(pc))
 end
 
 function vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5Dataspace)
