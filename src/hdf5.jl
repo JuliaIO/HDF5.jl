@@ -429,6 +429,15 @@ function vlenpack{T<:Union(HDF5BitsKind,CharType)}(v::HDF5Vlen{T})
     end
     io.data
 end
+# For group information
+type H5Ginfo
+    storage_type::C_int
+    nlinks::Hsize
+    max_corder::Int64
+    mounted::C_int
+end
+H5Ginfo() = H5Ginfo(int32(0), convert(Hsize, 0), int64(0), int32(0))
+pack(H5Ginfo(), align_native)
 # For links
 type H5LInfo
     linktype::C_int
@@ -644,6 +653,13 @@ exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = exists(parent, p
 has(parent::Union(HDF5File, HDF5Group, HDF5Dataset), path::ASCIIString) = exists(parent, path)
 
 # Querying items in the file
+function info(obj::Union(HDF5Group,HDF5File))
+    io = IOString()
+    pack(io, H5Ginfo(), align_native)
+    h5g_get_info(obj, io.data)
+    seek(io, 0)
+    unpack(io, H5Ginfo, align_native)
+end
 function length(x::Union(HDF5Group,HDF5File))
     buf = [int32(0)]
     h5g_get_num_objs(x.id, buf)
@@ -1469,6 +1485,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5f_close, :H5Fclose, Herr, (Hid,), (:file_id,), "Error closing file"),
      (:h5f_flush, :H5Fflush, Herr, (Hid, C_int), (:object_id, :scope,), "Error flushing object to file"),
      (:h5g_close, :H5Gclose, Herr, (Hid,), (:group_id,), "Error closing group"),
+     (:h5g_get_info, :H5Gget_info, Herr, (Hid, Ptr{Uint8}), (:group_id, :buf), "Error getting group info"),
      (:h5o_close, :H5Oclose, Herr, (Hid,), (:object_id,), "Error closing object"),
      (:h5p_close, :H5Pclose, Herr, (Hid,), (:id,), "Error closing property list"),
      (:h5p_get_fclose_degree, :H5Pget_fclose_degree, Herr, (Hid, Ptr{C_int}), (:plist_id, :fc_degree), "Error getting close degree"),
