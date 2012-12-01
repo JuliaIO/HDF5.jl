@@ -625,7 +625,9 @@ function split1(path::ASCIIString)
 end
 function exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lapl::HDF5Properties)
     first, rest = split1(path)
-    if !h5l_exists(parent.id, first, lapl.id)
+    if first == "/"
+        parent = root(parent)
+    elseif !h5l_exists(parent.id, first, lapl.id)
         return false
     end
     ret = true
@@ -795,6 +797,7 @@ dataspace(A::Array) = _dataspace(size(A)...)
 dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
 dataspace(R::HDF5ReferenceObjArray) = _dataspace(size(R)...)
 dataspace(v::HDF5Vlen) = _dataspace(size(v.data)...)
+dataspace(n::Nothing) = HDF5Dataspace(h5s_create(H5S_NULL))
 
 # Get the array dimensions from a dataspace
 # Returns both dims and maxdims
