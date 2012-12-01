@@ -97,7 +97,7 @@ function matopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
         close(rawfid)
         if magic == magic_hdf5.data
             f = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
-        elseif magic[1:length(magic_matlab)] .== magic_matlab.data
+        elseif magic[1:length(magic_matlab)] == magic_matlab.data
             error("This seems to be a MAT file, but it's not a version 7.3 MAT-file. Not (yet) supported.")
         else
             error("This does not seem to be a MAT file")
