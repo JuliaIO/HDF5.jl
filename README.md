@@ -4,44 +4,72 @@
 data, commonly used for scientific data. HDF5 files can be created and
 read by numerous [programming
 languages](http://www.hdfgroup.org/tools5desc.html).  This package
-provides a partial interface to the HDF5 library for the
+provides an interface to the HDF5 library for the
 [Julia][Julia] language.
 
-HDF5 is a large library, and this wrapper is not complete. However, it
-already provides useful functionality:
+Language wrappers for HDF5 are often described as either "low level" or "high level." This package contains both flavors: at the low level, it directly wraps HDF5's functions, thus copying their API and making them available fro within Julia. At the high level, it provides a set of functions built on the low-level wrap which may make the usage of this library more convenient.
 
-* Opening an HDF5 file for reading or writing (``fid = h5open("name.h5", "w")``)
-* Navigating to "groups" (``groupMyData = fid["MyData"]``) and creating new ones (``group(fid, "MyData")``)
-* Reading and writing array and string data (``write(groupMyData, "AnImage", A)`` and ``A = read(groupMyData, "AnImage")``)
-* Reading subsets of data (``dset = groupMyData["AnImage"]; Asub = dset[1:2:37, 200:300]``)
-* Limited support for HDF5 properties such as compression
-* The ability to write arrays-of-arrays ("cell arrays") preserving their structure
+In addition to the core HDF5 functionality, this package also provides two special-purpose modules used to read and write HDF5 files with specific formatting conventions. The first is the JLD ("Julia data") module, which provides a generic mechanism for reading and writing Julia variables. While one can use "plain" HDF5 for this purpose, the advantage of the JLD module is that it preserves the exact type information of each variable. The other module is MatIO ("Matlab I/O"), which can read and write *.mat files saved as "-v7.3".
 
-Users who need more comprehensive support for HDF5 are very much
-encouraged to contribute additional functionality.
+## Quickstart
+
+To use the JLD module, begin your code with
+
+```julia
+load("jld.jl")
+using JLD
+```
+
+Here's an example using functional syntax, which may be especially familiar to Matlab users:
+
+```julia
+file = jldopen("mydata.jld", "w")
+write(file, "A", A)
+close(file)
+
+file = jldopen("mydata.jld", "r")
+c = read(file, "A")
+close(file)
+```
+
+For HDF5 users coming from other languages, Julia's high-level wrapper providing a dictionary-like interface may be of particular interest. This is demonstrated with the "plain" (unformatted) HDF5 interface:
+
+```julia
+load("hdf5.jl")
+using HDF5
+
+file = h5open("test.h5", "w")
+g = g_create(file, "mygroup") # create a group
+g["dset1"] = 3.2              # create a scalar dataset
+attrs(g)["Description"] = "This group contains only a single dataset" # an attribute
+close(file)
+```
+
+For Matlab files, you would say ``load("matio.jl"); using MatIO``. There is no conflict in having multiple modules (HDF5, JLD, and MatIO) available simultaneously; the formatting of the file is determined by the open command.
+
+More extensive documentation is found in the doc/ directory.
+
+## Details
+
+HDF5 is a large library, and the low-level wrap is not complete. However, many of the most-commonly used functions are wrapped, and in general wrapping a new function takes only a single line of code. Users who need additional functionality are encourage to contribute it. Low-level functions are not exported, so you access them by importing ``HDF5``. This provides access to many constants (e.g., ``HDF5.H5T_STD_I16BE``), raw dataset, datatype, and dataspace utilities, and wrappers for the direct library calls (e.g., ``HDF5.h5d_create(...)``).
 
 Julia, like Fortran and Matlab, stores arrays in column-major order.
 HDF5 uses C's row-major order, and consequently every array's
 dimensions are inverted compared to what you see with tools like
-h5dump. This is the same convention as for the Fortran HDF5
-interface. The advantage is that no data rearrangement takes place,
+h5dump. This is the same convention as for the Fortran and Matlab HDF5
+interfaces. The advantage is that no data rearrangement takes place,
 neither when reading nor when writing.
 
-This library is entirely contained in the file "hdf5.jl", and any routines using it should start in the following way:
+The test/ directory contains a number of test scripts that also contain example of usage.
 
-```julia
-load("hdf5.jl")
-import HDF5Mod.*
-```
-
-Advanced (unexported) functionality can be accessed by importing ``HDF5Mod``.  This provides access to many constants (e.g., ``H5T_STD_I16BE``), raw dataset, datatype, and dataspace utilities, and wrappers for the direct library calls.
-
-The easiest way to determine whether this will work for you is to load the file "test.jl", which should run without error. This file also contains further examples illustrating how to use the library.
+## References
 
 [Julia]: http://julialang.org "Julia"
 [HDF5]: http://www.hdfgroup.org/HDF5/ "HDF5"
 
 ## Credits
 
-- [Konrad Hinsen](https://github.com/khinsen/julia_hdf5) initiated Julia support for HDF5
+- [Konrad Hinsen](https://github.com/khinsen/julia_hdf5) initiated Julia's support for HDF5
+- Tim Holy (maintainer)
+- Tom Short contributed code and ideas to the dictionary-like interface, and string->type conversion in the JLD module
 - [Mike Nolta](https://github.com/nolta/julia_hdf5) and Jameson Nash contributed code or suggestions for improving the handling of HDF5's constants
