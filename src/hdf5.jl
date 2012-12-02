@@ -1031,6 +1031,7 @@ function read{T<:Union(HDF5BitsKind,CharType)}(obj::Union(HDF5Dataset{PlainHDF5F
     # FIXME? Ownership of buffer (no need to call reclaim, right?)
     data
 end
+read(attr::HDF5Attributes, name::ASCIIString) = a_read(attr.parent, name)
 
 # Generic write
 function write{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name1::ASCIIString, val1, name2::ASCIIString, val2, nameval...)
