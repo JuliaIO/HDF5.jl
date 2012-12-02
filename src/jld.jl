@@ -153,11 +153,8 @@ function read(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
     # Convert to Julia type
     T = julia_type(typename)
     if T == CompositeKind
+        # Use type information in the file to ensure we find the right module
         typename = a_read(obj, "CompositeKind")
-        T = julia_type(typename)
-    end
-    if T == UnsupportedType
-        # Use type information in the file to find the right module
         try
             gtypes = root(obj)[pathtypes]
             objtype = gtypes[typename]
