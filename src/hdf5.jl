@@ -951,6 +951,10 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
             h5t_close(memtype_id)
             ret
         end
+        # Empty Array of strings
+        function read{C<:CharType}(obj::$objtype, ::Type{EmptyArray{C}})
+            Array(stringtype(C), 0)
+        end
     end
 end
 # Read an array of references
