@@ -221,7 +221,14 @@ end
 
 read(obj::HDF5Dataset{JldFile}, ::Type{Nothing}) = nothing
 read(obj::HDF5Dataset{JldFile}, ::Type{Bool}) = bool(read(obj, Uint8))
-read(obj::HDF5Dataset{JldFile}, ::Type{Array{Bool}}) = bool(read(obj, Array{Uint8}))
+function read(obj::HDF5Dataset{JldFile}, ::Type{Array{Bool}})
+    format = a_read(obj, "BoolFormat")
+    if format == "EachUint8"
+        bool(read(obj, Array{Uint8}))
+    else
+        error("bool format not recognized")
+    end
+end
 
 # General arrays
 function read{T,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}})
@@ -294,7 +301,10 @@ end
 
 # Bools
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, tf::Bool) = write(parent, name, uint8(tf), "Bool")
-write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, tf::Array{Bool}) = write(parent, name, uint8(tf), string(typeof(tf)))
+function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, tf::Array{Bool})
+    write(parent, name, uint8(tf), string(typeof(tf)))
+    a_write(parent[name], "BoolFormat", "EachUint8")
+end
 
 # General array types (as arrays of references)
 function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, data::Array{T}, astype::String)
