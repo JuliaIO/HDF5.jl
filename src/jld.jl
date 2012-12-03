@@ -6,7 +6,7 @@ load("hdf5.jl")
 module JLD
 using HDF5
 # Add methods to...
-import HDF5.close, HDF5.read, HDF5.write, HDF5.ref
+import HDF5.a_write, HDF5.close, HDF5.read, HDF5.ref, HDF5.write
 
 # Debugging: comment this block out if you un-modulize hdf5.jl
 # Types
@@ -23,8 +23,6 @@ H5P_DEFAULT = HDF5.H5P_DEFAULT
 H5P_FILE_ACCESS = HDF5.H5P_FILE_ACCESS
 H5P_FILE_CREATE = HDF5.H5P_FILE_CREATE
 # Functions
-a_write    = HDF5.a_write
-attrs      = HDF5.attrs
 h5d_create = HDF5.h5d_create
 h5f_close  = HDF5.h5f_close
 h5f_create = HDF5.h5f_create
@@ -139,8 +137,10 @@ function jldopen(fname::String, mode::String)
 end
 jldopen(fname::String) = jldopen(fname, "r")
 
-### Julia data file format implementation ###
+### "Inherited" behaviors
+a_write(parent::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}), name::ASCIIString, data) = a_write(plain(parent), name, data)
 
+### Julia data file format implementation ###
 
 ## Read
 function read(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
@@ -188,7 +188,7 @@ function readsafely(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
         objtype = gtypes[typename]
         n = read(objtype)
         v = getrefs(obj, Any)
-        ret = Dict(n, v)
+        ret = Dict(n[1,:], v)
     else
         ret = read(obj, T)
     end
@@ -241,6 +241,10 @@ for T in (Complex64, Complex128)
     end
 end
 
+# Symbol
+read(obj::HDF5Dataset{JldFile}, ::Type{Symbol}) = symbol(read(plain(obj), ASCIIString))
+read{N}(obj::HDF5Dataset{JldFile}, ::Type{Array{Symbol,N}}) = map(symbol, read(plain(obj), Array{ASCIIString}))
+
 # General arrays
 function read{T,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}})
     # Represented as an array of refs
@@ -251,6 +255,12 @@ function read{T,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}})
         out[i] = read(f[refs[i]])
     end
     return out
+end
+
+# Dict
+function read{T<:Associative}(obj::HDF5Dataset{JldFile}, ::Type{T})
+    kv = getrefs(obj, Any)
+    T(kv[1], kv[2])
 end
 
 # CompositeKind
@@ -281,6 +291,8 @@ function ref(dset::HDF5Dataset{JldFile}, indices::RangeIndex...)
     end
     HDF5._ref(plain(dset), eltype(T), indices...)
 end
+
+
 
 ## Writing
 
@@ -339,6 +351,12 @@ function write{T<:Complex}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASC
     write(parent, name, reim, string(typeof(C)))
 end
 
+# Int128/Uint128
+
+# Symbols
+write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, sym::Symbol) = write(parent, name, string(sym), "Symbol")
+write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, syms::Array{Symbol}) = write(parent, name, map(string, syms), string(typeof(syms)))
+
 # General array types (as arrays of references)
 function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, data::Array{T}, astype::String)
     local g
@@ -376,6 +394,26 @@ function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString,
 end
 write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, data::Array{T}) = write(parent, name, data, string(typeof(data)))
 
+# Dict
+function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d::Associative)
+    n = length(d)
+    K = keytype(d)
+    V = valuetype(d)
+    ks = Array(K, n)
+    vs = Array(V, n)
+    i = 0
+    for (k,v) in d
+        ks[i+=1] = k
+        vs[i] = v
+    end
+    da = Any[ks, vs]
+    write(parent, name, da, "Dict")
+    obj = parent[name]
+    a_write(obj, "KeyType", string(K))    # not necessary, but perhaps helpful
+    a_write(obj, "ValueType", string(V))
+    close(obj)
+end
+
 # CompositeKind
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s)
     T = typeof(s)
@@ -394,15 +432,19 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s)
         if !exists(gtypes, Tname)
             # Write names to a dataset, so that other languages reading this file can
             # at least create a sensible dict
-            nstr = Array(ASCIIString, length(n))
+            nametype = Array(ASCIIString, 2, length(n))
+            t = T.types
             for i = 1:length(n)
-                nstr[i] = string(n[i])
+                nametype[1, i] = string(n[i])
+                nametype[2, i] = string(t[i])
             end
-            write(gtypes, Tname, nstr)
+            write(plain(gtypes), Tname, nametype)
+            obj = gtypes[Tname]
             # Write the module name as an attribute
             mod = Base.full_name(T.name.module)
             modnames = [map(string, mod)...]
-            a_write(plain(gtypes[Tname]), "Module", modnames)
+            a_write(plain(obj), "Module", modnames)
+            close(obj)
         end
     finally
         close(gtypes)
@@ -417,7 +459,6 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s)
     a_write(plain(obj), "CompositeKind", Tname)
     close(obj)
 end
-
 
 ### Converting strings to Julia types
 type UnsupportedType
@@ -467,8 +508,14 @@ function isversionless(l::Array{Int}, r::Array{Int})
 end
 
 export
+    a_create,
+    a_delete,
+    a_open,
+    a_read,
+    a_write,
     close,
     jldopen,
+    plain,
     read,
     @read,
     readsafely,
