@@ -163,6 +163,18 @@ function read(g::HDF5Group{MatlabHDF5File})
     s
 end
 
+# read every variable in the file
+function read(f::MatlabHDF5File)
+    vars = names(f)
+    vars = vars[!(vars .== "#refs#")]  # delete "#refs#"
+    vals = Array(Any, length(vars))
+    for i = 1:length(vars)
+        println("...reading ", vars[i])
+        vals[i] = read(f, vars[i])
+    end
+    Dict(vars, vals)
+end
+
 for (fsym, dsym) in
     ((:(write{T<:HDF5BitsKind}), :T),
      (:(write{T<:HDF5BitsKind}), :(Array{T})))
