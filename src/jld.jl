@@ -398,7 +398,7 @@ write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, data::Ar
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d::Associative)
     n = length(d)
     K = keytype(d)
-    V = valuetype(d)
+    V = valtype(d)
     ks = Array(K, n)
     vs = Array(V, n)
     i = 0
@@ -410,7 +410,7 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d:
     write(parent, name, da, "Dict")
     obj = parent[name]
     a_write(obj, "KeyType", string(K))    # not necessary, but perhaps helpful
-    a_write(obj, "ValueType", string(V))
+    a_write(obj, "ValType", string(V))
     close(obj)
 end
 
