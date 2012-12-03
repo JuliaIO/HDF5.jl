@@ -218,12 +218,26 @@ end
 
 read(obj::HDF5Dataset{JldFile}, ::Type{Nothing}) = nothing
 read(obj::HDF5Dataset{JldFile}, ::Type{Bool}) = bool(read(obj, Uint8))
-function read(obj::HDF5Dataset{JldFile}, ::Type{Array{Bool}})
-    format = a_read(obj, "BoolFormat")
+function read{N}(obj::HDF5Dataset{JldFile}, ::Type{Array{Bool,N}})
+    format = a_read(obj, "julia_format")
     if format == "EachUint8"
-        bool(read(obj, Array{Uint8}))
+        bool(read(plain(obj), Array{Uint8}))
     else
         error("bool format not recognized")
+    end
+end
+
+# Complex
+for T in (Complex64, Complex128)
+    @eval begin
+        function read(obj::HDF5Dataset{JldFile}, ::Type{$T})
+            a = read(plain(obj), Array{realtype($T)})
+            a[1]+a[2]*im
+        end
+        function read{N}(obj::HDF5Dataset{JldFile}, ::Type{Array{$T, N}})
+            A = read(plain(obj), Array{realtype($T)})
+            reinterpret($T, A, ntuple(ndims(A)-1, i->size(A, i+1)))
+        end
     end
 end
 
@@ -300,7 +314,19 @@ end
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, tf::Bool) = write(parent, name, uint8(tf), "Bool")
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, tf::Array{Bool})
     write(parent, name, uint8(tf), string(typeof(tf)))
-    a_write(parent[name], "BoolFormat", "EachUint8")
+    a_write(plain(parent[name]), "julia_format", "EachUint8")
+end
+
+# Complex
+realtype(::Type{Complex64}) = Float32
+realtype(::Type{Complex128}) = Float64
+function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, c::Complex)
+    reim = [real(c), imag(c)]
+    write(parent, name, reim, string(typeof(c)))
+end
+function write{T<:Complex}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, C::Array{T})
+    reim = reinterpret(realtype(T), C, ntuple(ndims(C)+1, i->i==1?2:size(C,i-1)))
+    write(parent, name, reim, string(typeof(C)))
 end
 
 # General array types (as arrays of references)
