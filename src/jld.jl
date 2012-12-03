@@ -6,7 +6,7 @@ load("hdf5.jl")
 module JLD
 using HDF5
 # Add methods to...
-import HDF5.close, HDF5.read, HDF5.write
+import HDF5.close, HDF5.read, HDF5.write, HDF5.ref
 
 # Debugging: comment this block out if you un-modulize hdf5.jl
 # Types
@@ -271,6 +271,16 @@ function getrefs{T}(obj::HDF5Dataset{JldFile}, ::Type{T})
     return out
 end
 
+# dset[3:5, ...] syntax
+function ref(dset::HDF5Dataset{JldFile}, indices::RangeIndex...)
+    typename = a_read(dset, name_type_attr)
+    # Convert to Julia type
+    T = julia_type(typename)
+    if !(T <: AbstractArray)
+        error("Ref syntax only works for arrays")
+    end
+    HDF5._ref(plain(dset), eltype(T), indices...)
+end
 
 ## Writing
 
@@ -462,6 +472,7 @@ export
     read,
     @read,
     readsafely,
+    ref,
     write,
     @write
 

@@ -1229,13 +1229,23 @@ write(parent::HDF5Dataset, name::ASCIIString, data::Array{ASCIIString}, plists..
 
 # Reading arrays using ref
 function ref(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
-    local ret
+    local T
     dtype = datatype(dset)
     try
         T = hdf5_to_julia_eltype(dset, dtype)
-        if !(T <: HDF5BitsKind)
-            error("Must be a HDF5BitsKind array to use dset[...] syntax")
-        end
+    finally
+        close(dtype)
+    end
+    _ref(dset, T, indices...)
+end
+
+function _ref(dset::HDF5Dataset{PlainHDF5File}, T::Type, indices::RangeIndex...)
+    local ret
+    if !(T <: HDF5BitsKind)
+        error("Must be a HDF5BitsKind array to use dset[...] syntax")
+    end
+    dtype = datatype(dset)
+    try
         dspace = dataspace(dset)
         try
             dims, maxdims = get_dims(dspace)
