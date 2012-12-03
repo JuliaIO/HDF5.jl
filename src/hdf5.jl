@@ -819,6 +819,13 @@ dataspace(n::Nothing) = HDF5Dataspace(h5s_create(H5S_NULL))
 # Returns both dims and maxdims
 get_dims(dspace::HDF5Dataspace) = h5s_get_simple_extent_dims(dspace.id)
 
+# Convenience macros
+macro read(fid, sym)
+    esc(:($sym = read($fid, $(string(sym)))))
+end
+macro write(fid, sym)
+    esc(:(write($fid, $(string(sym)), $sym)))
+end
 
 # Generic read functions
 for (fsym, osym, ptype) in
@@ -1760,11 +1767,13 @@ export
     parent,
     plain,
     read,
+    @read,
     ref,
     root,
     size,
     t_create,
     t_commit,
-    write
+    write,
+    @write
 
 end  # module

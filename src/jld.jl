@@ -434,7 +434,9 @@ export
     close,
     jldopen,
     read,
+    @read,
     readsafely,
-    write
+    write,
+    @write
 
 end

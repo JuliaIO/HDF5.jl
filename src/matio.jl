@@ -334,6 +334,7 @@ export
     close,
     matopen,
     read,
-    write
-    
+    @read,
+    write,
+    @write,
 end
