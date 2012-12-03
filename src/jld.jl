@@ -132,9 +132,9 @@ function jldopen(fname::String, mode::String)
     mode == "r"  ? jldopen(fname, true , false, false, false, false) :
     mode == "r+" ? jldopen(fname, true , true , false, false, false) :
     mode == "w"  ? jldopen(fname, false, true , true , true , false) :
-    mode == "w+" ? jldopen(fname, true , true , true , true , false) :
-    mode == "a"  ? jldopen(fname, false, true , true , false, true ) :
-    mode == "a+" ? jldopen(fname, true , true , true , false, true ) :
+#     mode == "w+" ? jldopen(fname, true , true , true , true , false) :
+#     mode == "a"  ? jldopen(fname, false, true , true , false, true ) :
+#     mode == "a+" ? jldopen(fname, true , true , true , false, true ) :
     error("invalid open mode: ", mode)
 end
 jldopen(fname::String) = jldopen(fname, "r")

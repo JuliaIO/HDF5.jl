@@ -3,7 +3,7 @@ using HDF5
 
 # Create a new file
 fn = "/tmp/test.h5"
-f = h5open(fn, "w+")
+f = h5open(fn, "w")
 # Write scalars
 f["Float64"] = 3.2
 f["Int16"] = int16(4)

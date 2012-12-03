@@ -475,8 +475,8 @@ function h5open(filename::String, mode::String, toclose::Bool)
     mode == "r"  ? h5open(filename, true,  false, false, false, false, toclose) :
     mode == "r+" ? h5open(filename, true,  true , false, false, true, toclose)  :
     mode == "w"  ? h5open(filename, false, true , true , true,  false, toclose)  :
-    mode == "w+" ? h5open(filename, true,  true , true , true,  false, toclose)  :
-    mode == "a"  ? h5open(filename, true,  true , true , true,  true, toclose)   :
+#     mode == "w+" ? h5open(filename, true,  true , true , true,  false, toclose)  :
+#     mode == "a"  ? h5open(filename, true,  true , true , true,  true, toclose)   :
     error("invalid open mode: ", mode)
 end
 h5open(filename::String, mode::String) = h5open(filename, mode, true)

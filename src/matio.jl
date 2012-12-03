@@ -112,9 +112,9 @@ function matopen(fname::String, mode::String)
     mode == "r"  ? matopen(fname, true , false, false, false, false) :
     mode == "r+" ? matopen(fname, true , true , false, false, false) :
     mode == "w"  ? matopen(fname, false, true , true , true , false) :
-    mode == "w+" ? matopen(fname, true , true , true , true , false) :
-    mode == "a"  ? matopen(fname, false, true , true , false, true ) :
-    mode == "a+" ? matopen(fname, true , true , true , false, true ) :
+#     mode == "w+" ? matopen(fname, true , true , true , true , false) :
+#     mode == "a"  ? matopen(fname, false, true , true , false, true ) :
+#     mode == "a+" ? matopen(fname, true , true , true , false, true ) :
     error("invalid open mode: ", mode)
 end
 matopen(fname::String) = matopen(fname, "r")
@@ -312,7 +312,7 @@ const type2str_matlab = {
 }
 
 
-function read(obj::HDF5Object, ::Type{MatlabString})
+function read(obj::HDF5Object{PlainHDF5File}, ::Type{MatlabString})
     T = hdf5_to_julia(obj)
     data = read(obj, T)
     if size(data, 1) == 1
@@ -325,7 +325,7 @@ function read(obj::HDF5Object, ::Type{MatlabString})
         return Char(data)
     end
 end
-function read(obj::HDF5Object, ::Type{Bool})
+function read(obj::HDF5Object{PlainHDF5File}, ::Type{Bool})
     tf = read(obj, Uint8)
     tf > 0
 end
@@ -336,5 +336,5 @@ export
     read,
     @read,
     write,
-    @write,
+    @write
 end
