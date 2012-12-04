@@ -124,6 +124,12 @@ matopen(fname::String) = matopen(fname, "r")
 const name_type_attr_matlab = "MATLAB_class"
 
 function read(dset::HDF5Dataset{MatlabHDF5File})
+    if exists(dset, "MATLAB_empty")
+        # Empty arrays encode the dimensions as the dataset
+        dims = int(read(plain(dset)))
+        mattype = a_read(dset, name_type_attr_matlab)
+        return Array(str2type_matlab[mattype], dims...)
+    end
     # Read the MATLAB class
     mattype = "cell"
     if exists(dset, name_type_attr_matlab)
