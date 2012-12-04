@@ -105,8 +105,12 @@ function matopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
         elseif magic[1:length(magic_matlab)] == magic_matlab.data
             try
                 return MAT.matopen(filename)
-            catch
-                error("This seems to be a MAT file, but it's not a version 7.3 MAT-file. Try loading the MAT package.")
+            catch err
+                if isa(err, ErrorException) && err.msg == "in matopen: MAT not defined"
+                    error("This seems to be a MAT file, but it's not a version 7.3 MAT-file. Try loading the MAT package before MatIO.")
+                else
+                    rethrow(err)
+                end
             end
         else
             error("This does not seem to be a MAT file")
