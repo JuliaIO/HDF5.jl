@@ -5,6 +5,11 @@
 require("hdf5.jl")
 module MatIO
 using HDF5
+# Attempt to execute "using MAT", but don't error if it doesn't work
+try
+    eval(expr(:using, Any[:MAT]))
+catch
+end
 # Add methods to...
 import HDF5.close, HDF5.read, HDF5.write
 
@@ -98,7 +103,11 @@ function matopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
         if magic == magic_hdf5.data
             f = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
         elseif magic[1:length(magic_matlab)] == magic_matlab.data
-            error("This seems to be a MAT file, but it's not a version 7.3 MAT-file. Not (yet) supported.")
+            try
+                return MAT.matopen(filename)
+            catch
+                error("This seems to be a MAT file, but it's not a version 7.3 MAT-file. Try loading the MAT package.")
+            end
         else
             error("This does not seem to be a MAT file")
         end
