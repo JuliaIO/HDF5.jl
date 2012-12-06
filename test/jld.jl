@@ -11,6 +11,7 @@ tf = true
 TF = A .> 10
 B = randn(2, 4)
 AB = Any[A, B]
+t = (3, "cat")
 c = float32(3)+float32(7)im
 C = reinterpret(Complex128, B, (4,))
 type MyStruct
@@ -48,6 +49,7 @@ fid = jldopen("/tmp/test.jld","w")
 @write fid tf
 @write fid TF
 @write fid AB
+@write fid t
 @write fid c
 @write fid C
 @write fid ms
@@ -65,6 +67,7 @@ fidr = jldopen("/tmp/test.jld","r")
 @check fidr tf
 @check fidr TF
 @check fidr AB
+@check fidr t
 @check fidr c
 @check fidr C
 @check fidr ms

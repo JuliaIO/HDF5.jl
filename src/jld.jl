@@ -150,6 +150,9 @@ function read(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
     end
     # Read the type
     typename = a_read(obj, name_type_attr)
+    if typename == "Tuple"
+        return read_tuple(obj)
+    end
     # Convert to Julia type
     T = julia_type(typename)
     if T == CompositeKind
@@ -178,6 +181,10 @@ function readsafely(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
     end
     # Read the type
     typename = a_read(obj, name_type_attr)
+    println(typename)
+    if typename == "Tuple"
+        return read_tuple(obj)
+    end
     # Convert to Julia type
     T = julia_type(typename)
     local ret
@@ -255,6 +262,12 @@ function read{T,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}})
         out[i] = read(f[refs[i]])
     end
     return out
+end
+
+# Tuple
+function read_tuple(obj::HDF5Dataset{JldFile})
+    t = read(obj, Array{Any, 1})
+    return tuple(t...)
 end
 
 # Dict
@@ -394,7 +407,10 @@ function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString,
 end
 write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, data::Array{T}) = write(parent, name, data, string(typeof(data)))
 
-# Dict
+# Tuple
+write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Tuple) = write(parent, name, Any[t...], "Tuple")
+
+# Associative (Dict)
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d::Associative)
     n = length(d)
     K = keytype(d)
@@ -407,11 +423,7 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d:
         vs[i] = v
     end
     da = Any[ks, vs]
-    write(parent, name, da, "Dict")
-    obj = parent[name]
-    a_write(obj, "KeyType", string(K))    # not necessary, but perhaps helpful
-    a_write(obj, "ValType", string(V))
-    close(obj)
+    write(parent, name, da, string(typeof(d)))
 end
 
 # CompositeKind
