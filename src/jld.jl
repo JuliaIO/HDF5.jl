@@ -371,32 +371,49 @@ write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, sym::Symbol
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, syms::Array{Symbol}) = write(parent, name, map(string, syms), string(typeof(syms)))
 
 # General array types (as arrays of references)
-function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, data::Array{T}, astype::String)
-    local g
+function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString, data::Array{T}, astype::String)
+    local gref  # a group, inside /_refs, for all the elements in data
     local refs
     if !exists(file(parent), pathrefs)
-        g = g_create(file(parent), pathrefs)
+        # If necessary, create /_refs
+        grefbase = g_create(file(parent), pathrefs)
+        gref = g_create(grefbase, path)
+        close(grefbase)
     else
-        g = parent[pathrefs]
+        # Determine whether the parent is already in /_refs
+        pname = name(parent)
+        if length(pname) >= length(pathrefs) && pname[1:length(pathrefs)] == pathrefs
+            gref = g_create(parent, path)
+        else
+            gref = g_create(file(parent), pathrefs*pname*"/"*path)
+        end
     end
+    grefname = name(gref)
     try
         # Write the items to the reference group
         refs = HDF5ReferenceObjArray(size(data)...)
-        nrefs = file(parent).nrefs
+        # pad with zeros to keep in order
+        nd = ndigits(length(data))
+        z = "0"
+        z = z[ones(Int, nd-1)]
+        nd = 1
         for i = 1:length(data)
-            nrefs[1] += 1
-            itemname = string(nrefs[1])
-            write(g, itemname, data[i])
+            if ndigits(i) > nd
+                nd = ndigits(i)
+                z = z[1:end-1]
+            end
+            itemname = z*string(i)
+            write(gref, itemname, data[i])
             # Extract references
-            tmp = g[itemname]
-            refs[i] = (tmp, pathrefs*"/"*itemname)
+            tmp = gref[itemname]
+            refs[i] = (tmp, grefname*"/"*itemname)
             close(tmp)
         end
     finally
-        close(g)
+        close(gref)
     end
     # Write the references as the chosen variable
-    cset, ctype = d_create(plain(parent), name, refs)
+    cset, ctype = d_create(plain(parent), path, refs)
     try
         writearray(cset, ctype.id, refs.r)
         a_write(cset, name_type_attr, astype)
@@ -405,7 +422,7 @@ function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString,
         close(cset)
     end
 end
-write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, data::Array{T}) = write(parent, name, data, string(typeof(data)))
+write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString, data::Array{T}) = write(parent, path, data, string(typeof(data)))
 
 # Tuple
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Tuple) = write(parent, name, Any[t...], "Tuple")

@@ -24,13 +24,13 @@ Currently there is no support for "generic" `BitsKind`s because of fears that it
 - `Bool`s: scalars are written as a single Uint8. Arrays of Bools are written with an additional attribute "julia_format", containing a string which describes the encoding strategy. Currently "EachUint8" is the only supported format (which writes `Array{Bool}` as an `Array{Uint8}`), but in the future it's anticipated that `BitArray`s will be the default. TODO: consider letting `g[name, "julia_format", "EachUint8"] = A` specify the format explicitly.
 - `Complex64`/`Complex128`: written as pairs of `Float32`/`Float64`s. An array of complex numbers with dimensionality `(s1, s2, ...)` is written as an array of `FloatingPoint`s with  dimensionality `(2, s1, s2, ...)`.
 - `Symbol`: represented as a string. Array of symbols represented as array of strings.
-- General arrays: written as an array of references. A group of the same pathname, but rooted at /_refs rather than /, is created to store the referenced data. See more detail about [/_refs](#refs) below.
-- Associative (Dict): written as `Any[keys, vals]`, where `keys` and `vals` are arrays, using the "general array" format described previously.
-- CompositeKind: written as an `Array{Any, 1}`, where each item corresponds to a field of the type. The type is documented in [/_types](#types).
+- General arrays: written as an array of references. A group of the same pathname, but rooted at /_refs rather than /, is created to store the referenced data. See more detail about [/_refs](#_refs) below.
+- `Tuple` (is stored in the same way as a "general array")
+- Associative (Dict): written as `Any[keys, vals]`, where `keys` and `vals` are arrays, using the "general array" format.
+- CompositeKind: written as an `Array{Any, 1}` (using the format of "general array"), where each item corresponds to a field of the type. The type is documented in [/_types](#_types).
 
 #### Missing, but will be supported
 
-- `Tuple` (just convert to array)
 - `Int128`/`Uint128`: presumably similar to Complex128 (encode as pair of Uint64). The holdup: is the sign bit portable?
 
 #### Not currently supported, and may never be
@@ -43,16 +43,12 @@ The emphasis is on data, not code. This might change in response to feedback.
 Also, when writing, undefined array entries will cause an error. I don't currently anticipate changing this behavior.
 
 ### /_refs
-<a id="refs"></a>
 
 For any "container" object in / that needs to reference sub-objects, there's a group of the same pathname under _refs containing the references. The referenced items are either datasets or groups (depending on whether they also need references).
 
-NOTE: TODO (currently `/_refs` has a flat organization)
-
 ### /_types
-<a id="types"></a>
 
-Each new type (CompositeKind) gets described by a dataset in `/_types`, containing a 2-by-n array of strings. Row 1 contains the field names, row 2 the corresponding Julia type declaration. (When viewed in h5dump, these look like pairs.) This dataset also has a "Module" attribute, consisting of an array of strings that encodes the module hierarchy. The Module attribute is necessary for Julia to reconstruct the object in the case where the given type is not exported to Main. The array of name/type pairs is there (1) to help [readsafely](#readsafely), and (2) to assist other languages in interpreting \*.jld files.
+Each new type (CompositeKind) gets described by a dataset in `/_types`, containing a 2-by-n array of strings. Row 1 contains the field names, row 2 the corresponding Julia type declaration. (When viewed in h5dump, these look like pairs.) This dataset also has a "Module" attribute, consisting of an array of strings that encodes the module hierarchy. The Module attribute is necessary for Julia to reconstruct the object in the case where the given type is not exported to Main. The array of name/type pairs is there (1) to help [readsafely](#data-types-and-code-evolution), and (2) to assist other languages in interpreting \*.jld files.
 
 
 
