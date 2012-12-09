@@ -382,10 +382,17 @@ end
 type HDF5ReferenceObjArray
     r::Array{Uint8}
 end
+
 HDF5ReferenceObjArray(dims::Int...) = HDF5ReferenceObjArray(Array(Uint8, H5R_OBJ_REF_BUF_SIZE, dims...))
+
 size(a::HDF5ReferenceObjArray) = ntuple(ndims(a.r)-1, i->size(a.r,i+1))
+
 length(a::HDF5ReferenceObjArray) = prod(size(a))
+
 ref(a::HDF5ReferenceObjArray, i::Integer) = HDF5ObjPtr(pointer(a.r)+(i-1)*H5R_OBJ_REF_BUF_SIZE)
+
+ref(a::HDF5ReferenceObjArray, indices::Union(Integer, AbstractVector)...) = HDF5ReferenceObjArray(a.r[:, indices...])
+
 function assign(a::HDF5ReferenceObjArray, pname::(Union(HDF5File, HDF5Group, HDF5Dataset), ASCIIString), i::Integer)
     ptr = pointer(a.r)+(i-1)*H5R_OBJ_REF_BUF_SIZE
     h5r_create(ptr, pname[1].id, pname[2], H5R_OBJECT, -1)
@@ -724,12 +731,13 @@ end
 
 # It would also be nice to print the first few elements.
 function dump(io::IOStream, x::HDF5Dataset, n::Int, indent)
-    print(io, "HDF5Dataset $(size(x)) : ")
-    length(x) == 1 ? print(read(x)) :
+    sz = size(x)
+    print(io, "HDF5Dataset $sz : ")
+    isempty(sz) || prod(sz) == 1 ? print(io, read(x)) :
     # the following is a bit kludgy, but there's no way to do x[1:3] for the multidimensional case
-    ndims(x) == 1 ? Base.show_delim_array(io, x[1:min(5,size(x)[1])], '[', ',', ' ', true) :
-    ndims(x) == 2 ? Base.show_delim_array(io, x[1,1:min(5,size(x)[2])], '[', ',', ' ', true) : ""
-    println()
+    length(sz) == 1 ? Base.show_delim_array(io, x[1:min(5,size(x)[1])], '[', ',', ' ', true) :
+    length(sz) == 2 ? Base.show_delim_array(io, x[1,1:min(5,size(x)[2])], '[', ',', ' ', true) : ""
+    println(io,)
 end
 function dump(io::IOStream, x::Union(HDF5File, HDF5Group), n::Int, indent)
     println(typeof(x), " len ", length(x))
@@ -1183,11 +1191,8 @@ function ref(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
     _ref(dset, T, indices...)
 end
 
-function _ref(dset::HDF5Dataset{PlainHDF5File}, T::Type, indices::RangeIndex...)
+function _ref{T<:HDF5BitsKind}(dset::HDF5Dataset{PlainHDF5File}, ::Type{T}, indices::RangeIndex...)
     local ret
-    if !(T <: HDF5BitsKind)
-        error("Must be a HDF5BitsKind array to use dset[...] syntax")
-    end
     dtype = datatype(dset)
     try
         dspace = dataspace(dset)
@@ -1195,6 +1200,8 @@ function _ref(dset::HDF5Dataset{PlainHDF5File}, T::Type, indices::RangeIndex...)
             dims, maxdims = get_dims(dspace)
             n_dims = length(dims)
             if length(indices) != n_dims
+                @show n_dims
+                @show indices
                 error("Wrong number of indices supplied")
             end
             dsel_id = h5s_copy(dspace.id)
@@ -1482,14 +1489,14 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5a_get_space, :H5Aget_space, Hid, (Hid,), (:attr_id,), :(error("Error getting attribute dataspace"))),
      (:h5a_get_type, :H5Aget_type, Hid, (Hid,), (:attr_id,), :(error("Error getting attribute type"))),
      (:h5a_open, :H5Aopen, Hid, (Hid, Ptr{Uint8}, Hid), (:obj_id, :pathname, :aapl_id), :(error("Error opening attribute ", h5a_get_name(obj_id), "/", pathname))),
-     (:h5a_read, :H5Aread, Herr, (Hid, Hid, Ptr{Uint8}), (:attr_id, :mem_type_id, :buf), :(error("Error reading attribute"))),
+     (:h5a_read, :H5Aread, Herr, (Hid, Hid, Ptr{Uint8}), (:attr_id, :mem_type_id, :buf), :(error("Error reading attribute ", h5a_get_name(attr_id)))),
      (:h5d_create, :H5Dcreate2, Hid, (Hid, Ptr{Uint8}, Hid, Hid, Hid, Hid, Hid), (:loc_id, :pathname, :dtype_id, :space_id, :dlcpl_id, :dcpl_id, :dapl_id), :(error("Error creating dataset ", h5i_get_name(loc_id), "/", pathname))),
      (:h5d_get_access_plist, :H5Dget_access_plist, Hid, (Hid,), (:dataset_id,), :(error("Error getting dataset access property list"))),     
      (:h5d_get_create_plist, :H5Dget_create_plist, Hid, (Hid,), (:dataset_id,), :(error("Error getting dataset create property list"))),     
      (:h5d_get_space, :H5Dget_space, Hid, (Hid,), (:dataset_id,), :(error("Error getting dataspace"))),     
      (:h5d_get_type, :H5Dget_type, C_int, (Hid,), (:dataset_id,), :(error("Error getting dataspace type"))),
      (:h5d_open, :H5Dopen2, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :pathname, :dapl_id), :(error("Error opening dataset ", h5i_get_name(loc_id), "/", pathname))),
-     (:h5d_read, :H5Dread, Herr, (Hid, Hid, Hid, Hid, Hid, Ptr{Void}), (:dataset_id, :mem_type_id, :mem_space_id, :file_space_id, :xfer_plist_id, :buf), :(error("Error reading dataset"))),
+     (:h5d_read, :H5Dread, Herr, (Hid, Hid, Hid, Hid, Hid, Ptr{Void}), (:dataset_id, :mem_type_id, :mem_space_id, :file_space_id, :xfer_plist_id, :buf), :(error("Error reading dataset ", h5i_get_name(dataset_id)))),
      (:h5f_create, :H5Fcreate, Hid, (Ptr{Uint8}, C_unsigned, Hid, Hid), (:pathname, :flags, :fcpl_id, :fapl_id), :(error("Error creating file ", pathname))),
      (:h5f_get_access_plist, :H5Fget_access_plist, Hid, (Hid,), (:file_id,), :(error("Error getting file access property list"))),     
      (:h5f_get_create_plist, :H5Fget_create_plist, Hid, (Hid,), (:file_id,), :(error("Error getting file create property list"))),

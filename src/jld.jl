@@ -6,7 +6,7 @@ load("hdf5.jl")
 module JLD
 using HDF5
 # Add methods to...
-import HDF5.a_write, HDF5.close, HDF5.read, HDF5.ref, HDF5.write
+import HDF5.a_write, HDF5.close, HDF5.dump, HDF5.read, HDF5.ref, HDF5.size, HDF5.write
 
 # Debugging: comment this block out if you un-modulize hdf5.jl
 # Types
@@ -286,19 +286,14 @@ read(obj::HDF5Dataset{JldFile}, ::Type{Symbol}) = symbol(read(plain(obj), ASCIIS
 read{N}(obj::HDF5Dataset{JldFile}, ::Type{Array{Symbol,N}}) = map(symbol, read(plain(obj), Array{ASCIIString}))
 
 # General arrays
-function read{T,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}})
-    # Represented as an array of refs
-    refs = read(plain(obj), Array{HDF5ReferenceObj})
-    out = Array(T, size(refs))
-    f = file(obj)
-    for i = 1:numel(refs)
-        out[i] = read(f[refs[i]])
-    end
-    return out
-end
+read{T,N}(obj::HDF5Dataset{JldFile}, t::Type{Array{T,N}}) = getrefs(obj, T)
 
 # Tuple
 function read_tuple(obj::HDF5Dataset{JldFile})
+    t = read(obj, Array{Any, 1})
+    return tuple(t...)
+end
+function read_tuple(obj::HDF5Dataset{JldFile}, indices::AbstractVector)
     t = read(obj, Array{Any, 1})
     return tuple(t...)
 end
@@ -332,17 +327,33 @@ function getrefs{T}(obj::HDF5Dataset{JldFile}, ::Type{T})
     end
     return out
 end
+function getrefs{T}(obj::HDF5Dataset{JldFile}, ::Type{T}, indices::Union(Integer, AbstractVector)...)
+    refs = read(plain(obj), Array{HDF5ReferenceObj})
+    refs = refs[indices...]
+    f = file(obj)
+    local out
+    if isa(refs, HDF5.HDF5ObjPtr)
+        # This is a scalar, not an array
+        out = read(f[refs])
+    else
+        out = Array(T, size(refs))
+        for i = 1:numel(refs)
+            out[i] = read(f[refs[i]])
+        end
+    end
+    return out
+end
 
 # dset[3:5, ...] syntax
-function ref(dset::HDF5Dataset{JldFile}, indices::RangeIndex...)
-    typename = a_read(dset, name_type_attr)
-    # Convert to Julia type
-    T = julia_type(typename)
-    if !(T <: AbstractArray)
-        error("Ref syntax only works for arrays")
-    end
-    HDF5._ref(plain(dset), eltype(T), indices...)
-end
+# function ref(dset::HDF5Dataset{JldFile}, indices::RangeIndex...)
+#     typename = a_read(dset, name_type_attr)
+#     # Convert to Julia type
+#     T = julia_type(typename)
+#     if !(T <: AbstractArray)
+#         error("Ref syntax only works for arrays")
+#     end
+#     HDF5._ref(plain(dset), eltype(T), indices...)
+# end
 
 
 
@@ -546,6 +557,85 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s)
     a_write(plain(obj), "CompositeKind", Tname)
     close(obj)
 end
+
+### Size, length, etc ###
+function size(dset::HDF5Dataset{JldFile})
+    if !exists(attrs(dset), name_type_attr)
+        return size(plain(dset))
+    end
+    # Read the type
+    typename = a_read(dset, name_type_attr)
+    if typename == "Tuple"
+        return size(plain(dset))
+    end
+    # Convert to Julia type
+    T = julia_type(typename)
+    if T == CompositeKind || T <: Associative || T == Expr
+        return ()
+    elseif T <: Complex
+        return ()
+    elseif isarraycomplex(T)
+        sz = size(plain(dset))
+        return sz[2:end]
+    end
+    size(plain(dset))
+end
+
+isarraycomplex{T<:Complex, N}(::Type{Array{T, N}}) = true
+isarraycomplex(t) = false
+
+### Read via ref ###
+function ref(dset::HDF5Dataset{JldFile}, indices::Union(Integer, RangeIndex)...)
+    if !exists(attrs(dset), name_type_attr)
+        # Fallback to plain read
+        return read(plain(dset))
+    end
+    # Read the type
+    typename = a_read(dset, name_type_attr)
+    if typename == "Tuple"
+        return read_tuple(dset, indices...)
+    end
+    # Convert to Julia type
+    T = julia_type(typename)
+    if !(T <: AbstractArray)
+        error("Ref syntax only works for arrays")
+    end
+    _ref(dset, T, indices...)
+end
+
+_ref{T<:HDF5BitsKind,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::RangeIndex...) = HDF5._ref(plain(dset), T, indices...)
+function _ref{T<:Complex,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::RangeIndex...)
+    reinterpret(T, HDF5._ref(plain(dset), realtype(T), 1:2, indices...), ntuple(length(indices), i->length(indices[i])))
+end
+function _ref{N}(dset::HDF5Dataset{JldFile}, ::Type{Array{Bool,N}}, indices::RangeIndex...)
+    tf = HDF5._ref(plain(dset), Uint8, indices...)
+    bool(tf)
+end
+_ref{T,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::Union(Integer, RangeIndex)...) = getrefs(dset, T, indices...)
+
+
+### Dump ###
+function dump(io::IOStream, x::Union(JldFile, HDF5Group{JldFile}), n::Int, indent)
+    println(typeof(x), " len ", length(x))
+    if n > 0
+        i = 1
+        for k in names(x)
+            if k == "_refs" || k == "_types"
+                continue
+            end
+            print(io, indent, "  ", k, ": ")
+            v = o_open(x, k)
+            dump(io, v, n - 1, strcat(indent, "  "))
+            close(v)
+            if i > 10
+                println(io, indent, "  ...")
+                break
+            end
+            i += 1
+        end
+    end
+end
+
 
 
 ### Converting strings to Julia types
