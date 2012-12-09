@@ -1,5 +1,6 @@
 load("jld.jl")
 using JLD
+using HDF5
 
 # Define variables of different types
 x = 3.7

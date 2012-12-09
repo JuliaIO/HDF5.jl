@@ -820,13 +820,11 @@ for (fsym, osym, ptype) in
         function ($fsym)(parent::$ptype, name::ASCIIString)
             local ret
             obj = ($osym)(parent, name)
-        #      try
+            try
                 ret = read(obj)
-        #      catch err
-        #          close(obj)
-        #          throw(err)
-        #      end
-            close(obj)
+            finally
+                close(obj)
+            end
             ret
         end
     end
@@ -867,16 +865,10 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
             # Read array of BitsKind
             function read(obj::$objtype, ::Type{Array{$T}})
                 local data
+                dims = size(obj)
                 dspace = dataspace(obj)
-            #              try
-                    dims, maxdims = get_dims(dspace)
-                    data = Array($T, dims...)
-                    readarray(obj, hdf5_type_id($T), data)
-            #              catch err
-            #                  close(dspace)
-            #                  throw(err)
-            #              end
-                close(dspace)
+                data = Array($T, dims...)
+                readarray(obj, hdf5_type_id($T), data)
                 data
             end
             # Empty arrays
@@ -890,16 +882,14 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
         function read{S<:ByteString}(obj::$objtype, ::Type{S})
             local ret::S
             objtype = datatype(obj)
-        #      try
+            try
                 n = h5t_get_size(objtype.id)
                 buf = Array(Uint8, n)
                 readarray(obj, objtype.id, buf)
                 ret = convert(S, buf)
-        #      catch err
-        #          close(objtype)
-        #          throw(err)
-        #      end
-            close(objtype)
+            finally
+                close(objtype)
+            end
             ret
         end
         # Read array of strings
@@ -909,14 +899,12 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
             sz = size(obj)
             len = prod(sz)
             objtype = datatype(obj)
-        #      try
+            try
                 isvar = h5t_is_variable_str(objtype.id)
                 ilen = int(h5t_get_size(objtype.id))
-#             catch err
-#                 close(objtype)
-#                 throw(err)
-#             end
-            close(objtype)
+            finally
+                close(objtype)
+            end
             memtype_id = h5t_copy(H5T_C_S1)
             ret = Array(S, sz...)
             if isvar
@@ -978,16 +966,14 @@ function read(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute), ::Type{Arra
     local tag
     sz = size(obj)
     objtype = datatype(obj)
-#      try
+    try
         len = h5t_get_size(objtype)
         buf = Array(Uint8, prod(sz)*len)
         tag = h5t_get_tag(objtype.id)
         readarray(obj, objtype.id, buf)
-#     catch err
-#         close(objtype)
-#         throw(err)
-#     end
-    close(objtype)
+    finally
+        close(objtype)
+    end
     data = Array(Array{Uint8}, sz...)
     for i = 1:prod(sz)
         data[i] = buf[(i-1)*len+1:i*len]
@@ -1056,19 +1042,12 @@ for (privatesym, fsym, ptype) in
             local dtype
             local obj
             dtype = datatype(data)
-#             try
-                dspace = dataspace(data)
-#                 try
-                    obj = ($fsym)(parent, name, dtype, dspace, plists...)
-#                 catch err
-#                     close(dspace)
-#                     throw(err)
-#                 end
+            dspace = dataspace(data)
+            try
+                obj = ($fsym)(parent, name, dtype, dspace, plists...)
+            finally
                 close(dspace)
-#             catch err
-#                 close(dtype)
-#                 throw(err)
-#             end
+            end
             obj, dtype
         end
         # Scalar types
@@ -1087,18 +1066,11 @@ end
 function d_create(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::HDF5ReferenceObjArray, plists...)
     local obj
     dtype = datatype(data)
+    dspace = dataspace(data)
     try
-        dspace = dataspace(data)
-        try
-            obj = d_create(parent, name, dtype, dspace, plists...)
-        catch err
-            close(dspace)
-            throw(err)
-        end
+        obj = d_create(parent, name, dtype, dspace, plists...)
+    finally
         close(dspace)
-    catch err
-        close(dtype)
-        throw(err)
     end
     obj, dtype
 end
@@ -1110,15 +1082,12 @@ for (privatesym, fsym, ptype, crsym) in
         # Generic write (hidden)
         function ($privatesym)(parent::$ptype, name::ASCIIString, data, plists...)
             obj, dtype = ($crsym)(parent, name, data, plists...)
-#             try
+            try
                 writearray(obj, dtype.id, data)
-#             catch err
-#                 close(obj)
-#                 close(dtype)
-#                 throw(err)
-#             end
-            close(obj)
-            close(dtype)
+            finally
+                close(obj)
+                close(dtype)
+            end
         end
         # Scalar types
         ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ASCIIString, data::T, plists...) = ($privatesym)(parent, name, data, plists...)
@@ -1139,24 +1108,20 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
             # Scalars
             function write(obj::$objtype, x::$T)
                 dtype = datatype(x)
-#                try
+                try
                     writearray(obj, dtype.id, x)
-#                catch err
-#                    close(dtype)
-#                    throw(err)
-#                end
-                close(dtype)
+                finally
+                   close(dtype)
+                end
             end
             # Arrays
             function write(obj::$objtype, data::Array{$T})
                 dtype = datatype(data)
-#                try
+                try
                     writearray(obj, dtype.id, data)
-#                catch err
-#                    close(dtype)
-#                    throw(err)
-#                end
-                close(dtype)
+                finally
+                    close(dtype)
+                end
             end
         end
     end
@@ -1164,39 +1129,33 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
     @eval begin
         function write(obj::$objtype, str::ByteString)
             dtype = datatype(str)
-#            try
+            try
                 writearray(obj, dtype.id, str)
-#              catch err
-#                  close(dtype)
-#                  throw(err)
-#              end
-            close(dtype)
+            finally
+                  close(dtype)
+            end
         end
     end
     # Array{String}
     @eval begin
         function write{S<:ByteString}(obj::$objtype, strs::Array{S})
             dtype = datatype(strs)
-#            try
+            try
                 writearray(obj, dtype.id, strs)
-#              catch err
-#                  close(dtype)
-#                  throw(err)
-#              end
-            close(dtype)
+            finally
+                close(dtype)
+            end
         end
     end
     # VLEN types
     @eval begin
         function write{T<:Union(HDF5BitsKind,CharType)}(obj::$objtype, data::HDF5Vlen{T})
             dtype = datatype(data)
-#            try
+            try
                 writearray(obj, dtype.id, strs)
-#              catch err
-#                  close(dtype)
-#                  throw(err)
-#              end
-            close(dtype)
+            finally
+                close(dtype)
+            end
         end
     end
 end
@@ -1270,28 +1229,19 @@ function _ref(dset::HDF5Dataset{PlainHDF5File}, T::Type, indices::RangeIndex...)
                 memspace = dataspace(ret)
                 try
                     h5d_read(dset.id, memtype.id, memspace.id, dsel_id, H5P_DEFAULT, ret)
-                catch err
+                finally
                     close(memtype)
                     close(memspace)
-                    throw(err)
                 end
-                close(memtype)
-                close(memspace)
-            catch err
+            finally
                 h5s_close(dsel_id)
-                throw(err)
             end
-            h5s_close(dsel_id)
-        catch err
+        finally
             close(dspace)
-            throw(err)
         end
-        close(dspace)
-    catch err
+    finally
         close(dtype)
-        throw(err)
     end
-    close(dtype)
     ret
 end
 
@@ -1309,13 +1259,11 @@ writearray(attr::HDF5Attribute, type_id, buf) = h5a_write(attr.id, type_id, buf)
 function hdf5_to_julia(obj::Union(HDF5Dataset, HDF5Attribute))
     local T
     objtype = datatype(obj)
-#     try
+    try
         T = hdf5_to_julia_eltype(obj, objtype)
-#     catch err
-#         close(objtype)
-#         throw(err)
-#     end
-    close(objtype)
+    finally
+        close(objtype)
+    end
     if T <: HDF5Vlen
         return T
     end
@@ -1324,11 +1272,9 @@ function hdf5_to_julia(obj::Union(HDF5Dataset, HDF5Attribute))
     objspace = dataspace(obj)
     try
         stype = h5s_get_simple_extent_type(objspace.id)
-    catch err
+    finally
         close(objspace)
-        throw(err)
     end
-    close(objspace)
     if stype == H5S_SIMPLE
         T = Array{T}
     elseif stype == H5S_NULL

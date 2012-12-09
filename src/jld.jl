@@ -568,19 +568,8 @@ function isversionless(l::Array{Int}, r::Array{Int})
 end
 
 export
-    a_create,
-    a_delete,
-    a_open,
-    a_read,
-    a_write,
-    close,
     jldopen,
     plain,
-    read,
-    @read,
-    readsafely,
-    ref,
-    write,
-    @write
+    readsafely
 
 end
