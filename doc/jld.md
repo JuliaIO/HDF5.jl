@@ -28,6 +28,8 @@ Currently there is no support for "generic" `BitsKind`s because of fears that it
 - `Tuple` (is stored in the same way as a "general array")
 - Associative (Dict): written as `Any[keys, vals]`, where `keys` and `vals` are arrays, using the "general array" format.
 - CompositeKind: written as an `Array{Any, 1}` (using the format of "general array"), where each item corresponds to a field of the type. The type is documented in [/_types](#_types).
+- Types
+- Expressions
 
 #### Missing, but will be supported
 
@@ -35,7 +37,6 @@ Currently there is no support for "generic" `BitsKind`s because of fears that it
 
 #### Not currently supported, and may never be
 
-- Expressions
 - Functions (closures)
 
 The emphasis is on data, not code. This might change in response to feedback.
@@ -53,6 +54,5 @@ Each new type (CompositeKind) gets described by a dataset in `/_types`, containi
 
 
 ## Data types and code evolution
-<a id="readsafely"></a>
 
 `readsafely` loads a CompositeKind as a Dict. This provides a fallback if the type definition changes in the code after a \*.jld file is written, or if the correct Module simply hasn't been loaded.

@@ -22,6 +22,12 @@ ms = MyStruct(2, [3.2, -1.7])
 sym = :TestSymbol
 syms = [:a, :b]
 d = Dict(syms, ["aardvark", "banana"])
+exsimple = :(x+1)
+ex = quote
+    function incrementby1(x::Int)
+        x+1
+    end
+end
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -56,6 +62,7 @@ fid = jldopen("/tmp/test.jld","w")
 @write fid sym
 @write fid syms
 @write fid d
+@write fid ex
 close(fid)
 
 fidr = jldopen("/tmp/test.jld","r")
@@ -74,4 +81,5 @@ fidr = jldopen("/tmp/test.jld","r")
 @check fidr sym
 @check fidr syms
 @check fidr d
+exr = read(fidr, "ex")   # line numbers are stripped, don't expect equality
 close(fidr)

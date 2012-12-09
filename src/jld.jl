@@ -181,7 +181,6 @@ function readsafely(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
     end
     # Read the type
     typename = a_read(obj, name_type_attr)
-    println(typename)
     if typename == "Tuple"
         return read_tuple(obj)
     end
@@ -223,8 +222,14 @@ for typ in (HDF5BitsKind, ByteString)
     end
 end
 
+# Nothing
 read(obj::HDF5Dataset{JldFile}, ::Type{Nothing}) = nothing
 read(obj::HDF5Dataset{JldFile}, ::Type{Bool}) = bool(read(obj, Uint8))
+
+# Types
+read{T}(obj::HDF5Dataset{JldFile}, ::Type{Type{T}}) = T
+
+# Bool
 function read{N}(obj::HDF5Dataset{JldFile}, ::Type{Array{Bool,N}})
     format = a_read(obj, "julia_format")
     if format == "EachUint8"
@@ -274,6 +279,12 @@ end
 function read{T<:Associative}(obj::HDF5Dataset{JldFile}, ::Type{T})
     kv = getrefs(obj, Any)
     T(kv[1], kv[2])
+end
+
+# Expressions
+function read(obj::HDF5Dataset{JldFile}, ::Type{Expr})
+    a = getrefs(obj, Any)
+    expr(a[1], a[2])
 end
 
 # CompositeKind
@@ -335,15 +346,19 @@ for (fsym, dsym) in
 end
 
 # Write nothing
-function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, n::Nothing)
+function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, n::Nothing, astype::ASCIIString)
     local dset
     try
         dset = HDF5Dataset(h5d_create(parent.id, name, HDF5.H5T_NATIVE_UINT8, dataspace(nothing).id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT), file(parent))
-        a_write(plain(dset), name_type_attr, "Nothing")
+        a_write(plain(dset), name_type_attr, astype)
     finally
         close(dset)
     end
 end
+write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, n::Nothing) = write(parent, name, n, "Nothing")
+
+# Types
+write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Type{T}) = write(parent, name, nothing, strcat("Type{", t, "}"))
 
 # Bools
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, tf::Bool) = write(parent, name, uint8(tf), "Bool")
@@ -383,7 +398,7 @@ function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString,
         # Determine whether the parent is already in /_refs
         pname = name(parent)
         if length(pname) >= length(pathrefs) && pname[1:length(pathrefs)] == pathrefs
-            gref = g_create(parent, path)
+            gref = g_create(parent, path*"g") # to avoid group/dataset conflict
         else
             gref = g_create(file(parent), pathrefs*pname*"/"*path)
         end
@@ -443,6 +458,21 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d:
     write(parent, name, da, string(typeof(d)))
 end
 
+# Expressions
+function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, ex::Expr)
+    args = ex.args
+    # Discard "line" expressions
+    keep = trues(length(args))
+    for i = 1:length(args)
+        if isa(args[i], Expr) && args[i].head == :line
+            keep[i] = false
+        end
+    end
+    args = args[keep]
+    a = Any[ex.head, args]
+    write(parent, name, a, "Expr")
+end
+
 # CompositeKind
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s)
     T = typeof(s)
@@ -488,6 +518,7 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s)
     a_write(plain(obj), "CompositeKind", Tname)
     close(obj)
 end
+
 
 ### Converting strings to Julia types
 type UnsupportedType
