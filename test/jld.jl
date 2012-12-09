@@ -64,6 +64,9 @@ fid = jldopen("/tmp/test.jld","w")
 @write fid syms
 @write fid d
 @write fid ex
+g = g_create(fid, "mygroup")
+i = 7
+@write g i
 close(fid)
 
 fidr = jldopen("/tmp/test.jld","r")

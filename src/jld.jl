@@ -615,19 +615,32 @@ _ref{T,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::Union(Integer
 
 
 ### Dump ###
-function dump(io::IOStream, x::Union(JldFile, HDF5Group{JldFile}), n::Int, indent)
-    println(typeof(x), " len ", length(x))
+function dump(io::IOStream, parent::Union(JldFile, HDF5Group{JldFile}), n::Int, indent)
+    println(io, typeof(parent), " len ", length(parent))
     if n > 0
         i = 1
-        for k in names(x)
+        for k in names(parent)
             if k == "_refs" || k == "_types"
                 continue
             end
             print(io, indent, "  ", k, ": ")
-            v = o_open(x, k)
-            dump(io, v, n - 1, strcat(indent, "  "))
+            v = parent[k]
+            if isa(v, HDF5Group)
+                dump(io, v, n-1, strcat(indent, "  "))
+            else
+                if exists(attrs(v), name_type_attr)
+                    typename = a_read(v, name_type_attr)
+                    if length(typename) >= 5 && typename[1:5] == "Array"
+                        println(io, typename, " ", size(v))
+                    else
+                        println(io, typename)
+                    end
+                else
+                    dump(io, v, 1, indent)
+                end
+            end
             close(v)
-            if i > 10
+            if i > n
                 println(io, indent, "  ...")
                 break
             end
