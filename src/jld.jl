@@ -47,10 +47,9 @@ type JldFile <: HDF5File
     version::String
     toclose::Bool
     writeheader::Bool
-    nrefs::Array{Int}
 
     function JldFile(id, filename, version, toclose::Bool, writeheader::Bool)
-        f = new(id, filename, version, toclose, writeheader, [0])
+        f = new(id, filename, version, toclose, writeheader)
         if toclose
             finalizer(f, close)
         end
@@ -77,53 +76,59 @@ function close(f::JldFile)
 end
 
 function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool)
-    local f
+    local fj
     if ff && !wr
         error("Cannot append to a write-only file")
     end
     if !cr && !isfile(filename)
         error("File ", filename, " cannot be found")
     end
-    pa = p_create(H5P_FILE_ACCESS)
-    pa["fclose_degree"] = H5F_CLOSE_STRONG
     version = version_current
-    if cr && (tr || !isfile(filename))
-        # We're truncating, so we don't have to check the format of an existing file
-        # Set the user block to 512 bytes, to save room for the header
-        p = p_create(H5P_FILE_CREATE)
-        p["userblock"] = 512
-        f = h5f_create(filename, H5F_ACC_TRUNC, p.id, pa.id)
-        return JldFile(f, filename, version, true, true)
-    else
-        # Test whether this is a jld file
-        sz = filesize(filename)
-        if sz < 512
-            error("File size indicates this cannot be a Julia data file")
-        end
-        magic = Array(Uint8, 512)
-        rawfid = open(filename, "r")
-        magic = read(rawfid, magic)
-        close(rawfid)
-        local fj
-        if magic[1:length(magic_base)] == magic_base.data
-            f = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
-            version = bytestring(convert(Ptr{Uint8}, magic) + length(magic_base))
-            close(pa)
+    pa = p_create(H5P_FILE_ACCESS)
+    try
+        pa["fclose_degree"] = H5F_CLOSE_STRONG
+        if cr && (tr || !isfile(filename))
+            # We're truncating, so we don't have to check the format of an existing file
+            # Set the user block to 512 bytes, to save room for the header
+            p = p_create(H5P_FILE_CREATE)
+            local f
+            try
+                p["userblock"] = 512
+                f = h5f_create(filename, H5F_ACC_TRUNC, p.id, pa.id)
+            finally
+                close(p)
+            end
             fj = JldFile(f, filename, version, true, true)
         else
-            if ishdf5(filename)
-                println("This is an HDF5 file, but it is not a recognized Julia data file. Opening anyway.")
-                close(pa)
-                fj = JldFile(f, filename, version_current, true, false)
+            # Test whether this is a jld file
+            sz = filesize(filename)
+            if sz < 512
+                error("File size indicates this cannot be a Julia data file")
+            end
+            magic = Array(Uint8, 512)
+            rawfid = open(filename, "r")
+            try
+                magic = read(rawfid, magic)
+            finally
+                close(rawfid)
+            end
+            if magic[1:length(magic_base)] == magic_base.data
+                f = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
+                version = bytestring(convert(Ptr{Uint8}, magic) + length(magic_base))
+                fj = JldFile(f, filename, version, true, true)
             else
-                error("This does not seem to be a Julia data or HDF5 file")
+                if ishdf5(filename)
+                    println("This is an HDF5 file, but it is not a recognized Julia data file. Opening anyway.")
+                    fj = JldFile(f, filename, version_current, true, false)
+                else
+                    error("This does not seem to be a Julia data or HDF5 file")
+                end
             end
         end
-        if exists(fj, pathrefs)
-            fj.nrefs[1] = length(fj[pathrefs])
-        end
-        return fj
+    finally
+        close(pa)
     end
+    return fj
 end
 
 function jldopen(fname::String, mode::String)
@@ -142,7 +147,10 @@ a_write(parent::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}), name::ASCIIStri
 
 ### Julia data file format implementation ###
 
-## Read
+
+### Read ###
+
+# read and readsafely differ only in how they handle CompositeKind
 function read(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
     if !exists(attrs(obj), name_type_attr)
         # Fallback to plain read
@@ -160,14 +168,22 @@ function read(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
         typename = a_read(obj, "CompositeKind")
         try
             gtypes = root(obj)[pathtypes]
-            objtype = gtypes[typename]
-            n = read(objtype)
-            modnames = a_read(plain(objtype), "Module")
-            mod = Main
-            for mname in modnames
-                mod = eval(mod, symbol(mname))
+            try
+                objtype = gtypes[typename]
+                try
+                    n = read(objtype)
+                    modnames = a_read(plain(objtype), "Module")
+                    mod = Main
+                    for mname in modnames
+                        mod = eval(mod, symbol(mname))
+                    end
+                    T = eval(mod, symbol(typename))
+                finally
+                    close(objtype)
+                end
+            finally
+                close(gtypes)
             end
-            T = eval(mod, symbol(typename))
         catch
             error("Type ", typename, " is not recognized. As a fallback, you can load ", name(obj), " with readsafely().")
         end
@@ -191,19 +207,31 @@ function readsafely(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
         # Read as a dict
         typename = a_read(obj, "CompositeKind")
         gtypes = root(obj)[pathtypes]
-        objtype = gtypes[typename]
-        n = read(objtype)
-        v = getrefs(obj, Any)
-        ret = Dict(n[1,:], v)
+        try
+            objtype = gtypes[typename]
+            try
+                n = read(objtype)
+                v = getrefs(obj, Any)
+                ret = Dict(n[1,:], v)
+            finally
+                close(objtype)
+            end
+        finally
+            close(gtypes)
+        end
     else
         ret = read(obj, T)
     end
     ret
 end
 function readsafely(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString)
+    local ret
     obj = parent[name]
-    ret = readsafely(obj)
-    close(obj)
+    try
+        ret = readsafely(obj)
+    finally
+        close(obj)
+    end
     return ret
 end
 
@@ -318,7 +346,7 @@ end
 
 
 
-## Writing
+### Writing ###
 
 # Write "basic" types
 for (fsym, dsym) in
