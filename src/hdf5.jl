@@ -659,6 +659,7 @@ function exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lapl::HDF
 end
 exists(attr::HDF5Attributes, path::ASCIIString) = h5a_exists(attr.parent.id, path)
 exists(dset::HDF5Dataset, path::ASCIIString) = h5a_exists(dset.id, path)
+exists(dsetattr::Union(HDF5Attributes, HDF5Dataset), path::ASCIIString, lapl::HDF5Properties) = exists(dsetattr, path)
 exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = exists(parent, path, HDF5Properties())
 has(parent::Union(HDF5File, HDF5Group, HDF5Dataset), path::ASCIIString) = exists(parent, path)
 
