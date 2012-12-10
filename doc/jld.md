@@ -56,23 +56,22 @@ This is intended as a brief "reference standard" describing the structure of the
 
 ### Major structural elements
 
-- Files created using `jldopen` have a 512-byte header, which begins with a sequence of characters similar to "Julia data file (HDF5), version 0.0.0".  However, note that we also support opening a pre-existing "plain" HDF5 file with `jldopen(filename, "r+")`; it is possible to write new items written to it in *.jld format. Such files will lack the 512-byte header.
+- Files created using `jldopen` have a 512-byte header, which begins with a sequence of characters similar to "Julia data file (HDF5), version 0.0.0".  However, note that we also support opening a pre-existing "plain" HDF5 file with `jldopen(filename, "r+")`; new items will be written using *.jld formatting conventions. Such files will lack the 512-byte header.
 - Each Julia objects is stored as a dataset; groups are deliberately saved for "user structure." Complex objects are therefore stored by making use of HDF5's reference features. There are two reserved group names, `/_refs` and `/_types` (see below). 
-- Each dataset has at least a "julia_type" attribute, consisting of a string used to encode its type. Other reserved attribute names: "julia_format", "CompositeKind", "Module".
+- Each dataset has at least a `julia_type` attribute, consisting of a string used to encode its type. Other reserved attribute names: `julia_format`, `CompositeKind`, `Module`.
 
 ### Storage format for specific types
 
 - Scalars and arrays of HDF5-supported `BitsKind`s: represented directly
 - ASCII/UTF8 strings and arrays of such strings: represented directly (using variable-length strings)
-- `Nothing`: written as a H5S_NULL dataset with `julia_type` "Nothing"
-- `Bool`s: scalars are written as a single Uint8. Arrays of Bools are written with an additional attribute "julia_format", containing a string which describes the encoding strategy. Currently "EachUint8" is the only supported format (which writes `Array{Bool}` as an `Array{Uint8}`), but in the future it's anticipated that `BitArray`s will be the default. TODO: consider letting `g[name, "julia_format", "EachUint8"] = A` specify the format explicitly.
+- `Type`s: stored as a H5S_NULL, with the type encoded directly by the `julia_type` attribute. Examples include `Nothing`, `Any`, and `Int32` (as a type, not a value).
+- `Bool`s: scalars are written as a single Uint8. Arrays of Bools are written with an additional attribute "julia_format", containing a string which describes the encoding strategy. Currently "EachUint8" is the only supported format (which writes `Array{Bool}` as an `Array{Uint8}`), but in the future it's anticipated that `BitArray`s will be the default. TODO: consider letting `g[name, "julia_format", "EachUint8"] = B`, where `B` is a boolean array, specify the format explicitly.
 - `Complex64`/`Complex128`: written as pairs of `Float32`/`Float64`s. An array of complex numbers with dimensionality `(s1, s2, ...)` is written as an array of `FloatingPoint`s with  dimensionality `(2, s1, s2, ...)`.
 - `Symbol`: represented as a string. Array of symbols represented as array of strings.
-- General arrays: written as an array of references. A group of the same pathname, but rooted at `/_refs` rather than `/`, is created to store the referenced data. See more detail about [/_refs](#_refs) below.
-- `Tuple`: stored in the same way as a "general array"
+- General arrays: written as an array of references. A group of the same pathname, but rooted at `/_refs` rather than `/`, is created to store the referenced data. See more detail about [/_refs](#_refs) below. The `julia_type` will be, e.g., "Array{Any, 1}".
+- `Tuple`: stored in the same way as a "general array", but with `julia_type` "Tuple"
 - Associative (Dict): written as `Any[keys, vals]`, where `keys` and `vals` are arrays, using the "general array" format.
 - CompositeKind: written as an `Array{Any, 1}` (using the format of "general array"), where each item corresponds to a field. The CompositeKind itself is documented in [/_types](#_types).
-- Types: stored as a H5S_NULL, with the type encoded directly by the `julia_type` attribute
 - Expressions: stored as `Any[ex.head, ex.args]` using the "general array" syntax. Note that expressions quickly lead to deep nesting in `/_refs`.
 
 
@@ -85,7 +84,7 @@ This is intended as a brief "reference standard" describing the structure of the
 - Functions (closures)
 - Generic `BitsKind`s
 
-These are not supported due to fears about portability (Julia's serializer, largely used for inter-process communication, doesn't seem to worry about this, but perhaps that's because it's safe to assume that all machines in a cluster have the same endian architecture).
+These are not supported due to concerns about portability (Julia's serializer, largely used for inter-process communication, doesn't seem to worry about this, but perhaps that's because it's safe to assume that all machines in a cluster have the same endian architecture).
 
 Also, when writing, undefined array entries will cause an error.
 
