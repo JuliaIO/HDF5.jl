@@ -23,12 +23,12 @@ ms = MyStruct(2, [3.2, -1.7])
 sym = :TestSymbol
 syms = [:a, :b]
 d = Dict(syms, ["aardvark", "banana"])
-exsimple = :(x+1)
 ex = quote
     function incrementby1(x::Int)
         x+1
     end
 end
+T = Uint8
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -64,6 +64,7 @@ fid = jldopen("/tmp/test.jld","w")
 @write fid syms
 @write fid d
 @write fid ex
+@write fid T
 g = g_create(fid, "mygroup")
 i = 7
 @write g i
@@ -86,4 +87,5 @@ fidr = jldopen("/tmp/test.jld","r")
 @check fidr syms
 @check fidr d
 exr = read(fidr, "ex")   # line numbers are stripped, don't expect equality
+@check fidr T
 close(fidr)
