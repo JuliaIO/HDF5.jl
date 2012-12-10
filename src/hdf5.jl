@@ -6,7 +6,7 @@ module HDF5
 require("strpack.jl")
 
 ## Add methods to...
-import Base.assign, Base.close, Base.convert, Base.done, Base.dump, Base.flush, Base.has, Base.isempty, Base.isvalid, Base.length, Base.names, Base.ndims, Base.next, Base.ref, Base.read, Base.size, Base.start, Base.strlen, Base.write
+import Base.assign, Base.close, Base.convert, Base.done, Base.dump, Base.flush, Base.has, Base.isempty, Base.isvalid, Base.length, Base.names, Base.ndims, Base.next, Base.ref, Base.read, Base.show, Base.size, Base.start, Base.strlen, Base.write
 
 ## C types
 typealias C_int Int32
@@ -264,6 +264,7 @@ end
 PlainHDF5File(id, filename) = PlainHDF5File(id, filename, true)
 convert(::Type{C_int}, f::HDF5File) = f.id
 plain(f::HDF5File) = PlainHDF5File(f.id, f.filename, false)
+show(io, fid::HDF5File) = isvalid(fid) ? print(io, "HDF5 data file: ", fid.filename) : print(io, "Closed HFD5 data file: ", fid.filename)
 
 type HDF5Group{F<:HDF5File}
     id::Hid
@@ -282,6 +283,7 @@ HDF5Group{F<:HDF5File}(id, file::F, toclose::Bool) = HDF5Group{F}(id, file, tocl
 HDF5Group(id, file) = HDF5Group(id, file, true)
 convert(::Type{C_int}, g::HDF5Group) = g.id
 plain(g::HDF5Group) = HDF5Group(g.id, plain(g.file), false)
+show(io, g::HDF5Group) = isvalid(g) ? print(io, "HDF5 group: ", name(g), " (file: ", g.file.filename, ")") : print(io, "HDF5 group (invalid)")
 
 type HDF5Dataset{F<:HDF5File}
     id::Hid
@@ -300,6 +302,7 @@ HDF5Dataset{F<:HDF5File}(id, file::F, toclose::Bool) = HDF5Dataset{F}(id, file, 
 HDF5Dataset(id, file) = HDF5Dataset(id, file, true)
 convert(::Type{C_int}, dset::HDF5Dataset) = dset.id
 plain(dset::HDF5Dataset) = HDF5Dataset(dset.id, plain(dset.file), false)
+show(io, dset::HDF5Dataset) = isvalid(dset) ? print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, ")") : print(io, "HDF5 dataset (invalid)")
 
 type HDF5Datatype
     id::Hid
@@ -317,6 +320,7 @@ end
 HDF5Datatype(id) = HDF5Datatype(id, true)
 convert(::Type{C_int}, dtype::HDF5Datatype) = dtype.id
 #plain(dtype::HDF5Datatype) = HDF5Datatype(dtype.id, plain(dtype.file), false)
+show(io, dtype::HDF5Dataset) = isvalid(dtype) ? print(io, "HDF5 datatype: ", name(dtype)) : print(io, "HDF5 datatype (invalid)")
 
 # Define an H5O Object type
 typealias HDF5Object{F} Union(HDF5Group{F}, HDF5Dataset{F}, HDF5Datatype)
@@ -350,6 +354,7 @@ type HDF5Attribute
 end
 HDF5Attribute(id) = HDF5Attribute(id, true)
 convert(::Type{C_int}, attr::HDF5Attribute) = attr.id
+show(io, attr::HDF5Attribute) = isvalid(attr) ? print(io, "HDF5 attribute: ", name(attr)) : print(io, "HDF5 attribute (invalid)")
 
 type HDF5Attributes
     parent::Union(HDF5File, HDF5Group, HDF5Dataset)

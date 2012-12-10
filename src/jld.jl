@@ -6,7 +6,7 @@ load("hdf5.jl")
 module JLD
 using HDF5
 # Add methods to...
-import HDF5.a_write, HDF5.close, HDF5.dump, HDF5.read, HDF5.ref, HDF5.size, HDF5.write
+import HDF5.a_write, HDF5.close, HDF5.dump, HDF5.read, HDF5.ref, Base.show, HDF5.size, HDF5.write
 
 # Debugging: comment this block out if you un-modulize hdf5.jl
 # Types
@@ -74,6 +74,7 @@ function close(f::JldFile)
     end
     nothing
 end
+show(io, fid::JldFile) = isvalid(fid) ? print(io, "Julia data file version ", fid.version, ": ", fid.filename) : print(io, "Julia data file (closed): ", fid.filename)
 
 function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool)
     local fj
@@ -630,7 +631,7 @@ function dump(io::IOStream, parent::Union(JldFile, HDF5Group{JldFile}), n::Int, 
             else
                 if exists(attrs(v), name_type_attr)
                     typename = a_read(v, name_type_attr)
-                    if length(typename) >= 5 && typename[1:5] == "Array"
+                    if length(typename) >= 5 && (typename[1:5] == "Array" || typename[1:5] == "Tuple")
                         println(io, typename, " ", size(v))
                     else
                         println(io, typename)
