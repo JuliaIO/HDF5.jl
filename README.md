@@ -20,13 +20,14 @@ To use the JLD module, begin your code with
 ```julia
 load("jld.jl")
 using JLD
+using HDF5
 ```
 
 Here's an example using functional syntax, which may be especially familiar to Matlab users:
 
 ```julia
 file = jldopen("mydata.jld", "w")
-write(file, "A", A)
+write(file, "A", A)  # alternatively, say "@write fid A"
 close(file)
 
 file = jldopen("mydata.jld", "r")
