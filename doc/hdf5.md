@@ -1,7 +1,7 @@
 
 
-HDF5 Reference Guide
-=======================
+Julia HDF5 Guide
+================
 
 Overview
 --------
@@ -227,6 +227,19 @@ Low-level routines
 Many of the most commonly-used libhdf5 functions have been wrapped. These are not exported, so you need to preface them with `HDF5.function` to use them. The library follows a consistent convention: for example, libhdf5's `H5Adelete` is wrapped with a Julia function called `h5a_delete`. The arguments are exactly as specified in the [HDF5][HDF5] reference manual.
 
 Note that Julia's HDF5 directly uses the "2" interfaces, e.g., `H5Dcreate2`, so you need to have version 1.8 of the HDF5 library or later.
+
+Details
+-------
+
+HDF5 is a large library, and the low-level wrap is not complete. However, many of the most-commonly used functions are wrapped, and in general wrapping a new function takes only a single line of code. Users who need additional functionality are encourage to contribute it. Low-level functions are not exported, so you access them by importing ``HDF5``. This provides access to many constants (e.g., ``HDF5.H5T_STD_I16BE``), raw dataset, datatype, and dataspace utilities, and wrappers for the direct library calls (e.g., ``HDF5.h5d_create(...)``).
+
+Julia, like Fortran and Matlab, stores arrays in column-major order.
+HDF5 uses C's row-major order, and consequently every array's
+dimensions are inverted compared to what you see with tools like
+h5dump. This is the same convention as for the Fortran and Matlab HDF5
+interfaces. The advantage is that no data rearrangement takes place,
+neither when reading nor when writing.
+
 
 
 [HDF5]: http://www.hdfgroup.org/HDF5/ "HDF5"

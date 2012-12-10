@@ -52,17 +52,6 @@ For Matlab files, you would say ``load("matio.jl"); using MatIO``. There is no c
 
 More extensive documentation is found in the `doc/` directory.
 
-## Details
-
-HDF5 is a large library, and the low-level wrap is not complete. However, many of the most-commonly used functions are wrapped, and in general wrapping a new function takes only a single line of code. Users who need additional functionality are encourage to contribute it. Low-level functions are not exported, so you access them by importing ``HDF5``. This provides access to many constants (e.g., ``HDF5.H5T_STD_I16BE``), raw dataset, datatype, and dataspace utilities, and wrappers for the direct library calls (e.g., ``HDF5.h5d_create(...)``).
-
-Julia, like Fortran and Matlab, stores arrays in column-major order.
-HDF5 uses C's row-major order, and consequently every array's
-dimensions are inverted compared to what you see with tools like
-h5dump. This is the same convention as for the Fortran and Matlab HDF5
-interfaces. The advantage is that no data rearrangement takes place,
-neither when reading nor when writing.
-
 The test/ directory contains a number of test scripts that also contain example of usage.
 
 ## Credits
