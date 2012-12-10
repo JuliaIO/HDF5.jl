@@ -18,7 +18,7 @@ In addition to the core HDF5 functionality, this package also provides two speci
 To use the JLD module, begin your code with
 
 ```julia
-load("jld.jl")
+load("HDF5.jl")
 using JLD
 using HDF5
 ```
@@ -38,7 +38,7 @@ close(file)
 For HDF5 users coming from other languages, Julia's high-level wrapper providing a dictionary-like interface may be of particular interest. This is demonstrated with the "plain" (unformatted) HDF5 interface:
 
 ```julia
-load("hdf5.jl")
+load("HDF5.jl")
 using HDF5
 
 file = h5open("test.h5", "w")
@@ -50,7 +50,7 @@ close(file)
 
 For Matlab files, you would say ``load("matio.jl"); using MatIO``. There is no conflict in having multiple modules (HDF5, JLD, and MatIO) available simultaneously; the formatting of the file is determined by the open command.
 
-More extensive documentation is found [here](doc/hdf5).
+More extensive documentation is found [here](blob/master/doc/hdf5.md) and [here](blob/master/doc/jld.md).
 
 ## Details
 

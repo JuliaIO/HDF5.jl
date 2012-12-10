@@ -316,11 +316,9 @@ type HDF5Datatype
         nt
     end
 end
-#HDF5Datatype{F<:HDF5File}(id, file::F, toclose::Bool) = HDF5Datatype{F}(id, file, toclose)
 HDF5Datatype(id) = HDF5Datatype(id, true)
 convert(::Type{C_int}, dtype::HDF5Datatype) = dtype.id
-#plain(dtype::HDF5Datatype) = HDF5Datatype(dtype.id, plain(dtype.file), false)
-show(io, dtype::HDF5Dataset) = isvalid(dtype) ? print(io, "HDF5 datatype: ", name(dtype)) : print(io, "HDF5 datatype (invalid)")
+show(io, dtype::HDF5Dataset) = print(io, "HDF5 datatype ", dtype.id) # TODO: compound datatypes?
 
 # Define an H5O Object type
 typealias HDF5Object{F} Union(HDF5Group{F}, HDF5Dataset{F}, HDF5Datatype)
@@ -735,6 +733,7 @@ function parent(obj::Union(HDF5File, HDF5Group, HDF5Dataset))
 end
 
 # It would also be nice to print the first few elements.
+# FIXME: strings and array of variable-length strings
 function dump(io::IOStream, x::HDF5Dataset, n::Int, indent)
     sz = size(x)
     print(io, "HDF5Dataset $sz : ")
@@ -1540,10 +1539,13 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5t_copy, :H5Tcopy, Hid, (Hid,), (:dtype_id,), :(error("Error copying datatype"))),
      (:h5t_get_class, :H5Tget_class, C_int, (Hid,), (:dtype_id,), :(error("Error getting class"))),
      (:h5t_get_cset, :H5Tget_cset, C_int, (Hid,), (:dtype_id,), :(error("Error getting character set encoding"))),
+     (:h5t_get_member_class, :H5Tget_member_class, C_int, (Hid, C_unsigned), (:dtype_id, :direction), :(error("Error getting native type"))),
      (:h5t_get_native_type, :H5Tget_native_type, Hid, (Hid, C_int), (:dtype_id, :direction), :(error("Error getting native type"))),
+     (:h5t_get_nmembers, :H5Tget_nmembers, C_int, (Hid,), (:dtype_id,), :(error("Error getting the number of members"))),
      (:h5t_get_sign, :H5Tget_sign, C_int, (Hid,), (:dtype_id,), :(error("Error getting sign"))),
      (:h5t_get_size, :H5Tget_size, C_size_t, (Hid,), (:dtype_id,), :(error("Error getting size"))),
      (:h5t_get_super, :H5Tget_super, Hid, (Hid,), (:dtype_id,), :(error("Error getting super type"))),
+     (:h5t_insert, :H5Tinsert, Herr, (Hid, Ptr{Uint8}, C_size_t, Hid), (:dtype_id, :fieldname, :offset, :field_id), :(error("Error adding field ", fieldname, " to compound datatype"))),
      (:h5t_vlen_create, :H5Tvlen_create, Hid, (Hid,), (:base_type_id,), :(error("Error creating vlen type"))),
      ## The following doesn't work because it's in libhdf5_hl.so.
      ## (:h5tb_get_field_info, :H5TBget_field_info, Herr, (Hid, Ptr{Uint8}, Ptr{Ptr{Uint8}}, Ptr{Uint8}, Ptr{Uint8}, Ptr{Uint8}), (:loc_id, :table_name, :field_names, :field_sizes, :field_offsets, :type_size), :(error("Error getting field information")))

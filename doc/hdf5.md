@@ -10,7 +10,7 @@ Overview
 
 For simple types (scalars, strings, and arrays), HDF5 provides sufficient metadata to know how each item is to be interpreted. For example, HDF5 encodes that a given block of bytes is to be interpreted as an array of `Int64`, and represents them in a way that is compatible across different computing architectures.
 
-However, to preserve Julia objects, one generally needs additional type information to be supplied, which is easy to provide using attributes. This is handled for you automatically in the [JLD](/jld/) and [MatIO](/matio/) modules, for two different conventions (\*.jld and \*.mat files, respectively). These specific formats provide "extra" functionality, but they are still both regular HDF5 files and are therefore compatible with any HDF5 reader or writer.
+However, to preserve Julia objects, one generally needs additional type information to be supplied, which is easy to provide using attributes. This is handled for you automatically in the JLD and MatIO modules (\*.jld and \*.mat files, respectively), for two different conventions. These specific formats provide "extra" functionality, but they are still both regular HDF5 files and are therefore compatible with any HDF5 reader or writer.
 
 
 Opening and closing files
@@ -29,13 +29,13 @@ The mode can be any one of the following:
     <td>mode</td> <td>Meaning</td>
   </tr>
   <tr>
-    <td>`"r"`</td> <td>read-only</td>
+    <td>"r"</td> <td>read-only</td>
   </tr>
   <tr>
-    <td>`"r+"`</td> <td>read-write, preserving any existing contents</td>
+    <td>"r+"</td> <td>read-write, preserving any existing contents</td>
   </tr>
   <tr>
-    <td>`"w"`</td> <td>read-write, destroying any existing contents (if any)</td>
+    <td>"w"</td> <td>read-write, destroying any existing contents (if any)</td>
   </tr>
 </table>
 
@@ -52,13 +52,13 @@ Closing a file also closes any other open objects (e.g., datasets, groups) in th
 Opening and closing objects
 ---------------------------
 
-If you have a group or dataset called `"myobject"` at the top level of a file, you can open it in the following way:
+If you have a file object `fid`, and this has a group or dataset called `"myobject"` at the top level of a file, you can open it in the following way:
 
 ```julia
 obj = fid["myobject"]
 ```
 
-This does not read any data or attributes associated with the object; it's simply a handle for further manipulations. For example:
+This does not read any data or attributes associated with the object, it's simply a handle for further manipulations. For example:
 
 ```julia
 g = fid["mygroup"]
@@ -84,7 +84,7 @@ A = read(g, "mydataset")
 Asub = dset[2:3, 1:3]
 ```
 
-The last syntax reads just a subset of the data array, and can be an efficient way to extract a subset of the data.
+The last syntax reads just a subset of the data array (assuming that `dset` is an array of sufficient size). libhdf5 has internal mechanisms for slicing arrays, and consequently if you need only a small piece of a large array, it can be faster to read just what you need rather than reading the entire array and discarding most of it.
 
 Datasets can be created in either of the following ways:
 
@@ -100,14 +100,16 @@ A = rand(100,100)
 g["A", "chunk", (5,5), "compress", 3] = A
 ```
 
-stores the matrix `A` in 5-by-5 chunks (to facilitate extracting small pieces) and uses a compression level 3.
+stores the matrix `A` in 5-by-5 chunks and uses a compression level 3. Chunking can be useful if you will typically extract small segments of an array.
 
-More [fine-grained control](#midlevel) is also available.
+More [fine-grained control](#mid-level-routines) is also available.
 
 Supported data types
 --------------------
 
-PlainHDF5File knows how to store values of the following types: signed and unsigned integers of 8, 16, 32, and 64 bits, `Float32` and `Float64`; `Array`s of these numeric types; `ASCIIString` and `UTF8String`; and `Array`s of these two string types. `Array`s of strings are supported using HDF5's VLEN type. This package also support HDF5's OPAQUE and REFERENCE types, which can be used to encode more complex types. However, there is no convention specified for storing such objects; for such objects, the [JLD](/jld/) module may be of interest.
+PlainHDF5File knows how to store values of the following types: signed and unsigned integers of 8, 16, 32, and 64 bits, `Float32` and `Float64`; `Array`s of these numeric types; `ASCIIString` and `UTF8String`; and `Array`s of these two string types. `Array`s of strings are supported using HDF5's variable-length-strings facility.
+
+This module also support HDF5's VLEN, OPAQUE, and REFERENCE types, which can be used to encode more complex types. In general, you need to specify how you want to combine these more advanced facilities to represent more complex data types. For many of the data types in Julia, the JLD module implements support.
 
 Creating groups and attributes
 ------------------------------
@@ -126,37 +128,10 @@ Attributes can be created using
 attrs(parent::Union(HDF5Group, HDF5Dataset))[name] = value
 ```
 
+where `attrs` simply indicates that the object referenced by `name` (a string) is an attribute, not another group or dataset. (Datasets cannot have child datasets, but groups can have either.) `value` must be a simple type: `BitsKind`s, strings, and arrays of these two. In HDF5, attributes cannot store "complex" objects. 
 
-Mid-level routines  <a id="midlevel"></a>
-------------------
-
-```julia
-g = g_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString)
-dset = d_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString[, apl])
-attr = a_open(parent::Union(HDF5Group, HDF5Dataset), name::ASCIIString)
-t = t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString)
-```
-
-These open the named group, dataset, attribute, and committed datatype, respectively. For datasets, `apl` stands for "access parameter list" and provides opportunities for more sophisticated control (see the [HDF5][HDF5]) documentation.
-
-Similarly,
-
-```julia
-g = g_create(parent, name[, lcpl, dcpl])
-dset = d_create(parent, name, dtype, dspace[, lcpl, dcpl, dapl])
-attr = a_create(parent, name, dtype, dspace)
-```
-
-creates groups, datasets, and attributes without writing any data to them. You can then use `write(obj, data)` to store the data.
-
-```julia
-t = t_commit(parent, name, dtype[, lcpl, tcpl, tapl]) 
-```
-
-This creates (commits) a committed data type.
-
-Exploring contents of a file or group
--------------------------------------
+Getting information
+-------------------
 
 ```julia
 name(obj)
@@ -176,13 +151,87 @@ g = root(obj)
 
 will return the "root group" ("/") for any file, given an object in that file.
 
-### File-specific methods
+You can iterate over the objects in a group, i.e.,
+```julia
+for obj in g
+  data = read(obj)
+  println(data)
+end
+```
+This gives you a straightforward way of recursively exploring an entire HDF5 file. A convenient way of examining the structure of an HDF5 file is the `dump` function, e.g.,
+```julia
+dump(fid)
+```
 
+If you need to know whether group `g` has a dataset named `mydata`, you can test that with
+```julia
+if exists(g, "mydata")
+   ...
+end
+tf = has(g, "mydata")  # synonym for "exists"
+```
+If instead you want to know whether `g` has an attribute named `myattribute`, do it this way:
+```julia
+tf = exists(attrs(g), "myattribute")
+```
+
+If you have an HDF5 object, and you want to know where it fits in the hierarchy of the file, the following can be useful:
+```julia
+p = parent(obj)
+fname = filename(obj)
+```
+
+For array objects (datasets and attributes) the following methods work:
+```
+dims = size(dset)
+nd = ndims(dset)
+len = length(dset)
+```
+
+Finally, sometimes you need to be able to conveniently test whether a file is an HDF5 file:
 ```julia
 tf::Bool = ishdf5(filename::String)
 ```
 
-tests whether a file with the given name is an HDF5 file.
+
+Mid-level routines
+------------------
+
+Sometimes you might want more fine-grained control, which can be achieved using a different set of routines. For example,
+```julia
+g = g_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString)
+dset = d_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString[, apl])
+attr = a_open(parent::Union(HDF5Group, HDF5Dataset), name::ASCIIString)
+t = t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString)
+```
+
+These open the named group, dataset, attribute, and committed datatype, respectively. For datasets, `apl` stands for "access parameter list" and provides opportunities for more sophisticated control (see the [HDF5][HDF5]) documentation.
+
+New objects can be created in the following ways:
+```julia
+g = g_create(parent, name[, lcpl, dcpl])
+dset = d_create(parent, name, data[, lcpl, dcpl, dapl])
+attr = a_create(parent, name, data)
+```
+creates groups, datasets, and attributes without writing any data to them. You can then use `write(obj, data)` to store the data. The optional property lists allow even more fine-grained control. This syntax uses `data` to infer the object's "datatype" and "dataspace"; for the most explicit control, `data` can be replaced with `dtype, dspace`, where `dtype` is an `HDF5Datatype` and `dspace` is an `HDF5Dataspace`.
+
+Analogously, to create committed data types, use
+```julia
+t = t_commit(parent, name, dtype[, lcpl, tcpl, tapl]) 
+```
+
+You can create and write data in one step,
+```julia
+d_write(parent, name, data[, lcpl, dcpl, dapl])
+a_write(parent, name, data)
+```
+
+Low-level routines
+------------------
+
+Many of the most commonly-used libhdf5 functions have been wrapped. These are not exported, so you need to preface them with `HDF5.function` to use them. The library follows a consistent convention: for example, libhdf5's `H5Adelete` is wrapped with a Julia function called `h5a_delete`. The arguments are exactly as specified in the [HDF5][HDF5] reference manual.
+
+Note that Julia's HDF5 directly uses the "2" interfaces, e.g., `H5Dcreate2`, so you need to have version 1.8 of the HDF5 library or later.
 
 ----
 [HDF5]: http://www.hdfgroup.org/HDF5/ "HDF5"
