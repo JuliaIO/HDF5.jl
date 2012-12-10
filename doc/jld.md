@@ -4,7 +4,7 @@ The JLD module reads and writes "Julia data files" (\*.jld files) using HDF5. To
 
 Currently this module is EXPERIMENTAL. For the moment, there is some risk that the format conventions will change without a guarantee of backwards compatibility. Once this module leaves experimental status, backwards-compatibility will be provided. The good news is that your data, being written in HDF5, cannot truly be "lost"; you may just have to do a bit of type conversion.
 
-## Basic usage
+## Usage
 
 To get started using Julia data files, load the JLD module:
 ```
@@ -48,16 +48,17 @@ JldFile len 19
   x: Float64
 ```
 
-## The *.jld HDF5 format
 
-- Files created using `jldopen` have a 512-byte header, which begins with a sequence of characters similar to:
-```
-Julia data file (HDF5), version 0.0.0
-```
 
-A pre-existing "plain" HDF5 file can be opened with `jldopen(filename, "r+")` and have new items written to it in *.jld format; such files will lack the 512-byte header.
-- Julia objects are stored as datasets; groups are deliberately saved for "user structure." Complex objects are therefore stored by making use of HDF5's reference features. There are two reserved group names, `/_refs` and `/_types` (see below). 
-- Each object has at least a "julia_type" attribute, consisting of a string used to encode its type. Other reserved attribute names: "julia_format", "CompositeKind", "Module".
+## Reference: the *.jld HDF5 format
+
+This is intended as a brief "reference standard" describing the structure of the HDF5 files created by JLD. This may be of value to others trying to read such files from other languages.
+
+### Major structural elements
+
+- Files created using `jldopen` have a 512-byte header, which begins with a sequence of characters similar to "Julia data file (HDF5), version 0.0.0".  However, note that we also support opening a pre-existing "plain" HDF5 file with `jldopen(filename, "r+")`; it is possible to write new items written to it in *.jld format. Such files will lack the 512-byte header.
+- Each Julia objects is stored as a dataset; groups are deliberately saved for "user structure." Complex objects are therefore stored by making use of HDF5's reference features. There are two reserved group names, `/_refs` and `/_types` (see below). 
+- Each dataset has at least a "julia_type" attribute, consisting of a string used to encode its type. Other reserved attribute names: "julia_format", "CompositeKind", "Module".
 
 ### Storage format for specific types
 
@@ -84,7 +85,7 @@ A pre-existing "plain" HDF5 file can be opened with `jldopen(filename, "r+")` an
 - Functions (closures)
 - Generic `BitsKind`s
 
-These are not supported due to fears about portability (Julia's serializer doesn't seem to worry about this, but perhaps that's because it's safe to assume that all machines in a cluster are assumed to have the same endian architecture).
+These are not supported due to fears about portability (Julia's serializer, largely used for inter-process communication, doesn't seem to worry about this, but perhaps that's because it's safe to assume that all machines in a cluster have the same endian architecture).
 
 Also, when writing, undefined array entries will cause an error.
 
