@@ -50,7 +50,7 @@ close(file)
 
 For Matlab files, you would say ``load("matio.jl"); using MatIO``. There is no conflict in having multiple modules (HDF5, JLD, and MatIO) available simultaneously; the formatting of the file is determined by the open command.
 
-More extensive documentation is found [here](blob/master/doc/hdf5.md) and [here](blob/master/doc/jld.md).
+More extensive documentation is found in the `doc/` directory.
 
 ## Details
 

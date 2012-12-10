@@ -10,7 +10,7 @@ Overview
 
 For simple types (scalars, strings, and arrays), HDF5 provides sufficient metadata to know how each item is to be interpreted. For example, HDF5 encodes that a given block of bytes is to be interpreted as an array of `Int64`, and represents them in a way that is compatible across different computing architectures.
 
-However, to preserve Julia objects, one generally needs additional type information to be supplied, which is easy to provide using attributes. This is handled for you automatically in the JLD and MatIO modules (\*.jld and \*.mat files, respectively), for two different conventions. These specific formats provide "extra" functionality, but they are still both regular HDF5 files and are therefore compatible with any HDF5 reader or writer.
+However, to preserve Julia objects, one generally needs additional type information to be supplied, which is easy to provide using attributes. This is handled for you automatically in the JLD and MatIO modules for \*.jld and \*.mat files. These specific formats (conventions) provide "extra" functionality, but they are still both regular HDF5 files and are therefore compatible with any HDF5 reader or writer.
 
 
 Opening and closing files
@@ -100,7 +100,7 @@ A = rand(100,100)
 g["A", "chunk", (5,5), "compress", 3] = A
 ```
 
-stores the matrix `A` in 5-by-5 chunks and uses a compression level 3. Chunking can be useful if you will typically extract small segments of an array.
+stores the matrix `A` in 5-by-5 chunks and uses a compression level 3. Chunking can be useful if you will typically extract small segments of an array. Chunking is required if you plan to use compression.
 
 More [fine-grained control](#mid-level-routines) is also available.
 
@@ -109,7 +109,7 @@ Supported data types
 
 PlainHDF5File knows how to store values of the following types: signed and unsigned integers of 8, 16, 32, and 64 bits, `Float32` and `Float64`; `Array`s of these numeric types; `ASCIIString` and `UTF8String`; and `Array`s of these two string types. `Array`s of strings are supported using HDF5's variable-length-strings facility.
 
-This module also support HDF5's VLEN, OPAQUE, and REFERENCE types, which can be used to encode more complex types. In general, you need to specify how you want to combine these more advanced facilities to represent more complex data types. For many of the data types in Julia, the JLD module implements support.
+This module also supports HDF5's VLEN, OPAQUE, and REFERENCE types, which can be used to encode more complex types. In general, you need to specify how you want to combine these more advanced facilities to represent more complex data types. For many of the data types in Julia, the JLD module implements support. You can likewise define your own file format if, for example, you need to interact with some external program that has explicit formatting requirements.
 
 Creating groups and attributes
 ------------------------------
@@ -128,7 +128,7 @@ Attributes can be created using
 attrs(parent::Union(HDF5Group, HDF5Dataset))[name] = value
 ```
 
-where `attrs` simply indicates that the object referenced by `name` (a string) is an attribute, not another group or dataset. (Datasets cannot have child datasets, but groups can have either.) `value` must be a simple type: `BitsKind`s, strings, and arrays of these two. In HDF5, attributes cannot store "complex" objects. 
+where `attrs` simply indicates that the object referenced by `name` (a string) is an attribute, not another group or dataset. (Datasets cannot have child datasets, but groups can have either.) `value` must be a simple type: `BitsKind`s, strings, and arrays of either of these. The HDF5 standard does not permit attributes to store "complex" objects. 
 
 Getting information
 -------------------
@@ -144,12 +144,6 @@ names(g)
 ```
 
 will show all objects inside group `g`.
-
-```julia
-g = root(obj)
-```
-
-will return the "root group" ("/") for any file, given an object in that file.
 
 You can iterate over the objects in a group, i.e.,
 ```julia
@@ -177,8 +171,9 @@ tf = exists(attrs(g), "myattribute")
 
 If you have an HDF5 object, and you want to know where it fits in the hierarchy of the file, the following can be useful:
 ```julia
-p = parent(obj)
-fname = filename(obj)
+p = parent(obj)     # p is the parent object (usually a group)
+fn = filename(obj)  # fn is a string
+g = root(obj)       # g is the group "/"
 ```
 
 For array objects (datasets and attributes) the following methods work:
@@ -190,7 +185,7 @@ len = length(dset)
 
 Finally, sometimes you need to be able to conveniently test whether a file is an HDF5 file:
 ```julia
-tf::Bool = ishdf5(filename::String)
+tf = ishdf5(filename)
 ```
 
 
@@ -205,7 +200,7 @@ attr = a_open(parent::Union(HDF5Group, HDF5Dataset), name::ASCIIString)
 t = t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString)
 ```
 
-These open the named group, dataset, attribute, and committed datatype, respectively. For datasets, `apl` stands for "access parameter list" and provides opportunities for more sophisticated control (see the [HDF5][HDF5]) documentation.
+These open the named group, dataset, attribute, and committed datatype, respectively. For datasets, `apl` stands for "access parameter list" and provides opportunities for more sophisticated control (see the [HDF5][HDF5] documentation).
 
 New objects can be created in the following ways:
 ```julia
@@ -233,5 +228,5 @@ Many of the most commonly-used libhdf5 functions have been wrapped. These are no
 
 Note that Julia's HDF5 directly uses the "2" interfaces, e.g., `H5Dcreate2`, so you need to have version 1.8 of the HDF5 library or later.
 
-----
+
 [HDF5]: http://www.hdfgroup.org/HDF5/ "HDF5"
