@@ -240,10 +240,7 @@ function write{T}(parent::Union(MatlabHDF5File, HDF5Group{MatlabHDF5File}), name
     end
 #    try
         # If needed, create the "empty" item
-        if !exists(g, "a/MATLAB_empty")
-            if exists(g, "a")
-                error("Must create the empty item, with name a, first")
-            end
+        if !exists(g, "a")
             pg = plain(g)
             edata = zeros(Uint64, 2)
             eset, etype = d_create(pg, "a", edata)
@@ -258,6 +255,12 @@ function write{T}(parent::Union(MatlabHDF5File, HDF5Group{MatlabHDF5File}), name
 #              end
             close(etype)
             close(eset)
+        else
+            a = g["a"]
+            if !exists(attrs(a), "MATLAB_empty")
+                error("Must create the empty item, with name a, first")
+            end
+            close(a)            
         end
         # Write the items to the reference group
         refs = HDF5ReferenceObjArray(size(data)...)
