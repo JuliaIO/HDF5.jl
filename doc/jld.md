@@ -2,7 +2,7 @@
 
 The JLD module reads and writes "Julia data files" (\*.jld files) using HDF5. To the core HDF5 functionality, this module adds conventions for writing objects which are not directly supported by libhdf5. The key characteristic is that objects of many types can be written, and upon later reading they maintain the proper type.
 
-Currently this module is EXPERIMENTAL. For the moment, there is some risk that we'll make changes to the format conventions without (yet) worrying about backwards compatibility. Stability and the long-term ability to read old files is an explicit goal of this effort; however, there are no guarantees in this early period while the module is so new. The good news is that your data, being written in HDF5, cannot truly be "lost"; you may just have to do a bit of type conversion.
+Currently this module is EXPERIMENTAL. For the moment, there is some risk that the format conventions will change without a guarantee of backwards compatibility. Once this module leaves experimental status, backwards-compatibility will be provided. The good news is that your data, being written in HDF5, cannot truly be "lost"; you may just have to do a bit of type conversion.
 
 ## Basic usage
 
@@ -12,7 +12,7 @@ load("HDF5.jl")
 using JLD
 using HDF5
 ```
-JLD is built on top of HDF5; the last, line, `using HDF5`, is necessary if you want to use many of the features of HDF5 yourself.
+JLD is built on top of HDF5; the last, line, `using HDF5`, is necessary if you want to use many of the features of HDF5 directly.
 
 \*.jld files are created or opened in the following way:
 ```julia
@@ -54,15 +54,16 @@ JldFile len 19
 ```
 Julia data file (HDF5), version 0.0.0
 ```
-Pre-existing "plain" HDF5 file can have new items written to it in *.jld format; such files will lack the 512-byte header.
-- Julia objects are stored as datasets, and groups are deliberately saved for "user structure" (exceptions: /_refs, /_types, see below). Complex objects are therefore stored by making use of HDF5's reference features.
+
+A pre-existing "plain" HDF5 file can be opened with `jldopen(filename, "r+")` and have new items written to it in *.jld format; such files will lack the 512-byte header.
+- Julia objects are stored as datasets; groups are deliberately saved for "user structure." Complex objects are therefore stored by making use of HDF5's reference features. There are two reserved group names, `/_refs` and `/_types` (see below). 
 - Each object has at least a "julia_type" attribute, consisting of a string used to encode its type. Other reserved attribute names: "julia_format", "CompositeKind", "Module".
 
-### Specific types
+### Storage format for specific types
 
 - Scalars and arrays of HDF5-supported `BitsKind`s: represented directly
 - ASCII/UTF8 strings and arrays of such strings: represented directly (using variable-length strings)
-- `Nothing`: written as a H5S_NULL dataset with julia_type "Nothing"
+- `Nothing`: written as a H5S_NULL dataset with `julia_type` "Nothing"
 - `Bool`s: scalars are written as a single Uint8. Arrays of Bools are written with an additional attribute "julia_format", containing a string which describes the encoding strategy. Currently "EachUint8" is the only supported format (which writes `Array{Bool}` as an `Array{Uint8}`), but in the future it's anticipated that `BitArray`s will be the default. TODO: consider letting `g[name, "julia_format", "EachUint8"] = A` specify the format explicitly.
 - `Complex64`/`Complex128`: written as pairs of `Float32`/`Float64`s. An array of complex numbers with dimensionality `(s1, s2, ...)` is written as an array of `FloatingPoint`s with  dimensionality `(2, s1, s2, ...)`.
 - `Symbol`: represented as a string. Array of symbols represented as array of strings.
@@ -89,7 +90,7 @@ Also, when writing, undefined array entries will cause an error.
 
 ### /_refs
 
-For any "container" object in `/` that needs to reference sub-objects, there's a group of the same pathname under `/_refs` containing the references. The referenced items are either datasets or groups (depending on whether they also need references). Within `/_refs`, datasets may themselves need additional references. These are stored in a sub-group; the letter "g" is appended to prevent name conflicts with the dataset of references.
+For any "container" object in `/` that needs to reference sub-objects, there's a group of the same pathname under `/_refs` containing the references. Within `/_refs`, datasets may themselves need additional references. These are stored in a sub-group; the letter "g" is appended to prevent name conflicts with the dataset of references.
 
 ### /_types
 
