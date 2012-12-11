@@ -57,6 +57,7 @@ The test/ directory contains a number of test scripts that also contain example 
 - [Konrad Hinsen](https://github.com/khinsen/julia_hdf5) initiated Julia's support for HDF5
 - Tim Holy (maintainer)
 - Tom Short contributed code and ideas to the dictionary-like interface, and string->type conversion in the JLD module
+- Simon Kornblith fixed problems in the Matlab support
 - [Mike Nolta](https://github.com/nolta/julia_hdf5) and Jameson Nash contributed code or suggestions for improving the handling of HDF5's constants
 
 
