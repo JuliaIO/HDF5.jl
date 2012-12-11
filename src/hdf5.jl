@@ -318,7 +318,7 @@ type HDF5Datatype
 end
 HDF5Datatype(id) = HDF5Datatype(id, true)
 convert(::Type{C_int}, dtype::HDF5Datatype) = dtype.id
-show(io, dtype::HDF5Dataset) = print(io, "HDF5 datatype ", dtype.id) # TODO: compound datatypes?
+show(io, dtype::HDF5Datatype) = print(io, "HDF5 datatype ", dtype.id) # TODO: compound datatypes?
 
 # Define an H5O Object type
 typealias HDF5Object{F} Union(HDF5Group{F}, HDF5Dataset{F}, HDF5Datatype)
@@ -399,6 +399,15 @@ ref(a::HDF5ReferenceObjArray, indices::Union(Integer, AbstractVector)...) = HDF5
 function assign(a::HDF5ReferenceObjArray, pname::(Union(HDF5File, HDF5Group, HDF5Dataset), ASCIIString), i::Integer)
     ptr = pointer(a.r)+(i-1)*H5R_OBJ_REF_BUF_SIZE
     h5r_create(ptr, pname[1].id, pname[2], H5R_OBJECT, -1)
+end
+
+# Compound types
+# These are "raw" and not mapped to any Julia type
+type HDF5Compound
+    data::Array{Uint8}
+    membertype::Vector{Type}
+    membername::Vector{ASCIIString}
+    memberoffset::Vector{Uint}
 end
 
 # Opaque types
@@ -971,6 +980,40 @@ function ref(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5ObjPtr)
     obj_type == H5I_DATASET ? HDF5Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
 end
+# Read compound type
+function read(obj::HDF5Dataset{PlainHDF5File}, ::Type{Array{HDF5Compound}})
+    t = datatype(obj)
+    n = h5t_get_nmembers(t.id)
+    membertype = Array(Type, n)
+    membername = Array(ASCIIString, n)
+    memberoffset = Array(Uint64, n)
+    sz = 0
+    for i = 1:n
+        filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
+        T = hdf5_to_julia_eltype(filetype)
+        if T == ASCIIString
+            error("Not yet supported")  # need to handle the vlen issues
+#             T = Ptr{Uint8}
+        end
+        membertype[i] = T
+        memberoffset[i] = sz
+        sz += sizeof(T)
+        membername[i] = h5t_get_member_name(t.id, i-1)
+    end
+    @show membertype
+    @show membername
+    @show memberoffset
+    # Build the "memory type"
+    memtype_id = h5t_create(H5T_COMPOUND, sz)
+    for i = 1:n
+        h5t_insert(memtype_id, membername[i], memberoffset[i], hdf5_type_id(membertype[i])) # FIXME strings
+    end
+    # Read the raw data
+    buf = Array(Uint8, length(obj)*sz)
+    h5d_read(obj.id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
+    HDF5Compound(buf, membertype, membername, memberoffset)
+end
+
 # Read OPAQUE datasets and attributes
 function read(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute), ::Type{Array{HDF5Opaque}})
     local buf
@@ -1188,7 +1231,7 @@ function ref(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
     local T
     dtype = datatype(dset)
     try
-        T = hdf5_to_julia_eltype(dset, dtype)
+        T = hdf5_to_julia_eltype(dtype)
     finally
         close(dtype)
     end
@@ -1271,7 +1314,7 @@ function hdf5_to_julia(obj::Union(HDF5Dataset, HDF5Attribute))
     local T
     objtype = datatype(obj)
     try
-        T = hdf5_to_julia_eltype(obj, objtype)
+        T = hdf5_to_julia_eltype(objtype)
     finally
         close(objtype)
     end
@@ -1279,22 +1322,21 @@ function hdf5_to_julia(obj::Union(HDF5Dataset, HDF5Attribute))
         return T
     end
     # Determine whether it's an array
-    local stype
     objspace = dataspace(obj)
     try
         stype = h5s_get_simple_extent_type(objspace.id)
+        if stype == H5S_SIMPLE
+            T = Array{T}
+        elseif stype == H5S_NULL
+            T = EmptyArray{T}
+        end
     finally
         close(objspace)
-    end
-    if stype == H5S_SIMPLE
-        T = Array{T}
-    elseif stype == H5S_NULL
-        T = EmptyArray{T}
     end
     T
 end
 
-function hdf5_to_julia_eltype(obj, objtype)
+function hdf5_to_julia_eltype(objtype)
     local T
     class_id = h5t_get_class(objtype.id)
     if class_id == H5T_STRING
@@ -1323,8 +1365,9 @@ function hdf5_to_julia_eltype(obj, objtype)
         T = HDF5Opaque
     elseif class_id == H5T_VLEN
         super_id = h5t_get_super(objtype.id)
-        T = HDF5Vlen{hdf5_to_julia_eltype(obj, HDF5Datatype(super_id))}
-    # TODO: compound datatypes (when we have immutables)
+        T = HDF5Vlen{hdf5_to_julia_eltype(HDF5Datatype(super_id))}
+    elseif class_id == H5T_COMPOUND
+        T = HDF5Compound
     else
         error("Class id ", class_id, " is not yet supported")
     end
@@ -1537,9 +1580,13 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5s_get_simple_extent_ndims, :H5Sget_simple_extent_ndims, C_int, (Hid,), (:space_id,), :(error("Error getting the number of dimensions for a dataspace"))),
      (:h5s_get_simple_extent_type, :H5Sget_simple_extent_type, C_int, (Hid,), (:space_id,), :(error("Error getting the dataspace type"))),
      (:h5t_copy, :H5Tcopy, Hid, (Hid,), (:dtype_id,), :(error("Error copying datatype"))),
+     (:h5t_create, :H5Tcreate, Hid, (C_int, C_size_t), (:class_id, :sz), :(error("Error creating datatype of id ", classid))),
      (:h5t_get_class, :H5Tget_class, C_int, (Hid,), (:dtype_id,), :(error("Error getting class"))),
      (:h5t_get_cset, :H5Tget_cset, C_int, (Hid,), (:dtype_id,), :(error("Error getting character set encoding"))),
-     (:h5t_get_member_class, :H5Tget_member_class, C_int, (Hid, C_unsigned), (:dtype_id, :direction), :(error("Error getting native type"))),
+     (:h5t_get_member_class, :H5Tget_member_class, C_int, (Hid, C_unsigned), (:dtype_id, :index), :(error("Error getting class of compound datatype member #", index))),
+     (:h5t_get_member_index, :H5Tget_member_index, C_int, (Hid, Ptr{Uint8}), (:dtype_id, :membername), :(error("Error getting index of compound datatype member \"", membername, "\""))),
+     (:h5t_get_member_offset, :H5Tget_member_offset, C_size_t, (Hid, C_unsigned), (:dtype_id, :index), :(error("Error getting offset of compound datatype member #", index))),
+     (:h5t_get_member_type, :H5Tget_member_type, Hid, (Hid, C_unsigned), (:dtype_id, :index), :(error("Error getting type of compound datatype member #", index))),
      (:h5t_get_native_type, :H5Tget_native_type, Hid, (Hid, C_int), (:dtype_id, :direction), :(error("Error getting native type"))),
      (:h5t_get_nmembers, :H5Tget_nmembers, C_int, (Hid,), (:dtype_id,), :(error("Error getting the number of members"))),
      (:h5t_get_sign, :H5Tget_sign, C_int, (Hid,), (:dtype_id,), :(error("Error getting sign"))),
@@ -1623,13 +1670,6 @@ function h5i_get_name(loc_id::Hid)
     h5i_get_name(loc_id, buf, len+1)
     convert(ASCIIString, buf[1:len])
 end
-function h5s_get_simple_extent_dims(space_id::Hid)
-    n = h5s_get_simple_extent_ndims(space_id)
-    dims = Array(Hsize, n)
-    maxdims = Array(Hsize, n)
-    h5s_get_simple_extent_dims(space_id, dims, maxdims)
-    return tuple(reverse(dims)...), tuple(reverse(maxdims)...)
-end
 function h5l_get_info(link_loc_id::Hid, link_name::ASCIIString, lapl_id::Hid)
     io = IOString()
     i = H5LInfo()
@@ -1637,6 +1677,23 @@ function h5l_get_info(link_loc_id::Hid, link_name::ASCIIString, lapl_id::Hid)
     h5l_get_info(link_loc_id, link_name, io.data, lapl_id)
     seek(io, 0)
     unpack(io, H5LInfo)
+end
+function h5s_get_simple_extent_dims(space_id::Hid)
+    n = h5s_get_simple_extent_ndims(space_id)
+    dims = Array(Hsize, n)
+    maxdims = Array(Hsize, n)
+    h5s_get_simple_extent_dims(space_id, dims, maxdims)
+    return tuple(reverse(dims)...), tuple(reverse(maxdims)...)
+end
+function h5t_get_member_name(type_id::Hid, index::Integer)
+    pn = ccall(dlsym(libhdf5, :H5Tget_member_name),
+               Ptr{Uint8},
+               (Hid, C_unsigned),
+               type_id, index)
+    if pn == C_NULL
+        error("Error getting name of compound datatype member #", index)
+    end
+    ascii(bytestring(pn))
 end
 function h5t_get_tag(type_id::Hid)
     pc = ccall(dlsym(libhdf5, :H5Tget_tag),
