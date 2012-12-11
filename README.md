@@ -7,8 +7,6 @@ languages](http://www.hdfgroup.org/tools5desc.html).  This package
 provides an interface to the HDF5 library for the
 [Julia][Julia] language.
 
-Language wrappers for HDF5 are often described as either "low level" or "high level." This package contains both flavors: at the low level, it directly wraps HDF5's functions, thus copying their API and making them available fro within Julia. At the high level, it provides a set of functions built on the low-level wrap which may make the usage of this library more convenient.
-
 ## Julia data (\*.jld) and Matlab (\*.mat) files
 
 In addition to the core HDF5 functionality, this package also provides two special-purpose modules used to read and write HDF5 files with specific formatting conventions. The first is the JLD ("Julia data") module, which provides a generic mechanism for reading and writing Julia variables. While one can use "plain" HDF5 for this purpose, the advantage of the JLD module is that it preserves the exact type information of each variable. The other module is MatIO ("Matlab I/O"), which can read and write *.mat files saved as "-v7.3".

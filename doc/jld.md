@@ -62,9 +62,9 @@ This is intended as a brief "reference standard" describing the structure of the
 
 ### Storage format for specific types
 
-- Scalars and arrays of HDF5-supported `BitsKind`s: represented directly
-- ASCII/UTF8 strings and arrays of such strings: represented directly (using variable-length strings)
-- `Type`s: stored as a H5S_NULL, with the type encoded directly by the `julia_type` attribute. Examples include `Nothing`, `Any`, and `Int32` (as a type, not a value).
+- Scalars and arrays of HDF5-supported `BitsKind`s: represented directly. For such objects,  `julia_type` would be "Float64" (for a scalar double), "Array{Int8, 2}" (for a two-dimensional array of 8-bit integers).
+- ASCII/UTF8 strings and arrays of such strings: represented directly (using variable-length strings). `julia_type` might be "ASCIIString" or "Array{UTF8String, 1}".
+- `Type`s: stored as a H5S_NULL, with the type encoded directly by the `julia_type` attribute. Examples include `Nothing`, `Any`, and `Int32` (as a type, not a value), and the `julia_type` attribute is, e.g., "Type{Nothing}".
 - `Bool`s: scalars are written as a single Uint8. Arrays of Bools are written with an additional attribute "julia_format", containing a string which describes the encoding strategy. Currently "EachUint8" is the only supported format (which writes `Array{Bool}` as an `Array{Uint8}`), but in the future it's anticipated that `BitArray`s will be the default. TODO: consider letting `g[name, "julia_format", "EachUint8"] = B`, where `B` is a boolean array, specify the format explicitly.
 - `Complex64`/`Complex128`: written as pairs of `Float32`/`Float64`s. An array of complex numbers with dimensionality `(s1, s2, ...)` is written as an array of `FloatingPoint`s with  dimensionality `(2, s1, s2, ...)`.
 - `Symbol`: represented as a string. Array of symbols represented as array of strings.

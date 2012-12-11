@@ -12,11 +12,13 @@ For simple types (scalars, strings, and arrays), HDF5 provides sufficient metada
 
 However, to preserve Julia objects, one generally needs additional type information to be supplied, which is easy to provide using attributes. This is handled for you automatically in the JLD and MatIO modules for \*.jld and \*.mat files. These specific formats (conventions) provide "extra" functionality, but they are still both regular HDF5 files and are therefore compatible with any HDF5 reader or writer.
 
+Language wrappers for HDF5 are often described as either "low level" or "high level." This package contains both flavors: at the low level, it directly wraps HDF5's functions, thus copying their API and making them available from within Julia. At the high level, it provides a set of functions built on the low-level wrap which may make the usage of this library more convenient.
+
 
 Opening and closing files
 -------------------------
 
-Files are created and/or opened with the `h5open` command:
+"Plain" (i.e., with no extra formatting conventions) HDF5 files are created and/or opened with the `h5open` command:
 
 ```julia
 fid = h5open(filename, mode)
@@ -39,15 +41,15 @@ The mode can be any one of the following:
   </tr>
 </table>
 
-This produces an object of type `PlainHDF5File`, a subtype of the abstract type `HDF5File`. The subtypes of `HDF5File` are used in method dispatch to enforce any file-type-specific formatting. "Plain" files have no additional formatting.
+This produces an object of type `PlainHDF5File`, a subtype of the abstract type `HDF5File`. The subtypes of `HDF5File` are used in method dispatch to enforce any file-type-specific formatting. "Plain" files have no elements (groups, datasets, or attributes) that are not explicitly created by the user.
 
-Similarly, you close the file using `close`:
+When you're finished with a file, you should close it:
 
 ```julia
 close(fid)
 ```
 
-Closing a file also closes any other open objects (e.g., datasets, groups) in that file.
+Closing a file also closes any other open objects (e.g., datasets, groups) in that file. In general, you need to close an HDF5 file to "release" it for use by other applications.
 
 Opening and closing objects
 ---------------------------
@@ -71,7 +73,7 @@ or simply
 dset = fid["mygroup/mydataset"]
 ```
 
-Close the object using `close(obj)`.
+When you're done with an object, you can close it using `close(obj)`. If you forget to do this, it will be closed for you anyway when the file is closed, or if `obj` goes out of scope and gets garbage collected.
 
 Reading and writing data
 ------------------------
