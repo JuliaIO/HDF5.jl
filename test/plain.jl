@@ -1,4 +1,3 @@
-load("hdf5.jl")
 using HDF5
 
 # Create a new file

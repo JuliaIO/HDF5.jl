@@ -1,4 +1,3 @@
-load("matio.jl")
 using MatIO
 
 fid = matopen("/tmp/matwrite.mat","w")

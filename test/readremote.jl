@@ -1,7 +1,6 @@
 # Check that we can read the official HDF5 example files
 urlbase = "http://www.hdfgroup.org/ftp/HDF5/examples/files/exbyapi/"
 
-load("hdf5.jl")
 using HDF5
 
 fcmp = [0 1 2 3 4 5 6;
