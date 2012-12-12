@@ -16,9 +16,8 @@ In addition to the core HDF5 functionality, this package also provides two speci
 To use the JLD module, begin your code with
 
 ```julia
-load("HDF5.jl")
-using JLD
 using HDF5
+using JLD
 ```
 
 Here's an example using functional syntax, which may be especially familiar to Matlab users:
@@ -36,7 +35,6 @@ close(file)
 For HDF5 users coming from other languages, Julia's high-level wrapper providing a dictionary-like interface may be of particular interest. This is demonstrated with the "plain" (unformatted) HDF5 interface:
 
 ```julia
-load("HDF5.jl")
 using HDF5
 
 file = h5open("test.h5", "w")
