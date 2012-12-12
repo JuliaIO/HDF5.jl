@@ -1,6 +1,7 @@
 using MatIO
 
-fid = matopen("/tmp/matwrite.mat","w")
+fn = file_path(tempdir(), "matwrite.mat")
+fid = matopen(fn, "w")
 A = randi(20, 3, 5)
 B = randn(2, 4)
 AB = Any[A, B]

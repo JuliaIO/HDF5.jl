@@ -46,7 +46,9 @@ macro check(fid, sym)
     esc(ex)
 end
 
-fid = jldopen("/tmp/test.jld","w")
+fn = file_path(tempdir(),"test.jld")
+
+fid = jldopen(fn, "w")
 @write fid x
 @write fid A
 @write fid str
@@ -64,12 +66,13 @@ fid = jldopen("/tmp/test.jld","w")
 @write fid d
 @write fid ex
 @write fid T
+# Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
 @write g i
 close(fid)
 
-fidr = jldopen("/tmp/test.jld","r")
+fidr = jldopen(fn, "r")
 @check fidr x
 @check fidr A
 @check fidr str

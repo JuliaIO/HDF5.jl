@@ -1,7 +1,7 @@
 using HDF5
 
 # Create a new file
-fn = "/tmp/test.h5"
+fn = file_path(tempdir(),"test.h5")
 f = h5open(fn, "w")
 # Write scalars
 f["Float64"] = 3.2

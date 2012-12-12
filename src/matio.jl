@@ -2,7 +2,6 @@
 ## Reading and writing MATLAB .mat files ##
 ###########################################
 
-require("hdf5.jl")
 module MatIO
 using HDF5
 # Attempt to execute "using MAT", but don't error if it doesn't work
