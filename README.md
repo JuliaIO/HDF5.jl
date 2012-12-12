@@ -16,6 +16,7 @@ In addition to the core HDF5 functionality, this package also provides two speci
 To use the JLD module, begin your code with
 
 ```julia
+load("HDF5")
 using HDF5
 using JLD
 ```

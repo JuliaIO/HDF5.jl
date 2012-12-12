@@ -119,7 +119,7 @@ Creating groups and attributes
 Create a new group in the following way:
 
 ```julia
-g = g_create(parent::Union(HDF5File, HDF5Group), name::ASCIIString)
+g = g_create(parent, name)
 ```
 
 The named group will be created as a child of the parent.
@@ -127,10 +127,10 @@ The named group will be created as a child of the parent.
 Attributes can be created using
 
 ```julia
-attrs(parent::Union(HDF5Group, HDF5Dataset))[name] = value
+attrs(parent)[name] = value
 ```
 
-where `attrs` simply indicates that the object referenced by `name` (a string) is an attribute, not another group or dataset. (Datasets cannot have child datasets, but groups can have either.) `value` must be a simple type: `BitsKind`s, strings, and arrays of either of these. The HDF5 standard does not permit attributes to store "complex" objects. 
+where `attrs` simply indicates that the object referenced by `name` (a string) is an attribute, not another group or dataset. (Datasets cannot have child datasets, but groups can have either.) `value` must be a simple type: `BitsKind`s, strings, and arrays of either of these. The HDF5 standard recommends against storing large objects as attributes. 
 
 Getting information
 -------------------
@@ -145,7 +145,7 @@ will return the full HDF5 pathname of object `obj`.
 names(g)
 ```
 
-will show all objects inside group `g`.
+returns a string array containing all objects inside group `g`. These relative pathnames, not absolute pathnames.
 
 You can iterate over the objects in a group, i.e.,
 ```julia
@@ -196,10 +196,10 @@ Mid-level routines
 
 Sometimes you might want more fine-grained control, which can be achieved using a different set of routines. For example,
 ```julia
-g = g_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString)
-dset = d_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString[, apl])
-attr = a_open(parent::Union(HDF5Group, HDF5Dataset), name::ASCIIString)
-t = t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString)
+g = g_open(parent, name)
+dset = d_open(parent, name[, apl])
+attr = a_open(parent, name)
+t = t_open(parent, name)
 ```
 
 These open the named group, dataset, attribute, and committed datatype, respectively. For datasets, `apl` stands for "access parameter list" and provides opportunities for more sophisticated control (see the [HDF5][HDF5] documentation).
@@ -223,17 +223,23 @@ d_write(parent, name, data[, lcpl, dcpl, dapl])
 a_write(parent, name, data)
 ```
 
+Finally, it's possible to delete objects:
+```julia
+o_delete(parent, name)   # for groups, datasets, and datatypes
+a_delete(parent, name)   # for attributes
+```
+
 Low-level routines
 ------------------
 
 Many of the most commonly-used libhdf5 functions have been wrapped. These are not exported, so you need to preface them with `HDF5.function` to use them. The library follows a consistent convention: for example, libhdf5's `H5Adelete` is wrapped with a Julia function called `h5a_delete`. The arguments are exactly as specified in the [HDF5][HDF5] reference manual.
 
+HDF5 is a large library, and the low-level wrap is not complete. However, many of the most-commonly used functions are wrapped, and in general wrapping a new function takes only a single line of code. Users who need additional functionality are encourage to contribute it.
+
 Note that Julia's HDF5 directly uses the "2" interfaces, e.g., `H5Dcreate2`, so you need to have version 1.8 of the HDF5 library or later.
 
 Details
 -------
-
-HDF5 is a large library, and the low-level wrap is not complete. However, many of the most-commonly used functions are wrapped, and in general wrapping a new function takes only a single line of code. Users who need additional functionality are encourage to contribute it. Low-level functions are not exported, so you access them by importing ``HDF5``. This provides access to many constants (e.g., ``HDF5.H5T_STD_I16BE``), raw dataset, datatype, and dataspace utilities, and wrappers for the direct library calls (e.g., ``HDF5.h5d_create(...)``).
 
 Julia, like Fortran and Matlab, stores arrays in column-major order.
 HDF5 uses C's row-major order, and consequently every array's
