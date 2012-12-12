@@ -2,7 +2,6 @@
 ## Reading and writing Julia data .jld files ##
 ###############################################
 
-load("hdf5.jl")
 module JLD
 using HDF5
 # Add methods to...
@@ -313,6 +312,13 @@ end
 
 # CompositeKind
 function read(obj::HDF5Dataset{JldFile}, T::CompositeKind)
+    # Add the parameters
+    params = a_read(obj, "TypeParameters")
+    p = Array(Any, length(params))
+    for i = 1:length(params)
+        p[i], indx = parse(params[i])
+    end
+    T = T{p...}
     v = getrefs(obj, Any)
     t = ntuple(length(v), i->v[i])
     ccall(:jl_new_structt, Any, (Any,Any), T, t)
@@ -519,7 +525,7 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s)
     if !isa(T, CompositeKind)
         error("This is the write function for CompositeKind, but the input is of type ", T)
     end
-    Tname = string(T)
+    Tname = string(T.name.name)
     n = T.names
     local gtypes
     if !exists(file(parent), pathtypes)
@@ -556,6 +562,8 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s)
     write(parent, name, v, "CompositeKind")
     obj = parent[name]
     a_write(plain(obj), "CompositeKind", Tname)
+    params = [map(string, T.parameters)...]
+    a_write(plain(obj), "TypeParameters", params)
     close(obj)
 end
 
