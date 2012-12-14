@@ -9,7 +9,20 @@ provides an interface to the HDF5 library for the
 
 ## Julia data (\*.jld) and Matlab (\*.mat) files
 
-In addition to the core HDF5 functionality, this package also provides two special-purpose modules used to read and write HDF5 files with specific formatting conventions. The first is the JLD ("Julia data") module, which provides a generic mechanism for reading and writing Julia variables. While one can use "plain" HDF5 for this purpose, the advantage of the JLD module is that it preserves the exact type information of each variable. The other module is MatIO ("Matlab I/O"), which can read and write *.mat files saved as "-v7.3".
+The core HDF5 functionality is the foundation for two special-purpose modules, used to read and write HDF5 files with specific formatting conventions. The first is the JLD ("Julia data") module (provided in this package), which implements a generic mechanism for reading and writing Julia variables. While one can use "plain" HDF5 for this purpose, the advantage of the JLD module is that it preserves the exact type information of each variable.
+
+The other functionality provided through HDF5 is the ability to read and write Matlab \*.mat files saved as "-v7.3". The Matlab-specific portions have been moved to Simon Kornblith's [MAT.jl](https://github.com/simonster/MAT.jl) repository.
+
+## Installation
+
+Within Julia, use the package manager:
+```julia
+load("pkg.jl")
+Pkg.init()     # if you've never installed a package before
+Pkg.add("HDF5")
+```
+
+You also need to have the HDF5 library installed on your system. Version 1.8 or higher is required. For example, on Debian/(K)Ubuntu you should be able to do this via `apt-get -u install hdf5-tools`. 
 
 ## Quickstart
 
@@ -33,7 +46,7 @@ c = read(file, "A")
 close(file)
 ```
 
-For HDF5 users coming from other languages, Julia's high-level wrapper providing a dictionary-like interface may be of particular interest. This is demonstrated with the "plain" (unformatted) HDF5 interface:
+For HDF5 users coming from other languages, Julia's high-level wrapper providing a dictionary-like interface may be of interest. This is demonstrated with the "plain" (unformatted) HDF5 interface:
 
 ```julia
 using HDF5
@@ -45,7 +58,7 @@ attrs(g)["Description"] = "This group contains only a single dataset" # an attri
 close(file)
 ```
 
-For Matlab files, you would say ``load("matio.jl"); using MatIO``. There is no conflict in having multiple modules (HDF5, JLD, and MatIO) available simultaneously; the formatting of the file is determined by the open command.
+There is no conflict in having multiple modules (HDF5, JLD, and [MAT_HDF5](https://github.com/simonster/MAT.jl)) available simultaneously; the formatting of the file is determined by the open command.
 
 More extensive documentation is found in the `doc/` directory.
 
@@ -57,7 +70,7 @@ The test/ directory contains a number of test scripts that also contain example 
 - Tim Holy (maintainer)
 - Tom Short contributed code and ideas to the dictionary-like interface, and string->type conversion in the JLD module
 - Simon Kornblith fixed problems in the Matlab support
-- [Mike Nolta](https://github.com/nolta/julia_hdf5) and Jameson Nash contributed code or suggestions for improving the handling of HDF5's constants
+- Mike Nolta and Jameson Nash contributed code or suggestions for improving the handling of HDF5's constants
 
 
 [Julia]: http://julialang.org "Julia"
