@@ -1001,9 +1001,6 @@ function read(obj::HDF5Dataset{PlainHDF5File}, ::Type{Array{HDF5Compound}})
         sz += sizeof(T)
         membername[i] = h5t_get_member_name(t.id, i-1)
     end
-    @show membertype
-    @show membername
-    @show memberoffset
     # Build the "memory type"
     memtype_id = h5t_create(H5T_COMPOUND, sz)
     for i = 1:n
@@ -1055,9 +1052,10 @@ function read{T<:Union(HDF5BitsKind,CharType)}(obj::Union(HDF5Dataset{PlainHDF5F
     h5t_close(memtype_id)
     # Unpack the data
     data = Array(atype(T), sz...)
-    io = IOString(); io.data = Array(Uint8, HVL_SIZE)
+    io = IOString(); io.data = Array(Uint8, HVL_SIZE); io.size = HVL_SIZE
     for i = 1:len
-        copy_to(io.data, 1, structbuf, (i-1)*HVL_SIZE+1, HVL_SIZE)
+        offset = (i-1)*HVL_SIZE
+        copy_to(io.data, 1, structbuf, offset+1, HVL_SIZE)
         seek(io, 0)
         h = unpack(io, Hvl_t)
         data[i] = p2a(convert(Ptr{T}, h.p), int(h.len))
