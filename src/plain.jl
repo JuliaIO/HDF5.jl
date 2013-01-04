@@ -7,7 +7,7 @@ module HDF5
 ## Add methods to...
 import Base.assign, Base.close, Base.convert, Base.done, Base.dump, Base.flush, Base.has, Base.isempty, Base.isvalid, Base.length, Base.names, Base.ndims, Base.next, Base.ref, Base.read, Base.show, Base.size, Base.start, Base.strlen, Base.write
 
-require("strpack.jl")
+include(find_in_path("strpack.jl"))
 
 ## C types
 typealias C_int Int32

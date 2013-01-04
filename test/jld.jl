@@ -1,3 +1,4 @@
+require("HDF5")
 using JLD
 using HDF5
 

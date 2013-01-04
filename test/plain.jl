@@ -1,3 +1,4 @@
+require("HDF5")
 using HDF5
 
 # Create a new file
