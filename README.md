@@ -22,7 +22,10 @@ Pkg.init()     # if you've never installed a package before
 Pkg.add("HDF5")
 ```
 
-You also need to have the HDF5 library installed on your system. Version 1.8 or higher is required. For example, on Debian/(K)Ubuntu you should be able to do this via `apt-get -u install hdf5-tools`. 
+You also need to have the HDF5 library installed on your system. Version 1.8 or higher is required. Here are some examples of how to install HDF5:
+
+- Debian/(K)Ubuntu: `apt-get -u install hdf5-tools`
+- OSX: `brew install hdf5` (using [Homebrew](http://mxcl.github.com/homebrew/))
 
 ## Quickstart
 
