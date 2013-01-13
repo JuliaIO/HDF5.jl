@@ -1,6 +1,5 @@
-require("HDF5")
-using JLD
 using HDF5
+using JLD
 
 # Define variables of different types
 x = 3.7
@@ -47,7 +46,7 @@ macro check(fid, sym)
     esc(ex)
 end
 
-fn = file_path(tempdir(),"test.jld")
+fn = joinpath(tempdir(),"test.jld")
 
 fid = jldopen(fn, "w")
 @write fid x

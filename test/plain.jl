@@ -1,8 +1,7 @@
-require("HDF5")
 using HDF5
 
 # Create a new file
-fn = file_path(tempdir(),"test.h5")
+fn = joinpath(tempdir(),"test.h5")
 f = h5open(fn, "w")
 # Write scalars
 f["Float64"] = 3.2

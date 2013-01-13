@@ -1,7 +1,6 @@
 # Check that we can read the official HDF5 example files
 urlbase = "http://www.hdfgroup.org/ftp/HDF5/examples/files/exbyapi/"
 
-require("HDF5")
 using HDF5
 
 fcmp = [0 1 2 3 4 5 6;
@@ -19,7 +18,7 @@ opq = Array{Uint8}[[0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x30],
                    [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x32],
                    [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x33]]
 
-const savedir = file_path(tempdir(), "h5")
+const savedir = joinpath(tempdir(), "h5")
 if !isdir(savedir)
     mkdir(savedir)
 end

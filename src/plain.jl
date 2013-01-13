@@ -5,7 +5,7 @@
 module HDF5
 
 ## Add methods to...
-import Base.assign, Base.close, Base.convert, Base.done, Base.dump, Base.flush, Base.has, Base.isempty, Base.isvalid, Base.length, Base.names, Base.ndims, Base.next, Base.ref, Base.read, Base.show, Base.size, Base.start, Base.strlen, Base.write
+import Base.assign, Base.close, Base.convert, Base.done, Base.dump, Base.flush, Base.has, Base.isempty, Base.isvalid, Base.length, Base.names, Base.ndims, Base.next, Base.ref, Base.read, Base.show, Base.size, Base.start, Base.write
 
 include(find_in_path("strpack.jl"))
 
@@ -214,11 +214,11 @@ abstract CharType <: String
 type ASCIIChar<:CharType
     c::Uint8
 end
-strlen(c::ASCIIChar) = 1
+length(c::ASCIIChar) = 1
 type UTF8Char<:CharType
     c::Uint8
 end
-strlen(c::UTF8Char) = 1
+length(c::UTF8Char) = 1
 chartype(::Type{ASCIIString}) = ASCIIChar
 chartype(::Type{UTF8String})  = UTF8Char
 stringtype(::Type{ASCIIChar}) = ASCIIString
@@ -1449,10 +1449,10 @@ function ccallsyms(ccallargs, n, argsyms)
             ccallargs = Any[ccallargs..., argsyms...]
         else
             for i = 1:length(argsyms)-1
-                push(ccallargs, argsyms[i])
+                push!(ccallargs, argsyms[i])
             end
             for i = 1:n-length(argsyms)+1
-                push(ccallargs, expr(:ref, argsyms[end], i))
+                push!(ccallargs, expr(:ref, argsyms[end], i))
             end
         end
     end
@@ -1464,7 +1464,7 @@ function funcdecexpr(funcsym, n::Int, argsyms)
         return expr(:call, Any[funcsym, argsyms...])
     else
         exargs = Any[funcsym, argsyms[1:end-1]...]
-        push(exargs, expr(:..., argsyms[end]))
+        push!(exargs, expr(:..., argsyms[end]))
         return expr(:call, exargs)
     end
 end
