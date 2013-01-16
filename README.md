@@ -17,8 +17,6 @@ The other functionality provided through HDF5 is the ability to read and write M
 
 Within Julia, use the package manager:
 ```julia
-load("pkg.jl")
-Pkg.init()     # if you've never installed a package before
 Pkg.add("HDF5")
 ```
 
@@ -32,7 +30,6 @@ You also need to have the HDF5 library installed on your system. Version 1.8 or 
 To use the JLD module, begin your code with
 
 ```julia
-load("HDF5")
 using HDF5
 using JLD
 ```
