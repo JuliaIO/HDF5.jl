@@ -14,7 +14,7 @@ typealias C_int Int32
 typealias C_unsigned Uint32
 typealias C_char Uint8
 typealias C_unsigned_long_long Uint64
-typealias C_size_t Uint64
+typealias C_size_t Uint
 
 ## HDF5 types and constants
 typealias Hid         C_int
@@ -778,6 +778,7 @@ datatype(dset::HDF5Attribute) = HDF5Datatype(h5a_get_type(dset.id))
 
 # Create a datatype from in-memory types
 datatype{T<:HDF5BitsKind}(x::T) = HDF5Datatype(hdf5_type_id(T), false)
+datatype{T<:HDF5BitsKind}(::Type{T}) = HDF5Datatype(hdf5_type_id(T), false)
 datatype{T<:HDF5BitsKind}(A::Array{T}) = HDF5Datatype(hdf5_type_id(T), false)
 function datatype{S<:ByteString}(str::S)
     type_id = h5t_copy(hdf5_type_id(S))
@@ -821,6 +822,7 @@ dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
 dataspace(R::HDF5ReferenceObjArray) = _dataspace(size(R)...)
 dataspace(v::HDF5Vlen) = _dataspace(size(v.data)...)
 dataspace(n::Nothing) = HDF5Dataspace(h5s_create(H5S_NULL))
+dataspace(sz::Dims) = _dataspace(sz...)
 
 # Get the array dimensions from a dataspace
 # Returns both dims and maxdims
@@ -1298,6 +1300,15 @@ function _ref{T<:HDF5BitsKind}(dset::HDF5Dataset{PlainHDF5File}, ::Type{T}, indi
     ret
 end
 
+# Link to bytes in an external file
+# If you need to link to multiple segments, use low-level interface
+function d_create_external(parent::Union(HDF5File, HDF5Group), name::ASCIIString, filepath::ByteString, t, sz::Dims, offset::Integer)
+    p = p_create(HDF5.H5P_DATASET_CREATE)
+    h5p_set_external(p, filepath, int(offset), prod(sz)*sizeof(t))
+    d_create(parent, name, datatype(t), dataspace(sz), HDF5Properties(), p)
+end
+d_create_external(parent::Union(HDF5File, HDF5Group), name::ASCIIString, filepath::ByteString, t::Type, sz::Dims) = d_create_external(parent, name, filepath, t, sz, 0)
+
 # end of high-level interface
 
 
@@ -1497,6 +1508,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5p_get_fclose_degree, :H5Pget_fclose_degree, Herr, (Hid, Ptr{C_int}), (:plist_id, :fc_degree), "Error getting close degree"),
      (:h5p_get_userblock, :H5Pget_userblock, Herr, (Hid, Ptr{Hsize}), (:plist_id, :len), "Error getting userblock"),
      (:h5p_set_chunk, :H5Pset_chunk, Herr, (Hid, C_int, Ptr{Hsize}), (:plist_id, :ndims, :dims), "Error setting chunk size"),
+     (:h5p_set_external, :H5Pset_external, Herr, (Hid, Ptr{Uint8}, Int, C_size_t), (:plist_id, :name, :offset, :size), "Error setting external property"),
      (:h5p_set_fclose_degree, :H5Pset_fclose_degree, Herr, (Hid, C_int), (:plist_id, :fc_degree), "Error setting close degree"),
      (:h5p_set_deflate, :H5Pset_deflate, Herr, (Hid, C_unsigned), (:plist_id, :setting), "Error setting compression method and level (deflate)"),
      (:h5p_set_layout, :H5Pset_layout, Herr, (Hid, C_int), (:plist_id, :setting), "Error setting layout"),
@@ -1773,6 +1785,7 @@ export
     close,
     create,
     d_create,
+    d_create_external,
     d_open,
     d_read,
     d_write,
