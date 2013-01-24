@@ -73,7 +73,7 @@ function close(f::JldFile)
     end
     nothing
 end
-show(io, fid::JldFile) = isvalid(fid) ? print(io, "Julia data file version ", fid.version, ": ", fid.filename) : print(io, "Julia data file (closed): ", fid.filename)
+show(io::IO, fid::JldFile) = isvalid(fid) ? print(io, "Julia data file version ", fid.version, ": ", fid.filename) : print(io, "Julia data file (closed): ", fid.filename)
 
 function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool)
     local fj
