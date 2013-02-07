@@ -58,7 +58,7 @@ attrs(g)["Description"] = "This group contains only a single dataset" # an attri
 close(file)
 ```
 
-There is no conflict in having multiple modules (HDF5, JLD, and [MAT_HDF5](https://github.com/simonster/MAT.jl)) available simultaneously; the formatting of the file is determined by the open command.
+There is no conflict in having multiple modules (HDF5, JLD, and [MAT.jl](https://github.com/simonster/MAT.jl)) available simultaneously; the formatting of the file is determined by the open command.
 
 More extensive documentation is found in the `doc/` directory.
 
