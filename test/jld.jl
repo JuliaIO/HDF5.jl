@@ -3,7 +3,7 @@ using JLD
 
 # Define variables of different types
 x = 3.7
-A = randi(20, 3, 5)
+A = rand(1:20, 3, 5)
 str = "Hello"
 stringsA = ASCIIString["It", "was", "a", "dark", "and", "stormy", "night"]
 stringsU = UTF8String["It", "was", "a", "dark", "and", "stormy", "night"]

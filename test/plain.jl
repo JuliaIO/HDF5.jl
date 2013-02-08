@@ -10,7 +10,7 @@ f["Int16"] = int16(4)
 A = randn(3,5)
 write(f, "Afloat64", float64(A))
 write(f, "Afloat32", float32(A))
-Ai = randi(20, 2, 4)
+Ai = rand(1:20, 2, 4)
 write(f, "Aint8", int8(Ai))
 f["Aint16"] = int16(Ai)
 write(f, "Aint32", int32(Ai))
@@ -36,7 +36,7 @@ close(dset)
 # Group
 g = g_create(f, "mygroup")
 # Test dataset with compression
-R = randi(20, 20, 40);
+R = rand(1:20, 20, 40);
 g["CompressedA", "chunk", (5,5), "compress", 9] = R
 close(g)
 # Create a dataset designed to be deleted

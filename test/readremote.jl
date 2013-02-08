@@ -23,7 +23,7 @@ if !isdir(savedir)
     mkdir(savedir)
 end
 function getfile(name)
-    file = fullfile(savedir, name)
+    file = joinpath(savedir, name)
     if !isfile(file)
         file = download_file(urlbase*name, file)
     end

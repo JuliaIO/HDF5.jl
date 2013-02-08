@@ -63,7 +63,7 @@ function close(f::JldFile)
         h5f_close(f.id)
         if f.writeheader
             magic = zeros(Uint8, 512)
-            tmp = strcat(magic_base, f.version)
+            tmp = string(magic_base, f.version)
             magic[1:length(tmp)] = tmp.data
             rawfid = open(f.filename, "r+")
             write(rawfid, magic)
@@ -404,7 +404,7 @@ end
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, n::Nothing) = write(parent, name, n, "Nothing")
 
 # Types
-write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Type{T}) = write(parent, name, nothing, strcat("Type{", t, "}"))
+write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Type{T}) = write(parent, name, nothing, string("Type{", t, "}"))
 
 # Bools
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, tf::Bool) = write(parent, name, uint8(tf), "Bool")
@@ -491,10 +491,9 @@ write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Tuple) =
 # Associative (Dict)
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d::Associative)
     n = length(d)
-    K = keytype(d)
-    V = valtype(d)
-    ks = Array(K, n)
-    vs = Array(V, n)
+    T = eltype(d)
+    ks = Array(T[1], n)
+    vs = Array(T[2], n)
     i = 0
     for (k,v) in d
         ks[i+=1] = k
@@ -635,7 +634,7 @@ function dump(io::IOStream, parent::Union(JldFile, HDF5Group{JldFile}), n::Int, 
             print(io, indent, "  ", k, ": ")
             v = parent[k]
             if isa(v, HDF5Group)
-                dump(io, v, n-1, strcat(indent, "  "))
+                dump(io, v, n-1, string(indent, "  "))
             else
                 if exists(attrs(v), name_type_attr)
                     typename = a_read(v, name_type_attr)

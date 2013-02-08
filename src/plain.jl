@@ -1057,7 +1057,7 @@ function read{T<:Union(HDF5BitsKind,CharType)}(obj::Union(HDF5Dataset{PlainHDF5F
     io = IOString(); io.data = Array(Uint8, HVL_SIZE); io.size = HVL_SIZE
     for i = 1:len
         offset = (i-1)*HVL_SIZE
-        copy_to(io.data, 1, structbuf, offset+1, HVL_SIZE)
+        copy!(io.data, 1, structbuf, offset+1, HVL_SIZE)
         seek(io, 0)
         h = unpack(io, Hvl_t)
         data[i] = p2a(convert(Ptr{T}, h.p), int(h.len))
