@@ -744,7 +744,7 @@ end
 
 # It would also be nice to print the first few elements.
 # FIXME: strings and array of variable-length strings
-function dump(io::IOStream, x::HDF5Dataset, n::Int, indent)
+function dump(io::IO, x::HDF5Dataset, n::Int, indent)
     sz = size(x)
     print(io, "HDF5Dataset $sz : ")
     isempty(sz) || prod(sz) == 1 ? print(io, read(x)) :
@@ -753,7 +753,7 @@ function dump(io::IOStream, x::HDF5Dataset, n::Int, indent)
     length(sz) == 2 ? Base.show_delim_array(io, x[1,1:min(5,size(x)[2])], '[', ',', ' ', true) : ""
     println(io,)
 end
-function dump(io::IOStream, x::Union(HDF5File, HDF5Group), n::Int, indent)
+function dump(io::IO, x::Union(HDF5File, HDF5Group), n::Int, indent)
     println(typeof(x), " len ", length(x))
     if n > 0
         i = 1

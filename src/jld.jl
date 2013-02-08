@@ -623,7 +623,7 @@ _ref{T,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::Union(Integer
 
 
 ### Dump ###
-function dump(io::IOStream, parent::Union(JldFile, HDF5Group{JldFile}), n::Int, indent)
+function dump(io::IO, parent::Union(JldFile, HDF5Group{JldFile}), n::Int, indent)
     println(io, typeof(parent), " len ", length(parent))
     if n > 0
         i = 1
