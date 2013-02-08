@@ -14,9 +14,13 @@ AB = Any[A, B]
 t = (3, "cat")
 c = float32(3)+float32(7)im
 C = reinterpret(Complex128, B, (4,))
-type MyStruct
-    len::Int
-    data::Array{Float64}
+try
+    global MyStruct
+    type MyStruct
+        len::Int
+        data::Array{Float64}
+    end
+catch
 end
 ms = MyStruct(2, [3.2, -1.7])
 sym = :TestSymbol
