@@ -830,9 +830,15 @@ get_dims(dspace::HDF5Dataspace) = h5s_get_simple_extent_dims(dspace.id)
 
 # Convenience macros
 macro read(fid, sym)
+    if !isa(sym, Symbol)
+        error("Second input to @read must be a symbol (i.e., a variable)")
+    end
     esc(:($sym = read($fid, $(string(sym)))))
 end
 macro write(fid, sym)
+    if !isa(sym, Symbol)
+        error("Second input to @write must be a symbol (i.e., a variable)")
+    end
     esc(:(write($fid, $(string(sym)), $sym)))
 end
 
