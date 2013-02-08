@@ -669,7 +669,7 @@ is_valid_type_ex(e::Expr) = (e.head == :curly || e.head == :tuple) && all(map(is
 
 
 function julia_type(s::String)
-    e = parse(s)[1]
+    e = parse(s)
     typ = UnsupportedType
     if is_valid_type_ex(e)
         try     # try needed to catch undefined symbols
