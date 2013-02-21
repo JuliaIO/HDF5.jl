@@ -25,7 +25,7 @@ end
 function getfile(name)
     file = joinpath(savedir, name)
     if !isfile(file)
-        file = download_file(urlbase*name, file)
+        file = download(urlbase*name, file)
     end
     file
 end
