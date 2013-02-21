@@ -13,13 +13,13 @@ include(Base.find_in_path("strpack.jl"))
 typealias C_int Int32
 typealias C_unsigned Uint32
 typealias C_char Uint8
-typealias C_unsigned_long_long Uint64
 typealias C_size_t Uint
+typealias C_time_t Int
 
 ## HDF5 types and constants
 typealias Hid         C_int
 typealias Herr        C_int
-typealias Hssize      C_int
+typealias Hssize      Int
 typealias Hsize       C_size_t
 typealias Htri        C_int   # pseudo-boolean (negative if error)
 
@@ -458,6 +458,46 @@ type H5Ginfo
 end
 H5Ginfo() = H5Ginfo(int32(0), convert(Hsize, 0), int64(0), int32(0))
 pack(H5Ginfo(), align_native)
+# For objects
+type Hmetainfo
+    index_size::Hsize
+    heap_size::Hsize
+end
+Hmetainfo() = Hmetainfo(convert(Hsize, 0), convert(Hsize, 0))
+type H5Oinfo
+    fileno::C_unsigned
+    addr::Hsize
+    otype::C_int
+    rc::C_unsigned
+    atime::C_time_t
+    mtime::C_time_t
+    ctime::C_time_t
+    btime::C_time_t
+    num_attrs::Hsize
+    version::C_unsigned
+    nmesgs::C_unsigned
+    nchunks::C_unsigned
+    flags::C_unsigned
+    total::Hsize
+    meta::Hsize
+    mesg::Hsize
+    free::Hsize
+    present::Uint64
+    shared::Uint64
+    meta_obj::Hmetainfo
+    meta_attr::Hmetainfo
+end
+H5Oinfo() = H5Oinfo(uint32(0),
+    convert(Hsize,0),
+    int32(0),
+    uint32(0),
+    int(0), int(0), int(0), int(0),
+    convert(Hsize,0),
+    uint32(0), uint32(0), uint32(0), uint32(0),
+    convert(Hsize,0), convert(Hsize,0), convert(Hsize,0), convert(Hsize,0),
+    uint64(0), uint64(0),
+    Hmetainfo(), Hmetainfo())
+pack(H5Oinfo(), align_native)
 # For links
 type H5LInfo
     linktype::C_int
@@ -501,6 +541,14 @@ function h5open(filename::String, mode::String, toclose::Bool)
 end
 h5open(filename::String, mode::String) = h5open(filename, mode, true)
 h5open(filename::String) = h5open(filename, "r")
+function h5open(f::Function, args...)
+    fid = h5open(args...)
+    try
+        f(fid)
+    finally
+        close(fid)
+    end
+end
 
 # Close functions
 isvalid(obj) = h5i_is_valid(obj.id)
@@ -558,7 +606,7 @@ d_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString, apl::HDF5Propertie
 d_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Dataset(h5d_open(parent.id, name, H5P_DEFAULT), file(parent))
 t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString, apl::HDF5Properties) = HDF5Datatype(h5t_open(parent.id, name, apl.id))
 t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Datatype(h5t_open(parent.id, name, H5P_DEFAULT))
-a_open(parent::HDF5Object, name::ASCIIString) = HDF5Attribute(h5a_open(parent.id, name, H5P_DEFAULT))
+a_open(parent::Union(HDF5File, HDF5Object), name::ASCIIString) = HDF5Attribute(h5a_open(parent.id, name, H5P_DEFAULT))
 # Object (group, named datatype, or dataset) open
 function h5object(obj_id::Hid, parent)
     obj_type = h5i_get_type(obj_id)
@@ -680,11 +728,22 @@ function info(obj::Union(HDF5Group,HDF5File))
     seek(io, 0)
     unpack(io, H5Ginfo, align_native)
 end
+function objinfo(obj::Union(HDF5File, HDF5Object))
+    io = IOString()
+    pack(io, H5Oinfo(), align_native)
+    h5o_get_info(obj.id, io.data)
+    seek(io, 0)
+    unpack(io, H5Oinfo, align_native)
+end
 function length(x::Union(HDF5Group,HDF5File))
     buf = [int32(0)]
     h5g_get_num_objs(x.id, buf)
     buf[1]
 end
+function length(x::HDF5Attributes)
+    objinfo(x.parent).num_attrs
+end
+
 isempty(x::Union(HDF5Group,HDF5File)) = length(x) == 0
 function size(obj::Union(HDF5Dataset, HDF5Attribute))
     dspace = dataspace(obj)
@@ -707,6 +766,18 @@ function names(x::Union(HDF5Group,HDF5File))
         len = h5g_get_objname_by_idx(x.id, i - 1, "", 0)
         buf = Array(Uint8, len+1)
         len = h5g_get_objname_by_idx(x.id, i - 1, buf, len+1)
+        res[i] = convert(ASCIIString, buf[1:len])
+    end
+    res
+end
+
+function names(x::HDF5Attributes)
+    n = length(x)
+    res = Array(ASCIIString, n)
+    for i in 1:n
+        len = h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, "", 0, H5P_DEFAULT)
+        buf = Array(Uint8, len+1)
+        len = h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, buf, len+1, H5P_DEFAULT)
         res[i] = convert(ASCIIString, buf[1:len])
     end
     res
@@ -845,7 +916,7 @@ end
 # Generic read functions
 for (fsym, osym, ptype) in
     ((:d_read, :d_open, Union(HDF5File, HDF5Group)),
-     (:a_read, :a_open, Union(HDF5Group, HDF5Dataset)))
+     (:a_read, :a_open, Union(HDF5File, HDF5Group, HDF5Dataset)))
     @eval begin
         function ($fsym)(parent::$ptype, name::ASCIIString)
             local ret
@@ -1509,6 +1580,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5f_flush, :H5Fflush, Herr, (Hid, C_int), (:object_id, :scope,), "Error flushing object to file"),
      (:h5g_close, :H5Gclose, Herr, (Hid,), (:group_id,), "Error closing group"),
      (:h5g_get_info, :H5Gget_info, Herr, (Hid, Ptr{Uint8}), (:group_id, :buf), "Error getting group info"),
+     (:h5o_get_info, :H5Oget_info, Herr, (Hid, Ptr{Uint8}), (:object_id, :buf), "Error getting object info"),
      (:h5o_close, :H5Oclose, Herr, (Hid,), (:object_id,), "Error closing object"),
      (:h5p_close, :H5Pclose, Herr, (Hid,), (:id,), "Error closing property list"),
      (:h5p_get_fclose_degree, :H5Pget_fclose_degree, Herr, (Hid, Ptr{C_int}), (:plist_id, :fc_degree), "Error getting close degree"),
@@ -1550,6 +1622,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5a_delete_by_name, :H5delete_by_name, Herr, (Hid, Ptr{Uint8}, Ptr{Uint8}, Hid), (:loc_id, :obj_name, :attr_name, :lapl_id), :(error("Error removing attribute ", attr_name, " from object ", obj_name))),
      (:h5a_get_create_plist, :H5Aget_create_plist, Hid, (Hid,), (:attr_id,), :(error("Cannot get creation property list"))),
      (:h5a_get_name, :H5Aget_name, Hssize, (Hid, C_size_t, Ptr{Uint8}), (:attr_id, :buf_size, :buf), :(error("Error getting attribute name"))),
+     (:h5a_get_name_by_idx, :H5Aget_name_by_idx, Hssize, (Hid, Ptr{Uint8}, C_int, C_int, Hsize, Ptr{Uint8}, C_size_t, Hid), (:loc_id, :obj_name, :index_type, :order, :idx, :name, :size, :lapl_id), :(error("Error getting attribute name"))),
      (:h5a_get_space, :H5Aget_space, Hid, (Hid,), (:attr_id,), :(error("Error getting attribute dataspace"))),
      (:h5a_get_type, :H5Aget_type, Hid, (Hid,), (:attr_id,), :(error("Error getting attribute type"))),
      (:h5a_open, :H5Aopen, Hid, (Hid, Ptr{Uint8}, Hid), (:obj_id, :pathname, :aapl_id), :(error("Error opening attribute ", h5a_get_name(obj_id), "/", pathname))),
