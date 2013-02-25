@@ -433,7 +433,7 @@ type Hvl_t
     len::C_size_t
     p::Ptr{Void}
 end
-Hvl_t() = Hvl_t(uint64(0), C_NULL)
+Hvl_t() = Hvl_t(uint(0), C_NULL)
 io = IOString()
 pack(io, Hvl_t())      # create the pack Struct while in the module context...
 const HVL_SIZE = length(io.data) # and determine the size of the buffer needed
