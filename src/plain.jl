@@ -7,7 +7,7 @@ module HDF5
 ## Add methods to...
 import Base.assign, Base.close, Base.convert, Base.done, Base.dump, Base.flush, Base.has, Base.isempty, Base.isvalid, Base.length, Base.names, Base.ndims, Base.next, Base.ref, Base.read, Base.show, Base.size, Base.start, Base.write
 
-include(Base.find_in_path("strpack.jl"))
+using StrPack
 
 ## C types
 typealias C_int Int32
@@ -430,7 +430,7 @@ HDF5Vlen{T<:HDF5BitsKind}(A::Array{Array{T}}) = HDF5Vlen{T}(A)
 
 ## Types that correspond to C structs and get used for ccall
 # For VLEN
-type Hvl_t
+@struct type Hvl_t
     len::C_size_t
     p::Ptr{Void}
 end
@@ -451,21 +451,21 @@ function vlenpack{T<:Union(HDF5BitsKind,CharType)}(v::HDF5Vlen{T})
     io.data
 end
 # For group information
-type H5Ginfo
+@struct type H5Ginfo
     storage_type::C_int
     nlinks::Hsize
     max_corder::Int64
     mounted::C_int
 end
 H5Ginfo() = H5Ginfo(int32(0), convert(Hsize, 0), int64(0), int32(0))
-pack(H5Ginfo(), align_native)
+
 # For objects
-type Hmetainfo
+@struct type Hmetainfo
     index_size::Hsize
     heap_size::Hsize
 end
 Hmetainfo() = Hmetainfo(convert(Hsize, 0), convert(Hsize, 0))
-type H5Oinfo
+@struct type H5Oinfo
     fileno::C_unsigned
     addr::Hsize
     otype::C_int
@@ -498,9 +498,8 @@ H5Oinfo() = H5Oinfo(uint32(0),
     convert(Hsize,0), convert(Hsize,0), convert(Hsize,0), convert(Hsize,0),
     uint64(0), uint64(0),
     Hmetainfo(), Hmetainfo())
-pack(H5Oinfo(), align_native)
 # For links
-type H5LInfo
+@struct type H5LInfo
     linktype::C_int
     corder_valid::C_unsigned
     corder::Int64
@@ -508,7 +507,6 @@ type H5LInfo
     u::Uint64
 end
 H5LInfo() = H5LInfo(int32(0), uint32(0), int64(0), int32(0), uint64(0))
-Struct(H5LInfo)
 
 
 ### High-level interface ###
