@@ -7,7 +7,7 @@ module HDF5
 ## Add methods to...
 import Base.assign, Base.close, Base.convert, Base.done, Base.dump, Base.flush, Base.has, Base.isempty, Base.isvalid, Base.length, Base.names, Base.ndims, Base.next, Base.ref, Base.read, Base.show, Base.size, Base.start, Base.write
 
-include(Base.find_in_path("strpack.jl"))
+using StrPack
 
 ## C types
 typealias C_int Int32
@@ -430,7 +430,7 @@ HDF5Vlen{T<:HDF5BitsKind}(A::Array{Array{T}}) = HDF5Vlen{T}(A)
 
 ## Types that correspond to C structs and get used for ccall
 # For VLEN
-type Hvl_t
+@struct type Hvl_t
     len::C_size_t
     p::Ptr{Void}
 end
@@ -451,21 +451,21 @@ function vlenpack{T<:Union(HDF5BitsKind,CharType)}(v::HDF5Vlen{T})
     io.data
 end
 # For group information
-type H5Ginfo
+@struct type H5Ginfo
     storage_type::C_int
     nlinks::Hsize
     max_corder::Int64
     mounted::C_int
 end
 H5Ginfo() = H5Ginfo(int32(0), convert(Hsize, 0), int64(0), int32(0))
-pack(H5Ginfo(), align_native)
+
 # For objects
-type Hmetainfo
+@struct type Hmetainfo
     index_size::Hsize
     heap_size::Hsize
 end
 Hmetainfo() = Hmetainfo(convert(Hsize, 0), convert(Hsize, 0))
-type H5Oinfo
+@struct type H5Oinfo
     fileno::C_unsigned
     addr::Hsize
     otype::C_int
@@ -498,9 +498,8 @@ H5Oinfo() = H5Oinfo(uint32(0),
     convert(Hsize,0), convert(Hsize,0), convert(Hsize,0), convert(Hsize,0),
     uint64(0), uint64(0),
     Hmetainfo(), Hmetainfo())
-pack(H5Oinfo(), align_native)
 # For links
-type H5LInfo
+@struct type H5LInfo
     linktype::C_int
     corder_valid::C_unsigned
     corder::Int64
@@ -508,7 +507,6 @@ type H5LInfo
     u::Uint64
 end
 H5LInfo() = H5LInfo(int32(0), uint32(0), int64(0), int32(0), uint64(0))
-Struct(H5LInfo)
 
 
 ### High-level interface ###
@@ -724,17 +722,17 @@ has(parent::Union(HDF5File, HDF5Group, HDF5Dataset), path::ASCIIString) = exists
 # Querying items in the file
 function info(obj::Union(HDF5Group,HDF5File))
     io = IOString()
-    pack(io, H5Ginfo(), align_native)
+    pack(io, H5Ginfo())
     h5g_get_info(obj, io.data)
     seek(io, 0)
-    unpack(io, H5Ginfo, align_native)
+    unpack(io, H5Ginfo)
 end
 function objinfo(obj::Union(HDF5File, HDF5Object))
     io = IOString()
-    pack(io, H5Oinfo(), align_native)
+    pack(io, H5Oinfo())
     h5o_get_info(obj.id, io.data)
     seek(io, 0)
-    unpack(io, H5Oinfo, align_native)
+    unpack(io, H5Oinfo)
 end
 function length(x::Union(HDF5Group,HDF5File))
     buf = [int32(0)]
@@ -1521,15 +1519,15 @@ h5t_get_native_type(type_id::Hid) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
 ### Utilities for generating ccall wrapper functions programmatically ###
 
 function ccallexpr(ccallsym::Symbol, outtype, argtypes::Tuple, argsyms::Tuple)
-    ccallargs = Any[expr(:quote, ccallsym), outtype, expr(:tuple, Any[argtypes...])]
+    ccallargs = Any[Expr(:quote, ccallsym), outtype, Expr(:tuple, argtypes...)]
     ccallargs = ccallsyms(ccallargs, length(argtypes), argsyms)
-    expr(:ccall, ccallargs)
+    Expr(:ccall, ccallargs...)
 end
 
 function ccallexpr(lib::Ptr, ccallsym::Symbol, outtype, argtypes::Tuple, argsyms::Tuple)
-    ccallargs = Any[expr(:call, Any[:dlsym, lib, expr(:quote, ccallsym)]), outtype, expr(:tuple, Any[argtypes...])]
+    ccallargs = Any[Expr(:call, :dlsym, lib, Expr(:quote, ccallsym)), outtype, Expr(:tuple, argtypes...)]
     ccallargs = ccallsyms(ccallargs, length(argtypes), argsyms)
-    expr(:ccall, ccallargs)
+    Expr(:ccall, ccallargs...)
 end
 
 function ccallsyms(ccallargs, n, argsyms)
@@ -1541,7 +1539,7 @@ function ccallsyms(ccallargs, n, argsyms)
                 push!(ccallargs, argsyms[i])
             end
             for i = 1:n-length(argsyms)+1
-                push!(ccallargs, expr(:ref, argsyms[end], i))
+                push!(ccallargs, Expr(:ref, argsyms[end], i))
             end
         end
     end
@@ -1550,11 +1548,11 @@ end
 
 function funcdecexpr(funcsym, n::Int, argsyms)
     if length(argsyms) == n
-        return expr(:call, Any[funcsym, argsyms...])
+        return Expr(:call, funcsym, argsyms...)
     else
         exargs = Any[funcsym, argsyms[1:end-1]...]
-        push!(exargs, expr(:..., argsyms[end]))
-        return expr(:call, exargs)
+        push!(exargs, Expr(:..., argsyms[end]))
+        return Expr(:call, exargs...)
     end
 end
 
@@ -1607,7 +1605,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
             error($msg)
         end
     end
-    ex_func = expr(:function, Any[ex_dec, ex_body])
+    ex_func = Expr(:function, ex_dec, ex_body)
     @eval begin
         $ex_func
     end
@@ -1698,7 +1696,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
         end
         return ret
     end
-    ex_func = expr(:function, Any[ex_dec, ex_body])
+    ex_func = Expr(:function, ex_dec, ex_body)
     @eval begin
         $ex_func
     end
@@ -1723,7 +1721,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
         end
         return ret > 0
     end
-    ex_func = expr(:function, Any[ex_dec, ex_body])
+    ex_func = Expr(:function, ex_dec, ex_body)
     @eval begin
         $ex_func
     end
