@@ -722,17 +722,17 @@ has(parent::Union(HDF5File, HDF5Group, HDF5Dataset), path::ASCIIString) = exists
 # Querying items in the file
 function info(obj::Union(HDF5Group,HDF5File))
     io = IOString()
-    pack(io, H5Ginfo(), align_native)
+    pack(io, H5Ginfo())
     h5g_get_info(obj, io.data)
     seek(io, 0)
-    unpack(io, H5Ginfo, align_native)
+    unpack(io, H5Ginfo)
 end
 function objinfo(obj::Union(HDF5File, HDF5Object))
     io = IOString()
-    pack(io, H5Oinfo(), align_native)
+    pack(io, H5Oinfo())
     h5o_get_info(obj.id, io.data)
     seek(io, 0)
-    unpack(io, H5Oinfo, align_native)
+    unpack(io, H5Oinfo)
 end
 function length(x::Union(HDF5Group,HDF5File))
     buf = [int32(0)]
@@ -1519,15 +1519,15 @@ h5t_get_native_type(type_id::Hid) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
 ### Utilities for generating ccall wrapper functions programmatically ###
 
 function ccallexpr(ccallsym::Symbol, outtype, argtypes::Tuple, argsyms::Tuple)
-    ccallargs = Any[expr(:quote, ccallsym), outtype, expr(:tuple, Any[argtypes...])]
+    ccallargs = Any[Expr(:quote, ccallsym), outtype, Expr(:tuple, argtypes...)]
     ccallargs = ccallsyms(ccallargs, length(argtypes), argsyms)
-    expr(:ccall, ccallargs)
+    Expr(:ccall, ccallargs...)
 end
 
 function ccallexpr(lib::Ptr, ccallsym::Symbol, outtype, argtypes::Tuple, argsyms::Tuple)
-    ccallargs = Any[expr(:call, Any[:dlsym, lib, expr(:quote, ccallsym)]), outtype, expr(:tuple, Any[argtypes...])]
+    ccallargs = Any[Expr(:call, :dlsym, lib, Expr(:quote, ccallsym)), outtype, Expr(:tuple, argtypes...)]
     ccallargs = ccallsyms(ccallargs, length(argtypes), argsyms)
-    expr(:ccall, ccallargs)
+    Expr(:ccall, ccallargs...)
 end
 
 function ccallsyms(ccallargs, n, argsyms)
@@ -1539,7 +1539,7 @@ function ccallsyms(ccallargs, n, argsyms)
                 push!(ccallargs, argsyms[i])
             end
             for i = 1:n-length(argsyms)+1
-                push!(ccallargs, expr(:ref, argsyms[end], i))
+                push!(ccallargs, Expr(:ref, argsyms[end], i))
             end
         end
     end
@@ -1548,11 +1548,11 @@ end
 
 function funcdecexpr(funcsym, n::Int, argsyms)
     if length(argsyms) == n
-        return expr(:call, Any[funcsym, argsyms...])
+        return Expr(:call, funcsym, argsyms...)
     else
         exargs = Any[funcsym, argsyms[1:end-1]...]
-        push!(exargs, expr(:..., argsyms[end]))
-        return expr(:call, exargs)
+        push!(exargs, Expr(:..., argsyms[end]))
+        return Expr(:call, exargs...)
     end
 end
 
@@ -1605,7 +1605,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
             error($msg)
         end
     end
-    ex_func = expr(:function, Any[ex_dec, ex_body])
+    ex_func = Expr(:function, ex_dec, ex_body)
     @eval begin
         $ex_func
     end
@@ -1696,7 +1696,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
         end
         return ret
     end
-    ex_func = expr(:function, Any[ex_dec, ex_body])
+    ex_func = Expr(:function, ex_dec, ex_body)
     @eval begin
         $ex_func
     end
@@ -1721,7 +1721,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
         end
         return ret > 0
     end
-    ex_func = expr(:function, Any[ex_dec, ex_body])
+    ex_func = Expr(:function, ex_dec, ex_body)
     @eval begin
         $ex_func
     end
