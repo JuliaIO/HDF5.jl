@@ -1006,26 +1006,30 @@ for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
                 close(objtype)
             end
             memtype_id = h5t_copy(H5T_C_S1)
-            ret = Array(S, sz...)
-            if isvar
-                # Variable-length
-                buf = Array(Ptr{Uint8}, len)
-                h5t_set_size(memtype_id, H5T_VARIABLE)
-                readarray(obj, memtype_id, buf)
-                # FIXME? Who owns the memory for each string? Will Julia free it?
-                for i = 1:len
-                    ret[i] = bytestring(buf[i])
-                end
+            if isempty(sz)
+                ret = Array(S, 0)
             else
-                # Fixed length
-                ilen += 1  # for null terminator
-                buf = Array(Uint8, len*ilen)
-                h5t_set_size(memtype_id, ilen)
-                readarray(obj, memtype_id, buf)
-                p = convert(Ptr{Uint8}, buf)
-                for i = 1:len
-                    ret[i] = bytestring(p)
-                    p += ilen
+                ret = Array(S, sz...)
+                if isvar
+                    # Variable-length
+                    buf = Array(Ptr{Uint8}, len)
+                    h5t_set_size(memtype_id, H5T_VARIABLE)
+                    readarray(obj, memtype_id, buf)
+                    # FIXME? Who owns the memory for each string? Will Julia free it?
+                    for i = 1:len
+                        ret[i] = bytestring(buf[i])
+                    end
+                else
+                    # Fixed length
+                    ilen += 1  # for null terminator
+                    buf = Array(Uint8, len*ilen)
+                    h5t_set_size(memtype_id, ilen)
+                    readarray(obj, memtype_id, buf)
+                    p = convert(Ptr{Uint8}, buf)
+                    for i = 1:len
+                        ret[i] = bytestring(p)
+                        p += ilen
+                    end
                 end
             end
             h5t_close(memtype_id)
