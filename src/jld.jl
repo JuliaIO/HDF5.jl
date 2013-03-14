@@ -36,6 +36,10 @@ const pathtypes = "/_types"
 const pathrequire = "/_require"
 const name_type_attr = "julia type"
 
+### Dummy types used for converting attribute strings to Julia types
+type UnsupportedType; end
+type CompositeKind; end   # this means "a type with fields"
+
 # The Julia Data file type
 # Purpose of the nrefs field:
 # length(group) only returns the number of _completed_ items in a group. Since
@@ -181,7 +185,6 @@ function read(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
             try
                 objtype = gtypes[typename]
                 try
-                    n = read(objtype)
                     modnames = a_read(plain(objtype), "Module")
                     mod = Main
                     for mname in modnames
@@ -317,11 +320,12 @@ end
 # Expressions
 function read(obj::HDF5Dataset{JldFile}, ::Type{Expr})
     a = getrefs(obj, Any)
-    expr(a[1], a[2])
+    Expr(a[1], a[2])
 end
 
 # CompositeKind
-function read(obj::HDF5Dataset{JldFile}, T::CompositeKind)
+function read(obj::HDF5Dataset{JldFile}, T::DataType)
+    local x
     # Add the parameters
     params = a_read(obj, "TypeParameters")
     p = Array(Any, length(params))
@@ -330,8 +334,19 @@ function read(obj::HDF5Dataset{JldFile}, T::CompositeKind)
     end
     T = T{p...}
     v = getrefs(obj, Any)
-    t = ntuple(length(v), i->v[i])
-    ccall(:jl_new_structt, Any, (Any,Any), T, t)
+    if length(v) == 0
+        x = ccall(:jl_new_struct, Any, (Any,Any...), T)
+    else
+        n = T.names
+        if length(v) != length(n)
+            error("Wrong number of fields")
+        end
+        x = ccall(:jl_new_struct_uninit, Any, (Any,), T)
+        for i = 1:length(v)
+            setfield(x, n[i], v[i])
+        end
+    end
+    x
 end
 
 # Read an array of references
@@ -531,7 +546,7 @@ end
 # CompositeKind
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s)
     T = typeof(s)
-    if !isa(T, CompositeKind)
+    if isempty(T.names)
         error("This is the write function for CompositeKind, but the input is of type ", T)
     end
     Tname = string(T.name.name)
@@ -669,9 +684,7 @@ end
 
 
 
-### Converting strings to Julia types
-type UnsupportedType
-end
+### Converting attribute strings to Julia types
 
 is_valid_type_ex(s::Symbol) = true
 is_valid_type_ex(x::Int) = true
