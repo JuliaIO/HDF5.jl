@@ -30,9 +30,10 @@ writearray = HDF5.writearray
 hdf5_to_julia = HDF5.hdf5_to_julia
 
 const magic_base = "Julia data file (HDF5), version "
-const version_current = "0.0.0"
+const version_current = "0.0.1"
 const pathrefs = "/_refs"
 const pathtypes = "/_types"
+const pathrequire = "/_require"
 const name_type_attr = "julia type"
 
 # The Julia Data file type
@@ -99,6 +100,8 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
                 close(p)
             end
             fj = JldFile(f, filename, version, true, true)
+            # initialize empty require list
+            write(fj, pathrequire, ASCIIString[])
         else
             # Test whether this is a jld file
             sz = filesize(filename)
@@ -112,10 +115,17 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             finally
                 close(rawfid)
             end
-            if magic[1:length(magic_base)] == magic_base.data
+            if begins_with(magic, magic_base.data)
                 f = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
                 version = bytestring(convert(Ptr{Uint8}, magic) + length(magic_base))
                 fj = JldFile(f, filename, version, true, true)
+                # Load any required files/packages
+                if has(fj, pathrequire)
+                    r = read(fj, pathrequire)
+                    for fn in r
+                        require(fn)
+                    end
+                end
             else
                 if ishdf5(filename)
                     println("This is an HDF5 file, but it is not a recognized Julia data file. Opening anyway.")
