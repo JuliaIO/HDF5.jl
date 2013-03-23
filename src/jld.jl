@@ -5,7 +5,7 @@
 module JLD
 using HDF5
 # Add methods to...
-import HDF5.a_write, HDF5.close, HDF5.dump, HDF5.read, HDF5.ref, Base.show, HDF5.size, HDF5.write
+import HDF5.a_write, HDF5.close, HDF5.dump, HDF5.read, HDF5.getindex, Base.show, HDF5.size, HDF5.write
 
 # Debugging: comment this block out if you un-modulize hdf5.jl
 # Types
@@ -38,7 +38,7 @@ const name_type_attr = "julia type"
 
 ### Dummy types used for converting attribute strings to Julia types
 type UnsupportedType; end
-type CompositeKind; end   # this means "a type with fields"
+type CompositeKind; end   # here this means "a type with fields"
 
 # The Julia Data file type
 # Purpose of the nrefs field:
@@ -330,7 +330,7 @@ function read(obj::HDF5Dataset{JldFile}, T::DataType)
     params = a_read(obj, "TypeParameters")
     p = Array(Any, length(params))
     for i = 1:length(params)
-        p[i], indx = parse(params[i])
+        p[i] = parse(params[i])
     end
     T = T{p...}
     v = getrefs(obj, Any)
@@ -377,14 +377,14 @@ function getrefs{T}(obj::HDF5Dataset{JldFile}, ::Type{T}, indices::Union(Integer
 end
 
 # dset[3:5, ...] syntax
-# function ref(dset::HDF5Dataset{JldFile}, indices::RangeIndex...)
+# function getindex(dset::HDF5Dataset{JldFile}, indices::RangeIndex...)
 #     typename = a_read(dset, name_type_attr)
 #     # Convert to Julia type
 #     T = julia_type(typename)
 #     if !(T <: AbstractArray)
 #         error("Ref syntax only works for arrays")
 #     end
-#     HDF5._ref(plain(dset), eltype(T), indices...)
+#     HDF5._getindex(plain(dset), eltype(T), indices...)
 # end
 
 
@@ -617,8 +617,8 @@ end
 isarraycomplex{T<:Complex, N}(::Type{Array{T, N}}) = true
 isarraycomplex(t) = false
 
-### Read via ref ###
-function ref(dset::HDF5Dataset{JldFile}, indices::Union(Integer, RangeIndex)...)
+### Read via getindex ###
+function getindex(dset::HDF5Dataset{JldFile}, indices::Union(Integer, RangeIndex)...)
     if !exists(attrs(dset), name_type_attr)
         # Fallback to plain read
         return read(plain(dset))
@@ -633,18 +633,18 @@ function ref(dset::HDF5Dataset{JldFile}, indices::Union(Integer, RangeIndex)...)
     if !(T <: AbstractArray)
         error("Ref syntax only works for arrays")
     end
-    _ref(dset, T, indices...)
+    _getindex(dset, T, indices...)
 end
 
-_ref{T<:HDF5BitsKind,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::RangeIndex...) = HDF5._ref(plain(dset), T, indices...)
-function _ref{T<:Complex,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::RangeIndex...)
-    reinterpret(T, HDF5._ref(plain(dset), realtype(T), 1:2, indices...), ntuple(length(indices), i->length(indices[i])))
+_getindex{T<:HDF5BitsKind,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::RangeIndex...) = HDF5._getindex(plain(dset), T, indices...)
+function _getindex{T<:Complex,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::RangeIndex...)
+    reinterpret(T, HDF5._getindex(plain(dset), realtype(T), 1:2, indices...), ntuple(length(indices), i->length(indices[i])))
 end
-function _ref{N}(dset::HDF5Dataset{JldFile}, ::Type{Array{Bool,N}}, indices::RangeIndex...)
-    tf = HDF5._ref(plain(dset), Uint8, indices...)
+function _getindex{N}(dset::HDF5Dataset{JldFile}, ::Type{Array{Bool,N}}, indices::RangeIndex...)
+    tf = HDF5._getindex(plain(dset), Uint8, indices...)
     bool(tf)
 end
-_ref{T,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::Union(Integer, RangeIndex)...) = getrefs(dset, T, indices...)
+_getindex{T,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::Union(Integer, RangeIndex)...) = getrefs(dset, T, indices...)
 
 
 ### Dump ###

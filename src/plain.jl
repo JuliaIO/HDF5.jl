@@ -5,7 +5,7 @@
 module HDF5
 
 ## Add methods to...
-import Base.assign, Base.close, Base.convert, Base.done, Base.dump, Base.flush, Base.has, Base.isempty, Base.isvalid, Base.length, Base.names, Base.ndims, Base.next, Base.ref, Base.read, Base.show, Base.size, Base.start, Base.write
+import Base.setindex!, Base.close, Base.convert, Base.done, Base.dump, Base.flush, Base.has, Base.isempty, Base.isvalid, Base.length, Base.names, Base.ndims, Base.next, Base.getindex, Base.read, Base.show, Base.size, Base.start, Base.write
 
 using StrPack
 
@@ -394,11 +394,11 @@ size(a::HDF5ReferenceObjArray) = ntuple(ndims(a.r)-1, i->size(a.r,i+1))
 
 length(a::HDF5ReferenceObjArray) = prod(size(a))
 
-ref(a::HDF5ReferenceObjArray, i::Integer) = HDF5ObjPtr(pointer(a.r)+(i-1)*H5R_OBJ_REF_BUF_SIZE)
+getindex(a::HDF5ReferenceObjArray, i::Integer) = HDF5ObjPtr(pointer(a.r)+(i-1)*H5R_OBJ_REF_BUF_SIZE)
 
-ref(a::HDF5ReferenceObjArray, indices::Union(Integer, AbstractVector)...) = HDF5ReferenceObjArray(a.r[:, indices...])
+getindex(a::HDF5ReferenceObjArray, indices::Union(Integer, AbstractVector)...) = HDF5ReferenceObjArray(a.r[:, indices...])
 
-function assign(a::HDF5ReferenceObjArray, pname::(Union(HDF5File, HDF5Group, HDF5Dataset), ASCIIString), i::Integer)
+function setindex!(a::HDF5ReferenceObjArray, pname::(Union(HDF5File, HDF5Group, HDF5Dataset), ASCIIString), i::Integer)
     ptr = pointer(a.r)+(i-1)*H5R_OBJ_REF_BUF_SIZE
     h5r_create(ptr, pname[1].id, pname[2], H5R_OBJECT, -1)
 end
@@ -618,10 +618,10 @@ o_open(parent, path::ASCIIString) = h5object(h5o_open(parent.id, path), parent)
 # Get the root group
 root(h5file::HDF5File) = g_open(h5file, "/")
 root(obj::Union(HDF5Group, HDF5Dataset)) = g_open(file(obj), "/")
-# ref syntax: obj2 = obj1[path]
-ref(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = o_open(parent, path)
-ref(dset::HDF5Dataset, name::ASCIIString) = a_open(dset, name)
-ref(x::HDF5Attributes, name::ASCIIString) = a_open(x.parent, name)
+# getindex syntax: obj2 = obj1[path]
+getindex(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = o_open(parent, path)
+getindex(dset::HDF5Dataset, name::ASCIIString) = a_open(dset, name)
+getindex(x::HDF5Attributes, name::ASCIIString) = a_open(x.parent, name)
 
 # Create objects
 g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Group(h5g_create(parent.id, path, lcpl.id, dcpl.id), file(parent))
@@ -659,17 +659,17 @@ o_delete(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = h5l_delete(par
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
-assign{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ASCIIString) = write(parent, path, val)
-assign(dset::HDF5Dataset, val, name::ASCIIString) = a_write(dset, name, val)
-assign(x::HDF5Attributes, val, name::ASCIIString) = a_write(x.parent, name, val)
+setindex!{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ASCIIString) = write(parent, path, val)
+setindex!(dset::HDF5Dataset, val, name::ASCIIString) = a_write(dset, name, val)
+setindex!(x::HDF5Attributes, val, name::ASCIIString) = a_write(x.parent, name, val)
 # Getting and setting properties: p["chunk"] = dims, p["compress"] = 6
-function assign(p::HDF5Properties, val, name::ASCIIString)
+function setindex!(p::HDF5Properties, val, name::ASCIIString)
     funcget, funcset = hdf5_prop_get_set[name]
     funcset(p, val...)
     return p
 end
 # Create a dataset with properties: obj[path, prop1, set1, ...] = val
-function assign{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ASCIIString, prop1::ASCIIString, val1, pv...)
+function setindex!{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ASCIIString, prop1::ASCIIString, val1, pv...)
     if !iseven(length(pv))
         error("Properties and values must come in pairs")
     end
@@ -946,7 +946,7 @@ function read{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name::ASCIIString...)
 end
 
 # "Plain" (unformatted) reads. These work only for simple types: scalars, arrays, and strings
-# See also "Reading arrays using ref" below
+# See also "Reading arrays using getindex" below
 # This infers the Julia type from the HDF5Datatype. Specific file formats should provide their own read(dset); they can force this one by calling read(plain(dset)).
 function read(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute))
     local T
@@ -1055,7 +1055,7 @@ function read(obj::HDF5Attribute, ::Type{Array{HDF5ReferenceObj}})
     refs
 end
 # Dereference
-function ref(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5ObjPtr)
+function getindex(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5ObjPtr)
     obj_id = h5r_dereference(parent.id, H5R_OBJECT, r.p)
     obj_type = h5i_get_type(obj_id)
     obj_type == H5I_GROUP ? HDF5Group(obj_id, file(parent)) :
@@ -1307,8 +1307,8 @@ write(parent::HDF5Dataset, name::ASCIIString, data::ASCIIString, plists...) = a_
 write(parent::HDF5Dataset, name::ASCIIString, data::Array{ASCIIString}, plists...) = a_write(parent, name, data, plists...)
 
 
-# Reading arrays using ref
-function ref(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
+# Reading arrays using getindex
+function getindex(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
     local T
     dtype = datatype(dset)
     try
@@ -1316,10 +1316,10 @@ function ref(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
     finally
         close(dtype)
     end
-    _ref(dset, T, indices...)
+    _getindex(dset, T, indices...)
 end
 
-function _ref{T<:HDF5BitsKind}(dset::HDF5Dataset{PlainHDF5File}, ::Type{T}, indices::RangeIndex...)
+function _getindex{T<:HDF5BitsKind}(dset::HDF5Dataset{PlainHDF5File}, ::Type{T}, indices::RangeIndex...)
     local ret
     dtype = datatype(dset)
     try
@@ -1543,7 +1543,7 @@ function ccallsyms(ccallargs, n, argsyms)
                 push!(ccallargs, argsyms[i])
             end
             for i = 1:n-length(argsyms)+1
-                push!(ccallargs, Expr(:ref, argsyms[end], i))
+                push!(ccallargs, Expr(:getindex, argsyms[end], i))
             end
         end
     end
@@ -1857,7 +1857,7 @@ export
     HDF5Vlen,
     PlainHDF5File,
     # Functions
-    assign,
+    setindex!,
     a_create,
     a_delete,
     a_open,
@@ -1892,7 +1892,7 @@ export
     plain,
     read,
     @read,
-    ref,
+    getindex,
     root,
     size,
     t_create,
