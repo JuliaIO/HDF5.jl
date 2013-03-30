@@ -38,7 +38,7 @@ Here's an example using functional syntax, which may be especially familiar to M
 
 ```julia
 file = jldopen("mydata.jld", "w")
-write(file, "A", A)  # alternatively, say "@write fid A"
+write(file, "A", A)  # alternatively, say "@write file A"
 close(file)
 
 file = jldopen("mydata.jld", "r")

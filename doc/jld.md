@@ -17,7 +17,7 @@ JLD is built on top of HDF5; the last, line, `using HDF5`, is necessary if you w
 \*.jld files are created or opened in the following way:
 ```julia
 file = jldopen("mydata.jld", "w")
-@write fid A
+@write file A
 close(file)
 ```
 This creates a dataset named `"A"` containing the contents of the variable `A`.
