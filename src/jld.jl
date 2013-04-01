@@ -330,7 +330,7 @@ function read(obj::HDF5Dataset{JldFile}, T::DataType)
     params = a_read(obj, "TypeParameters")
     p = Array(Any, length(params))
     for i = 1:length(params)
-        p[i] = parse(params[i])
+        p[i] = eval(parse(params[i]))
     end
     T = T{p...}
     v = getrefs(obj, Any)
@@ -515,6 +515,9 @@ write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Tuple) =
 
 # Associative (Dict)
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d::Associative)
+    if string(typeof(d)) == "DataFrame"
+        return write_composite(parent, name, d)
+    end
     n = length(d)
     T = eltype(d)
     ks = Array(T[1], n)
@@ -544,7 +547,9 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, ex
 end
 
 # CompositeKind
-function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s)
+write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s) = write_composite(parent, name, s)
+
+function write_composite(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s)
     T = typeof(s)
     if isempty(T.names)
         error("This is the write function for CompositeKind, but the input is of type ", T)
@@ -688,8 +693,7 @@ end
 
 is_valid_type_ex(s::Symbol) = true
 is_valid_type_ex(x::Int) = true
-is_valid_type_ex(e::Expr) = (e.head == :curly || e.head == :tuple) && all(map(is_valid_type_ex, e.args))
-
+is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple) && all(map(is_valid_type_ex, e.args))) || (e.head == :call && e.args[1] == :Union)
 
 function julia_type(s::String)
     e = parse(s)

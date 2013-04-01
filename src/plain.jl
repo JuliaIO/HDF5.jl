@@ -229,6 +229,7 @@ cset(::Type{ASCIIString}) = H5T_CSET_ASCII
 cset(::Type{ASCIIChar})   = H5T_CSET_ASCII
 cset(::Type{UTF8String})  = H5T_CSET_UTF8
 cset(::Type{UTF8Char})    = H5T_CSET_UTF8
+cset(::Type{ByteString})  = H5T_CSET_UTF8
 
 hdf5_type_id{C<:CharType}(::Type{C})  = H5T_C_S1
 
