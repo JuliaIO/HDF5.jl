@@ -429,6 +429,8 @@ end
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, n::Nothing) = write(parent, name, n, "Nothing")
 
 # Types
+# the first is needed to avoid an ambiguity warning
+write{T<:Top}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
 write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Type{T}) = write(parent, name, nothing, string("Type{", t, "}"))
 
 # Bools
