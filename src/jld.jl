@@ -119,7 +119,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             finally
                 close(rawfid)
             end
-            if begins_with(magic, magic_base.data)
+            if beginswith(magic, magic_base.data)
                 f = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
                 version = bytestring(convert(Ptr{Uint8}, magic) + length(magic_base))
                 fj = JldFile(f, filename, version, true, true)
