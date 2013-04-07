@@ -1324,61 +1324,64 @@ function _getindex{T<:HDF5BitsKind}(dset::HDF5Dataset{PlainHDF5File}, ::Type{T},
     local ret
     dtype = datatype(dset)
     try
-        dspace = dataspace(dset)
+        dsel_id = hyperslab(dset, indices...)
+        ret = Array(T, map(length, indices))
+        memtype = datatype(ret)
+        memspace = dataspace(ret)
         try
-            dims, maxdims = get_dims(dspace)
-            n_dims = length(dims)
-            if length(indices) != n_dims
-                @show n_dims
-                @show indices
-                error("Wrong number of indices supplied")
-            end
-            dsel_id = h5s_copy(dspace.id)
-            try
-                dsel_start  = Array(Hsize, n_dims)
-                dsel_stride = Array(Hsize, n_dims)
-                dsel_count  = Array(Hsize, n_dims)
-                for k = 1:n_dims
-                    index = indices[n_dims-k+1]
-                    if isa(index, Integer)
-                        dsel_start[k] = index-1
-                        dsel_stride[k] = 1
-                        dsel_count[k] = 1
-                    elseif isa(index, Ranges)
-                        dsel_start[k] = first(index)-1
-                        dsel_stride[k] = step(index)
-                        dsel_count[k] = length(index)
-                    else
-                        error("index must be range or integer")
-                    end
-                    if dsel_start[k] < 0 || dsel_start[k]+(dsel_count[k]-1)*dsel_stride[k] >= dims[n_dims-k+1]
-                        println(dsel_start)
-                        println(dsel_stride)
-                        println(dsel_count)
-                        println(reverse(dims))
-                        error("index out of range")
-                    end
-                end
-                h5s_select_hyperslab(dsel_id, H5S_SELECT_SET, dsel_start, dsel_stride, dsel_count, C_NULL)
-                ret = Array(T, map(length, indices))
-                memtype = datatype(ret)
-                memspace = dataspace(ret)
-                try
-                    h5d_read(dset.id, memtype.id, memspace.id, dsel_id, H5P_DEFAULT, ret)
-                finally
-                    close(memtype)
-                    close(memspace)
-                end
-            finally
-                h5s_close(dsel_id)
-            end
+            h5d_read(dset.id, memtype.id, memspace.id, dsel_id, H5P_DEFAULT, ret)
         finally
-            close(dspace)
+            close(memtype)
+            close(memspace)
         end
+        h5s_close(dsel_id)
     finally
         close(dtype)
     end
     ret
+end
+
+function hyperslab(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
+    local dsel_id
+    dspace = dataspace(dset)
+    try
+        dims, maxdims = get_dims(dspace)
+        n_dims = length(dims)
+        if length(indices) != n_dims
+            @show n_dims
+            @show indices
+            error("Wrong number of indices supplied")
+        end
+        dsel_id = h5s_copy(dspace.id)
+        dsel_start  = Array(Hsize, n_dims)
+        dsel_stride = Array(Hsize, n_dims)
+        dsel_count  = Array(Hsize, n_dims)
+        for k = 1:n_dims
+            index = indices[n_dims-k+1]
+            if isa(index, Integer)
+                dsel_start[k] = index-1
+                dsel_stride[k] = 1
+                dsel_count[k] = 1
+            elseif isa(index, Ranges)
+                dsel_start[k] = first(index)-1
+                dsel_stride[k] = step(index)
+                dsel_count[k] = length(index)
+            else
+                error("index must be range or integer")
+            end
+            if dsel_start[k] < 0 || dsel_start[k]+(dsel_count[k]-1)*dsel_stride[k] >= dims[n_dims-k+1]
+                println(dsel_start)
+                println(dsel_stride)
+                println(dsel_count)
+                println(reverse(dims))
+                error("index out of range")
+            end
+        end
+        h5s_select_hyperslab(dsel_id, H5S_SELECT_SET, dsel_start, dsel_stride, dsel_count, C_NULL)
+    finally
+        close(dspace)
+    end
+    dsel_id
 end
 
 # Link to bytes in an external file
