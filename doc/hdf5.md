@@ -88,7 +88,7 @@ Asub = dset[2:3, 1:3]
 
 The last syntax reads just a subset of the data array (assuming that `dset` is an array of sufficient size). libhdf5 has internal mechanisms for slicing arrays, and consequently if you need only a small piece of a large array, it can be faster to read just what you need rather than reading the entire array and discarding most of it.
 
-Datasets can be created in either of the following ways:
+Datasets can be created with either
 
 ```julia
 g["mydataset"] = rand(3,5)
@@ -104,18 +104,18 @@ g["A", "chunk", (5,5), "compress", 3] = A
 
 stores the matrix `A` in 5-by-5 chunks and uses a compression level 3. Chunking can be useful if you will typically extract small segments of an array. Chunking is required if you plan to use compression.
 
-It is also possible to write to subsets of an on-disk hdf5 dataset. This is
-useful to incrementally save to vary large datasets you don't want to keep in
+It is also possible to write to subsets of an on-disk HDF5 dataset. This is
+useful to incrementally save to very large datasets you don't want to keep in
 memory. For example,
 
 ```julia
-d_create(g, "B", datatype(Float64), dataspace((1000,100,10)))
-g["B"][:,1,1] = rand(1000)
+dset = d_create(g, "B", datatype(Float64), dataspace(1000,100,10), "chunk", (100,100,1))
+dset[:,1,1] = rand(1000)
 ```
 
-creates a Float64 dataset in the file `g`, with dimensions 1000x100x10 and then
+creates a Float64 dataset in the file or group `g`, with dimensions 1000x100x10, and then
 writes to just the first 1000 element slice. For performance reasons it is
-usually best to set the chunk dimensions to the typical subset slices you will
+usually best to set the chunk dimensions to the typical subset regions you will
 be writing (or reading) from the dataset.
 
 More [fine-grained control](#mid-level-routines) is also available.

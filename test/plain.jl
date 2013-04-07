@@ -39,6 +39,12 @@ g = g_create(f, "mygroup")
 R = rand(1:20, 20, 40);
 g["CompressedA", "chunk", (5,5), "compress", 9] = R
 close(g)
+# Writing hyperslabs
+dset = d_create(f,"slab",datatype(Float64),dataspace(20,20,5),"chunk",(5,5,1))
+Xslab = randn(20,20,5)
+for i = 1:5
+    dset[:,:,i] = Xslab[:,:,i]
+end
 # Create a dataset designed to be deleted
 f["deleteme"] = 17.2
 close(f)
@@ -87,6 +93,8 @@ Rr = read(fr, "mygroup/CompressedA")
 @assert Rr == R
 dset = fr["mygroup/CompressedA"]
 @assert name(dset) == "/mygroup/CompressedA"
+Xslabr = read(fr, "slab")
+@assert Xslabr == Xslab
 emptyr = read(fr, "empty")
 @assert isempty(emptyr)
 dset = fr["salut"]

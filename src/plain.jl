@@ -632,6 +632,22 @@ d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datat
 d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Dataset(h5d_create(parent.id, path, dtype.id, dspace.id, lcpl.id, dcpl.id, H5P_DEFAULT), file(parent))
 d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties) = HDF5Dataset(h5d_create(parent.id, path, dtype.id, dspace.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT), file(parent))
 d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Dataset(h5d_create(parent.id, path, dtype.id, dspace.id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT), file(parent))
+# Setting dset creation properties with name/value pairs
+function d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, prop1::ASCIIString, val1, pv...)
+    if !iseven(length(pv))
+        error("Properties and values must come in pairs")
+    end
+    p = p_create(H5P_DATASET_CREATE)
+    p[prop1] = val1
+    for i = 1:2:length(pv)
+        thisname = pv[i]
+        if !isa(thisname, ASCIIString)
+            error("Argument ", i+3, " should be a string, but it's a ", typeof(thisname))
+        end
+        p[thisname] = pv[i+1]
+    end
+    HDF5Dataset(h5d_create(parent.id, path, dtype.id, dspace.id, H5P_DEFAULT, p.id, H5P_DEFAULT), file(parent))
+end
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 t_create(class_id, sz) = HDF5Datatype(h5t_create(class_id, sz))
 function t_commit(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, lcpl::HDF5Properties, tcpl::HDF5Properties, tapl::HDF5Properties)
@@ -684,81 +700,6 @@ function setindex!{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ASCII
         p[thisname] = pv[i+1]
     end
     write(parent, path, val, HDF5Properties(), p)
-end
-
-# Write to a subset of a dataset using array slices: dataset[:,:,10] = array
-function setindex!(dset::HDF5Dataset{PlainHDF5File}, X, indices::RangeIndex...)
-    if length(X) != prod([length(idxs) for idxs in
-                         filter(idx -> isa(idx, Ranges),
-                                [indices[i] for i in 1:length(indices)])])
-        error("number of elements in range and length of array must be equal")
-    end
-    local T
-    dtype = datatype(dset)
-    try
-        T = hdf5_to_julia_eltype(dtype)
-    finally
-        close(dtype)
-    end
-    _setindex(dset, T, X, indices...)
-end
-
-function _setindex{T<:HDF5BitsKind}(dset::HDF5Dataset{PlainHDF5File}, ::Type{T}, X::Array, indices::RangeIndex...)
-    dtype = datatype(dset)
-    try
-        dspace = dataspace(dset)
-        try
-            dims, maxdims = get_dims(dspace)
-            n_dims = length(dims)
-            if length(indices) != n_dims
-                @show n_dims
-                @show indices
-                error("Wrong number of indices supplied")
-            end
-            dsel_id = h5s_copy(dspace.id)
-            try
-                dsel_start  = Array(Hsize, n_dims)
-                dsel_stride = Array(Hsize, n_dims)
-                dsel_count  = Array(Hsize, n_dims)
-                for k = 1:n_dims
-                    index = indices[n_dims-k+1]
-                    if isa(index, Integer)
-                        dsel_start[k] = index-1
-                        dsel_stride[k] = 1
-                        dsel_count[k] = 1
-                    elseif isa(index, Ranges)
-                        dsel_start[k] = first(index)-1
-                        dsel_stride[k] = step(index)
-                        dsel_count[k] = length(index)
-                    else
-                        error("index must be range or integer")
-                    end
-                    if dsel_start[k] < 0 || dsel_start[k]+(dsel_count[k]-1)*dsel_stride[k] >= dims[n_dims-k+1]
-                        println(dsel_start)
-                        println(dsel_stride)
-                        println(dsel_count)
-                        println(reverse(dims))
-                        error("index out of range")
-                    end
-                end
-                h5s_select_hyperslab(dsel_id, H5S_SELECT_SET, dsel_start, dsel_stride, dsel_count, C_NULL)
-                memtype = datatype(X)
-                memspace = dataspace(X)
-                try
-                    h5d_write(dset.id, memtype.id, memspace.id, dsel_id, H5P_DEFAULT, X)
-                finally
-                    close(memtype)
-                    close(memspace)
-                end
-            finally
-                h5s_close(dsel_id)
-            end
-        finally
-            close(dspace)
-        end
-    finally
-        close(dtype)
-    end
 end
 
 # Check existence
@@ -969,6 +910,7 @@ dataspace(R::HDF5ReferenceObjArray) = _dataspace(size(R)...)
 dataspace(v::HDF5Vlen) = _dataspace(size(v.data)...)
 dataspace(n::Nothing) = HDF5Dataspace(h5s_create(H5S_NULL))
 dataspace(sz::Dims) = _dataspace(sz...)
+dataspace(sz::Int...) = _dataspace(sz...)
 
 # Get the array dimensions from a dataspace
 # Returns both dims and maxdims
@@ -1383,7 +1325,7 @@ write(parent::HDF5Dataset, name::ASCIIString, data::ASCIIString, plists...) = a_
 write(parent::HDF5Dataset, name::ASCIIString, data::Array{ASCIIString}, plists...) = a_write(parent, name, data, plists...)
 
 
-# Reading arrays using getindex
+# Reading arrays using getindex: data = dset[:,:,10]
 function getindex(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
     local T
     dtype = datatype(dset)
@@ -1392,28 +1334,38 @@ function getindex(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
     finally
         close(dtype)
     end
-    _getindex(dset, T, indices...)
-end
-
-function _getindex{T<:HDF5BitsKind}(dset::HDF5Dataset{PlainHDF5File}, ::Type{T}, indices::RangeIndex...)
-    local ret
-    dtype = datatype(dset)
+    dsel_id = hyperslab(dset, indices...)
+    ret = Array(T, map(length, indices))
+    memtype = datatype(ret)
+    memspace = dataspace(ret)
     try
-        dsel_id = hyperslab(dset, indices...)
-        ret = Array(T, map(length, indices))
-        memtype = datatype(ret)
-        memspace = dataspace(ret)
-        try
-            h5d_read(dset.id, memtype.id, memspace.id, dsel_id, H5P_DEFAULT, ret)
-        finally
-            close(memtype)
-            close(memspace)
-        end
-        h5s_close(dsel_id)
+        h5d_read(dset.id, memtype.id, memspace.id, dsel_id, H5P_DEFAULT, ret)
     finally
-        close(dtype)
+        close(memtype)
+        close(memspace)
+        h5s_close(dsel_id)
     end
     ret
+end
+
+# Write to a subset of a dataset using array slices: dataset[:,:,10] = array
+function setindex!(dset::HDF5Dataset{PlainHDF5File}, X, indices::RangeIndex...)
+    if length(X) != prod([length(idxs) for idxs in
+                         filter(idx -> isa(idx, Ranges),
+                                [indices[i] for i in 1:length(indices)])])
+        error("number of elements in range and length of array must be equal")
+    end
+    dsel_id = hyperslab(dset, indices...)
+    memtype = datatype(X)
+    memspace = dataspace(X)
+    try
+        h5d_write(dset.id, memtype.id, memspace.id, dsel_id, H5P_DEFAULT, X)
+    finally
+        close(memtype)
+        close(memspace)
+        h5s_close(dsel_id)
+    end
+    X
 end
 
 function hyperslab(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
