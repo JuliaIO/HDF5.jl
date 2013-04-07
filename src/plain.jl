@@ -1889,16 +1889,9 @@ function get_chunk(p::HDF5Properties)
     n = h5p_get_chunk(p, 0, C_NULL)
     cdims = Array(Hsize, n)
     h5p_get_chunk(p, n, cdims)
-    tuple(convert(Array{Int}, cdims)...)
+    tuple(convert(Array{Int}, reverse(cdims))...)
 end
-function set_chunk(p::HDF5Properties, dims...)
-    n = length(dims)
-    cdims = Array(Hsize, n)
-    for i = 1:n
-        cdims[i] = dims[i]
-    end
-    h5p_set_chunk(p.id, n, cdims)
-end
+set_chunk(p::HDF5Properties, dims...) = h5p_set_chunk(p.id, length(dims), Hsize[reverse(dims)...])
 function get_userblock(p::HDF5Properties)
     alen = Array(Hsize, 1)
     h5p_get_userblock(p.id, alen)
