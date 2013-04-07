@@ -686,6 +686,81 @@ function setindex!{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ASCII
     write(parent, path, val, HDF5Properties(), p)
 end
 
+# Write to a subset of a dataset using array slices: dataset[:,:,10] = array
+function setindex!(dset::HDF5Dataset{PlainHDF5File}, X, indices::RangeIndex...)
+    if length(X) != prod([length(idxs) for idxs in
+                         filter(idx -> isa(idx, Ranges),
+                                [indices[i] for i in 1:length(indices)])])
+        error("number of elements in range and length of array must be equal")
+    end
+    local T
+    dtype = datatype(dset)
+    try
+        T = hdf5_to_julia_eltype(dtype)
+    finally
+        close(dtype)
+    end
+    _setindex(dset, T, X, indices...)
+end
+
+function _setindex{T<:HDF5BitsKind}(dset::HDF5Dataset{PlainHDF5File}, ::Type{T}, X::Array, indices::RangeIndex...)
+    dtype = datatype(dset)
+    try
+        dspace = dataspace(dset)
+        try
+            dims, maxdims = get_dims(dspace)
+            n_dims = length(dims)
+            if length(indices) != n_dims
+                @show n_dims
+                @show indices
+                error("Wrong number of indices supplied")
+            end
+            dsel_id = h5s_copy(dspace.id)
+            try
+                dsel_start  = Array(Hsize, n_dims)
+                dsel_stride = Array(Hsize, n_dims)
+                dsel_count  = Array(Hsize, n_dims)
+                for k = 1:n_dims
+                    index = indices[n_dims-k+1]
+                    if isa(index, Integer)
+                        dsel_start[k] = index-1
+                        dsel_stride[k] = 1
+                        dsel_count[k] = 1
+                    elseif isa(index, Ranges)
+                        dsel_start[k] = first(index)-1
+                        dsel_stride[k] = step(index)
+                        dsel_count[k] = length(index)
+                    else
+                        error("index must be range or integer")
+                    end
+                    if dsel_start[k] < 0 || dsel_start[k]+(dsel_count[k]-1)*dsel_stride[k] >= dims[n_dims-k+1]
+                        println(dsel_start)
+                        println(dsel_stride)
+                        println(dsel_count)
+                        println(reverse(dims))
+                        error("index out of range")
+                    end
+                end
+                h5s_select_hyperslab(dsel_id, H5S_SELECT_SET, dsel_start, dsel_stride, dsel_count, C_NULL)
+                memtype = datatype(X)
+                memspace = dataspace(X)
+                try
+                    h5d_write(dset.id, memtype.id, memspace.id, dsel_id, H5P_DEFAULT, X)
+                finally
+                    close(memtype)
+                    close(memspace)
+                end
+            finally
+                h5s_close(dsel_id)
+            end
+        finally
+            close(dspace)
+        end
+    finally
+        close(dtype)
+    end
+end
+
 # Check existence
 function split1(path::ASCIIString)
     m = match(r"/", path)
