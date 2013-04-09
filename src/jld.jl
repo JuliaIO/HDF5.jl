@@ -298,6 +298,9 @@ end
 read(obj::HDF5Dataset{JldFile}, ::Type{Symbol}) = symbol(read(plain(obj), ASCIIString))
 read{N}(obj::HDF5Dataset{JldFile}, ::Type{Array{Symbol,N}}) = map(symbol, read(plain(obj), Array{ASCIIString}))
 
+# Char
+read(obj::HDF5Dataset{JldFile}, ::Type{Char}) = char(read(plain(obj), Uint32))
+
 # General arrays
 read{T,N}(obj::HDF5Dataset{JldFile}, t::Type{Array{T,N}}) = getrefs(obj, T)
 
@@ -457,6 +460,9 @@ end
 # Symbols
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, sym::Symbol) = write(parent, name, string(sym), "Symbol")
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, syms::Array{Symbol}) = write(parent, name, map(string, syms), string(typeof(syms)))
+
+# Char
+write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, char::Char) = write(parent, name, uint32(char), "Char")
 
 # General array types (as arrays of references)
 function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString, data::Array{T}, astype::String)
