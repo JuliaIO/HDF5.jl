@@ -32,6 +32,8 @@ ex = quote
     end
 end
 T = Uint8
+char = 'x'
+unicode_char = '\U10ffff'
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -70,6 +72,8 @@ fid = jldopen(fn, "w")
 @write fid d
 @write fid ex
 @write fid T
+@write fid char
+@write fid unicode_char
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -94,4 +98,6 @@ fidr = jldopen(fn, "r")
 @check fidr d
 exr = read(fidr, "ex")   # line numbers are stripped, don't expect equality
 @check fidr T
+@check fidr char
+@check fidr unicode_char
 close(fidr)
