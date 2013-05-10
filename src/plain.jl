@@ -34,7 +34,7 @@ end
 
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
-read_const(sym::Symbol) = unsafe_ref(convert(Ptr{C_int}, dlsym(libhdf5, sym)))
+read_const(sym::Symbol) = unsafe_load(convert(Ptr{C_int}, dlsym(libhdf5, sym)))
 
 # iteration order constants
 const H5_ITER_UNKNOWN = -1 
