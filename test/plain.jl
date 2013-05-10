@@ -21,7 +21,9 @@ write(f, "Auint32", uint32(Ai))
 write(f, "Auint64", uint64(Ai))
 # Test strings
 salut = "Hi there"
+ucode = "uniçº∂e"
 write(f, "salut", salut)
+write(f, "ucode", ucode)
 # Arrays of strings
 salut_split = ["Hi", "there"]
 write(f, "salut_split", salut_split)
@@ -87,6 +89,8 @@ Ai64 = read(fr, "Auint64")
 @assert eltype(Ai64) == Uint64
 salutr = read(fr, "salut")
 @assert salut == salutr
+ucoder = read(fr, "ucode")
+@assert ucode == ucoder
 salut_splitr = read(fr, "salut_split")
 @assert salut_splitr == salut_split
 Rr = read(fr, "mygroup/CompressedA")
