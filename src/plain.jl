@@ -869,7 +869,7 @@ datatype{T<:HDF5BitsKind}(::Type{T}) = HDF5Datatype(hdf5_type_id(T), false)
 datatype{T<:HDF5BitsKind}(A::Array{T}) = HDF5Datatype(hdf5_type_id(T), false)
 function datatype{S<:ByteString}(str::S)
     type_id = h5t_copy(hdf5_type_id(S))
-    h5t_set_size(type_id, length(str))
+    h5t_set_size(type_id, length(str.data))
     h5t_set_cset(type_id, cset(S))
     HDF5Datatype(type_id)
 end
