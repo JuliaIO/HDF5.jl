@@ -937,98 +937,90 @@ end
 # "Plain" (unformatted) reads. These work only for simple types: scalars, arrays, and strings
 # See also "Reading arrays using getindex" below
 # This infers the Julia type from the HDF5Datatype. Specific file formats should provide their own read(dset); they can force this one by calling read(plain(dset)).
-function read(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute))
+typealias DatasetOrAttribute Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute)
+function read(obj::DatasetOrAttribute)
     local T
     T = hdf5_to_julia(obj)
     read(obj, T)
 end
-# To avoid method ambiguities, we cannot use Unions
-for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
-    for T in (Int8, Uint8, Int16, Uint16, Int32, Uint32, Int64, Uint64, Float32, Float64)
-        @eval begin
-            # Read scalars (BitsKind only)
-            function read(obj::$objtype, ::Type{$T})
-                x = read(obj, Array{$T})
-                x[1]
+# Read scalars (BitsKind only)
+function read{T<:HDF5BitsKind}(obj::DatasetOrAttribute, ::Type{T})
+    x = read(obj, Array{T})
+    x[1]
+end
+# Read array of BitsKind
+function read{T<:HDF5BitsKind}(obj::DatasetOrAttribute, ::Type{Array{T}})
+    local data
+    dims = size(obj)
+    dspace = dataspace(obj)
+    data = Array(T, dims...)
+    readarray(obj, hdf5_type_id(T), data)
+    data
+end
+# Empty arrays
+function read{T<:HDF5BitsKind}(obj::DatasetOrAttribute, ::Type{EmptyArray{T}})
+    Array(T, 0)
+end
+# Read string
+function read{S<:ByteString}(obj::DatasetOrAttribute, ::Type{S})
+    local ret::S
+    objtype = datatype(obj)
+    try
+        n = h5t_get_size(objtype.id)
+        buf = Array(Uint8, n)
+        readarray(obj, objtype.id, buf)
+        ret = convert(S, buf)
+    finally
+        close(objtype)
+    end
+    ret
+end
+# Read array of strings
+function read{S<:ByteString}(obj::DatasetOrAttribute, ::Type{Array{S}})
+    local isvar::Bool
+    local ret::Array{S}
+    sz = size(obj)
+    len = prod(sz)
+    objtype = datatype(obj)
+    try
+        isvar = h5t_is_variable_str(objtype.id)
+        ilen = int(h5t_get_size(objtype.id))
+    finally
+        close(objtype)
+    end
+    memtype_id = h5t_copy(H5T_C_S1)
+    if isempty(sz)
+        ret = Array(S, 0)
+    else
+        ret = Array(S, sz...)
+        if isvar
+            # Variable-length
+            buf = Array(Ptr{Uint8}, len)
+            h5t_set_size(memtype_id, H5T_VARIABLE)
+            readarray(obj, memtype_id, buf)
+            # FIXME? Who owns the memory for each string? Will Julia free it?
+            for i = 1:len
+                ret[i] = bytestring(buf[i])
             end
-            # Read array of BitsKind
-            function read(obj::$objtype, ::Type{Array{$T}})
-                local data
-                dims = size(obj)
-                dspace = dataspace(obj)
-                data = Array($T, dims...)
-                readarray(obj, hdf5_type_id($T), data)
-                data
-            end
-            # Empty arrays
-            function read(obj::$objtype, ::Type{EmptyArray{$T}})
-                Array($T, 0)
+        else
+            # Fixed length
+            ilen += 1  # for null terminator
+            buf = Array(Uint8, len*ilen)
+            h5t_set_size(memtype_id, ilen)
+            readarray(obj, memtype_id, buf)
+            p = convert(Ptr{Uint8}, buf)
+            for i = 1:len
+                ret[i] = bytestring(p)
+                p += ilen
             end
         end
     end
-    @eval begin
-        # Read string
-        function read{S<:ByteString}(obj::$objtype, ::Type{S})
-            local ret::S
-            objtype = datatype(obj)
-            try
-                n = h5t_get_size(objtype.id)
-                buf = Array(Uint8, n)
-                readarray(obj, objtype.id, buf)
-                ret = convert(S, buf)
-            finally
-                close(objtype)
-            end
-            ret
-        end
-        # Read array of strings
-        function read{S<:ByteString}(obj::$objtype, ::Type{Array{S}})
-            local isvar::Bool
-            local ret::Array{S}
-            sz = size(obj)
-            len = prod(sz)
-            objtype = datatype(obj)
-            try
-                isvar = h5t_is_variable_str(objtype.id)
-                ilen = int(h5t_get_size(objtype.id))
-            finally
-                close(objtype)
-            end
-            memtype_id = h5t_copy(H5T_C_S1)
-            if isempty(sz)
-                ret = Array(S, 0)
-            else
-                ret = Array(S, sz...)
-                if isvar
-                    # Variable-length
-                    buf = Array(Ptr{Uint8}, len)
-                    h5t_set_size(memtype_id, H5T_VARIABLE)
-                    readarray(obj, memtype_id, buf)
-                    # FIXME? Who owns the memory for each string? Will Julia free it?
-                    for i = 1:len
-                        ret[i] = bytestring(buf[i])
-                    end
-                else
-                    # Fixed length
-                    ilen += 1  # for null terminator
-                    buf = Array(Uint8, len*ilen)
-                    h5t_set_size(memtype_id, ilen)
-                    readarray(obj, memtype_id, buf)
-                    p = convert(Ptr{Uint8}, buf)
-                    for i = 1:len
-                        ret[i] = bytestring(p)
-                        p += ilen
-                    end
-                end
-            end
-            h5t_close(memtype_id)
-            ret
-        end
-        # Empty Array of strings
-        function read{C<:CharType}(obj::$objtype, ::Type{EmptyArray{C}})
-            Array(stringtype(C), 0)
-        end
-    end
+    h5t_close(memtype_id)
+    ret
+end
+# Empty Array of strings
+function read{C<:CharType}(obj::DatasetOrAttribute, ::Type{EmptyArray{C}})
+    Array(stringtype(C), 0)
 end
 # Read an array of references
 function read(obj::HDF5Dataset{PlainHDF5File}, ::Type{Array{HDF5ReferenceObj}})
@@ -1084,7 +1076,7 @@ function read(obj::HDF5Dataset{PlainHDF5File}, ::Type{Array{HDF5Compound}})
 end
 
 # Read OPAQUE datasets and attributes
-function read(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute), ::Type{Array{HDF5Opaque}})
+function read(obj::DatasetOrAttribute, ::Type{Array{HDF5Opaque}})
     local buf
     local len
     local tag
@@ -1112,7 +1104,7 @@ p2a{T<:HDF5BitsKind}(p::Ptr{T}, len::Int) = pointer_to_array(p, (len,), true)
 p2a{C<:CharType}(p::Ptr{C}, len::Int) = convert(stringtype(C), bytestring(convert(Ptr{Uint8}, p), len))
 t2p{T<:HDF5BitsKind}(::Type{T}) = Ptr{T}
 t2p{C<:CharType}(::Type{C}) = Ptr{Uint8}
-function read{T<:Union(HDF5BitsKind,CharType)}(obj::Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute), ::Type{HDF5Vlen{T}})
+function read{T<:Union(HDF5BitsKind,CharType)}(obj::DatasetOrAttribute, ::Type{HDF5Vlen{T}})
     local data
     sz = size(obj)
     len = prod(sz)
@@ -1223,61 +1215,49 @@ for (privatesym, fsym, ptype, crsym) in
     end
 end
 # Write to already-created objects
-for objtype in (HDF5Dataset{PlainHDF5File}, HDF5Attribute)
-    for T in (Int8, Uint8, Int16, Uint16, Int32, Uint32, Int64, Uint64, Float32, Float64)
-        @eval begin
-            # Scalars
-            function write(obj::$objtype, x::$T)
-                dtype = datatype(x)
-                try
-                    writearray(obj, dtype.id, x)
-                finally
-                   close(dtype)
-                end
-            end
-            # Arrays
-            function write(obj::$objtype, data::Array{$T})
-                dtype = datatype(data)
-                try
-                    writearray(obj, dtype.id, data)
-                finally
-                    close(dtype)
-                end
-            end
-        end
+# Scalars
+function write(obj::DatasetOrAttribute, x::HDF5BitsKind)
+    dtype = datatype(x)
+    try
+        writearray(obj, dtype.id, x)
+    finally
+       close(dtype)
     end
-    # String
-    @eval begin
-        function write(obj::$objtype, str::ByteString)
-            dtype = datatype(str)
-            try
-                writearray(obj, dtype.id, str)
-            finally
-                  close(dtype)
-            end
-        end
+end
+# Arrays
+function write{T<:HDF5BitsKind}(obj::DatasetOrAttribute, data::Array{T})
+    dtype = datatype(data)
+    try
+        writearray(obj, dtype.id, data)
+    finally
+        close(dtype)
     end
-    # Array{String}
-    @eval begin
-        function write{S<:ByteString}(obj::$objtype, strs::Array{S})
-            dtype = datatype(strs)
-            try
-                writearray(obj, dtype.id, strs)
-            finally
-                close(dtype)
-            end
-        end
+end
+# String
+function write(obj::DatasetOrAttribute, str::ByteString)
+    dtype = datatype(str)
+    try
+        writearray(obj, dtype.id, str)
+    finally
+          close(dtype)
     end
-    # VLEN types
-    @eval begin
-        function write{T<:Union(HDF5BitsKind,CharType)}(obj::$objtype, data::HDF5Vlen{T})
-            dtype = datatype(data)
-            try
-                writearray(obj, dtype.id, strs)
-            finally
-                close(dtype)
-            end
-        end
+end
+# Array{String}
+function write{S<:ByteString}(obj::DatasetOrAttribute, strs::Array{S})
+    dtype = datatype(strs)
+    try
+        writearray(obj, dtype.id, strs)
+    finally
+        close(dtype)
+    end
+end
+# VLEN types
+function write{T<:Union(HDF5BitsKind,CharType)}(obj::DatasetOrAttribute, data::HDF5Vlen{T})
+    dtype = datatype(data)
+    try
+        writearray(obj, dtype.id, strs)
+    finally
+        close(dtype)
     end
 end
 # For plain files and groups, let "write(obj, name, val)" mean "d_write"

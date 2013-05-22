@@ -249,18 +249,15 @@ function readsafely(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIStrin
 end
 
 # Basic types
-for typ in (HDF5BitsKind, ByteString)
-    @eval begin
-        function read{T<:$typ}(obj::HDF5Dataset{JldFile}, ::Type{T})
-            read(plain(obj), T)
-        end
-        function read{T<:$typ}(obj::HDF5Dataset{JldFile}, ::Type{Array{T}})
-            read(plain(obj), Array{T})
-        end
-        function read{T<:$typ,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}})
-            read(plain(obj), Array{T})
-        end
-    end
+typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
+function read{T<:BitsKindOrByteString}(obj::HDF5Dataset{JldFile}, ::Type{T})
+    read(plain(obj), T)
+end
+function read{T<:BitsKindOrByteString}(obj::HDF5Dataset{JldFile}, ::Type{Array{T}})
+    read(plain(obj), Array{T})
+end
+function read{T<:BitsKindOrByteString,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}})
+    read(plain(obj), Array{T})
 end
 
 # Nothing
@@ -281,17 +278,14 @@ function read{N}(obj::HDF5Dataset{JldFile}, ::Type{Array{Bool,N}})
 end
 
 # Complex
-for T in (Complex64, Complex128)
-    @eval begin
-        function read(obj::HDF5Dataset{JldFile}, ::Type{$T})
-            a = read(plain(obj), Array{realtype($T)})
-            a[1]+a[2]*im
-        end
-        function read{N}(obj::HDF5Dataset{JldFile}, ::Type{Array{$T, N}})
-            A = read(plain(obj), Array{realtype($T)})
-            reinterpret($T, A, ntuple(ndims(A)-1, i->size(A, i+1)))
-        end
-    end
+typealias ComplexTypes Union(Complex64, Complex128)
+function read{T<:ComplexTypes}(obj::HDF5Dataset{JldFile}, ::Type{T})
+    a = read(plain(obj), Array{realtype(T)})
+    a[1]+a[2]*im
+end
+function read{T<:ComplexTypes,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}})
+    A = read(plain(obj), Array{realtype(T)})
+    reinterpret(T, A, ntuple(ndims(A)-1, i->size(A, i+1)))
 end
 
 # Symbol
