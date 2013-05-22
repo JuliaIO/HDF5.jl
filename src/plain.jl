@@ -7,8 +7,6 @@ module HDF5
 ## Add methods to...
 import Base.setindex!, Base.close, Base.convert, Base.done, Base.dump, Base.flush, Base.has, Base.isempty, Base.isvalid, Base.length, Base.names, Base.ndims, Base.next, Base.getindex, Base.read, Base.show, Base.size, Base.start, Base.write
 
-using StrPack
-
 ## C types
 typealias C_time_t Int
 
@@ -426,42 +424,35 @@ HDF5Vlen{T<:HDF5BitsKind}(A::Array{Array{T}}) = HDF5Vlen{T}(A)
 
 ## Types that correspond to C structs and get used for ccall
 # For VLEN
-@struct type Hvl_t
+immutable Hvl_t
     len::Csize_t
     p::Ptr{Void}
 end
-Hvl_t() = Hvl_t(uint(0), C_NULL)
-io = IOString()
-pack(io, Hvl_t())      # create the pack Struct while in the module context...
-const HVL_SIZE = length(io.data) # and determine the size of the buffer needed
+const HVL_SIZE = sizeof(Hvl_t) # and determine the size of the buffer needed
 function vlenpack{T<:Union(HDF5BitsKind,CharType)}(v::HDF5Vlen{T})
     len = length(v.data)
     Tp = t2p(T)  # Ptr{Uint8} or Ptr{T}
-    io = IOString()
-    h = Hvl_t()
+    h = Array(Hvl_t, len)
     for i = 1:len
-        h.len = length(v.data[i])
-        h.p = convert(Tp, v.data[i])
-        pack(io, h)
+        h[i] = Hvl_t(convert(Csize_t, length(v.data[i])), convert(Ptr{Void}, convert(Tp, v.data[i])))
     end
-    io.data
+    h
 end
+
 # For group information
-@struct type H5Ginfo
+immutable H5Ginfo
     storage_type::Cint
     nlinks::Hsize
     max_corder::Int64
     mounted::Cint
 end
-H5Ginfo() = H5Ginfo(int32(0), convert(Hsize, 0), int64(0), int32(0))
 
 # For objects
-@struct type Hmetainfo
+immutable Hmetainfo
     index_size::Hsize
     heap_size::Hsize
 end
-Hmetainfo() = Hmetainfo(convert(Hsize, 0), convert(Hsize, 0))
-@struct type H5Oinfo
+immutable H5Oinfo
     fileno::Cuint
     addr::Hsize
     otype::Cint
@@ -484,25 +475,14 @@ Hmetainfo() = Hmetainfo(convert(Hsize, 0), convert(Hsize, 0))
     meta_obj::Hmetainfo
     meta_attr::Hmetainfo
 end
-H5Oinfo() = H5Oinfo(uint32(0),
-    convert(Hsize,0),
-    int32(0),
-    uint32(0),
-    int(0), int(0), int(0), int(0),
-    convert(Hsize,0),
-    uint32(0), uint32(0), uint32(0), uint32(0),
-    convert(Hsize,0), convert(Hsize,0), convert(Hsize,0), convert(Hsize,0),
-    uint64(0), uint64(0),
-    Hmetainfo(), Hmetainfo())
 # For links
-@struct type H5LInfo
+immutable H5LInfo
     linktype::Cint
     corder_valid::Cuint
     corder::Int64
     cset::Cint
     u::Uint64
 end
-H5LInfo() = H5LInfo(int32(0), uint32(0), int64(0), int32(0), uint64(0))
 
 
 ### High-level interface ###
@@ -733,18 +713,14 @@ has(parent::Union(HDF5File, HDF5Group, HDF5Dataset), path::ASCIIString) = exists
 
 # Querying items in the file
 function info(obj::Union(HDF5Group,HDF5File))
-    io = IOString()
-    pack(io, H5Ginfo())
-    h5g_get_info(obj, io.data)
-    seek(io, 0)
-    unpack(io, H5Ginfo)
+    info = Array(H5Ginfo, 1)
+    h5g_get_info(obj, info)
+    info[1]
 end
 function objinfo(obj::Union(HDF5File, HDF5Object))
-    io = IOString()
-    pack(io, H5Oinfo())
-    h5o_get_info(obj.id, io.data)
-    seek(io, 0)
-    unpack(io, H5Oinfo)
+    info = Array(H5Oinfo, 1)
+    h5o_get_info(obj.id, info)
+    info[1]
 end
 function length(x::Union(HDF5Group,HDF5File))
     buf = [int32(0)]
@@ -1141,18 +1117,14 @@ function read{T<:Union(HDF5BitsKind,CharType)}(obj::Union(HDF5Dataset{PlainHDF5F
     sz = size(obj)
     len = prod(sz)
     # Read the data
-    structbuf = Array(Uint8, HVL_SIZE*len)
+    structbuf = Array(Hvl_t, len)
     memtype_id = h5t_vlen_create(hdf5_type_id(T))
     readarray(obj, memtype_id, structbuf)
     h5t_close(memtype_id)
     # Unpack the data
     data = Array(atype(T), sz...)
-    io = IOString(); io.data = Array(Uint8, HVL_SIZE); io.size = HVL_SIZE
     for i = 1:len
-        offset = (i-1)*HVL_SIZE
-        copy!(io.data, 1, structbuf, offset+1, HVL_SIZE)
-        seek(io, 0)
-        h = unpack(io, Hvl_t)
+        h = structbuf[i]
         data[i] = p2a(convert(Ptr{T}, h.p), int(h.len))
     end
     # FIXME? Ownership of buffer (no need to call reclaim, right?)
@@ -1608,8 +1580,8 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5f_close, :H5Fclose, Herr, (Hid,), (:file_id,), "Error closing file"),
      (:h5f_flush, :H5Fflush, Herr, (Hid, Cint), (:object_id, :scope,), "Error flushing object to file"),
      (:h5g_close, :H5Gclose, Herr, (Hid,), (:group_id,), "Error closing group"),
-     (:h5g_get_info, :H5Gget_info, Herr, (Hid, Ptr{Uint8}), (:group_id, :buf), "Error getting group info"),
-     (:h5o_get_info, :H5Oget_info, Herr, (Hid, Ptr{Uint8}), (:object_id, :buf), "Error getting object info"),
+     (:h5g_get_info, :H5Gget_info, Herr, (Hid, Ptr{H5Ginfo}), (:group_id, :buf), "Error getting group info"),
+     (:h5o_get_info, :H5Oget_info, Herr, (Hid, Ptr{H5Oinfo}), (:object_id, :buf), "Error getting object info"),
      (:h5o_close, :H5Oclose, Herr, (Hid,), (:object_id,), "Error closing object"),
      (:h5p_close, :H5Pclose, Herr, (Hid,), (:id,), "Error closing property list"),
      (:h5p_get_fclose_degree, :H5Pget_fclose_degree, Herr, (Hid, Ptr{Cint}), (:plist_id, :fc_degree), "Error getting close degree"),
@@ -1682,7 +1654,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5l_create_hard, :H5Lcreate_hard, Herr, (Hid, Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:obj_loc_id, :obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating hard link ", link_name, " pointing to ", obj_name))),
      (:h5l_create_soft, :H5Lcreate_soft, Herr, (Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:target_path, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating soft link ", link_name, " pointing to ", target_path))),
      (:h5l_exists, :H5Lexists, Htri, (Hid, Ptr{Uint8}, Hid), (:loc_id, :pathname, :lapl_id), :(error("Cannot determine whether link ", h5i_get_name(loc_id), "/", pathname, " exists, check each item along the path"))),
-     (:h5l_get_info, :H5Lget_info, Herr, (Hid, Ptr{Uint8}, Ptr{Void}, Hid), (:link_loc_id, :link_name, :link_buf, :lapl_id), :(error("Error getting info for link ", link_name))),
+     (:h5l_get_info, :H5Lget_info, Herr, (Hid, Ptr{Uint8}, Ptr{H5LInfo}, Hid), (:link_loc_id, :link_name, :link_buf, :lapl_id), :(error("Error getting info for link ", link_name))),
      (:h5o_open, :H5Oopen, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :pathname, :lapl_id), :(error("Error opening object ", h5i_get_name(loc_id), "/", pathname))),
      (:h5o_open_by_idx, :H5Oopen_by_idx, Hid, (Hid, Ptr{Uint8}, Cint, Cint, Hsize, Hid), (:loc_id, :group_name, :index_type, :order, :n, :lapl_id), :(error("Error opening object of index ", n))),
      (:h5p_create, :H5Pcreate, Hid, (Hid,), (:cls_id,), "Error creating property list"),
@@ -1790,12 +1762,9 @@ function h5i_get_name(loc_id::Hid)
     convert(ASCIIString, buf[1:len])
 end
 function h5l_get_info(link_loc_id::Hid, link_name::ASCIIString, lapl_id::Hid)
-    io = IOString()
-    i = H5LInfo()
-    pack(io, i)
-    h5l_get_info(link_loc_id, link_name, io.data, lapl_id)
-    seek(io, 0)
-    unpack(io, H5LInfo)
+    info = Array(H5LInfo, 1)
+    h5l_get_info(link_loc_id, link_name, info, lapl_id)
+    info[1]
 end
 function h5s_get_simple_extent_dims(space_id::Hid)
     n = h5s_get_simple_extent_ndims(space_id)
