@@ -389,29 +389,22 @@ end
 ### Writing ###
 
 # Write "basic" types
-for (fsym, dsym) in
-    ((:(write{T<:HDF5BitsKind}), :T),
-     (:(write{T<:HDF5BitsKind}), :(Array{T})),
-     (:(write{S<:ByteString}), :S),
-     (:(write{S<:ByteString}), :(Array{S}))
-    )
-    @eval begin
-        function ($fsym)(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, data::$dsym, astype::ByteString)
-            # Create the dataset
-            dset, dtype = d_create(plain(parent), name, data)
-            try
-                # Write the attribute
-                a_write(dset, name_type_attr, astype)
-                # Write the data
-                writearray(dset, dtype.id, data)
-            finally
-                close(dset)
-                close(dtype)
-            end
-        end
-        ($fsym)(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, data::$dsym) = write(parent, name, data, string(typeof(data)))
+function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString,
+                                                   data::Union(T, Array{T}), astype::ByteString)
+    # Create the dataset
+    dset, dtype = d_create(plain(parent), name, data)
+    try
+        # Write the attribute
+        a_write(dset, name_type_attr, astype)
+        # Write the data
+        writearray(dset, dtype.id, data)
+    finally
+        close(dset)
+        close(dtype)
     end
 end
+write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, data::data::Union(T, Array{T})) =
+    write(parent, name, data, string(typeof(data)))
 
 # Write nothing
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, n::Nothing, astype::ASCIIString)
