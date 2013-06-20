@@ -577,7 +577,7 @@ function write_composite(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCII
             write(plain(gtypes), Tname, nametype)
             obj = gtypes[Tname]
             # Write the module name as an attribute
-            mod = Base.full_name(T.name.module)
+            mod = Base.fullname(T.name.module)
             modnames = [map(string, mod)...]
             a_write(plain(obj), "Module", modnames)
             close(obj)
