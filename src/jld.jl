@@ -51,18 +51,17 @@ type JldFile <: HDF5File
     version::String
     toclose::Bool
     writeheader::Bool
+    mmaparrays::Bool
 
-    function JldFile(id, filename, version, toclose::Bool, writeheader::Bool)
-        f = new(id, filename, version, toclose, writeheader)
+    function JldFile(id, filename, version::String=version_current, toclose::Bool=true,
+                     writeheader::Bool=false, mmaparrays::Bool=false)
+        f = new(id, filename, version, toclose, writeheader, mmaparrays)
         if toclose
             finalizer(f, close)
         end
         f
     end
 end
-JldFile(id, filename, version, toclose) = JldFile(id, filename, version, toclose, false)
-JldFile(id, filename, version) = JldFile(id, filename, version, true, false)
-JldFile(id, filename) = JldFile(id, filename, version_current, true, false)
 function close(f::JldFile)
     if f.toclose
         h5f_close(f.id)
@@ -80,7 +79,7 @@ function close(f::JldFile)
 end
 show(io::IO, fid::JldFile) = isvalid(fid) ? print(io, "Julia data file version ", fid.version, ": ", fid.filename) : print(io, "Julia data file (closed): ", fid.filename)
 
-function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool)
+function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool; mmaparrays::Bool=false)
     local fj
     if ff && !wr
         error("Cannot append to a write-only file")
@@ -103,7 +102,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             finally
                 close(p)
             end
-            fj = JldFile(f, filename, version, true, true)
+            fj = JldFile(f, filename, version, true, true, mmaparrays)
             # initialize empty require list
             write(fj, pathrequire, ASCIIString[])
         else
@@ -122,7 +121,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             if beginswith(magic, magic_base.data)
                 f = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
                 version = bytestring(convert(Ptr{Uint8}, magic) + length(magic_base))
-                fj = JldFile(f, filename, version, true, true)
+                fj = JldFile(f, filename, version, true, true, mmaparrays)
                 # Load any required files/packages
                 if has(fj, pathrequire)
                     r = read(fj, pathrequire)
@@ -133,7 +132,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             else
                 if ishdf5(filename)
                     println("This is an HDF5 file, but it is not a recognized Julia data file. Opening anyway.")
-                    fj = JldFile(f, filename, version_current, true, false)
+                    fj = JldFile(f, filename, version_current, true, false, mmaparrays)
                 else
                     error("This does not seem to be a Julia data or HDF5 file")
                 end
@@ -145,10 +144,10 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
     return fj
 end
 
-function jldopen(fname::String, mode::String)
-    mode == "r"  ? jldopen(fname, true , false, false, false, false) :
-    mode == "r+" ? jldopen(fname, true , true , false, false, false) :
-    mode == "w"  ? jldopen(fname, false, true , true , true , false) :
+function jldopen(fname::String, mode::String; mmaparrays::Bool=false)
+    mode == "r"  ? jldopen(fname, true , false, false, false, false, mmaparrays=mmaparrays) :
+    mode == "r+" ? jldopen(fname, true , true , false, false, false, mmaparrays=mmaparrays) :
+    mode == "w"  ? jldopen(fname, false, true , true , true , false, mmaparrays=mmaparrays) :
 #     mode == "w+" ? jldopen(fname, true , true , true , true , false) :
 #     mode == "a"  ? jldopen(fname, false, true , true , false, true ) :
 #     mode == "a+" ? jldopen(fname, true , true , true , false, true ) :
@@ -250,15 +249,11 @@ end
 
 # Basic types
 typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
-function read{T<:BitsKindOrByteString}(obj::HDF5Dataset{JldFile}, ::Type{T})
-    read(plain(obj), T)
-end
-function read{T<:BitsKindOrByteString}(obj::HDF5Dataset{JldFile}, ::Type{Array{T}})
-    read(plain(obj), Array{T})
-end
-function read{T<:BitsKindOrByteString,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}})
-    read(plain(obj), Array{T})
-end
+read{T<:BitsKindOrByteString}(obj::HDF5Dataset{JldFile}, ::Type{T}) = read(plain(obj), T)
+read{T<:HDF5BitsKind}(obj::HDF5Dataset{JldFile}, ::Type{Array{T}}) =
+    obj.file.mmaparrays ? readmmap(plain(obj), Array{T}) : read(plain(obj), Array{T})
+read{T<:ByteString}(obj::HDF5Dataset{JldFile}, ::Type{Array{T}}) = read(plain(obj), Array{T})
+read{T<:BitsKindOrByteString,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}}) = read(obj, Array{T})
 
 # Nothing
 read(obj::HDF5Dataset{JldFile}, ::Type{Nothing}) = nothing

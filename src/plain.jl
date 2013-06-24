@@ -1125,6 +1125,36 @@ function read{T<:Union(HDF5BitsKind,CharType)}(obj::DatasetOrAttribute, ::Type{H
 end
 read(attr::HDF5Attributes, name::ASCIIString) = a_read(attr.parent, name)
 
+# Reading with mmap
+function readmmap{T<:HDF5BitsKind}(obj::HDF5Dataset{PlainHDF5File}, ::Type{Array{T}})
+    local fd
+    prop = h5d_get_create_plist(obj.id)
+    try
+        if h5p_get_layout(prop) == H5D_CHUNKED
+            error("Cannot mmap chunked HDF5 arrays")
+        end
+    finally
+        h5p_close(prop)
+    end
+
+    prop = h5d_get_access_plist(obj.id)
+    try
+        # TODO: Check that we will get file descriptor from driver
+        #driver = h5p_get_driver(prop)
+        ret = Ptr{Cint}[0]
+        h5f_get_vfd_handle(obj.file.id, prop, ret)
+        fd = unsafe_load(ret[1])
+    finally
+        HDF5.h5p_close(prop)
+    end
+    
+    offset = h5d_get_offset(obj.id)
+    if offset == uint64(-1)
+        error("Cannot mmap array")
+    end
+    mmap_array(T, size(obj), fdio(fd), convert(FileOffset, offset))
+end
+
 # Generic write
 function write{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name1::ASCIIString, val1, name2::ASCIIString, val2, nameval...)
     if !iseven(length(nameval))
@@ -1863,6 +1893,7 @@ export
     parent,
     plain,
     read,
+    readmmap,
     @read,
     getindex,
     root,
