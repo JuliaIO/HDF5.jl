@@ -144,7 +144,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
     return fj
 end
 
-function jldopen(fname::String, mode::String; mmaparrays::Bool=false)
+function jldopen(fname::String, mode::String="r"; mmaparrays::Bool=false)
     mode == "r"  ? jldopen(fname, true , false, false, false, false, mmaparrays=mmaparrays) :
     mode == "r+" ? jldopen(fname, true , true , false, false, false, mmaparrays=mmaparrays) :
     mode == "w"  ? jldopen(fname, false, true , true , true , false, mmaparrays=mmaparrays) :
@@ -153,7 +153,6 @@ function jldopen(fname::String, mode::String; mmaparrays::Bool=false)
 #     mode == "a+" ? jldopen(fname, true , true , true , false, true ) :
     error("invalid open mode: ", mode)
 end
-jldopen(fname::String) = jldopen(fname, "r")
 
 ### "Inherited" behaviors
 a_write(parent::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}), name::ASCIIString, data) = a_write(plain(parent), name, data)
