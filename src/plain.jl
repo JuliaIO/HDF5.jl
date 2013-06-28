@@ -391,29 +391,14 @@ HDF5Properties() = HDF5Properties(H5P_DEFAULT, false)
 convert(::Type{Cint}, p::HDF5Properties) = p.id
 
 # Object reference types
-type HDF5ReferenceObj
-    r::Vector{Uint8}
+immutable HDF5ReferenceObj
+    r::Uint64 # Size must be H5R_OBJ_REF_BUF_SIZE
 end
-type HDF5ObjPtr
-    p::Ptr{Uint8}
-end
-type HDF5ReferenceObjArray
-    r::Array{Uint8}
-end
-
-HDF5ReferenceObjArray(dims::Int...) = HDF5ReferenceObjArray(Array(Uint8, H5R_OBJ_REF_BUF_SIZE, dims...))
-
-size(a::HDF5ReferenceObjArray) = ntuple(ndims(a.r)-1, i->size(a.r,i+1))
-
-length(a::HDF5ReferenceObjArray) = prod(size(a))
-
-getindex(a::HDF5ReferenceObjArray, i::Integer) = HDF5ObjPtr(pointer(a.r)+(i-1)*H5R_OBJ_REF_BUF_SIZE)
-
-getindex(a::HDF5ReferenceObjArray, indices::Union(Integer, AbstractVector)...) = HDF5ReferenceObjArray(a.r[:, indices...])
-
-function setindex!(a::HDF5ReferenceObjArray, pname::(Union(HDF5File, HDF5Group, HDF5Dataset), ASCIIString), i::Integer)
-    ptr = pointer(a.r)+(i-1)*H5R_OBJ_REF_BUF_SIZE
-    h5r_create(ptr, pname[1].id, pname[2], H5R_OBJECT, -1)
+const HDF5ReferenceObj_NULL = HDF5ReferenceObj(uint64(0))
+function HDF5ReferenceObj(parent::Union(HDF5File, HDF5Group, HDF5Dataset), name::ASCIIString)
+    a = Array(HDF5ReferenceObj, 1)
+    h5r_create(a, parent.id, name, H5R_OBJECT, -1)
+    a[1]
 end
 
 # Compound types
@@ -869,7 +854,7 @@ function datatype{S<:ByteString}(str::Array{S})
     h5t_set_cset(type_id, cset(S))
     HDF5Datatype(type_id)
 end
-datatype(R::HDF5ReferenceObjArray) = HDF5Datatype(H5T_STD_REF_OBJ, false)
+datatype(R::Array{HDF5ReferenceObj}) = HDF5Datatype(H5T_STD_REF_OBJ, false)
 datatype{T<:HDF5BitsKind}(A::HDF5Vlen{T}) = HDF5Datatype(h5t_vlen_create(hdf5_type_id(T)))
 function datatype{C<:CharType}(str::HDF5Vlen{C})
     type_id = h5t_copy(hdf5_type_id(C))
@@ -896,7 +881,7 @@ function _dataspace(sz::Int...)
 end
 dataspace(A::Array) = _dataspace(size(A)...)
 dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
-dataspace(R::HDF5ReferenceObjArray) = _dataspace(size(R)...)
+dataspace(R::Array{HDF5ReferenceObj}) = _dataspace(size(R)...)
 dataspace(v::HDF5Vlen) = _dataspace(size(v.data)...)
 dataspace(n::Nothing) = HDF5Dataspace(h5s_create(H5S_NULL))
 dataspace(sz::Dims) = _dataspace(sz...)
@@ -1044,19 +1029,20 @@ end
 # Read an array of references
 function read(obj::HDF5Dataset{PlainHDF5File}, ::Type{Array{HDF5ReferenceObj}})
     dims = size(obj)
-    refs = HDF5ReferenceObjArray(dims...)
-    h5d_read(obj.id, H5T_STD_REF_OBJ, refs.r)
+    refs = Array(HDF5ReferenceObj, dims...)
+    h5d_read(obj.id, H5T_STD_REF_OBJ, refs)
     refs
 end
 function read(obj::HDF5Attribute, ::Type{Array{HDF5ReferenceObj}})
     dims = size(obj)
-    refs = HDF5ReferenceObjArray(dims...)
-    h5a_read(obj.id, H5T_STD_REF_OBJ, refs.r)
+    refs = Array(HDF5ReferenceObj, dims...)
+    h5a_read(obj.id, H5T_STD_REF_OBJ, refs)
     refs
 end
 # Dereference
-function getindex(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5ObjPtr)
-    obj_id = h5r_dereference(parent.id, H5R_OBJECT, r.p)
+function getindex(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5ReferenceObj)
+    if r == HDF5ReferenceObj_NULL; error("Reference is null"); end
+    obj_id = h5r_dereference(parent.id, H5R_OBJECT, r)
     obj_type = h5i_get_type(obj_id)
     obj_type == H5I_GROUP ? HDF5Group(obj_id, file(parent)) :
     obj_type == H5I_DATATYPE ? HDF5Datatype(obj_id) :
@@ -1235,7 +1221,7 @@ for (privatesym, fsym, ptype) in
     end
 end
 # ReferenceObjArray
-function d_create(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::HDF5ReferenceObjArray, plists...)
+function d_create(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::Array{HDF5ReferenceObj}, plists...)
     local obj
     dtype = datatype(data)
     dspace = dataspace(data)
@@ -1556,6 +1542,13 @@ h5l_exists(loc_id::Hid, name::ASCIIString) = h5l_exists(loc_id, name, H5P_DEFAUL
 h5o_open(obj_id::Hid, name::ASCIIString) = h5o_open(obj_id, name, H5P_DEFAULT)
 #h5s_get_simple_extent_ndims(space_id::Hid) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 h5t_get_native_type(type_id::Hid) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
+function h5r_dereference(obj_id::Hid, ref_type::Integer, pointee::HDF5ReferenceObj)
+    ret = ccall(dlsym(libhdf5, :H5Rdereference), Hid, (Hid, Cint, Ptr{HDF5ReferenceObj}), obj_id, ref_type, &pointee)
+    if ret < 0
+        error("Error dereferencing object")
+    end
+    ret
+end
 
 ### Utilities for generating ccall wrapper functions programmatically ###
 
@@ -1702,8 +1695,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5p_get_chunk, :H5Pget_chunk, Cint, (Hid, Cint, Ptr{Hsize}), (:plist_id, :n_dims, :dims), :(error("Error getting chunk size"))),
      (:h5p_get_layout, :H5Pget_layout, Cint, (Hid,), (:plist_id,), :(error("Error getting layout"))),
      (:h5p_get_driver, :H5Pget_driver_info, Ptr{Void}, (Hid,), (:plist_id,), "Error getting driver info"),
-     (:h5r_create, :H5Rcreate, Herr, (Ptr{Void}, Hid, Ptr{Uint8}, Cint, Hid), (:ref, :loc_id, :pathname, :ref_type, :space_id), :(error("Error creating reference to object ", hi5_get_name(loc_id), "/", pathname))),
-     (:h5r_dereference, :H5Rdereference, Hid, (Hid, Cint, Ptr{Void}), (:obj_id, :ref_type, :ref), :(error("Error dereferencing object"))),
+     (:h5r_create, :H5Rcreate, Herr, (Ptr{HDF5ReferenceObj}, Hid, Ptr{Uint8}, Cint, Hid), (:ref, :loc_id, :pathname, :ref_type, :space_id), :(error("Error creating reference to object ", hi5_get_name(loc_id), "/", pathname))),
      (:h5r_get_obj_type, :H5Rget_obj_type2, Herr, (Hid, Cint, Ptr{Void}, Ptr{Cint}), (:loc_id, :ref_type, :ref, :obj_type), :(error("Error getting object type"))),
      (:h5r_get_region, :H5Rget_region, Hid, (Hid, Cint, Ptr{Void}), (:loc_id, :ref_type, :ref), :(error("Error getting region from reference"))),
      (:h5s_copy, :H5Scopy, Hid, (Hid,), (:space_id,), :(error("Error copying dataspace"))),
