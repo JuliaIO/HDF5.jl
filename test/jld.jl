@@ -39,14 +39,15 @@ iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
 macro check(fid, sym)
     ex = quote
-        local tmp
-        try
-            tmp = read($fid, $(string(sym)))
-        catch
-            error("Error reading ", $(string(sym)))
-        end
-        if !iseq(tmp, $sym)
-            error("For ", $(string(sym)), ", read value does not agree with written value")
+        let tmp
+            try
+                tmp = read($fid, $(string(sym)))
+            catch
+                error("Error reading ", $(string(sym)))
+            end
+            if !iseq(tmp, $sym)
+                error("For ", $(string(sym)), ", read value does not agree with written value")
+            end
         end
     end
     esc(ex)
@@ -80,24 +81,26 @@ i = 7
 @write g i
 close(fid)
 
-fidr = jldopen(fn, "r")
-@check fidr x
-@check fidr A
-@check fidr str
-@check fidr stringsA
-@check fidr stringsU
-@check fidr tf
-@check fidr TF
-@check fidr AB
-@check fidr t
-@check fidr c
-@check fidr C
-@check fidr ms
-@check fidr sym
-@check fidr syms
-@check fidr d
-exr = read(fidr, "ex")   # line numbers are stripped, don't expect equality
-@check fidr T
-@check fidr char
-@check fidr unicode_char
-close(fidr)
+for mmap = (true, false)
+    fidr = jldopen(fn, "r", mmaparrays=mmap)
+    @check fidr x
+    @check fidr A
+    @check fidr str
+    @check fidr stringsA
+    @check fidr stringsU
+    @check fidr tf
+    @check fidr TF
+    @check fidr AB
+    @check fidr t
+    @check fidr c
+    @check fidr C
+    @check fidr ms
+    @check fidr sym
+    @check fidr syms
+    @check fidr d
+    exr = read(fidr, "ex")   # line numbers are stripped, don't expect equality
+    @check fidr T
+    @check fidr char
+    @check fidr unicode_char
+    close(fidr)
+end
