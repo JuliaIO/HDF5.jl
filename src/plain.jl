@@ -16,6 +16,7 @@ typealias Herr        Cint
 typealias Hsize       Uint64
 typealias Hssize      Int64
 typealias Htri        Cint   # pseudo-boolean (negative if error)
+typealias Haddr       Uint64
 
 ### Load and initialize the HDF library ###
 const libhdf5 = dlopen("libhdf5")
@@ -1124,6 +1125,46 @@ function read{T<:Union(HDF5BitsKind,CharType)}(obj::DatasetOrAttribute, ::Type{H
 end
 read(attr::HDF5Attributes, name::ASCIIString) = a_read(attr.parent, name)
 
+# Reading with mmap
+function iscontiguous(obj::HDF5Dataset)
+    prop = h5d_get_create_plist(obj.id)
+    try
+        h5p_get_layout(prop) != H5D_CHUNKED
+    finally
+        h5p_close(prop)
+    end
+end
+
+ismmappable{T<:HDF5BitsKind}(::Type{Array{T}}) = true
+ismmappable(::Type) = false
+ismmappable{T}(obj::HDF5Dataset, ::Type{T}) = ismmappable(T) && iscontiguous(obj)
+ismmappable(obj::HDF5Dataset) = ismmappable(obj, hdf5_to_julia(obj))
+
+function readmmap{T<:HDF5BitsKind}(obj::HDF5Dataset, ::Type{Array{T}})
+    local fd
+    prop = h5d_get_access_plist(obj.id)
+    try
+        ret = Ptr{Cint}[0]
+        h5f_get_vfd_handle(obj.file.id, prop, ret)
+        fd = unsafe_load(ret[1])
+    finally
+        HDF5.h5p_close(prop)
+    end
+    
+    offset = h5d_get_offset(obj.id)
+    if offset == uint64(-1)
+        error("Error mmapping array")
+    end
+    mmap_array(T, size(obj), fdio(fd), convert(FileOffset, offset))
+end
+
+function readmmap(obj::HDF5Dataset)
+    T = hdf5_to_julia(obj)
+    if !ismmappable(T); error("Cannot mmap datasets of type $T"); end
+    if !iscontiguous(T); error("Cannot mmap discontiguous dataset"); end
+    readmmap(obj, T)
+end
+
 # Generic write
 function write{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name1::ASCIIString, val1, name2::ASCIIString, val2, nameval...)
     if !iseven(length(nameval))
@@ -1559,6 +1600,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5e_set_auto, :H5Eset_auto2, Herr, (Hid, Ptr{Void}, Ptr{Void}), (:estack_id, :func, :client_data), "Error setting error reporting behavior"),  # FIXME callbacks, for now pass C_NULL for both pointers
      (:h5f_close, :H5Fclose, Herr, (Hid,), (:file_id,), "Error closing file"),
      (:h5f_flush, :H5Fflush, Herr, (Hid, Cint), (:object_id, :scope,), "Error flushing object to file"),
+     (:h5f_get_vfd_handle, :H5Fget_vfd_handle, Herr, (Hid, Hid, Ptr{Ptr{Cint}}), (:file_id, :fapl_id, :file_handle), "Error getting VFD handle"),
      (:h5g_close, :H5Gclose, Herr, (Hid,), (:group_id,), "Error closing group"),
      (:h5g_get_info, :H5Gget_info, Herr, (Hid, Ptr{H5Ginfo}), (:group_id, :buf), "Error getting group info"),
      (:h5o_get_info, :H5Oget_info, Herr, (Hid, Ptr{H5Oinfo}), (:object_id, :buf), "Error getting object info"),
@@ -1611,6 +1653,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5d_create, :H5Dcreate2, Hid, (Hid, Ptr{Uint8}, Hid, Hid, Hid, Hid, Hid), (:loc_id, :pathname, :dtype_id, :space_id, :dlcpl_id, :dcpl_id, :dapl_id), :(error("Error creating dataset ", h5i_get_name(loc_id), "/", pathname))),
      (:h5d_get_access_plist, :H5Dget_access_plist, Hid, (Hid,), (:dataset_id,), :(error("Error getting dataset access property list"))),     
      (:h5d_get_create_plist, :H5Dget_create_plist, Hid, (Hid,), (:dataset_id,), :(error("Error getting dataset create property list"))),     
+     (:h5d_get_offset, :H5Dget_offset, Haddr, (Hid,), (:dataset_id,), :(error("Error getting offset"))),     
      (:h5d_get_space, :H5Dget_space, Hid, (Hid,), (:dataset_id,), :(error("Error getting dataspace"))),     
      (:h5d_get_type, :H5Dget_type, Cint, (Hid,), (:dataset_id,), :(error("Error getting dataspace type"))),
      (:h5d_open, :H5Dopen2, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :pathname, :dapl_id), :(error("Error opening dataset ", h5i_get_name(loc_id), "/", pathname))),
@@ -1640,6 +1683,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5p_create, :H5Pcreate, Hid, (Hid,), (:cls_id,), "Error creating property list"),
      (:h5p_get_chunk, :H5Pget_chunk, Cint, (Hid, Cint, Ptr{Hsize}), (:plist_id, :n_dims, :dims), :(error("Error getting chunk size"))),
      (:h5p_get_layout, :H5Pget_layout, Cint, (Hid,), (:plist_id,), :(error("Error getting layout"))),
+     (:h5p_get_driver, :H5Pget_driver_info, Ptr{Void}, (Hid,), (:plist_id,), "Error getting driver info"),
      (:h5r_create, :H5Rcreate, Herr, (Ptr{Void}, Hid, Ptr{Uint8}, Cint, Hid), (:ref, :loc_id, :pathname, :ref_type, :space_id), :(error("Error creating reference to object ", hi5_get_name(loc_id), "/", pathname))),
      (:h5r_dereference, :H5Rdereference, Hid, (Hid, Cint, Ptr{Void}), (:obj_id, :ref_type, :ref), :(error("Error dereferencing object"))),
      (:h5r_get_obj_type, :H5Rget_obj_type2, Herr, (Hid, Cint, Ptr{Void}, Ptr{Cint}), (:loc_id, :ref_type, :ref, :obj_type), :(error("Error getting object type"))),
@@ -1859,6 +1903,8 @@ export
     parent,
     plain,
     read,
+    readmmap,
+    ismmappable,
     @read,
     getindex,
     root,
