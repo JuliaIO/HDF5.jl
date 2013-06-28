@@ -250,7 +250,7 @@ end
 typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
 read{T<:BitsKindOrByteString}(obj::HDF5Dataset{JldFile}, ::Type{T}) = read(plain(obj), T)
 read{T<:HDF5BitsKind}(obj::HDF5Dataset{JldFile}, ::Type{Array{T}}) =
-    obj.file.mmaparrays ? readmmap(plain(obj), Array{T}) : read(plain(obj), Array{T})
+    obj.file.mmaparrays && HDF5.iscontiguous(obj) ? readmmap(obj, Array{T}) : read(plain(obj), Array{T})
 read{T<:ByteString}(obj::HDF5Dataset{JldFile}, ::Type{Array{T}}) = read(plain(obj), Array{T})
 read{T<:BitsKindOrByteString,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}}) = read(obj, Array{T})
 

@@ -1126,21 +1126,24 @@ end
 read(attr::HDF5Attributes, name::ASCIIString) = a_read(attr.parent, name)
 
 # Reading with mmap
-function readmmap{T<:HDF5BitsKind}(obj::HDF5Dataset{PlainHDF5File}, ::Type{Array{T}})
-    local fd
+function iscontiguous(obj::HDF5Dataset)
     prop = h5d_get_create_plist(obj.id)
     try
-        if h5p_get_layout(prop) == H5D_CHUNKED
-            error("Cannot mmap chunked HDF5 arrays")
-        end
+        h5p_get_layout(prop) != H5D_CHUNKED
     finally
         h5p_close(prop)
     end
+end
 
+ismmappable{T<:HDF5BitsKind}(::Type{Array{T}}) = true
+ismmappable(::Type) = false
+ismmappable{T}(obj::HDF5Dataset, ::Type{T}) = ismmappable(T) && iscontiguous(obj)
+ismmappable(obj::HDF5Dataset) = ismmappable(obj, hdf5_to_julia(obj))
+
+function readmmap{T<:HDF5BitsKind}(obj::HDF5Dataset, ::Type{Array{T}})
+    local fd
     prop = h5d_get_access_plist(obj.id)
     try
-        # TODO: Check that we will get file descriptor from driver
-        #driver = h5p_get_driver(prop)
         ret = Ptr{Cint}[0]
         h5f_get_vfd_handle(obj.file.id, prop, ret)
         fd = unsafe_load(ret[1])
@@ -1150,9 +1153,16 @@ function readmmap{T<:HDF5BitsKind}(obj::HDF5Dataset{PlainHDF5File}, ::Type{Array
     
     offset = h5d_get_offset(obj.id)
     if offset == uint64(-1)
-        error("Cannot mmap array")
+        error("Error mmapping array")
     end
     mmap_array(T, size(obj), fdio(fd), convert(FileOffset, offset))
+end
+
+function readmmap(obj::HDF5Dataset)
+    T = hdf5_to_julia(obj)
+    if !ismmappable(T); error("Cannot mmap datasets of type $T"); end
+    if !iscontiguous(T); error("Cannot mmap discontiguous dataset"); end
+    readmmap(obj, T)
 end
 
 # Generic write
@@ -1894,6 +1904,7 @@ export
     plain,
     read,
     readmmap,
+    ismmappable,
     @read,
     getindex,
     root,
