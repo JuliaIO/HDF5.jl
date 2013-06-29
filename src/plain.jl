@@ -1187,6 +1187,7 @@ end
 
 # Plain dataset & attribute writes
 # Due to method ambiguities we generate these explicitly
+typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
 
 # Create datasets and attributes with "native" types, but don't write the data.
 # The return syntax is: dset, dtype = d_create(parent, name, data)
@@ -1209,15 +1210,11 @@ for (privatesym, fsym, ptype) in
             obj, dtype
         end
         # Scalar types
-        ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ASCIIString, data::T, plists...) = ($privatesym)(parent, name, data, plists...)
-        # Arrays
-        ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ASCIIString, data::Array{T}, plists...) = ($privatesym)(parent, name, data, plists...)
-        # Strings
-        ($fsym)(parent::$ptype, name::ASCIIString, data::ByteString, plists...) = ($privatesym)(parent, name, data, plists...)
-        # Array{String}
-        ($fsym){S<:ByteString}(parent::$ptype, name::ASCIIString, data::Array{S}, plists...) = ($privatesym)(parent, name, data, plists...)
+        ($fsym){T<:BitsKindOrByteString}(parent::$ptype, name::ASCIIString, data::Union(T, Array{T}), plists...) =
+            ($privatesym)(parent, name, data, plists...)
         # VLEN types
-        ($fsym){T<:Union(HDF5BitsKind,CharType)}(parent::$ptype, name::ASCIIString, data::HDF5Vlen{T}, plists...) = ($privatesym)(parent, name, data, plists...)
+        ($fsym){T<:Union(HDF5BitsKind,CharType)}(parent::$ptype, name::ASCIIString, data::HDF5Vlen{T}, plists...) =
+            ($privatesym)(parent, name, data, plists...)
     end
 end
 # ReferenceObjArray
@@ -1248,20 +1245,16 @@ for (privatesym, fsym, ptype, crsym) in
             end
         end
         # Scalar types
-        ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ASCIIString, data::T, plists...) = ($privatesym)(parent, name, data, plists...)
-        # Arrays
-        ($fsym){T<:HDF5BitsKind}(parent::$ptype, name::ASCIIString, data::Array{T}, plists...) = ($privatesym)(parent, name, data, plists...)
-        # Strings
-        ($fsym)(parent::$ptype, name::ASCIIString, data::ByteString, plists...) = ($privatesym)(parent, name, data, plists...)
-        # Array{String}
-        ($fsym){S<:ByteString}(parent::$ptype, name::ASCIIString, data::Array{S}, plists...) = ($privatesym)(parent, name, data, plists...)        
+        ($fsym){T<:BitsKindOrByteString}(parent::$ptype, name::ASCIIString, data::Union(T, Array{T}), plists...) =
+            ($privatesym)(parent, name, data, plists...)
         # VLEN types
-        ($fsym){T<:Union(HDF5BitsKind,CharType)}(parent::$ptype, name::ASCIIString, data::HDF5Vlen{T}, plists...) = ($privatesym)(parent, name, data, plists...)
+        ($fsym){T<:Union(HDF5BitsKind,CharType)}(parent::$ptype, name::ASCIIString, data::HDF5Vlen{T}, plists...) =
+            ($privatesym)(parent, name, data, plists...)
     end
 end
 # Write to already-created objects
 # Scalars
-function write(obj::DatasetOrAttribute, x::HDF5BitsKind)
+function write{T<:BitsKindOrByteString}(obj::DatasetOrAttribute, x::Union(T, Array{T}))
     dtype = datatype(x)
     try
         writearray(obj, dtype.id, x)
@@ -1269,8 +1262,8 @@ function write(obj::DatasetOrAttribute, x::HDF5BitsKind)
        close(dtype)
     end
 end
-# Arrays
-function write{T<:HDF5BitsKind}(obj::DatasetOrAttribute, data::Array{T})
+# VLEN types
+function write{T<:Union(HDF5BitsKind,CharType)}(obj::DatasetOrAttribute, data::HDF5Vlen{T})
     dtype = datatype(data)
     try
         writearray(obj, dtype.id, data)
@@ -1278,44 +1271,11 @@ function write{T<:HDF5BitsKind}(obj::DatasetOrAttribute, data::Array{T})
         close(dtype)
     end
 end
-# String
-function write(obj::DatasetOrAttribute, str::ByteString)
-    dtype = datatype(str)
-    try
-        writearray(obj, dtype.id, str)
-    finally
-          close(dtype)
-    end
-end
-# Array{String}
-function write{S<:ByteString}(obj::DatasetOrAttribute, strs::Array{S})
-    dtype = datatype(strs)
-    try
-        writearray(obj, dtype.id, strs)
-    finally
-        close(dtype)
-    end
-end
-# VLEN types
-function write{T<:Union(HDF5BitsKind,CharType)}(obj::DatasetOrAttribute, data::HDF5Vlen{T})
-    dtype = datatype(data)
-    try
-        writearray(obj, dtype.id, strs)
-    finally
-        close(dtype)
-    end
-end
 # For plain files and groups, let "write(obj, name, val)" mean "d_write"
-write{T<:HDF5BitsKind}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::T, plists...) = d_write(parent, name, data, plists...)
-write{T<:HDF5BitsKind}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::Array{T}, plists...) = d_write(parent, name, data, plists...)
-write(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::ByteString, plists...) = d_write(parent, name, data, plists...)
-write{S<:ByteString}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::Array{S}, plists...) = d_write(parent, name, data, plists...)
+write{T<:BitsKindOrByteString}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::Union(T, Array{T}), plists...) =
+    d_write(parent, name, data, plists...)
 # For datasets, "write(dset, name, val)" means "a_write"
-write{T<:HDF5BitsKind}(parent::HDF5Dataset, name::ASCIIString, data::T, plists...) = a_write(parent, name, data, plists...)
-write{T<:HDF5BitsKind}(parent::HDF5Dataset, name::ASCIIString, data::Array{T}, plists...) = a_write(parent, name, data, plists...)
-write(parent::HDF5Dataset, name::ASCIIString, data::ASCIIString, plists...) = a_write(parent, name, data, plists...)
-write(parent::HDF5Dataset, name::ASCIIString, data::Array{ASCIIString}, plists...) = a_write(parent, name, data, plists...)
-
+write{T<:BitsKindOrByteString}(parent::HDF5Dataset, name::ASCIIString, data::Union(T, Array{T}), plists...) = a_write(parent, name, data, plists...)
 
 # Reading arrays using getindex: data = dset[:,:,10]
 function getindex(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
