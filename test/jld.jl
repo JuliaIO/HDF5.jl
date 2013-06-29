@@ -19,6 +19,8 @@ try
     type MyStruct
         len::Int
         data::Array{Float64}
+        MyStruct(len::Int) = new(len)
+        MyStruct(len::Int, data::Array{Float64}) = new(len, data)
     end
 catch
 end
@@ -34,6 +36,9 @@ end
 T = Uint8
 char = 'x'
 unicode_char = '\U10ffff'
+undef = cell(1)
+undefs = cell(2, 2)
+ms_undef = MyStruct(0)
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -75,6 +80,9 @@ fid = jldopen(fn, "w")
 @write fid T
 @write fid char
 @write fid unicode_char
+@write fid undef
+@write fid undefs
+@write fid ms_undef
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -102,5 +110,20 @@ for mmap = (true, false)
     @check fidr T
     @check fidr char
     @check fidr unicode_char
+
+    # Special cases for reading undefs
+    undef = read(fidr, "undef")
+    if !isa(undef, Array{Any, 1}) || length(undef) != 1 || isdefined(undef, 1)
+        error("For undef, read value does not agree with written value")
+    end
+    undefs = read(fidr, "undefs")
+    if !isa(undefs, Array{Any, 2}) || length(undefs) != 4 || any(map(i->isdefined(undefs, i), 1:4))
+        error("For undefs, read value does not agree with written value")
+    end
+    ms_undef = read(fidr, "ms_undef")
+    if !isa(ms_undef, MyStruct) || ms_undef.len != 0 || isdefined(ms_undef, :data)
+        error("For ms_undef, read value does not agree with written value")
+    end
+
     close(fidr)
 end

@@ -11,7 +11,6 @@ import HDF5.a_write, HDF5.close, HDF5.dump, HDF5.read, HDF5.getindex, Base.show,
 # Types
 Hid = HDF5.Hid
 HDF5ReferenceObj = HDF5.HDF5ReferenceObj
-HDF5ReferenceObjArray = HDF5.HDF5ReferenceObjArray
 HDF5BitsKind = HDF5.HDF5BitsKind
 # Constants
 H5F_ACC_RDONLY = HDF5.H5F_ACC_RDONLY
@@ -334,7 +333,9 @@ function read(obj::HDF5Dataset{JldFile}, T::DataType)
         end
         x = ccall(:jl_new_struct_uninit, Any, (Any,), T)
         for i = 1:length(v)
-            setfield(x, n[i], v[i])
+            if isdefined(v, i)
+                setfield(x, n[i], v[i])
+            end
         end
     end
     x
@@ -346,7 +347,9 @@ function getrefs{T}(obj::HDF5Dataset{JldFile}, ::Type{T})
     out = Array(T, size(refs))
     f = file(obj)
     for i = 1:length(refs)
-        out[i] = read(f[refs[i]])
+        if refs[i] != HDF5.HDF5ReferenceObj_NULL
+            out[i] = read(f[refs[i]])
+        end
     end
     return out
 end
@@ -355,7 +358,7 @@ function getrefs{T}(obj::HDF5Dataset{JldFile}, ::Type{T}, indices::Union(Integer
     refs = refs[indices...]
     f = file(obj)
     local out
-    if isa(refs, HDF5.HDF5ObjPtr)
+    if isa(refs, HDF5ReferenceObj)
         # This is a scalar, not an array
         out = read(f[refs])
     else
@@ -466,23 +469,27 @@ function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString,
     grefname = name(gref)
     try
         # Write the items to the reference group
-        refs = HDF5ReferenceObjArray(size(data)...)
+        refs = Array(HDF5ReferenceObj, size(data)...)
         # pad with zeros to keep in order
         nd = ndigits(length(data))
         z = "0"
         z = z[ones(Int, nd-1)]
         nd = 1
         for i = 1:length(data)
-            if ndigits(i) > nd
-                nd = ndigits(i)
-                z = z[1:end-1]
+            if isdefined(data, i)
+                if ndigits(i) > nd
+                    nd = ndigits(i)
+                    z = z[1:end-1]
+                end
+                itemname = z*string(i)
+                write(gref, itemname, data[i])
+                # Extract references
+                tmp = gref[itemname]
+                refs[i] = HDF5ReferenceObj(tmp, grefname*"/"*itemname)
+                close(tmp)
+            else
+                refs[i] = HDF5.HDF5ReferenceObj_NULL
             end
-            itemname = z*string(i)
-            write(gref, itemname, data[i])
-            # Extract references
-            tmp = gref[itemname]
-            refs[i] = (tmp, grefname*"/"*itemname)
-            close(tmp)
         end
     finally
         close(gref)
@@ -490,7 +497,7 @@ function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString,
     # Write the references as the chosen variable
     cset, ctype = d_create(plain(parent), path, refs)
     try
-        writearray(cset, ctype.id, refs.r)
+        writearray(cset, ctype.id, refs)
         a_write(cset, name_type_attr, astype)
     finally
         close(ctype)
@@ -575,7 +582,9 @@ function write_composite(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCII
     # Write the data
     v = Array(Any, length(n))
     for i = 1:length(v)
-        v[i] = getfield(s, n[i])
+        if isdefined(s, n[i])
+            v[i] = getfield(s, n[i])
+        end
     end
     write(parent, name, v, "CompositeKind")
     obj = parent[name]
