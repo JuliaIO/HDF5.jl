@@ -882,7 +882,7 @@ dataspace(R::HDF5ReferenceObjArray) = _dataspace(size(R)...)
 dataspace(v::HDF5Vlen) = _dataspace(size(v.data)...)
 dataspace(n::Nothing) = HDF5Dataspace(h5s_create(H5S_NULL))
 dataspace(sz::Dims) = _dataspace(sz...)
-dataspace(sz1::Int, sz2::Int...) = _dataspace(sz1, sz2...)
+dataspace(sz1::Int, sz2::Int, sz3::Int...) = _dataspace(sz1, sz2, sz3...)
 
 # Get the array dimensions from a dataspace
 # Returns both dims and maxdims
