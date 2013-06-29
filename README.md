@@ -24,6 +24,7 @@ You also need to have the HDF5 library installed on your system. Version 1.8 or 
 
 - Debian/(K)Ubuntu: `apt-get -u install hdf5-tools`
 - OSX: `brew install hdf5` (using [Homebrew](http://mxcl.github.com/homebrew/))
+- Windows: determine whether you're running 32bit or 64bit Julia by typing `Int` on the command line. Then [download](http://www.hdfgroup.org/HDF5/release/obtain5.html) the appropriate version, using the Visual Studio (VS) build. When you run the installer, allow it to set up the system PATH variable as suggested (Julia will use this to help find the library).
 
 ## Quickstart
 

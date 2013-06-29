@@ -19,7 +19,25 @@ typealias Htri        Cint   # pseudo-boolean (negative if error)
 typealias Haddr       Uint64
 
 ### Load and initialize the HDF library ###
-const libhdf5 = dlopen("libhdf5")
+libname = "libhdf5"
+@unix_only const libhdf5 = dlopen(libname)
+@windows_only begin
+function findlibhdf5()    
+    spaths = split(ENV["SYS_PATH"], ";")
+    libfile = ""
+    for p in spaths
+        if !isempty(search(p, "HDF5"))
+            dl = dlopen_e(joinpath(p,"hdf5.dll"))
+            if dl != C_NULL
+                ccall(:add_library_mapping,Cint,(Ptr{Cchar},Ptr{Void}),libname,dl)
+                return dl
+            end
+        end
+    end
+    error("Library not found. See the README for installation instructions.")
+end
+const libhdf5 = findlibhdf5()
+end
 
 status = ccall(dlsym(libhdf5, :H5open), Herr, ())
 if status < 0
