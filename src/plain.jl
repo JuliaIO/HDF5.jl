@@ -152,6 +152,10 @@ const H5T_SGN_2        = 1  # 2's complement
 # Search directions
 const H5T_DIR_ASCEND   = 1
 const H5T_DIR_DESCEND  = 2
+# String padding modes
+const H5T_STR_NULLTERM = 0
+const H5T_STR_NULLPAD  = 1
+const H5T_STR_SPACEPAD = 2
 # Other type constants
 const H5T_VARIABLE     = -1
 # Type_id constants (LE = little endian, I16 = Int16, etc)
@@ -204,6 +208,7 @@ hdf5_type_id(::Type{Float32})    = H5T_NATIVE_FLOAT
 hdf5_type_id(::Type{Float64})    = H5T_NATIVE_DOUBLE
 
 typealias HDF5BitsKind Union(Int8, Uint8, Int16, Uint16, Int32, Uint32, Int64, Uint64, Float32, Float64)
+typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
 const hdf5_type_map = {
@@ -844,7 +849,7 @@ datatype{T<:HDF5BitsKind}(::Type{T}) = HDF5Datatype(hdf5_type_id(T), false)
 datatype{T<:HDF5BitsKind}(A::Array{T}) = HDF5Datatype(hdf5_type_id(T), false)
 function datatype{S<:ByteString}(str::S)
     type_id = h5t_copy(hdf5_type_id(S))
-    h5t_set_size(type_id, length(str.data))
+    h5t_set_size(type_id, max(length(str.data), 1))
     h5t_set_cset(type_id, cset(S))
     HDF5Datatype(type_id)
 end
@@ -962,8 +967,22 @@ function read{T<:HDF5BitsKind}(obj::DatasetOrAttribute, ::Type{Array{T}})
     data
 end
 # Empty arrays
-function read{T<:HDF5BitsKind}(obj::DatasetOrAttribute, ::Type{EmptyArray{T}})
+function read{T<:BitsKindOrByteString}(obj::DatasetOrAttribute, ::Type{EmptyArray{T}})
     Array(T, 0)
+end
+
+# Clean up string buffer according to padding mode
+function unpad(s::ByteString, pad::Cint)
+    if pad == H5T_STR_NULLTERM
+        v = search(s, '\0')
+        v == 0 ? s : s[1:v-1]
+    elseif pad == H5T_STR_NULLPAD
+        rstrip(s, '\0')
+    elseif pad == H5T_STR_SPACEPAD
+        rstrip(s, ' ')
+    else
+        error("Unrecognized string padding mode $pad")
+    end
 end
 # Read string
 function read{S<:ByteString}(obj::DatasetOrAttribute, ::Type{S})
@@ -971,14 +990,16 @@ function read{S<:ByteString}(obj::DatasetOrAttribute, ::Type{S})
     objtype = datatype(obj)
     try
         n = h5t_get_size(objtype.id)
+        pad = h5t_get_strpad(objtype.id)
         buf = Array(Uint8, n)
         readarray(obj, objtype.id, buf)
-        ret = convert(S, buf)
+        ret = unpad(convert(S, buf), pad)
     finally
         close(objtype)
     end
     ret
 end
+read{S<:CharType}(obj::DatasetOrAttribute, ::Type{S}) = read(obj, stringtype(S))
 # Read array of strings
 function read{S<:ByteString}(obj::DatasetOrAttribute, ::Type{Array{S}})
     local isvar::Bool
@@ -1022,6 +1043,7 @@ function read{S<:ByteString}(obj::DatasetOrAttribute, ::Type{Array{S}})
     h5t_close(memtype_id)
     ret
 end
+read{S<:CharType}(obj::DatasetOrAttribute, ::Type{Array{S}}) = read(obj, Array{stringtype(S)})
 # Empty Array of strings
 function read{C<:CharType}(obj::DatasetOrAttribute, ::Type{EmptyArray{C}})
     Array(stringtype(C), 0)
@@ -1187,7 +1209,6 @@ end
 
 # Plain dataset & attribute writes
 # Due to method ambiguities we generate these explicitly
-typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
 
 # Create datasets and attributes with "native" types, but don't write the data.
 # The return syntax is: dset, dtype = d_create(parent, name, data)
@@ -1451,6 +1472,7 @@ end
 ### Convenience wrappers ###
 # These supply default values where possible
 # See also the "special handling" section below
+const EMPTY_STRING = Uint8[0x00]
 h5a_write(attr_id::Hid, mem_type_id::Hid, buf::ByteString) = h5a_write(attr_id, mem_type_id, buf.data)
 function h5a_write{T<:HDF5BitsKind}(attr_id::Hid, mem_type_id::Hid, x::T)
     tmp = Array(T, 1)
@@ -1475,7 +1497,8 @@ h5d_create(loc_id::Hid, name::ASCIIString, type_id::Hid, space_id::Hid) = h5d_cr
 h5d_open(obj_id::Hid, name::ASCIIString) = h5d_open(obj_id, name, H5P_DEFAULT)
 h5d_read(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
 h5d_write(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
-h5d_write(dataset_id::Hid, memtype_id::Hid, buf::ByteString) = h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf.data)
+h5d_write(dataset_id::Hid, memtype_id::Hid, buf::ByteString) =
+    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, isempty(buf) ? EMPTY_STRING : buf.data)
 function h5d_write{T<:HDF5BitsKind}(dataset_id::Hid, memtype_id::Hid, x::T)
     tmp = Array(T, 1)
     tmp[1] = x
@@ -1485,7 +1508,7 @@ function h5d_write{S<:ByteString}(dataset_id::Hid, memtype_id::Hid, strs::Array{
     len = length(strs)
     p = Array(Ptr{Uint8}, size(strs))
     for i = 1:len
-        p[i] = convert(Ptr{Uint8}, strs[i])
+        p[i] = isempty(strs[i]) ? EMPTY_STRING : convert(Ptr{Uint8}, strs[i])
     end
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, p)
 end
@@ -1677,6 +1700,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5t_get_sign, :H5Tget_sign, Cint, (Hid,), (:dtype_id,), :(error("Error getting sign"))),
      (:h5t_get_size, :H5Tget_size, Csize_t, (Hid,), (:dtype_id,), :(error("Error getting size"))),
      (:h5t_get_super, :H5Tget_super, Hid, (Hid,), (:dtype_id,), :(error("Error getting super type"))),
+     (:h5t_get_strpad, :H5Tget_strpad, Cint, (Hid,), (:dtype_id,), :(error("Error getting string padding"))),
      (:h5t_insert, :H5Tinsert, Herr, (Hid, Ptr{Uint8}, Csize_t, Hid), (:dtype_id, :fieldname, :offset, :field_id), :(error("Error adding field ", fieldname, " to compound datatype"))),
      (:h5t_vlen_create, :H5Tvlen_create, Hid, (Hid,), (:base_type_id,), :(error("Error creating vlen type"))),
      ## The following doesn't work because it's in libhdf5_hl.so.

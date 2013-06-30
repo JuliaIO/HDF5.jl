@@ -30,6 +30,15 @@ write(f, "salut_split", salut_split)
 # Empty arrays
 empty = Array(Uint32, 0)
 write(f, "empty", empty)
+# Empty strings
+empty_string = ""
+write(f, "empty_string", empty_string)
+# Empty array of strings
+empty_string_array = ASCIIString[]
+write(f, "empty_string_array", empty_string_array)
+# Array of empty string
+empty_array_of_strings = ASCIIString[""]
+write(f, "empty_array_of_strings", empty_array_of_strings)
 # Attributes
 dset = f["salut"]
 label = "This is a string"
@@ -101,6 +110,12 @@ Xslabr = read(fr, "slab")
 @assert Xslabr == Xslab
 emptyr = read(fr, "empty")
 @assert isempty(emptyr)
+empty_stringr = read(fr, "empty_string")
+@assert empty_stringr == empty_string
+empty_string_arrayr = read(fr, "empty_string_array")
+@assert empty_string_arrayr == empty_string_array
+empty_array_of_stringsr = read(fr, "empty_array_of_strings")
+@assert empty_array_of_stringsr == empty_array_of_strings
 dset = fr["salut"]
 @assert a_read(dset, "typeinfo") == label
 close(dset)

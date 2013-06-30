@@ -7,6 +7,9 @@ A = rand(1:20, 3, 5)
 str = "Hello"
 stringsA = ASCIIString["It", "was", "a", "dark", "and", "stormy", "night"]
 stringsU = UTF8String["It", "was", "a", "dark", "and", "stormy", "night"]
+empty_string = ""
+empty_string_array = ASCIIString[]
+empty_array_of_strings = ASCIIString[""]
 tf = true
 TF = A .> 10
 B = randn(2, 4)
@@ -66,6 +69,9 @@ fid = jldopen(fn, "w")
 @write fid str
 @write fid stringsA
 @write fid stringsU
+@write fid empty_string
+@write fid empty_string_array
+@write fid empty_array_of_strings
 @write fid tf
 @write fid TF
 @write fid AB
@@ -96,6 +102,9 @@ for mmap = (true, false)
     @check fidr str
     @check fidr stringsA
     @check fidr stringsU
+    @check fidr empty_string
+    @check fidr empty_string_array
+    @check fidr empty_array_of_strings
     @check fidr tf
     @check fidr TF
     @check fidr AB
