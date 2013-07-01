@@ -1187,7 +1187,7 @@ end
 function readmmap(obj::HDF5Dataset)
     T = hdf5_to_julia(obj)
     if !ismmappable(T); error("Cannot mmap datasets of type $T"); end
-    if !iscontiguous(T); error("Cannot mmap discontiguous dataset"); end
+    if !iscontiguous(obj); error("Cannot mmap discontiguous dataset"); end
     readmmap(obj, T)
 end
 
@@ -1863,7 +1863,6 @@ export
     HDF5Vlen,
     PlainHDF5File,
     # Functions
-    setindex!,
     a_create,
     a_delete,
     a_open,
@@ -1885,9 +1884,12 @@ export
     filename,
     g_create,
     g_open,
+    getindex,
     h5open,
     has,
+    iscontiguous,
     ishdf5,
+    ismmappable,
     length,
     name,
     names,
@@ -1898,10 +1900,9 @@ export
     plain,
     read,
     readmmap,
-    ismmappable,
     @read,
-    getindex,
     root,
+    setindex!,
     size,
     t_create,
     t_commit,
