@@ -114,11 +114,30 @@ dset[:,1,1] = rand(1000)
 ```
 
 creates a Float64 dataset in the file or group `g`, with dimensions 1000x100x10, and then
-writes to just the first 1000 element slice. For performance reasons it is
-usually best to set the chunk dimensions to the typical subset regions you will
-be writing (or reading) from the dataset.
+writes to just the first 1000 element slice.
+If you know the typical size of subset reasons you'll be reading/writing, it can be beneficial to set the chunk dimensions appropriately.
 
 More [fine-grained control](#mid-level-routines) is also available.
+
+Memory mapping
+--------------
+
+If you will frequently be accessing individual elements or small regions of array datasets, it can be substantially more efficient to bypass HDF5 routines and use direct [memory mapping](https://en.wikipedia.org/wiki/Memory-mapped_file).
+This is possible only under particular conditions: when the dataset is an array of standard "bits" types (e.g., `Float64` or `Int32`) and no chunking/compression is being used.
+You can use the `ismmappable` function to test whether this is possible; for example,
+
+```julia
+dset = g["x"]
+if ismmappable(dset)
+    dset = readmmap(dset)
+end
+val = dset[15]
+```
+
+Note that `readmmap` returns an `Array` rather than an HDF5 object.
+
+**Note**: if you use `readmmap` on a dataset and subsequently close the file, the array data are still available---and file continues to be in use---until all of the arrays are garbage-collected.
+This is in contrast to standard HDF5 datasets, where closing the file prevents further access to any of the datasets, but the file is also detached and can safely be rewritten immediately.
 
 Supported data types
 --------------------

@@ -22,6 +22,13 @@ close(file)
 ```
 This creates a dataset named `"A"` containing the contents of the variable `A`.
 
+JLD files can be opened with the `mmaparrays` option, which if true returns "qualified" array data sets as arrays using [memory-mapping](hdf5.md#memory-mapping):
+
+```julia
+file = jldopen("mydata.jld", "r", mmaparrays=true)
+y = read(file, "y")   # y will be a mmapped array, not read immediately in its entirety
+```
+
 Provided that you've said `using HDF5`, the features described for the HDF5 module work for \*.jld files, too. For example:
 ```julia
 julia> fidr = jldopen("/tmp/test.jld","r");
@@ -47,8 +54,6 @@ JldFile len 19
   tf: Bool
   x: Float64
 ```
-
-
 
 ## Reference: the *.jld HDF5 format
 

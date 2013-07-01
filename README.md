@@ -61,7 +61,7 @@ close(file)
 
 There is no conflict in having multiple modules (HDF5, JLD, and [MAT](https://github.com/simonster/MAT.jl)) available simultaneously; the formatting of the file is determined by the open command.
 
-More extensive documentation is found in the `doc/` directory.
+More extensive documentation is found in the [`doc/`](doc/) directory.
 
 The test/ directory contains a number of test scripts that also contain example of usage.
 
