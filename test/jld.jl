@@ -93,6 +93,8 @@ fid = jldopen(fn, "w")
 g = g_create(fid, "mygroup")
 i = 7
 @write g i
+write(fid, "group1/x", {1})
+write(fid, "group2/x", {2})
 close(fid)
 
 for mmap = (true, false)
@@ -133,6 +135,11 @@ for mmap = (true, false)
     if !isa(ms_undef, MyStruct) || ms_undef.len != 0 || isdefined(ms_undef, :data)
         error("For ms_undef, read value does not agree with written value")
     end
+    
+    x1 = read(fidr, "group1/x")
+    @assert x1 == {1}
+    x2 = read(fidr, "group2/x")
+    @assert x2 == {2}
 
     close(fidr)
 end

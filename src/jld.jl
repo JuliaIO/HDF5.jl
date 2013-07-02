@@ -452,18 +452,16 @@ write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, char::Char)
 function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString, data::Array{T}, astype::String)
     local gref  # a group, inside /_refs, for all the elements in data
     local refs
-    if !exists(file(parent), pathrefs)
-        # If necessary, create /_refs
-        grefbase = g_create(file(parent), pathrefs)
-        gref = g_create(grefbase, path)
-        close(grefbase)
+    # Determine whether parent already exists in /_refs, so we can avoid group/dataset conflict
+    pname = name(parent)
+    if beginswith(pname, pathrefs)
+        gref = g_create(parent, path*"g")
     else
-        # Determine whether the parent is already in /_refs
-        pname = name(parent)
-        if length(pname) >= length(pathrefs) && pname[1:length(pathrefs)] == pathrefs
-            gref = g_create(parent, path*"g") # to avoid group/dataset conflict
+        pathr = beginswith(pname, "/") ? joinpath(pathrefs, pname[2:end], path) : joinpath(pathrefs, pname, path)
+        if exists(file(parent), pathr)
+            gref = g_open(file(parent), pathr)
         else
-            gref = g_create(file(parent), pathrefs*pname*"/"*path)
+            gref = g_create(file(parent), pathr)
         end
     end
     grefname = name(gref)

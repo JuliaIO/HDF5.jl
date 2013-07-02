@@ -609,13 +609,28 @@ getindex(dset::HDF5Dataset, name::ASCIIString) = a_open(dset, name)
 getindex(x::HDF5Attributes, name::ASCIIString) = a_open(x.parent, name)
 
 # Create objects
-g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Group(h5g_create(parent.id, path, lcpl.id, dcpl.id), file(parent))
-g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lcpl::HDF5Properties) = HDF5Group(h5g_create(parent.id, path, lcpl.id, H5P_DEFAULT), file(parent))
-g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = HDF5Group(h5g_create(parent.id, path, H5P_DEFAULT, H5P_DEFAULT), file(parent))
-d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties, dapl::HDF5Properties) = HDF5Dataset(h5d_create(parent.id, path, dtype.id, dspace.id, lcpl.id, dcpl.id, dapl.id), file(parent))
-d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Dataset(h5d_create(parent.id, path, dtype.id, dspace.id, lcpl.id, dcpl.id, H5P_DEFAULT), file(parent))
-d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties) = HDF5Dataset(h5d_create(parent.id, path, dtype.id, dspace.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT), file(parent))
-d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Dataset(h5d_create(parent.id, path, dtype.id, dspace.id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT), file(parent))
+function parents_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, args...)
+    g = split(path, "/")
+    if isempty(g[1])
+        g[1] = "/"
+    end
+    keepflag = Bool[!isempty(x) for x in g]
+    g = g[keepflag]
+    for i = 1:length(g)-1
+        if !exists(parent, g[i])
+            g_create(parent, g[i])
+        end
+        parent = g_open(parent, g[i])
+    end
+    tuple(parent.id, g[end], args...)
+end        
+g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Group(h5g_create(parents_create(parent, path, lcpl.id, dcpl.id)...), file(parent))
+g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lcpl::HDF5Properties) = HDF5Group(h5g_create(parents_create(parent, path, lcpl.id, H5P_DEFAULT)...), file(parent))
+g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = HDF5Group(h5g_create(parents_create(parent, path, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties, dapl::HDF5Properties) = HDF5Dataset(h5d_create(parents_create(parent, path, dtype.id, dspace.id, lcpl.id, dcpl.id, dapl.id)...), file(parent))
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Dataset(h5d_create(parents_create(parent, path, dtype.id, dspace.id, lcpl.id, dcpl.id, H5P_DEFAULT)...), file(parent))
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties) = HDF5Dataset(h5d_create(parents_create(parent, path, dtype.id, dspace.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Dataset(h5d_create(parents_create(parent, path, dtype.id, dspace.id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
 # Setting dset creation properties with name/value pairs
 function d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, prop1::ASCIIString, val1, pv...)
     if !iseven(length(pv))
@@ -630,7 +645,7 @@ function d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::
         end
         p[thisname] = pv[i+1]
     end
-    HDF5Dataset(h5d_create(parent.id, path, dtype.id, dspace.id, H5P_DEFAULT, p.id, H5P_DEFAULT), file(parent))
+    HDF5Dataset(h5d_create(parents_create(parent, path, dtype.id, dspace.id, H5P_DEFAULT, p.id, H5P_DEFAULT)...), file(parent))
 end
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 t_create(class_id, sz) = HDF5Datatype(h5t_create(class_id, sz))
