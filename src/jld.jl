@@ -457,7 +457,7 @@ function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString,
     if beginswith(pname, pathrefs)
         gref = g_create(parent, path*"g")
     else
-        pathr = beginswith(pname, "/") ? joinpath(pathrefs, pname[2:end], path) : joinpath(pathrefs, pname, path)
+        pathr = HDF5.joinpathh5(pathrefs, pname, path)
         if exists(file(parent), pathr)
             gref = g_open(file(parent), pathr)
         else

@@ -608,6 +608,32 @@ getindex(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = o_open(parent,
 getindex(dset::HDF5Dataset, name::ASCIIString) = a_open(dset, name)
 getindex(x::HDF5Attributes, name::ASCIIString) = a_open(x.parent, name)
 
+# Path manipulation
+function joinpathh5(a::ASCIIString, b::ASCIIString)
+    isempty(a) && return b
+    isempty(b) && return a
+    ae = a[end]
+    b1 = b[1]
+    ae == "/" && b1 == "/" && return a[1:end-1]*b
+    (ae== "/" || b1 == "/") && return a*b
+    return a*"/"*b
+end
+joinpathh5(a::ASCIIString, b::ASCIIString, c::ASCIIString) = joinpathh5(joinpathh5(a, b), c)
+
+function split1(path::ASCIIString)
+    m = match(r"/", path)
+    if m == nothing
+        return path, nothing
+    else
+        if m.offset == 1
+            # Matches the root group
+            return "/", path[2:end]
+        else
+            return path[1:m.offset-1], path[m.offset+1:end]
+        end
+    end
+end
+
 # Create objects
 function parents_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, args...)
     g = split(path, "/")
@@ -702,19 +728,6 @@ function setindex!{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ASCII
 end
 
 # Check existence
-function split1(path::ASCIIString)
-    m = match(r"/", path)
-    if m == nothing
-        return path, nothing
-    else
-        if m.offset == 1
-            # Matches the root group
-            return "/", path[2:end]
-        else
-            return path[1:m.offset-1], path[m.offset+1:end]
-        end
-    end
-end
 function exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lapl::HDF5Properties)
     first, rest = split1(path)
     if first == "/"
