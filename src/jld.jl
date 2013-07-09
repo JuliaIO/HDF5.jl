@@ -401,7 +401,7 @@ function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, HDF5Gr
     end
 end
 write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, data::data::Union(T, Array{T})) =
-    write(parent, name, data, string(typeof(data)))
+    write(parent, name, data, full_typename(typeof(data)))
 
 # Write nothing
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, n::Nothing, astype::ASCIIString)
@@ -423,7 +423,7 @@ write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Type{
 # Bools
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, tf::Bool) = write(parent, name, uint8(tf), "Bool")
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, tf::Array{Bool})
-    write(parent, name, uint8(tf), string(typeof(tf)))
+    write(parent, name, uint8(tf), full_typename(typeof(tf)))
     a_write(plain(parent[name]), "julia_format", "EachUint8")
 end
 
@@ -432,18 +432,18 @@ realtype(::Type{Complex64}) = Float32
 realtype(::Type{Complex128}) = Float64
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, c::Complex)
     reim = [real(c), imag(c)]
-    write(parent, name, reim, string(typeof(c)))
+    write(parent, name, reim, full_typename(typeof(c)))
 end
 function write{T<:Complex}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, C::Array{T})
     reim = reinterpret(realtype(T), C, ntuple(ndims(C)+1, i->i==1?2:size(C,i-1)))
-    write(parent, name, reim, string(typeof(C)))
+    write(parent, name, reim, full_typename(typeof(C)))
 end
 
 # Int128/Uint128
 
 # Symbols
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, sym::Symbol) = write(parent, name, string(sym), "Symbol")
-write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, syms::Array{Symbol}) = write(parent, name, map(string, syms), string(typeof(syms)))
+write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, syms::Array{Symbol}) = write(parent, name, map(string, syms), full_typename(typeof(syms)))
 
 # Char
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, char::Char) = write(parent, name, uint32(char), "Char")
@@ -502,14 +502,15 @@ function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString,
         close(cset)
     end
 end
-write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString, data::Array{T}) = write(parent, path, data, string(typeof(data)))
+write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString, data::Array{T}) = write(parent, path, data, full_typename(typeof(data)))
 
 # Tuple
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Tuple) = write(parent, name, Any[t...], "Tuple")
 
 # Associative (Dict)
 function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d::Associative)
-    if string(typeof(d)) == "DataFrame"
+    tn = full_typename(typeof(d))
+    if tn == "DataFrame"
         return write_composite(parent, name, d)
     end
     n = length(d)
@@ -522,7 +523,7 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d:
         vs[i] = v
     end
     da = Any[ks, vs]
-    write(parent, name, da, string(typeof(d)))
+    write(parent, name, da, tn)
 end
 
 # Expressions
@@ -587,7 +588,7 @@ function write_composite(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCII
     write(parent, name, v, "CompositeKind")
     obj = parent[name]
     a_write(plain(obj), "CompositeKind", Tname)
-    params = [map(string, T.parameters)...]
+    params = [map(full_typename, T.parameters)...]
     a_write(plain(obj), "TypeParameters", params)
     close(obj)
 end
@@ -689,7 +690,8 @@ end
 
 is_valid_type_ex(s::Symbol) = true
 is_valid_type_ex(x::Int) = true
-is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple) && all(map(is_valid_type_ex, e.args))) || (e.head == :call && e.args[1] == :Union)
+is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == :.) && all(map(is_valid_type_ex, e.args))) ||
+                            (e.head == :call && (e.args[1] == :Union || e.args[1] == :TypeVar))
 
 function julia_type(s::String)
     e = parse(s)
@@ -707,6 +709,29 @@ function julia_type(s::String)
         typ = UnsupportedType
     end
     typ
+end
+
+### Converting Julia types to fully qualified names
+full_typename(jltype::UnionType) = @sprintf "Union(%s)" join(map(full_typename, jltype.types), ",")
+function full_typename(tv::TypeVar)
+    if is(tv.lb, None) && is(tv.ub, Any)
+        "TypeVar(:$(tv.name))" 
+    elseif is(tv.lb, None)
+        "TypeVar(:$(tv.name),$(tv.ub))"
+    else
+        "TypeVar(:$(tv.name),$(tv.lb),$(tv.ub))"
+    end
+end
+full_typename(jltype::(Type...)) = @sprintf "(%s)" join(map(full_typename, jltype), ",")
+full_typename(x) = string(x)
+function full_typename(jltype::DataType)
+    #tname = "$(jltype.name.module).$(jltype.name)"
+    tname = string(jltype.name)
+    if isempty(jltype.parameters)
+        tname
+    else
+        @sprintf "%s{%s}" tname join([full_typename(x) for x in jltype.parameters], ",")
+    end
 end
 
 ### Version number utilities
