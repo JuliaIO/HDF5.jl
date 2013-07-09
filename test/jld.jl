@@ -39,6 +39,10 @@ end
 T = Uint8
 char = 'x'
 unicode_char = '\U10ffff'
+typevar = Array{Int}[[1]]
+typevar_lb = Vector{TypeVar(:U, Integer)}[[1]]
+typevar_ub = Vector{TypeVar(:U, Int, Any)}[[1]]
+typevar_lb_ub = Vector{TypeVar(:U, Int, Real)}[[1]]
 undef = cell(1)
 undefs = cell(2, 2)
 ms_undef = MyStruct(0)
@@ -55,6 +59,10 @@ macro check(fid, sym)
             end
             if !iseq(tmp, $sym)
                 error("For ", $(string(sym)), ", read value does not agree with written value")
+            end
+            written_type = typeof($sym)
+            if typeof(tmp) != written_type
+                error("For ", $(string(sym)), ", read type $(typeof(tmp)) does not agree with written type $(written_type)")
             end
         end
     end
@@ -86,6 +94,10 @@ fid = jldopen(fn, "w")
 @write fid T
 @write fid char
 @write fid unicode_char
+@write fid typevar
+@write fid typevar_lb
+@write fid typevar_ub
+@write fid typevar_lb_ub
 @write fid undef
 @write fid undefs
 @write fid ms_undef
@@ -119,6 +131,10 @@ for mmap = (true, false)
     @check fidr T
     @check fidr char
     @check fidr unicode_char
+    @check fidr typevar
+    @check fidr typevar_lb
+    @check fidr typevar_ub
+    @check fidr typevar_lb_ub
 
     # Special cases for reading undefs
     undef = read(fidr, "undef")
