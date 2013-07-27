@@ -331,10 +331,14 @@ function read(obj::HDF5Dataset{JldFile}, T::DataType)
         if length(v) != length(n)
             error("Wrong number of fields")
         end
-        x = ccall(:jl_new_struct_uninit, Any, (Any,), T)
-        for i = 1:length(v)
-            if isdefined(v, i)
-                setfield(x, n[i], v[i])
+        if !T.mutable
+            x = ccall(:jl_new_structv, Any, (Any,Ptr{Void},Uint32), T, v, length(T.names))
+        else
+            x = ccall(:jl_new_struct_uninit, Any, (Any,), T)
+            for i = 1:length(v)
+                if isdefined(v, i)
+                    setfield(x, n[i], v[i])
+                end
             end
         end
     end

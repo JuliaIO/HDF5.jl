@@ -46,6 +46,8 @@ typevar_lb_ub = Vector{TypeVar(:U, Int, Real)}[[1]]
 undef = cell(1)
 undefs = cell(2, 2)
 ms_undef = MyStruct(0)
+# Immutable type:
+rng = 1:5
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -94,6 +96,7 @@ fid = jldopen(fn, "w")
 @write fid T
 @write fid char
 @write fid unicode_char
+@write fid rng
 @write fid typevar
 @write fid typevar_lb
 @write fid typevar_ub
@@ -133,6 +136,7 @@ for mmap = (true, false)
     @check fidr T
     @check fidr char
     @check fidr unicode_char
+    @check fidr rng
     @check fidr typevar
     @check fidr typevar_lb
     @check fidr typevar_ub
