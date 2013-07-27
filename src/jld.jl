@@ -422,7 +422,7 @@ write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, n::Nothing)
 # Types
 # the first is needed to avoid an ambiguity warning
 write{T<:Top}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
-write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Type{T}) = write(parent, name, nothing, string("Type{", t, "}"))
+write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Type{T}) = write(parent, name, nothing, string("Type{", full_typename(t), "}"))
 
 # Bools
 write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, tf::Bool) = write(parent, name, uint8(tf), "Bool")
@@ -693,6 +693,7 @@ end
 ### Converting attribute strings to Julia types
 
 is_valid_type_ex(s::Symbol) = true
+is_valid_type_ex(s::QuoteNode) = true
 is_valid_type_ex(x::Int) = true
 is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == :.) && all(map(is_valid_type_ex, e.args))) ||
                             (e.head == :call && (e.args[1] == :Union || e.args[1] == :TypeVar))
@@ -730,7 +731,7 @@ full_typename(jltype::(Type...)) = @sprintf "(%s)" join(map(full_typename, jltyp
 full_typename(x) = string(x)
 function full_typename(jltype::DataType)
     #tname = "$(jltype.name.module).$(jltype.name)"
-    tname = string(jltype.name)
+    tname = string(jltype.name.module, ".", jltype.name.name)
     if isempty(jltype.parameters)
         tname
     else

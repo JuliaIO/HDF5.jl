@@ -46,11 +46,22 @@ typevar_lb_ub = Vector{TypeVar(:U, Int, Real)}[[1]]
 undef = cell(1)
 undefs = cell(2, 2)
 ms_undef = MyStruct(0)
+# Unexported type:
+cpus = Base.Sys.cpu_info()
 # Immutable type:
 rng = 1:5
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
+iseq(c1::Array{Base.Sys.CPUinfo}, c2::Array{Base.Sys.CPUinfo}) = length(c1) == length(c2) && all([iseq(c1[i], c2[i]) for i = 1:length(c1)])
+function iseq(c1::Base.Sys.CPUinfo, c2::Base.Sys.CPUinfo)
+    for n in Base.Sys.CPUinfo.names
+        if getfield(c1, n) != getfield(c2, n)
+            return false
+        end
+    end
+    true
+end
 macro check(fid, sym)
     ex = quote
         let tmp
@@ -96,6 +107,7 @@ fid = jldopen(fn, "w")
 @write fid T
 @write fid char
 @write fid unicode_char
+@write fid cpus
 @write fid rng
 @write fid typevar
 @write fid typevar_lb
@@ -136,6 +148,7 @@ for mmap = (true, false)
     @check fidr T
     @check fidr char
     @check fidr unicode_char
+    @check fidr cpus
     @check fidr rng
     @check fidr typevar
     @check fidr typevar_lb
