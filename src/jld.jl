@@ -708,7 +708,14 @@ function julia_type(s::String)
                 typ = UnsupportedType
             end
         catch
-            typ = UnsupportedType
+            try
+                typ = eval(Main, e)
+            catch
+                typ = UnsupportedType
+                if !isa(typ, Type)
+                    typ = UnsupportedType
+                end
+            end
         end
     else
         typ = UnsupportedType
