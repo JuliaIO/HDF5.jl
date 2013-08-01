@@ -352,7 +352,12 @@ function getrefs{T}(obj::HDF5Dataset{JldFile}, ::Type{T})
     f = file(obj)
     for i = 1:length(refs)
         if refs[i] != HDF5.HDF5ReferenceObj_NULL
-            out[i] = read(f[refs[i]])
+            ref = f[refs[i]]
+            try
+                out[i] = read(ref)
+            finally
+                close(ref)
+            end
         end
     end
     return out
@@ -364,11 +369,21 @@ function getrefs{T}(obj::HDF5Dataset{JldFile}, ::Type{T}, indices::Union(Integer
     local out
     if isa(refs, HDF5ReferenceObj)
         # This is a scalar, not an array
-        out = read(f[refs])
+        ref = f[refs]
+        try
+            out = read(ref)
+        finally
+            close(ref)
+        end
     else
         out = Array(T, size(refs))
         for i = 1:length(refs)
-            out[i] = read(f[refs[i]])
+            ref = f[refs[i]]
+            try
+                out[i] = read(ref)
+            finally
+                close(ref)
+            end
         end
     end
     return out
