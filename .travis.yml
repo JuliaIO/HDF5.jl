@@ -9,6 +9,7 @@ before_install:
     - sudo apt-get update -qq -y
     - sudo apt-get upgrade -y
     - sudo apt-get install julia -y
+    - sudo apt-get install hdf5-tools
     - git config --global user.name "Travis User"
     - git config --global user.email "travis@example.net"
 script:
