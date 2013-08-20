@@ -641,7 +641,7 @@ function parents_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, a
         g[1] = "/"
     end
     keepflag = Bool[!isempty(x) for x in g]
-    g = g[keepflag]
+    g = g[keepflag]   # NOTE: performance bottleneck up to here; find a better way
     for i = 1:length(g)-1
         if !exists(parent, g[i])
             g_create(parent, g[i])

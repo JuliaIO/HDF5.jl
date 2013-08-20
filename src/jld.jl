@@ -714,11 +714,11 @@ is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == 
                             (e.head == :call && (e.args[1] == :Union || e.args[1] == :TypeVar))
 
 function julia_type(s::String)
-    e = parse(s)
+    e = parse(s)  # On read, major performance bottleneck
     typ = UnsupportedType
     if is_valid_type_ex(e)
         try     # try needed to catch undefined symbols
-            typ = eval(e)
+            typ = eval(e)  # on read, major performance bottleneck
             if !isa(typ, Type)
                 typ = UnsupportedType
             end
@@ -753,7 +753,7 @@ full_typename(jltype::(Type...)) = @sprintf "(%s)" join(map(full_typename, jltyp
 full_typename(x) = string(x)
 function full_typename(jltype::DataType)
     #tname = "$(jltype.name.module).$(jltype.name)"
-    tname = string(jltype.name.module, ".", jltype.name.name)
+    tname = string(jltype.name.module, ".", jltype.name.name)  # NOTE: performance bottleneck
     if isempty(jltype.parameters)
         tname
     else
@@ -781,9 +781,37 @@ function isversionless(l::Array{Int}, r::Array{Int})
     false
 end
 
+function load(filename, varnames::Array)
+    vars = Array(Any, length(varnames))
+    f = jldopen(filename)
+    for i = 1:length(varnames)
+        vars[i] = read(f, varnames[i])
+    end
+    close(f)
+    tuple(vars...)
+end
+
+macro save(filename, vars...)
+    writeexprs = Array(Expr, length(vars))
+    for i = 1:length(vars)
+        writeexprs[i] = :(write(f, $(string(vars[i])), $(esc(vars[i]))))
+    end
+    Expr(:block, :(local f = jldopen($filename, "w")), writeexprs..., :(close(f)))
+end
+
+macro load(filename, vars...)
+    readexprs = Array(Expr, length(vars))
+    for i = 1:length(vars)
+        readexprs[i] = :($(esc(vars[i])) = read(f, $(string(vars[i]))))
+    end
+    Expr(:block, :(local f = jldopen($filename)), readexprs..., :(close(f)))
+end
+
 export
     jldopen,
     plain,
-    readsafely
+    readsafely,
+    @load,
+    @save
 
 end
