@@ -42,6 +42,14 @@ how to install HDF5:
   run the installer, allow it to set up the system PATH variable as
   suggested (Julia will use this to help find the library).
 
+If you've installed the library but discover that Julia is not finding
+it, you can add the path to Julia's `Sys.DL_LOAD_PATH` variable, e.g.,
+```
+push!(Sys.DL_LOAD_PATH, "/opt/local/lib")
+```
+Inserting this command into your `.juliarc.jl` file will cause this to
+happen automatically each time you start Julia.
+
 ## Quickstart
 
 To use the JLD module, begin your code with
