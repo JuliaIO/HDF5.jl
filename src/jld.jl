@@ -5,7 +5,7 @@
 module JLD
 using HDF5
 # Add methods to...
-import HDF5.a_write, HDF5.close, HDF5.dump, HDF5.read, HDF5.getindex, Base.show, HDF5.size, HDF5.write
+import HDF5.a_write, HDF5.close, HDF5.dump, HDF5.read, HDF5.getindex, HDF5.names, Base.show, HDF5.size, HDF5.write
 
 # Debugging: comment this block out if you un-modulize hdf5.jl
 # Types
@@ -781,6 +781,18 @@ function isversionless(l::Array{Int}, r::Array{Int})
     false
 end
 
+function names(parent::Union(JldFile, HDF5Group{JldFile}))
+    n = names(plain(parent))
+    keep = trues(length(n))
+    const reserved = [pathrefs[2:end], pathtypes[2:end], pathrequire[2:end]]
+    for i = 1:length(n)
+        if contains(reserved, n[i])
+            keep[i] = false
+        end
+    end
+    n[keep]
+end
+
 function load(filename, varnames::Array)
     vars = Array(Any, length(varnames))
     f = jldopen(filename)
@@ -792,19 +804,46 @@ function load(filename, varnames::Array)
 end
 
 macro save(filename, vars...)
-    writeexprs = Array(Expr, length(vars))
-    for i = 1:length(vars)
-        writeexprs[i] = :(write(f, $(string(vars[i])), $(esc(vars[i]))))
+    if isempty(vars)
+        # Save all variables in the current module
+        writeexprs = Array(Expr, 0)
+        m = current_module()
+        for vname in names(m)
+            v = eval(m, vname)
+            if !isa(v, Module)
+                push!(writeexprs, :(write(f, $(string(vname)), $(esc(vname)))))
+            end
+        end
+    else
+        writeexprs = Array(Expr, length(vars))
+        for i = 1:length(vars)
+            writeexprs[i] = :(write(f, $(string(vars[i])), $(esc(vars[i]))))
+        end
     end
     Expr(:block, :(local f = jldopen($filename, "w")), writeexprs..., :(close(f)))
 end
 
 macro load(filename, vars...)
-    readexprs = Array(Expr, length(vars))
-    for i = 1:length(vars)
-        readexprs[i] = :($(esc(vars[i])) = read(f, $(string(vars[i]))))
+    if isempty(vars)
+        # Load all variables in the top level of the file
+        readexprs = Array(Expr, 0)
+        f = jldopen(filename)
+        nms = names(f)
+        for n in nms
+            obj = f[n]
+            if isa(obj, HDF5Dataset)
+                sym = symbol(n)
+                push!(readexprs, :($(esc(sym)) = read($f, $n)))
+            end
+        end
+        return Expr(:block, readexprs..., :(close($f)))
+    else
+        readexprs = Array(Expr, length(vars))
+        for i = 1:length(vars)
+            readexprs[i] = :($(esc(vars[i])) = read(f, $(string(vars[i]))))
+        end
+        return Expr(:block, :(local f = jldopen($filename)), readexprs..., :(close(f)))
     end
-    Expr(:block, :(local f = jldopen($filename)), readexprs..., :(close(f)))
 end
 
 export

@@ -8,11 +8,9 @@ The JLD module reads and writes "Julia data files" (\*.jld files) using HDF5. To
 
 To get started using Julia data files, load the JLD module:
 ```
-load("HDF5")
-using JLD
-using HDF5
+using HDF5, JLD
 ```
-JLD is built on top of HDF5; the last, line, `using HDF5`, is necessary if you want to use many of the features of HDF5 directly.
+JLD is built on top of HDF5, which is why you need to import HDF5 first.
 
 \*.jld files are created or opened in the following way:
 ```julia
@@ -21,6 +19,7 @@ file = jldopen("mydata.jld", "w")
 close(file)
 ```
 This creates a dataset named `"A"` containing the contents of the variable `A`.
+There is also the convenient `@save "mydata.jld" A` [syntax](../README.html).
 
 JLD files can be opened with the `mmaparrays` option, which if true returns "qualified" array data sets as arrays using [memory-mapping](hdf5.md#memory-mapping):
 

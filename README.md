@@ -55,12 +55,26 @@ happen automatically each time you start Julia.
 To use the JLD module, begin your code with
 
 ```julia
-using HDF5
-using JLD
+using HDF5, JLD
 ```
 
-Here's an example using functional syntax, which may be especially
-familiar to Matlab users:
+If you just want to save a few variables and don't care to use the more advanced
+features of
+HDF5, then a particularly-convenient syntax is:
+
+```
+t = 15
+z = [1,3]
+@save "/tmp/myfile.jld" t z
+```
+Here we're explicitly saving just `t` and `z`; if you don't mention any
+variables, then it saves all the variables in the current module. You can read these variables back in with
+```
+@load "/tmp/myfile.jld"
+```
+which reads the entire file. You can alternatively list particular variables of interest, e.g., `@load "/tmp/myfile.jld" z`.
+
+More fine-grained control can be obtained using functional syntax:
 
 ```julia
 file = jldopen("mydata.jld", "w")
@@ -71,9 +85,10 @@ file = jldopen("mydata.jld", "r")
 c = read(file, "A")
 close(file)
 ```
+This allows you to add variables as they are generated to an open JLD file.
 
 Julia's high-level wrapper, providing a dictionary-like interface, may
-be of interest. This is demonstrated with the "plain" (unformatted)
+also be of interest. This is demonstrated with the "plain" (unformatted)
 HDF5 interface:
 
 ```julia
@@ -81,7 +96,7 @@ using HDF5
 
 file = h5open("test.h5", "w")
 g = g_create(file, "mygroup") # create a group
-g["dset1"] = 3.2              # create a scalar dataset
+g["dset1"] = 3.2              # create a scalar dataset inside the group
 attrs(g)["Description"] = "This group contains only a single dataset" # an attribute
 close(file)
 ```
@@ -111,8 +126,7 @@ contain example of usage.
 - Mike Nolta and Jameson Nash contributed code or suggestions for
   improving the handling of HDF5's constants
 
-- Several users have reported bugs and tested fixes: Jason Knight,
-  Mark McCurry
+- Thanks also to the users who have reported bugs and tested fixes
 
 
 [Julia]: http://julialang.org "Julia"
