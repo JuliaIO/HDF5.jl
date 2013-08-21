@@ -37,6 +37,7 @@ const name_type_attr = "julia type"
 
 ### Dummy types used for converting attribute strings to Julia types
 type UnsupportedType; end
+type UnconvertedType; end
 type CompositeKind; end   # here this means "a type with fields"
 
 # The Julia Data file type
@@ -713,27 +714,34 @@ is_valid_type_ex(x::Int) = true
 is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == :.) && all(map(is_valid_type_ex, e.args))) ||
                             (e.head == :call && (e.args[1] == :Union || e.args[1] == :TypeVar))
 
+_typedict = Dict{String, DataType}()
 function julia_type(s::String)
-    e = parse(s)  # On read, major performance bottleneck
-    typ = UnsupportedType
-    if is_valid_type_ex(e)
-        try     # try needed to catch undefined symbols
-            typ = eval(e)  # on read, major performance bottleneck
-            if !isa(typ, Type)
-                typ = UnsupportedType
-            end
-        catch
-            try
-                typ = eval(Main, e)
-            catch
-                typ = UnsupportedType
+    typ = get(_typedict, s, UnconvertedType)
+    if typ == UnconvertedType
+        e = parse(s)
+        typ = UnsupportedType
+        if is_valid_type_ex(e)
+            try     # try needed to catch undefined symbols
+                typ = eval(e)
                 if !isa(typ, Type)
                     typ = UnsupportedType
                 end
+            catch
+                try
+                    typ = eval(Main, e)
+                catch
+                    typ = UnsupportedType
+                    if !isa(typ, Type)
+                        typ = UnsupportedType
+                    end
+                end
             end
+        else
+            typ = UnsupportedType
         end
-    else
-        typ = UnsupportedType
+        if typ != UnsupportedType
+            _typedict[s] = typ
+        end
     end
     typ
 end
