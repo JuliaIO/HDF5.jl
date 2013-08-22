@@ -923,7 +923,7 @@ function _dataspace(sz::Int...; max_dims::Union(Dims, ())  = ())
 end
 dataspace(A::Array; max_dims::Union(Dims, ())  = ()) = _dataspace(size(A)..., max_dims=max_dims)
 dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
-dataspace(R::Array{HDF5ReferenceObj}; max_dims::Dims=(-1,)) = _dataspace(size(R)..., max_dims=max_dims)
+dataspace(R::Array{HDF5ReferenceObj}; max_dims::Union(Dims, ())  = ()) = _dataspace(size(R)..., max_dims=max_dims)
 dataspace(v::HDF5Vlen; max_dims::Union(Dims, ())  = ()) = _dataspace(size(v.data)..., max_dims=max_dims)
 dataspace(n::Nothing) = HDF5Dataspace(h5s_create(H5S_NULL))
 dataspace(sz::Dims; max_dims::Union(Dims, ())  = ()) = _dataspace(sz..., max_dims=max_dims)
