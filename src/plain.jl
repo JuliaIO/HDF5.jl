@@ -122,6 +122,8 @@ const H5S_ALL          = 0
 const H5S_SCALAR       = 0
 const H5S_SIMPLE       = 1
 const H5S_NULL         = 2
+const H5S_UNLIMITED    = typemax(Hsize)
+const MAXIMUM_DIM = H5S_UNLIMITED
 # Dataspace selection constants
 const H5S_SELECT_SET   = 0
 const H5S_SELECT_OR    = 1
@@ -673,6 +675,9 @@ function d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::
     end
     HDF5Dataset(h5d_create(parents_create(parent, path, dtype.id, dspace.id, H5P_DEFAULT, p.id, H5P_DEFAULT)...), file(parent))
 end
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace_dims::Dims, prop1::ASCIIString, val1, pv...) = d_create(parent, path, dtype, dataspace(dspace_dims), prop1, val1, pv...)
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace_dims::(Dims,Dims), prop1::ASCIIString, val1, pv...) = d_create(parent, path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]), prop1, val1, pv...)
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::Type, dspace_dims, prop1::ASCIIString, val1, pv...) = d_create(parent, path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]), prop1, val1, pv...)
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 t_create(class_id, sz) = HDF5Datatype(h5t_create(class_id, sz))
 function t_commit(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, lcpl::HDF5Properties, tcpl::HDF5Properties, tapl::HDF5Properties)
@@ -903,26 +908,35 @@ dataspace(attr::HDF5Attribute) = HDF5Dataspace(h5a_get_space(attr.id))
 
 # Create a dataspace from in-memory types
 dataspace{T<:HDF5BitsKind}(x::T) = HDF5Dataspace(h5s_create(H5S_SCALAR))
-function _dataspace(sz::Int...)
+function _dataspace(sz::Int...; max_dims::Union(Dims, ())  = ())
     dims = convert(Array{Hsize, 1}, [reverse(sz)...])
     if any(dims .== 0)
         space_id = h5s_create(H5S_NULL)
     else
-        space_id = h5s_create_simple(length(dims), dims, dims)
+        if max_dims  == ()
+            space_id = h5s_create_simple(length(dims), dims, dims)
+        else
+            space_id = h5s_create_simple(length(dims), dims, convert(Array{Hsize, 1},[reverse(max_dims)...]))
+        end
     end
     HDF5Dataspace(space_id)
 end
-dataspace(A::Array) = _dataspace(size(A)...)
+dataspace(A::Array; max_dims::Union(Dims, ())  = ()) = _dataspace(size(A)..., max_dims=max_dims)
 dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
-dataspace(R::Array{HDF5ReferenceObj}) = _dataspace(size(R)...)
-dataspace(v::HDF5Vlen) = _dataspace(size(v.data)...)
+dataspace(R::Array{HDF5ReferenceObj}; max_dims::Union(Dims, ())  = ()) = _dataspace(size(R)..., max_dims=max_dims)
+dataspace(v::HDF5Vlen; max_dims::Union(Dims, ())  = ()) = _dataspace(size(v.data)..., max_dims=max_dims)
 dataspace(n::Nothing) = HDF5Dataspace(h5s_create(H5S_NULL))
-dataspace(sz::Dims) = _dataspace(sz...)
-dataspace(sz1::Int, sz2::Int, sz3::Int...) = _dataspace(sz1, sz2, sz3...)
+dataspace(sz::Dims; max_dims::Union(Dims, ())  = ()) = _dataspace(sz..., max_dims=max_dims)
+dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union(Dims, ())  = ()) = _dataspace(sz1, sz2, sz3..., max_dims=max_dims)
 
-# Get the array dimensions from a dataspace
+# Get the array dimensions from a dataspace or a dataset
 # Returns both dims and maxdims
 get_dims(dspace::HDF5Dataspace) = h5s_get_simple_extent_dims(dspace.id)
+get_dims(dset::HDF5Dataset) = get_dims(dataspace(dset))
+
+# change the current dimensions of a dataset, new_dims fit in max_dims = get_dims(dset)[2]
+# reduction is possible, and leads to loss of truncated data
+set_dims!(dset::HDF5Dataset, new_dims::Dims) = h5d_set_extent(dset, [reverse(new_dims)...])
 
 # Convenience macros
 macro read(fid, sym)
@@ -1616,6 +1630,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5a_close, :H5Aclose, Herr, (Hid,), (:id,), "Error closing attribute"),
      (:h5a_write, :H5Awrite, Herr, (Hid, Hid, Ptr{Void}), (:attr_hid, :mem_type_id, :buf), "Error writing attribute data"),
      (:h5d_close, :H5Dclose, Herr, (Hid,), (:dataset_id,), "Error closing dataset"),
+     (:h5d_set_extent, :H5Dset_extent, Herr, (Hid, Ptr{Hsize}), (:dataset_id, :new_dims), "Error extending dataset dimensions"),
      (:h5d_vlen_get_buf_size, :H5Dvlen_get_buf_size, Herr, (Hid, Hid, Hid, Ptr{Hsize}), (:dset_id, :type_id, :space_id, :buf), "Error getting vlen buffer size"),
      (:h5d_vlen_reclaim, :H5Dvlen_reclaim, Herr, (Hid, Hid, Hid, Ptr{Void}), (:type_id, :space_id, :plist_id, :buf), "Error reclaiming vlen buffer"),
      (:h5d_write, :H5Dwrite, Herr, (Hid, Hid, Hid, Hid, Hid, Ptr{Void}), (:dataset_id, :mem_type_id, :mem_space_id, :file_space_id, :xfer_plist_id, :buf), "Error writing dataset"),
@@ -1930,6 +1945,7 @@ export
     readmmap,
     @read,
     root,
+    set_dims!,
     setindex!,
     size,
     t_create,

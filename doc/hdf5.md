@@ -1,5 +1,4 @@
 
-
 Julia HDF5 Guide
 ================
 
@@ -255,6 +254,19 @@ You can create and write data in one step,
 d_write(parent, name, data[, lcpl, dcpl, dapl])
 a_write(parent, name, data)
 ```
+
+You can use extendible dimensions,
+```julia
+d = d_create(parent, name, dtype, (dims, max_dims), "chunk", (chunk_dims), [lcpl, dcpl, dapl])
+set_dims!(d, new_dims)
+```
+where dims is a tuple of integers.  For example
+```julia
+d = d_create(fid, "b", Int, ((1000,),(-1,)), "chunk", (100,)) #-1 is equivalent to typemax(Hsize)
+set_dims!(b, (10000,))
+b[1:10000] = [1:10000] 
+```
+when dimensions are reduced, the truncated data is lost.  A maximum dimension of -1 is often referred to as unlimited dimensions, though it is limited by the maximum size of an unsigned integer.
 
 Finally, it's possible to delete objects:
 ```julia
