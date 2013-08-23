@@ -1364,7 +1364,7 @@ function getindex(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
 end
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
-function setindex!(dset::HDF5Dataset{PlainHDF5File}, X::AbstractArray, indices::RangeIndex...)
+function setindex!(dset::HDF5Dataset{PlainHDF5File}, X::Array, indices::RangeIndex...)
     T = hdf5_to_julia(dset)
     if !(T<:Array)
         error("Hyperslab interface is available only for arrays")
@@ -1388,6 +1388,15 @@ function setindex!(dset::HDF5Dataset{PlainHDF5File}, X::AbstractArray, indices::
         h5s_close(dsel_id)
     end
     X
+end
+
+function setindex!(dset::HDF5Dataset{PlainHDF5File}, X::AbstractArray, indices::RangeIndex...)
+    T = hdf5_to_julia(dset)
+    if !(T<:Array)
+        error("Hyperslab interface is available only for arrays")
+    end
+    Y = convert(Array{T.parameters[1], ndims(X)}, X)
+    setindex!(dset, Y, indices...)
 end
 
 function setindex!(dset::HDF5Dataset{PlainHDF5File}, x::Number, indices::RangeIndex...)
