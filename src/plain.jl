@@ -1364,11 +1364,18 @@ function getindex(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
 end
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
-function setindex!(dset::HDF5Dataset{PlainHDF5File}, X, indices::RangeIndex...)
+function setindex!(dset::HDF5Dataset{PlainHDF5File}, X::AbstractArray, indices::RangeIndex...)
+    T = hdf5_to_julia(dset)
+    if !(T<:Array)
+        error("Hyperslab interface is available only for arrays")
+    end
     if length(X) != prod([length(idxs) for idxs in
                          filter(idx -> isa(idx, Ranges),
                                 [indices[i] for i in 1:length(indices)])])
         error("number of elements in range and length of array must be equal")
+    end
+    if eltype(X) != T.parameters[1]
+        X = convert(Array{T.parameters[1]}, X)
     end
     dsel_id = hyperslab(dset, indices...)
     memtype = datatype(X)
@@ -1381,6 +1388,15 @@ function setindex!(dset::HDF5Dataset{PlainHDF5File}, X, indices::RangeIndex...)
         h5s_close(dsel_id)
     end
     X
+end
+
+function setindex!(dset::HDF5Dataset{PlainHDF5File}, x::Number, indices::RangeIndex...)
+    T = hdf5_to_julia(dset)
+    if !(T<:Array)
+        error("Hyperslab interface is available only for arrays")
+    end
+    X = fill(convert(T.parameters[1], x), map(length, indices))
+    setindex!(dset, X, indices...)
 end
 
 function hyperslab(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)

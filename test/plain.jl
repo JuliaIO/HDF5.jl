@@ -56,6 +56,10 @@ Xslab = randn(20,20,5)
 for i = 1:5
     dset[:,:,i] = Xslab[:,:,i]
 end
+# More complex hyperslab and assignment with "incorrect" types (issue #34)
+d = d_create(f, "slab2", datatype(Float64), ((10,20),(100,200)), "chunk", (1,1))
+d[:,:] = 5
+d[1,1] = 4
 # Create a dataset designed to be deleted
 f["deleteme"] = 17.2
 close(f)
@@ -108,6 +112,10 @@ dset = fr["mygroup/CompressedA"]
 @assert name(dset) == "/mygroup/CompressedA"
 Xslabr = read(fr, "slab")
 @assert Xslabr == Xslab
+Xslab2r = read(fr, "slab2")
+target = fill(5, 10, 20)
+target[1] = 4
+@assert Xslab2r == target
 emptyr = read(fr, "empty")
 @assert isempty(emptyr)
 empty_stringr = read(fr, "empty_string")
