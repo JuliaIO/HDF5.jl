@@ -5,7 +5,7 @@
 module HDF5
 
 ## Add methods to...
-import Base.setindex!, Base.close, Base.convert, Base.done, Base.dump, Base.flush, Base.has, Base.isempty, Base.isvalid, Base.length, Base.names, Base.ndims, Base.next, Base.getindex, Base.read, Base.show, Base.size, Base.start, Base.write
+import Base: close, convert, done, dump, endof, flush, getindex, has, isempty, isvalid, length, names, ndims, next, read, setindex!, show, size, start, write
 
 ## C types
 typealias C_time_t Int
@@ -827,6 +827,8 @@ function next(parent::Union(HDF5File, HDF5Group), iter)
     iter[1] += 1
     (iter[2], iter)
 end
+
+endof(dset::HDF5Dataset) = length(dset)
 
 function parent(obj::Union(HDF5File, HDF5Group, HDF5Dataset))
     f = file(obj)

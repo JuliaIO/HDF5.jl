@@ -60,6 +60,10 @@ end
 d = d_create(f, "slab2", datatype(Float64), ((10,20),(100,200)), "chunk", (1,1))
 d[:,:] = 5
 d[1,1] = 4
+# 1d indexing
+d = d_create(f, "slab3", datatype(Int), ((10,),(-1,)), "chunk", (5,))
+@assert d[:] == zeros(Int, 10)
+d[3:5] = 3:5
 # Create a dataset designed to be deleted
 f["deleteme"] = 17.2
 close(f)
@@ -116,6 +120,8 @@ Xslab2r = read(fr, "slab2")
 target = fill(5, 10, 20)
 target[1] = 4
 @assert Xslab2r == target
+dset = fr["slab3"]
+@assert dset[3:5] == 3:5
 emptyr = read(fr, "empty")
 @assert isempty(emptyr)
 empty_stringr = read(fr, "empty_string")
