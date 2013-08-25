@@ -360,19 +360,20 @@ end
 HDF5Dataspace(id) = HDF5Dataspace(id, true)
 convert(::Type{Cint}, dspace::HDF5Dataspace) = dspace.id
 
-type HDF5Attribute
+type HDF5Attribute{F<:HDF5File}
     id::Hid
+    file::F
     toclose::Bool
     
-    function HDF5Attribute(id, toclose::Bool)
-        attr = new(id, toclose)
+    function HDF5Attribute(id, file, toclose::Bool)
+        dset = new(id, file, toclose)
         if toclose
-            finalizer(attr, close)
+            finalizer(dset, close)
         end
-        attr
+        dset
     end
 end
-HDF5Attribute(id) = HDF5Attribute(id, true)
+HDF5Attribute{F<:HDF5File}(id, file::F, toclose::Bool=true) = HDF5Attribute{F}(id, file, toclose)
 convert(::Type{Cint}, attr::HDF5Attribute) = attr.id
 show(io::IO, attr::HDF5Attribute) = isvalid(attr) ? print(io, "HDF5 attribute: ", name(attr)) : print(io, "HDF5 attribute (invalid)")
 
@@ -537,38 +538,54 @@ function h5open(f::Function, args...)
 end
 
 # Close functions
-isvalid(obj) = h5i_is_valid(obj.id)
-for (h5type, h5func, checkvalid) in
-    ((HDF5File, :h5f_close, false),
-     (HDF5Group, :h5o_close, true),
-     (HDF5Dataset, :h5o_close, true),
-     (HDF5Datatype, :h5o_close, true),
-     (HDF5Dataspace, :h5s_close, true),
-     (HDF5Attribute, :h5a_close, true),
-     (HDF5Properties, :h5p_close, false))
-    if checkvalid
-        # Close functions that should first check that the object is still valid. The common case is a file that has been closed with CLOSE_STRONG but there are still finalizers that have not run for the datasets, etc, in the file.
-        @eval begin
-            function close(obj::$h5type)
-                if obj.toclose
-                    if isvalid(obj)
-                        $h5func(obj.id)
-                    end
-                    obj.toclose = false
-                end
-                nothing
+for (h5type, h5func) in
+    ((:HDF5File, :h5f_close),
+     (:HDF5Properties, :h5p_close))
+    # Close functions that should try calling close regardless
+    @eval begin
+        function close(obj::$h5type)
+            if obj.toclose
+                $h5func(obj.id)
+                obj.toclose = false
             end
+            nothing
         end
-    else
-        # Close functions that should try calling close regardless
-        @eval begin
-            function close(obj::$h5type)
-                if obj.toclose
+    end
+end
+
+isvalid(obj) = h5i_is_valid(obj.id)
+for (h5type, h5func) in 
+    ((:(Union(HDF5Group, HDF5Dataset)), :h5o_close),
+     (:HDF5Attribute, :h5a_close))
+    # Close functions that should first check that the file is still open. The common case is a
+    # file that has been closed with CLOSE_STRONG but there are still finalizers that have not run
+    # for the datasets, etc, in the file.
+    @eval begin
+        function close(obj::$h5type)
+            if obj.toclose
+                if obj.file.toclose && isvalid(obj)
                     $h5func(obj.id)
-                    obj.toclose = false
                 end
-                nothing
+                obj.toclose = false
             end
+            nothing
+        end
+    end
+end
+
+for (h5type, h5func) in 
+    ((:HDF5Datatype, :h5o_close),
+     (:HDF5Dataspace, :h5s_close))
+    # Close functions that should first check that the object is still valid.
+    @eval begin
+        function close(obj::$h5type)
+            if obj.toclose
+                if isvalid(obj)
+                    $h5func(obj.id)
+                end
+                obj.toclose = false
+            end
+            nothing
         end
     end
 end
@@ -592,7 +609,7 @@ d_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString, apl::HDF5Propertie
 d_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Dataset(h5d_open(parent.id, name, H5P_DEFAULT), file(parent))
 t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString, apl::HDF5Properties) = HDF5Datatype(h5t_open(parent.id, name, apl.id))
 t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Datatype(h5t_open(parent.id, name, H5P_DEFAULT))
-a_open(parent::Union(HDF5File, HDF5Object), name::ASCIIString) = HDF5Attribute(h5a_open(parent.id, name, H5P_DEFAULT))
+a_open(parent::Union(HDF5File, HDF5Object), name::ASCIIString) = HDF5Attribute(h5a_open(parent.id, name, H5P_DEFAULT), file(parent))
 # Object (group, named datatype, or dataset) open
 function h5object(obj_id::Hid, parent)
     obj_type = h5i_get_type(obj_id)
@@ -696,7 +713,7 @@ function t_commit(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::
     h5t_commit(parent.id, path, dtype.id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
     dtype
 end
-a_create(parent::Union(HDF5File, HDF5Object), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(parent.id, path, dtype.id, dspace.id))
+a_create(parent::Union(HDF5File, HDF5Object), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(parent.id, path, dtype.id, dspace.id), file(parent))
 p_create(class) = HDF5Properties(h5p_create(class))
 
 # Delete objects
