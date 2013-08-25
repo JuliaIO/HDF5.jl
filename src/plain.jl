@@ -134,23 +134,23 @@ const H5S_SELECT_NOTA  = 5
 const H5S_SELECT_APPEND  = 6
 const H5S_SELECT_PREPEND = 7
 # type classes (C enum H5T_class_t)
-const H5T_INTEGER      = 0
-const H5T_FLOAT        = 1
-const H5T_TIME         = 2  # not supported by HDF5 library
-const H5T_STRING       = 3
-const H5T_BITFIELD     = 4
-const H5T_OPAQUE       = 5
-const H5T_COMPOUND     = 6
-const H5T_REFERENCE    = 7
-const H5T_ENUM         = 8
-const H5T_VLEN         = 9
-const H5T_ARRAY        = 10
+const H5T_INTEGER      = convert(Hid, 0)
+const H5T_FLOAT        = convert(Hid, 1)
+const H5T_TIME         = convert(Hid, 2)  # not supported by HDF5 library
+const H5T_STRING       = convert(Hid, 3)
+const H5T_BITFIELD     = convert(Hid, 4)
+const H5T_OPAQUE       = convert(Hid, 5)
+const H5T_COMPOUND     = convert(Hid, 6)
+const H5T_REFERENCE    = convert(Hid, 7)
+const H5T_ENUM         = convert(Hid, 8)
+const H5T_VLEN         = convert(Hid, 9)
+const H5T_ARRAY        = convert(Hid, 10)
 # Character types
 const H5T_CSET_ASCII   = 0
 const H5T_CSET_UTF8    = 1
 # Sign types (C enum H5T_sign_t)
-const H5T_SGN_NONE     = 0  # unsigned
-const H5T_SGN_2        = 1  # 2's complement
+const H5T_SGN_NONE     = convert(Cint, 0)  # unsigned
+const H5T_SGN_2        = convert(Cint, 1)  # 2's complement
 # Search directions
 const H5T_DIR_ASCEND   = 1
 const H5T_DIR_DESCEND  = 2
@@ -214,16 +214,16 @@ typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
 const hdf5_type_map = {
-    (H5T_INTEGER, H5T_SGN_2, 1) => Int8,
-    (H5T_INTEGER, H5T_SGN_2, 2) => Int16,
-    (H5T_INTEGER, H5T_SGN_2, 4) => Int32,
-    (H5T_INTEGER, H5T_SGN_2, 8) => Int64,
-    (H5T_INTEGER, H5T_SGN_NONE, 1) => Uint8,
-    (H5T_INTEGER, H5T_SGN_NONE, 2) => Uint16,
-    (H5T_INTEGER, H5T_SGN_NONE, 4) => Uint32,
-    (H5T_INTEGER, H5T_SGN_NONE, 8) => Uint64,
-    (H5T_FLOAT, nothing, 4) => Float32,
-    (H5T_FLOAT, nothing, 8) => Float64,
+    (H5T_INTEGER, H5T_SGN_2, convert(Csize_t, 1)) => Int8,
+    (H5T_INTEGER, H5T_SGN_2, convert(Csize_t, 2)) => Int16,
+    (H5T_INTEGER, H5T_SGN_2, convert(Csize_t, 4)) => Int32,
+    (H5T_INTEGER, H5T_SGN_2, convert(Csize_t, 8)) => Int64,
+    (H5T_INTEGER, H5T_SGN_NONE, convert(Csize_t, 1)) => Uint8,
+    (H5T_INTEGER, H5T_SGN_NONE, convert(Csize_t, 2)) => Uint16,
+    (H5T_INTEGER, H5T_SGN_NONE, convert(Csize_t, 4)) => Uint32,
+    (H5T_INTEGER, H5T_SGN_NONE, convert(Csize_t, 8)) => Uint64,
+    (H5T_FLOAT, nothing, convert(Csize_t, 4)) => Float32,
+    (H5T_FLOAT, nothing, convert(Csize_t, 8)) => Float64,
 }
 
 hdf5_type_id{S<:String}(::Type{S})  = H5T_C_S1
