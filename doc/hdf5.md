@@ -217,6 +217,14 @@ nd = ndims(dset)
 len = length(dset)
 ```
 
+Objects can be created with properties, and you can query those
+properties in the following way:
+```
+p = get_create_properties(dset)
+chunksz = get_chunk(p)
+```
+The simpler syntax `chunksz = get_chunk(dset)` is also available.
+
 Finally, sometimes you need to be able to conveniently test whether a file is an HDF5 file:
 ```julia
 tf = ishdf5(filename)

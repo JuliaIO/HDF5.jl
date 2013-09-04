@@ -1890,11 +1890,25 @@ function vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5D
 end
 
 ### Property manipulation ###
+get_create_properties(dset::HDF5Dataset) = HDF5Properties(h5d_get_create_plist(dset.id))
+get_create_properties(g::HDF5Group) = HDF5Properties(h5g_get_create_plist(dset.id))
+get_create_properties(g::HDF5File) = HDF5Properties(h5f_get_create_plist(dset.id))
+get_create_properties(g::HDF5Attribute) = HDF5Properties(h5a_get_create_plist(dset.id))
 function get_chunk(p::HDF5Properties)
     n = h5p_get_chunk(p, 0, C_NULL)
     cdims = Array(Hsize, n)
     h5p_get_chunk(p, n, cdims)
     tuple(convert(Array{Int}, reverse(cdims))...)
+end
+function get_chunk(dset::HDF5Dataset)
+    p = get_create_properties(dset)
+    local ret
+    try
+        ret = get_chunk(p)
+    finally
+        close(p)
+    end
+    ret
 end
 set_chunk(p::HDF5Properties, dims...) = h5p_set_chunk(p.id, length(dims), Hsize[reverse(dims)...])
 function get_userblock(p::HDF5Properties)
@@ -1955,6 +1969,8 @@ export
     filename,
     g_create,
     g_open,
+    get_chunk,
+    get_create_properties,
     getindex,
     h5open,
     has,

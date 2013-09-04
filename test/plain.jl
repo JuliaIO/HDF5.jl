@@ -48,7 +48,7 @@ close(dset)
 g = g_create(f, "mygroup")
 # Test dataset with compression
 R = rand(1:20, 20, 40);
-g["CompressedA", "chunk", (5,5), "compress", 9] = R
+g["CompressedA", "chunk", (5,6), "compress", 9] = R
 close(g)
 # Writing hyperslabs
 dset = d_create(f,"slab",datatype(Float64),dataspace(20,20,5),"chunk",(5,5,1))
@@ -113,6 +113,7 @@ salut_splitr = read(fr, "salut_split")
 Rr = read(fr, "mygroup/CompressedA")
 @assert Rr == R
 dset = fr["mygroup/CompressedA"]
+@assert get_chunk(dset) == (5,6)
 @assert name(dset) == "/mygroup/CompressedA"
 Xslabr = read(fr, "slab")
 @assert Xslabr == Xslab
