@@ -794,7 +794,7 @@ function names(parent::Union(JldFile, HDF5Group{JldFile}))
     keep = trues(length(n))
     const reserved = [pathrefs[2:end], pathtypes[2:end], pathrequire[2:end]]
     for i = 1:length(n)
-        if contains(reserved, n[i])
+        if in(n[i], reserved)
             keep[i] = false
         end
     end
