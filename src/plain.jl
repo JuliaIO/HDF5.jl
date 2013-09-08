@@ -267,15 +267,13 @@ hdf5_type_id{C<:CharType}(::Type{C})  = H5T_C_S1
 # all (like calling hdf5_type_id on BitsKind, which does not open a
 # new resource, or calling h5s_create with H5S_SCALAR).
 
-abstract HDF5File
-
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
-type PlainHDF5File <: HDF5File
+type HDF5File
     id::Hid
     filename::String
     toclose::Bool
 
-    function PlainHDF5File(id, filename, toclose::Bool)
+    function HDF5File(id, filename, toclose::Bool)
         f = new(id, filename, toclose)
         if toclose
             finalizer(f, close)
@@ -283,17 +281,16 @@ type PlainHDF5File <: HDF5File
         f
     end
 end
-PlainHDF5File(id, filename) = PlainHDF5File(id, filename, true)
+HDF5File(id, filename) = HDF5File(id, filename, true)
 convert(::Type{Cint}, f::HDF5File) = f.id
-plain(f::HDF5File) = PlainHDF5File(f.id, f.filename, false)
 show(io::IO, fid::HDF5File) = isvalid(fid) ? print(io, "HDF5 data file: ", fid.filename) : print(io, "Closed HFD5 data file: ", fid.filename)
 
-type HDF5Group{F<:HDF5File}
+type HDF5Group
     id::Hid
-    file::F         # the parent file
+    file::HDF5File         # the parent file
     toclose::Bool
 
-    function HDF5Group(id, file, toclose::Bool)
+    function HDF5Group(id, file, toclose::Bool=true)
         g = new(id, file, toclose)
         if toclose
             finalizer(g, close)
@@ -301,18 +298,15 @@ type HDF5Group{F<:HDF5File}
         g
     end
 end
-HDF5Group{F<:HDF5File}(id, file::F, toclose::Bool) = HDF5Group{F}(id, file, toclose)
-HDF5Group(id, file) = HDF5Group(id, file, true)
 convert(::Type{Cint}, g::HDF5Group) = g.id
-plain(g::HDF5Group) = HDF5Group(g.id, plain(g.file), false)
 show(io::IO, g::HDF5Group) = isvalid(g) ? print(io, "HDF5 group: ", name(g), " (file: ", g.file.filename, ")") : print(io, "HDF5 group (invalid)")
 
-type HDF5Dataset{F<:HDF5File}
+type HDF5Dataset
     id::Hid
-    file::F
+    file::HDF5File
     toclose::Bool
     
-    function HDF5Dataset(id, file, toclose::Bool)
+    function HDF5Dataset(id, file, toclose::Bool=true)
         dset = new(id, file, toclose)
         if toclose
             finalizer(dset, close)
@@ -320,10 +314,7 @@ type HDF5Dataset{F<:HDF5File}
         dset
     end
 end
-HDF5Dataset{F<:HDF5File}(id, file::F, toclose::Bool) = HDF5Dataset{F}(id, file, toclose)
-HDF5Dataset(id, file) = HDF5Dataset(id, file, true)
 convert(::Type{Cint}, dset::HDF5Dataset) = dset.id
-plain(dset::HDF5Dataset) = HDF5Dataset(dset.id, plain(dset.file), false)
 show(io::IO, dset::HDF5Dataset) = isvalid(dset) ? print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, ")") : print(io, "HDF5 dataset (invalid)")
 
 type HDF5Datatype
@@ -343,7 +334,7 @@ convert(::Type{Cint}, dtype::HDF5Datatype) = dtype.id
 show(io::IO, dtype::HDF5Datatype) = print(io, "HDF5 datatype ", dtype.id) # TODO: compound datatypes?
 
 # Define an H5O Object type
-typealias HDF5Object{F} Union(HDF5Group{F}, HDF5Dataset{F}, HDF5Datatype)
+typealias HDF5Object Union(HDF5Group, HDF5Dataset, HDF5Datatype)
 
 type HDF5Dataspace
     id::Hid
@@ -514,7 +505,7 @@ function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bo
         fid = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
     end
     close(pa)
-    PlainHDF5File(fid, filename, toclose)
+    HDF5File(fid, filename, toclose)
 end
 
 function h5open(filename::String, mode::String, toclose::Bool)
@@ -706,7 +697,7 @@ o_delete(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = h5l_delete(par
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
-setindex!{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ASCIIString) = write(parent, path, val)
+setindex!(parent::Union(HDF5File, HDF5Group), val, path::ASCIIString) = write(parent, path, val)
 setindex!(dset::HDF5Dataset, val, name::ASCIIString) = a_write(dset, name, val)
 setindex!(x::HDF5Attributes, val, name::ASCIIString) = a_write(x.parent, name, val)
 # Getting and setting properties: p["chunk"] = dims, p["compress"] = 6
@@ -716,7 +707,7 @@ function setindex!(p::HDF5Properties, val, name::ASCIIString)
     return p
 end
 # Create a dataset with properties: obj[path, prop1, set1, ...] = val
-function setindex!{F<:HDF5File}(parent::Union(F, HDF5Group{F}), val, path::ASCIIString, prop1::ASCIIString, val1, pv...)
+function setindex!(parent::Union(HDF5File, HDF5Group), val, path::ASCIIString, prop1::ASCIIString, val1, pv...)
     if !iseven(length(pv))
         error("Properties and values must come in pairs")
     end
@@ -971,14 +962,14 @@ for (fsym, osym, ptype) in
         end
     end
 end
-function read{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name::ASCIIString)
+function read(parent::Union(HDF5File, HDF5Group), name::ASCIIString)
     obj = o_open(parent, name)
     val = read(obj)
     close(obj)
     val
 end
 # Read a list of variables, read(parent, "A", "B", "x", ...)
-function read{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name::ASCIIString...)
+function read(parent::Union(HDF5File, HDF5Group), name::ASCIIString...)
     n = length(name)
     out = Array(Any, n)
     for i = 1:n
@@ -989,8 +980,8 @@ end
 
 # "Plain" (unformatted) reads. These work only for simple types: scalars, arrays, and strings
 # See also "Reading arrays using getindex" below
-# This infers the Julia type from the HDF5Datatype. Specific file formats should provide their own read(dset); they can force this one by calling read(plain(dset)).
-typealias DatasetOrAttribute Union(HDF5Dataset{PlainHDF5File}, HDF5Attribute)
+# This infers the Julia type from the HDF5Datatype. Specific file formats should provide their own read(dset).
+typealias DatasetOrAttribute Union(HDF5Dataset, HDF5Attribute)
 function read(obj::DatasetOrAttribute)
     local T
     T = hdf5_to_julia(obj)
@@ -1093,7 +1084,7 @@ function read{C<:CharType}(obj::DatasetOrAttribute, ::Type{EmptyArray{C}})
     Array(stringtype(C), 0)
 end
 # Read an array of references
-function read(obj::HDF5Dataset{PlainHDF5File}, ::Type{Array{HDF5ReferenceObj}})
+function read(obj::HDF5Dataset, ::Type{Array{HDF5ReferenceObj}})
     dims = size(obj)
     refs = Array(HDF5ReferenceObj, dims...)
     h5d_read(obj.id, H5T_STD_REF_OBJ, refs)
@@ -1109,14 +1100,10 @@ end
 function getindex(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5ReferenceObj)
     if r == HDF5ReferenceObj_NULL; error("Reference is null"); end
     obj_id = h5r_dereference(parent.id, H5R_OBJECT, r)
-    obj_type = h5i_get_type(obj_id)
-    obj_type == H5I_GROUP ? HDF5Group(obj_id, file(parent)) :
-    obj_type == H5I_DATATYPE ? HDF5Datatype(obj_id) :
-    obj_type == H5I_DATASET ? HDF5Dataset(obj_id, file(parent)) :
-    error("Invalid object type for path ", path)
+    h5object(obj_id, parent)
 end
 # Read compound type
-function read(obj::HDF5Dataset{PlainHDF5File}, ::Type{Array{HDF5Compound}})
+function read(obj::HDF5Dataset, ::Type{Array{HDF5Compound}})
     t = datatype(obj)
     n = h5t_get_nmembers(t.id)
     membertype = Array(Type, n)
@@ -1236,7 +1223,7 @@ function readmmap(obj::HDF5Dataset)
 end
 
 # Generic write
-function write{F<:HDF5File}(parent::Union(F, HDF5Group{F}), name1::ASCIIString, val1, name2::ASCIIString, val2, nameval...)
+function write(parent::Union(HDF5File, HDF5Group), name1::ASCIIString, val1, name2::ASCIIString, val2, nameval...)
     if !iseven(length(nameval))
         error("name, value arguments must come in pairs")
     end
@@ -1258,8 +1245,8 @@ end
 # The return syntax is: dset, dtype = d_create(parent, name, data)
 # You can also pass in property lists
 for (privatesym, fsym, ptype) in
-    ((:_d_create, :d_create, Union(PlainHDF5File, HDF5Group{PlainHDF5File})),
-     (:_a_create, :a_create, Union(HDF5Group{PlainHDF5File}, HDF5Dataset{PlainHDF5File})))
+    ((:_d_create, :d_create, Union(HDF5File, HDF5Group)),
+     (:_a_create, :a_create, Union(HDF5Group, HDF5Dataset)))
     @eval begin
         # Generic create (hidden)
         function ($privatesym)(parent::$ptype, name::ASCIIString, data, plists...)
@@ -1283,7 +1270,7 @@ for (privatesym, fsym, ptype) in
     end
 end
 # ReferenceObjArray
-function d_create(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::Array{HDF5ReferenceObj}, plists...)
+function d_create(parent::Union(HDF5File, HDF5Group), name::ASCIIString, data::Array{HDF5ReferenceObj}, plists...)
     local obj
     dtype = datatype(data)
     dspace = dataspace(data)
@@ -1296,8 +1283,8 @@ function d_create(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::
 end
 # Create and write, closing the objects upon exit
 for (privatesym, fsym, ptype, crsym) in
-    ((:_d_write, :d_write, Union(PlainHDF5File, HDF5Group{PlainHDF5File}), :d_create),
-     (:_a_write, :a_write, Union(PlainHDF5File, HDF5Object{PlainHDF5File}, HDF5Datatype), :a_create))
+    ((:_d_write, :d_write, Union(HDF5File, HDF5Group), :d_create),
+     (:_a_write, :a_write, Union(HDF5File, HDF5Object{HDF5File}, HDF5Datatype), :a_create))
     @eval begin
         # Generic write (hidden)
         function ($privatesym)(parent::$ptype, name::ASCIIString, data, plists...)
@@ -1337,13 +1324,13 @@ function write{T<:Union(HDF5BitsKind,CharType)}(obj::DatasetOrAttribute, data::H
     end
 end
 # For plain files and groups, let "write(obj, name, val)" mean "d_write"
-write{T<:BitsKindOrByteString}(parent::Union(PlainHDF5File, HDF5Group{PlainHDF5File}), name::ASCIIString, data::Union(T, Array{T}), plists...) =
+write{T<:BitsKindOrByteString}(parent::Union(HDF5File, HDF5Group), name::ASCIIString, data::Union(T, Array{T}), plists...) =
     d_write(parent, name, data, plists...)
 # For datasets, "write(dset, name, val)" means "a_write"
 write{T<:BitsKindOrByteString}(parent::HDF5Dataset, name::ASCIIString, data::Union(T, Array{T}), plists...) = a_write(parent, name, data, plists...)
 
 # Reading arrays using getindex: data = dset[:,:,10]
-function getindex(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
+function getindex(dset::HDF5Dataset, indices::RangeIndex...)
     local T
     dtype = datatype(dset)
     try
@@ -1366,7 +1353,7 @@ function getindex(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
 end
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
-function setindex!(dset::HDF5Dataset{PlainHDF5File}, X::Array, indices::RangeIndex...)
+function setindex!(dset::HDF5Dataset, X::Array, indices::RangeIndex...)
     T = hdf5_to_julia(dset)
     if !(T<:Array)
         error("Hyperslab interface is available only for arrays")
@@ -1392,7 +1379,7 @@ function setindex!(dset::HDF5Dataset{PlainHDF5File}, X::Array, indices::RangeInd
     X
 end
 
-function setindex!(dset::HDF5Dataset{PlainHDF5File}, X::AbstractArray, indices::RangeIndex...)
+function setindex!(dset::HDF5Dataset, X::AbstractArray, indices::RangeIndex...)
     T = hdf5_to_julia(dset)
     if !(T<:Array)
         error("Hyperslab interface is available only for arrays")
@@ -1401,7 +1388,7 @@ function setindex!(dset::HDF5Dataset{PlainHDF5File}, X::AbstractArray, indices::
     setindex!(dset, Y, indices...)
 end
 
-function setindex!(dset::HDF5Dataset{PlainHDF5File}, x::Number, indices::RangeIndex...)
+function setindex!(dset::HDF5Dataset, x::Number, indices::RangeIndex...)
     T = hdf5_to_julia(dset)
     if !(T<:Array)
         error("Hyperslab interface is available only for arrays")
@@ -1410,7 +1397,7 @@ function setindex!(dset::HDF5Dataset{PlainHDF5File}, x::Number, indices::RangeIn
     setindex!(dset, X, indices...)
 end
 
-function hyperslab(dset::HDF5Dataset{PlainHDF5File}, indices::RangeIndex...)
+function hyperslab(dset::HDF5Dataset, indices::RangeIndex...)
     local dsel_id
     dspace = dataspace(dset)
     try
@@ -1946,7 +1933,7 @@ export
     HDF5Object,
     HDF5Properties,
     HDF5Vlen,
-    PlainHDF5File,
+    HDF5File,
     # Functions
     a_create,
     a_delete,
