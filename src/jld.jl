@@ -5,7 +5,7 @@
 module JLD
 using HDF5
 # Add methods to...
-import HDF5: a_write, a_read, g_create, g_open, exists, attrs, close, dump, read, getindex, names, size, write, file, name
+import HDF5: close, dump, exists, file, getindex, g_create, g_open, name, names, read, size, write
 import Base.show
 
 # Debugging: comment this block out if you un-modulize hdf5.jl
