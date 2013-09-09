@@ -261,40 +261,29 @@ hdf5_type_id{C<:CharType}(::Type{C})  = H5T_C_S1
 # finalizers don't run on a predictable schedule, we also call close
 # directly on function exit. (This avoids certain problems, like those
 # that occur when passing a freshly-created file to some other
-# application). The "toclose" field in the types is there to prevent
-# errors from calling close() twice on the same object. It's also there
-# to prevent errors in cases where the object shouldn't be closed at
-# all (like calling hdf5_type_id on BitsKind, which does not open a
-# new resource, or calling h5s_create with H5S_SCALAR).
+# application).
 
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
 type HDF5File
     id::Hid
     filename::String
-    toclose::Bool
 
-    function HDF5File(id, filename, toclose::Bool)
-        f = new(id, filename, toclose)
-        if toclose
-            finalizer(f, close)
-        end
+    function HDF5File(id, filename)
+        f = new(id, filename)
+        finalizer(f, close)
         f
     end
 end
-HDF5File(id, filename) = HDF5File(id, filename, true)
 convert(::Type{Cint}, f::HDF5File) = f.id
 show(io::IO, fid::HDF5File) = isvalid(fid) ? print(io, "HDF5 data file: ", fid.filename) : print(io, "Closed HFD5 data file: ", fid.filename)
 
 type HDF5Group
     id::Hid
     file::HDF5File         # the parent file
-    toclose::Bool
 
-    function HDF5Group(id, file, toclose::Bool=true)
-        g = new(id, file, toclose)
-        if toclose
-            finalizer(g, close)
-        end
+    function HDF5Group(id, file)
+        g = new(id, file)
+        finalizer(g, close)
         g
     end
 end
@@ -304,13 +293,10 @@ show(io::IO, g::HDF5Group) = isvalid(g) ? print(io, "HDF5 group: ", name(g), " (
 type HDF5Dataset
     id::Hid
     file::HDF5File
-    toclose::Bool
     
-    function HDF5Dataset(id, file, toclose::Bool=true)
-        dset = new(id, file, toclose)
-        if toclose
-            finalizer(dset, close)
-        end
+    function HDF5Dataset(id, file)
+        dset = new(id, file)
+        finalizer(dset, close)
         dset
     end
 end
@@ -321,15 +307,14 @@ type HDF5Datatype
     id::Hid
     toclose::Bool
 
-    function HDF5Datatype(id, toclose::Bool)
-        nt = new(id, toclose)
+    function HDF5Datatype(id, toclose::Bool=false)
+        nt = new(id)
         if toclose
             finalizer(nt, close)
         end
         nt
     end
 end
-HDF5Datatype(id) = HDF5Datatype(id, true)
 convert(::Type{Cint}, dtype::HDF5Datatype) = dtype.id
 show(io::IO, dtype::HDF5Datatype) = print(io, "HDF5 datatype ", dtype.id) # TODO: compound datatypes?
 
@@ -338,33 +323,25 @@ typealias HDF5Object Union(HDF5Group, HDF5Dataset, HDF5Datatype)
 
 type HDF5Dataspace
     id::Hid
-    toclose::Bool
 
-    function HDF5Dataspace(id, toclose::Bool)
-        dspace = new(id, toclose)
-        if toclose
-            finalizer(dspace, close)
-        end
+    function HDF5Dataspace(id)
+        dspace = new(id)
+        finalizer(dspace, close)
         dspace
     end
 end
-HDF5Dataspace(id) = HDF5Dataspace(id, true)
 convert(::Type{Cint}, dspace::HDF5Dataspace) = dspace.id
 
-type HDF5Attribute{F<:HDF5File}
+type HDF5Attribute
     id::Hid
-    file::F
-    toclose::Bool
+    file::HDF5File
     
-    function HDF5Attribute(id, file, toclose::Bool)
-        dset = new(id, file, toclose)
-        if toclose
-            finalizer(dset, close)
-        end
+    function HDF5Attribute(id, file)
+        dset = new(id, file)
+        finalizer(dset, close)
         dset
     end
 end
-HDF5Attribute{F<:HDF5File}(id, file::F, toclose::Bool=true) = HDF5Attribute{F}(id, file, toclose)
 convert(::Type{Cint}, attr::HDF5Attribute) = attr.id
 show(io::IO, attr::HDF5Attribute) = isvalid(attr) ? print(io, "HDF5 attribute: ", name(attr)) : print(io, "HDF5 attribute (invalid)")
 
@@ -375,18 +352,14 @@ attrs(p::Union(HDF5File, HDF5Group, HDF5Dataset)) = HDF5Attributes(p)
 
 type HDF5Properties
     id::Hid
-    toclose::Bool
 
-    function HDF5Properties(id, toclose::Bool)
-        p = new(id, toclose)
-        if toclose
-            finalizer(p, close)
-        end
+    function HDF5Properties(id)
+        p = new(id)
+        finalizer(p, close)
         p
     end
 end
-HDF5Properties(id) = HDF5Properties(id, true)
-HDF5Properties() = HDF5Properties(H5P_DEFAULT, false)
+HDF5Properties() = HDF5Properties(H5P_DEFAULT)
 convert(::Type{Cint}, p::HDF5Properties) = p.id
 
 # Object reference types
@@ -490,7 +463,7 @@ end
 
 ### High-level interface ###
 # Open or create an HDF5 file
-function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool, toclose::Bool)
+function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool)
     if ff && !wr
         error("HDF5 does not support appending without writing")
     end
@@ -506,19 +479,17 @@ function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bo
         fid = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
     end
     close(pa)
-    HDF5File(fid, filename, toclose)
+    HDF5File(fid, filename)
 end
 
-function h5open(filename::String, mode::String, toclose::Bool)
-    mode == "r"  ? h5open(filename, true,  false, false, false, false, toclose) :
-    mode == "r+" ? h5open(filename, true,  true , false, false, true, toclose)  :
-    mode == "w"  ? h5open(filename, false, true , true , true,  false, toclose)  :
-#     mode == "w+" ? h5open(filename, true,  true , true , true,  false, toclose)  :
-#     mode == "a"  ? h5open(filename, true,  true , true , true,  true, toclose)   :
+function h5open(filename::String, mode::String="r")
+    mode == "r"  ? h5open(filename, true,  false, false, false, false) :
+    mode == "r+" ? h5open(filename, true,  true , false, false, true)  :
+    mode == "w"  ? h5open(filename, false, true , true , true,  false)  :
+#     mode == "w+" ? h5open(filename, true,  true , true , true,  false)  :
+#     mode == "a"  ? h5open(filename, true,  true , true , true,  true)   :
     error("invalid open mode: ", mode)
 end
-h5open(filename::String, mode::String) = h5open(filename, mode, true)
-h5open(filename::String) = h5open(filename, "r")
 function h5open(f::Function, args...)
     fid = h5open(args...)
     try
@@ -535,9 +506,9 @@ for (h5type, h5func) in
     # Close functions that should try calling close regardless
     @eval begin
         function close(obj::$h5type)
-            if obj.toclose
+            if obj.id != -1
                 $h5func(obj.id)
-                obj.toclose = false
+                obj.id = -1
             end
             nothing
         end
@@ -553,32 +524,35 @@ for (h5type, h5func) in
     # for the datasets, etc, in the file.
     @eval begin
         function close(obj::$h5type)
-            if obj.toclose
-                if obj.file.toclose && isvalid(obj)
+            if obj.id != -1
+                if obj.file.id != -1 && isvalid(obj)
                     $h5func(obj.id)
                 end
-                obj.toclose = false
+                obj.id = -1
             end
             nothing
         end
     end
 end
 
-for (h5type, h5func) in 
-    ((:HDF5Datatype, :h5o_close),
-     (:HDF5Dataspace, :h5s_close))
-    # Close functions that should first check that the object is still valid.
-    @eval begin
-        function close(obj::$h5type)
-            if obj.toclose
-                if isvalid(obj)
-                    $h5func(obj.id)
-                end
-                obj.toclose = false
-            end
-            nothing
+function close(obj::HDF5Datatype)
+    if obj.toclose && obj.id != -1
+        if isvalid(obj)
+            h5o_close(obj.id)
         end
+        obj.id = -1
     end
+    nothing
+end
+
+function close(obj::HDF5Dataspace)
+    if obj.id != -1
+        if isvalid(obj)
+            h5s_close(obj.id)
+        end
+        obj.id = -1
+    end
+    nothing
 end
 
 # Testing file type
