@@ -9,6 +9,17 @@ macro gcvalid(args...)
 	[:(@assert HDF5.isvalid($x)) for x in args]...)
 end
 
+macro closederror(x)
+	quote
+		try
+			$x
+		catch e
+			isa(e, ErrorException) || rethrow(e)
+			e.msg == "File or object has been closed" || error("Attempt to access closed object did not throw")
+		end
+	end
+end
+
 gc_disable()
 fn = joinpath(tempdir(),"test.h5")
 for i = 1:10
@@ -24,6 +35,19 @@ for i = 1:10
 	a = a_create(file, "a", dt, ds)
 	@gcvalid dt ds d g a
 	close(file)
+
+	@closederror read(d)
+	for obj in (d, g)
+		@closederror a_read(obj, "a")
+		@closederror a_write(obj, "a", 1)
+	end
+	for obj in (g, file)
+		@closederror d_open(obj, "d")
+		@closederror d_read(obj, "d")
+		@closederror d_write(obj, "d", 1)
+		@closederror read(obj, "x")
+		@closederror write(obj, "x", "y")
+	end
 end
 for i = 1:10
 	file = h5open(fn, "r")

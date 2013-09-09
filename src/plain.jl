@@ -369,7 +369,7 @@ end
 const HDF5ReferenceObj_NULL = HDF5ReferenceObj(uint64(0))
 function HDF5ReferenceObj(parent::Union(HDF5File, HDF5Group, HDF5Dataset), name::ASCIIString)
     a = Array(HDF5ReferenceObj, 1)
-    h5r_create(a, parent.id, name, H5R_OBJECT, -1)
+    h5r_create(a, checkvalid(parent).id, name, H5R_OBJECT, -1)
     a[1]
 end
 
@@ -499,6 +499,11 @@ function h5open(f::Function, args...)
     end
 end
 
+# Ensure that objects haven't been closed
+isvalid(obj::Union(HDF5File, HDF5Properties, HDF5Datatype, HDF5Dataspace)) = obj.id != -1 && h5i_is_valid(obj.id)
+isvalid(obj::Union(HDF5Group, HDF5Dataset, HDF5Attribute)) = obj.id != -1 && obj.file.id != -1 && h5i_is_valid(obj.id)
+checkvalid(obj) = isvalid(obj) ? obj : error("File or object has been closed")
+
 # Close functions
 for (h5type, h5func) in
     ((:HDF5File, :h5f_close),
@@ -515,7 +520,6 @@ for (h5type, h5func) in
     end
 end
 
-isvalid(obj) = h5i_is_valid(obj.id)
 for (h5type, h5func) in 
     ((:(Union(HDF5Group, HDF5Dataset)), :h5o_close),
      (:HDF5Attribute, :h5a_close))
@@ -562,19 +566,19 @@ ishdf5(name::String) = h5f_is_hdf5(name)
 file(f::HDF5File) = f
 file(g::HDF5Group) = g.file
 file(dset::HDF5Dataset) = dset.file
-fd(obj::HDF5Object) = h5i_get_file_id(obj.id)
+fd(obj::HDF5Object) = h5i_get_file_id(checkvalid(obj).id)
 
 # Flush buffers
-flush(f::Union(HDF5Object, HDF5Attribute, HDF5Datatype), scope) = h5f_flush(f.id, scope)
+flush(f::Union(HDF5Object, HDF5Attribute, HDF5Datatype), scope) = h5f_flush(checkvalid(f).id, scope)
 flush(f::Union(HDF5Object, HDF5Attribute, HDF5Datatype)) = flush(f, H5F_SCOPE_GLOBAL)
 
 # Open objects
-g_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Group(h5g_open(parent.id, name, H5P_DEFAULT), file(parent))
-d_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString, apl::HDF5Properties) = HDF5Dataset(h5d_open(parent.id, name, apl.id), file(parent))
-d_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Dataset(h5d_open(parent.id, name, H5P_DEFAULT), file(parent))
-t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString, apl::HDF5Properties) = HDF5Datatype(h5t_open(parent.id, name, apl.id))
-t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Datatype(h5t_open(parent.id, name, H5P_DEFAULT))
-a_open(parent::Union(HDF5File, HDF5Object), name::ASCIIString) = HDF5Attribute(h5a_open(parent.id, name, H5P_DEFAULT), file(parent))
+g_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Group(h5g_open(checkvalid(parent).id, name, H5P_DEFAULT), file(parent))
+d_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString, apl::HDF5Properties) = HDF5Dataset(h5d_open(checkvalid(parent).id, name, apl.id), file(parent))
+d_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Dataset(h5d_open(checkvalid(parent).id, name, H5P_DEFAULT), file(parent))
+t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString, apl::HDF5Properties) = HDF5Datatype(h5t_open(checkvalid(parent).id, name, apl.id))
+t_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Datatype(h5t_open(checkvalid(parent).id, name, H5P_DEFAULT))
+a_open(parent::Union(HDF5File, HDF5Object), name::ASCIIString) = HDF5Attribute(h5a_open(checkvalid(parent).id, name, H5P_DEFAULT), file(parent))
 # Object (group, named datatype, or dataset) open
 function h5object(obj_id::Hid, parent)
     obj_type = h5i_get_type(obj_id)
@@ -583,7 +587,7 @@ function h5object(obj_id::Hid, parent)
     obj_type == H5I_DATASET ? HDF5Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
 end
-o_open(parent, path::ASCIIString) = h5object(h5o_open(parent.id, path), parent)
+o_open(parent, path::ASCIIString) = h5object(h5o_open(checkvalid(parent).id, path), parent)
 # Get the root group
 root(h5file::HDF5File) = g_open(h5file, "/")
 root(obj::Union(HDF5Group, HDF5Dataset)) = g_open(file(obj), "/")
@@ -634,13 +638,13 @@ function parents_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, a
     end
     tuple(parent.id, g[end], args...)
 end        
-g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Group(h5g_create(parents_create(parent, path, lcpl.id, dcpl.id)...), file(parent))
-g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lcpl::HDF5Properties) = HDF5Group(h5g_create(parents_create(parent, path, lcpl.id, H5P_DEFAULT)...), file(parent))
-g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = HDF5Group(h5g_create(parents_create(parent, path, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
-d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties, dapl::HDF5Properties) = HDF5Dataset(h5d_create(parents_create(parent, path, dtype.id, dspace.id, lcpl.id, dcpl.id, dapl.id)...), file(parent))
-d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Dataset(h5d_create(parents_create(parent, path, dtype.id, dspace.id, lcpl.id, dcpl.id, H5P_DEFAULT)...), file(parent))
-d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties) = HDF5Dataset(h5d_create(parents_create(parent, path, dtype.id, dspace.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
-d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Dataset(h5d_create(parents_create(parent, path, dtype.id, dspace.id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
+g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Group(h5g_create(parents_create(checkvalid(parent), path, lcpl.id, dcpl.id)...), file(parent))
+g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lcpl::HDF5Properties) = HDF5Group(h5g_create(parents_create(checkvalid(parent), path, lcpl.id, H5P_DEFAULT)...), file(parent))
+g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = HDF5Group(h5g_create(parents_create(checkvalid(parent), path, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties, dapl::HDF5Properties) = HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, lcpl.id, dcpl.id, dapl.id)...), file(parent))
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, lcpl.id, dcpl.id, H5P_DEFAULT)...), file(parent))
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties) = HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
 # Setting dset creation properties with name/value pairs
 function d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace, prop1::ASCIIString, val1, pv...)
     if !iseven(length(pv))
@@ -655,36 +659,36 @@ function d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::
         end
         p[thisname] = pv[i+1]
     end
-    HDF5Dataset(h5d_create(parents_create(parent, path, dtype.id, dspace.id, H5P_DEFAULT, p.id, H5P_DEFAULT)...), file(parent))
+    HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, H5P_DEFAULT, p.id, H5P_DEFAULT)...), file(parent))
 end
-d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace_dims::Dims, prop1::ASCIIString, val1, pv...) = d_create(parent, path, dtype, dataspace(dspace_dims), prop1, val1, pv...)
-d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace_dims::(Dims,Dims), prop1::ASCIIString, val1, pv...) = d_create(parent, path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]), prop1, val1, pv...)
-d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::Type, dspace_dims, prop1::ASCIIString, val1, pv...) = d_create(parent, path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]), prop1, val1, pv...)
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace_dims::Dims, prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims), prop1, val1, pv...)
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, dspace_dims::(Dims,Dims), prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]), prop1, val1, pv...)
+d_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::Type, dspace_dims, prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]), prop1, val1, pv...)
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 t_create(class_id, sz) = HDF5Datatype(h5t_create(class_id, sz))
 function t_commit(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, lcpl::HDF5Properties, tcpl::HDF5Properties, tapl::HDF5Properties)
-    h5t_commit(parent.id, path, dtype.id, lcpl.id, tcpl.id, tapl.id)
+    h5t_commit(checkvalid(parent).id, path, dtype.id, lcpl.id, tcpl.id, tapl.id)
     dtype
 end
 function t_commit(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, lcpl::HDF5Properties, tcpl::HDF5Properties)
-    h5t_commit(parent.id, path, dtype.id, lcpl.id, tcpl.id, H5P_DEFAULT)
+    h5t_commit(checkvalid(parent).id, path, dtype.id, lcpl.id, tcpl.id, H5P_DEFAULT)
     dtype
 end
 function t_commit(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype, lcpl::HDF5Properties)
-    h5t_commit(parent.id, path, dtype.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT)
+    h5t_commit(checkvalid(parent).id, path, dtype.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT)
     dtype
 end
 function t_commit(parent::Union(HDF5File, HDF5Group), path::ASCIIString, dtype::HDF5Datatype)
-    h5t_commit(parent.id, path, dtype.id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
+    h5t_commit(checkvalid(parent).id, path, dtype.id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
     dtype
 end
-a_create(parent::Union(HDF5File, HDF5Object), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(parent.id, path, dtype.id, dspace.id), file(parent))
+a_create(parent::Union(HDF5File, HDF5Object), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(checkvalid(parent).id, path, dtype.id, dspace.id), file(parent))
 p_create(class) = HDF5Properties(h5p_create(class))
 
 # Delete objects
-a_delete(parent::Union(HDF5File, HDF5Object), path::ASCIIString) = h5a_delete(parent.id, path)
-o_delete(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lapl::HDF5Properties) = h5l_delete(parent.id, path, lapl.id)
-o_delete(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = h5l_delete(parent.id, path, H5P_DEFAULT)
+a_delete(parent::Union(HDF5File, HDF5Object), path::ASCIIString) = h5a_delete(checkvalid(parent).id, path)
+o_delete(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lapl::HDF5Properties) = h5l_delete(checkvalid(parent).id, path, lapl.id)
+o_delete(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = h5l_delete(checkvalid(parent).id, path, H5P_DEFAULT)
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
@@ -730,8 +734,8 @@ function exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lapl::HDF
     end
     ret
 end
-exists(attr::HDF5Attributes, path::ASCIIString) = h5a_exists(attr.parent.id, path)
-exists(dset::HDF5Dataset, path::ASCIIString) = h5a_exists(dset.id, path)
+exists(attr::HDF5Attributes, path::ASCIIString) = h5a_exists(checkvalid(attr.parent).id, path)
+exists(dset::HDF5Dataset, path::ASCIIString) = h5a_exists(checkvalid(dset).id, path)
 exists(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = exists(parent, path, HDF5Properties())
 has(parent::Union(HDF5File, HDF5Group, HDF5Dataset), path::ASCIIString) = exists(parent, path)
 
@@ -767,10 +771,11 @@ length(dset::Union(HDF5Dataset, HDF5Attribute)) = prod(size(dset))
 ndims(dset::Union(HDF5Dataset, HDF5Attribute)) = length(size(dset))
 
 # filename and name
-filename(obj::Union(HDF5File, HDF5Group, HDF5Dataset, HDF5Attribute, HDF5Datatype)) = h5f_get_name(obj.id)
-name(obj::Union(HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype)) = h5i_get_name(obj.id)
+filename(obj::Union(HDF5File, HDF5Group, HDF5Dataset, HDF5Attribute, HDF5Datatype)) = h5f_get_name(checkvalid(obj).id)
+name(obj::Union(HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype)) = h5i_get_name(checkvalid(obj).id)
 name(attr::HDF5Attribute) = h5a_get_name(attr.id)
 function names(x::Union(HDF5Group,HDF5File))
+    checkvalid(x)
     n = length(x)
     res = Array(ASCIIString, n)
     for i in 1:n
@@ -783,6 +788,7 @@ function names(x::Union(HDF5Group,HDF5File))
 end
 
 function names(x::HDF5Attributes)
+    checkvalid(x.parent)
     n = length(x)
     res = Array(ASCIIString, n)
     for i in 1:n
@@ -805,7 +811,7 @@ function done(parent::Union(HDF5File, HDF5Group), iter::Array{Any})
     iter[1] > length(parent)
 end
 function next(parent::Union(HDF5File, HDF5Group), iter)
-    iter[2] = h5object(h5o_open_by_idx(parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, iter[1]-1, H5P_DEFAULT), parent)
+    iter[2] = h5object(h5o_open_by_idx(checkvalid(parent).id, ".", H5_INDEX_NAME, H5_ITER_INC, iter[1]-1, H5P_DEFAULT), parent)
     iter[1] += 1
     (iter[2], iter)
 end
@@ -856,9 +862,9 @@ function dump(io::IO, x::Union(HDF5File, HDF5Group), n::Int, indent)
 end
 
 # Get the datatype of a dataset
-datatype(dset::HDF5Dataset) = HDF5Datatype(h5d_get_type(dset.id))
+datatype(dset::HDF5Dataset) = HDF5Datatype(h5d_get_type(checkvalid(dset).id))
 # Get the datatype of an attribute
-datatype(dset::HDF5Attribute) = HDF5Datatype(h5a_get_type(dset.id))
+datatype(dset::HDF5Attribute) = HDF5Datatype(h5a_get_type(checkvalid(dset).id))
 
 # Create a datatype from in-memory types
 datatype{T<:HDF5BitsKind}(x::T) = HDF5Datatype(hdf5_type_id(T), false)
@@ -886,9 +892,9 @@ function datatype{C<:CharType}(str::HDF5Vlen{C})
 end
 
 # Get the dataspace of a dataset
-dataspace(dset::HDF5Dataset) = HDF5Dataspace(h5d_get_space(dset.id))
+dataspace(dset::HDF5Dataset) = HDF5Dataspace(h5d_get_space(checkvalid(dset).id))
 # Get the dataspace of an attribute
-dataspace(attr::HDF5Attribute) = HDF5Dataspace(h5a_get_space(attr.id))
+dataspace(attr::HDF5Attribute) = HDF5Dataspace(h5a_get_space(checkvalid(attr).id))
 
 # Create a dataspace from in-memory types
 dataspace{T<:HDF5BitsKind}(x::T) = HDF5Dataspace(h5s_create(H5S_SCALAR))
@@ -916,11 +922,11 @@ dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union(Dims, ())  = ()) = _d
 # Get the array dimensions from a dataspace or a dataset
 # Returns both dims and maxdims
 get_dims(dspace::HDF5Dataspace) = h5s_get_simple_extent_dims(dspace.id)
-get_dims(dset::HDF5Dataset) = get_dims(dataspace(dset))
+get_dims(dset::HDF5Dataset) = get_dims(dataspace(checkvalid(dset)))
 
 # change the current dimensions of a dataset, new_dims fit in max_dims = get_dims(dset)[2]
 # reduction is possible, and leads to loss of truncated data
-set_dims!(dset::HDF5Dataset, new_dims::Dims) = h5d_set_extent(dset, [reverse(new_dims)...])
+set_dims!(dset::HDF5Dataset, new_dims::Dims) = h5d_set_extent(checkvalid(dset), [reverse(new_dims)...])
 
 # Convenience macros
 macro read(fid, sym)
@@ -1090,7 +1096,7 @@ end
 # Dereference
 function getindex(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5ReferenceObj)
     if r == HDF5ReferenceObj_NULL; error("Reference is null"); end
-    obj_id = h5r_dereference(parent.id, H5R_OBJECT, r)
+    obj_id = h5r_dereference(checkvalid(parent).id, H5R_OBJECT, r)
     h5object(obj_id, parent)
 end
 # Read compound type
@@ -1175,7 +1181,7 @@ read(attr::HDF5Attributes, name::ASCIIString) = a_read(attr.parent, name)
 
 # Reading with mmap
 function iscontiguous(obj::HDF5Dataset)
-    prop = h5d_get_create_plist(obj.id)
+    prop = h5d_get_create_plist(checkvalid(obj).id)
     try
         h5p_get_layout(prop) != H5D_CHUNKED
     finally
@@ -1190,7 +1196,7 @@ ismmappable(obj::HDF5Dataset) = ismmappable(obj, hdf5_to_julia(obj))
 
 function readmmap{T<:HDF5BitsKind}(obj::HDF5Dataset, ::Type{Array{T}})
     local fd
-    prop = h5d_get_access_plist(obj.id)
+    prop = h5d_get_access_plist(checkvalid(obj).id)
     try
         ret = Ptr{Cint}[0]
         h5f_get_vfd_handle(obj.file.id, prop, ret)
@@ -1434,6 +1440,7 @@ end
 # Link to bytes in an external file
 # If you need to link to multiple segments, use low-level interface
 function d_create_external(parent::Union(HDF5File, HDF5Group), name::ASCIIString, filepath::ByteString, t, sz::Dims, offset::Integer)
+    checkvalid(parent)
     p = p_create(HDF5.H5P_DATASET_CREATE)
     h5p_set_external(p, filepath, int(offset), prod(sz)*sizeof(t))
     d_create(parent, name, datatype(t), dataspace(sz), HDF5Properties(), p)
