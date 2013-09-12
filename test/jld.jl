@@ -67,8 +67,9 @@ macro check(fid, sym)
         let tmp
             try
                 tmp = read($fid, $(string(sym)))
-            catch
-                error("Error reading ", $(string(sym)))
+            catch e
+                warn("Error reading ", $(string(sym)))
+                rethrow(e)
             end
             if !iseq(tmp, $sym)
                 error("For ", $(string(sym)), ", read value does not agree with written value")

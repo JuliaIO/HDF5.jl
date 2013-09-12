@@ -5,7 +5,8 @@
 module JLD
 using HDF5
 # Add methods to...
-import HDF5.a_write, HDF5.close, HDF5.dump, HDF5.read, HDF5.getindex, HDF5.names, Base.show, HDF5.size, HDF5.write
+import HDF5: close, dump, exists, file, getindex, g_create, g_open, name, names, read, size, write
+import Base.show
 
 # Debugging: comment this block out if you un-modulize hdf5.jl
 # Types
@@ -45,31 +46,44 @@ type CompositeKind; end   # here this means "a type with fields"
 # length(group) only returns the number of _completed_ items in a group. Since
 # we'll write recursively, we need to keep track of the number of reference
 # objects _started_.
-type JldFile <: HDF5File
-    id::Hid
-    filename::String
+type JldFile
+    plain::HDF5File
     version::String
     toclose::Bool
     writeheader::Bool
     mmaparrays::Bool
 
-    function JldFile(id, filename, version::String=version_current, toclose::Bool=true,
+    function JldFile(plain::HDF5File, version::String=version_current, toclose::Bool=true,
                      writeheader::Bool=false, mmaparrays::Bool=false)
-        f = new(id, filename, version, toclose, writeheader, mmaparrays)
+        f = new(plain, version, toclose, writeheader, mmaparrays)
         if toclose
             finalizer(f, close)
         end
         f
     end
 end
+
+immutable JldGroup
+    plain::HDF5Group
+    file::JldFile
+end
+
+immutable JldDataset
+    plain::HDF5Dataset
+    file::JldFile
+end
+
+file(x::JldFile) = x
+file(x::Union(JldGroup, JldDataset)) = x.file
+
 function close(f::JldFile)
     if f.toclose
-        h5f_close(f.id)
+        close(f.plain)
         if f.writeheader
             magic = zeros(Uint8, 512)
             tmp = string(magic_base, f.version)
             magic[1:length(tmp)] = tmp.data
-            rawfid = open(f.filename, "r+")
+            rawfid = open(f.plain.filename, "r+")
             write(rawfid, magic)
             close(rawfid)
         end
@@ -77,7 +91,8 @@ function close(f::JldFile)
     end
     nothing
 end
-show(io::IO, fid::JldFile) = isvalid(fid) ? print(io, "Julia data file version ", fid.version, ": ", fid.filename) : print(io, "Julia data file (closed): ", fid.filename)
+close(g::Union(JldGroup, JldDataset)) = close(g.plain)
+show(io::IO, fid::JldFile) = isvalid(fid.plain) ? print(io, "Julia data file version ", fid.version, ": ", fid.plain.filename) : print(io, "Julia data file (closed): ", fid.plain.filename)
 
 function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool; mmaparrays::Bool=false)
     local fj
@@ -102,7 +117,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             finally
                 close(p)
             end
-            fj = JldFile(f, filename, version, true, true, mmaparrays)
+            fj = JldFile(HDF5File(f, filename), version, true, true, mmaparrays)
             # initialize empty require list
             write(fj, pathrequire, ASCIIString[])
         else
@@ -121,9 +136,9 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             if beginswith(magic, magic_base.data)
                 f = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
                 version = bytestring(convert(Ptr{Uint8}, magic) + length(magic_base))
-                fj = JldFile(f, filename, version, true, true, mmaparrays)
+                fj = JldFile(HDF5File(f, filename), version, true, true, mmaparrays)
                 # Load any required files/packages
-                if has(fj, pathrequire)
+                if exists(fj, pathrequire)
                     r = read(fj, pathrequire)
                     for fn in r
                         require(fn)
@@ -132,7 +147,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             else
                 if ishdf5(filename)
                     println("This is an HDF5 file, but it is not a recognized Julia data file. Opening anyway.")
-                    fj = JldFile(f, filename, version_current, true, false, mmaparrays)
+                    fj = JldFile(h5open(filename, rd, wr, cr, tr, ff), version_current, true, false, mmaparrays)
                 else
                     error("This does not seem to be a Julia data or HDF5 file")
                 end
@@ -154,22 +169,54 @@ function jldopen(fname::String, mode::String="r"; mmaparrays::Bool=false)
     error("invalid open mode: ", mode)
 end
 
+function jldobject(obj_id::Hid, parent)
+    obj_type = HDF5.h5i_get_type(obj_id)
+    obj_type == HDF5.H5I_GROUP ? JldGroup(HDF5Group(obj_id, file(parent.plain)), file(parent)) :
+    obj_type == HDF5.H5I_DATATYPE ? HDF5Datatype(obj_id) :
+    obj_type == HDF5.H5I_DATASET ? JldDataset(HDF5Dataset(obj_id, file(parent.plain)), file(parent)) :
+    error("Invalid object type for path ", path)
+end
+
+getindex(parent::Union(JldFile, JldGroup), path::ASCIIString) =
+    jldobject(HDF5.h5o_open(parent.plain.id, path), parent)
+
+function getindex(parent::Union(JldFile, JldGroup, HDF5Dataset), r::HDF5ReferenceObj)
+    if r == HDF5.HDF5ReferenceObj_NULL; error("Reference is null"); end
+    obj_id = HDF5.h5r_dereference(parent.plain.id, HDF5.H5R_OBJECT, r)
+    jldobject(obj_id, parent)
+end
+
 ### "Inherited" behaviors
-a_write(parent::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}), name::ASCIIString, data) = a_write(plain(parent), name, data)
+g_create(parent::Union(JldFile, JldGroup), args...) = JldGroup(g_create(parent.plain, args...), file(parent))
+g_open(parent::Union(JldFile, JldGroup), args...) = JldGroup(g_open(parent.plain, args...), file(parent))
+name(p::Union(JldFile, JldGroup, JldDataset)) = name(p.plain)
+exists(p::Union(JldFile, JldGroup, JldDataset), path::ASCIIString) = exists(p.plain, path)
+root(p::Union(JldFile, JldGroup, JldDataset)) = g_open(file(p), "/")
 
 ### Julia data file format implementation ###
 
 
 ### Read ###
 
+function read(parent::Union(JldFile, JldDataset), name::ASCIIString)
+    local val
+    obj = parent[name]
+    try
+        val = read(obj)
+    finally
+        close(obj)
+    end
+    val
+end
+
 # read and readsafely differ only in how they handle CompositeKind
-function read(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
-    if !exists(attrs(obj), name_type_attr)
+function read(obj::Union(JldFile, JldDataset))
+    if !exists(attrs(obj.plain), name_type_attr)
         # Fallback to plain read
-        return read(plain(obj))
+        return read(obj.plain)
     end
     # Read the type
-    typename = a_read(obj, name_type_attr)
+    typename = a_read(obj.plain, name_type_attr)
     if typename == "Tuple"
         return read_tuple(obj)
     end
@@ -177,13 +224,13 @@ function read(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
     T = julia_type(typename)
     if T == CompositeKind
         # Use type information in the file to ensure we find the right module
-        typename = a_read(obj, "CompositeKind")
+        typename = a_read(obj.plain, "CompositeKind")
         try
             gtypes = root(obj)[pathtypes]
             try
                 objtype = gtypes[typename]
                 try
-                    modnames = a_read(plain(objtype), "Module")
+                    modnames = a_read(objtype.plain, "Module")
                     mod = Main
                     for mname in modnames
                         mod = eval(mod, symbol(mname))
@@ -201,13 +248,13 @@ function read(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
     end
     read(obj, T)
 end
-function readsafely(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
-    if !exists(attrs(obj), name_type_attr)
+function readsafely(obj::Union(JldFile, JldDataset))
+    if !exists(attrs(obj.plain), name_type_attr)
         # Fallback to plain read
-        return read(plain(obj))
+        return read(obj.plain)
     end
     # Read the type
-    typename = a_read(obj, name_type_attr)
+    typename = a_read(obj.plain, name_type_attr)
     if typename == "Tuple"
         return read_tuple(obj)
     end
@@ -216,7 +263,7 @@ function readsafely(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
     local ret
     if T == CompositeKind
         # Read as a dict
-        typename = a_read(obj, "CompositeKind")
+        typename = a_read(obj.plain, "CompositeKind")
         gtypes = root(obj)[pathtypes]
         try
             objtype = gtypes[typename]
@@ -235,11 +282,11 @@ function readsafely(obj::Union(HDF5Group{JldFile}, HDF5Dataset{JldFile}))
     end
     ret
 end
-function readsafely(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString)
+function readsafely(parent::Union(JldFile, JldGroup), name::ASCIIString)
     local ret
     obj = parent[name]
     try
-        ret = readsafely(obj)
+        ret = readsafely(JldDataset(obj))
     finally
         close(obj)
     end
@@ -248,24 +295,24 @@ end
 
 # Basic types
 typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
-read{T<:BitsKindOrByteString}(obj::HDF5Dataset{JldFile}, ::Type{T}) = read(plain(obj), T)
-read{T<:HDF5BitsKind}(obj::HDF5Dataset{JldFile}, ::Type{Array{T}}) =
-    obj.file.mmaparrays && HDF5.iscontiguous(obj) ? readmmap(obj, Array{T}) : read(plain(obj), Array{T})
-read{T<:ByteString}(obj::HDF5Dataset{JldFile}, ::Type{Array{T}}) = read(plain(obj), Array{T})
-read{T<:BitsKindOrByteString,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}}) = read(obj, Array{T})
+read{T<:BitsKindOrByteString}(obj::JldDataset, ::Type{T}) = read(obj.plain, T)
+read{T<:HDF5BitsKind}(obj::JldDataset, ::Type{Array{T}}) =
+    obj.file.mmaparrays && HDF5.iscontiguous(obj.plain) ? readmmap(obj.plain, Array{T}) : read(obj.plain, Array{T})
+read{T<:ByteString}(obj::JldDataset, ::Type{Array{T}}) = read(obj.plain, Array{T})
+read{T<:BitsKindOrByteString,N}(obj::JldDataset, ::Type{Array{T,N}}) = read(obj, Array{T})
 
 # Nothing
-read(obj::HDF5Dataset{JldFile}, ::Type{Nothing}) = nothing
-read(obj::HDF5Dataset{JldFile}, ::Type{Bool}) = bool(read(obj, Uint8))
+read(obj::JldDataset, ::Type{Nothing}) = nothing
+read(obj::JldDataset, ::Type{Bool}) = bool(read(obj, Uint8))
 
 # Types
-read{T}(obj::HDF5Dataset{JldFile}, ::Type{Type{T}}) = T
+read{T}(obj::JldDataset, ::Type{Type{T}}) = T
 
 # Bool
-function read{N}(obj::HDF5Dataset{JldFile}, ::Type{Array{Bool,N}})
-    format = a_read(obj, "julia_format")
+function read{N}(obj::JldDataset, ::Type{Array{Bool,N}})
+    format = a_read(obj.plain, "julia_format")
     if format == "EachUint8"
-        bool(read(plain(obj), Array{Uint8}))
+        bool(read(obj.plain, Array{Uint8}))
     else
         error("bool format not recognized")
     end
@@ -273,52 +320,52 @@ end
 
 # Complex
 typealias ComplexTypes Union(Complex64, Complex128)
-function read{T<:ComplexTypes}(obj::HDF5Dataset{JldFile}, ::Type{T})
-    a = read(plain(obj), Array{realtype(T)})
+function read{T<:ComplexTypes}(obj::JldDataset, ::Type{T})
+    a = read(obj.plain, Array{realtype(T)})
     a[1]+a[2]*im
 end
-function read{T<:ComplexTypes,N}(obj::HDF5Dataset{JldFile}, ::Type{Array{T,N}})
-    A = read(plain(obj), Array{realtype(T)})
+function read{T<:ComplexTypes,N}(obj::JldDataset, ::Type{Array{T,N}})
+    A = read(obj.plain, Array{realtype(T)})
     reinterpret(T, A, ntuple(ndims(A)-1, i->size(A, i+1)))
 end
 
 # Symbol
-read(obj::HDF5Dataset{JldFile}, ::Type{Symbol}) = symbol(read(plain(obj), ASCIIString))
-read{N}(obj::HDF5Dataset{JldFile}, ::Type{Array{Symbol,N}}) = map(symbol, read(plain(obj), Array{ASCIIString}))
+read(obj::JldDataset, ::Type{Symbol}) = symbol(read(obj.plain, ASCIIString))
+read{N}(obj::JldDataset, ::Type{Array{Symbol,N}}) = map(symbol, read(obj.plain, Array{ASCIIString}))
 
 # Char
-read(obj::HDF5Dataset{JldFile}, ::Type{Char}) = char(read(plain(obj), Uint32))
+read(obj::JldDataset, ::Type{Char}) = char(read(obj.plain, Uint32))
 
 # General arrays
-read{T,N}(obj::HDF5Dataset{JldFile}, t::Type{Array{T,N}}) = getrefs(obj, T)
+read{T,N}(obj::JldDataset, t::Type{Array{T,N}}) = getrefs(obj, T)
 
 # Tuple
-function read_tuple(obj::HDF5Dataset{JldFile})
+function read_tuple(obj::JldDataset)
     t = read(obj, Array{Any, 1})
     return tuple(t...)
 end
-function read_tuple(obj::HDF5Dataset{JldFile}, indices::AbstractVector)
+function read_tuple(obj::JldDataset, indices::AbstractVector)
     t = read(obj, Array{Any, 1})
     return tuple(t...)
 end
 
 # Dict
-function read{T<:Associative}(obj::HDF5Dataset{JldFile}, ::Type{T})
+function read{T<:Associative}(obj::JldDataset, ::Type{T})
     kv = getrefs(obj, Any)
     T(kv[1], kv[2])
 end
 
 # Expressions
-function read(obj::HDF5Dataset{JldFile}, ::Type{Expr})
+function read(obj::JldDataset, ::Type{Expr})
     a = getrefs(obj, Any)
     Expr(a[1], a[2])
 end
 
 # CompositeKind
-function read(obj::HDF5Dataset{JldFile}, T::DataType)
+function read(obj::JldDataset, T::DataType)
     local x
     # Add the parameters
-    params = a_read(obj, "TypeParameters")
+    params = a_read(obj.plain, "TypeParameters")
     p = Array(Any, length(params))
     for i = 1:length(params)
         p[i] = eval(parse(params[i]))
@@ -347,8 +394,8 @@ function read(obj::HDF5Dataset{JldFile}, T::DataType)
 end
 
 # Read an array of references
-function getrefs{T}(obj::HDF5Dataset{JldFile}, ::Type{T})
-    refs = read(plain(obj), Array{HDF5ReferenceObj})
+function getrefs{T}(obj::JldDataset, ::Type{T})
+    refs = read(obj.plain, Array{HDF5ReferenceObj})
     out = Array(T, size(refs))
     f = file(obj)
     for i = 1:length(refs)
@@ -363,8 +410,8 @@ function getrefs{T}(obj::HDF5Dataset{JldFile}, ::Type{T})
     end
     return out
 end
-function getrefs{T}(obj::HDF5Dataset{JldFile}, ::Type{T}, indices::Union(Integer, AbstractVector)...)
-    refs = read(plain(obj), Array{HDF5ReferenceObj})
+function getrefs{T}(obj::JldDataset, ::Type{T}, indices::Union(Integer, AbstractVector)...)
+    refs = read(obj.plain, Array{HDF5ReferenceObj})
     refs = refs[indices...]
     f = file(obj)
     local out
@@ -406,10 +453,10 @@ end
 ### Writing ###
 
 # Write "basic" types
-function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString,
+function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ASCIIString,
                                                    data::Union(T, Array{T}), astype::ByteString)
     # Create the dataset
-    dset, dtype = d_create(plain(parent), name, data)
+    dset, dtype = d_create(parent.plain, name, data)
     try
         # Write the attribute
         a_write(dset, name_type_attr, astype)
@@ -420,41 +467,41 @@ function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, HDF5Gr
         close(dtype)
     end
 end
-write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, data::data::Union(T, Array{T})) =
+write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ASCIIString, data::data::Union(T, Array{T})) =
     write(parent, name, data, full_typename(typeof(data)))
 
 # Write nothing
-function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, n::Nothing, astype::ASCIIString)
+function write(parent::Union(JldFile, JldGroup), name::ASCIIString, n::Nothing, astype::ASCIIString)
     local dset
     try
-        dset = HDF5Dataset(h5d_create(parent.id, name, HDF5.H5T_NATIVE_UINT8, dataspace(nothing).id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT), file(parent))
-        a_write(plain(dset), name_type_attr, astype)
+        dset = HDF5Dataset(h5d_create(parent.plain.id, name, HDF5.H5T_NATIVE_UINT8, dataspace(nothing).id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT), file(parent.plain))
+        a_write(dset, name_type_attr, astype)
     finally
         close(dset)
     end
 end
-write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, n::Nothing) = write(parent, name, n, "Nothing")
+write(parent::Union(JldFile, JldGroup), name::ASCIIString, n::Nothing) = write(parent, name, n, "Nothing")
 
 # Types
 # the first is needed to avoid an ambiguity warning
-write{T<:Top}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
-write{T}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Type{T}) = write(parent, name, nothing, string("Type{", full_typename(t), "}"))
+write{T<:Top}(parent::Union(JldFile, JldGroup), name::ASCIIString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
+write{T}(parent::Union(JldFile, JldGroup), name::ASCIIString, t::Type{T}) = write(parent, name, nothing, string("Type{", full_typename(t), "}"))
 
 # Bools
-write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, tf::Bool) = write(parent, name, uint8(tf), "Bool")
-function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, tf::Array{Bool})
+write(parent::Union(JldFile, JldGroup), name::ASCIIString, tf::Bool) = write(parent, name, uint8(tf), "Bool")
+function write(parent::Union(JldFile, JldGroup), name::ASCIIString, tf::Array{Bool})
     write(parent, name, uint8(tf), full_typename(typeof(tf)))
-    a_write(plain(parent[name]), "julia_format", "EachUint8")
+    a_write(parent[name].plain, "julia_format", "EachUint8")
 end
 
 # Complex
 realtype(::Type{Complex64}) = Float32
 realtype(::Type{Complex128}) = Float64
-function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, c::Complex)
+function write(parent::Union(JldFile, JldGroup), name::ASCIIString, c::Complex)
     reim = [real(c), imag(c)]
     write(parent, name, reim, full_typename(typeof(c)))
 end
-function write{T<:Complex}(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, C::Array{T})
+function write{T<:Complex}(parent::Union(JldFile, JldGroup), name::ASCIIString, C::Array{T})
     reim = reinterpret(realtype(T), C, ntuple(ndims(C)+1, i->i==1?2:size(C,i-1)))
     write(parent, name, reim, full_typename(typeof(C)))
 end
@@ -462,14 +509,14 @@ end
 # Int128/Uint128
 
 # Symbols
-write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, sym::Symbol) = write(parent, name, string(sym), "Symbol")
-write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, syms::Array{Symbol}) = write(parent, name, map(string, syms), full_typename(typeof(syms)))
+write(parent::Union(JldFile, JldGroup), name::ASCIIString, sym::Symbol) = write(parent, name, string(sym), "Symbol")
+write(parent::Union(JldFile, JldGroup), name::ASCIIString, syms::Array{Symbol}) = write(parent, name, map(string, syms), full_typename(typeof(syms)))
 
 # Char
-write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, char::Char) = write(parent, name, uint32(char), "Char")
+write(parent::Union(JldFile, JldGroup), name::ASCIIString, char::Char) = write(parent, name, uint32(char), "Char")
 
 # General array types (as arrays of references)
-function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString, data::Array{T}, astype::String)
+function write{T}(parent::Union(JldFile, JldGroup), path::ASCIIString, data::Array{T}, astype::String)
     local gref  # a group, inside /_refs, for all the elements in data
     local refs
     # Determine whether parent already exists in /_refs, so we can avoid group/dataset conflict
@@ -503,7 +550,7 @@ function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString,
                 write(gref, itemname, data[i])
                 # Extract references
                 tmp = gref[itemname]
-                refs[i] = HDF5ReferenceObj(tmp, grefname*"/"*itemname)
+                refs[i] = HDF5ReferenceObj(tmp.plain, grefname*"/"*itemname)
                 close(tmp)
             else
                 refs[i] = HDF5.HDF5ReferenceObj_NULL
@@ -513,7 +560,7 @@ function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString,
         close(gref)
     end
     # Write the references as the chosen variable
-    cset, ctype = d_create(plain(parent), path, refs)
+    cset, ctype = d_create(parent.plain, path, refs)
     try
         writearray(cset, ctype.id, refs)
         a_write(cset, name_type_attr, astype)
@@ -522,13 +569,13 @@ function write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString,
         close(cset)
     end
 end
-write{T}(parent::Union(JldFile, HDF5Group{JldFile}), path::ASCIIString, data::Array{T}) = write(parent, path, data, full_typename(typeof(data)))
+write{T}(parent::Union(JldFile, JldGroup), path::ASCIIString, data::Array{T}) = write(parent, path, data, full_typename(typeof(data)))
 
 # Tuple
-write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, t::Tuple) = write(parent, name, Any[t...], "Tuple")
+write(parent::Union(JldFile, JldGroup), name::ASCIIString, t::Tuple) = write(parent, name, Any[t...], "Tuple")
 
 # Associative (Dict)
-function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d::Associative)
+function write(parent::Union(JldFile, JldGroup), name::ASCIIString, d::Associative)
     tn = full_typename(typeof(d))
     if tn == "DataFrame"
         return write_composite(parent, name, d)
@@ -547,7 +594,7 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d:
 end
 
 # Expressions
-function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, ex::Expr)
+function write(parent::Union(JldFile, JldGroup), name::ASCIIString, ex::Expr)
     args = ex.args
     # Discard "line" expressions
     keep = trues(length(args))
@@ -562,9 +609,9 @@ function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, ex
 end
 
 # CompositeKind
-write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s) = write_composite(parent, name, s)
+write(parent::Union(JldFile, JldGroup), name::ASCIIString, s) = write_composite(parent, name, s)
 
-function write_composite(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, s)
+function write_composite(parent::Union(JldFile, JldGroup), name::ASCIIString, s)
     T = typeof(s)
     if isempty(T.names)
         error("This is the write function for CompositeKind, but the input is of type ", T)
@@ -587,12 +634,12 @@ function write_composite(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCII
                 nametype[1, i] = string(n[i])
                 nametype[2, i] = string(t[i])
             end
-            write(plain(gtypes), Tname, nametype)
+            write(gtypes.plain, Tname, nametype)
             obj = gtypes[Tname]
             # Write the module name as an attribute
             mod = Base.fullname(T.name.module)
             modnames = [map(string, mod)...]
-            a_write(plain(obj), "Module", modnames)
+            a_write(obj.plain, "Module", modnames)
             close(obj)
         end
     finally
@@ -607,21 +654,21 @@ function write_composite(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCII
     end
     write(parent, name, v, "CompositeKind")
     obj = parent[name]
-    a_write(plain(obj), "CompositeKind", Tname)
+    a_write(obj.plain, "CompositeKind", Tname)
     params = [map(full_typename, T.parameters)...]
-    a_write(plain(obj), "TypeParameters", params)
+    a_write(obj.plain, "TypeParameters", params)
     close(obj)
 end
 
 ### Size, length, etc ###
-function size(dset::HDF5Dataset{JldFile})
-    if !exists(attrs(dset), name_type_attr)
-        return size(plain(dset))
+function size(dset::JldDataset)
+    if !exists(attrs(dset.plain), name_type_attr)
+        return size(dset.plain)
     end
     # Read the type
-    typename = a_read(dset, name_type_attr)
+    typename = a_read(dset.plain, name_type_attr)
     if typename == "Tuple"
-        return size(plain(dset))
+        return size(dset.plain)
     end
     # Convert to Julia type
     T = julia_type(typename)
@@ -630,23 +677,23 @@ function size(dset::HDF5Dataset{JldFile})
     elseif T <: Complex
         return ()
     elseif isarraycomplex(T)
-        sz = size(plain(dset))
+        sz = size(dset.plain)
         return sz[2:end]
     end
-    size(plain(dset))
+    size(dset.plain)
 end
 
 isarraycomplex{T<:Complex, N}(::Type{Array{T, N}}) = true
 isarraycomplex(t) = false
 
 ### Read via getindex ###
-function getindex(dset::HDF5Dataset{JldFile}, indices::Union(Integer, RangeIndex)...)
-    if !exists(attrs(dset), name_type_attr)
+function getindex(dset::JldDataset, indices::Union(Integer, RangeIndex)...)
+    if !exists(attrs(dset.plain), name_type_attr)
         # Fallback to plain read
-        return read(plain(dset))
+        return read(dset.plain)
     end
     # Read the type
-    typename = a_read(dset, name_type_attr)
+    typename = a_read(dset.plain, name_type_attr)
     if typename == "Tuple"
         return read_tuple(dset, indices...)
     end
@@ -658,19 +705,19 @@ function getindex(dset::HDF5Dataset{JldFile}, indices::Union(Integer, RangeIndex
     _getindex(dset, T, indices...)
 end
 
-_getindex{T<:HDF5BitsKind,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::RangeIndex...) = HDF5._getindex(plain(dset), T, indices...)
-function _getindex{T<:Complex,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::RangeIndex...)
-    reinterpret(T, HDF5._getindex(plain(dset), realtype(T), 1:2, indices...), ntuple(length(indices), i->length(indices[i])))
+_getindex{T<:HDF5BitsKind,N}(dset::JldDataset, ::Type{Array{T,N}}, indices::RangeIndex...) = HDF5._getindex(dset.plain, T, indices...)
+function _getindex{T<:Complex,N}(dset::JldDataset, ::Type{Array{T,N}}, indices::RangeIndex...)
+    reinterpret(T, HDF5._getindex(dset.plain, realtype(T), 1:2, indices...), ntuple(length(indices), i->length(indices[i])))
 end
-function _getindex{N}(dset::HDF5Dataset{JldFile}, ::Type{Array{Bool,N}}, indices::RangeIndex...)
-    tf = HDF5._getindex(plain(dset), Uint8, indices...)
+function _getindex{N}(dset::JldDataset, ::Type{Array{Bool,N}}, indices::RangeIndex...)
+    tf = HDF5._getindex(dset.plain, Uint8, indices...)
     bool(tf)
 end
-_getindex{T,N}(dset::HDF5Dataset{JldFile}, ::Type{Array{T,N}}, indices::Union(Integer, RangeIndex)...) = getrefs(dset, T, indices...)
+_getindex{T,N}(dset::JldDataset, ::Type{Array{T,N}}, indices::Union(Integer, RangeIndex)...) = getrefs(dset, T, indices...)
 
 
 ### Dump ###
-function dump(io::IO, parent::Union(JldFile, HDF5Group{JldFile}), n::Int, indent)
+function dump(io::IO, parent::Union(JldFile, JldGroup), n::Int, indent)
     println(io, typeof(parent), " len ", length(parent))
     if n > 0
         i = 1
@@ -683,8 +730,8 @@ function dump(io::IO, parent::Union(JldFile, HDF5Group{JldFile}), n::Int, indent
             if isa(v, HDF5Group)
                 dump(io, v, n-1, string(indent, "  "))
             else
-                if exists(attrs(v), name_type_attr)
-                    typename = a_read(v, name_type_attr)
+                if exists(attrs(v.plain), name_type_attr)
+                    typename = a_read(v.plain, name_type_attr)
                     if length(typename) >= 5 && (typename[1:5] == "Array" || typename[1:5] == "Tuple")
                         println(io, typename, " ", size(v))
                     else
@@ -789,8 +836,8 @@ function isversionless(l::Array{Int}, r::Array{Int})
     false
 end
 
-function names(parent::Union(JldFile, HDF5Group{JldFile}))
-    n = names(plain(parent))
+function names(parent::Union(JldFile, JldGroup))
+    n = names(parent.plain)
     keep = trues(length(n))
     const reserved = [pathrefs[2:end], pathtypes[2:end], pathrequire[2:end]]
     for i = 1:length(n)
