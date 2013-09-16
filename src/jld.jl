@@ -875,7 +875,7 @@ macro save(filename, vars...)
             writeexprs[i] = :(write(f, $(string(vars[i])), $(esc(vars[i]))))
         end
     end
-    Expr(:block, :(local f = jldopen($filename, "w")), writeexprs..., :(close(f)))
+    Expr(:block, :(local f = jldopen($(esc(filename)), "w")), writeexprs..., :(close(f)))
 end
 
 macro load(filename, vars...)
@@ -897,7 +897,7 @@ macro load(filename, vars...)
         for i = 1:length(vars)
             readexprs[i] = :($(esc(vars[i])) = read(f, $(string(vars[i]))))
         end
-        return Expr(:block, :(local f = jldopen($filename)), readexprs..., :(close(f)))
+        return Expr(:block, :(local f = jldopen($(esc(filename)))), readexprs..., :(close(f)))
     end
 end
 
