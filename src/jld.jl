@@ -325,7 +325,7 @@ function read{T<:ComplexTypes}(obj::JldDataset, ::Type{T})
     a[1]+a[2]*im
 end
 function read{T<:ComplexTypes,N}(obj::JldDataset, ::Type{Array{T,N}})
-    A = read(obj.plain, Array{realtype(T)})
+    A = read(obj, Array{realtype(T)})
     reinterpret(T, A, ntuple(ndims(A)-1, i->size(A, i+1)))
 end
 
