@@ -1335,6 +1335,9 @@ function getindex(dset::HDF5Dataset, indices::RangeIndex...)
     finally
         close(dtype)
     end
+    if !(T<:HDF5BitsKind)
+        error("Dataset indexing (hyperslab) is available only for bits types")
+    end
     dsel_id = hyperslab(dset, indices...)
     ret = Array(T, map(length, indices))
     memtype = datatype(ret)
@@ -1353,7 +1356,10 @@ end
 function setindex!(dset::HDF5Dataset, X::Array, indices::RangeIndex...)
     T = hdf5_to_julia(dset)
     if !(T<:Array)
-        error("Hyperslab interface is available only for arrays")
+        error("Dataset indexing (hyperslab) is available only for arrays")
+    end
+    if !(T.parameters[1]<:HDF5BitsKind)
+        error("Dataset indexing (hyperslab) is available only for bits types")
     end
     if length(X) != prod([length(idxs) for idxs in
                          filter(idx -> isa(idx, Ranges),
