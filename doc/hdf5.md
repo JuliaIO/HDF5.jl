@@ -77,7 +77,8 @@ When you're done with an object, you can close it using `close(obj)`. If you for
 Reading and writing data
 ------------------------
 
-You can read the information in a dataset in any of the following ways:
+Suppose you have a group `g` which contains a dataset with path `"mydataset"`, and that you've also opened this dataset as `dset = g["mydataset"]`.
+You can read information in this dataset in any of the following ways:
 
 ```julia
 A = read(dset)
@@ -85,7 +86,8 @@ A = read(g, "mydataset")
 Asub = dset[2:3, 1:3]
 ```
 
-The last syntax reads just a subset of the data array (assuming that `dset` is an array of sufficient size). libhdf5 has internal mechanisms for slicing arrays, and consequently if you need only a small piece of a large array, it can be faster to read just what you need rather than reading the entire array and discarding most of it.
+The last syntax reads just a subset of the data array (assuming that `dset` is an array of sufficient size).
+libhdf5 has internal mechanisms for slicing arrays, and consequently if you need only a small piece of a large array, it can be faster to read just what you need rather than reading the entire array and discarding most of it.
 
 Datasets can be created with either
 
