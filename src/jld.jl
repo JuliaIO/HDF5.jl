@@ -180,7 +180,7 @@ end
 getindex(parent::Union(JldFile, JldGroup), path::ASCIIString) =
     jldobject(HDF5.h5o_open(parent.plain.id, path), parent)
 
-function getindex(parent::Union(JldFile, JldGroup, HDF5Dataset), r::HDF5ReferenceObj)
+function getindex(parent::Union(JldFile, JldGroup, JldDataset), r::HDF5ReferenceObj)
     if r == HDF5.HDF5ReferenceObj_NULL; error("Reference is null"); end
     obj_id = HDF5.h5r_dereference(parent.plain.id, HDF5.H5R_OBJECT, r)
     jldobject(obj_id, parent)
