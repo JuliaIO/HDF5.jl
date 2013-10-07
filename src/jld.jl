@@ -352,7 +352,11 @@ end
 # Dict
 function read{T<:Associative}(obj::JldDataset, ::Type{T})
     kv = getrefs(obj, Any)
-    T(kv[1], kv[2])
+    ret = T()
+    for (cn, c) in zip(kv[1], kv[2])
+        ret[cn] = c
+    end
+    ret
 end
 
 # Expressions
