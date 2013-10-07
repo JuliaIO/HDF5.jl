@@ -4,6 +4,7 @@
 
 module JLD
 using HDF5
+using DataFrames
 # Add methods to...
 import HDF5: close, dump, exists, file, getindex, g_create, g_open, name, names, read, size, write
 import Base.show
@@ -349,11 +350,20 @@ function read_tuple(obj::JldDataset, indices::AbstractVector)
     return tuple(t...)
 end
 
+#DataFrame
+function read{T<:AbstractDataFrame}(obj::JldDataset, ::Type{T})
+    kv = getrefs(obj, Any)
+    T(kv[2], convert(Vector{ASCIIString}, kv[1]))
+end
+
 # Dict
 function read{T<:Associative}(obj::JldDataset, ::Type{T})
     kv = getrefs(obj, Any)
-    T(Dict(kv[1], kv[2]))
+    T(kv[1], kv[2])
 end
+
+
+
 
 # Expressions
 function read(obj::JldDataset, ::Type{Expr})
