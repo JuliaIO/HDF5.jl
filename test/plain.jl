@@ -146,6 +146,21 @@ for obj in fr
     n = name(obj)
     p = parent(obj)
 end
+# Test reading multiple vars at once
+z = read(fr, "Float64", "Int16")
+@assert z == (3.2, 4)
+@assert typeof(z) == (Float64, Int16)
+# Test function syntax
+read(fr, "Float64") do x
+	@assert x == 3.2
+end
+read(fr, "Float64", "Int16") do x, y
+	@assert x == 3.2
+	@assert y == 4
+end
+# Test reading entire file at once
+z = read(fr)
+@assert z["Float64"] == 3.2
 close(fr)
 
 # Test object deletion

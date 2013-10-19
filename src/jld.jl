@@ -5,29 +5,9 @@
 module JLD
 using HDF5
 # Add methods to...
-import HDF5: close, dump, exists, file, getindex, g_create, g_open, name, names, read, size, write
+import HDF5: close, dump, exists, file, getindex, g_create, g_open, name, names, read, size, write,
+             HDF5ReferenceObj, HDF5BitsKind
 import Base.show
-
-# Debugging: comment this block out if you un-modulize hdf5.jl
-# Types
-Hid = HDF5.Hid
-HDF5ReferenceObj = HDF5.HDF5ReferenceObj
-HDF5BitsKind = HDF5.HDF5BitsKind
-# Constants
-H5F_ACC_RDONLY = HDF5.H5F_ACC_RDONLY
-H5F_ACC_RDWR = HDF5.H5F_ACC_RDWR
-H5F_ACC_TRUNC = HDF5.H5F_ACC_TRUNC
-H5F_CLOSE_STRONG = HDF5.H5F_CLOSE_STRONG
-H5P_DEFAULT = HDF5.H5P_DEFAULT
-H5P_FILE_ACCESS = HDF5.H5P_FILE_ACCESS
-H5P_FILE_CREATE = HDF5.H5P_FILE_CREATE
-# Functions
-h5d_create = HDF5.h5d_create
-h5f_close  = HDF5.h5f_close
-h5f_create = HDF5.h5f_create
-h5f_open   = HDF5.h5f_open
-writearray = HDF5.writearray
-hdf5_to_julia = HDF5.hdf5_to_julia
 
 const magic_base = "Julia data file (HDF5), version "
 const version_current = "0.0.1"
@@ -46,7 +26,7 @@ type CompositeKind; end   # here this means "a type with fields"
 # length(group) only returns the number of _completed_ items in a group. Since
 # we'll write recursively, we need to keep track of the number of reference
 # objects _started_.
-type JldFile
+type JldFile <: HDF5.DataFile
     plain::HDF5File
     version::String
     toclose::Bool
@@ -103,17 +83,17 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
         error("File ", filename, " cannot be found")
     end
     version = version_current
-    pa = p_create(H5P_FILE_ACCESS)
+    pa = p_create(HDF5.H5P_FILE_ACCESS)
     try
-        pa["fclose_degree"] = H5F_CLOSE_STRONG
+        pa["fclose_degree"] = HDF5.H5F_CLOSE_STRONG
         if cr && (tr || !isfile(filename))
             # We're truncating, so we don't have to check the format of an existing file
             # Set the user block to 512 bytes, to save room for the header
-            p = p_create(H5P_FILE_CREATE)
+            p = p_create(HDF5.H5P_FILE_CREATE)
             local f
             try
                 p["userblock"] = 512
-                f = h5f_create(filename, H5F_ACC_TRUNC, p.id, pa.id)
+                f = HDF5.h5f_create(filename, HDF5.H5F_ACC_TRUNC, p.id, pa.id)
             finally
                 close(p)
             end
@@ -134,7 +114,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
                 close(rawfid)
             end
             if beginswith(magic, magic_base.data)
-                f = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
+                f = HDF5.h5f_open(filename, wr ? HDF5.H5F_ACC_RDWR : HDF5.H5F_ACC_RDONLY, pa.id)
                 version = bytestring(convert(Ptr{Uint8}, magic) + length(magic_base))
                 fj = JldFile(HDF5File(f, filename), version, true, true, mmaparrays)
                 # Load any required files/packages
@@ -169,7 +149,7 @@ function jldopen(fname::String, mode::String="r"; mmaparrays::Bool=false)
     error("invalid open mode: ", mode)
 end
 
-function jldobject(obj_id::Hid, parent)
+function jldobject(obj_id::HDF5.Hid, parent)
     obj_type = HDF5.h5i_get_type(obj_id)
     obj_type == HDF5.H5I_GROUP ? JldGroup(HDF5Group(obj_id, file(parent.plain)), file(parent)) :
     obj_type == HDF5.H5I_DATATYPE ? HDF5Datatype(obj_id) :
@@ -465,7 +445,7 @@ function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGro
         # Write the attribute
         a_write(dset, name_type_attr, astype)
         # Write the data
-        writearray(dset, dtype.id, data)
+        HDF5.writearray(dset, dtype.id, data)
     finally
         close(dset)
         close(dtype)
@@ -478,7 +458,8 @@ write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name
 function write(parent::Union(JldFile, JldGroup), name::ASCIIString, n::Nothing, astype::ASCIIString)
     local dset
     try
-        dset = HDF5Dataset(h5d_create(parent.plain.id, name, HDF5.H5T_NATIVE_UINT8, dataspace(nothing).id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT), file(parent.plain))
+        dset = HDF5Dataset(HDF5.h5d_create(parent.plain.id, name, HDF5.H5T_NATIVE_UINT8, dataspace(nothing).id,
+                           HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT), file(parent.plain))
         a_write(dset, name_type_attr, astype)
     finally
         close(dset)
@@ -566,7 +547,7 @@ function write{T}(parent::Union(JldFile, JldGroup), path::ASCIIString, data::Arr
     # Write the references as the chosen variable
     cset, ctype = d_create(parent.plain, path, refs)
     try
-        writearray(cset, ctype.id, refs)
+        HDF5.writearray(cset, ctype.id, refs)
         a_write(cset, name_type_attr, astype)
     finally
         close(ctype)

@@ -4,6 +4,8 @@
 
 module HDF5
 
+include("datafile.jl")
+
 ## Add methods to...
 import Base: close, convert, done, dump, endof, flush, getindex, has, isempty, isvalid, length, names, ndims, next, read, setindex!, show, size, start, write
 
@@ -264,7 +266,7 @@ hdf5_type_id{C<:CharType}(::Type{C})  = H5T_C_S1
 # application).
 
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
-type HDF5File
+type HDF5File <: DataFile
     id::Hid
     filename::String
 
@@ -277,7 +279,7 @@ end
 convert(::Type{Cint}, f::HDF5File) = f.id
 show(io::IO, fid::HDF5File) = isvalid(fid) ? print(io, "HDF5 data file: ", fid.filename) : print(io, "Closed HFD5 data file: ", fid.filename)
 
-type HDF5Group
+type HDF5Group <: DataFile
     id::Hid
     file::HDF5File         # the parent file
 
@@ -928,20 +930,6 @@ get_dims(dset::HDF5Dataset) = get_dims(dataspace(checkvalid(dset)))
 # reduction is possible, and leads to loss of truncated data
 set_dims!(dset::HDF5Dataset, new_dims::Dims) = h5d_set_extent(checkvalid(dset), [reverse(new_dims)...])
 
-# Convenience macros
-macro read(fid, sym)
-    if !isa(sym, Symbol)
-        error("Second input to @read must be a symbol (i.e., a variable)")
-    end
-    esc(:($sym = read($fid, $(string(sym)))))
-end
-macro write(fid, sym)
-    if !isa(sym, Symbol)
-        error("Second input to @write must be a symbol (i.e., a variable)")
-    end
-    esc(:(write($fid, $(string(sym)), $sym)))
-end
-
 # Generic read functions
 for (fsym, osym, ptype) in
     ((:d_read, :d_open, Union(HDF5File, HDF5Group)),
@@ -964,15 +952,6 @@ function read(parent::Union(HDF5File, HDF5Group), name::ASCIIString)
     val = read(obj)
     close(obj)
     val
-end
-# Read a list of variables, read(parent, "A", "B", "x", ...)
-function read(parent::Union(HDF5File, HDF5Group), name::ASCIIString...)
-    n = length(name)
-    out = Array(Any, n)
-    for i = 1:n
-        out[i] = read(parent, name[i])
-    end
-    return tuple(out...)
 end
 
 # "Plain" (unformatted) reads. These work only for simple types: scalars, arrays, and strings
