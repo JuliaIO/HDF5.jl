@@ -24,17 +24,12 @@ typealias Haddr       Uint64
 libname = "libhdf5"
 @unix_only const libhdf5 = dlopen(libname)
 @windows_only begin
-function findlibhdf5()    
-    spaths = split(ENV["SYS_PATH"], ";")
-    libfile = ""
-    for p in spaths
-        if !isempty(search(p, "HDF5"))
-            dl = dlopen_e(joinpath(p,"hdf5.dll"))
-            if dl != C_NULL
-                ccall(:add_library_mapping,Cint,(Ptr{Cchar},Ptr{Void}),libname,dl)
-                return dl
-            end
-        end
+function findlibhdf5()
+    const OS_ARCH = WORD_SIZE == 64 ? "x86_64" : "x86"
+    push!(DL_LOAD_PATH, joinpath(Pkg.dir("HDF5/deps/usr/lib/"), OS_ARCH))
+    dl = dlopen_e("hdf5")
+    if dl != C_NULL
+        return dl
     end
     error("Library not found. See the README for installation instructions.")
 end

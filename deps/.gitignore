@@ -1,0 +1,4 @@
+*
+!.gitignore
+!deps.jl
+!build.jl
