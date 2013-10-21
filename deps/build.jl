@@ -2,6 +2,12 @@ using BinDeps
 
 @BinDeps.setup
 
+@linux_only begin
+    hdf5 = library_dependency("libhdf5")
+    provides(AptGet, "hdf5-tools", hdf5)
+    provides(Yum, "hdf5", hdf5)
+end
+
 @windows_only begin
     hdf5 = library_dependency("hdf5")
 
