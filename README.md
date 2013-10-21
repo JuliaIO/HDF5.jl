@@ -30,7 +30,7 @@ Pkg.add("HDF5")
 ```
 
 You also need to have the HDF5 library installed on your
-system. Version 1.8 or higher is required. **On Linux and Windows,
+system (version 1.8 or higher is required), but **for most users
 no additional steps should be required; the HDF5 library should be
 installed for you automatically when you add the package.**
 
