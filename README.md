@@ -30,8 +30,12 @@ Pkg.add("HDF5")
 ```
 
 You also need to have the HDF5 library installed on your
-system. Version 1.8 or higher is required. Here are some examples of
-how to install HDF5:
+system. Version 1.8 or higher is required. **On Linux and Windows,
+no additional steps should be required; the HDF5 library should be
+installed for you automatically when you add the package.**
+
+If you have to install HDF5 manually, here are some examples of
+how to do it:
 
 - Debian/(K)Ubuntu: `apt-get -u install hdf5-tools`
 - OSX: `brew install hdf5` (using [Homebrew](http://mxcl.github.com/homebrew/))
