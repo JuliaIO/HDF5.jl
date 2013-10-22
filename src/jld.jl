@@ -871,7 +871,7 @@ macro load(filename, vars...)
         nms = names(f)
         for n in nms
             obj = f[n]
-            if isa(obj, HDF5Dataset)
+            if isa(obj, JldDataset)
                 sym = symbol(n)
                 push!(readexprs, :($(esc(sym)) = read($f, $n)))
             end
