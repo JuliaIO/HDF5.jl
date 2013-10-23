@@ -21,13 +21,13 @@ end
     push!(DL_LOAD_PATH, joinpath(Pkg.dir("HDF5/deps/usr/lib/"), OS_ARCH))
 end
 
-@osx_only begin
-    if Pkg.installed("Homebrew") === nothing
-            error("Homebrew package not installed, please run Pkg.add(\"Homebrew\")")
-    end
-    using Homebrew
-    hdf5 = library_dependency("hdf5")
-    provides( Homebrew.HB, "hdf5", hdf5, os = :Darwin )
-end
+# @osx_only begin
+#     if Pkg.installed("Homebrew") === nothing
+#             error("Homebrew package not installed, please run Pkg.add(\"Homebrew\")")
+#     end
+#     using Homebrew
+#     hdf5 = library_dependency("hdf5")
+#     provides( Homebrew.HB, "hdf5", hdf5, os = :Darwin )
+# end
 
 @BinDeps.install
