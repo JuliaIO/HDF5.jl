@@ -3,4 +3,6 @@ include("jld.jl")
 include("readremote.jl")
 include("extend_test.jl")
 include("gc.jl")
-include("jld_dataframe.jl")
+if Pkg.installed("DataFrames")
+    include("jld_dataframe.jl")
+end
