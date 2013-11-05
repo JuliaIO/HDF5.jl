@@ -847,7 +847,7 @@ function dump(io::IO, x::Union(HDF5File, HDF5Group), n::Int, indent)
         for k in names(x)
             print(io, indent, "  ", k, ": ")
             v = o_open(x, k)
-            dump(io, v, n - 1, strcat(indent, "  "))
+            dump(io, v, n - 1, string(indent, "  "))
             close(v)
             if i > 10
                 println(io, indent, "  ...")
