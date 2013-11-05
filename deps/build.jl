@@ -26,7 +26,7 @@ end
             error("Homebrew package not installed, please run Pkg.add(\"Homebrew\")")
     end
     using Homebrew
-    hdf5 = library_dependency("hdf5")
+    hdf5 = library_dependency("libhdf5")
     provides( Homebrew.HB, "hdf5", hdf5, os = :Darwin )
 end
 
