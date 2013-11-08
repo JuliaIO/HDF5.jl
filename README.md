@@ -81,13 +81,13 @@ which reads the entire file. You can alternatively list particular variables of 
 More fine-grained control can be obtained using functional syntax:
 
 ```julia
-file = jldopen("mydata.jld", "w")
-write(file, "A", A)  # alternatively, say "@write file A"
-close(file)
+jldopen("mydata.jld", "w") do file
+    write(file, "A", A)  # alternatively, say "@write file A"
+end
 
-file = jldopen("mydata.jld", "r")
-c = read(file, "A")
-close(file)
+c = jldopen("mydata.jld", "r") do file
+    read(file, "A")
+end
 ```
 This allows you to add variables as they are generated to an open JLD file.
 
@@ -98,11 +98,11 @@ HDF5 interface:
 ```julia
 using HDF5
 
-file = h5open("test.h5", "w")
-g = g_create(file, "mygroup") # create a group
-g["dset1"] = 3.2              # create a scalar dataset inside the group
-attrs(g)["Description"] = "This group contains only a single dataset" # an attribute
-close(file)
+h5open("test.h5", "w") do file
+    g = g_create(file, "mygroup") # create a group
+    g["dset1"] = 3.2              # create a scalar dataset inside the group
+    attrs(g)["Description"] = "This group contains only a single dataset" # an attribute
+end
 ```
 
 There is no conflict in having multiple modules (HDF5, JLD, and
