@@ -149,6 +149,15 @@ function jldopen(fname::String, mode::String="r"; mmaparrays::Bool=false)
     error("invalid open mode: ", mode)
 end
 
+function jldopen(f::Function, args...)
+    jld = jldopen(args...)
+    try
+        f(jld)
+    finally
+        close(jld)
+    end
+end
+
 function jldobject(obj_id::HDF5.Hid, parent)
     obj_type = HDF5.h5i_get_type(obj_id)
     obj_type == HDF5.H5I_GROUP ? JldGroup(HDF5Group(obj_id, file(parent.plain)), file(parent)) :
@@ -835,12 +844,12 @@ end
 
 function load(filename, varnames::Array)
     vars = Array(Any, length(varnames))
-    f = jldopen(filename)
-    for i = 1:length(varnames)
-        vars[i] = read(f, varnames[i])
+    jldopen(filename) do f
+        for i = 1:length(varnames)
+            vars[i] = read(f, varnames[i])
+        end
+        tuple(vars...)
     end
-    close(f)
-    tuple(vars...)
 end
 
 macro save(filename, vars...)
@@ -849,9 +858,12 @@ macro save(filename, vars...)
         writeexprs = Array(Expr, 0)
         m = current_module()
         for vname in names(m)
-            v = eval(m, vname)
-            if !isa(v, Module)
-                push!(writeexprs, :(write(f, $(string(vname)), $(esc(vname)))))
+            s = string(vname)
+            if !ismatch(r"^_+[0-9]*$", s) # skip IJulia history vars
+                v = eval(m, vname)
+                if !isa(v, Module)
+                    push!(writeexprs, :(write(f, $s, $(esc(vname)))))
+                end
             end
         end
     else
@@ -860,29 +872,41 @@ macro save(filename, vars...)
             writeexprs[i] = :(write(f, $(string(vars[i])), $(esc(vars[i]))))
         end
     end
-    Expr(:block, :(local f = jldopen($(esc(filename)), "w")), writeexprs..., :(close(f)))
+    Expr(:block,
+         :(local f = jldopen($(esc(filename)), "w")),
+         Expr(:try, Expr(:block, writeexprs...), false, false,
+              :(close(f))))
 end
 
 macro load(filename, vars...)
     if isempty(vars)
         # Load all variables in the top level of the file
         readexprs = Array(Expr, 0)
+        vars = Array(Expr, 0)
         f = jldopen(filename)
         nms = names(f)
         for n in nms
             obj = f[n]
             if isa(obj, JldDataset)
-                sym = symbol(n)
-                push!(readexprs, :($(esc(sym)) = read($f, $n)))
+                sym = esc(symbol(n))
+                push!(readexprs, :($sym = read($f, $n)))
+                push!(vars, sym)
             end
         end
-        return Expr(:block, readexprs..., :(close($f)))
+        return Expr(:block, 
+                    Expr(:global, vars...),
+                    Expr(:try,  Expr(:block, readexprs...), false, false,
+                         :(close($f))))
     else
         readexprs = Array(Expr, length(vars))
         for i = 1:length(vars)
             readexprs[i] = :($(esc(vars[i])) = read(f, $(string(vars[i]))))
         end
-        return Expr(:block, :(local f = jldopen($(esc(filename)))), readexprs..., :(close(f)))
+        return Expr(:block, 
+                    :(local f = jldopen($(esc(filename)))),
+                    Expr(:global, map(esc, vars)...),
+                    Expr(:try,  Expr(:block, readexprs...), false, false,
+                         :(close(f))))
     end
 end
 
