@@ -858,9 +858,12 @@ macro save(filename, vars...)
         writeexprs = Array(Expr, 0)
         m = current_module()
         for vname in names(m)
-            v = eval(m, vname)
-            if !isa(v, Module)
-                push!(writeexprs, :(write(f, $(string(vname)), $(esc(vname)))))
+            s = string(vname)
+            if !ismatch(r"^_+[0-9]*$", s) # skip IJulia history vars
+                v = eval(m, vname)
+                if !isa(v, Module)
+                    push!(writeexprs, :(write(f, $s, $(esc(vname)))))
+                end
             end
         end
     else
