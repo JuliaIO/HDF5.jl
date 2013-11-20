@@ -17,6 +17,29 @@ opq = Array{Uint8}[[0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x30],
                    [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x31],
                    [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x32],
                    [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x33]]
+# For H5T_ARRAY
+AA = Array{Int,2}[
+[ 0   0   0;
+ 0  -1  -2;
+ 0  -2  -4;
+ 0  -3  -6;
+ 0  -4  -8],
+[ 0  1   2;
+ 1  1   1;
+ 2  1   0;
+ 3  1  -1;
+ 4  1  -2],
+[ 0  2  4;
+ 2  3  4;
+ 4  4  4;
+ 6  5  4;
+ 8  6  4],
+[ 0   3   6;
+  3   5   7;
+  6   7   8;
+  9   9   9;
+ 12  11  10]]
+
 
 const savedir = joinpath(tempdir(), "h5")
 if !isdir(savedir)
@@ -131,4 +154,10 @@ fid = h5open(file, "r")
 d = read(fid, "DS1")
 @assert d.tag == "Character array"
 @assert d.data == opq
+close(fid)
+
+file = getfile("h5ex_t_array.h5")
+fid = h5open(file, "r")
+A = read(fid, "DS1")
+@assert A == AA
 close(fid)
