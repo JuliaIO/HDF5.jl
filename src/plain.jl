@@ -4,10 +4,11 @@
 
 module HDF5
 
-include("datafile.jl")
-
 ## Add methods to...
 import Base: close, convert, done, dump, endof, flush, getindex, has, isempty, isvalid, length, names, ndims, next, read, setindex!, show, size, start, write
+
+include("datafile.jl")
+include("fixedarrays.jl")
 
 ## C types
 typealias C_time_t Int
@@ -965,9 +966,7 @@ function read{T<:HDF5BitsKind}(obj::DatasetOrAttribute, ::Type{T})
 end
 # Read array of BitsKind
 function read{T<:HDF5BitsKind}(obj::DatasetOrAttribute, ::Type{Array{T}})
-    local data
     dims = size(obj)
-    dspace = dataspace(obj)
     data = Array(T, dims...)
     readarray(obj, hdf5_type_id(T), data)
     data
@@ -975,6 +974,34 @@ end
 # Empty arrays
 function read{T<:BitsKindOrByteString}(obj::DatasetOrAttribute, ::Type{EmptyArray{T}})
     Array(T, 0)
+end
+# Fixed-size arrays (H5T_ARRAY)
+function read{A<:FixedArray}(obj::DatasetOrAttribute, ::Type{A})
+    T = eltype(A)
+    sz = size(A)
+    data = Array(T, sz)
+    readarray(obj, hdf5_type_id(T), data)
+    data
+end
+function read{A<:FixedArray}(obj::DatasetOrAttribute, ::Type{Array{A}})
+    T = eltype(A)
+    sz = size(A)
+    dims = size(obj)
+    dataptr = Base.c_malloc(prod(sz)*prod(dims)*sizeof(T))
+    nd = length(sz)
+    hsz = Hsize[convert(Hsize,sz[nd-i+1]) for i = 1:nd]
+    memtype_id = h5t_array_create(hdf5_type_id(T), convert(Cuint, length(sz)), hsz)
+    try
+        h5d_read(obj.id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataptr)
+    finally
+        h5t_close(memtype_id)
+    end
+    ret = Array(Array{T}, dims)
+    L = prod(sz)
+    for i = 1:prod(dims)
+        ret[i] = pointer_to_array(convert(Ptr{T},dataptr+L*sizeof(T)*(i-1)), sz, i == 1)
+    end
+    ret
 end
 
 # Clean up string buffer according to padding mode
@@ -1496,6 +1523,8 @@ function hdf5_to_julia_eltype(objtype)
         T = HDF5Vlen{hdf5_to_julia_eltype(HDF5Datatype(super_id))}
     elseif class_id == H5T_COMPOUND
         T = HDF5Compound
+    elseif class_id == H5T_ARRAY
+        T = hdf5array(objtype)
     else
         error("Class id ", class_id, " is not yet supported")
     end
@@ -1723,8 +1752,11 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5s_get_simple_extent_dims, :H5Sget_simple_extent_dims, Cint, (Hid, Ptr{Hsize}, Ptr{Hsize}), (:space_id, :dims, :maxdims), :(error("Error getting the dimensions for a dataspace"))),
      (:h5s_get_simple_extent_ndims, :H5Sget_simple_extent_ndims, Cint, (Hid,), (:space_id,), :(error("Error getting the number of dimensions for a dataspace"))),
      (:h5s_get_simple_extent_type, :H5Sget_simple_extent_type, Cint, (Hid,), (:space_id,), :(error("Error getting the dataspace type"))),
+     (:h5t_array_create, :H5Tarray_create2, Hid, (Hid, Cuint, Ptr{Hsize}), (:basetype_id, :ndims, :sz), :(error("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz))),
      (:h5t_copy, :H5Tcopy, Hid, (Hid,), (:dtype_id,), :(error("Error copying datatype"))),
      (:h5t_create, :H5Tcreate, Hid, (Cint, Csize_t), (:class_id, :sz), :(error("Error creating datatype of id ", classid))),
+     (:h5t_get_array_dims, :H5Tget_array_dims2, Cint, (Hid, Ptr{Hsize}), (:dtype_id, :dims), :(error("Error getting dimensions of array"))),
+     (:h5t_get_array_ndims, :H5Tget_array_ndims, Cint, (Hid,), (:dtype_id,), :(error("Error getting ndims of array"))),
      (:h5t_get_class, :H5Tget_class, Cint, (Hid,), (:dtype_id,), :(error("Error getting class"))),
      (:h5t_get_cset, :H5Tget_cset, Cint, (Hid,), (:dtype_id,), :(error("Error getting character set encoding"))),
      (:h5t_get_member_class, :H5Tget_member_class, Cint, (Hid, Cuint), (:dtype_id, :index), :(error("Error getting class of compound datatype member #", index))),
@@ -1852,6 +1884,15 @@ function vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5D
     sz = Array(Hsize, 1)
     h5d_vlen_get_buf_size(dset.id, dtype.id, dspace.id, sz)
     sz[1]
+end
+
+function hdf5array(objtype)
+    nd = h5t_get_array_ndims(objtype.id)
+    dims = Array(Hsize, nd)
+    h5t_get_array_dims(objtype.id, dims)
+    eltyp = HDF5Datatype(h5t_get_super(objtype.id))
+    T = hdf5_to_julia_eltype(eltyp)
+    fixedarray_type(T, ntuple(nd, i->int(dims[nd-i+1])))
 end
 
 ### Property manipulation ###
