@@ -1020,6 +1020,7 @@ function read{S<:ByteString}(obj::DatasetOrAttribute, ::Type{Array{S}})
         close(objtype)
     end
     memtype_id = h5t_copy(H5T_C_S1)
+    h5t_set_cset(memtype_id, cset(S))
     if isempty(sz)
         ret = Array(S, 0)
     else
