@@ -880,6 +880,9 @@ end
 
 macro load(filename, vars...)
     if isempty(vars)
+        if isa(filename, Expr)
+            filename = eval(current_module(), filename)
+        end
         # Load all variables in the top level of the file
         readexprs = Array(Expr, 0)
         vars = Array(Expr, 0)
