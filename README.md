@@ -78,6 +78,14 @@ variables, then it saves all the variables in the current module. You can read t
 ```
 which reads the entire file. You can alternatively list particular variables of interest, e.g., `@load "/tmp/myfile.jld" z`.
 
+For plain HDF5 files, you can similarly say
+```julia
+A = reshape(1:120, 15, 8)
+h5write("/tmp/test2.h5", "mygroup2/A", A)
+data = h5read("/tmp/test2.h5", "mygroup2/A", (2:3:15, 3:5))
+```
+where the last line reads back just `A[2:3:15, 3:5]` from the dataset.
+
 More fine-grained control can be obtained using functional syntax:
 
 ```julia
@@ -90,6 +98,9 @@ c = jldopen("mydata.jld", "r") do file
 end
 ```
 This allows you to add variables as they are generated to an open JLD file.
+You don't have to use the `do` syntax (`file = jldopen("mydata.jld", "w")` works
+just fine), but an advantage is that it will automatically close the file (`close(file)`)
+for you, even in cases of error.
 
 Julia's high-level wrapper, providing a dictionary-like interface, may
 also be of interest. This is demonstrated with the "plain" (unformatted)
@@ -126,6 +137,10 @@ contain example of usage.
 
 - Blake Johnson made several improvements, such as support for
   iterating over attributes
+
+- Isaiah Norton and Elliot Saba improved installation on Windows and OSX
+
+- Steve Johnson contributed the `do` syntax
 
 - Mike Nolta and Jameson Nash contributed code or suggestions for
   improving the handling of HDF5's constants

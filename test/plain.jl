@@ -67,6 +67,9 @@ d[3:5] = 3:5
 # Create a dataset designed to be deleted
 f["deleteme"] = 17.2
 close(f)
+# Test the h5read/write interface
+W = reshape(1:120, 15, 8)
+h5write(fn, "newgroup/W", W)
 
 # Read the file back in
 fr = h5open(fn)
@@ -169,3 +172,10 @@ fr = h5open(fn, "r+")
 o_delete(fr, "deleteme")
 @assert !exists(fr, "deleteme")
 close(fr)
+
+# Test the h5read interface
+Wr = h5read(fn, "newgroup/W")
+@assert Wr == W
+rng = (2:3:15, 3:5)
+Wr = h5read(fn, "newgroup/W", rng)
+@assert Wr == W[rng...]
