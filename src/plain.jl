@@ -475,7 +475,6 @@ function h5open(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bo
     pa["fclose_degree"] = H5F_CLOSE_STRONG
     if cr && (tr || !isfile(filename))
         fid = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, pa.id)
-        close(pa)
     else
         if !h5f_is_hdf5(filename)
             error("This does not appear to be an HDF5 file")
@@ -501,6 +500,38 @@ function h5open(f::Function, args...)
     finally
         close(fid)
     end
+end
+
+function h5write(filename, name::ASCIIString, data)
+    fid = h5open(filename, true, true, true, false, true)
+    try
+        write(fid, name, data)
+    finally
+        close(fid)
+    end
+end
+
+function h5read(filename, name::ASCIIString)
+    local dat
+    fid = h5open(filename, "r")
+    try
+        dat = read(fid, name)
+    finally
+        close(fid)
+    end
+    dat
+end
+
+function h5read(filename, name::ASCIIString, indices::(RangeIndex...))
+    local dat
+    fid = h5open(filename, "r")
+    try
+        dset = fid[name]
+        dat = dset[indices...]
+    finally
+        close(fid)
+    end
+    dat
 end
 
 # Ensure that objects haven't been closed
@@ -1991,6 +2022,8 @@ export
     get_create_properties,
     getindex,
     h5open,
+    h5read,
+    h5write,
     has,
     iscontiguous,
     ishdf5,
