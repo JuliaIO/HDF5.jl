@@ -358,12 +358,14 @@ end
 function read(obj::JldDataset, T::DataType)
     local x
     # Add the parameters
-    params = a_read(obj.plain, "TypeParameters")
-    p = Array(Any, length(params))
-    for i = 1:length(params)
-        p[i] = eval(parse(params[i]))
+    if exists(obj, "TypeParameters")
+        params = a_read(obj.plain, "TypeParameters")
+        p = Array(Any, length(params))
+        for i = 1:length(params)
+            p[i] = eval(parse(params[i]))
+        end
+        T = T{p...}
     end
-    T = T{p...}
     v = getrefs(obj, Any)
     if length(v) == 0
         x = ccall(:jl_new_struct, Any, (Any,Any...), T)
