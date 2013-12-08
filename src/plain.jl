@@ -22,10 +22,7 @@ typealias Haddr       Uint64
 
 ### Load and initialize the HDF library ###
 libname = "libhdf5"
-@osx_only begin
-import Homebrew
-push!(DL_LOAD_PATH, joinpath(Homebrew.brew_prefix,"lib"))
-end
+@osx_only import Homebrew # Add Homebrew/lib to the DL_LOAD_PATH
 @unix_only const libhdf5 = dlopen(libname)
 @windows_only begin
 function findlibhdf5()
