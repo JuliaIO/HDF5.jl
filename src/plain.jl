@@ -21,23 +21,27 @@ typealias Htri        Cint   # pseudo-boolean (negative if error)
 typealias Haddr       Uint64
 
 ### Load and initialize the HDF library ###
-libname = "libhdf5"
 @osx_only import Homebrew # Add Homebrew/lib to the DL_LOAD_PATH
-@unix_only const libhdf5 = dlopen(libname)
+@unix_only begin
+    const libname = "libhdf5"
+    const libhdf5 = dlopen(libname)
+end
 @windows_only begin
-function findlibhdf5()
+let
+    global libhdf5, libname
     const OS_ARCH = WORD_SIZE == 64 ? "x86_64" : "x86"
     push!(DL_LOAD_PATH, joinpath(Pkg.dir("HDF5/deps/usr/lib/"), OS_ARCH))
     dl = dlopen_e("hdf5")
     if dl != C_NULL
-        return dl
+        const libhdf5 = dl
+        const libname = "hdf5"
+    else
+        error("Library not found. See the README for installation instructions.")
     end
-    error("Library not found. See the README for installation instructions.")
 end
-const libhdf5 = findlibhdf5()
 end
 
-status = ccall(dlsym(libhdf5, :H5open), Herr, ())
+status = ccall((:H5open, libname), Herr, ())
 if status < 0
     error("Can't initialize the HDF5 library")
 end
@@ -1632,7 +1636,7 @@ h5o_open(obj_id::Hid, name::ASCIIString) = h5o_open(obj_id, name, H5P_DEFAULT)
 #h5s_get_simple_extent_ndims(space_id::Hid) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 h5t_get_native_type(type_id::Hid) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
 function h5r_dereference(obj_id::Hid, ref_type::Integer, pointee::HDF5ReferenceObj)
-    ret = ccall(dlsym(libhdf5, :H5Rdereference), Hid, (Hid, Cint, Ptr{HDF5ReferenceObj}), obj_id, ref_type, &pointee)
+    ret = ccall((:H5Rdereference, libname), Hid, (Hid, Cint, Ptr{HDF5ReferenceObj}), obj_id, ref_type, &pointee)
     if ret < 0
         error("Error dereferencing object")
     end
@@ -1641,14 +1645,8 @@ end
 
 ### Utilities for generating ccall wrapper functions programmatically ###
 
-function ccallexpr(ccallsym::Symbol, outtype, argtypes::Tuple, argsyms::Tuple)
-    ccallargs = Any[Expr(:quote, ccallsym), outtype, Expr(:tuple, argtypes...)]
-    ccallargs = ccallsyms(ccallargs, length(argtypes), argsyms)
-    Expr(:ccall, ccallargs...)
-end
-
-function ccallexpr(lib::Ptr, ccallsym::Symbol, outtype, argtypes::Tuple, argsyms::Tuple)
-    ccallargs = Any[Expr(:call, :dlsym, lib, Expr(:quote, ccallsym)), outtype, Expr(:tuple, argtypes...)]
+function ccallexpr(lib::String, ccallsym::Symbol, outtype, argtypes::Tuple, argsyms::Tuple)
+    ccallargs = Any[Expr(:tuple, Expr(:quote, ccallsym), lib), outtype, Expr(:tuple, argtypes...)]
     ccallargs = ccallsyms(ccallargs, length(argtypes), argsyms)
     Expr(:ccall, ccallargs...)
 end
@@ -1724,7 +1722,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
     )
 
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
-    ex_ccall = ccallexpr(libhdf5, h5name, outtype, argtypes, argsyms)
+    ex_ccall = ccallexpr(libname, h5name, outtype, argtypes, argsyms)
     ex_body = quote
         status = $ex_ccall
         if status < 0
@@ -1819,7 +1817,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
 )
 
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
-    ex_ccall = ccallexpr(libhdf5, h5name, outtype, argtypes, argsyms)
+    ex_ccall = ccallexpr(libname, h5name, outtype, argtypes, argsyms)
     ex_body = quote
         ret = $ex_ccall
         if ret < 0
@@ -1844,7 +1842,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5t_is_variable_str, :H5Tis_variable_str, Htri, (Hid,), (:type_id,), :(error("Error determining whether string is of variable length"))),
 )
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
-    ex_ccall = ccallexpr(libhdf5, h5name, outtype, argtypes, argsyms)
+    ex_ccall = ccallexpr(libname, h5name, outtype, argtypes, argsyms)
     ex_body = quote
         ret = $ex_ccall
         if ret < 0
@@ -1863,7 +1861,7 @@ _majnum = Array(Cuint, 1)
 _minnum = Array(Cuint, 1)
 _relnum = Array(Cuint, 1)
 function h5_get_libversion()
-    status = ccall(dlsym(libhdf5, :H5get_libversion),
+    status = ccall((:H5get_libversion, libname),
                    Herr,
                    (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}),
                    _majnum, _minnum, _relnum)
@@ -1903,7 +1901,7 @@ function h5s_get_simple_extent_dims(space_id::Hid)
     return tuple(reverse(dims)...), tuple(reverse(maxdims)...)
 end
 function h5t_get_member_name(type_id::Hid, index::Integer)
-    pn = ccall(dlsym(libhdf5, :H5Tget_member_name),
+    pn = ccall((:H5Tget_member_name, libname),
                Ptr{Uint8},
                (Hid, Cuint),
                type_id, index)
@@ -1913,7 +1911,7 @@ function h5t_get_member_name(type_id::Hid, index::Integer)
     ascii(bytestring(pn))
 end
 function h5t_get_tag(type_id::Hid)
-    pc = ccall(dlsym(libhdf5, :H5Tget_tag),
+    pc = ccall((:H5Tget_tag, libname),
                    Ptr{Uint8},
                    (Hid,),
                    type_id)
