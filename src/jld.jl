@@ -7,7 +7,7 @@ using HDF5
 # Add methods to...
 import HDF5: close, dump, exists, file, getindex, g_create, g_open, name, names, read, size, write,
              HDF5ReferenceObj, HDF5BitsKind
-import Base.show
+import Base.show, Base.length
 
 const magic_base = "Julia data file (HDF5), version "
 const version_current = "0.0.1"
@@ -711,16 +711,15 @@ function _getindex{N}(dset::JldDataset, ::Type{Array{Bool,N}}, indices::RangeInd
 end
 _getindex{T,N}(dset::JldDataset, ::Type{Array{T,N}}, indices::Union(Integer, RangeIndex)...) = getrefs(dset, T, indices...)
 
+length(x::Union(JldFile, JldGroup)) = length(names(x))
 
 ### Dump ###
 function dump(io::IO, parent::Union(JldFile, JldGroup), n::Int, indent)
-    println(io, typeof(parent), " len ", length(parent))
+    nms = names(parent)
+    println(io, typeof(parent), " len ", length(nms))
     if n > 0
         i = 1
-        for k in names(parent)
-            if k == "_refs" || k == "_types"
-                continue
-            end
+        for k in nms
             print(io, indent, "  ", k, ": ")
             v = parent[k]
             if isa(v, HDF5Group)
