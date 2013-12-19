@@ -99,7 +99,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             end
             fj = JldFile(HDF5File(f, filename), version, true, true, mmaparrays)
             # initialize empty require list
-            write(fj, pathrequire, ASCIIString[])
+            write(fj, pathrequire, ByteString[])
         else
             # Test whether this is a jld file
             sz = filesize(filename)
@@ -166,7 +166,7 @@ function jldobject(obj_id::HDF5.Hid, parent)
     error("Invalid object type for path ", path)
 end
 
-getindex(parent::Union(JldFile, JldGroup), path::ASCIIString) =
+getindex(parent::Union(JldFile, JldGroup), path::ByteString) =
     jldobject(HDF5.h5o_open(parent.plain.id, path), parent)
 
 function getindex(parent::Union(JldFile, JldGroup, JldDataset), r::HDF5ReferenceObj)
@@ -179,7 +179,7 @@ end
 g_create(parent::Union(JldFile, JldGroup), args...) = JldGroup(g_create(parent.plain, args...), file(parent))
 g_open(parent::Union(JldFile, JldGroup), args...) = JldGroup(g_open(parent.plain, args...), file(parent))
 name(p::Union(JldFile, JldGroup, JldDataset)) = name(p.plain)
-exists(p::Union(JldFile, JldGroup, JldDataset), path::ASCIIString) = exists(p.plain, path)
+exists(p::Union(JldFile, JldGroup, JldDataset), path::ByteString) = exists(p.plain, path)
 root(p::Union(JldFile, JldGroup, JldDataset)) = g_open(file(p), "/")
 
 ### Julia data file format implementation ###
@@ -187,7 +187,7 @@ root(p::Union(JldFile, JldGroup, JldDataset)) = g_open(file(p), "/")
 
 ### Read ###
 
-function read(parent::Union(JldFile, JldDataset), name::ASCIIString)
+function read(parent::Union(JldFile, JldDataset), name::ByteString)
     local val
     obj = parent[name]
     try
@@ -271,7 +271,7 @@ function readsafely(obj::Union(JldFile, JldDataset))
     end
     ret
 end
-function readsafely(parent::Union(JldFile, JldGroup), name::ASCIIString)
+function readsafely(parent::Union(JldFile, JldGroup), name::ByteString)
     local ret
     obj = parent[name]
     try
@@ -319,8 +319,8 @@ function read{T<:ComplexTypes,N}(obj::JldDataset, ::Type{Array{T,N}})
 end
 
 # Symbol
-read(obj::JldDataset, ::Type{Symbol}) = symbol(read(obj.plain, ASCIIString))
-read{N}(obj::JldDataset, ::Type{Array{Symbol,N}}) = map(symbol, read(obj.plain, Array{ASCIIString}))
+read(obj::JldDataset, ::Type{Symbol}) = symbol(read(obj.plain, ByteString))
+read{N}(obj::JldDataset, ::Type{Array{Symbol,N}}) = map(symbol, read(obj.plain, Array{ByteString}))
 
 # Char
 read(obj::JldDataset, ::Type{Char}) = char(read(obj.plain, Uint32))
@@ -448,7 +448,7 @@ end
 ### Writing ###
 
 # Write "basic" types
-function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ASCIIString,
+function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ByteString,
                                                    data::Union(T, Array{T}), astype::ByteString)
     # Create the dataset
     dset, dtype = d_create(parent.plain, name, data)
@@ -462,11 +462,11 @@ function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGro
         close(dtype)
     end
 end
-write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ASCIIString, data::data::Union(T, Array{T})) =
+write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ByteString, data::data::Union(T, Array{T})) =
     write(parent, name, data, full_typename(typeof(data)))
 
 # Write nothing
-function write(parent::Union(JldFile, JldGroup), name::ASCIIString, n::Nothing, astype::ASCIIString)
+function write(parent::Union(JldFile, JldGroup), name::ByteString, n::Nothing, astype::ASCIIString)
     local dset
     try
         dset = HDF5Dataset(HDF5.h5d_create(parent.plain.id, name, HDF5.H5T_NATIVE_UINT8, dataspace(nothing).id,
@@ -476,16 +476,16 @@ function write(parent::Union(JldFile, JldGroup), name::ASCIIString, n::Nothing, 
         close(dset)
     end
 end
-write(parent::Union(JldFile, JldGroup), name::ASCIIString, n::Nothing) = write(parent, name, n, "Nothing")
+write(parent::Union(JldFile, JldGroup), name::ByteString, n::Nothing) = write(parent, name, n, "Nothing")
 
 # Types
 # the first is needed to avoid an ambiguity warning
-write{T<:Top}(parent::Union(JldFile, JldGroup), name::ASCIIString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
-write{T}(parent::Union(JldFile, JldGroup), name::ASCIIString, t::Type{T}) = write(parent, name, nothing, string("Type{", full_typename(t), "}"))
+write{T<:Top}(parent::Union(JldFile, JldGroup), name::ByteString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
+write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::Type{T}) = write(parent, name, nothing, string("Type{", full_typename(t), "}"))
 
 # Bools
-write(parent::Union(JldFile, JldGroup), name::ASCIIString, tf::Bool) = write(parent, name, uint8(tf), "Bool")
-function write(parent::Union(JldFile, JldGroup), name::ASCIIString, tf::Array{Bool})
+write(parent::Union(JldFile, JldGroup), name::ByteString, tf::Bool) = write(parent, name, uint8(tf), "Bool")
+function write(parent::Union(JldFile, JldGroup), name::ByteString, tf::Array{Bool})
     write(parent, name, uint8(tf), full_typename(typeof(tf)))
     a_write(parent[name].plain, "julia_format", "EachUint8")
 end
@@ -493,11 +493,11 @@ end
 # Complex
 realtype(::Type{Complex64}) = Float32
 realtype(::Type{Complex128}) = Float64
-function write(parent::Union(JldFile, JldGroup), name::ASCIIString, c::Complex)
+function write(parent::Union(JldFile, JldGroup), name::ByteString, c::Complex)
     reim = [real(c), imag(c)]
     write(parent, name, reim, full_typename(typeof(c)))
 end
-function write{T<:Complex}(parent::Union(JldFile, JldGroup), name::ASCIIString, C::Array{T})
+function write{T<:Complex}(parent::Union(JldFile, JldGroup), name::ByteString, C::Array{T})
     reim = reinterpret(realtype(T), C, ntuple(ndims(C)+1, i->i==1?2:size(C,i-1)))
     write(parent, name, reim, full_typename(typeof(C)))
 end
@@ -505,14 +505,14 @@ end
 # Int128/Uint128
 
 # Symbols
-write(parent::Union(JldFile, JldGroup), name::ASCIIString, sym::Symbol) = write(parent, name, string(sym), "Symbol")
-write(parent::Union(JldFile, JldGroup), name::ASCIIString, syms::Array{Symbol}) = write(parent, name, map(string, syms), full_typename(typeof(syms)))
+write(parent::Union(JldFile, JldGroup), name::ByteString, sym::Symbol) = write(parent, name, string(sym), "Symbol")
+write(parent::Union(JldFile, JldGroup), name::ByteString, syms::Array{Symbol}) = write(parent, name, map(string, syms), full_typename(typeof(syms)))
 
 # Char
-write(parent::Union(JldFile, JldGroup), name::ASCIIString, char::Char) = write(parent, name, uint32(char), "Char")
+write(parent::Union(JldFile, JldGroup), name::ByteString, char::Char) = write(parent, name, uint32(char), "Char")
 
 # General array types (as arrays of references)
-function write{T}(parent::Union(JldFile, JldGroup), path::ASCIIString, data::Array{T}, astype::String)
+function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T}, astype::String)
     local gref  # a group, inside /_refs, for all the elements in data
     local refs
     # Determine whether parent already exists in /_refs, so we can avoid group/dataset conflict
@@ -565,13 +565,13 @@ function write{T}(parent::Union(JldFile, JldGroup), path::ASCIIString, data::Arr
         close(cset)
     end
 end
-write{T}(parent::Union(JldFile, JldGroup), path::ASCIIString, data::Array{T}) = write(parent, path, data, full_typename(typeof(data)))
+write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T}) = write(parent, path, data, full_typename(typeof(data)))
 
 # Tuple
-write(parent::Union(JldFile, JldGroup), name::ASCIIString, t::Tuple) = write(parent, name, Any[t...], "Tuple")
+write(parent::Union(JldFile, JldGroup), name::ByteString, t::Tuple) = write(parent, name, Any[t...], "Tuple")
 
 # Associative (Dict)
-function write(parent::Union(JldFile, JldGroup), name::ASCIIString, d::Associative)
+function write(parent::Union(JldFile, JldGroup), name::ByteString, d::Associative)
     tn = full_typename(typeof(d))
     if tn == "DataFrame"
         return write_composite(parent, name, d)
@@ -590,7 +590,7 @@ function write(parent::Union(JldFile, JldGroup), name::ASCIIString, d::Associati
 end
 
 # Expressions
-function write(parent::Union(JldFile, JldGroup), name::ASCIIString, ex::Expr)
+function write(parent::Union(JldFile, JldGroup), name::ByteString, ex::Expr)
     args = ex.args
     # Discard "line" expressions
     keep = trues(length(args))
@@ -605,9 +605,9 @@ function write(parent::Union(JldFile, JldGroup), name::ASCIIString, ex::Expr)
 end
 
 # CompositeKind
-write(parent::Union(JldFile, JldGroup), name::ASCIIString, s) = write_composite(parent, name, s)
+write(parent::Union(JldFile, JldGroup), name::ByteString, s) = write_composite(parent, name, s)
 
-function write_composite(parent::Union(JldFile, JldGroup), name::ASCIIString, s)
+function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s)
     T = typeof(s)
     if isempty(T.names)
         error("This is the write function for CompositeKind, but the input is of type ", T)
