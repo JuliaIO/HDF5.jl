@@ -877,7 +877,17 @@ end
 function dump(io::IO, x::HDF5Dataset, n::Int, indent)
     sz = size(x)
     print(io, "HDF5Dataset $sz : ")
-    isempty(sz) || prod(sz) == 1 ? print(io, read(x)) :
+    isshowall = isempty(sz) || prod(sz) == 1
+    if !isshowall
+        dtype = datatype(x)
+        try
+            T = hdf5_to_julia_eltype(dtype)
+            isshowall |= !(T<:HDF5BitsKind)
+        finally
+            close(dtype)
+        end
+    end
+    isshowall ? print(io, read(x)) :
     # the following is a bit kludgy, but there's no way to do x[1:3] for the multidimensional case
     length(sz) == 1 ? Base.show_delim_array(io, x[1:min(5,size(x)[1])], '[', ',', ' ', true) :
     length(sz) == 2 ? Base.show_delim_array(io, x[1,1:min(5,size(x)[2])], '[', ',', ' ', true) : ""
