@@ -729,6 +729,7 @@ p_create(class) = HDF5Properties(h5p_create(class))
 a_delete(parent::Union(HDF5File, HDF5Object), path::ASCIIString) = h5a_delete(checkvalid(parent).id, path)
 o_delete(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lapl::HDF5Properties) = h5l_delete(checkvalid(parent).id, path, lapl.id)
 o_delete(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = h5l_delete(checkvalid(parent).id, path, H5P_DEFAULT)
+o_delete(obj::HDF5Object) = o_delete(parent(obj),split(name(obj),"/")[end])
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
