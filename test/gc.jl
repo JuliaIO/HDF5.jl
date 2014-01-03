@@ -15,7 +15,9 @@ macro closederror(x)
 			$x
 		catch e
 			isa(e, ErrorException) || rethrow(e)
-			e.msg == "File or object has been closed" || error("Attempt to access closed object did not throw")
+			if e.msg != "File or object has been closed"
+				error("Attempt to access closed object did not throw")
+			end
 		end
 	end
 end
@@ -49,6 +51,7 @@ for i = 1:10
 		@closederror write(obj, "x", "y")
 	end
 end
+
 for i = 1:10
 	file = h5open(fn, "r")
 	dt = file["dt"]

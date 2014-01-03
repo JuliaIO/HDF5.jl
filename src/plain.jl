@@ -1344,6 +1344,9 @@ for (privatesym, fsym, ptype, crsym) in
     @eval begin
         # Generic write (hidden)
         function ($privatesym)(parent::$ptype, name::ASCIIString, data, plists...)
+            if isvalid(parent) && exists(parent, name)
+                o_delete(parent, name)
+            end
             obj, dtype = ($crsym)(parent, name, data, plists...)
             try
                 writearray(obj, dtype.id, data)
