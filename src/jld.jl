@@ -863,7 +863,7 @@ macro save(filename, vars...)
             if !ismatch(r"^_+[0-9]*$", s) # skip IJulia history vars
                 v = eval(m, vname)
                 if !isa(v, Module)
-                    push!(writeexprs, :(write(f, $s, $(esc(vname)))))
+                    push!(writeexprs, :(if !isa($(esc(vname)), Function) write(f, $s, $(esc(vname))) end))
                 end
             end
         end
