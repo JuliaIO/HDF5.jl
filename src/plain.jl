@@ -819,10 +819,10 @@ function names(x::Union(HDF5Group,HDF5File))
     checkvalid(x)
     n = length(x)
     res = Array(ASCIIString, n)
+    buf = Array(Uint8, 10000)
     for i in 1:n
-        len = h5g_get_objname_by_idx(x.id, i - 1, "", 0)
-        buf = Array(Uint8, len+1)
-        len = h5g_get_objname_by_idx(x.id, i - 1, buf, len+1)
+        len = h5g_get_objname_by_idx(x.id, i - 1, buf, length(buf))
+        assert(len<length(buf))
         res[i] = convert(ASCIIString, buf[1:len])
     end
     res
