@@ -5,8 +5,8 @@
 module JLD
 using HDF5
 # Add methods to...
-import HDF5: close, dump, exists, file, getindex, g_create, g_open, name, names, read, size, write,
-             HDF5ReferenceObj, HDF5BitsKind
+import HDF5: close, dump, exists, file, getindex, g_create, g_open, o_delete, name, names, read, size, write,
+             HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
 import Base.show, Base.length
 
 const magic_base = "Julia data file (HDF5), version "
@@ -181,7 +181,9 @@ g_open(parent::Union(JldFile, JldGroup), args...) = JldGroup(g_open(parent.plain
 name(p::Union(JldFile, JldGroup, JldDataset)) = name(p.plain)
 exists(p::Union(JldFile, JldGroup, JldDataset), path::ASCIIString) = exists(p.plain, path)
 root(p::Union(JldFile, JldGroup, JldDataset)) = g_open(file(p), "/")
-
+o_delete(parent::Union(JldFile, JldGroup), args...) = o_delete(parent.plain, args...)
+ismmappable(obj::JldDataset) = ismmappable(obj.plain)
+readmmap(obj::JldDataset, args...) = readmmap(obj.plain, args...)
 ### Julia data file format implementation ###
 
 
@@ -919,6 +921,8 @@ export
     plain,
     readsafely,
     @load,
-    @save
-
+    @save,
+    o_delete,
+    ismmappable,
+    readmmap
 end
