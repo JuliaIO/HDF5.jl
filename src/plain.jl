@@ -609,8 +609,8 @@ file(dset::HDF5Dataset) = dset.file
 fd(obj::HDF5Object) = h5i_get_file_id(checkvalid(obj).id)
 
 # Flush buffers
-flush(f::Union(HDF5Object, HDF5Attribute, HDF5Datatype), scope) = h5f_flush(checkvalid(f).id, scope)
-flush(f::Union(HDF5Object, HDF5Attribute, HDF5Datatype)) = flush(f, H5F_SCOPE_GLOBAL)
+flush(f::Union(HDF5Object, HDF5Attribute, HDF5Datatype, HDF5File), scope) = h5f_flush(checkvalid(f).id, scope)
+flush(f::Union(HDF5Object, HDF5Attribute, HDF5Datatype, HDF5File)) = flush(f, H5F_SCOPE_GLOBAL)
 
 # Open objects
 g_open(parent::Union(HDF5File, HDF5Group), name::ASCIIString) = HDF5Group(h5g_open(checkvalid(parent).id, name, H5P_DEFAULT), file(parent))
