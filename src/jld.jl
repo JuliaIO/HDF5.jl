@@ -464,7 +464,7 @@ function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGro
         close(dtype)
     end
 end
-write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ASCIIString, data::data::Union(T, Array{T})) =
+write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ASCIIString, data::Union(T, Array{T})) =
     write(parent, name, data, full_typename(typeof(data)))
 
 # Write nothing
