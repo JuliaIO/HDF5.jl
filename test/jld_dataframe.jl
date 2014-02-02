@@ -5,7 +5,7 @@ using DataFrames
 fname = joinpath(tempdir(), "mydata.jld")
 
 df = DataFrame({[2:6], pi*[1:5]})
-df2 = @DataFrame(a => [1:5], b => pi * [1:5])
+df2 = DataFrame(a = [1:5], b = pi * [1:5])
 
 file = jldopen(fname, "w")
 write(file, "df", df)
@@ -18,5 +18,5 @@ y = read(file, "df2")
 close(file)
 
 using Base.Test
-@test all(df .== x)
-@test all(df2 .== y)
+@test isequal(df, x)
+@test isequal(df2, y)
