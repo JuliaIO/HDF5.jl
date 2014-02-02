@@ -671,12 +671,13 @@ function parents_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, a
     keepflag = Bool[!isempty(x) for x in g]
     g = g[keepflag]   # NOTE: performance bottleneck up to here; find a better way
     for i = 1:length(g)-1
-        if !exists(parent, g[i])
-            g_create(parent, g[i])
+        gstr = ascii(g[i])
+        if !exists(parent, gstr)
+            g_create(parent, gstr)
         end
-        parent = g_open(parent, g[i])
+        parent = g_open(parent, gstr)
     end
-    tuple(parent.id, g[end], args...)
+    tuple(parent.id, ascii(g[end]), args...)
 end        
 g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lcpl::HDF5Properties, dcpl::HDF5Properties) = HDF5Group(h5g_create(parents_create(checkvalid(parent), path, lcpl.id, dcpl.id)...), file(parent))
 g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lcpl::HDF5Properties) = HDF5Group(h5g_create(parents_create(checkvalid(parent), path, lcpl.id, H5P_DEFAULT)...), file(parent))
@@ -729,7 +730,7 @@ p_create(class) = HDF5Properties(h5p_create(class))
 a_delete(parent::Union(HDF5File, HDF5Object), path::ASCIIString) = h5a_delete(checkvalid(parent).id, path)
 o_delete(parent::Union(HDF5File, HDF5Group), path::ASCIIString, lapl::HDF5Properties) = h5l_delete(checkvalid(parent).id, path, lapl.id)
 o_delete(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = h5l_delete(checkvalid(parent).id, path, H5P_DEFAULT)
-o_delete(obj::HDF5Object) = o_delete(parent(obj),split(name(obj),"/")[end])
+o_delete(obj::HDF5Object) = o_delete(parent(obj), ascii(split(name(obj),"/")[end]))
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
