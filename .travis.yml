@@ -7,14 +7,10 @@ before_install:
     - sudo add-apt-repository ppa:staticfloat/julia-deps -y
     - sudo add-apt-repository ppa:staticfloat/julianightlies -y
     - sudo apt-get update -qq -y
-    - sudo apt-get install julia -y
-    - sudo apt-get install hdf5-tools
+    - sudo apt-get install git julia hdf5-tools -y
     - git config --global user.name "Travis User"
     - git config --global user.email "travis@example.net"
+    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 script:
-    - julia -e 'versioninfo(); Pkg.init(); Pkg.add("DataFrames")'
-    - mkdir -p ~/.julia/HDF5
-    - cp -R ./* ~/.julia/HDF5/
-    - julia ~/.julia/HDF5/test/plain.jl
-    - julia ~/.julia/HDF5/test/readremote.jl
-    - julia ~/.julia/HDF5/test/jld.jl
+    - julia -e 'versioninfo(); Pkg.init(); Pkg.add("DataFrames"); Pkg.clone(pwd())'
+    - julia ./test/runtests.jl
