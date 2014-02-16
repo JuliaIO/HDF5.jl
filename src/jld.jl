@@ -9,6 +9,10 @@ import HDF5: close, dump, exists, file, getindex, g_create, g_open, o_delete, na
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
 import Base.show, Base.length
 
+if !isdefined(:setfield!)
+    const setfield! = setfield
+end
+
 const magic_base = "Julia data file (HDF5), version "
 const version_current = "0.0.1"
 const pathrefs = "/_refs"
@@ -382,7 +386,7 @@ function read(obj::JldDataset, T::DataType)
             x = ccall(:jl_new_struct_uninit, Any, (Any,), T)
             for i = 1:length(v)
                 if isdefined(v, i)
-                    setfield(x, n[i], v[i])
+                    setfield!(x, n[i], v[i])
                 end
             end
         end
