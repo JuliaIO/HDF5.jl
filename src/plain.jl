@@ -41,10 +41,19 @@ let
 end
 end
 
-status = ccall((:H5open, libname), Herr, ())
-if status < 0
-    error("Can't initialize the HDF5 library")
+function _init()
+    status = ccall((:H5open, libname), Herr, ())
+    if status < 0
+        error("Can't initialize the HDF5 library")
+    end
 end
+function init()
+    _init()
+    Base.rehash(hdf5_type_map, length(hdf5_type_map.keys))
+    nothing
+end
+
+_init()
 
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
