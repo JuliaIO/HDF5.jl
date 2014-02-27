@@ -179,3 +179,16 @@ Wr = h5read(fn, "newgroup/W")
 rng = (2:3:15, 3:5)
 Wr = h5read(fn, "newgroup/W", rng)
 @assert Wr == W[rng...]
+
+# more do syntax
+h5open(fn, "w") do fid
+    g_create(fid, "mygroup") do g
+        write(g, "x", 3.2)
+    end
+end
+fid = h5open(fn, "r")
+@assert names(fid) == ASCIIString["mygroup"]
+g = fid["mygroup"]
+@assert names(g) == ASCIIString["x"]
+close(g)
+close(fid)

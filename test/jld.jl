@@ -177,3 +177,16 @@ for mmap = (true, false)
 
     close(fidr)
 end
+
+# do syntax
+jldopen(fn, "w") do fid
+    g_create(fid, "mygroup") do g
+        write(g, "x", 3.2)
+    end
+end
+fid = jldopen(fn, "r")
+@assert names(fid) == ASCIIString["mygroup"]
+g = fid["mygroup"]
+@assert names(g) == ASCIIString["x"]
+close(g)
+close(fid)

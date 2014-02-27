@@ -181,6 +181,14 @@ end
 
 ### "Inherited" behaviors
 g_create(parent::Union(JldFile, JldGroup), args...) = JldGroup(g_create(parent.plain, args...), file(parent))
+function g_create(f::Function, parent::Union(JldFile, JldGroup), args...)
+    g = JldGroup(g_create(parent.plain, args...), file(parent))
+    try
+        f(g)
+    finally
+        close(g)
+    end
+end
 g_open(parent::Union(JldFile, JldGroup), args...) = JldGroup(g_open(parent.plain, args...), file(parent))
 name(p::Union(JldFile, JldGroup, JldDataset)) = name(p.plain)
 exists(p::Union(JldFile, JldGroup, JldDataset), path::ASCIIString) = exists(p.plain, path)
