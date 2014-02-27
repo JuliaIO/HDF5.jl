@@ -190,3 +190,11 @@ g = fid["mygroup"]
 @assert names(g) == ASCIIString["x"]
 close(g)
 close(fid)
+
+# #71
+jldopen(fn, "w") do file
+    file["a"] = 1
+end
+jldopen(fn, "r") do file
+    @assert read(file, "a") == 1
+end

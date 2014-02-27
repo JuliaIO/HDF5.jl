@@ -196,6 +196,7 @@ root(p::Union(JldFile, JldGroup, JldDataset)) = g_open(file(p), "/")
 o_delete(parent::Union(JldFile, JldGroup), args...) = o_delete(parent.plain, args...)
 ismmappable(obj::JldDataset) = ismmappable(obj.plain)
 readmmap(obj::JldDataset, args...) = readmmap(obj.plain, args...)
+setindex!(parent::Union(JldFile, JldGroup), val, path::ASCIIString) = write(parent, path, val)
 ### Julia data file format implementation ###
 
 
