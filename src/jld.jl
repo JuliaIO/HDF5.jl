@@ -202,7 +202,7 @@ setindex!(parent::Union(JldFile, JldGroup), val, path::ASCIIString) = write(pare
 
 ### Read ###
 
-function read(parent::Union(JldFile, JldDataset), name::ASCIIString)
+function read(parent::Union(JldFile, JldGroup), name::ASCIIString)
     local val
     obj = parent[name]
     try

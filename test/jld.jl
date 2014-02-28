@@ -188,6 +188,7 @@ fid = jldopen(fn, "r")
 @assert names(fid) == ASCIIString["mygroup"]
 g = fid["mygroup"]
 @assert names(g) == ASCIIString["x"]
+@assert read(g, "x") == 3.2
 close(g)
 close(fid)
 
