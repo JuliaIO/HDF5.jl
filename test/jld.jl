@@ -17,6 +17,8 @@ AB = Any[A, B]
 t = (3, "cat")
 c = float32(3)+float32(7)im
 C = reinterpret(Complex128, B, (4,))
+emptyA = zeros(0,2)
+emptyB = zeros(2,0)
 try
     global MyStruct
     type MyStruct
@@ -28,6 +30,7 @@ try
 catch
 end
 ms = MyStruct(2, [3.2, -1.7])
+msempty = MyStruct(5, Float64[])
 sym = :TestSymbol
 syms = [:a, :b]
 d = Dict(syms, ["aardvark", "banana"])
@@ -100,7 +103,10 @@ fid = jldopen(fn, "w")
 @write fid t
 @write fid c
 @write fid C
+@write fid emptyA
+@write fid emptyB
 @write fid ms
+@write fid msempty
 @write fid sym
 @write fid syms
 @write fid d
@@ -141,7 +147,10 @@ for mmap = (true, false)
     @check fidr t
     @check fidr c
     @check fidr C
+    @check fidr emptyA
+    @check fidr emptyB
     @check fidr ms
+    @check fidr msempty
     @check fidr sym
     @check fidr syms
     @check fidr d

@@ -14,7 +14,7 @@ if !isdefined(:setfield!)
 end
 
 const magic_base = "Julia data file (HDF5), version "
-const version_current = "0.0.1"
+const version_current = "0.0.2"
 const pathrefs = "/_refs"
 const pathtypes = "/_types"
 const pathrequire = "/_require"
@@ -300,8 +300,14 @@ end
 # Basic types
 typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
 read{T<:BitsKindOrByteString}(obj::JldDataset, ::Type{T}) = read(obj.plain, T)
-read{T<:HDF5BitsKind}(obj::JldDataset, ::Type{Array{T}}) =
-    obj.file.mmaparrays && HDF5.iscontiguous(obj.plain) ? readmmap(obj.plain, Array{T}) : read(obj.plain, Array{T})
+function read{T<:HDF5BitsKind}(obj::JldDataset, ::Type{Array{T}})
+    A = obj.file.mmaparrays && HDF5.iscontiguous(obj.plain) ? readmmap(obj.plain, Array{T}) : read(obj.plain, Array{T})
+    if isempty(A) && exists(obj, "dims")
+        dims = a_read(obj.plain, "dims")
+        A = reshape(A, dims...)
+    end
+    A
+end
 read{T<:ByteString}(obj::JldDataset, ::Type{Array{T}}) = read(obj.plain, Array{T})
 read{T<:BitsKindOrByteString,N}(obj::JldDataset, ::Type{Array{T,N}}) = read(obj, Array{T})
 
@@ -470,6 +476,7 @@ function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGro
     try
         # Write the attribute
         a_write(dset, name_type_attr, astype)
+        isa(data, Array) && isempty(data) && a_write(dset, "dims", [size(data)...])
         # Write the data
         HDF5.writearray(dset, dtype.id, data)
     finally

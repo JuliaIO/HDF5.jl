@@ -828,6 +828,12 @@ end
 size(dset::Union(HDF5Dataset, HDF5Attribute), d) = d > ndims(dset) ? 1 : size(dset)[d]
 length(dset::Union(HDF5Dataset, HDF5Attribute)) = prod(size(dset))
 ndims(dset::Union(HDF5Dataset, HDF5Attribute)) = length(size(dset))
+function isnull(obj::Union(HDF5Dataset, HDF5Attribute))
+    dspace = dataspace(obj)
+    ret = h5s_get_simple_extent_type(dspace.id) == H5S_NULL
+    close(dspace)
+    ret
+end
 
 # filename and name
 filename(obj::Union(HDF5File, HDF5Group, HDF5Dataset, HDF5Attribute, HDF5Datatype)) = h5f_get_name(checkvalid(obj).id)
@@ -1040,6 +1046,9 @@ function read{T<:HDF5BitsKind}(obj::DatasetOrAttribute, ::Type{T})
 end
 # Read array of BitsKind
 function read{T<:HDF5BitsKind}(obj::DatasetOrAttribute, ::Type{Array{T}})
+    if isnull(obj)
+        return T[]
+    end
     dims = size(obj)
     data = Array(T, dims...)
     readarray(obj, hdf5_type_id(T), data)
@@ -1163,12 +1172,18 @@ end
 # Read an array of references
 function read(obj::HDF5Dataset, ::Type{Array{HDF5ReferenceObj}})
     dims = size(obj)
+    if dims == ()
+        return Array(HDF5ReferenceObj, 0)
+    end
     refs = Array(HDF5ReferenceObj, dims...)
     h5d_read(obj.id, H5T_STD_REF_OBJ, refs)
     refs
 end
 function read(obj::HDF5Attribute, ::Type{Array{HDF5ReferenceObj}})
     dims = size(obj)
+    if dims == ()
+        return Array(HDF5ReferenceObj, 0)
+    end
     refs = Array(HDF5ReferenceObj, dims...)
     h5a_read(obj.id, H5T_STD_REF_OBJ, refs)
     refs
@@ -1275,6 +1290,10 @@ ismmappable{T}(obj::HDF5Dataset, ::Type{T}) = ismmappable(T) && iscontiguous(obj
 ismmappable(obj::HDF5Dataset) = ismmappable(obj, hdf5_to_julia(obj))
 
 function readmmap{T<:HDF5BitsKind}(obj::HDF5Dataset, ::Type{Array{T}})
+    dims = size(obj)
+    if dims == ()
+        return T[]
+    end
     local fd
     prop = h5d_get_access_plist(checkvalid(obj).id)
     try
@@ -1289,7 +1308,7 @@ function readmmap{T<:HDF5BitsKind}(obj::HDF5Dataset, ::Type{Array{T}})
     if offset == uint64(-1)
         error("Error mmapping array")
     end
-    mmap_array(T, size(obj), fdio(fd), convert(FileOffset, offset))
+    mmap_array(T, dims, fdio(fd), convert(FileOffset, offset))
 end
 
 function readmmap(obj::HDF5Dataset)
