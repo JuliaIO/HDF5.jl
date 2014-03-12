@@ -125,7 +125,7 @@ target = fill(5, 10, 20)
 target[1] = 4
 @assert Xslab2r == target
 dset = fr["slab3"]
-@assert dset[3:5] == 3:5
+@assert dset[3:5] == [3:5]
 emptyr = read(fr, "empty")
 @assert isempty(emptyr)
 empty_stringr = read(fr, "empty_string")
