@@ -810,7 +810,7 @@ function objinfo(obj::Union(HDF5File, HDF5Object))
     info[1]
 end
 function length(x::Union(HDF5Group,HDF5File))
-    buf = [int32(0)]
+    buf = [uint64(0)]
     h5g_get_num_objs(x.id, buf)
     buf[1]
 end
@@ -1004,7 +1004,7 @@ get_dims(dset::HDF5Dataset) = get_dims(dataspace(checkvalid(dset)))
 
 # change the current dimensions of a dataset, new_dims fit in max_dims = get_dims(dset)[2]
 # reduction is possible, and leads to loss of truncated data
-set_dims!(dset::HDF5Dataset, new_dims::Dims) = h5d_set_extent(checkvalid(dset), [reverse(new_dims)...])
+set_dims!(dset::HDF5Dataset, new_dims::Dims) = h5d_set_extent(checkvalid(dset), Hsize[reverse(new_dims)...])
 
 # Generic read functions
 for (fsym, osym, ptype) in
@@ -1800,7 +1800,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5a_get_space, :H5Aget_space, Hid, (Hid,), (:attr_id,), :(error("Error getting attribute dataspace"))),
      (:h5a_get_type, :H5Aget_type, Hid, (Hid,), (:attr_id,), :(error("Error getting attribute type"))),
      (:h5a_open, :H5Aopen, Hid, (Hid, Ptr{Uint8}, Hid), (:obj_id, :pathname, :aapl_id), :(error("Error opening attribute ", h5i_get_name(obj_id), "/", pathname))),
-     (:h5a_read, :H5Aread, Herr, (Hid, Hid, Ptr{Uint8}), (:attr_id, :mem_type_id, :buf), :(error("Error reading attribute ", h5a_get_name(attr_id)))),
+     (:h5a_read, :H5Aread, Herr, (Hid, Hid, Ptr{Void}), (:attr_id, :mem_type_id, :buf), :(error("Error reading attribute ", h5a_get_name(attr_id)))),
      (:h5d_create, :H5Dcreate2, Hid, (Hid, Ptr{Uint8}, Hid, Hid, Hid, Hid, Hid), (:loc_id, :pathname, :dtype_id, :space_id, :dlcpl_id, :dcpl_id, :dapl_id), :(error("Error creating dataset ", h5i_get_name(loc_id), "/", pathname))),
      (:h5d_get_access_plist, :H5Dget_access_plist, Hid, (Hid,), (:dataset_id,), :(error("Error getting dataset access property list"))),     
      (:h5d_get_create_plist, :H5Dget_create_plist, Hid, (Hid,), (:dataset_id,), :(error("Error getting dataset create property list"))),     
@@ -1817,7 +1817,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5g_create, :H5Gcreate2, Hid, (Hid, Ptr{Uint8}, Hid, Hid, Hid), (:loc_id, :pathname, :lcpl_id, :gcpl_id, :gapl_id), :(error("Error creating group ", h5i_get_name(loc_id), "/", pathname))),
      (:h5g_get_create_plist, :H5Gget_create_plist, Hid, (Hid,), (:group_id,), :(error("Error getting group create property list"))),
      (:h5g_get_objname_by_idx, :H5Gget_objname_by_idx, Hid, (Hid, Hsize, Ptr{Uint8}, Csize_t), (:loc_id, :idx, :pathname, :size), :(error("Error getting group object name ", h5i_get_name(loc_id), "/", pathname))),
-     (:h5g_get_num_objs, :H5Gget_num_objs, Hid, (Hid, Ptr{Uint8}), (:loc_id, :num_obj), :(error("Error getting group length"))),
+     (:h5g_get_num_objs, :H5Gget_num_objs, Hid, (Hid, Ptr{Hsize}), (:loc_id, :num_obj), :(error("Error getting group length"))),
      (:h5g_open, :H5Gopen2, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :pathname, :gapl_id), :(error("Error opening group ", h5i_get_name(loc_id), "/", pathname))),
      (:h5i_get_file_id, :H5Iget_file_id, Hid, (Hid,), (:obj_id,), :(error("Error getting file identifier"))),
      (:h5i_get_name, :H5Iget_name, Cssize_t, (Hid, Ptr{Uint8}, Csize_t), (:obj_id, :buf, :buf_size), :(error("Error getting object name"))),
