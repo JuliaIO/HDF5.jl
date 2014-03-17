@@ -2,8 +2,6 @@
 
 The JLD module reads and writes "Julia data files" (\*.jld files) using HDF5. To the core HDF5 functionality, this module adds conventions for writing objects which are not directly supported by libhdf5. The key characteristic is that objects of many types can be written, and upon later reading they maintain the proper type.
 
-**Currently this module is EXPERIMENTAL**: until it has seen widespread testing, there is some risk that the formatting conventions will change without a guarantee of backwards compatibility. Once this module leaves experimental status, backwards-compatibility will be provided. The good news is that your data, being written in HDF5, cannot truly be "lost"; you may just have to do a bit of type conversion.
-
 ## Usage
 
 To get started using Julia data files, load the JLD module:
@@ -53,6 +51,19 @@ JldFile len 19
   tf: Bool
   x: Float64
 ```
+
+## Types and their definitions
+
+You can save objects that have user-defined type; before loading those objects from a JLD file in a fresh julia session, these types need to be defined. You can ensure this happens automatically with `addrequire`. For example, suppose you have a file `"MyTypes.jl"` somewhere on your default `LOAD_PATH`, and you have an object `x` of type `MyType`.
+
+```
+jldopen("somedata.jld", "w") do file
+    write(file, "x", x)
+    addrequire(file, "MyTypes")
+end
+```
+This will cause `"MyTypes.jl"` to be loaded automatically whenever `"somedata.jld"` is opened.
+
 
 ## Reference: the *.jld HDF5 format
 
