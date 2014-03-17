@@ -7,7 +7,7 @@ using HDF5
 # Add methods to...
 import HDF5: close, dump, exists, file, getindex, g_create, g_open, o_delete, name, names, read, size, write,
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
-import Base.show, Base.length
+import Base: length, show, done, next, start
 
 if !isdefined(:setfield!)
     const setfield! = setfield
@@ -197,6 +197,12 @@ o_delete(parent::Union(JldFile, JldGroup), args...) = o_delete(parent.plain, arg
 ismmappable(obj::JldDataset) = ismmappable(obj.plain)
 readmmap(obj::JldDataset, args...) = readmmap(obj.plain, args...)
 setindex!(parent::Union(JldFile, JldGroup), val, path::ASCIIString) = write(parent, path, val)
+
+start(parent::Union(JldFile, JldGroup)) = (names(parent), 1)
+done(parent::Union(JldFile, JldGroup), state) = state[2] > length(state[1])
+next(parent::Union(JldFile, JldGroup), state) = parent[state[1][state[2]]], (state[1], state[2]+1)
+
+
 ### Julia data file format implementation ###
 
 
