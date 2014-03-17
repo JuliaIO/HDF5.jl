@@ -936,13 +936,21 @@ macro load(filename, vars...)
     end
 end
 
+function addrequire(file::JldFile, filename::String)
+    files = read(file, pathrequire)
+    push!(files, filename)
+    o_delete(file, pathrequire)
+    write(file, pathrequire, files)
+end
+
 export
+    addrequire,
+    ismmappable,
     jldopen,
+    o_delete,
     plain,
+    readmmap,
     readsafely,
     @load,
-    @save,
-    o_delete,
-    ismmappable,
-    readmmap
+    @save
 end
