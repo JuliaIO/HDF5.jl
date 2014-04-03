@@ -42,6 +42,7 @@ end
 T = Uint8
 char = 'x'
 unicode_char = '\U10ffff'
+α = 22
 typevar = Array{Int}[[1]]
 typevar_lb = Vector{TypeVar(:U, Integer)}[[1]]
 typevar_ub = Vector{TypeVar(:U, Int, Any)}[[1]]
@@ -114,6 +115,7 @@ fid = jldopen(fn, "w")
 @write fid T
 @write fid char
 @write fid unicode_char
+@write fid α
 @write fid cpus
 @write fid rng
 @write fid typevar
@@ -158,6 +160,7 @@ for mmap = (true, false)
     @check fidr T
     @check fidr char
     @check fidr unicode_char
+    @check fidr α
     @check fidr cpus
     @check fidr rng
     @check fidr typevar
