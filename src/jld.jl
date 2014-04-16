@@ -113,7 +113,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             magic = Array(Uint8, 512)
             rawfid = open(filename, "r")
             try
-                magic = read(rawfid, magic)
+                magic = read!(rawfid, magic)
             finally
                 close(rawfid)
             end
