@@ -633,9 +633,9 @@ function write(parent::Union(JldFile, JldGroup), name::ByteString, ex::Expr)
 end
 
 # CompositeKind
-write(parent::Union(JldFile, JldGroup), name::ByteString, s) = write_composite(parent, name, s)
+write(parent::Union(JldFile, JldGroup), name::ByteString, s; rootmodule="") = write_composite(parent, name, s; rootmodule=rootmodule)
 
-function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s)
+function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; rootmodule="")
     T = typeof(s)
     if isempty(T.names)
         error("This is the write function for CompositeKind, but the input is of type ", T)
@@ -663,6 +663,10 @@ function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s)
             # Write the module name as an attribute
             mod = Base.fullname(T.name.module)
             modnames = [map(string, mod)...]
+            indx = findfirst(x->x==rootmodule, modnames)
+            if indx > 0
+                modnames = modnames[indx+1:end]
+            end
             a_write(obj.plain, "Module", modnames)
             close(obj)
         end

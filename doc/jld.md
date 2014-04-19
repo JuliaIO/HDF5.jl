@@ -54,16 +54,43 @@ JldFile len 19
 
 ## Types and their definitions
 
-You can save objects that have user-defined type; before loading those objects from a JLD file in a fresh julia session, these types need to be defined. You can ensure this happens automatically with `addrequire`. For example, suppose you have a file `"MyTypes.jl"` somewhere on your default `LOAD_PATH`, and you have an object `x` of type `MyType`.
+You can save objects that have user-defined type; before loading those objects from a JLD file in a fresh julia session, these types need to be defined. You can ensure this happens automatically with `addrequire`. For example, suppose you have a file `"MyTypes.jl"` somewhere on your default `LOAD_PATH`, defined this way:
+```
+module MyTypes
+
+export MyType
+
+type MyType
+    value::Int
+end
+
+end
+```
+and you have an object `x` of type `MyType`. Then save `x` in the following way:
 
 ```
 jldopen("somedata.jld", "w") do file
-    write(file, "x", x)
     addrequire(file, "MyTypes")
+    write(file, "x", x)
 end
 ```
 This will cause `"MyTypes.jl"` to be loaded automatically whenever `"somedata.jld"` is opened.
 
+Types are saved with their full module path, e.g., `MyTypes.MyType`. In general, most types should naturally be in modules that have a consistent module path each time you use them. However, in rare cases you may want to save types from a different module path than you expect to use them. You can use the `rootmodule` option to truncate the module path. For example, if you save your file this way:
+```
+module A
+    module B
+        using HDF5, JLD
+        include("MyTypes.jl")
+        x = MyTypes.MyType(7)      # Full module path is A.B.MyTypes.MyType
+        jldopen("test.jld", "w") do file
+            addrequire(file, "MyTypes")
+            write(file, "x", x, rootmodule="B")  # truncate up to and including B, so path is MyTypes.MyType
+        end
+    end
+end
+```
+Then you can read this file from the REPL prompt simply with `@load "test.jld"`. The `MyTypes` module will be defined inside `Main`, with no reference to `A.B`.
 
 ## Reference: the *.jld HDF5 format
 

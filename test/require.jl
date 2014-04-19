@@ -1,5 +1,20 @@
 using HDF5, JLD
 
+module JLDTemp
+using HDF5, JLD
+include("JLDTest.jl")
+
+function create()
+    x = JLDTest(5)
+    jldopen("require.jld", "w") do file
+        addrequire(file, "JLDTest.jl")
+        write(file, "x", x, rootmodule="JLDTemp")
+    end
+end
+end
+
+JLDTemp.create()
+
 x = jldopen("require.jld") do file
     read(file, "x")
 end
