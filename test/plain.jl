@@ -120,6 +120,8 @@ dset = fr["mygroup/CompressedA"]
 @assert name(dset) == "/mygroup/CompressedA"
 Xslabr = read(fr, "slab")
 @assert Xslabr == Xslab
+Xslabr = h5read(fn, "slab", (:, :, :))  # issue #87
+@assert Xslabr == Xslab
 Xslab2r = read(fr, "slab2")
 target = fill(5, 10, 20)
 target[1] = 4

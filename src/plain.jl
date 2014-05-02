@@ -536,7 +536,7 @@ function h5read(filename, name::ByteString)
     dat
 end
 
-function h5read(filename, name::ByteString, indices::(RangeIndex...))
+function h5read(filename, name::ByteString, indices::(Union(RangeIndex,Colon)...))
     local dat
     fid = h5open(filename, "r")
     try
@@ -1518,6 +1518,9 @@ function setindex!(dset::HDF5Dataset, x::Number, indices::RangeIndex...)
     X = fill(convert(T.parameters[1], x), map(length, indices))
     setindex!(dset, X, indices...)
 end
+
+getindex(dset::HDF5Dataset, I::Union(RangeIndex, Colon)...) = getindex(dset, ntuple(length(I), i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i])...)
+setindex!(dset::HDF5Dataset, x, I::Union(RangeIndex, Colon)...) = setindex!(dset, x, ntuple(length(I), i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i])...)
 
 function hyperslab(dset::HDF5Dataset, indices::RangeIndex...)
     local dsel_id
