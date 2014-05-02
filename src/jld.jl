@@ -12,6 +12,9 @@ import Base: length, show, done, next, start
 if !isdefined(:setfield!)
     const setfield! = setfield
 end
+if !isdefined(:read!)
+    const read! = read
+end
 
 const magic_base = "Julia data file (HDF5), version "
 const version_current = "0.0.2"
@@ -113,7 +116,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             magic = Array(Uint8, 512)
             rawfid = open(filename, "r")
             try
-                magic = read(rawfid, magic)
+                magic = read!(rawfid, magic)
             finally
                 close(rawfid)
             end
