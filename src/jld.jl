@@ -381,7 +381,7 @@ end
 # Expressions
 function read(obj::JldDataset, ::Type{Expr})
     a = getrefs(obj, Any)
-    Expr(a[1], a[2])
+    Expr(a[1], a[2]...)
 end
 
 # CompositeKind

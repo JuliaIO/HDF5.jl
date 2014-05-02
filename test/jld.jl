@@ -87,6 +87,28 @@ macro check(fid, sym)
     esc(ex)
 end
 
+# Test for equality of expressions, skipping line numbers
+checkexpr(a, b) = @assert a == b
+function checkexpr(a::Expr, b::Expr)
+    @assert a.head == b.head
+    i = 1
+    j = 1
+    while i <= length(a.args) && j <= length(b.args)
+        if isa(a.args[i], Expr) && a.args[i].head == :line
+            i += 1
+            continue
+        end
+        if isa(b.args[j], Expr) && b.args[j].head == :line
+            j += 1
+            continue
+        end
+        checkexpr(a.args[i], b.args[j])
+        i += 1
+        j += 1
+    end
+    @assert i >= length(a.args) && j >= length(b.args)
+end
+
 fn = joinpath(tempdir(),"test.jld")
 
 fid = jldopen(fn, "w")
@@ -157,6 +179,7 @@ for mmap = (true, false)
     @check fidr syms
     @check fidr d
     exr = read(fidr, "ex")   # line numbers are stripped, don't expect equality
+    checkexpr(ex, exr)
     @check fidr T
     @check fidr char
     @check fidr unicode_char
