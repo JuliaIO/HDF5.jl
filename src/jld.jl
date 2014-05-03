@@ -392,7 +392,7 @@ function read(obj::JldDataset, T::DataType)
         params = a_read(obj.plain, "TypeParameters")
         p = Array(Any, length(params))
         for i = 1:length(params)
-            p[i] = eval(parse(params[i]))
+            p[i] = eval(current_module(), parse(params[i]))
         end
         T = T{p...}
     end
