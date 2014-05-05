@@ -7,7 +7,7 @@ include("JLDTest.jl")
 function create()
     x = JLDTest(5)
     jldopen("require.jld", "w") do file
-        addrequire(file, "JLDTest.jl")
+        addrequire(file, joinpath(Pkg.dir(), "HDF5", "test", "JLDTest.jl"))
         write(file, "x", x, rootmodule="JLDTemp")
     end
 end
@@ -20,3 +20,4 @@ x = jldopen("require.jld") do file
 end
 @assert typeof(x) == JLDTest
 @assert x.data == 5
+rm("require.jld")
