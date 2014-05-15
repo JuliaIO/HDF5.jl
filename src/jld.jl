@@ -498,12 +498,14 @@ write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name
 
 # Write nothing
 function write(parent::Union(JldFile, JldGroup), name::ByteString, n::Nothing, astype::ASCIIString)
-    local dset
+    local dspace, dset
     try
-        dset = HDF5Dataset(HDF5.h5d_create(HDF5.parents_create(HDF5.checkvalid(parent.plain), name, HDF5.H5T_NATIVE_UINT8, dataspace(nothing).id,
+        dspace = dataspace(nothing)
+        dset = HDF5Dataset(HDF5.h5d_create(HDF5.parents_create(HDF5.checkvalid(parent.plain), name, HDF5.H5T_NATIVE_UINT8, dspace.id,
                            HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT)...), file(parent.plain))
         a_write(dset, name_type_attr, astype)
     finally
+        close(dspace)
         close(dset)
     end
 end
