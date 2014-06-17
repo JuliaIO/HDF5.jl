@@ -230,6 +230,12 @@ g = fid["mygroup"]
 close(g)
 close(fid)
 
+# Function load() and save() syntax
+d = ["x"=>3.2, "β"=>β, "A"=>A]
+save(fn, d)
+d2 = load(fn)
+@assert d == d2
+
 # #71
 jldopen(fn, "w") do file
     file["a"] = 1
