@@ -937,7 +937,8 @@ macro load(filename, vars...)
         return Expr(:block, 
                     Expr(:global, vars...),
                     Expr(:try,  Expr(:block, readexprs...), false, false,
-                         :(close($f))))
+                         :(close($f))),
+                    Symbol[v.args[1] for v in vars]) # "unescape" vars
     else
         readexprs = Array(Expr, length(vars))
         for i = 1:length(vars)
@@ -947,7 +948,8 @@ macro load(filename, vars...)
                     :(local f = jldopen($(esc(filename)))),
                     Expr(:global, map(esc, vars)...),
                     Expr(:try,  Expr(:block, readexprs...), false, false,
-                         :(close(f))))
+                         :(close(f))),
+                    Symbol[v for v in vars]) # vars is a tuple
     end
 end
 
