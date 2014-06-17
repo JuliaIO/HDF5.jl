@@ -951,6 +951,25 @@ macro load(filename, vars...)
     end
 end
 
+function save{K<:ByteString}(filename::String, dict::Associative{K})
+    jldopen(filename, "w") do file
+        for (k,v) in dict
+            write(file, k, v)
+        end
+    end
+end
+
+function load(filename::String, varnames::ByteString...)
+    d = Dict{ByteString, Any}()
+    jldopen(filename, "r") do file
+        isempty(varnames) && (varnames = names(file))
+        for var in varnames
+            d[var] = read(file, var)
+        end
+    end
+    d
+end
+
 function addrequire(file::JldFile, filename::String)
     files = read(file, pathrequire)
     push!(files, filename)
@@ -967,5 +986,7 @@ export
     readmmap,
     readsafely,
     @load,
-    @save
+    @save,
+    load,
+    save
 end
