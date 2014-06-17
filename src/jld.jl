@@ -954,7 +954,7 @@ macro load(filename, vars...)
 end
 
 function save{K<:String}(filename::String, dict::Associative{K})
-    jldopen(filename, "r+") do file
+    jldopen(filename, "w") do file
         for (k,v) in dict
             write(file, bytestring(k), v)
         end
