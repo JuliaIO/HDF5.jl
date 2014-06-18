@@ -386,6 +386,9 @@ end
 
 # CompositeKind
 function read(obj::JldDataset, T::DataType)
+    if isempty(T.names) && T.size > 0
+        return read_bitstype(obj, T)
+    end
     local x
     # Add the parameters
     if exists(obj, "TypeParameters")
@@ -416,6 +419,11 @@ function read(obj::JldDataset, T::DataType)
         end
     end
     x
+end
+
+function read_bitstype(obj::JldDataset, T::DataType)
+    a = read(obj.plain)
+    reinterpret(T, a[1])
 end
 
 # Read an array of references
@@ -643,6 +651,9 @@ write(parent::Union(JldFile, JldGroup), name::ByteString, s; rootmodule="") = wr
 function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; rootmodule="")
     T = typeof(s)
     if isempty(T.names)
+        if T.size > 0
+            return write_bitstype(parent, name, s)
+        end
         error("This is the write function for CompositeKind, but the input is of type ", T)
     end
     if has_pointer_field(s, name)
@@ -694,6 +705,22 @@ function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; 
     params = [map(full_typename, T.parameters)...]
     a_write(obj.plain, "TypeParameters", params)
     close(obj)
+end
+
+function write_bitstype(parent::Union(JldFile, JldGroup), name::ByteString, s)
+    T = typeof(s)
+    if T.size == 1
+        ub = reinterpret(Uint8, s)
+    elseif T.size == 2
+        ub = reinterpret(Uint16, s)
+    elseif T.size == 4
+        ub = reinterpret(Uint32, s)
+    elseif T.size == 8
+        ub = reinterpret(Uint64, s)
+    else
+        error("Unsupported bitstype $T of size $(T.size)")
+    end
+    write(parent, name, [ub], "$T")
 end
 
 function has_pointer_field(obj::Tuple, name)

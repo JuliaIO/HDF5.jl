@@ -57,6 +57,9 @@ cpus = Base.Sys.cpu_info()
 rng = 1:5
 # Type with a pointer field (#84)
 objwithpointer = r"julia"
+# Custom BitsType (#99)
+bitstype 64 MyBT
+bt = reinterpret(MyBT, 55)
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -152,6 +155,7 @@ fid = jldopen(fn, "w")
 @write fid undefs
 @write fid ms_undef
 @write fid objwithpointer  # This should not write anything
+@write fid bt
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -197,8 +201,6 @@ for mmap = (true, false)
     @check fidr typevar_ub
     @check fidr typevar_lb_ub
 
-    @assert !in("objwithpointer", names(fidr))
-
     # Special cases for reading undefs
     undef = read(fidr, "undef")
     if !isa(undef, Array{Any, 1}) || length(undef) != 1 || isdefined(undef, 1)
@@ -212,6 +214,9 @@ for mmap = (true, false)
     if !isa(ms_undef, MyStruct) || ms_undef.len != 0 || isdefined(ms_undef, :data)
         error("For ms_undef, read value does not agree with written value")
     end
+    
+    @assert !in("objwithpointer", names(fidr))
+    @check fidr bt
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}
