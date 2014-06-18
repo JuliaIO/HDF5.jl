@@ -1026,7 +1026,12 @@ function load(filename::String)
         (ByteString => Any)[var => read(file, var) for var in names(file)]
     end
 end
-# When called with explicitly requested variable names, return them in a tuple
+# When called with explicitly requested variable names, return each one
+function load(filename::String, varname::String)
+    jldopen(filename, "r") do file
+        read(file, varname)
+    end
+end
 load(filename::String, varnames::String...) = load(filename, varnames)
 function load(filename::String, varnames::(String...))
     jldopen(filename, "r") do file
