@@ -17,7 +17,7 @@ file = jldopen("mydata.jld", "w")
 close(file)
 ```
 This creates a dataset named `"A"` containing the contents of the variable `A`.
-There is also the convenient `@save "mydata.jld" A` [syntax](../README.html).
+There are also the convenient `save("mydata.jld", "A", A)` or `@save "mydata.jld" A` [syntaxes](../README.md).
 
 JLD files can be opened with the `mmaparrays` option, which if true returns "qualified" array data sets as arrays using [memory-mapping](hdf5.md#memory-mapping):
 
