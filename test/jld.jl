@@ -235,6 +235,13 @@ d = ["x"=>3.2, "β"=>β, "A"=>A]
 save(fn, d)
 d2 = load(fn)
 @assert d == d2
+β2, A2 = load(fn, "β", "A")
+@assert β == β2
+@assert A == A2
+
+save(fn, "x", 3.2, "β", β, "A", A)
+d3 = load(fn)
+@assert d == d3
 
 # #71
 jldopen(fn, "w") do file

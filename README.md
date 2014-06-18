@@ -78,17 +78,19 @@ advanced features of HDF5, then a simpler syntax is:
 ```
 t = 15
 z = [1,3]
-save("/tmp/myfile.jld", ["t"=>t, "arr"=>z])
+save("/tmp/myfile.jld", "t", t, "arr", z)
 ```
-Here we're explicitly saving `t` and `z` as `"t"` and `"arr"` within myfile.jld.
-You can read these variables back in with
+Here we're explicitly saving `t` and `z` as `"t"` and `"arr"` within
+myfile.jld. You can alternatively pass `save` a dictionary; the keys must be
+strings and are saved as the variable names of their values within the JLD
+file. You can read these variables back in with
 ```
 d = load("/tmp/myfile.jld")
 ```
-which reads the entire file into a returned dictionary `d`. You can
-alternatively just list particular variables of interest, e.g.,
-`load("/tmp/myfile.jld", "arr")` will return the single-pair dictionary
-`["arr"=>[1,3]]`.
+which reads the entire file into a returned dictionary `d`. Or you can be more
+specific and just request particular variables of interest. For example, `z =
+load("/tmp/myfile.jld", "arr")` will return the value of `arr` from the file
+and assign it back to z.
 
 There are also convenience macros `@save` and `@load` that work on the
 variables themselves. `@save "/tmp/myfile.jld" t z` will create a file with

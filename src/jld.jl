@@ -880,16 +880,6 @@ function names(parent::Union(JldFile, JldGroup))
     n[keep]
 end
 
-function load(filename, varnames::Array)
-    vars = Array(Any, length(varnames))
-    jldopen(filename) do f
-        for i = 1:length(varnames)
-            vars[i] = read(f, varnames[i])
-        end
-        tuple(vars...)
-    end
-end
-
 macro save(filename, vars...)
     if isempty(vars)
         # Save all variables in the current module
@@ -953,6 +943,7 @@ macro load(filename, vars...)
     end
 end
 
+# Save all the key-value pairs in the dict as top-level variables of the JLD
 function save(filename::String, dict::Associative)
     jldopen(filename, "w") do file
         for (k,v) in dict
@@ -960,16 +951,31 @@ function save(filename::String, dict::Associative)
         end
     end
 end
-
-function load(filename::String, varnames::ByteString...)
-    d = Dict{ByteString, Any}()
-    jldopen(filename, "r") do file
-        isempty(varnames) && (varnames = names(file))
-        for var in varnames
-            d[var] = read(file, var)
+# Or the names and values may be specified as alternating pairs
+function save(filename::String, name::String, value, pairs...)
+    if isodd(length(pairs)) || !isa(pairs[1:2:end], (String...)) 
+        throw(ArgumentError("arguments must be in name-value pairs"))
+    end
+    jldopen(filename, "w") do file
+        write(file, bytestring(name), value)
+        for i=1:2:length(pairs)
+            write(file, bytestring(pairs[i]), pairs[i+1])
         end
     end
-    d
+end
+
+# load with just a filename returns a dictionary containing all the variables
+function load(filename::String)
+    jldopen(filename, "r") do file
+        (ByteString => Any)[var => read(file, var) for var in names(file)]
+    end
+end
+# When called with explicitly requested variable names, return them in a tuple
+load(filename::String, varnames::String...) = load(filename, varnames)
+function load(filename::String, varnames::(String...))
+    jldopen(filename, "r") do file
+        map((var)->read(file, var), varnames)
+    end
 end
 
 function addrequire(file::JldFile, filename::String)
