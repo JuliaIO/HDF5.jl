@@ -97,6 +97,15 @@ variables themselves. `@save "/tmp/myfile.jld" t z` will create a file with
 just `t` and `z`; if you don't mention any variables, then it saves all the
 variables in the current module. Conversely, `@load` will pop the saved
 variables directly into the global workspace of the current module.
+However, keep in mind that these macros have significant limitations: for example,
+you can't use `@load` inside a function, there are constraints on using string
+interpolation inside filenames, etc. These limitations stem
+from the fact that Julia compiles functions to machine code before evaluation,
+so you cannot introduce new variables at runtime or evaluate expressions
+in other workspaces.
+The `save` and `load` functions do not have these limitations, and are therefore
+recommended as being considerably more robust, at the cost of some slight
+reduction of convenience.
 
 For plain HDF5 files, you can similarly say
 ```julia
