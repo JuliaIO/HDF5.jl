@@ -262,6 +262,18 @@ save(fn, "x", 3.2, "β", β, "A", A)
 d3 = load(fn)
 @assert d == d3
 
+# Test reference semantics
+v = Array(Vector{Int},0)
+arr = [1,2,3]
+push!(v, arr)
+push!(v, arr)
+@assert v[1] === v[2]
+save(fn, "v", v)
+v2 = load(fn,"v")
+@assert v2[1] === v2[2]
+v2[1][1] = 2
+@assert v2[2] == [2,2,3]
+
 # #71
 jldopen(fn, "w") do file
     file["a"] = 1

@@ -433,12 +433,18 @@ function getrefs{T}(obj::JldDataset, ::Type{T})
     out = Array(T, size(refs))
     f = file(obj)
     for i = 1:length(refs)
-        if refs[i] != HDF5.HDF5ReferenceObj_NULL
-            ref = f[refs[i]]
-            try
-                out[i] = read(ref)
-            finally
-                close(ref)
+        prevobj = get(file(obj).objectrefs, refs[i], nothing)
+        if prevobj != nothing
+            out[i] = prevobj
+        else
+            if refs[i] != HDF5.HDF5ReferenceObj_NULL
+                ref = f[refs[i]]
+                try
+                    out[i] = read(ref)
+                    file(obj).objectrefs[refs[i]] = out[i]
+                finally
+                    close(ref)
+                end
             end
         end
     end
