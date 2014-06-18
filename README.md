@@ -73,7 +73,7 @@ using HDF5, JLD
 ```
 
 If you just want to save a few variables and don't care to use the more
-advanced features of HDF5, then a simpler syntax is:
+advanced features of HDF5, then a simple syntax is:
 
 ```
 t = 15
