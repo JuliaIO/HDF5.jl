@@ -645,6 +645,9 @@ function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; 
     if isempty(T.names)
         error("This is the write function for CompositeKind, but the input is of type ", T)
     end
+    if has_pointer_field(s, name)
+        return
+    end
     Tname = string(T.name.name)
     n = T.names
     local gtypes
@@ -691,6 +694,32 @@ function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; 
     params = [map(full_typename, T.parameters)...]
     a_write(obj.plain, "TypeParameters", params)
     close(obj)
+end
+
+function has_pointer_field(obj::Tuple, name)
+    for o in obj
+        if has_pointer_field(o, name)
+            return true
+        end
+    end
+    false
+end
+
+function has_pointer_field(obj, name)
+    names = typeof(obj).names
+    for fieldname in names
+        if isdefined(obj, fieldname)
+            x = getfield(obj, fieldname)
+            if isa(x, Ptr)
+                warn("Skipping $name because field \"$fieldname\" is a pointer")
+                return true
+            end
+            if !isa(x, Associative) && has_pointer_field(x, name)
+                return true
+            end
+        end
+    end
+    false
 end
 
 ### Size, length, etc ###

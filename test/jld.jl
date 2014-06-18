@@ -55,6 +55,8 @@ ms_undef = MyStruct(0)
 cpus = Base.Sys.cpu_info()
 # Immutable type:
 rng = 1:5
+# Type with a pointer field (#84)
+objwithpointer = r"julia"
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -149,6 +151,7 @@ fid = jldopen(fn, "w")
 @write fid undef
 @write fid undefs
 @write fid ms_undef
+@write fid objwithpointer  # This should not write anything
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -193,6 +196,8 @@ for mmap = (true, false)
     @check fidr typevar_lb
     @check fidr typevar_ub
     @check fidr typevar_lb_ub
+
+    @assert !in("objwithpointer", names(fidr))
 
     # Special cases for reading undefs
     undef = read(fidr, "undef")
