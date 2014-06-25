@@ -63,6 +63,8 @@ bt = reinterpret(MyBT, 55)
 # Symbol arrays (#100)
 sa_asc = [:a, :b]
 sa_utf8 = [:α, :β]
+# SubArray (to test tuple type params)
+subarray = sub([1:5], 1:5)
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -161,6 +163,7 @@ fid = jldopen(fn, "w")
 @write fid bt
 @write fid sa_asc
 @write fid sa_utf8
+@write fid subarray
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -224,6 +227,7 @@ for mmap = (true, false)
     @check fidr bt
     @check fidr sa_asc
     @check fidr sa_utf8
+    @check fidr subarray
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}

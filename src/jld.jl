@@ -892,7 +892,7 @@ function full_typename(tv::TypeVar)
         "TypeVar(:$(tv.name),$(tv.lb),$(tv.ub))"
     end
 end
-full_typename(jltype::(Type...)) = @sprintf "(%s)" join(map(full_typename, jltype), ",")
+full_typename(jltype::(Type...)) = @sprintf "(%s,)" join(map(full_typename, jltype), ",")
 full_typename(x) = string(x)
 function full_typename(jltype::DataType)
     #tname = "$(jltype.name.module).$(jltype.name)"
