@@ -221,6 +221,7 @@ function read(parent::Union(JldFile, JldGroup), name::ByteString)
     end
     val
 end
+read(parent::Union(JldFile,JldGroup), name::Symbol) = read(parent,bytestring(string(name)))
 
 # read and readsafely differ only in how they handle CompositeKind
 function read(obj::Union(JldFile, JldDataset))
@@ -305,6 +306,7 @@ function readsafely(parent::Union(JldFile, JldGroup), name::ByteString)
     end
     return ret
 end
+readsafely(parent::Union(JldFile,JldGroup), name::Symbol) = readsafely(parent, bytestring(string(symbol)))
 
 # Basic types
 typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
