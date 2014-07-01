@@ -984,6 +984,7 @@ macro load(filename, vars...)
             end
         end
         return Expr(:block, 
+                    Expr(:global, vars...),
                     Expr(:try,  Expr(:block, readexprs...), false, false,
                          :(close($f))),
                     Symbol[v.args[1] for v in vars]) # "unescape" vars
@@ -993,6 +994,7 @@ macro load(filename, vars...)
             readexprs[i] = :($(esc(vars[i])) = read(f, $(string(vars[i]))))
         end
         return Expr(:block, 
+                    Expr(:global, map(esc, vars)...),
                     :(local f = jldopen($(esc(filename)))),
                     Expr(:try,  Expr(:block, readexprs...), false, false,
                          :(close(f))),
