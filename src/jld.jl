@@ -894,7 +894,8 @@ function full_typename(tv::TypeVar)
         "TypeVar(:$(tv.name),$(tv.lb),$(tv.ub))"
     end
 end
-full_typename(jltype::(Type...)) = @sprintf "(%s,)" join(map(full_typename, jltype), ",")
+full_typename(jltype::(Type...)) = length(jltype) == 1 ? @sprintf("(%s,)", full_typename(jltype[1])) :
+                                   @sprintf("(%s)", join(map(full_typename, jltype), ","))
 full_typename(x) = string(x)
 function full_typename(jltype::DataType)
     #tname = "$(jltype.name.module).$(jltype.name)"
@@ -983,7 +984,6 @@ macro load(filename, vars...)
             end
         end
         return Expr(:block, 
-                    Expr(:global, vars...),
                     Expr(:try,  Expr(:block, readexprs...), false, false,
                          :(close($f))),
                     Symbol[v.args[1] for v in vars]) # "unescape" vars
@@ -994,7 +994,6 @@ macro load(filename, vars...)
         end
         return Expr(:block, 
                     :(local f = jldopen($(esc(filename)))),
-                    Expr(:global, map(esc, vars)...),
                     Expr(:try,  Expr(:block, readexprs...), false, false,
                          :(close(f))),
                     Symbol[v for v in vars]) # vars is a tuple

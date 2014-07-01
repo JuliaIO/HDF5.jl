@@ -65,6 +65,8 @@ sa_asc = [:a, :b]
 sa_utf8 = [:α, :β]
 # SubArray (to test tuple type params)
 subarray = sub([1:5], 1:5)
+# Array of empty tuples (to test tuple type params)
+arr_empty_tuple = ()[]
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -164,6 +166,7 @@ fid = jldopen(fn, "w")
 @write fid sa_asc
 @write fid sa_utf8
 @write fid subarray
+@write fid arr_empty_tuple
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -228,6 +231,7 @@ for mmap = (true, false)
     @check fidr sa_asc
     @check fidr sa_utf8
     @check fidr subarray
+    @check fidr arr_empty_tuple
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}
