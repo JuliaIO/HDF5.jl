@@ -5,7 +5,11 @@
 module HDF5
 
 ## Add methods to...
-import Base: close, convert, done, dump, eltype, endof, flush, getindex, has, isempty, isvalid, length, names, ndims, next, read, setindex!, show, size, start, write
+import Base: close, convert, done, dump, eltype, endof, flush, getindex, isempty, isvalid, length, names, ndims, next, read, setindex!, show, size, start, write
+
+if VERSION <= v"0.2.99"
+    import Base.has
+end
 
 include("datafile.jl")
 
