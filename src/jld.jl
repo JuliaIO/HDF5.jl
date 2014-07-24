@@ -722,7 +722,7 @@ function write_bitstype(parent::Union(JldFile, JldGroup), name::ByteString, s)
     else
         error("Unsupported bitstype $T of size $(T.size)")
     end
-    write(parent, name, [ub], "$T")
+    write(parent, name, [ub], "$(full_typename(T))")
 end
 
 function has_pointer_field(obj::Tuple, name)

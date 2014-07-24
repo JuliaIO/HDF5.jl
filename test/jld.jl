@@ -277,3 +277,13 @@ end
 jldopen(fn, "r") do file
     @assert read(file, "a") == 1
 end
+
+# Issue #106
+module Mod106
+bitstype 64 Typ{T}
+typ{T}(x::Int, ::Type{T}) = Base.box(Typ{T}, Base.unbox(Int,x))
+abstract UnexportedT
+end
+save(fn, "i106", Mod106.typ(1, Mod106.UnexportedT))
+i106 = load(fn, "i106")
+@assert i106 == Mod106.typ(1, Mod106.UnexportedT)
