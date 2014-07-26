@@ -340,12 +340,11 @@ function read{N}(obj::JldDataset, ::Type{Array{Bool,N}})
 end
 
 # Complex
-typealias ComplexTypes Union(Complex64, Complex128)
-function read{T<:ComplexTypes}(obj::JldDataset, ::Type{T})
-    a = read(obj.plain, Array{realtype(T)})
+function read{T}(obj::JldDataset, ::Type{Complex{T}})
+    a = read(obj.plain, Array{T})
     a[1]+a[2]*im
 end
-function read{T<:ComplexTypes,N}(obj::JldDataset, ::Type{Array{T,N}})
+function read{T<:Complex,N}(obj::JldDataset, ::Type{Array{T,N}})
     A = read(obj, Array{realtype(T)})
     reinterpret(T, A, ntuple(ndims(A)-1, i->size(A, i+1)))
 end
@@ -534,8 +533,7 @@ function write(parent::Union(JldFile, JldGroup), name::ByteString, tf::Array{Boo
 end
 
 # Complex
-realtype(::Type{Complex64}) = Float32
-realtype(::Type{Complex128}) = Float64
+realtype{T}(::Type{Complex{T}}) = T
 function write(parent::Union(JldFile, JldGroup), name::ByteString, c::Complex)
     reim = [real(c), imag(c)]
     write(parent, name, reim, full_typename(typeof(c)))

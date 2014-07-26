@@ -16,6 +16,7 @@ B = randn(2, 4)
 AB = Any[A, B]
 t = (3, "cat")
 c = float32(3)+float32(7)im
+cint = 1+im  # issue 108
 C = reinterpret(Complex128, B, (4,))
 emptyA = zeros(0,2)
 emptyB = zeros(2,0)
@@ -138,6 +139,7 @@ fid = jldopen(fn, "w")
 @write fid AB
 @write fid t
 @write fid c
+@write fid cint
 @write fid C
 @write fid emptyA
 @write fid emptyB
@@ -190,6 +192,7 @@ for mmap = (true, false)
     @check fidr AB
     @check fidr t
     @check fidr c
+    @check fidr cint
     @check fidr C
     @check fidr emptyA
     @check fidr emptyB
