@@ -803,7 +803,7 @@ function setindex!(dset::JldDataset, X::Array, indices::RangeIndex...)
     end
     # Convert to Julia type
     T = julia_type(typename)
-    HDF5._setindex!(dset, T, X, indices...)
+    HDF5._setindex!(dset.plain, T, X, indices...)
 end
 
 length(x::Union(JldFile, JldGroup)) = length(names(x))
