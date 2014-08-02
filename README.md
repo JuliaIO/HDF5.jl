@@ -34,7 +34,7 @@ system (version 1.8 or higher is required), but **for most users
 no additional steps should be required; the HDF5 library should be
 installed for you automatically when you add the package.**
 
-If you have to install HDF5 manually, here are some examples of
+If you have to install the HDF5 library manually, here are some examples of
 how to do it:
 
 - Debian/(K)Ubuntu: `apt-get -u install hdf5-tools`

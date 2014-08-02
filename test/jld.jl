@@ -16,6 +16,7 @@ B = randn(2, 4)
 AB = Any[A, B]
 t = (3, "cat")
 c = float32(3)+float32(7)im
+cint = 1+im  # issue 108
 C = reinterpret(Complex128, B, (4,))
 emptyA = zeros(0,2)
 emptyB = zeros(2,0)
@@ -138,6 +139,7 @@ fid = jldopen(fn, "w")
 @write fid AB
 @write fid t
 @write fid c
+@write fid cint
 @write fid C
 @write fid emptyA
 @write fid emptyB
@@ -190,6 +192,7 @@ for mmap = (true, false)
     @check fidr AB
     @check fidr t
     @check fidr c
+    @check fidr cint
     @check fidr C
     @check fidr emptyA
     @check fidr emptyB
@@ -278,28 +281,12 @@ jldopen(fn, "r") do file
     @assert read(file, "a") == 1
 end
 
-
-# bracket synax for datasets
-jldopen(fn, "w") do file
-    file["a"] = [1:100]
-    file["a"][51:100] = [1:50]
-    file["b"] = [x*y for x=1:10,y=1:10]
+# Issue #106
+module Mod106
+bitstype 64 Typ{T}
+typ{T}(x::Int, ::Type{T}) = Base.box(Typ{T}, Base.unbox(Int,x))
+abstract UnexportedT
 end
-jldopen(fn, "r") do file
-    @assert(file["a"][1:50] == [1:50])
-    @assert(file["a"][:] == [[1:50],[1:50]])
-    @assert(file["b"][5,6][1]==5*6)
-end
-
-# bracket syntax when created by HDF5
-h5open(fn, "w") do file
-    file["a"] = [1:100]
-    file["a"][51:100] = [1:50]
-    file["b"] = [x*y for x=1:10,y=1:10]
-end
-jldopen(fn, "r") do file
-    @assert(file["a"][1:50] == [1:50])
-    @assert(file["a"][:] == [[1:50],[1:50]])
-    @assert(file["b"][5,6][1]==5*6)
-end
-    
+save(fn, "i106", Mod106.typ(1, Mod106.UnexportedT))
+i106 = load(fn, "i106")
+@assert i106 == Mod106.typ(1, Mod106.UnexportedT)

@@ -1,6 +1,9 @@
 # The Julia data (\*.jld) module
 
-The JLD module reads and writes "Julia data files" (\*.jld files) using HDF5. To the core HDF5 functionality, this module adds conventions for writing objects which are not directly supported by libhdf5. The key characteristic is that objects of many types can be written, and upon later reading they maintain the proper type.
+The JLD module reads and writes "Julia data files" (\*.jld files) using HDF5. To the core HDF5 functionality, this module adds conventions for writing objects which are not directly supported by libhdf5. The key characteristic is that objects of many types can be written, and upon later reading they maintain the proper type. For example, libhdf5 does not know about complex numbers; as a consequence, JLD writes a complex number as a pair of real numbers, and then adds annotation hinting to the reader that these should be interpreted as a complex number of a particular type. The JLD read functions look for those hints and apply them automatically.
+
+Note that \*.jld files are "just" HDF5 files, and consequently can be ready by any language that supports HDF5. However, to get variables read back in the appropriate type for that language, you'll want to use or write a translator. This translator should inspect the annotations of each variable. For further information, [see below](#reference). If you do write a translator for another programming language, if let me know I will be happy to add a link to your package.
+
 
 ## Usage
 
@@ -92,7 +95,7 @@ end
 ```
 Then you can read this file from the REPL prompt simply with `@load "test.jld"`. The `MyTypes` module will be defined inside `Main`, with no reference to `A.B`.
 
-## Reference: the *.jld HDF5 format
+## Reference: the *.jld HDF5 format <a name="reference"></a>
 
 This is intended as a brief "reference standard" describing the structure of the HDF5 files created by JLD. This may be of value to others trying to read such files from other languages. If you're interested in understanding the format, it is highly recommended to run the script `test/jld.jl`, which generates a sample file called `test.jld` in your temporary directory (e.g., `/tmp`). This file can then be inspected with `h5dump`.
 
