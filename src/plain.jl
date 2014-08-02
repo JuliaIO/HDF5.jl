@@ -27,6 +27,7 @@ typealias Haddr       Uint64
 ### Load and initialize the HDF library ###
 @osx_only import Homebrew # Add Homebrew/lib to the DL_LOAD_PATH
 @unix_only begin
+    push!(Sys.DL_LOAD_PATH, "/opt/local/lib")
     const libname = "libhdf5"
     const libhdf5 = dlopen(libname)
 end
@@ -1462,7 +1463,10 @@ function getindex(dset::HDF5Dataset, indices::RangeIndex...)
     finally
         close(dtype)
     end
-    if !(T<:HDF5BitsKind)
+    _getindex(dset,T, indices...)
+end
+function _getindex(dset::HDF5Dataset, T::Type, indices::RangeIndex...)
+    if !(T<:HDF5BitsKind)    
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
     dsel_id = hyperslab(dset, indices...)
@@ -1482,6 +1486,9 @@ end
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
 function setindex!(dset::HDF5Dataset, X::Array, indices::RangeIndex...)
     T = hdf5_to_julia(dset)
+    _setindex!(dset, T, X, indices...)
+end
+function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::RangeIndex...)
     if !(T<:Array)
         error("Dataset indexing (hyperslab) is available only for arrays")
     end
@@ -1508,7 +1515,6 @@ function setindex!(dset::HDF5Dataset, X::Array, indices::RangeIndex...)
     end
     X
 end
-
 function setindex!(dset::HDF5Dataset, X::AbstractArray, indices::RangeIndex...)
     T = hdf5_to_julia(dset)
     if !(T<:Array)
