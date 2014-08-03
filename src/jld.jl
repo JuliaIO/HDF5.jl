@@ -519,7 +519,7 @@ function write(parent::Union(JldFile, JldGroup), name::ByteString, tf::Array{Boo
     a_write(parent[name].plain, "julia_format", "EachUint8")
 end
 
-# Complext
+# Complex
 realtype{T}(::Type{Complex{T}}) = T
 function write(parent::Union(JldFile, JldGroup), name::ByteString, c::Complex)
     reim = [real(c), imag(c)]
