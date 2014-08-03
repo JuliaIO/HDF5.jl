@@ -519,7 +519,7 @@ function write(parent::Union(JldFile, JldGroup), name::ByteString, tf::Array{Boo
     a_write(parent[name].plain, "julia_format", "EachUint8")
 end
 
-# Complex
+# Complext
 realtype{T}(::Type{Complex{T}}) = T
 function write(parent::Union(JldFile, JldGroup), name::ByteString, c::Complex)
     reim = [real(c), imag(c)]
@@ -797,7 +797,7 @@ function setindex!(dset::JldDataset, X::Array, indices::RangeIndex...)
     # Read the type
     typename = a_read(dset.plain, name_type_attr)
     if typename == "Tuple"
-        return read_tuple(dset, indices...)
+        error("setindex! not availble for julia type tuple")             
     end
     # Convert to Julia type
     T = julia_type(typename)
