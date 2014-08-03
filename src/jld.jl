@@ -5,9 +5,9 @@
 module JLD
 using HDF5
 # Add methods to...
-import HDF5: close, dump, exists, file, getindex, g_create, g_open, o_delete, name, names, read, size, write,
+import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o_delete, name, names, read, size, write,
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
-import Base: length, show, done, next, start
+import Base: length, endof, show, done, next, start
 
 if !isdefined(:setfield!)
     const setfield! = setfield
@@ -471,19 +471,6 @@ function getrefs{T}(obj::JldDataset, ::Type{T}, indices::Union(Integer, Abstract
     return out
 end
 
-# dset[3:5, ...] syntax
-# function getindex(dset::HDF5Dataset{JldFile}, indices::RangeIndex...)
-#     typename = a_read(dset, name_type_attr)
-#     # Convert to Julia type
-#     T = julia_type(typename)
-#     if !(T <: AbstractArray)
-#         error("Ref syntax only works for arrays")
-#     end
-#     HDF5._getindex(plain(dset), eltype(T), indices...)
-# end
-
-
-
 ### Writing ###
 
 # Write "basic" types
@@ -771,15 +758,17 @@ function size(dset::JldDataset)
     end
     size(dset.plain)
 end
+length(dset::JldDataset) = prod(size(dset))
+endof(dset::JldDataset) = length(dset)
 
 isarraycomplex{T<:Complex, N}(::Type{Array{T, N}}) = true
 isarraycomplex(t) = false
 
-### Read via getindex ###
+### Read/write via getindex/setindex! ###
 function getindex(dset::JldDataset, indices::Union(Integer, RangeIndex)...)
     if !exists(attrs(dset.plain), name_type_attr)
         # Fallback to plain read
-        return read(dset.plain)
+        return getindex(dset.plain, indices...)
     end
     # Read the type
     typename = a_read(dset.plain, name_type_attr)
@@ -788,9 +777,6 @@ function getindex(dset::JldDataset, indices::Union(Integer, RangeIndex)...)
     end
     # Convert to Julia type
     T = julia_type(typename)
-    if !(T <: AbstractArray)
-        error("Ref syntax only works for arrays")
-    end
     _getindex(dset, T, indices...)
 end
 
@@ -803,6 +789,20 @@ function _getindex{N}(dset::JldDataset, ::Type{Array{Bool,N}}, indices::RangeInd
     bool(tf)
 end
 _getindex{T,N}(dset::JldDataset, ::Type{Array{T,N}}, indices::Union(Integer, RangeIndex)...) = getrefs(dset, T, indices...)
+function setindex!(dset::JldDataset, X::Array, indices::RangeIndex...)
+    if !exists(attrs(dset.plain), name_type_attr)
+        # Fallback to plain read
+        return setindex!(dset.plain, X, indices...)
+    end
+    # Read the type
+    typename = a_read(dset.plain, name_type_attr)
+    if typename == "Tuple"
+        return read_tuple(dset, indices...)
+    end
+    # Convert to Julia type
+    T = julia_type(typename)
+    HDF5._setindex!(dset, T, X, indices...)
+end
 
 length(x::Union(JldFile, JldGroup)) = length(names(x))
 
