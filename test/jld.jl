@@ -290,3 +290,26 @@ end
 save(fn, "i106", Mod106.typ(1, Mod106.UnexportedT))
 i106 = load(fn, "i106")
 @assert i106 == Mod106.typ(1, Mod106.UnexportedT)
+
+# bracket synax for datasets
+jldopen(fn, "w") do file
+    file["a"] = [1:100]
+    file["b"] = [x*y for x=1:10,y=1:10]
+end
+jldopen(fn, "r") do file
+    @assert(file["a"][1:50] == [1:50])
+    @assert(file["b"][5,6][1]==5*6)
+end
+
+# bracket syntax when created by HDF5
+h5open(fn, "w") do file
+    file["a"] = [1:100]
+    file["a"][51:100] = [1:50]
+    file["b"] = [x*y for x=1:10,y=1:10]
+end
+jldopen(fn, "r") do file
+    @assert(file["a"][1:50] == [1:50])
+    @assert(file["a"][:] == [[1:50],[1:50]])
+    @assert(file["b"][5,6][1]==5*6)
+end
+    
