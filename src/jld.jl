@@ -7,7 +7,7 @@ using HDF5
 # Add methods to...
 import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o_delete, name, names, read, size, write,
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
-import Base: length, endof, show, done, next, start
+import Base: length, endof, show, done, next, start, delete!
 
 if !isdefined(:setfield!)
     const setfield! = setfield
@@ -197,6 +197,12 @@ name(p::Union(JldFile, JldGroup, JldDataset)) = name(p.plain)
 exists(p::Union(JldFile, JldGroup, JldDataset), path::ByteString) = exists(p.plain, path)
 root(p::Union(JldFile, JldGroup, JldDataset)) = g_open(file(p), "/")
 o_delete(parent::Union(JldFile, JldGroup), args...) = o_delete(parent.plain, args...)
+function delete!(g::Union(JldGroup, JldFile), name)
+    beginswith(name,'_') && error("$name is internal to the JLD format, use o_delete if you really want to delete it")
+    o_delete(g, name)
+    o_delete(g, joinpath("_refs", name))
+end
+delete!(parent::Union(JldFile, JldGroup), args...) = for a in args delete!(parent,a) end
 ismmappable(obj::JldDataset) = ismmappable(obj.plain)
 readmmap(obj::JldDataset, args...) = readmmap(obj.plain, args...)
 setindex!(parent::Union(JldFile, JldGroup), val, path::ASCIIString) = write(parent, path, val)
