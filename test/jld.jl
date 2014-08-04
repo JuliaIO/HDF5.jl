@@ -317,4 +317,3 @@ jldopen(fn, "r") do file
     @assert(file["a"][:] == [[1:50],[1:50]])
     @assert(file["b"][5,6][1]==5*6)
 end
-    

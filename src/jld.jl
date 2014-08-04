@@ -641,6 +641,7 @@ function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; 
         if T.size > 0
             return write_bitstype(parent, name, s)
         end
+        isdefined(T, :instance) || error("This is the write function for CompositeKind, but the input is of type ", T)
     end
     if has_pointer_field(s, name)
         return
