@@ -197,12 +197,29 @@ name(p::Union(JldFile, JldGroup, JldDataset)) = name(p.plain)
 exists(p::Union(JldFile, JldGroup, JldDataset), path::ByteString) = exists(p.plain, path)
 root(p::Union(JldFile, JldGroup, JldDataset)) = g_open(file(p), "/")
 o_delete(parent::Union(JldFile, JldGroup), args...) = o_delete(parent.plain, args...)
-function delete!(g::Union(JldGroup, JldFile), name)
-    beginswith(name,'_') && error("$name is internal to the JLD format, use o_delete if you really want to delete it")
-    o_delete(g, name)
-    o_delete(g, joinpath("_refs", name))
+function ensurepathsafe(path::ByteString)
+    if any([beginswith(path, s) for s in (pathrefs,pathtypes,pathrequire)]) 
+        error("$name is internal to the JLD format, use o_delete if you really want to delete it") 
+    end
 end
-delete!(parent::Union(JldFile, JldGroup), args...) = for a in args delete!(parent,a) end
+function delete!(o::JldDataset)
+    fullpath = name(o)
+    ensurepathsafe(fullpath)
+    o_delete(o.file, fullpath)
+    refspath = joinpath(pathrefs, fullpath[2:end])
+    exists(o.file, refspath) && o_delete(o.file, refspath)
+end
+function delete!(g::JldGroup)
+    fullpath = name(g)
+    ensurepathsafe(fullpath)
+    for o in g typeof(o) == JldDataset && delete!(o) end
+    o_delete(g.file,name(g))
+end
+function delete!(parent::Union(JldFile, JldGroup), path::ByteString)
+    exists(parent, path) || error("$path does not exist in $parent")
+    delete!(parent[path])
+end
+delete!(parent::Union(JldFile, JldGroup), args::(ByteString...)) = for a in args delete!(parent,a) end
 ismmappable(obj::JldDataset) = ismmappable(obj.plain)
 readmmap(obj::JldDataset, args...) = readmmap(obj.plain, args...)
 setindex!(parent::Union(JldFile, JldGroup), val, path::ASCIIString) = write(parent, path, val)
