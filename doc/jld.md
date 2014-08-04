@@ -22,6 +22,15 @@ close(file)
 This creates a dataset named `"A"` containing the contents of the variable `A`.
 There are also the convenient `save("mydata.jld", "A", A)` or `@save "mydata.jld" A` [syntaxes](../README.md).
 
+You may also use an array like syntax
+```julia
+file = jldopen("mydata.jld", "w")
+file["a"] = [1:100]
+b = file["a"][20:30]
+close(file)
+```
+Use the `delete!` function to delete `JldDataset`s and their associated references.  Directly deleting a `JldDataset` with `o_delete` will leave behind unwanted objects that may cause future errors, especially if you reuse the same path in the JLD file. 
+
 JLD files can be opened with the `mmaparrays` option, which if true returns "qualified" array data sets as arrays using [memory-mapping](hdf5.md#memory-mapping):
 
 ```julia

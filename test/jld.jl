@@ -1,5 +1,6 @@
 using HDF5
 using JLD
+using Base.Test
 
 # Define variables of different types
 x = 3.7
@@ -296,7 +297,7 @@ save(fn, "i106", Mod106.typ(1, Mod106.UnexportedT))
 i106 = load(fn, "i106")
 @assert i106 == Mod106.typ(1, Mod106.UnexportedT)
 
-# bracket synax for datasets
+# bracket syntax for datasets
 jldopen(fn, "w") do file
     file["a"] = [1:100]
     file["b"] = [x*y for x=1:10,y=1:10]
@@ -316,4 +317,31 @@ jldopen(fn, "r") do file
     @assert(file["a"][1:50] == [1:50])
     @assert(file["a"][:] == [[1:50],[1:50]])
     @assert(file["b"][5,6][1]==5*6)
+end
+
+# delete!
+jldopen(fn, "w") do file
+    file["ms"] = ms
+    delete!(file, "ms")
+    file["ms"] = β
+    g = g_create(file,"g")
+    file["g/ms"] = ms
+    @test_throws ErrorException delete!(file, "_refs/g/ms")
+    delete!(file, "g/ms")
+    file["g/ms"] = ms
+    delete!(file, "/g/ms")
+    g["ms"] = ms
+    delete!(g,"ms")
+    g["ms"] = ms
+    delete!(g["ms"])
+    g["ms"] = ms
+    delete!(g)
+    g = g_create(file,"g")
+    g["ms"] = ms
+    delete!(g)
+end
+jldopen(fn, "r") do file
+    @assert(read(file["ms"]) == β)
+    @assert(!exists(file, "g/ms"))
+    @assert(!exists(file, "g"))
 end
