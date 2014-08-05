@@ -681,7 +681,7 @@ function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; 
         if !exists(gtypes, Tname)
             # Write names to a dataset, so that other languages reading this file can
             # at least create a sensible dict
-            nametype = Array(ASCIIString, 2, length(n))
+            nametype = Array(ByteString, 2, length(n))
             t = T.types
             for i = 1:length(n)
                 nametype[1, i] = string(n[i])
