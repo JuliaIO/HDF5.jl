@@ -72,6 +72,14 @@ arr_empty_tuple = ()[]
 immutable EmptyType
 end
 emptytype = EmptyType()
+# Unicode type field names (#118)
+type MyUnicodeStruct☺{τ}
+    α::τ
+    ∂ₓα::τ
+    MyUnicodeStruct☺(α::τ, ∂ₓα::τ) = new(α, ∂ₓα)
+end
+unicodestruct☺ = MyUnicodeStruct☺{Float64}(1.0, -1.0)
+
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -84,6 +92,7 @@ function iseq(c1::Base.Sys.CPUinfo, c2::Base.Sys.CPUinfo)
     end
     true
 end
+iseq(x::MyUnicodeStruct☺, y::MyUnicodeStruct☺) = (x.α == y.α && x.∂ₓα == y.∂ₓα)
 macro check(fid, sym)
     ex = quote
         let tmp
@@ -174,6 +183,7 @@ fid = jldopen(fn, "w")
 @write fid subarray
 @write fid arr_empty_tuple
 @write fid emptytype
+@write fid unicodestruct☺
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -241,6 +251,7 @@ for mmap = (true, false)
     @check fidr subarray
     @check fidr arr_empty_tuple
     @check fidr emptytype
+    @check fidr unicodestruct☺
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}
