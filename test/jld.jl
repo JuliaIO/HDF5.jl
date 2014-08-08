@@ -9,6 +9,8 @@ Aarray = Vector{Float64}[[1.2,1.3],[2.2,2.3,2.4]]
 str = "Hello"
 stringsA = ASCIIString["It", "was", "a", "dark", "and", "stormy", "night"]
 stringsU = UTF8String["It", "was", "a", "dark", "and", "stormy", "night"]
+strings16 = convert(Array{UTF16String}, stringsA)
+strings16_2d = reshape(strings16[1:6], (2,3))
 empty_string = ""
 empty_string_array = ASCIIString[]
 empty_array_of_strings = ASCIIString[""]
@@ -146,6 +148,8 @@ fid = jldopen(fn, "w")
 @write fid str
 @write fid stringsA
 @write fid stringsU
+@write fid strings16
+@write fid strings16_2d
 @write fid empty_string
 @write fid empty_string_array
 @write fid empty_array_of_strings
@@ -202,6 +206,8 @@ for mmap = (true, false)
     @check fidr str
     @check fidr stringsA
     @check fidr stringsU
+    @check fidr strings16
+    @check fidr strings16_2d
     @check fidr empty_string
     @check fidr empty_string_array
     @check fidr empty_array_of_strings
