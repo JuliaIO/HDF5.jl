@@ -1706,7 +1706,7 @@ function h5d_write{S<:ByteString}(dataset_id::Hid, memtype_id::Hid, strs::Array{
     len = length(strs)
     p = Array(Ptr{Uint8}, size(strs))
     for i = 1:len
-        p[i] = isempty(strs[i]) ? EMPTY_STRING : convert(Ptr{Uint8}, strs[i])
+        p[i] = convert(Ptr{Uint8}, !isdefined(strs, i) || isempty(strs[i]) ? EMPTY_STRING : strs[i])
     end
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, p)
 end
