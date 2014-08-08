@@ -5,6 +5,7 @@ using Base.Test
 # Define variables of different types
 x = 3.7
 A = rand(1:20, 3, 5)
+Aarray = Vector{Float64}[[1.2,1.3],[2.2,2.3,2.4]]
 str = "Hello"
 stringsA = ASCIIString["It", "was", "a", "dark", "and", "stormy", "night"]
 stringsU = UTF8String["It", "was", "a", "dark", "and", "stormy", "night"]
@@ -141,6 +142,7 @@ fn = joinpath(tempdir(),"test.jld")
 fid = jldopen(fn, "w")
 @write fid x
 @write fid A
+@write fid Aarray
 @write fid str
 @write fid stringsA
 @write fid stringsU
@@ -196,6 +198,7 @@ for mmap = (true, false)
     fidr = jldopen(fn, "r", mmaparrays=mmap)
     @check fidr x
     @check fidr A
+    @check fidr Aarray
     @check fidr str
     @check fidr stringsA
     @check fidr stringsU

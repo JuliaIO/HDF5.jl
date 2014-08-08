@@ -419,6 +419,7 @@ type HDF5Vlen{T}
 end
 HDF5Vlen{S<:ByteString}(strs::Array{S}) = HDF5Vlen{chartype(S)}(strs)
 HDF5Vlen{T<:HDF5BitsKind}(A::Array{Array{T}}) = HDF5Vlen{T}(A)
+HDF5Vlen{T<:HDF5BitsKind,N}(A::Array{Array{T,N}}) = HDF5Vlen{T}(A)
 
 ## Types that correspond to C structs and get used for ccall
 # For VLEN

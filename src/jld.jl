@@ -345,6 +345,16 @@ end
 read{T<:ByteString}(obj::JldDataset, ::Type{Array{T}}) = read(obj.plain, Array{T})
 read{T<:BitsKindOrByteString,N}(obj::JldDataset, ::Type{Array{T,N}}) = read(obj, Array{T})
 
+# Arrays-of-arrays of basic types
+function read{T<:HDF5BitsKind,M,N}(obj::JldDataset, ::Type{Array{Array{T,N},M}})
+    A = read(obj.plain, HDF5.HDF5Vlen{T})
+    if isempty(A) && exists(obj, "dims")
+        dims = a_read(obj.plain, "dims")
+        A = reshape(A, dims...)
+    end
+    convert(Array{Array{T,N},M}, A)
+end
+
 # Nothing
 read(obj::JldDataset, ::Type{Nothing}) = nothing
 read(obj::JldDataset, ::Type{Bool}) = bool(read(obj, Uint8))
@@ -514,6 +524,30 @@ function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGro
 end
 write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ByteString, data::Union(T, Array{T})) =
     write(parent, name, data, full_typename(typeof(data)))
+
+# Arrays-of-arrays of basic types
+write{T<:Union(HDF5BitsKind, ByteString),N}(parent::Union(JldFile, JldGroup), name::ByteString,
+                                            data::Array{Array{T,N}}, astype::ByteString) = 
+    write(parent, name, HDF5.HDF5Vlen(data), astype)
+write{T<:Union(HDF5BitsKind, ByteString),N}(parent::Union(JldFile, JldGroup), name::ByteString,
+                                            data::Array{Array{T,N}}) =
+    write(parent, name, data, full_typename(typeof(data)))
+function write{T}(parent::Union(JldFile, JldGroup), name::ByteString,
+                  data::HDF5.HDF5Vlen{T}, astype::ByteString)
+    # Create the dataset
+    dset, dtype = d_create(parent.plain, name, data)
+    try
+        # Write the attribute
+        a_write(dset, name_type_attr, astype)
+        isa(data, Array) && isempty(data) && a_write(dset, "dims", [size(data)...])
+        # Write the data
+        HDF5.writearray(dset, dtype.id, data)
+    finally
+        close(dset)
+        close(dtype)
+    end
+end
+
 
 # Write nothing
 function write(parent::Union(JldFile, JldGroup), name::ByteString, n::Nothing, astype::ASCIIString)
