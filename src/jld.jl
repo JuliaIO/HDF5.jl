@@ -111,7 +111,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             # Test whether this is a jld file
             sz = filesize(filename)
             if sz < 512
-                error("File size indicates this cannot be a Julia data file")
+                error("File size indicates $filename cannot be a Julia data file")
             end
             magic = Array(Uint8, 512)
             rawfid = open(filename, "r")
@@ -133,10 +133,10 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
                 end
             else
                 if ishdf5(filename)
-                    println("This is an HDF5 file, but it is not a recognized Julia data file. Opening anyway.")
+                    println("$filename is an HDF5 file, but it is not a recognized Julia data file. Opening anyway.")
                     fj = JldFile(h5open(filename, rd, wr, cr, tr, ff), version_current, true, false, mmaparrays)
                 else
-                    error("This does not seem to be a Julia data or HDF5 file")
+                    error("$filename does not seem to be a Julia data or HDF5 file")
                 end
             end
         end
