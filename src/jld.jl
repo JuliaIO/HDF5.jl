@@ -347,6 +347,9 @@ read{T<:BitsKindOrByteString,N}(obj::JldDataset, ::Type{Array{T,N}}) = read(obj,
 
 # Arrays-of-arrays of basic types
 function read{T<:HDF5BitsKind,M,N}(obj::JldDataset, ::Type{Array{Array{T,N},M}})
+    # fallback for backwards compatibility with pre-v0.2.27 format
+    HDF5.hdf5_to_julia_eltype(datatype(obj.plain)) == HDF5ReferenceObj &&
+        return getrefs(obj, Array{T,N})
     A = read(obj.plain, HDF5.HDF5Vlen{T})
     if isempty(A) && exists(obj, "dims")
         dims = a_read(obj.plain, "dims")
