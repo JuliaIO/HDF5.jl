@@ -4,7 +4,7 @@ using Base.Test
 
 # Define variables of different types
 x = 3.7
-A = rand(1:20, 3, 5)
+A = reshape(1:15, 3, 5)
 Aarray = Vector{Float64}[[1.2,1.3],[2.2,2.3,2.4]]
 str = "Hello"
 stringsA = ASCIIString["It", "was", "a", "dark", "and", "stormy", "night"]
@@ -18,7 +18,8 @@ empty_string_array = ASCIIString[]
 empty_array_of_strings = ASCIIString[""]
 tf = true
 TF = A .> 10
-B = randn(2, 4)
+B = [-1.5 sqrt(2) NaN 6;
+     0.0  Inf eps() -Inf]
 AB = Any[A, B]
 t = (3, "cat")
 c = float32(3)+float32(7)im
@@ -51,6 +52,7 @@ char = 'x'
 unicode_char = '\U10ffff'
 α = 22
 β = Any[[1, 2], [3, 4]]  # issue #93
+vv = Vector{Int}[[1,2,3]]  # issue #123
 typevar = Array{Int}[[1]]
 typevar_lb = Vector{TypeVar(:U, Integer)}[[1]]
 typevar_ub = Vector{TypeVar(:U, Int, Any)}[[1]]
@@ -177,6 +179,7 @@ end
 @write fid unicode_char
 @write fid α
 @write fid β
+@write fid vv
 @write fid cpus
 @write fid rng
 @write fid typevar
@@ -238,6 +241,7 @@ for mmap = (true, false)
     @check fidr unicode_char
     @check fidr α
     @check fidr β
+    @check fidr vv
     @check fidr cpus
     @check fidr rng
     @check fidr typevar
