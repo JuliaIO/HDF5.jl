@@ -392,9 +392,11 @@ read{N}(obj::JldDataset, ::Type{Array{Symbol,N}}) = map(symbol, read(obj.plain, 
 # Char
 read(obj::JldDataset, ::Type{Char}) = char(read(obj.plain, Uint32))
 
-# UTF16String
-read(obj::JldDataset, ::Type{UTF16String}) = UTF16String(read(obj.plain, Array{Uint16}))
-read{N}(obj::JldDataset, ::Type{Array{UTF16String,N}}) = map(x->UTF16String(x), read(obj, Array{Vector{Uint16},N}))
+# UTF16String (not defined in julia 0.2)
+if VERSION >= v"0.3-"
+    read(obj::JldDataset, ::Type{UTF16String}) = UTF16String(read(obj.plain, Array{Uint16}))
+    read{N}(obj::JldDataset, ::Type{Array{UTF16String,N}}) = map(x->UTF16String(x), read(obj, Array{Vector{Uint16},N}))
+end
 
 # General arrays
 read{T,N}(obj::JldDataset, t::Type{Array{T,N}}) = getrefs(obj, T)
@@ -604,8 +606,10 @@ write(parent::Union(JldFile, JldGroup), name::ByteString, syms::Array{Symbol}) =
 write(parent::Union(JldFile, JldGroup), name::ByteString, char::Char) = write(parent, name, uint32(char), "Char")
 
 #UTF16String
-write(parent::Union(JldFile, JldGroup), name::ByteString, str::UTF16String) = write(parent, name, str.data, "UTF16String")
-write{N}(parent::Union(JldFile, JldGroup), name::ByteString, strs::Array{UTF16String,N}) = write(parent, name, map(x->x.data, strs), "Array{UTF16String,$N}")
+if VERSION >= v"0.3-"
+    write(parent::Union(JldFile, JldGroup), name::ByteString, str::UTF16String) = write(parent, name, str.data, "UTF16String")
+    write{N}(parent::Union(JldFile, JldGroup), name::ByteString, strs::Array{UTF16String,N}) = write(parent, name, map(x->x.data, strs), "Array{UTF16String,$N}")
+end
 
 # General array types (as arrays of references)
 function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T}, astype::String)

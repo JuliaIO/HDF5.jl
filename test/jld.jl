@@ -9,8 +9,10 @@ Aarray = Vector{Float64}[[1.2,1.3],[2.2,2.3,2.4]]
 str = "Hello"
 stringsA = ASCIIString["It", "was", "a", "dark", "and", "stormy", "night"]
 stringsU = UTF8String["It", "was", "a", "dark", "and", "stormy", "night"]
-strings16 = convert(Array{UTF16String}, stringsA)
-strings16_2d = reshape(strings16[1:6], (2,3))
+if VERSION >= v"0.3-"
+    strings16 = convert(Array{UTF16String}, stringsA)
+    strings16_2d = reshape(strings16[1:6], (2,3))
+end
 empty_string = ""
 empty_string_array = ASCIIString[]
 empty_array_of_strings = ASCIIString[""]
@@ -61,7 +63,7 @@ cpus = Base.Sys.cpu_info()
 # Immutable type:
 rng = 1:5
 # Type with a pointer field (#84)
-objwithpointer = r"julia"
+objwithpointer = big(10)^10000
 # Custom BitsType (#99)
 bitstype 64 MyBT
 bt = reinterpret(MyBT, 55)
@@ -148,8 +150,10 @@ fid = jldopen(fn, "w")
 @write fid str
 @write fid stringsA
 @write fid stringsU
-@write fid strings16
-@write fid strings16_2d
+if VERSION >= v"0.3-"
+    @write fid strings16
+    @write fid strings16_2d
+end
 @write fid empty_string
 @write fid empty_string_array
 @write fid empty_array_of_strings
@@ -206,8 +210,10 @@ for mmap = (true, false)
     @check fidr str
     @check fidr stringsA
     @check fidr stringsU
-    @check fidr strings16
-    @check fidr strings16_2d
+    if VERSION >= v"0.3-"
+        @check fidr strings16
+        @check fidr strings16_2d
+    end
     @check fidr empty_string
     @check fidr empty_string_array
     @check fidr empty_array_of_strings
@@ -346,7 +352,7 @@ jldopen(fn, "w") do file
     file["ms"] = β
     g = g_create(file,"g")
     file["g/ms"] = ms
-    @test_throws ErrorException delete!(file, "_refs/g/ms")
+    @test_throws_02 ErrorException delete!(file, "_refs/g/ms")
     delete!(file, "g/ms")
     file["g/ms"] = ms
     delete!(file, "/g/ms")
