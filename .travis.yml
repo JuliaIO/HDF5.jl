@@ -14,3 +14,4 @@ before_install:
 script:
     - julia -e 'versioninfo(); Pkg.init(); Pkg.add("DataFrames"); Pkg.clone(pwd())'
     - julia ./test/runtests.jl
+    - julia -e 'Pkg.add("JLDArchives"); Pkg.test("JLDArchives")'
