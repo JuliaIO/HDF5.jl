@@ -959,9 +959,9 @@ function full_typename(tv::TypeVar)
     if is(tv.lb, None) && is(tv.ub, Any)
         "TypeVar(:$(tv.name))" 
     elseif is(tv.lb, None)
-        "TypeVar(:$(tv.name),$(tv.ub))"
+        "TypeVar(:$(tv.name),$(full_typename(tv.ub)))"
     else
-        "TypeVar(:$(tv.name),$(tv.lb),$(tv.ub))"
+        "TypeVar(:$(tv.name),$(full_typename(tv.lb)),$(full_typename(tv.ub)))"
     end
 end
 full_typename(jltype::(Type...)) = length(jltype) == 1 ? @sprintf("(%s,)", full_typename(jltype[1])) :
