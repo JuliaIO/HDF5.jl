@@ -535,11 +535,11 @@ write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name
     write(parent, name, data, full_typename(typeof(data)))
 
 # Arrays-of-arrays of basic types
-write{T<:Union(HDF5BitsKind, ByteString),N}(parent::Union(JldFile, JldGroup), name::ByteString,
-                                            data::Array{Array{T,N}}, astype::ByteString) = 
+write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ByteString,
+                                            data::Array{Array{T,1}}, astype::ByteString) = 
     write(parent, name, HDF5.HDF5Vlen(data), astype)
-write{T<:Union(HDF5BitsKind, ByteString),N}(parent::Union(JldFile, JldGroup), name::ByteString,
-                                            data::Array{Array{T,N}}) =
+write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ByteString,
+                                            data::Array{Array{T,1}}) =
     write(parent, name, data, full_typename(typeof(data)))
 function write{T}(parent::Union(JldFile, JldGroup), name::ByteString,
                   data::HDF5.HDF5Vlen{T}, astype::ByteString)

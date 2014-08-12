@@ -86,6 +86,8 @@ type MyUnicodeStruct☺{τ}
     MyUnicodeStruct☺(α::τ, ∂ₓα::τ) = new(α, ∂ₓα)
 end
 unicodestruct☺ = MyUnicodeStruct☺{Float64}(1.0, -1.0)
+# Arrays of matrices (#131)
+array_of_matrices = Matrix{Int}[[1 2; 3 4], [5 6; 7 8]]
 
 
 iseq(x,y) = isequal(x,y)
@@ -197,6 +199,7 @@ end
 @write fid arr_empty_tuple
 @write fid emptytype
 @write fid unicodestruct☺
+@write fid array_of_matrices
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -271,6 +274,7 @@ for mmap = (true, false)
     @check fidr arr_empty_tuple
     @check fidr emptytype
     @check fidr unicodestruct☺
+    @check fidr array_of_matrices
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}
