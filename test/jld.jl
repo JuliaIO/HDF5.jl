@@ -191,7 +191,7 @@ end
 @write fid undef
 @write fid undefs
 @write fid ms_undef
-@write fid objwithpointer  # This should not write anything
+@test_throws JLD.PointerException @write fid objwithpointer
 @write fid bt
 @write fid sa_asc
 @write fid sa_utf8
@@ -266,7 +266,6 @@ for mmap = (true, false)
         error("For ms_undef, read value does not agree with written value")
     end
     
-    @assert !in("objwithpointer", names(fidr))
     @check fidr bt
     @check fidr sa_asc
     @check fidr sa_utf8

@@ -23,10 +23,17 @@ const pathtypes = "/_types"
 const pathrequire = "/_require"
 const name_type_attr = "julia type"
 
+typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
+
 ### Dummy types used for converting attribute strings to Julia types
 type UnsupportedType; end
 type UnconvertedType; end
 type CompositeKind; end   # here this means "a type with fields"
+
+immutable JldDatatype
+    dtype::HDF5Datatype
+    index::Int
+end
 
 # The Julia Data file type
 # Purpose of the nrefs field:
@@ -39,10 +46,17 @@ type JldFile <: HDF5.DataFile
     toclose::Bool
     writeheader::Bool
     mmaparrays::Bool
+    h5jltype::Dict{Int,Type}
+    jlh5type::Dict{Type,JldDatatype}
+    h5ref::WeakKeyDict{Any,HDF5ReferenceObj}
+    jlref::Dict{HDF5ReferenceObj,WeakRef}
+    nrefs::Int
 
     function JldFile(plain::HDF5File, version::String=version_current, toclose::Bool=true,
                      writeheader::Bool=false, mmaparrays::Bool=false)
-        f = new(plain, version, toclose, writeheader, mmaparrays)
+        f = new(plain, version, toclose, writeheader, mmaparrays,
+                Dict{HDF5Datatype,Type}(), Dict{Type,HDF5Datatype}(),
+                WeakKeyDict{Any,HDF5ReferenceObj}(), Dict{HDF5ReferenceObj,Any}(), 0)
         if toclose
             finalizer(f, close)
         end
@@ -59,6 +73,19 @@ immutable JldDataset
     plain::HDF5Dataset
     file::JldFile
 end
+
+immutable PointerException <: Exception; end
+show(io::IO, ::PointerException) = print(io, "Cannot write a pointer to JLD file")
+
+# Wrapper for associative keys
+# We write this instead of the associative to avoid dependence on the
+# Julia hash function
+immutable AssociativeWrapper{K,V,T<:Associative}
+    keys::Vector{K}
+    values::Vector{V}
+end
+
+include("jld_types.jl")
 
 file(x::JldFile) = x
 file(x::Union(JldGroup, JldDataset)) = x.file
@@ -247,241 +274,120 @@ end
 read(parent::Union(JldFile,JldGroup), name::Symbol) = read(parent,bytestring(string(name)))
 
 # read and readsafely differ only in how they handle CompositeKind
-function read(obj::Union(JldFile, JldDataset))
-    if !exists(attrs(obj.plain), name_type_attr)
-        # Fallback to plain read
-        return read(obj.plain)
-    end
-    # Read the type
-    typename = a_read(obj.plain, name_type_attr)
-    if typename == "Tuple"
-        return read_tuple(obj)
-    end
-    # Convert to Julia type
-    T = julia_type(typename)
-    if T == CompositeKind
-        # Use type information in the file to ensure we find the right module
-        typename = a_read(obj.plain, "CompositeKind")
-        try
-            gtypes = root(obj)[pathtypes]
-            try
-                objtype = gtypes[typename]
-                try
-                    modnames = a_read(objtype.plain, "Module")
-                    mod = Main
-                    for mname in modnames
-                        mod = eval(mod, symbol(mname))
-                    end
-                    T = eval(mod, symbol(typename))
-                finally
-                    close(objtype)
-                end
-            finally
-                close(gtypes)
-            end
-        catch
-            error("Type ", typename, " is not recognized. As a fallback, you can load ", name(obj), " with readsafely().")
-        end
-    end
-    read(obj, T)
-end
-function readsafely(obj::Union(JldFile, JldDataset))
-    if !exists(attrs(obj.plain), name_type_attr)
-        # Fallback to plain read
-        return read(obj.plain)
-    end
-    # Read the type
-    typename = a_read(obj.plain, name_type_attr)
-    if typename == "Tuple"
-        return read_tuple(obj)
-    end
-    # Convert to Julia type
-    T = julia_type(typename)
-    local ret
-    if T == CompositeKind
-        # Read as a dict
-        typename = a_read(obj.plain, "CompositeKind")
-        gtypes = root(obj)[pathtypes]
-        try
-            objtype = gtypes[typename]
-            try
-                n = read(objtype)
-                v = getrefs(obj, Any)
-                ret = Dict(n[1,:], v)
-            finally
-                close(objtype)
-            end
-        finally
-            close(gtypes)
-        end
-    else
-        ret = read(obj, T)
-    end
-    ret
-end
-function readsafely(parent::Union(JldFile, JldGroup), name::ByteString)
-    local ret
-    obj = parent[name]
+function read(obj::JldDataset)
+    dtype = datatype(obj.plain)
+    dspace_id = HDF5.h5d_get_space(obj.plain)
+    extent_type = HDF5.h5s_get_simple_extent_type(dspace_id)
     try
-        ret = readsafely(JldDataset(obj))
+        if extent_type == HDF5.H5S_SCALAR
+            # Scalar value
+            return read_scalar(obj, dtype, jldatatype(file(obj), dtype))
+        elseif extent_type == HDF5.H5S_SIMPLE
+            # Array of values
+            if HDF5.h5t_get_class(dtype) == HDF5.H5T_REFERENCE
+                typename = a_read(obj.plain, "julia eltype")
+                T2 = julia_type(typename)
+                T2 == UnsupportedType && error("type $typename does not exist in namespace")
+                return getrefs(obj, T2)
+            else
+                return read_array(obj, dtype, jldatatype(file(obj), dtype), dspace_id)
+            end
+        elseif extent_type == HDF5.H5S_NULL
+            # Empty array
+            if HDF5.h5t_get_class(dtype) == HDF5.H5T_REFERENCE
+                typename = a_read(obj.plain, "julia eltype")
+                T3 = julia_type(typename)
+                T3 == UnsupportedType && error("type $typename does not exist in namespace")
+            else
+                T3 = jldatatype(file(obj), dtype)
+            end
+            if exists(obj, "dims")
+                dims = a_read(obj.plain, "dims")
+                return Array(T3, dims...)
+            else
+                return T3[]
+            end
+        end
     finally
-        close(obj)
+        HDF5.h5s_close(dspace_id)
     end
-    return ret
-end
-readsafely(parent::Union(JldFile,JldGroup), name::Symbol) = readsafely(parent, bytestring(string(symbol)))
-
-# Basic types
-typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
-read{T<:BitsKindOrByteString}(obj::JldDataset, ::Type{T}) = read(obj.plain, T)
-function read{T<:HDF5BitsKind}(obj::JldDataset, ::Type{Array{T}})
-    A = obj.file.mmaparrays && HDF5.iscontiguous(obj.plain) ? readmmap(obj.plain, Array{T}) : read(obj.plain, Array{T})
-    if isempty(A) && exists(obj, "dims")
-        dims = a_read(obj.plain, "dims")
-        A = reshape(A, dims...)
-    end
-    A
-end
-read{T<:ByteString}(obj::JldDataset, ::Type{Array{T}}) = read(obj.plain, Array{T})
-read{T<:BitsKindOrByteString,N}(obj::JldDataset, ::Type{Array{T,N}}) = read(obj, Array{T})
-
-# Arrays-of-arrays of basic types
-function read{T<:HDF5BitsKind,M,N}(obj::JldDataset, ::Type{Array{Array{T,N},M}})
-    # fallback for backwards compatibility with pre-v0.2.27 format
-    HDF5.hdf5_to_julia_eltype(datatype(obj.plain)) == HDF5ReferenceObj &&
-        return getrefs(obj, Array{T,N})
-    A = read(obj.plain, HDF5.HDF5Vlen{T})
-    if isempty(A) && exists(obj, "dims")
-        dims = a_read(obj.plain, "dims")
-        A = reshape(A, dims...)
-    end
-    convert(Array{Array{T,N},M}, A)
 end
 
-# Nothing
-read(obj::JldDataset, ::Type{Nothing}) = nothing
-read(obj::JldDataset, ::Type{Bool}) = bool(read(obj, Uint8))
+read_scalar{T<:BitsKindOrByteString}(obj::JldDataset, dtype::HDF5Datatype, ::Type{T}) =
+    read(obj.plain, T)
+function read_scalar(obj::JldDataset, dtype::HDF5Datatype, T::Type)
+    buf = Array(Uint8, sizeof(dtype))
+    HDF5.readarray(obj.plain, dtype.id, buf)
+    return after_read(jlconvert(T, file(obj), pointer(buf)))
+end
 
-# Types
-read{T}(obj::JldDataset, ::Type{Type{T}}) = T
+read_array{T<:HDF5BitsKind}(obj::JldDataset, dtype::HDF5Datatype, ::Type{Array{T}}, dspace_id::HDF5.Hid) =
+    obj.file.mmaparrays && HDF5.iscontiguous(obj.plain) ? readmmap(obj.plain, Array{T}) : read(obj.plain, Array{T})
+function read_array(obj::JldDataset, dtype::HDF5Datatype, T::Type, dspace_id::HDF5.Hid)
+    dims = map(int, HDF5.h5s_get_simple_extent_dims(dspace_id)[1])
+    n = prod(dims)
+    h5sz = sizeof(dtype)
+    out = Array(T, dims)
 
-# Bool
-function read{N}(obj::JldDataset, ::Type{Array{Bool,N}})
-    format = a_read(obj.plain, "julia_format")
-    if format == "EachUint8"
-        bool(read(obj.plain, Array{Uint8}))
+    # Read from file
+    buf = Array(Uint8, h5sz*n)
+    HDF5.readarray(obj.plain, dtype.id, buf)
+
+    f = file(obj)
+    h5offset = pointer(buf)
+    if T.pointerfree
+        jloffset = pointer(out)
+        jlsz = T.size
+
+        # Perform conversion in buffer
+        for i = 1:n
+            jlconvert!(jloffset, T, f, h5offset)
+            jloffset += jlsz
+            h5offset += h5sz
+        end
     else
-        error("bool format not recognized")
+        # Convert each item individually
+        for i = 1:n
+            out[i] = jlconvert(T, f, h5offset)
+            h5offset += h5sz
+        end
     end
+    out
 end
 
-# Complex
-function read{T}(obj::JldDataset, ::Type{Complex{T}})
-    a = read(obj.plain, Array{T})
-    a[1]+a[2]*im
-end
-function read{T<:Complex,N}(obj::JldDataset, ::Type{Array{T,N}})
-    A = read(obj, Array{realtype(T)})
-    reinterpret(T, A, ntuple(ndims(A)-1, i->size(A, i+1)))
-end
+after_read(x) = x
 
-# Symbol
-read(obj::JldDataset, ::Type{Symbol}) = symbol(read(obj.plain, ByteString))
-read{N}(obj::JldDataset, ::Type{Array{Symbol,N}}) = map(symbol, read(obj.plain, Array{ByteString}))
-
-# Char
-read(obj::JldDataset, ::Type{Char}) = char(read(obj.plain, Uint32))
-
-# UTF16String (not defined in julia 0.2)
-if VERSION >= v"0.3-"
-    read(obj::JldDataset, ::Type{UTF16String}) = UTF16String(read(obj.plain, Array{Uint16}))
-    read{N}(obj::JldDataset, ::Type{Array{UTF16String,N}}) = map(x->UTF16String(x), read(obj, Array{Vector{Uint16},N}))
-end
-
-# General arrays
-read{T,N}(obj::JldDataset, t::Type{Array{T,N}}) = getrefs(obj, T)
-
-# Tuple
-function read_tuple(obj::JldDataset)
-    t = read(obj, Array{Any, 1})
-    return tuple(t...)
-end
-function read_tuple(obj::JldDataset, indices::AbstractVector)
-    t = read(obj, Array{Any, 1})
-    return tuple(t...)
-end
-
-# Dict
-function read{T<:Associative}(obj::JldDataset, ::Type{T})
-    kv = getrefs(obj, Any)
+# Special case for associative, to rehash keys
+function after_read{K,V,T}(x::AssociativeWrapper{K,V,T})
     ret = T()
-    for (cn, c) in zip(kv[1], kv[2])
-        ret[cn] = c
+    keys = x.keys
+    values = x.values
+    n = length(keys)
+    if applicable(sizehint, (ret, n))
+        sizehint(ret, n)
+    end
+    for i = 1:n
+        ret[keys[i]] = values[i]
     end
     ret
 end
 
-# Expressions
-function read(obj::JldDataset, ::Type{Expr})
-    a = getrefs(obj, Any)
-    Expr(a[1], a[2]...)
-end
-
-# CompositeKind
-function read(obj::JldDataset, T::DataType)
-    if isempty(T.names) && T.size > 0
-        return read_bitstype(obj, T)
+# Read a reference
+function read_ref(f::JldFile, ref::HDF5ReferenceObj)
+    dset = f[ref]
+    try
+        return read(dset)
+    finally
+        close(dset)
     end
-    local x
-    # Add the parameters
-    if exists(obj, "TypeParameters")
-        params = a_read(obj.plain, "TypeParameters")
-        p = Array(Any, length(params))
-        for i = 1:length(params)
-            p[i] = eval(current_module(), parse(params[i]))
-        end
-        T = T{p...}
-    end
-    v = getrefs(obj, Any)
-    if length(v) == 0
-        x = ccall(:jl_new_struct, Any, (Any,Any...), T)
-    else
-        n = T.names
-        if length(v) != length(n)
-            error("Wrong number of fields")
-        end
-        if !T.mutable
-            x = ccall(:jl_new_structv, Any, (Any,Ptr{Void},Uint32), T, v, length(T.names))
-        else
-            x = ccall(:jl_new_struct_uninit, Any, (Any,), T)
-            for i = 1:length(v)
-                if isdefined(v, i)
-                    setfield!(x, n[i], v[i])
-                end
-            end
-        end
-    end
-    x
 end
-
-function read_bitstype(obj::JldDataset, T::DataType)
-    a = read(obj.plain)
-    reinterpret(T, a[1])
-end
-
-# Read an array of references
 function getrefs{T}(obj::JldDataset, ::Type{T})
     refs = read(obj.plain, Array{HDF5ReferenceObj})
     out = Array(T, size(refs))
     f = file(obj)
     for i = 1:length(refs)
         if refs[i] != HDF5.HDF5ReferenceObj_NULL
-            ref = f[refs[i]]
-            try
-                out[i] = read(ref)
-            finally
-                close(ref)
-            end
+            out[i] = read_ref(f, refs[i])
         end
     end
     return out
@@ -517,37 +423,11 @@ end
 
 # Write "basic" types
 function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ByteString,
-                                                   data::Union(T, Array{T}), astype::ByteString)
+                                                   data::Union(T, Array{T}))
     # Create the dataset
     dset, dtype = d_create(parent.plain, name, data)
     try
         # Write the attribute
-        a_write(dset, name_type_attr, astype)
-        isa(data, Array) && isempty(data) && a_write(dset, "dims", [size(data)...])
-        # Write the data
-        HDF5.writearray(dset, dtype.id, data)
-    finally
-        close(dset)
-        close(dtype)
-    end
-end
-write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ByteString, data::Union(T, Array{T})) =
-    write(parent, name, data, full_typename(typeof(data)))
-
-# Arrays-of-arrays of basic types
-write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ByteString,
-                                            data::Array{Array{T,1}}, astype::ByteString) = 
-    write(parent, name, HDF5.HDF5Vlen(data), astype)
-write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ByteString,
-                                            data::Array{Array{T,1}}) =
-    write(parent, name, data, full_typename(typeof(data)))
-function write{T}(parent::Union(JldFile, JldGroup), name::ByteString,
-                  data::HDF5.HDF5Vlen{T}, astype::ByteString)
-    # Create the dataset
-    dset, dtype = d_create(parent.plain, name, data)
-    try
-        # Write the attribute
-        a_write(dset, name_type_attr, astype)
         isa(data, Array) && isempty(data) && a_write(dset, "dims", [size(data)...])
         # Write the data
         HDF5.writearray(dset, dtype.id, data)
@@ -557,136 +437,104 @@ function write{T}(parent::Union(JldFile, JldGroup), name::ByteString,
     end
 end
 
-
-# Write nothing
-function write(parent::Union(JldFile, JldGroup), name::ByteString, n::Nothing, astype::ASCIIString)
-    local dspace, dset
-    try
-        dspace = dataspace(nothing)
-        dset = HDF5Dataset(HDF5.h5d_create(HDF5.parents_create(HDF5.checkvalid(parent.plain), name, HDF5.H5T_NATIVE_UINT8, dspace.id,
-                           HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT)...), file(parent.plain))
-        a_write(dset, name_type_attr, astype)
-    finally
-        close(dspace)
-        close(dset)
-    end
-end
-write(parent::Union(JldFile, JldGroup), name::ByteString, n::Nothing) = write(parent, name, n, "Nothing")
-
-# Types
-# the first is needed to avoid an ambiguity warning
-write{T<:Top}(parent::Union(JldFile, JldGroup), name::ByteString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
-write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::Type{T}) = write(parent, name, nothing, string("Type{", full_typename(t), "}"))
-
-# Bools
-write(parent::Union(JldFile, JldGroup), name::ByteString, tf::Bool) = write(parent, name, uint8(tf), "Bool")
-function write(parent::Union(JldFile, JldGroup), name::ByteString, tf::Array{Bool})
-    write(parent, name, uint8(tf), full_typename(typeof(tf)))
-    a_write(parent[name].plain, "julia_format", "EachUint8")
-end
-
-# Complex
-realtype{T}(::Type{Complex{T}}) = T
-function write(parent::Union(JldFile, JldGroup), name::ByteString, c::Complex)
-    reim = [real(c), imag(c)]
-    write(parent, name, reim, full_typename(typeof(c)))
-end
-function write{T<:Complex}(parent::Union(JldFile, JldGroup), name::ByteString, C::Array{T})
-    reim = reinterpret(realtype(T), C, ntuple(ndims(C)+1, i->i==1?2:size(C,i-1)))
-    write(parent, name, reim, full_typename(typeof(C)))
-end
-
-# Int128/Uint128
-
-# Symbols
-write(parent::Union(JldFile, JldGroup), name::ByteString, sym::Symbol) = write(parent, name, string(sym), "Symbol")
-write(parent::Union(JldFile, JldGroup), name::ByteString, syms::Array{Symbol}) = write(parent, name, map(string, syms), full_typename(typeof(syms)))
-
-# Char
-write(parent::Union(JldFile, JldGroup), name::ByteString, char::Char) = write(parent, name, uint32(char), "Char")
-
-#UTF16String
-if VERSION >= v"0.3-"
-    write(parent::Union(JldFile, JldGroup), name::ByteString, str::UTF16String) = write(parent, name, str.data, "UTF16String")
-    write{N}(parent::Union(JldFile, JldGroup), name::ByteString, strs::Array{UTF16String,N}) = write(parent, name, map(x->x.data, strs), "Array{UTF16String,$N}")
-end
-
-# General array types (as arrays of references)
-function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T}, astype::String)
-    local gref  # a group, inside /_refs, for all the elements in data
-    local refs
-    # Determine whether parent already exists in /_refs, so we can avoid group/dataset conflict
-    pname = name(parent)
-    if beginswith(pname, pathrefs)
-        gref = g_create(parent, path*"g")
-    else
-        pathr = HDF5.joinpathh5(pathrefs, pname, path)
-        if exists(file(parent), pathr)
-            gref = g_open(file(parent), pathr)
-        else
-            gref = g_create(file(parent), pathr)
-        end
-    end
-    grefname = name(gref)
-    try
-        # Write the items to the reference group
-        refs = Array(HDF5ReferenceObj, size(data)...)
-        # pad with zeros to keep in order
-        nd = ndigits(length(data))
-        z = "0"
-        z = z[ones(Int, nd-1)]
-        nd = 1
+# General array types
+function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T})
+    f = file(parent)
+    dtype = h5fieldtype(f, T)
+    if dtype == JLD_REF_TYPE
+        # Write as references
+        refs = Array(HDF5ReferenceObj, size(data))
         for i = 1:length(data)
             if isdefined(data, i)
-                if ndigits(i) > nd
-                    nd = ndigits(i)
-                    z = z[1:end-1]
-                end
-                itemname = z*string(i)
-                write(gref, itemname, data[i])
-                # Extract references
-                tmp = gref[itemname]
-                refs[i] = HDF5ReferenceObj(tmp.plain, grefname*"/"*itemname)
-                close(tmp)
+                refs[i] = write_ref(f, data[i])
             else
                 refs[i] = HDF5.HDF5ReferenceObj_NULL
             end
         end
-    finally
-        close(gref)
-    end
-    # Write the references as the chosen variable
-    cset, ctype = d_create(parent.plain, path, refs)
-    try
-        HDF5.writearray(cset, ctype.id, refs)
-        a_write(cset, name_type_attr, astype)
-    finally
-        close(ctype)
-        close(cset)
+        dset, reftype = d_create(parent.plain, path, refs)
+        a_write(dset, "julia eltype", full_typename(T))
+        try
+            if isempty(data)
+                a_write(dset, "dims", [size(data)...])
+            else
+                HDF5.writearray(dset, reftype.id, refs)
+            end
+        finally
+            close(reftype)
+            close(dset)
+        end
+    else
+        # Write as individual values
+        persist = {}
+        sz = HDF5.h5t_get_size(dtype)
+        n = length(data)
+        buf = Array(Uint8, sz*n)
+        offset = pointer(buf)
+        for i = 1:n
+            h5convert!(offset, f, data[i], persist)
+            offset += sz
+        end
+
+        dims = convert(Array{HDF5.Hsize, 1}, [reverse(size(data))...])
+        dspace = dataspace(data)
+        try
+            dset = d_create(parent.plain, path, dtype.dtype, dspace)
+            try
+                if isempty(data)
+                    a_write(dset, "dims", [size(data)...])
+                else
+                    HDF5.writearray(dset, dtype.dtype.id, buf)
+                end
+            finally
+                close(dset)
+            end
+        finally
+            close(dspace)
+        end
     end
 end
-write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T}) = write(parent, path, data, full_typename(typeof(data)))
 
-# Tuple
-write(parent::Union(JldFile, JldGroup), name::ByteString, t::Tuple) = write(parent, name, Any[t...], "Tuple")
+# Write a reference to a JLD file
+function write_ref(parent::JldFile, data)
+    # Check whether we have already written this object
+    ref = get!(parent.h5ref, data, HDF5.HDF5ReferenceObj_NULL)
+    ref != HDF5.HDF5ReferenceObj_NULL && return ref
 
-# Associative (Dict)
+    # Write an new reference
+    if !exists(parent, pathrefs)
+        gref = g_create(parent, pathrefs)
+    else
+        gref = parent[pathrefs]
+    end
+    name = @sprintf "%08d" (parent.nrefs += 1)
+    write(gref, name, data)
+
+    # Add reference to reference list
+    ref = HDF5ReferenceObj(gref.plain, name)
+    if !isa(data, Tuple) && typeof(data).mutable
+        parent.jlref[ref] = WeakRef(data)
+        parent.h5ref[data] = ref
+    end
+    ref
+end
+write_ref(parent::JldGroup, data) = write_ref(file(parent), data)
+
+# Special case for associative, to rehash keys
 function write(parent::Union(JldFile, JldGroup), name::ByteString, d::Associative)
     tn = full_typename(typeof(d))
     if tn == "DataFrame"
-        return write_composite(parent, name, d)
+        return write_compound(parent, name, d)
     end
     n = length(d)
-    T = eltype(d)
-    ks = Array(T[1], n)
-    vs = Array(T[2], n)
+    K, V = eltype(d)
+    ks = Array(K, n)
+    vs = Array(V, n)
     i = 0
     for (k,v) in d
         ks[i+=1] = k
         vs[i] = v
     end
-    da = Any[ks, vs]
-    write(parent, name, da, tn)
+    write(parent, name, AssociativeWrapper{K,V,typeof(d)}(ks, vs))
 end
 
 # Expressions
@@ -699,113 +547,35 @@ function write(parent::Union(JldFile, JldGroup), name::ByteString, ex::Expr)
             keep[i] = false
         end
     end
-    args = args[keep]
-    a = Any[ex.head, args]
-    write(parent, name, a, "Expr")
+    newex = Expr(ex.head)
+    newex.args = args[keep]
+    close(write_compound(parent, name, newex))
 end
 
-# CompositeKind
-write(parent::Union(JldFile, JldGroup), name::ByteString, s; rootmodule="") = write_composite(parent, name, s; rootmodule=rootmodule)
+# Generic (tuples, immutables, and compound types)
+write(parent::Union(JldFile, JldGroup), name::ByteString, s) =
+    close(write_compound(parent, name, s))
 
-function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; rootmodule="")
+function write_compound(parent::Union(JldFile, JldGroup), name::ByteString, s)
     T = typeof(s)
-    if isempty(T.names)
-        if T.size > 0
-            return write_bitstype(parent, name, s)
-        end
-        isdefined(T, :instance) || error("This is the write function for CompositeKind, but the input is of type ", T)
-    end
-    if has_pointer_field(s, name)
-        return
-    end
-    Tname = string(T.name.name)
-    n = T.names
-    local gtypes
-    if !exists(file(parent), pathtypes)
-        gtypes = g_create(file(parent), pathtypes)
-    else
-        gtypes = parent[pathtypes]
-    end
+    dtype = h5datatype(parent, s)
+    buf = Array(Uint8, HDF5.h5t_get_size(dtype))
+    persist = {}
+    h5convert!(pointer(buf), file(parent), s, persist)
+
+    dspace = HDF5Dataspace(HDF5.h5s_create(HDF5.H5S_SCALAR))
     try
-        if !exists(gtypes, Tname)
-            # Write names to a dataset, so that other languages reading this file can
-            # at least create a sensible dict
-            nametype = Array(ByteString, 2, length(n))
-            t = T.types
-            for i = 1:length(n)
-                nametype[1, i] = string(n[i])
-                nametype[2, i] = string(t[i])
-            end
-            write(gtypes.plain, Tname, nametype)
-            obj = gtypes[Tname]
-            # Write the module name as an attribute
-            mod = Base.fullname(T.name.module)
-            modnames = [map(string, mod)...]
-            indx = findfirst(x->x==rootmodule, modnames)
-            if indx > 0
-                modnames = modnames[indx+1:end]
-            end
-            a_write(obj.plain, "Module", modnames)
-            close(obj)
+        dset = HDF5.d_create(parent.plain, name, dtype.dtype, dspace)
+        try
+            #HDF5.h5d_write(dset.id, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, buf)
+            HDF5.writearray(dset, dtype.dtype.id, buf)
+        catch
+            close(dset)
         end
+        return dset
     finally
-        close(gtypes)
+        close(dspace)
     end
-    # Write the data
-    v = Array(Any, length(n))
-    for i = 1:length(v)
-        if isdefined(s, n[i])
-            v[i] = getfield(s, n[i])
-        end
-    end
-    write(parent, name, v, "CompositeKind")
-    obj = parent[name]
-    a_write(obj.plain, "CompositeKind", Tname)
-    params = [map(full_typename, T.parameters)...]
-    a_write(obj.plain, "TypeParameters", params)
-    close(obj)
-end
-
-function write_bitstype(parent::Union(JldFile, JldGroup), name::ByteString, s)
-    T = typeof(s)
-    if T.size == 1
-        ub = reinterpret(Uint8, s)
-    elseif T.size == 2
-        ub = reinterpret(Uint16, s)
-    elseif T.size == 4
-        ub = reinterpret(Uint32, s)
-    elseif T.size == 8
-        ub = reinterpret(Uint64, s)
-    else
-        error("Unsupported bitstype $T of size $(T.size)")
-    end
-    write(parent, name, [ub], "$(full_typename(T))")
-end
-
-function has_pointer_field(obj::Tuple, name)
-    for o in obj
-        if has_pointer_field(o, name)
-            return true
-        end
-    end
-    false
-end
-
-function has_pointer_field(obj, name)
-    names = typeof(obj).names
-    for fieldname in names
-        if isdefined(obj, fieldname)
-            x = getfield(obj, fieldname)
-            if isa(x, Ptr)
-                warn("Skipping $name because field \"$fieldname\" is a pointer")
-                return true
-            end
-            if !isa(x, Associative) && has_pointer_field(x, name)
-                return true
-            end
-        end
-    end
-    false
 end
 
 ### Size, length, etc ###
@@ -921,36 +691,26 @@ is_valid_type_ex(x::Int) = true
 is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == :.) && all(map(is_valid_type_ex, e.args))) ||
                             (e.head == :call && (e.args[1] == :Union || e.args[1] == :TypeVar))
 
-_typedict = Dict{String, DataType}()
+_typedict = Dict{String, Type}()
 function julia_type(s::String)
     typ = get(_typedict, s, UnconvertedType)
     if typ == UnconvertedType
-        e = parse(s)
-        typ = UnsupportedType
-        if is_valid_type_ex(e)
-            try     # try needed to catch undefined symbols
-                typ = eval(e)
-                if !isa(typ, Type)
-                    typ = UnsupportedType
-                end
-            catch
-                try
-                    typ = eval(Main, e)
-                catch
-                    typ = UnsupportedType
-                    if !isa(typ, Type)
-                        typ = UnsupportedType
-                    end
-                end
-            end
-        else
-            typ = UnsupportedType
-        end
+        typ = julia_type(parse(s))
         if typ != UnsupportedType
             _typedict[s] = typ
         end
     end
     typ
+end
+
+function julia_type(e::Union(Symbol, Expr))
+    if is_valid_type_ex(e)
+        try     # try needed to catch undefined symbols
+            typ = eval(Main, e)
+            isa(typ, Type) && return typ
+        end
+    end
+    return UnsupportedType
 end
 
 ### Converting Julia types to fully qualified names
@@ -1009,6 +769,18 @@ function names(parent::Union(JldFile, JldGroup))
     n[keep]
 end
 
+function save_write(f, s, vname)
+    if !isa(vname, Function)
+        try
+            write(f, s, vname)
+        catch e
+            if isa(e, PointerException)
+                warn("Skipping $vname because it contains a pointer")
+            end
+        end
+    end
+end
+
 macro save(filename, vars...)
     if isempty(vars)
         # Save all variables in the current module
@@ -1019,7 +791,7 @@ macro save(filename, vars...)
             if !ismatch(r"^_+[0-9]*$", s) # skip IJulia history vars
                 v = eval(m, vname)
                 if !isa(v, Module)
-                    push!(writeexprs, :(if !isa($(esc(vname)), Function) write(f, $s, $(esc(vname))) end))
+                    push!(writeexprs, :(save_write(f, $s, $(esc(vname)))))
                 end
             end
         end
@@ -1131,4 +903,5 @@ export
     @save,
     load,
     save
+
 end
