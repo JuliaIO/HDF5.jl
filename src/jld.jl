@@ -465,32 +465,39 @@ function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Arra
         end
     else
         # Write as individual values
-        persist = {}
-        sz = HDF5.h5t_get_size(dtype)
-        n = length(data)
-        buf = Array(Uint8, sz*n)
-        offset = pointer(buf)
-        for i = 1:n
-            h5convert!(offset, f, data[i], persist)
-            offset += sz
-        end
+        # Split into a separate function to avoid dynamic dispatch
+        # because h5convert! may be defined by h5fieldtype
+        write_vals(parent, path, data, dtype)
+    end
+end
 
-        dims = convert(Array{HDF5.Hsize, 1}, [reverse(size(data))...])
-        dspace = dataspace(data)
+function write_vals{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T}, dtype::JldDatatype)
+    f = file(parent)
+    persist = {}
+    sz = HDF5.h5t_get_size(dtype)
+    n = length(data)
+    buf = Array(Uint8, sz*n)
+    offset = pointer(buf)
+    for i = 1:n
+        h5convert!(offset, f, data[i], persist)
+        offset += sz
+    end
+
+    dims = convert(Array{HDF5.Hsize, 1}, [reverse(size(data))...])
+    dspace = dataspace(data)
+    try
+        dset = d_create(parent.plain, path, dtype.dtype, dspace)
         try
-            dset = d_create(parent.plain, path, dtype.dtype, dspace)
-            try
-                if isempty(data)
-                    a_write(dset, "dims", [size(data)...])
-                else
-                    HDF5.writearray(dset, dtype.dtype.id, buf)
-                end
-            finally
-                close(dset)
+            if isempty(data)
+                a_write(dset, "dims", [size(data)...])
+            else
+                HDF5.writearray(dset, dtype.dtype.id, buf)
             end
         finally
-            close(dspace)
+            close(dset)
         end
+    finally
+        close(dspace)
     end
 end
 
