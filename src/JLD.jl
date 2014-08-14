@@ -30,9 +30,17 @@ type UnsupportedType; end
 type UnconvertedType; end
 type CompositeKind; end   # here this means "a type with fields"
 
+
 immutable JldDatatype
     dtype::HDF5Datatype
     index::Int
+end
+
+immutable JldWriteSession
+    persist::Vector{Any} # To hold objects that should not be garbage-collected
+    h5ref::ObjectIdDict  # To hold mapping from Object/Array -> HDF5ReferenceObject
+
+    JldWriteSession() = new({}, ObjectIdDict())
 end
 
 # The Julia Data file type
@@ -48,17 +56,16 @@ type JldFile <: HDF5.DataFile
     mmaparrays::Bool
     h5jltype::Dict{Int,Type}
     jlh5type::Dict{Type,JldDatatype}
-    h5ref::WeakKeyDict{Any,HDF5ReferenceObj}
     jlref::Dict{HDF5ReferenceObj,WeakRef}
-    nrefs::Int
     truncatemodules::Vector{ByteString}
+    gref # Group references; can't annotate type here due to circularity
+    nrefs::Int
 
     function JldFile(plain::HDF5File, version::VersionNumber=version_current, toclose::Bool=true,
                      writeheader::Bool=false, mmaparrays::Bool=false)
         f = new(plain, version, toclose, writeheader, mmaparrays,
                 Dict{HDF5Datatype,Type}(), Dict{Type,HDF5Datatype}(),
-                WeakKeyDict{Any,HDF5ReferenceObj}(), Dict{HDF5ReferenceObj,Any}(), 0,
-                Array(ByteString, 0))
+                Dict{HDF5ReferenceObj,WeakRef}(), Array(ByteString, 0))
         if toclose
             finalizer(f, close)
         end
@@ -445,9 +452,13 @@ function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGro
         close(dtype)
     end
 end
+write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ByteString,
+                                          data::Union(T, Array{T}), wsession::JldWriteSession) =
+    write(parent, name, data)
 
 # General array types
-function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T})
+function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T},
+                  wsession::JldWriteSession=JldWriteSession())
     f = file(parent)
     dtype = h5fieldtype(f, T)
     if dtype == JLD_REF_TYPE
@@ -455,7 +466,7 @@ function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Arra
         refs = Array(HDF5ReferenceObj, size(data))
         for i = 1:length(data)
             if isdefined(data, i)
-                refs[i] = write_ref(f, data[i])
+                refs[i] = write_ref(f, data[i], wsession)
             else
                 refs[i] = HDF5.HDF5ReferenceObj_NULL
             end
@@ -473,22 +484,22 @@ function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Arra
             close(dset)
         end
     else
-        # Write as individual values
-        # Split into a separate function to avoid dynamic dispatch
-        # because h5convert! may be defined by h5fieldtype
-        write_vals(parent, path, data, dtype)
+        write_vals(parent, path, data, dtype, wsession)
     end
 end
 
-function write_vals{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T}, dtype::JldDatatype)
+# Write as individual values
+# Split into a separate function to avoid dynamic dispatch because
+# h5convert! may be defined by h5fieldtype
+function write_vals{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T},
+                       dtype::JldDatatype, wsession::JldWriteSession)
     f = file(parent)
-    persist = {}
     sz = HDF5.h5t_get_size(dtype)
     n = length(data)
     buf = Array(Uint8, sz*n)
     offset = pointer(buf)
     for i = 1:n
-        h5convert!(offset, f, data[i], persist)
+        h5convert!(offset, f, data[i], wsession)
         offset += sz
     end
 
@@ -510,18 +521,27 @@ function write_vals{T}(parent::Union(JldFile, JldGroup), path::ByteString, data:
     end
 end
 
-# Write a reference to a JLD file
-function write_ref(parent::JldFile, data)
+# Get reference group, creating a new one if necessary
+function get_gref(f::JldFile)
+    isdefined(f, :gref) && return f.gref::JldGroup
+
+    if !exists(f, pathrefs)
+        gref = f.gref = g_create(f, pathrefs)
+    else
+        gref = f.gref = f[pathrefs]
+    end
+    f.nrefs = length(gref)
+    gref
+end
+
+# Write a reference
+function write_ref(parent::JldFile, data, wsession::JldWriteSession)
     # Check whether we have already written this object
-    ref = get!(parent.h5ref, data, HDF5.HDF5ReferenceObj_NULL)
+    ref = get(wsession.h5ref, data, HDF5.HDF5ReferenceObj_NULL)
     ref != HDF5.HDF5ReferenceObj_NULL && return ref
 
     # Write an new reference
-    if !exists(parent, pathrefs)
-        gref = g_create(parent, pathrefs)
-    else
-        gref = parent[pathrefs]
-    end
+    gref = get_gref(parent)
     name = @sprintf "%08d" (parent.nrefs += 1)
     write(gref, name, data)
 
@@ -529,14 +549,16 @@ function write_ref(parent::JldFile, data)
     ref = HDF5ReferenceObj(gref.plain, name)
     if !isa(data, Tuple) && typeof(data).mutable
         parent.jlref[ref] = WeakRef(data)
-        parent.h5ref[data] = ref
+        wsession.h5ref[data] = ref
     end
     ref
 end
-write_ref(parent::JldGroup, data) = write_ref(file(parent), data)
+write_ref(parent::JldGroup, data, wsession::JldWriteSession) =
+    write_ref(file(parent), data, wsession)
 
 # Special case for associative, to rehash keys
-function write(parent::Union(JldFile, JldGroup), name::ByteString, d::Associative)
+function write(parent::Union(JldFile, JldGroup), name::ByteString, d::Associative,
+               wsession::JldWriteSession)
     n = length(d)
     K, V = eltype(d)
     ks = Array(K, n)
@@ -546,11 +568,12 @@ function write(parent::Union(JldFile, JldGroup), name::ByteString, d::Associativ
         ks[i+=1] = k
         vs[i] = v
     end
-    write(parent, name, AssociativeWrapper{K,V,typeof(d)}(ks, vs))
+    write(parent, name, AssociativeWrapper{K,V,typeof(d)}(ks, vs), wsession)
 end
 
-# Expressions
-function write(parent::Union(JldFile, JldGroup), name::ByteString, ex::Expr)
+# Expressions, drop line numbers
+function write(parent::Union(JldFile, JldGroup), name::ByteString, ex::Expr,
+               wsession::JldWriteSession=JldWriteSession())
     args = ex.args
     # Discard "line" expressions
     keep = trues(length(args))
@@ -561,19 +584,20 @@ function write(parent::Union(JldFile, JldGroup), name::ByteString, ex::Expr)
     end
     newex = Expr(ex.head)
     newex.args = args[keep]
-    close(write_compound(parent, name, newex))
+    close(write_compound(parent, name, newex, wsession))
 end
 
 # Generic (tuples, immutables, and compound types)
-write(parent::Union(JldFile, JldGroup), name::ByteString, s) =
-    close(write_compound(parent, name, s))
+write(parent::Union(JldFile, JldGroup), name::ByteString, s,
+      wsession::JldWriteSession=JldWriteSession()) =
+    close(write_compound(parent, name, s, wsession))
 
-function write_compound(parent::Union(JldFile, JldGroup), name::ByteString, s)
+function write_compound(parent::Union(JldFile, JldGroup), name::ByteString, s,
+                        wsession::JldWriteSession)
     T = typeof(s)
     dtype = h5datatype(parent, s)
     buf = Array(Uint8, HDF5.h5t_get_size(dtype))
-    persist = {}
-    h5convert!(pointer(buf), file(parent), s, persist)
+    h5convert!(pointer(buf), file(parent), s, wsession)
 
     dspace = HDF5Dataspace(HDF5.h5s_create(HDF5.H5S_SCALAR))
     try
@@ -812,7 +836,7 @@ function names(parent::Union(JldFile, JldGroup))
     n[keep]
 end
 
-function save_write(f, s, vname)
+function save_write(f, s, vname, wsession::JldWriteSession)
     if !isa(vname, Function)
         try
             write(f, s, vname)
@@ -834,20 +858,26 @@ macro save(filename, vars...)
             if !ismatch(r"^_+[0-9]*$", s) # skip IJulia history vars
                 v = eval(m, vname)
                 if !isa(v, Module)
-                    push!(writeexprs, :(save_write(f, $s, $(esc(vname)))))
+                    push!(writeexprs, :(save_write(f, $s, $(esc(vname)), wsession)))
                 end
             end
         end
     else
         writeexprs = Array(Expr, length(vars))
         for i = 1:length(vars)
-            writeexprs[i] = :(write(f, $(string(vars[i])), $(esc(vars[i]))))
+            writeexprs[i] = :(write(f, $(string(vars[i])), $(esc(vars[i])), wsession))
         end
     end
-    Expr(:block,
-         :(local f = jldopen($(esc(filename)), "w")),
-         Expr(:try, Expr(:block, writeexprs...), false, false,
-              :(close(f))))
+
+    quote
+        local f = jldopen($(esc(filename)), "w")
+        wsession = JldWriteSession()
+        try
+            $(Expr(:block, writeexprs...))
+        finally
+            close(f)
+        end
+    end
 end
 
 macro load(filename, vars...)
@@ -890,8 +920,9 @@ end
 # Save all the key-value pairs in the dict as top-level variables of the JLD
 function save(filename::String, dict::Associative)
     jldopen(filename, "w") do file
+        wsession = JldWriteSession()
         for (k,v) in dict
-            write(file, bytestring(k), v)
+            write(file, bytestring(k), v, wsession)
         end
     end
 end
@@ -901,9 +932,10 @@ function save(filename::String, name::String, value, pairs...)
         throw(ArgumentError("arguments must be in name-value pairs"))
     end
     jldopen(filename, "w") do file
-        write(file, bytestring(name), value)
+        wsession = JldWriteSession()
+        write(file, bytestring(name), value, wsession)
         for i=1:2:length(pairs)
-            write(file, bytestring(pairs[i]), pairs[i+1])
+            write(file, bytestring(pairs[i]), pairs[i+1], wsession)
         end
     end
 end

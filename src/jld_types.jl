@@ -33,7 +33,7 @@ JldTypeInfo(parent::JldFile, T::ANY) = JldTypeInfo(parent, T.types)
 # Definitions for basic types
 
 # HDF5 bits kinds
-h5convert!{T<:HDF5.HDF5BitsKind}(out::Ptr, ::JldFile, x::T, ::Vector{Any}) =
+h5convert!{T<:HDF5.HDF5BitsKind}(out::Ptr, ::JldFile, x::T, ::JldWriteSession) =
     unsafe_store!(convert(Ptr{T}, out), x)
 
 _jlconvert_bits{T}(::Type{T}, ptr::Ptr) = unsafe_load(convert(Ptr{T}, ptr))
@@ -44,7 +44,7 @@ jlconvert{T<:HDF5.HDF5BitsKind}(::Type{T}, ::JldFile, ptr::Ptr) = _jlconvert_bit
 jlconvert!{T<:HDF5.HDF5BitsKind}(out::Ptr, ::Type{T}, ::JldFile, ptr::Ptr) = _jlconvert_bits!(out, T, ptr)
 
 # ByteStrings
-h5convert!(out::Ptr, ::JldFile, x::ByteString, ::Vector{Any}) =
+h5convert!(out::Ptr, ::JldFile, x::ByteString, ::JldWriteSession) =
     unsafe_store!(convert(Ptr{Ptr{Uint8}}, out), pointer(x))
 function jlconvert{T<:ByteString}(::Type{T}, ::JldFile, ptr::Ptr)
     strptr = unsafe_load(convert(Ptr{Ptr{Uint8}}, ptr))
@@ -53,26 +53,26 @@ function jlconvert{T<:ByteString}(::Type{T}, ::JldFile, ptr::Ptr)
 end
 
 # UTF16Strings
-h5convert!(out::Ptr, ::JldFile, x::UTF16String, ::Vector{Any}) =
+h5convert!(out::Ptr, ::JldFile, x::UTF16String, ::JldWriteSession) =
     unsafe_store!(convert(Ptr{HDF5.Hvl_t}, out), HDF5.Hvl_t(length(x.data), pointer(x.data)))
 function jlconvert(::Type{UTF16String}, ::JldFile, ptr::Ptr)
     hvl = unsafe_load(convert(Ptr{HDF5.Hvl_t}, ptr))
-    UTF16String(pointer_to_array(convert(Ptr{Uint16}, hvl.p), hvl.len))
+    UTF16String(pointer_to_array(convert(Ptr{Uint16}, hvl.p), hvl.len, true))
 end
 
 # Symbols
-function h5convert!(out::Ptr, file::JldFile, x::Symbol, persist::Vector{Any})
+function h5convert!(out::Ptr, file::JldFile, x::Symbol, wsession::JldWriteSession)
     str = string(x)
-    push!(persist, str)
-    h5convert!(out, file, str, persist)
+    push!(wsession.persist, str)
+    h5convert!(out, file, str, wsession)
 end
 jlconvert(::Type{Symbol}, file::JldFile, ptr::Ptr) = symbol(jlconvert(UTF8String, file, ptr))
 
 # Types
-function h5convert!(out::Ptr, file::JldFile, x::Type, persist::Vector{Any})
+function h5convert!(out::Ptr, file::JldFile, x::Type, wsession::JldWriteSession)
     str = full_typename(file, x)
-    push!(persist, str)
-    h5convert!(out, file, str, persist)
+    push!(wsession.persist, str)
+    h5convert!(out, file, str, wsession)
 end
 jlconvert(::Type{Type}, file::JldFile, ptr::Ptr) = julia_type(jlconvert(UTF8String, file, ptr))
 
@@ -157,6 +157,8 @@ Base.convert(::Type{HDF5.Hid}, x::JldDatatype) = x.dtype.id
 # Implement h5convert! to convert from Julia to HDF5 representation for
 # a given JldTypeInfo and Julia type
 function gen_h5convert!(typeinfo::JldTypeInfo, T::ANY)
+    method_exists(h5convert!, (Ptr, JldFile, T, JldWriteSession)) && return
+
     istuple = isa(T, Tuple)
     types = istuple ? T : T.types
     getindex_fn = istuple ? (:getindex) : (:getfield)
@@ -167,11 +169,11 @@ function gen_h5convert!(typeinfo::JldTypeInfo, T::ANY)
         if HDF5.h5t_get_class(typeinfo.dtypes[i]) == HDF5.H5T_REFERENCE
             if istuple
                 push!(args, :(unsafe_store!(convert(Ptr{HDF5ReferenceObj}, out)+$offset,
-                                            write_ref(file, $getindex_fn(x, $i)))))
+                                            write_ref(file, $getindex_fn(x, $i), wsession))))
             else
                 push!(args, quote
                     if isdefined(x, $i)
-                        ref = write_ref(file, $getindex_fn(x, $i))
+                        ref = write_ref(file, $getindex_fn(x, $i), wsession)
                     else
                         ref = HDF5.HDF5ReferenceObj_NULL
                     end
@@ -179,10 +181,11 @@ function gen_h5convert!(typeinfo::JldTypeInfo, T::ANY)
                 end)
             end
         else
-            push!(args, :(h5convert!(out+$offset, file, $getindex_fn(x, $i), persist)))
+            push!(args, :(h5convert!(out+$offset, file, $getindex_fn(x, $i), wsession)))
         end
     end
-    @eval h5convert!(out::Ptr, file::JldFile, x::$T, persist::Vector{Any}) = ($ex; nothing)
+    @eval h5convert!(out::Ptr, file::JldFile, x::$T, wsession::JldWriteSession) = ($ex; nothing)
+    nothing
 end
 
 ## jlconvert/jlconvert!
@@ -195,6 +198,8 @@ uses_reference(::Tuple) = true
 
 # Tuples
 function gen_jlconvert(typeinfo::JldTypeInfo, T::(Type...))
+    method_exists(jlconvert, (Type{T}, JldFile, Ptr)) && return
+
     ex = Expr(:block)
     args = ex.args
     tup = Expr(:tuple)
@@ -211,6 +216,7 @@ function gen_jlconvert(typeinfo::JldTypeInfo, T::(Type...))
         push!(tupargs, field)
     end
     @eval jlconvert(::Type{$T}, file::JldFile, ptr::Ptr) = ($ex; $tup)
+    nothing
 end
 
 # Normal objects
@@ -236,6 +242,7 @@ function _gen_jlconvert_type(typeinfo::JldTypeInfo, T::ANY)
         $ex
         out
     end
+    nothing
 end
 
 # Immutables
@@ -295,10 +302,13 @@ function _gen_jlconvert_immutable(typeinfo::JldTypeInfo, T::ANY)
         end
         )
     end
+    nothing
 end
 
 # Dispatch for non-tuple types
 function gen_jlconvert(typeinfo::JldTypeInfo, T::ANY)
+    method_exists(jlconvert, (Type{T}, JldFile, Ptr)) && return
+
     if isempty(T.names)
         if T.size == 0
             @eval begin
@@ -311,6 +321,7 @@ function gen_jlconvert(typeinfo::JldTypeInfo, T::ANY)
                jlconvert!(out::Ptr, ::Type{$T}, ::JldFile, ptr::Ptr) =  _jlconvert_bits!(out, $T, ptr)
             end
         end
+        nothing
     elseif T.mutable
         _gen_jlconvert_type(typeinfo, T)
     else
@@ -391,9 +402,9 @@ function h5type(parent::JldFile, T::ANY)
         # Empty type or non-basic bitstype
         id = HDF5.h5t_create(HDF5.H5T_OPAQUE, max(1, T.size))
         if T.size == 0
-            @eval h5convert!(out::Ptr, ::JldFile, x::$T, ::Vector{Any}) = nothing
+            @eval h5convert!(out::Ptr, ::JldFile, x::$T, ::JldWriteSession) = nothing
         else
-            @eval h5convert!(out::Ptr, ::JldFile, x::$T, ::Vector{Any}) =
+            @eval h5convert!(out::Ptr, ::JldFile, x::$T, ::JldWriteSession) =
                 unsafe_store!(convert(Ptr{$T}, out), x)
         end
     else
@@ -484,9 +495,7 @@ function jldatatype(parent::JldFile, dtype::HDF5Datatype)
             #    - the type matches
             #    - the type has the same field names
 
-            if !method_exists(jlconvert, (Type{T}, JldFile, Ptr))
-                gen_jlconvert(JldTypeInfo(parent, T), T)
-            end
+            gen_jlconvert(JldTypeInfo(parent, T), T)
         end
 
         parent.jlh5type[T] = JldDatatype(dtype, id)
