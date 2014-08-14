@@ -70,7 +70,7 @@ jlconvert(::Type{Symbol}, file::JldFile, ptr::Ptr) = symbol(jlconvert(UTF8String
 
 # Types
 function h5convert!(out::Ptr, file::JldFile, x::Type, persist::Vector{Any})
-    str = full_typename(x)
+    str = full_typename(file, x)
     push!(persist, str)
     h5convert!(out, file, str, persist)
 end
@@ -140,7 +140,7 @@ function commit_datatype(parent::JldFile, dtype::HDF5Datatype, T::ANY)
     finally
         close(gtypes)
     end
-    a_write(dtype, name_type_attr, full_typename(T))
+    a_write(dtype, name_type_attr, full_typename(parent, T))
 
     # Store in map
     parent.jlh5type[T] = JldDatatype(dtype, id)

@@ -8,7 +8,8 @@ function create()
     x = JLDTest(int16(5))  # int16 makes this work on 0.2
     jldopen("require.jld", "w") do file
         addrequire(file, joinpath(Pkg.dir(), "HDF5", "test", "JLDTest.jl"))
-        write(file, "x", x, rootmodule="JLDTemp")
+        truncate_module_path(file, JLDTemp)
+        write(file, "x", x)
     end
 end
 end

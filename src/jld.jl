@@ -51,12 +51,14 @@ type JldFile <: HDF5.DataFile
     h5ref::WeakKeyDict{Any,HDF5ReferenceObj}
     jlref::Dict{HDF5ReferenceObj,WeakRef}
     nrefs::Int
+    truncatemodules::Vector{ByteString}
 
     function JldFile(plain::HDF5File, version::String=version_current, toclose::Bool=true,
                      writeheader::Bool=false, mmaparrays::Bool=false)
         f = new(plain, version, toclose, writeheader, mmaparrays,
                 Dict{HDF5Datatype,Type}(), Dict{Type,HDF5Datatype}(),
-                WeakKeyDict{Any,HDF5ReferenceObj}(), Dict{HDF5ReferenceObj,Any}(), 0)
+                WeakKeyDict{Any,HDF5ReferenceObj}(), Dict{HDF5ReferenceObj,Any}(), 0,
+                Array(ByteString, 0))
         if toclose
             finalizer(f, close)
         end
@@ -452,7 +454,7 @@ function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Arra
             end
         end
         dset, reftype = d_create(parent.plain, path, refs)
-        a_write(dset, "julia eltype", full_typename(T))
+        a_write(dset, "julia eltype", full_typename(f, T))
         try
             if isempty(data)
                 a_write(dset, "dims", [size(data)...])
@@ -528,10 +530,6 @@ write_ref(parent::JldGroup, data) = write_ref(file(parent), data)
 
 # Special case for associative, to rehash keys
 function write(parent::Union(JldFile, JldGroup), name::ByteString, d::Associative)
-    tn = full_typename(typeof(d))
-    if tn == "DataFrame"
-        return write_compound(parent, name, d)
-    end
     n = length(d)
     K, V = eltype(d)
     ks = Array(K, n)
@@ -721,27 +719,78 @@ function julia_type(e::Union(Symbol, Expr))
 end
 
 ### Converting Julia types to fully qualified names
-full_typename(jltype::UnionType) = @sprintf "Union(%s)" join(map(full_typename, jltype.types), ",")
-function full_typename(tv::TypeVar)
+function full_typename(io::IO, file::JldFile, jltype::UnionType)
+    print(io, "Union(")
+    full_typename(io, file, jltype.types[1])
+    for i = 2:length(jltype.types)
+        print(io, ',')
+        full_typename(io, file, jltype.types[i])
+    end
+    print(io, ')')
+end
+function full_typename(io::IO, file::JldFile, tv::TypeVar)
     if is(tv.lb, None) && is(tv.ub, Any)
-        "TypeVar(:$(tv.name))" 
+        print(io, "TypeVar(:", tv.name, ")")
     elseif is(tv.lb, None)
-        "TypeVar(:$(tv.name),$(full_typename(tv.ub)))"
+        print(io, "TypeVar(:", tv.name, ",")
+        full_typename(io, file, tv.ub)
+        print(io, ')')
     else
-        "TypeVar(:$(tv.name),$(full_typename(tv.lb)),$(full_typename(tv.ub)))"
+        print(io, "TypeVar(:")
+        print(io, tv.name)
+        print(io, ',')
+        full_typename(io, file, tv.lb)
+        print(io, ',')
+        full_typename(io, file, tv.ub)
+        print(io, ')')
     end
 end
-full_typename(jltype::(Type...)) = length(jltype) == 1 ? @sprintf("(%s,)", full_typename(jltype[1])) :
-                                   @sprintf("(%s)", join(map(full_typename, jltype), ","))
-full_typename(x) = string(x)
-function full_typename(jltype::DataType)
-    #tname = "$(jltype.name.module).$(jltype.name)"
-    tname = string(jltype.name.module, ".", jltype.name.name)  # NOTE: performance bottleneck
-    if isempty(jltype.parameters)
-        tname
-    else
-        @sprintf "%s{%s}" tname join([full_typename(x) for x in jltype.parameters], ",")
+function full_typename(io::IO, file::JldFile, jltype::(Type...))
+    print(io, '(')
+    for t in jltype
+        full_typename(io, file, t)
+        print(io, ',')
     end
+    print(io, ')')
+end
+full_typename(io::IO, ::JldFile, x) = print(io, x)
+function full_typename(io::IO, file::JldFile, jltype::DataType)
+    mod = jltype.name.module
+    if mod != Main
+        mname = string(mod)
+        for x in file.truncatemodules
+            if beginswith(mname, x)
+                mname = length(x) == length(mname) ? "" : mname[sizeof(x)+1:end]
+                break
+            end
+        end
+
+        if !isempty(mname)
+            print(io, mname)
+            print(io, '.')
+        end
+    end
+
+    print(io, jltype.name.name)
+    if !isempty(jltype.parameters)
+        print(io, '{')
+        full_typename(io, file, jltype.parameters[1])
+        for i = 2:length(jltype.parameters)
+            print(io, ',')
+            full_typename(io, file, jltype.parameters[i])
+        end
+        print(io, '}')
+    end
+end
+function full_typename(file::JldFile, x)
+    io = IOBuffer(Array(Uint8, 64), true, true)
+    truncate(io, 0)
+    full_typename(io, file, x)
+    takebuf_string(io)
+end
+
+function truncate_module_path(file::JldFile, mod::Module)
+    push!(file.truncatemodules, string(mod))
 end
 
 ### Version number utilities
@@ -909,6 +958,7 @@ export
     @load,
     @save,
     load,
-    save
+    save,
+    truncate_module_path
 
 end
