@@ -393,10 +393,10 @@ immutable HDF5ReferenceObj
     r::Uint64 # Size must be H5R_OBJ_REF_BUF_SIZE
 end
 const HDF5ReferenceObj_NULL = HDF5ReferenceObj(uint64(0))
+const REF_TEMP_ARRAY = Array(HDF5ReferenceObj, 1)
 function HDF5ReferenceObj(parent::Union(HDF5File, HDF5Group, HDF5Dataset), name::ByteString)
-    a = Array(HDF5ReferenceObj, 1)
-    h5r_create(a, checkvalid(parent).id, name, H5R_OBJECT, -1)
-    a[1]
+    h5r_create(REF_TEMP_ARRAY, checkvalid(parent).id, name, H5R_OBJECT, -1)
+    REF_TEMP_ARRAY[1]
 end
 
 # Compound types
@@ -1016,12 +1016,18 @@ dataspace(attr::HDF5Attribute) = HDF5Dataspace(h5a_get_space(checkvalid(attr).id
 
 # Create a dataspace from in-memory types
 dataspace{T<:HDF5BitsKind}(x::T) = HDF5Dataspace(h5s_create(H5S_SCALAR))
-function _dataspace(sz::Int...; max_dims::Union(Dims, ())  = ())
-    dims = convert(Array{Hsize, 1}, [reverse(sz)...])
-    if any(dims .== 0)
+function _dataspace(sz::(Int...), max_dims::Union(Dims, ())=())
+    dims = Array(Hsize, length(sz))
+    any_zero = false
+    for i = 1:length(sz)
+        dims[end-i+1] = sz[i]
+        any_zero |= sz[i] == 0
+    end
+
+    if any_zero
         space_id = h5s_create(H5S_NULL)
     else
-        if max_dims  == ()
+        if max_dims == ()
             space_id = h5s_create_simple(length(dims), dims, dims)
         else
             space_id = h5s_create_simple(length(dims), dims, convert(Array{Hsize, 1},[reverse(max_dims)...]))
@@ -1029,13 +1035,13 @@ function _dataspace(sz::Int...; max_dims::Union(Dims, ())  = ())
     end
     HDF5Dataspace(space_id)
 end
-dataspace(A::Array; max_dims::Union(Dims, ())  = ()) = _dataspace(size(A)..., max_dims=max_dims)
+dataspace(A::Array; max_dims::Union(Dims, ())  = ()) = _dataspace(size(A), max_dims)
 dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
-dataspace(R::Array{HDF5ReferenceObj}; max_dims::Union(Dims, ())  = ()) = _dataspace(size(R)..., max_dims=max_dims)
-dataspace(v::HDF5Vlen; max_dims::Union(Dims, ())  = ()) = _dataspace(size(v.data)..., max_dims=max_dims)
+dataspace(R::Array{HDF5ReferenceObj}; max_dims::Union(Dims, ())=()) = _dataspace(size(R), max_dims)
+dataspace(v::HDF5Vlen; max_dims::Union(Dims, ())=()) = _dataspace(size(v.data), max_dims)
 dataspace(n::Nothing) = HDF5Dataspace(h5s_create(H5S_NULL))
-dataspace(sz::Dims; max_dims::Union(Dims, ())  = ()) = _dataspace(sz..., max_dims=max_dims)
-dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union(Dims, ())  = ()) = _dataspace(sz1, sz2, sz3..., max_dims=max_dims)
+dataspace(sz::Dims; max_dims::Union(Dims, ())=()) = _dataspace(sz, max_dims)
+dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union(Dims, ())=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
 
 # Get the array dimensions from a dataspace or a dataset
 # Returns both dims and maxdims
