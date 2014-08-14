@@ -224,7 +224,7 @@ function _gen_jlconvert_type(typeinfo::JldTypeInfo, T::ANY)
             push!(args, quote
                 ref = unsafe_load(convert(Ptr{HDF5ReferenceObj}, ptr)+$h5offset)
                 if ref != HDF5.HDF5ReferenceObj_NULL
-                    out.$(T.names[i]) = read_ref(file, ref)
+                    out.$(T.names[i]) = read_ref(file, ref)::$(T.types[i])
                 end
             end)
         else
@@ -232,7 +232,7 @@ function _gen_jlconvert_type(typeinfo::JldTypeInfo, T::ANY)
         end
     end
     @eval function jlconvert(::Type{$T}, file::JldFile, ptr::Ptr)
-        out::$T = ccall(:jl_new_struct_uninit, Any, (Any,), $T)
+        out = ccall(:jl_new_struct_uninit, Any, (Any,), $T)::$T
         $ex
         out
     end
@@ -287,7 +287,7 @@ function _gen_jlconvert_immutable(typeinfo::JldTypeInfo, T::ANY)
             # XXX can this be improved?
             quote
                 function jlconvert(::Type{$T}, file::JldFile, ptr::Ptr)
-                    out::$T = ccall(:jl_new_struct_uninit, Any, (Any,), $T)
+                    out = ccall(:jl_new_struct_uninit, Any, (Any,), $T)::$T
                     jlconvert!(pointer_from_objref(out)+sizeof(Int), $T, file, ptr)
                     out
                 end
