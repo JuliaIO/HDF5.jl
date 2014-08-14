@@ -359,7 +359,7 @@ jldopen(fn, "w") do file
     file["ms"] = β
     g = g_create(file,"g")
     file["g/ms"] = ms
-    @test_throws_02 ErrorException delete!(file, "_refs/g/ms")
+    @test_throws ErrorException delete!(file, "_refs/g/ms")
     delete!(file, "g/ms")
     file["g/ms"] = ms
     delete!(file, "/g/ms")
