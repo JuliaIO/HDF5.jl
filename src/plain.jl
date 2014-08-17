@@ -837,21 +837,24 @@ exists(parent::Union(HDF5File, HDF5Group), path::ByteString) = exists(parent, pa
 has(parent::Union(HDF5File, HDF5Group, HDF5Dataset), path::ByteString) = exists(parent, path)
 
 # Querying items in the file
+const H5GINFO_TEMP_ARRAY = Array(H5Ginfo, 1)
 function info(obj::Union(HDF5Group,HDF5File))
-    info = Array(H5Ginfo, 1)
-    h5g_get_info(obj, info)
-    info[1]
+    h5g_get_info(obj, H5GINFO_TEMP_ARRAY)
+    H5GINFO_TEMP_ARRAY[1]
 end
+
+const H5OINFO_TEMP_ARRAY = Array(H5Oinfo, 1)
 function objinfo(obj::Union(HDF5File, HDF5Object))
-    info = Array(H5Oinfo, 1)
-    h5o_get_info(obj.id, info)
-    info[1]
+    h5o_get_info(obj.id, H5OINFO_TEMP_ARRAY)
+    H5OINFO_TEMP_ARRAY[1]
 end
+
+const LENGTH_TEMP_ARRAY = Array(Uint64, 1)
 function length(x::Union(HDF5Group,HDF5File))
-    buf = [uint64(0)]
-    h5g_get_num_objs(x.id, buf)
-    buf[1]
+    h5g_get_num_objs(x.id, LENGTH_TEMP_ARRAY)
+    LENGTH_TEMP_ARRAY[1]
 end
+
 function length(x::HDF5Attributes)
     objinfo(x.parent).num_attrs
 end

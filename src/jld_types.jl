@@ -469,8 +469,7 @@ function jldatatype(parent::JldFile, dtype::HDF5Datatype)
         
         T = HDF5.hdf5_type_map[(class_id, is_signed, native_size)]
     elseif class_id == HDF5.H5T_COMPOUND || class_id == HDF5.H5T_OPAQUE
-        h5name = name(dtype)
-        id = parseint(h5name[rsearchindex(h5name, "/")+1:end])
+        id = HDF5.objinfo(dtype).addr
         haskey(parent.h5jltype, id) && return parent.h5jltype[id]
 
         typename = a_read(dtype, name_type_attr)
