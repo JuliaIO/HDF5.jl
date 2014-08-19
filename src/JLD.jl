@@ -84,7 +84,13 @@ immutable JldDataset
 end
 
 immutable PointerException <: Exception; end
-show(io::IO, ::PointerException) = print(io, "Cannot write a pointer to JLD file")
+show(io::IO, ::PointerException) = print(io, "cannot write a pointer to JLD file")
+
+immutable TypeMismatchException <: Exception
+    typename::ByteString
+end
+show(io::IO, e::TypeMismatchException) =
+    print(io, "stored type $(e.typename) does not match currently loaded type")
 
 # Wrapper for associative keys
 # We write this instead of the associative to avoid dependence on the
@@ -460,7 +466,7 @@ write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name
 function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T},
                   wsession::JldWriteSession=JldWriteSession())
     f = file(parent)
-    dtype = h5fieldtype(f, T)
+    dtype = h5datatype(f, data)
     if dtype == JLD_REF_TYPE
         # Write as references
         refs = Array(HDF5ReferenceObj, size(data))

@@ -378,3 +378,40 @@ jldopen(fn, "r") do file
     @assert(!exists(file, "g/ms"))
     @assert(!exists(file, "g"))
 end
+
+# mismatched types
+module JLDTemp1
+using JLD
+import ..fn
+
+type TestType1
+    x::Int
+end
+type TestType2
+    x::Int
+end
+immutable TestType3
+    x::TestType2
+end
+
+jldopen(fn, "w") do file
+    truncate_module_path(file, JLDTemp1)
+    write(file, "x1", TestType1(1))
+    write(file, "x2", TestType3(TestType2(1)))
+end
+end
+
+type TestType1
+    x::Float64
+end
+type TestType2
+    x::Int
+end
+immutable TestType3
+    x::TestType1
+end
+
+jldopen(fn, "r") do file
+    @test_throws JLD.TypeMismatchException read(file, "x1")
+    @test_throws TypeError read(file, "x2")
+end

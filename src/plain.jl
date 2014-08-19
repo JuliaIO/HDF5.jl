@@ -342,7 +342,7 @@ end
 convert(::Type{Cint}, dtype::HDF5Datatype) = dtype.id
 show(io::IO, dtype::HDF5Datatype) = print(io, "HDF5 datatype ", dtype.id) # TODO: compound datatypes?
 hash(dtype::HDF5Datatype) = dtype.id
-==(dt1::HDF5Datatype, dt2::HDF5Datatype) = dt1.id == dt2.id
+==(dt1::HDF5Datatype, dt2::HDF5Datatype) = h5t_equal(dt1, dt2) > 0
 
 # Define an H5O Object type
 typealias HDF5Object Union(HDF5Group, HDF5Dataset, HDF5Datatype)
@@ -1893,6 +1893,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5l_get_info, :H5Lget_info, Herr, (Hid, Ptr{Uint8}, Ptr{H5LInfo}, Hid), (:link_loc_id, :link_name, :link_buf, :lapl_id), :(error("Error getting info for link ", link_name))),
      (:h5o_open, :H5Oopen, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :pathname, :lapl_id), :(error("Error opening object ", h5i_get_name(loc_id), "/", pathname))),
      (:h5o_open_by_idx, :H5Oopen_by_idx, Hid, (Hid, Ptr{Uint8}, Cint, Cint, Hsize, Hid), (:loc_id, :group_name, :index_type, :order, :n, :lapl_id), :(error("Error opening object of index ", n))),
+     (:h5o_open_by_addr, :H5Oopen_by_addr, Hid, (Hid, Haddr), (:loc_id, :addr), :(error("Error opening object by address"))),
      (:h5p_create, :H5Pcreate, Hid, (Hid,), (:cls_id,), "Error creating property list"),
      (:h5p_get_chunk, :H5Pget_chunk, Cint, (Hid, Cint, Ptr{Hsize}), (:plist_id, :n_dims, :dims), :(error("Error getting chunk size"))),
      (:h5p_get_layout, :H5Pget_layout, Cint, (Hid,), (:plist_id,), :(error("Error getting layout"))),
@@ -1909,6 +1910,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5t_array_create, :H5Tarray_create2, Hid, (Hid, Cuint, Ptr{Hsize}), (:basetype_id, :ndims, :sz), :(error("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz))),
      (:h5t_copy, :H5Tcopy, Hid, (Hid,), (:dtype_id,), :(error("Error copying datatype"))),
      (:h5t_create, :H5Tcreate, Hid, (Cint, Csize_t), (:class_id, :sz), :(error("Error creating datatype of id ", class_id))),
+     (:h5t_equal, :H5Tequal, Hid, (Hid, Hid), (:dtype_id1, :dtype_id2), :(error("Error checking datatype equality"))),
      (:h5t_get_array_dims, :H5Tget_array_dims2, Cint, (Hid, Ptr{Hsize}), (:dtype_id, :dims), :(error("Error getting dimensions of array"))),
      (:h5t_get_array_ndims, :H5Tget_array_ndims, Cint, (Hid,), (:dtype_id,), :(error("Error getting ndims of array"))),
      (:h5t_get_class, :H5Tget_class, Cint, (Hid,), (:dtype_id,), :(error("Error getting class"))),
