@@ -349,10 +349,18 @@ function read_scalar(obj::JldDataset, dtype::HDF5Datatype, T::Type)
     return after_read(jlconvert(T, file(obj), pointer(buf)))
 end
 
-read_array{T<:HDF5BitsKind}(obj::JldDataset, dtype::HDF5Datatype, ::Type{T}, dspace_id::HDF5.Hid) =
-    obj.file.mmaparrays && HDF5.iscontiguous(obj.plain) ? readmmap(obj.plain, Array{T}) : read(obj.plain, Array{T})
+function read_array{T<:HDF5BitsKind}(obj::JldDataset, dtype::HDF5Datatype, ::Type{T}, dspace_id::HDF5.Hid)
+    if obj.file.mmaparrays && HDF5.iscontiguous(obj.plain)
+        readmmap(obj.plain, Array{T})
+    else
+        dims = convert((Int...), HDF5.h5s_get_simple_extent_dims(dspace_id)[1])
+        out = Array(T, dims)
+        HDF5.readarray(obj.plain, dtype.id, out)
+        out
+    end
+end
 function read_array(obj::JldDataset, dtype::HDF5Datatype, T::Type, dspace_id::HDF5.Hid)
-    dims = map(int, HDF5.h5s_get_simple_extent_dims(dspace_id)[1])::(Int...)
+    dims = convert((Int...), HDF5.h5s_get_simple_extent_dims(dspace_id)[1])
     n = prod(dims)::Int
     h5sz = sizeof(dtype)
     out = Array(T, dims)

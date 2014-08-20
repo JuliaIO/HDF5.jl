@@ -860,7 +860,7 @@ function size(obj::Union(HDF5Dataset, HDF5Attribute))
     dspace = dataspace(obj)
     dims, maxdims = get_dims(dspace)
     close(dspace)
-    map(int, dims)::(Int...)
+    convert((Int...), dims)
 end
 size(dset::Union(HDF5Dataset, HDF5Attribute), d) = d > ndims(dset) ? 1 : size(dset)[d]
 length(dset::Union(HDF5Dataset, HDF5Attribute)) = prod(size(dset))
