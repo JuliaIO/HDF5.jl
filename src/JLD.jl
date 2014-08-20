@@ -472,7 +472,7 @@ write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name
 function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T},
                   wsession::JldWriteSession=JldWriteSession())
     f = file(parent)
-    dtype = h5datatype(f, data)
+    dtype = h5fieldtype(f, T, true)
     if dtype == JLD_REF_TYPE
         # Write as references
         refs = Array(HDF5ReferenceObj, size(data))
@@ -609,7 +609,7 @@ function write_compound(parent::Union(JldFile, JldGroup), name::ByteString, s,
                         wsession::JldWriteSession)
     T = typeof(s)
     f = file(parent)
-    dtype = h5datatype(f, s)
+    dtype = h5type(f, T, true)
     gen_h5convert(f, T)
 
     buf = Array(Uint8, HDF5.h5t_get_size(dtype))
