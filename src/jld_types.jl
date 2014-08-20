@@ -552,6 +552,21 @@ function reconstuct_type(parent::JldFile, dtype::HDF5Datatype, name::Symbol)
     end
 end
 
+# Get the index of a type in the types group. This could be cached,
+# but it's already many times faster than calling H5Iget_name with
+# a lot of data in the file. Revisit if this ever turns out to be a
+# bottleneck.
+function typeindex(parent::JldFile, addr::HDF5.Haddr)
+    gtypes = parent.plain[pathtypes]
+    i = 1
+    for x in gtypes
+        if HDF5.objinfo(x).addr == addr
+            return i
+        end
+        i += 1
+    end
+end
+
 function jldatatype(parent::JldFile, dtype::HDF5Datatype)
     class_id = HDF5.h5t_get_class(dtype.id)
     if class_id == HDF5.H5T_STRING
@@ -564,18 +579,21 @@ function jldatatype(parent::JldFile, dtype::HDF5Datatype)
             error("character set ", cset, " not recognized")
         end
     elseif class_id == HDF5.H5T_INTEGER || class_id == HDF5.H5T_FLOAT
-        native_type = HDF5.h5t_get_native_type(dtype.id)
-        native_size = HDF5.h5t_get_size(native_type)
-        if class_id == HDF5.H5T_INTEGER
-            is_signed = HDF5.h5t_get_sign(native_type)
-        else
-            is_signed = nothing
-        end
-        
-        T = HDF5.hdf5_type_map[(class_id, is_signed, native_size)]
+        # This can be a performance hotspot
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_DOUBLE) > 0 && return Float64
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_INT64) > 0 && return Int64
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_FLOAT) > 0 && return Float32
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_INT32) > 0 && return Int32
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_UINT8) > 0 && return Uint8
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_UINT64) > 0 && return Uint64
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_UINT32) > 0 && return Uint32
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_INT8) > 0 && return Int8
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_INT16) > 0 && return Int16
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_UINT16) > 0 && return Uint16
+        error("unrecognized integer or float type")
     elseif class_id == HDF5.H5T_COMPOUND || class_id == HDF5.H5T_OPAQUE
-        id = HDF5.objinfo(dtype).addr
-        haskey(parent.h5jltype, id) && return parent.h5jltype[id]
+        addr = HDF5.objinfo(dtype).addr
+        haskey(parent.h5jltype, addr) && return parent.h5jltype[addr]
 
         typename = a_read(dtype, name_type_attr)
         T = julia_type(typename)
@@ -606,10 +624,9 @@ function jldatatype(parent::JldFile, dtype::HDF5Datatype)
         dtype == newtype || throw(TypeMismatchException(typename))
 
         # Store type in type index
-        h5name = name(dtype)
-        index = parseint(h5name[rsearchindex(h5name, "/")+1:end])
+        index = typeindex(parent, addr)
         parent.jlh5type[T] = JldDatatype(dtype, index)
-        parent.h5jltype[id] = T
+        parent.h5jltype[addr] = T
         T
     else
         error("unrecognized HDF5 datatype class ", class_id)

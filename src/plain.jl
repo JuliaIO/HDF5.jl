@@ -398,6 +398,7 @@ function HDF5ReferenceObj(parent::Union(HDF5File, HDF5Group, HDF5Dataset), name:
     h5r_create(REF_TEMP_ARRAY, checkvalid(parent).id, name, H5R_OBJECT, -1)
     REF_TEMP_ARRAY[1]
 end
+==(a::HDF5ReferenceObj, b::HDF5ReferenceObj) = a.r == b.r
 
 # Compound types
 # These are "raw" and not mapped to any Julia type
@@ -2015,7 +2016,7 @@ function h5s_get_simple_extent_dims(space_id::Hid)
     dims = Array(Hsize, n)
     maxdims = Array(Hsize, n)
     h5s_get_simple_extent_dims(space_id, dims, maxdims)
-    return tuple(reverse(dims)...), tuple(reverse(maxdims)...)
+    return tuple(reverse!(dims)...), tuple(reverse!(maxdims)...)
 end
 function h5t_get_member_name(type_id::Hid, index::Integer)
     pn = ccall((:H5Tget_member_name, libname),
