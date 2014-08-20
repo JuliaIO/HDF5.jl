@@ -399,6 +399,7 @@ function HDF5ReferenceObj(parent::Union(HDF5File, HDF5Group, HDF5Dataset), name:
     REF_TEMP_ARRAY[1]
 end
 ==(a::HDF5ReferenceObj, b::HDF5ReferenceObj) = a.r == b.r
+hash(x::HDF5ReferenceObj) = hash(x.r)
 
 # Compound types
 # These are "raw" and not mapped to any Julia type
@@ -689,7 +690,8 @@ function split1(path::ByteString)
 end
 
 # Create objects
-function parents_create(parent::Union(HDF5File, HDF5Group), path::ByteString, args...)
+function parents_create(parent::Union(HDF5File, HDF5Group), path::ByteString)
+   '/' in path || return tuple(parent.id, path)
     g = split(path, "/")
     if isempty(g[1])
         g[1] = oftype(path, "/")
@@ -703,19 +705,15 @@ function parents_create(parent::Union(HDF5File, HDF5Group), path::ByteString, ar
         end
         parent = g_open(parent, gstr)
     end
-    tuple(parent.id, bytestring(g[end]), args...)
+    tuple(parent.id, bytestring(g[end]))
 end
 
-function g_create(parent::Union(HDF5File, HDF5Group), path::ByteString, lcpl::HDF5Properties, dcpl::HDF5Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    HDF5Group(h5g_create(parents_create(checkvalid(parent), path, lcpl.id, dcpl.id)...), file(parent))
+function g_create(parent::Union(HDF5File, HDF5Group), path::ByteString,
+                  lcpl::HDF5Properties=_link_properties(path),
+                  dcpl::HDF5Properties=DEFAULT_PROPERTIES)
+    (parent_id, leafpath) = parents_create(checkvalid(parent), path)
+    HDF5Group(h5g_create(parent_id, leafpath, lcpl.id, dcpl.id), file(parent))
 end
-function g_create(parent::Union(HDF5File, HDF5Group), path::ByteString, lcpl::HDF5Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    HDF5Group(h5g_create(parents_create(checkvalid(parent), path, lcpl.id, H5P_DEFAULT)...), file(parent))
-end
-g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = HDF5Group(h5g_create(parents_create(checkvalid(parent), path, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
-g_create(parent::Union(HDF5File, HDF5Group), path::UTF8String) = g_create(parent, path, p_create(H5P_LINK_CREATE))
 function g_create(f::Function, parent::Union(HDF5File, HDF5Group), args...)
     g = g_create(parent, args...)
     try
@@ -725,19 +723,15 @@ function g_create(f::Function, parent::Union(HDF5File, HDF5Group), args...)
     end
 end
 
-function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties, dapl::HDF5Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, lcpl.id, dcpl.id, dapl.id)...), file(parent))
+function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype,
+         dspace::HDF5Dataspace, lcpl::HDF5Properties=_link_properties(path),
+         dcpl::HDF5Properties=DEFAULT_PROPERTIES,
+         dapl::HDF5Properties=DEFAULT_PROPERTIES)
+    (parent_id, leafpath) = parents_create(checkvalid(parent), path)
+    HDF5Dataset(h5d_create(parent_id, leafpath, dtype.id, dspace.id, lcpl.id, dcpl.id, dapl.id),
+                file(parent))
 end
-function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, lcpl.id, dcpl.id, H5P_DEFAULT)...), file(parent))
-end
-function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
-end
-d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = d_create(parent, path, dtype, dspace, p_create(H5P_LINK_CREATE))
+
 # Setting dset creation properties with name/value pairs
 function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace, prop1::ASCIIString, val1, pv...)
     if !iseven(length(pv))
@@ -754,7 +748,8 @@ function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::H
     end
     lcpl = p_create(H5P_LINK_CREATE)
     h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, lcpl, p.id, H5P_DEFAULT)...), file(parent))
+    (parent_id, leafpath) = parents_create(checkvalid(parent), path)
+    HDF5Dataset(h5d_create(parent_id, leafpath, dtype.id, dspace.id, lcpl, p.id, H5P_DEFAULT), file(parent))
 end
 d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace_dims::Dims, prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims), prop1, val1, pv...)
 d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace_dims::(Dims,Dims), prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]), prop1, val1, pv...)
@@ -865,7 +860,7 @@ function size(obj::Union(HDF5Dataset, HDF5Attribute))
     dspace = dataspace(obj)
     dims, maxdims = get_dims(dspace)
     close(dspace)
-    map(int, dims)
+    map(int, dims)::(Int...)
 end
 size(dset::Union(HDF5Dataset, HDF5Attribute), d) = d > ndims(dset) ? 1 : size(dset)[d]
 length(dset::Union(HDF5Dataset, HDF5Attribute)) = prod(size(dset))
@@ -2087,6 +2082,15 @@ function get_fclose_degree(p::HDF5Properties)
     h5p_get_fclose_degee(p.id, out)
     out[1]
 end
+
+const ASCII_LINK_PROPERTIES = p_create(H5P_LINK_CREATE)
+h5p_set_char_encoding(ASCII_LINK_PROPERTIES.id, cset(ASCIIString))
+_link_properties(path::ASCIIString) = ASCII_LINK_PROPERTIES
+const UTF8_LINK_PROPERTIES = p_create(H5P_LINK_CREATE)
+h5p_set_char_encoding(UTF8_LINK_PROPERTIES.id, cset(UTF8String))
+_link_properties(path::UTF8String) = UTF8_LINK_PROPERTIES
+const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT)
+
 # property function get/set pairs
 const hdf5_prop_get_set = {
     "chunk"         => (get_chunk, set_chunk),
