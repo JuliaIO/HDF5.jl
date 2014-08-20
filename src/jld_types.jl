@@ -519,6 +519,39 @@ h5datatype(parent::JldGroup, x) = h5datatype(file(parent), x)
 ## Get corresponding Julia type for a specific HDF5 type, and define
 ## jlconvert for that type.
 
+function reconstuct_type(parent::JldFile, dtype::HDF5Datatype, name::Symbol)
+    class_id = HDF5.h5t_get_class(dtype.id)
+    if class_id == HDF5.H5T_OPAQUE
+        if exists(dtype, "empty")
+            @eval (immutable $name; end; $name)
+        else
+            sz = int(HDF5.h5t_get_size(dtype.id))*8
+            @eval (bitstype $sz $name; $name)
+        end
+    else
+        fields = Expr(:block)
+        for i = 0:HDF5.h5t_get_nmembers(dtype.id)-1
+            member_name = HDF5.h5t_get_member_name(dtype.id, i)
+            idx = rsearchindex(member_name, "_")
+            field_name = symbol(member_name[1:idx-1])
+            if idx != sizeof(member_name)
+                member_dtype = HDF5.t_open(parent.plain, string(pathtypes, '/', lpad(member_name[idx+1:end], 8, '0')))
+                push!(fields.args, :($(field_name)::$(jldatatype(parent, member_dtype))))
+            else
+                member_class = HDF5.h5t_get_member_class(dtype.id, i)
+                if member_class == HDF5.H5T_REFERENCE
+                    push!(fields.args, field_name)
+                else
+                    member_dtype = HDF5Datatype(HDF5.h5t_get_member_type(dtype.id, i), parent.plain)
+                    push!(fields.args, :($(field_name)::$(jldatatype(parent, member_dtype))))
+                end
+            end
+        end
+
+        @eval (immutable $name; $fields; end; $name)
+    end
+end
+
 function jldatatype(parent::JldFile, dtype::HDF5Datatype)
     class_id = HDF5.h5t_get_class(dtype.id)
     if class_id == HDF5.H5T_STRING
@@ -546,8 +579,10 @@ function jldatatype(parent::JldFile, dtype::HDF5Datatype)
 
         typename = a_read(dtype, name_type_attr)
         T = julia_type(typename)
-        T == UnsupportedType && error("type $typename does not exist")
-        # TODO attempt to reconstruct type
+        if T == UnsupportedType
+            warn("type $typename not present in workspace; reconstructing")
+            T = reconstuct_type(parent, dtype, gensym(typename))
+        end
 
         if !(T in BUILTIN_TYPES)
             # Call jldatatype on dependent types to validate them and

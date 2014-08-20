@@ -832,7 +832,7 @@ function exists(parent::Union(HDF5File, HDF5Group), path::ByteString, lapl::HDF5
     ret
 end
 exists(attr::HDF5Attributes, path::ByteString) = h5a_exists(checkvalid(attr.parent).id, path)
-exists(dset::HDF5Dataset, path::ByteString) = h5a_exists(checkvalid(dset).id, path)
+exists(dset::Union(HDF5Dataset, HDF5Datatype), path::ByteString) = h5a_exists(checkvalid(dset).id, path)
 exists(parent::Union(HDF5File, HDF5Group), path::ByteString) = exists(parent, path, HDF5Properties())
 has(parent::Union(HDF5File, HDF5Group, HDF5Dataset), path::ByteString) = exists(parent, path)
 

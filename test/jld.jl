@@ -341,6 +341,7 @@ jldopen(fn, "r") do file
 end
 
 # bracket syntax when created by HDF5
+println("The following unrecognized JLD file warning is a sign of normal operation.")
 h5open(fn, "w") do file
     file["a"] = [1:100]
     file["a"][51:100] = [1:50]
@@ -379,10 +380,10 @@ jldopen(fn, "r") do file
     @assert(!exists(file, "g"))
 end
 
-# mismatched types
+# mismatched and missing types
 module JLDTemp1
 using JLD
-import ..fn
+import ..fn, Core.Intrinsics.box
 
 type TestType1
     x::Int
@@ -394,10 +395,24 @@ immutable TestType3
     x::TestType2
 end
 
+type TestType4
+    x::Int
+end
+type TestType5
+    x::TestType4
+end
+type TestType6 end
+bitstype 8 TestType7
+
 jldopen(fn, "w") do file
     truncate_module_path(file, JLDTemp1)
     write(file, "x1", TestType1(1))
     write(file, "x2", TestType3(TestType2(1)))
+    write(file, "x3", TestType4(1))
+    write(file, "x4", TestType5(TestType4(2)))
+    write(file, "x5", [TestType5(TestType4(i)) for i = 1:5])
+    write(file, "x6", TestType6())
+    write(file, "x7", reinterpret(TestType7, 0x77))
 end
 end
 
@@ -411,7 +426,17 @@ immutable TestType3
     x::TestType1
 end
 
+import Core.Intrinsics.box, Core.Intrinsics.unbox
 jldopen(fn, "r") do file
     @test_throws JLD.TypeMismatchException read(file, "x1")
     @test_throws TypeError read(file, "x2")
+    println("The following missing type warnings are a sign of normal operation.")
+    @test read(file, "x3").x == 1
+    @test read(file, "x4").x.x == 2
+    x = read(file, "x5")
+    for i = 1:5
+        @test x[i].x.x == i
+    end
+    @test typeof(read(file, "x6")).names == ()
+    @test reinterpret(Uint8, read(file, "x7")) == 0x77
 end

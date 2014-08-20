@@ -309,7 +309,10 @@ function read(obj::JldDataset)
             if HDF5.h5t_get_class(dtype) == HDF5.H5T_REFERENCE
                 typename = a_read(obj.plain, "julia eltype")
                 T2 = julia_type(typename)
-                T2 == UnsupportedType && error("type $typename does not exist in namespace")
+                if T2 == UnsupportedType
+                    warn("type $typename not present in workspace; interpreting array as Array{Any}")
+                    T2 = Any
+                end
                 return getrefs(obj, T2)
             else
                 return read_array(obj, dtype, jldatatype(file(obj), dtype), dspace_id)
@@ -319,7 +322,10 @@ function read(obj::JldDataset)
             if HDF5.h5t_get_class(dtype) == HDF5.H5T_REFERENCE
                 typename = a_read(obj.plain, "julia eltype")
                 T3 = julia_type(typename)
-                T3 == UnsupportedType && error("type $typename does not exist in namespace")
+                if T3 == UnsupportedType
+                    warn("type $typename not present in workspace; interpreting array as Array{Any}")
+                    T3 = Any
+                end
             else
                 T3 = jldatatype(file(obj), dtype)
             end
