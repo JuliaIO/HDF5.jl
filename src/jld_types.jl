@@ -163,19 +163,48 @@ mangle_name(jtype::JldDatatype, jlname) =
     jtype.index <= 0 ? string(jlname, "_") : string(jlname, "_", jtype.index)
 Base.convert(::Type{HDF5.Hid}, x::JldDatatype) = x.dtype.id
 
-# Implement h5convert! to convert from Julia to HDF5 representation for
-# a given JldTypeInfo and Julia type
-function gen_h5convert!(typeinfo::JldTypeInfo, T::ANY)
-    method_exists(h5convert!, (Ptr, JldFile, T, JldWriteSession)) && return
+## Define h5convert! to convert from Julia to HDF5 representation for
+## a given JldTypeInfo and Julia type. Assumes h5datatype has already been
+## called for this type.
 
+# For types that have h5convert! predefined
+gen_h5convert{T<:HDF5.HDF5BitsKind}(::JldFile, ::Type{T}) = nothing
+gen_h5convert{T<:ByteString}(::JldFile, ::Type{T}) = nothing
+gen_h5convert{T<:UTF16String}(::JldFile, ::Type{T}) = nothing
+gen_h5convert{T<:Symbol}(::JldFile, ::Type{T}) = nothing
+gen_h5convert{T<:Type}(::JldFile, ::Type{T}) = nothing
+
+# For other types
+const H5CONVERT_DEFINED = ObjectIdDict()
+gen_h5convert(parent::JldFile, T) =
+    haskey(H5CONVERT_DEFINED, T) || _gen_h5convert(parent, T)
+
+# There is no point in specializing this
+function _gen_h5convert(parent::JldFile, T::ANY)
+    dtype = parent.jlh5type[T].dtype
     istuple = isa(T, Tuple)
-    types = istuple ? T : T.types
+    if istuple
+        types = T
+    else
+        if isopaque(T::DataType)
+            if (T::DataType).size == 0
+                @eval h5convert!(out::Ptr, ::JldFile, x::$T, ::JldWriteSession) = nothing
+            else
+                @eval h5convert!(out::Ptr, ::JldFile, x::$T, ::JldWriteSession) =
+                    unsafe_store!(convert(Ptr{$T}, out), x)
+            end
+            return
+        end
+        types = (T::DataType).types
+    end
+
     getindex_fn = istuple ? (:getindex) : (:getfield)
     ex = Expr(:block)
     args = ex.args
-    for i = 1:length(typeinfo.dtypes)
-        offset = typeinfo.offsets[i]
-        if HDF5.h5t_get_class(typeinfo.dtypes[i]) == HDF5.H5T_REFERENCE
+    n = HDF5.h5t_get_nmembers(dtype.id)
+    for i = 1:n
+        offset = HDF5.h5t_get_member_offset(dtype.id, i-1)
+        if HDF5.h5t_get_member_class(dtype.id, i-1) == HDF5.H5T_REFERENCE
             if istuple
                 push!(args, :(unsafe_store!(convert(Ptr{HDF5ReferenceObj}, out)+$offset,
                                             write_ref(file, $getindex_fn(x, $i), wsession))))
@@ -190,10 +219,12 @@ function gen_h5convert!(typeinfo::JldTypeInfo, T::ANY)
                 end)
             end
         else
+            gen_h5convert(parent, types[i])
             push!(args, :(h5convert!(out+$offset, file, $getindex_fn(x, $i), wsession)))
         end
     end
     @eval h5convert!(out::Ptr, file::JldFile, x::$T, wsession::JldWriteSession) = ($ex; nothing)
+    H5CONVERT_DEFINED[T] = true
     nothing
 end
 
@@ -404,8 +435,6 @@ function h5type(parent::JldFile, T::(ANY...), commit::Bool)
         HDF5.h5t_insert(id, mangle_name(fielddtype, i), typeinfo.offsets[i], fielddtype)
     end
 
-    commit && gen_h5convert!(typeinfo, T)
-
     dtype = HDF5Datatype(id, parent.plain)
     if commit
         jlddtype = commit_datatype(parent, dtype, T)
@@ -430,14 +459,6 @@ function h5type(parent::JldFile, T::ANY, commit::Bool)
     if isopaque(T)
         # Empty type or non-basic bitstype
         id = HDF5.h5t_create(HDF5.H5T_OPAQUE, opaquesize(T))
-        if isa(parent, JldFile)
-            if T.size == 0
-                @eval h5convert!(out::Ptr, ::JldFile, x::$T, ::JldWriteSession) = nothing
-            else
-                @eval h5convert!(out::Ptr, ::JldFile, x::$T, ::JldWriteSession) =
-                    unsafe_store!(convert(Ptr{$T}, out), x)
-            end
-        end
     else
         # Compound type
         typeinfo = JldTypeInfo(parent, T.types, commit)
@@ -446,7 +467,6 @@ function h5type(parent::JldFile, T::ANY, commit::Bool)
             fielddtype = typeinfo.dtypes[i]
             HDF5.h5t_insert(id, mangle_name(fielddtype, T.names[i]), typeinfo.offsets[i], fielddtype)
         end
-        commit && gen_h5convert!(typeinfo, T)
     end
 
     dtype = HDF5Datatype(id, parent.plain)

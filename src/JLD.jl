@@ -490,6 +490,7 @@ function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Arra
             close(dset)
         end
     else
+        gen_h5convert(f, eltype(data))
         write_vals(parent, path, data, dtype, wsession)
     end
 end
@@ -601,7 +602,10 @@ write(parent::Union(JldFile, JldGroup), name::ByteString, s,
 function write_compound(parent::Union(JldFile, JldGroup), name::ByteString, s,
                         wsession::JldWriteSession)
     T = typeof(s)
-    dtype = h5datatype(parent, s)
+    f = file(parent)
+    dtype = h5datatype(f, s)
+    gen_h5convert(f, T)
+
     buf = Array(Uint8, HDF5.h5t_get_size(dtype))
     h5convert!(pointer(buf), file(parent), s, wsession)
 
