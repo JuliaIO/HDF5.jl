@@ -118,7 +118,11 @@ immutable MyImmutable{T}
 end
 nonpointerfree_immutable_1 = MyImmutable(1, [1., 2., 3.], false)
 nonpointerfree_immutable_2 = MyImmutable(2, {3., 4., 5.}, true)
-
+immutable MyImmutable2
+    x::Vector{Int}
+    MyImmutable2() = new()
+end
+nonpointerfree_immutable_3 = MyImmutable2()
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -242,6 +246,7 @@ end
 @write fid empty_tup
 @write fid nonpointerfree_immutable_1
 @write fid nonpointerfree_immutable_2
+@write fid nonpointerfree_immutable_3
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -325,6 +330,7 @@ for mmap = (true, false)
     @check fidr empty_tup
     @check fidr nonpointerfree_immutable_1
     @check fidr nonpointerfree_immutable_2
+    @check fidr nonpointerfree_immutable_3
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}
