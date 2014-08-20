@@ -139,8 +139,6 @@ else
         isleaftype(T) && (!T.mutable || T.size == 0) && T.pointerfree ? h5type(parent, T, commit) : JLD_REF_TYPE
 end
 
-h5fieldtype(parent::JldGroup, x, commit::Bool) = h5fieldtype(file(parent), x)
-
 # Write an HDF5 datatype to the file
 function commit_datatype(parent::JldFile, dtype::HDF5Datatype, T::ANY)
     # Write to HDF5 file
@@ -367,7 +365,8 @@ function gen_jlconvert(typeinfo::JldTypeInfo, T::ANY)
         if T.size == 0
             @eval begin
                 jlconvert(::Type{$T}, ::JldFile, ::Ptr) = $T()
-                jlconvert!(::Ptr, ::Type{$T}, ::JldFile, ::Ptr) = nothing
+                jlconvert!(out::Ptr, ::Type{$T}, ::JldFile, ::Ptr) =
+                    unsafe_store!(convert(Ptr{Ptr{Void}}, out), pointer_from_objref($T()))
             end
         else
             @eval begin
@@ -519,7 +518,7 @@ h5datatype(parent::JldGroup, x) = h5datatype(file(parent), x)
 ## Get corresponding Julia type for a specific HDF5 type, and define
 ## jlconvert for that type.
 
-function reconstuct_type(parent::JldFile, dtype::HDF5Datatype, name::Symbol)
+function reconstruct_type(parent::JldFile, dtype::HDF5Datatype, name::Symbol)
     class_id = HDF5.h5t_get_class(dtype.id)
     if class_id == HDF5.H5T_OPAQUE
         if exists(dtype, "empty")
@@ -599,7 +598,7 @@ function jldatatype(parent::JldFile, dtype::HDF5Datatype)
         T = julia_type(typename)
         if T == UnsupportedType
             warn("type $typename not present in workspace; reconstructing")
-            T = reconstuct_type(parent, dtype, gensym(typename))
+            T = reconstruct_type(parent, dtype, gensym(typename))
         end
 
         if !(T in BUILTIN_TYPES)

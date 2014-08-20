@@ -76,9 +76,27 @@ sa_utf8 = [:α, :β]
 subarray = sub([1:5], 1:5)
 # Array of empty tuples (to test tuple type params)
 arr_empty_tuple = ()[]
-immutable EmptyType
-end
+immutable EmptyImmutable end
+emptyimmutable = EmptyImmutable()
+type EmptyType end
 emptytype = EmptyType()
+immutable EmptyII
+    x::EmptyImmutable
+end
+emptyii = EmptyII(EmptyImmutable())
+immutable EmptyIT
+    x::EmptyType
+end
+emptyit = EmptyIT(EmptyType())
+type EmptyTI
+    x::EmptyImmutable
+end
+emptyti = EmptyTI(EmptyImmutable())
+type EmptyTT
+    x::EmptyType
+end
+emptytt = EmptyTT(EmptyType())
+
 # Unicode type field names (#118)
 type MyUnicodeStruct☺{τ}
     α::τ
@@ -88,10 +106,24 @@ end
 unicodestruct☺ = MyUnicodeStruct☺{Float64}(1.0, -1.0)
 # Arrays of matrices (#131)
 array_of_matrices = Matrix{Int}[[1 2; 3 4], [5 6; 7 8]]
+# Tuple of arrays and bitstype
+tup = (1, 2, [1, 2], [1 2; 3 4], bt)
+# Empty tuple
+empty_tup = ()
+# Non-pointer-free immutable
+immutable MyImmutable{T}
+    x::Int
+    y::Vector{T}
+    z::Bool
+end
+nonpointerfree_immutable_1 = MyImmutable(1, [1., 2., 3.], false)
+nonpointerfree_immutable_2 = MyImmutable(2, {3., 4., 5.}, true)
 
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
+iseq(x::MyImmutable, y::MyImmutable) = (isequal(x.x, y.x) && isequal(x.y, y.y) && isequal(x.z, y.z))
+iseq(x::Union(EmptyTI, EmptyTT), y::Union(EmptyTI, EmptyTT)) = isequal(x.x, y.x)
 iseq(c1::Array{Base.Sys.CPUinfo}, c2::Array{Base.Sys.CPUinfo}) = length(c1) == length(c2) && all([iseq(c1[i], c2[i]) for i = 1:length(c1)])
 function iseq(c1::Base.Sys.CPUinfo, c2::Base.Sys.CPUinfo)
     for n in Base.Sys.CPUinfo.names
@@ -112,7 +144,8 @@ macro check(fid, sym)
                 rethrow(e)
             end
             if !iseq(tmp, $sym)
-                error("For ", $(string(sym)), ", read value does not agree with written value")
+                written = $sym
+                error("For ", $(string(sym)), ", read value $tmp does not agree with written value $written")
             end
             written_type = typeof($sym)
             if typeof(tmp) != written_type
@@ -197,9 +230,18 @@ end
 @write fid sa_utf8
 @write fid subarray
 @write fid arr_empty_tuple
+@write fid emptyimmutable
 @write fid emptytype
+@write fid emptyii
+@write fid emptyit
+@write fid emptyti
+@write fid emptytt
 @write fid unicodestruct☺
 @write fid array_of_matrices
+@write fid tup
+@write fid empty_tup
+@write fid nonpointerfree_immutable_1
+@write fid nonpointerfree_immutable_2
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -271,9 +313,18 @@ for mmap = (true, false)
     @check fidr sa_utf8
     @check fidr subarray
     @check fidr arr_empty_tuple
+    @check fidr emptyimmutable
     @check fidr emptytype
+    @check fidr emptyii
+    @check fidr emptyit
+    @check fidr emptyti
+    @check fidr emptytt
     @check fidr unicodestruct☺
     @check fidr array_of_matrices
+    @check fidr tup
+    @check fidr empty_tup
+    @check fidr nonpointerfree_immutable_1
+    @check fidr nonpointerfree_immutable_2
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}
@@ -403,6 +454,12 @@ type TestType5
 end
 type TestType6 end
 bitstype 8 TestType7
+immutable TestType8
+    a::TestType4
+    b::TestType5
+    c::TestType6
+    d::TestType7
+end
 
 jldopen(fn, "w") do file
     truncate_module_path(file, JLDTemp1)
@@ -413,6 +470,8 @@ jldopen(fn, "w") do file
     write(file, "x5", [TestType5(TestType4(i)) for i = 1:5])
     write(file, "x6", TestType6())
     write(file, "x7", reinterpret(TestType7, 0x77))
+    write(file, "x8", TestType8(TestType4(2), TestType5(TestType4(3)),
+                                TestType6(), reinterpret(TestType7, 0x12)))
 end
 end
 
@@ -439,4 +498,9 @@ jldopen(fn, "r") do file
     end
     @test typeof(read(file, "x6")).names == ()
     @test reinterpret(Uint8, read(file, "x7")) == 0x77
+    x = read(file, "x8")
+    @test x.a.x == 2
+    @test x.b.x.x == 3
+    @test typeof(x.c).names == ()
+    @test reinterpret(Uint8, x.d) == 0x12
 end

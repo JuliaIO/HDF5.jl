@@ -631,27 +631,7 @@ function write_compound(parent::Union(JldFile, JldGroup), name::ByteString, s,
 end
 
 ### Size, length, etc ###
-function size(dset::JldDataset)
-    if !exists(attrs(dset.plain), name_type_attr)
-        return size(dset.plain)
-    end
-    # Read the type
-    typename = a_read(dset.plain, name_type_attr)
-    if typename == "Tuple"
-        return size(dset.plain)
-    end
-    # Convert to Julia type
-    T = julia_type(typename)
-    if T == CompositeKind || T <: Associative || T == Expr
-        return ()
-    elseif T <: Complex
-        return ()
-    elseif isarraycomplex(T)
-        sz = size(dset.plain)
-        return sz[2:end]
-    end
-    size(dset.plain)
-end
+size(dset::JldDataset) = size(dset.plain)
 length(dset::JldDataset) = prod(size(dset))
 endof(dset::JldDataset) = length(dset)
 
