@@ -39,10 +39,11 @@ type JldFile <: HDF5.DataFile
     toclose::Bool
     writeheader::Bool
     mmaparrays::Bool
+    objectrefs::ObjectIdDict
 
     function JldFile(plain::HDF5File, version::String=version_current, toclose::Bool=true,
-                     writeheader::Bool=false, mmaparrays::Bool=false)
-        f = new(plain, version, toclose, writeheader, mmaparrays)
+                     writeheader::Bool=false, mmaparrays::Bool=false, objectrefs::ObjectIdDict=ObjectIdDict())
+        f = new(plain, version, toclose, writeheader, mmaparrays, objectrefs)
         if toclose
             finalizer(f, close)
         end
@@ -475,12 +476,18 @@ function getrefs{T}(obj::JldDataset, ::Type{T})
     out = Array(T, size(refs))
     f = file(obj)
     for i = 1:length(refs)
-        if refs[i] != HDF5.HDF5ReferenceObj_NULL
-            ref = f[refs[i]]
-            try
-                out[i] = read(ref)
-            finally
-                close(ref)
+        prevobj = get(file(obj).objectrefs, refs[i], nothing)
+        if prevobj != nothing
+            out[i] = prevobj
+        else
+            if refs[i] != HDF5.HDF5ReferenceObj_NULL
+                ref = f[refs[i]]
+                try
+                    out[i] = read(ref)
+                    file(obj).objectrefs[refs[i]] = out[i]
+                finally
+                    close(ref)
+                end
             end
         end
     end
@@ -638,16 +645,24 @@ function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Arra
         nd = 1
         for i = 1:length(data)
             if isdefined(data, i)
-                if ndigits(i) > nd
-                    nd = ndigits(i)
-                    z = z[1:end-1]
+                # If the data have already been written, use the previous ref
+                prevref = get(file(parent).objectrefs, data[i], nothing)
+                if prevref != nothing
+                    refs[i] = prevref
+                else
+                    if ndigits(i) > nd
+                        nd = ndigits(i)
+                        z = z[1:end-1]
+                    end
+                    itemname = z*string(i)
+                    write(gref, itemname, data[i])
+                    # Extract references
+                    # tmp = gref[itemname]
+                    tmp = g_open(file(parent), pathrefs)
+                    refs[i] = HDF5ReferenceObj(tmp.plain, grefname*"/"*itemname)
+                    close(tmp)
+                    file(parent).objectrefs[data[i]] = refs[i]
                 end
-                itemname = z*string(i)
-                write(gref, itemname, data[i])
-                # Extract references
-                tmp = gref[itemname]
-                refs[i] = HDF5ReferenceObj(tmp.plain, grefname*"/"*itemname)
-                close(tmp)
             else
                 refs[i] = HDF5.HDF5ReferenceObj_NULL
             end
