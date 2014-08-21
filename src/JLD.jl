@@ -295,7 +295,6 @@ function read(parent::Union(JldFile, JldGroup), name::ByteString)
 end
 read(parent::Union(JldFile,JldGroup), name::Symbol) = read(parent,bytestring(string(name)))
 
-# read and readsafely differ only in how they handle CompositeKind
 function read(obj::JldDataset)
     dtype = datatype(obj.plain)
     dspace_id = HDF5.h5d_get_space(obj.plain)
@@ -410,12 +409,17 @@ end
 
 # Read a reference
 function read_ref(f::JldFile, ref::HDF5ReferenceObj)
+    haskey(f.jlref, ref) && return f.jlref[ref].value
+
     dset = f[ref]
-    try
-        return read(dset)
+    data = try
+        read(dset)
     finally
         close(dset)
     end
+
+    f.jlref[ref] = WeakRef(data)
+    data
 end
 function getrefs{T}(obj::JldDataset, ::Type{T})
     refs = read(obj.plain, Array{HDF5ReferenceObj})
