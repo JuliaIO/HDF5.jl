@@ -9,13 +9,6 @@ import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
 import Base: length, endof, show, done, next, start, delete!
 
-if !isdefined(:setfield!)
-    const setfield! = setfield
-end
-if !isdefined(:read!)
-    const read! = read
-end
-
 const magic_base = "Julia data file (HDF5), version "
 const version_current = v"0.1"
 const pathrefs = "/_refs"

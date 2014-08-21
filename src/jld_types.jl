@@ -68,9 +68,10 @@ Base.convert(::Type{HDF5.Hid}, x::JldDatatype) = x.dtype.id
 
 ## Serialization of datatypes to JLD
 ##
-## h5fieldtype - gets the JldDatatype corresponding to a field of the
-## given Julia type. This may be either a numeric type, a string type,
-## an opaque type, a compound type, or a reference.
+## h5fieldtype - gets the JldDatatype corresponding to a given
+## Julia type, when the Julia type is stored as an element of an HDF5
+## compound type or array. This is the only function that can operate
+## on non-leaf types.
 ##
 ## h5type - gets the JldDatatype corresponding to an object of the
 ## given Julia type. For pointerfree types, this is usually the same as
