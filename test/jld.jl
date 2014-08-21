@@ -136,6 +136,12 @@ type ObjRefType
 end
 ref1 = ObjRefType()
 obj_ref = ObjRefType(ObjRefType(ref1, ref1), ObjRefType(ref1, ref1))
+# Immutable that requires padding between elements in array
+immutable PaddingTest
+    x::Int64
+    y::Int8
+end
+padding_test = PaddingTest[PaddingTest(i, i) for i = 1:8]
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -262,6 +268,7 @@ end
 @write fid nonpointerfree_immutable_3
 @write fid arr_ref
 @write fid obj_ref
+@write fid padding_test
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -346,12 +353,16 @@ for mmap = (true, false)
     @check fidr nonpointerfree_immutable_1
     @check fidr nonpointerfree_immutable_2
     @check fidr nonpointerfree_immutable_3
+
     arr = read(fidr, "arr_ref")
     @test arr == arr_ref
     @test arr[1] === arr[2]
+
     obj = read(fidr, "obj_ref")
     @test obj.x.x === obj.x.y == obj.y.x === obj.y.y
     @test obj.x !== obj.y
+
+    @check fidr padding_test
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}
