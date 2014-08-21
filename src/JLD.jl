@@ -564,7 +564,7 @@ function write_ref(parent::JldFile, data, wsession::JldWriteSession)
     # Write an new reference
     gref = get_gref(parent)
     name = @sprintf "%08d" (parent.nrefs += 1)
-    write(gref, name, data)
+    write(gref, name, data, wsession)
 
     # Add reference to reference list
     ref = HDF5ReferenceObj(gref.plain, name)
@@ -579,7 +579,7 @@ write_ref(parent::JldGroup, data, wsession::JldWriteSession) =
 
 # Special case for associative, to rehash keys
 function write(parent::Union(JldFile, JldGroup), name::ByteString, d::Associative,
-               wsession::JldWriteSession)
+               wsession::JldWriteSession=JldWriteSession())
     n = length(d)
     K, V = eltype(d)
     ks = Array(K, n)
@@ -605,14 +605,13 @@ function write(parent::Union(JldFile, JldGroup), name::ByteString, ex::Expr,
     end
     newex = Expr(ex.head)
     newex.args = args[keep]
-    close(write_compound(parent, name, newex, wsession))
+    write_compound(parent, name, newex, wsession)
 end
 
 # Generic (tuples, immutables, and compound types)
 write(parent::Union(JldFile, JldGroup), name::ByteString, s,
       wsession::JldWriteSession=JldWriteSession()) =
-    close(write_compound(parent, name, s, wsession))
-
+    write_compound(parent, name, s, wsession)
 function write_compound(parent::Union(JldFile, JldGroup), name::ByteString, s,
                         wsession::JldWriteSession)
     T = typeof(s)
@@ -629,10 +628,9 @@ function write_compound(parent::Union(JldFile, JldGroup), name::ByteString, s,
         try
             #HDF5.h5d_write(dset.id, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, buf)
             HDF5.writearray(dset, dtype.dtype.id, buf)
-        catch
+        finally
             close(dset)
         end
-        return dset
     finally
         close(dspace)
     end
