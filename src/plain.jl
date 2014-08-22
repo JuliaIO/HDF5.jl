@@ -210,7 +210,10 @@ const H5T_NATIVE_INT64    = read_const(:H5T_NATIVE_INT64_g)
 const H5T_NATIVE_UINT64   = read_const(:H5T_NATIVE_UINT64_g)
 const H5T_NATIVE_FLOAT    = read_const(:H5T_NATIVE_FLOAT_g)
 const H5T_NATIVE_DOUBLE   = read_const(:H5T_NATIVE_DOUBLE_g)
-
+# Library versions
+const H5F_LIBVER_EARLIEST = 0
+const H5F_LIBVER_18 = 1
+const H5F_LIBVER_LATEST = 1
 
 ## Conversion between Julia types and HDF5 atomic types
 hdf5_type_id(::Type{Int8})       = H5T_NATIVE_INT8
@@ -689,30 +692,10 @@ function split1(path::ByteString)
     end
 end
 
-# Create objects
-function parents_create(parent::Union(HDF5File, HDF5Group), path::ByteString)
-   '/' in path || return tuple(parent.id, path)
-    g = split(path, "/")
-    if isempty(g[1])
-        g[1] = oftype(path, "/")
-    end
-    keepflag = Bool[!isempty(x) for x in g]
-    g = g[keepflag]   # NOTE: performance bottleneck up to here; find a better way
-    for i = 1:length(g)-1
-        gstr = ascii(g[i])
-        if !exists(parent, gstr)
-            g_create(parent, gstr)
-        end
-        parent = g_open(parent, gstr)
-    end
-    tuple(parent.id, bytestring(g[end]))
-end
-
 function g_create(parent::Union(HDF5File, HDF5Group), path::ByteString,
                   lcpl::HDF5Properties=_link_properties(path),
                   dcpl::HDF5Properties=DEFAULT_PROPERTIES)
-    (parent_id, leafpath) = parents_create(checkvalid(parent), path)
-    HDF5Group(h5g_create(parent_id, leafpath, lcpl.id, dcpl.id), file(parent))
+    HDF5Group(h5g_create(checkvalid(parent).id, path, lcpl.id, dcpl.id), file(parent))
 end
 function g_create(f::Function, parent::Union(HDF5File, HDF5Group), args...)
     g = g_create(parent, args...)
@@ -727,9 +710,8 @@ function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::H
          dspace::HDF5Dataspace, lcpl::HDF5Properties=_link_properties(path),
          dcpl::HDF5Properties=DEFAULT_PROPERTIES,
          dapl::HDF5Properties=DEFAULT_PROPERTIES)
-    (parent_id, leafpath) = parents_create(checkvalid(parent), path)
-    HDF5Dataset(h5d_create(parent_id, leafpath, dtype.id, dspace.id, lcpl.id, dcpl.id, dapl.id),
-                file(parent))
+    HDF5Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, lcpl.id,
+                dcpl.id, dapl.id), file(parent))
 end
 
 # Setting dset creation properties with name/value pairs
@@ -746,10 +728,7 @@ function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::H
         end
         p[thisname] = pv[i+1]
     end
-    lcpl = p_create(H5P_LINK_CREATE)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    (parent_id, leafpath) = parents_create(checkvalid(parent), path)
-    HDF5Dataset(h5d_create(parent_id, leafpath, dtype.id, dspace.id, lcpl, p.id, H5P_DEFAULT), file(parent))
+    HDF5Dataset(h5d_create(parent, path, dtype.id, dspace.id, _link_properties(path), p.id, H5P_DEFAULT), file(parent))
 end
 d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace_dims::Dims, prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims), prop1, val1, pv...)
 d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace_dims::(Dims,Dims), prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]), prop1, val1, pv...)
@@ -1327,7 +1306,7 @@ read(attr::HDF5Attributes, name::ByteString) = a_read(attr.parent, name)
 function iscontiguous(obj::HDF5Dataset)
     prop = h5d_get_create_plist(checkvalid(obj).id)
     try
-        h5p_get_layout(prop) != H5D_CHUNKED
+        h5p_get_layout(prop) == H5D_CONTIGUOUS
     finally
         h5p_close(prop)
     end
@@ -1817,10 +1796,13 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5p_get_userblock, :H5Pget_userblock, Herr, (Hid, Ptr{Hsize}), (:plist_id, :len), "Error getting userblock"),
      (:h5p_set_char_encoding, :H5Pset_char_encoding, Herr, (Hid, Cint), (:plist_id, :encoding), "Error setting char encoding"),
      (:h5p_set_chunk, :H5Pset_chunk, Herr, (Hid, Cint, Ptr{Hsize}), (:plist_id, :ndims, :dims), "Error setting chunk size"),
+     (:h5p_set_create_intermediate_group, :H5Pset_create_intermediate_group, Herr, (Hid, Cuint), (:plist_id, :setting), "Error setting create intermediate group"),
      (:h5p_set_external, :H5Pset_external, Herr, (Hid, Ptr{Uint8}, Int, Csize_t), (:plist_id, :name, :offset, :size), "Error setting external property"),
      (:h5p_set_fclose_degree, :H5Pset_fclose_degree, Herr, (Hid, Cint), (:plist_id, :fc_degree), "Error setting close degree"),
      (:h5p_set_deflate, :H5Pset_deflate, Herr, (Hid, Cuint), (:plist_id, :setting), "Error setting compression method and level (deflate)"),
      (:h5p_set_layout, :H5Pset_layout, Herr, (Hid, Cint), (:plist_id, :setting), "Error setting layout"),
+     (:h5p_set_libver_bounds, :H5Pset_libver_bounds, Herr, (Hid, Cint, Cint), (:fapl_id, :libver_low, :libver_high), "Error setting library version bounds"),
+     (:h5p_set_local_heap_size_hint, :H5Pset_local_heap_size_hint, Herr, (Hid, Cuint), (:fapl_id, :size_hint), "Error setting local heap size hint"),
      (:h5p_set_userblock, :H5Pset_userblock, Herr, (Hid, Hsize), (:plist_id, :len), "Error setting userblock"),
      (:h5s_close, :H5Sclose, Herr, (Hid,), (:space_id,), "Error closing dataspace"),
      (:h5s_select_hyperslab, :H5Sselect_hyperslab, Herr, (Hid, Cint, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}), (:dspace_id, :seloper, :start, :stride, :count, :block), "Error selecting hyperslab"),
@@ -2085,9 +2067,11 @@ end
 
 const ASCII_LINK_PROPERTIES = p_create(H5P_LINK_CREATE)
 h5p_set_char_encoding(ASCII_LINK_PROPERTIES.id, cset(ASCIIString))
+h5p_set_create_intermediate_group(ASCII_LINK_PROPERTIES.id, 1)
 _link_properties(path::ASCIIString) = ASCII_LINK_PROPERTIES
 const UTF8_LINK_PROPERTIES = p_create(H5P_LINK_CREATE)
 h5p_set_char_encoding(UTF8_LINK_PROPERTIES.id, cset(UTF8String))
+h5p_set_create_intermediate_group(UTF8_LINK_PROPERTIES.id, 1)
 _link_properties(path::UTF8String) = UTF8_LINK_PROPERTIES
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT)
 

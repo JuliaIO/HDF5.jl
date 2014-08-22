@@ -58,7 +58,7 @@ type JldFile <: HDF5.DataFile
                      writeheader::Bool=false, mmaparrays::Bool=false)
         f = new(plain, version, toclose, writeheader, mmaparrays,
                 Dict{HDF5Datatype,Type}(), Dict{Type,HDF5Datatype}(),
-                Dict{HDF5ReferenceObj,WeakRef}(), Array(ByteString, 0))
+                Dict{HDF5ReferenceObj,WeakRef}(), ByteString[])
         if toclose
             finalizer(f, close)
         end
@@ -126,6 +126,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
     end
     version = version_current
     pa = p_create(HDF5.H5P_FILE_ACCESS)
+    # HDF5.h5p_set_libver_bounds(pa, HDF5.H5F_LIBVER_18, HDF5.H5F_LIBVER_18)
     try
         pa["fclose_degree"] = HDF5.H5F_CLOSE_STRONG
         if cr && (tr || !isfile(filename))
@@ -444,47 +445,56 @@ end
 
 ### Writing ###
 
+write(parent::Union(JldFile, JldGroup), name::ByteString,
+      data, wsession::JldWriteSession=JldWriteSession()) =
+    close(_write(parent, name, data, wsession))
+
+# Pick whether to use compact or default storage based on data size
+const COMPACT_PROPERTIES = p_create(HDF5.H5P_DATASET_CREATE)
+HDF5.h5p_set_layout(COMPACT_PROPERTIES.id, HDF5.H5D_COMPACT)
+dset_create_properties(sz::Int) =
+    sz <= 8192 ? COMPACT_PROPERTIES : HDF5.DEFAULT_PROPERTIES
+
 # Write "basic" types
-function write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ByteString,
-                                                   data::Union(T, Array{T}))
+function _write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup),
+                                                    name::ByteString,
+                                                    data::Union(T, Array{T}),
+                                                    wsession::JldWriteSession)
     # Create the dataset
-    dset, dtype = d_create(parent.plain, name, data)
+    dset, dtype = d_create(parent.plain, bytestring(name), data, HDF5._link_properties(name),
+                           dset_create_properties(sizeof(data)))
     try
         # Write the attribute
         isa(data, Array) && isempty(data) && a_write(dset, "dims", [size(data)...])
         # Write the data
         HDF5.writearray(dset, dtype.id, data)
     finally
-        close(dset)
         close(dtype)
     end
+    dset
 end
-write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup), name::ByteString,
-                                          data::Union(T, Array{T}), wsession::JldWriteSession) =
-    write(parent, name, data)
 
 # General array types
-function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T},
-                  wsession::JldWriteSession=JldWriteSession())
+function _write{T}(parent::Union(JldFile, JldGroup),
+                   path::ByteString, data::Array{T},
+                   wsession::JldWriteSession)
     f = file(parent)
     dtype = h5fieldtype(f, T, true)
     buf = h5convert_array(f, data, dtype, wsession)
     dims = convert(Array{HDF5.Hsize, 1}, [reverse(size(data))...])
     dspace = dataspace(data)
     try
-        dset = d_create(parent.plain, path, dtype.dtype, dspace)
-        try
-            if dtype == JLD_REF_TYPE
-                a_write(dset, "julia eltype", full_typename(f, T))
-            end
-            if isempty(data) && ndims(data) != 0
-                a_write(dset, "dims", [size(data)...])
-            else
-                HDF5.writearray(dset, dtype.dtype.id, buf)
-            end
-        finally
-            close(dset)
+        dset = d_create(parent.plain, path, dtype.dtype, dspace, HDF5._link_properties(path),
+                        dset_create_properties(sizeof(buf)))
+        if dtype == JLD_REF_TYPE
+            a_write(dset, "julia eltype", full_typename(f, T))
         end
+        if isempty(data) && ndims(data) != 1
+            a_write(dset, "dims", [size(data)...])
+        else
+            HDF5.writearray(dset, dtype.dtype.id, buf)
+        end
+        return dset
     finally
         close(dspace)
     end
@@ -547,12 +557,12 @@ function write_ref(parent::JldFile, data, wsession::JldWriteSession)
     # Write an new reference
     gref = get_gref(parent)
     name = @sprintf "%08d" (parent.nrefs += 1)
-    write(gref, name, data, wsession)
+    dset = _write(gref, name, data, wsession)
 
     # Add reference to reference list
-    ref = HDF5ReferenceObj(gref.plain, name)
+    ref = HDF5ReferenceObj(HDF5.objinfo(dset).addr)
+    close(dset)
     if !isa(data, Tuple) && typeof(data).mutable
-        parent.jlref[ref] = WeakRef(data)
         wsession.h5ref[data] = ref
     end
     ref
@@ -561,8 +571,8 @@ write_ref(parent::JldGroup, data, wsession::JldWriteSession) =
     write_ref(file(parent), data, wsession)
 
 # Special case for associative, to rehash keys
-function write(parent::Union(JldFile, JldGroup), name::ByteString, d::Associative,
-               wsession::JldWriteSession=JldWriteSession())
+function _write(parent::Union(JldFile, JldGroup), name::ByteString,
+                d::Associative, wsession::JldWriteSession)
     n = length(d)
     K, V = eltype(d)
     ks = Array(K, n)
@@ -572,12 +582,13 @@ function write(parent::Union(JldFile, JldGroup), name::ByteString, d::Associativ
         ks[i+=1] = k
         vs[i] = v
     end
-    write(parent, name, AssociativeWrapper{K,V,typeof(d)}(ks, vs), wsession)
+    write_compound(parent, name, AssociativeWrapper{K,V,typeof(d)}(ks, vs), wsession)
 end
 
 # Expressions, drop line numbers
-function write(parent::Union(JldFile, JldGroup), name::ByteString, ex::Expr,
-               wsession::JldWriteSession=JldWriteSession())
+function _write(parent::Union(JldFile, JldGroup),
+                name::ByteString, ex::Expr,
+                wsession::JldWriteSession)
     args = ex.args
     # Discard "line" expressions
     keep = trues(length(args))
@@ -592,11 +603,11 @@ function write(parent::Union(JldFile, JldGroup), name::ByteString, ex::Expr,
 end
 
 # Generic (tuples, immutables, and compound types)
-write(parent::Union(JldFile, JldGroup), name::ByteString, s,
-      wsession::JldWriteSession=JldWriteSession()) =
+_write(parent::Union(JldFile, JldGroup), name::ByteString, s,
+      wsession::JldWriteSession) =
     write_compound(parent, name, s, wsession)
-function write_compound(parent::Union(JldFile, JldGroup), name::ByteString, s,
-                        wsession::JldWriteSession)
+function write_compound(parent::Union(JldFile, JldGroup), name::ByteString,
+                        s, wsession::JldWriteSession)
     T = typeof(s)
     f = file(parent)
     dtype = h5type(f, T, true)
@@ -607,12 +618,10 @@ function write_compound(parent::Union(JldFile, JldGroup), name::ByteString, s,
 
     dspace = HDF5Dataspace(HDF5.h5s_create(HDF5.H5S_SCALAR))
     try
-        dset = HDF5.d_create(parent.plain, name, dtype.dtype, dspace)
-        try
-            HDF5.writearray(dset, dtype.dtype.id, buf)
-        finally
-            close(dset)
-        end
+        dset = HDF5.d_create(parent.plain, name, dtype.dtype, dspace, HDF5._link_properties(name),
+                             dset_create_properties(length(buf)))
+        HDF5.writearray(dset, dtype.dtype.id, buf)
+        return dset
     finally
         close(dspace)
     end
