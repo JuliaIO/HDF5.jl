@@ -142,6 +142,11 @@ immutable PaddingTest
     y::Int8
 end
 padding_test = PaddingTest[PaddingTest(i, i) for i = 1:8]
+# Empty arrays of various types and sizes
+empty_arr_1 = Int[]
+empty_arr_2 = Array(Int, 56, 0)
+empty_arr_3 = {}
+empty_arr_4 = cell(0, 97)
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -269,6 +274,10 @@ end
 @write fid arr_ref
 @write fid obj_ref
 @write fid padding_test
+@write fid empty_arr_1
+@write fid empty_arr_2
+@write fid empty_arr_3
+@write fid empty_arr_4
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -363,6 +372,10 @@ for mmap = (true, false)
     @test obj.x !== obj.y
 
     @check fidr padding_test
+    @check fidr empty_arr_1
+    @check fidr empty_arr_2
+    @check fidr empty_arr_3
+    @check fidr empty_arr_4
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}
@@ -423,10 +436,20 @@ i106 = load(fn, "i106")
 jldopen(fn, "w") do file
     file["a"] = [1:100]
     file["b"] = [x*y for x=1:10,y=1:10]
+    file["c"] = {1, 2, 3}
+    file["d"] = [1//2, 1//4, 1//8]
 end
-jldopen(fn, "r") do file
-    @assert(file["a"][1:50] == [1:50])
-    @assert(file["b"][5,6][1]==5*6)
+jldopen(fn, "r+") do file
+    @test(file["a"][1:50] == [1:50])
+    file["a"][1:50] = 1:2:100
+    @test(file["a"][1:50] == [1:2:100])
+    @test(file["b"][5,6][1]==5*6)
+    @test(file["c"][1:2] == [1, 2])
+    file["c"][2:3] = [5, 7]
+    @test(read(file, "c") == [1, 5, 7])
+    @test(file["d"][2:3] == [1//4, 1//8])
+    file["d"][1:1] = [9]
+    @test(read(file, "d") == [9, 1//4, 1//8])
 end
 
 # bracket syntax when created by HDF5

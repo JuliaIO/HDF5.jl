@@ -297,35 +297,19 @@ function read(obj::JldDataset)
             # Scalar value
             return read_scalar(obj, dtype, jldatatype(file(obj), dtype))
         elseif extent_type == HDF5.H5S_SIMPLE
-            # Array of values
-            if HDF5.h5t_get_class(dtype) == HDF5.H5T_REFERENCE
-                typename = a_read(obj.plain, "julia eltype")
-                T2 = julia_type(typename)
-                if T2 == UnsupportedType
-                    warn("type $typename not present in workspace; interpreting array as Array{Any}")
-                    T2 = Any
-                end
-                return getrefs(obj, T2)
-            else
-                return read_array(obj, dtype, jldatatype(file(obj), dtype), dspace_id)
-            end
+            return read_array(obj, dtype, dspace_id, HDF5.H5S_ALL)
         elseif extent_type == HDF5.H5S_NULL
             # Empty array
             if HDF5.h5t_get_class(dtype) == HDF5.H5T_REFERENCE
-                typename = a_read(obj.plain, "julia eltype")
-                T3 = julia_type(typename)
-                if T3 == UnsupportedType
-                    warn("type $typename not present in workspace; interpreting array as Array{Any}")
-                    T3 = Any
-                end
+                T = refarray_eltype(obj)
             else
-                T3 = jldatatype(file(obj), dtype)
+                T = jldatatype(file(obj), dtype)
             end
             if exists(obj, "dims")
                 dims = a_read(obj.plain, "dims")
-                return Array(T3, dims...)
+                return Array(T, dims...)
             else
-                return T3[]
+                return T[]
             end
         end
     finally
@@ -333,6 +317,7 @@ function read(obj::JldDataset)
     end
 end
 
+## Scalars
 read_scalar{T<:BitsKindOrByteString}(obj::JldDataset, dtype::HDF5Datatype, ::Type{T}) =
     read(obj.plain, T)
 function read_scalar(obj::JldDataset, dtype::HDF5Datatype, T::Type)
@@ -341,25 +326,57 @@ function read_scalar(obj::JldDataset, dtype::HDF5Datatype, T::Type)
     return after_read(jlconvert(T, file(obj), pointer(buf)))
 end
 
-function read_array{T<:HDF5BitsKind}(obj::JldDataset, dtype::HDF5Datatype, ::Type{T}, dspace_id::HDF5.Hid)
-    if obj.file.mmaparrays && HDF5.iscontiguous(obj.plain)
+after_read(x) = x
+
+# Special case for associative, to rehash keys
+function after_read{K,V,T}(x::AssociativeWrapper{K,V,T})
+    ret = T()
+    keys = x.keys
+    values = x.values
+    n = length(keys)
+    if applicable(sizehint, ret, n)
+        sizehint(ret, n)
+    end
+    for i = 1:n
+        ret[keys[i]] = values[i]
+    end
+    ret
+end
+
+## Arrays
+
+# Read an array
+function read_array(obj::JldDataset, dtype::HDF5Datatype, dspace_id::HDF5.Hid, dsel_id::HDF5.Hid,
+                    dims::(Int...)=convert((Int...), HDF5.h5s_get_simple_extent_dims(dspace_id)[1]))
+    if HDF5.h5t_get_class(dtype) == HDF5.H5T_REFERENCE
+        return read_refs(obj, refarray_eltype(obj), dspace_id, dsel_id, dims)
+    else
+        return read_vals(obj, dtype, jldatatype(file(obj), dtype), dspace_id, dsel_id, dims)
+    end
+end
+
+# Arrays of basic HDF5 kinds
+function read_vals{T<:HDF5BitsKind}(obj::JldDataset, dtype::HDF5Datatype, ::Type{T},
+                                    dspace_id::HDF5.Hid, dsel_id::HDF5.Hid, dims::(Int...))
+    if obj.file.mmaparrays && HDF5.iscontiguous(obj.plain) && dsel_id == HDF5.H5S_ALL
         readmmap(obj.plain, Array{T})
     else
-        dims = convert((Int...), HDF5.h5s_get_simple_extent_dims(dspace_id)[1])
         out = Array(T, dims)
-        HDF5.readarray(obj.plain, dtype.id, out)
+        HDF5.h5d_read(obj.plain.id, dtype.id, dspace_id, dsel_id, HDF5.H5P_DEFAULT, out)
         out
     end
 end
-function read_array(obj::JldDataset, dtype::HDF5Datatype, T::Type, dspace_id::HDF5.Hid)
-    dims = convert((Int...), HDF5.h5s_get_simple_extent_dims(dspace_id)[1])
-    n = prod(dims)::Int
+
+# Arrays of immutables/bitstypes
+function read_vals(obj::JldDataset, dtype::HDF5Datatype, T::Type, dspace_id::HDF5.Hid,
+                   dsel_id::HDF5.Hid, dims::(Int...))
+    n = prod(dims)
     h5sz = sizeof(dtype)
     out = Array(T, dims)
 
     # Read from file
     buf = Array(Uint8, h5sz*n)
-    HDF5.readarray(obj.plain, dtype.id, buf)
+    HDF5.h5d_read(obj.plain.id, dtype.id, dspace_id, dsel_id, HDF5.H5P_DEFAULT, buf)
 
     f = file(obj)
     h5offset = pointer(buf)
@@ -383,24 +400,34 @@ function read_array(obj::JldDataset, dtype::HDF5Datatype, T::Type, dspace_id::HD
     out
 end
 
-after_read(x) = x
+# Arrays of references
+function read_refs{T}(obj::JldDataset, ::Type{T}, dspace_id::HDF5.Hid, dsel_id::HDF5.Hid,
+                      dims::(Int...))
+    refs = Array(HDF5ReferenceObj, dims)
+    HDF5.h5d_read(obj.plain.id, HDF5.H5T_STD_REF_OBJ, dspace_id, dsel_id, HDF5.H5P_DEFAULT, refs)
 
-# Special case for associative, to rehash keys
-function after_read{K,V,T}(x::AssociativeWrapper{K,V,T})
-    ret = T()
-    keys = x.keys
-    values = x.values
-    n = length(keys)
-    if applicable(sizehint, (ret, n))
-        sizehint(ret, n)
+    out = Array(T, dims)
+    f = file(obj)
+    for i = 1:length(refs)
+        if refs[i] != HDF5.HDF5ReferenceObj_NULL
+            out[i] = read_ref(f, refs[i])
+        end
     end
-    for i = 1:n
-        ret[keys[i]] = values[i]
-    end
-    ret
+    out
 end
 
-# Read a reference
+# Get element type of a reference array
+function refarray_eltype(obj::JldDataset)
+    typename = a_read(obj.plain, "julia eltype")
+    T = julia_type(typename)
+    if T == UnsupportedType
+        warn("type $typename not present in workspace; interpreting array as Array{Any}")
+        return Any
+    end
+    return T
+end
+
+## Reference
 function read_ref(f::JldFile, ref::HDF5ReferenceObj)
     haskey(f.jlref, ref) && return f.jlref[ref].value
 
@@ -413,43 +440,6 @@ function read_ref(f::JldFile, ref::HDF5ReferenceObj)
 
     f.jlref[ref] = WeakRef(data)
     data
-end
-function getrefs{T}(obj::JldDataset, ::Type{T})
-    refs = read(obj.plain, Array{HDF5ReferenceObj})
-    out = Array(T, size(refs))
-    f = file(obj)
-    for i = 1:length(refs)
-        if refs[i] != HDF5.HDF5ReferenceObj_NULL
-            out[i] = read_ref(f, refs[i])
-        end
-    end
-    return out
-end
-function getrefs{T}(obj::JldDataset, ::Type{T}, indices::Union(Integer, AbstractVector)...)
-    refs = read(obj.plain, Array{HDF5ReferenceObj})
-    refs = refs[indices...]
-    f = file(obj)
-    local out
-    if isa(refs, HDF5ReferenceObj)
-        # This is a scalar, not an array
-        ref = f[refs]
-        try
-            out = read(ref)
-        finally
-            close(ref)
-        end
-    else
-        out = Array(T, size(refs))
-        for i = 1:length(refs)
-            ref = f[refs[i]]
-            try
-                out[i] = read(ref)
-            finally
-                close(ref)
-            end
-        end
-    end
-    return out
 end
 
 ### Writing ###
@@ -478,55 +468,16 @@ function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Arra
                   wsession::JldWriteSession=JldWriteSession())
     f = file(parent)
     dtype = h5fieldtype(f, T, true)
-    if dtype == JLD_REF_TYPE
-        # Write as references
-        refs = Array(HDF5ReferenceObj, size(data))
-        for i = 1:length(data)
-            if isdefined(data, i)
-                refs[i] = write_ref(f, data[i], wsession)
-            else
-                refs[i] = HDF5.HDF5ReferenceObj_NULL
-            end
-        end
-        dset, reftype = d_create(parent.plain, path, refs)
-        a_write(dset, "julia eltype", full_typename(f, T))
-        try
-            if isempty(data)
-                a_write(dset, "dims", [size(data)...])
-            else
-                HDF5.writearray(dset, reftype.id, refs)
-            end
-        finally
-            close(reftype)
-            close(dset)
-        end
-    else
-        gen_h5convert(f, eltype(data))
-        write_vals(parent, path, data, dtype, wsession)
-    end
-end
-
-# Write as individual values
-# Split into a separate function to avoid dynamic dispatch because
-# h5convert! may be defined by h5fieldtype
-function write_vals{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T},
-                       dtype::JldDatatype, wsession::JldWriteSession)
-    f = file(parent)
-    sz = HDF5.h5t_get_size(dtype)
-    n = length(data)
-    buf = Array(Uint8, sz*n)
-    offset = pointer(buf)
-    for i = 1:n
-        h5convert!(offset, f, data[i], wsession)
-        offset += sz
-    end
-
+    buf = h5convert_array(f, data, dtype, wsession)
     dims = convert(Array{HDF5.Hsize, 1}, [reverse(size(data))...])
     dspace = dataspace(data)
     try
         dset = d_create(parent.plain, path, dtype.dtype, dspace)
         try
-            if isempty(data)
+            if dtype == JLD_REF_TYPE
+                a_write(dset, "julia eltype", full_typename(f, T))
+            end
+            if isempty(data) && ndims(data) != 0
                 a_write(dset, "dims", [size(data)...])
             else
                 HDF5.writearray(dset, dtype.dtype.id, buf)
@@ -537,6 +488,41 @@ function write_vals{T}(parent::Union(JldFile, JldGroup), path::ByteString, data:
     finally
         close(dspace)
     end
+end
+
+# Convert an array to the format to be written to the HDF5 file, either
+# references or values
+function h5convert_array(f::JldFile, data::Array,
+                         dtype::JldDatatype, wsession::JldWriteSession)
+    if dtype == JLD_REF_TYPE
+        refs = Array(HDF5ReferenceObj, length(data))
+        for i = 1:length(data)
+            if isdefined(data, i)
+                refs[i] = write_ref(f, data[i], wsession)
+            else
+                refs[i] = HDF5.HDF5ReferenceObj_NULL
+            end
+        end
+        reinterpret(Uint8, refs) # for type stability
+    else
+        gen_h5convert(f, eltype(data))
+        h5convert_vals(f, data, dtype, wsession)
+    end
+end
+
+# Convert an array of immutables or bitstypes to a buffer representing
+# HDF5 compound objects. A separate function so that it is specialized.
+function h5convert_vals(f::JldFile, data::Array,
+                        dtype::JldDatatype, wsession::JldWriteSession)
+    sz = HDF5.h5t_get_size(dtype)
+    n = length(data)
+    buf = Array(Uint8, sz*n)
+    offset = pointer(buf)
+    for i = 1:n
+        h5convert!(offset, f, data[i], wsession)
+        offset += sz
+    end
+    buf
 end
 
 # Get reference group, creating a new one if necessary
@@ -623,7 +609,6 @@ function write_compound(parent::Union(JldFile, JldGroup), name::ByteString, s,
     try
         dset = HDF5.d_create(parent.plain, name, dtype.dtype, dspace)
         try
-            #HDF5.h5d_write(dset.id, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, buf)
             HDF5.writearray(dset, dtype.dtype.id, buf)
         finally
             close(dset)
@@ -638,85 +623,56 @@ size(dset::JldDataset) = size(dset.plain)
 length(dset::JldDataset) = prod(size(dset))
 endof(dset::JldDataset) = length(dset)
 
-isarraycomplex{T<:Complex, N}(::Type{Array{T, N}}) = true
-isarraycomplex(t) = false
-
 ### Read/write via getindex/setindex! ###
 function getindex(dset::JldDataset, indices::Union(Integer, RangeIndex)...)
-    if !exists(attrs(dset.plain), name_type_attr)
-        # Fallback to plain read
-        return getindex(dset.plain, indices...)
+    sz = map(length, indices)
+    dsel_id = HDF5.hyperslab(dset.plain, indices...)
+    try
+        dspace = HDF5._dataspace(sz)
+        try
+            return read_array(dset, datatype(dset.plain), dspace.id, dsel_id, sz)
+        finally
+            close(dspace)
+        end
+    finally
+        HDF5.h5s_close(dsel_id)
     end
-    # Read the type
-    typename = a_read(dset.plain, name_type_attr)
-    if typename == "Tuple"
-        return read_tuple(dset, indices...)
-    end
-    # Convert to Julia type
-    T = julia_type(typename)
-    _getindex(dset, T, indices...)
 end
 
-_getindex{T<:HDF5BitsKind,N}(dset::JldDataset, ::Type{Array{T,N}}, indices::RangeIndex...) = HDF5._getindex(dset.plain, T, indices...)
-function _getindex{T<:Complex,N}(dset::JldDataset, ::Type{Array{T,N}}, indices::RangeIndex...)
-    reinterpret(T, HDF5._getindex(dset.plain, realtype(T), 1:2, indices...), ntuple(length(indices), i->length(indices[i])))
-end
-function _getindex{N}(dset::JldDataset, ::Type{Array{Bool,N}}, indices::RangeIndex...)
-    tf = HDF5._getindex(dset.plain, Uint8, indices...)
-    bool(tf)
-end
-_getindex{T,N}(dset::JldDataset, ::Type{Array{T,N}}, indices::Union(Integer, RangeIndex)...) = getrefs(dset, T, indices...)
-function setindex!(dset::JldDataset, X::Array, indices::RangeIndex...)
-    if !exists(attrs(dset.plain), name_type_attr)
-        # Fallback to plain read
-        return setindex!(dset.plain, X, indices...)
+function setindex!{T,N}(dset::JldDataset, X::AbstractArray{T,N}, indices::RangeIndex...)
+    f = file(dset)
+    sz = map(length, indices)
+    dsel_id = HDF5.hyperslab(dset.plain, indices...)
+    try
+        dtype = datatype(dset.plain)
+        try
+            # Convert array to writeable buffer
+            if HDF5.h5t_get_class(dtype) == HDF5.H5T_REFERENCE
+                written_eltype = refarray_eltype(dset)
+                jldtype = JLD_REF_TYPE
+            else
+                written_eltype = jldatatype(f, dtype)
+                jldtype = JldDatatype(dtype, -1)
+            end
+
+            buf = h5convert_array(f, convert(Array{written_eltype,N}, X), jldtype,
+                                  JldWriteSession())
+
+            dspace = HDF5._dataspace(sz)
+            try
+                HDF5.h5d_write(dset.plain.id, dtype, dspace, dsel_id, HDF5.H5P_DEFAULT, buf)
+            finally
+                close(dspace)
+            end
+        finally
+            close(dtype)
+        end
+    finally
+        HDF5.h5s_close(dsel_id)
     end
-    # Read the type
-    typename = a_read(dset.plain, name_type_attr)
-    if typename == "Tuple"
-        return read_tuple(dset, indices...)
-    end
-    # Convert to Julia type
-    T = julia_type(typename)
-    HDF5._setindex!(dset, T, X, indices...)
 end
 
 length(x::Union(JldFile, JldGroup)) = length(names(x))
-
-### Dump ###
-function dump(io::IO, parent::Union(JldFile, JldGroup), n::Int, indent)
-    nms = names(parent)
-    println(io, typeof(parent), " len ", length(nms))
-    if n > 0
-        i = 1
-        for k in nms
-            print(io, indent, "  ", k, ": ")
-            v = parent[k]
-            if isa(v, HDF5Group)
-                dump(io, v, n-1, string(indent, "  "))
-            else
-                if exists(attrs(v.plain), name_type_attr)
-                    typename = a_read(v.plain, name_type_attr)
-                    if length(typename) >= 5 && (typename[1:5] == "Array" || typename[1:5] == "Tuple")
-                        println(io, typename, " ", size(v))
-                    else
-                        println(io, typename)
-                    end
-                else
-                    dump(io, v, 1, indent)
-                end
-            end
-            close(v)
-            if i > n
-                println(io, indent, "  ...")
-                break
-            end
-            i += 1
-        end
-    end
-end
-
-
 
 ### Converting attribute strings to Julia types
 

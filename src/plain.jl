@@ -133,10 +133,10 @@ const H5R_DATASET_REGION = 1
 const H5R_OBJ_REF_BUF_SIZE      = 8
 const H5R_DSET_REG_REF_BUF_SIZE = 12
 # Dataspace constants
-const H5S_ALL          = 0
-const H5S_SCALAR       = 0
-const H5S_SIMPLE       = 1
-const H5S_NULL         = 2
+const H5S_ALL          = convert(Hid, 0)
+const H5S_SCALAR       = convert(Hid, 0)
+const H5S_SIMPLE       = convert(Hid, 1)
+const H5S_NULL         = convert(Hid, 2)
 const H5S_UNLIMITED    = typemax(Hsize)
 const MAXIMUM_DIM = H5S_UNLIMITED
 # Dataspace selection constants
