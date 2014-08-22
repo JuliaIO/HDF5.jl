@@ -385,6 +385,27 @@ for mmap = (true, false)
     close(fidr)
 end
 
+# object references in a write session
+x = ObjRefType()
+a = [x, x]
+b = [x, x]
+@save fn a b
+jldopen(fn, "r") do fid
+    a = read(fid, "a")
+    b = read(fid, "b")
+    @test a[1] === a[2] === b[2] === a[1]
+
+    # Let gc get rid of a and b
+    a = nothing
+    b = nothing
+    gc()
+
+    a = read(fid, "a")
+    b = read(fid, "b")
+    @test typeof(a[1]) == ObjRefType
+    @test a[1] === a[2] === b[2] === a[1]
+end
+
 # do syntax
 jldopen(fn, "w") do fid
     g_create(fid, "mygroup") do g

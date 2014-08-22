@@ -430,7 +430,11 @@ end
 
 ## Reference
 function read_ref(f::JldFile, ref::HDF5ReferenceObj)
-    haskey(f.jlref, ref) && return f.jlref[ref].value
+    if haskey(f.jlref, ref)
+        # Stored as WeakRefs and may no longer exist
+        val = f.jlref[ref].value
+        val != nothing && return val
+    end
 
     dset = f[ref]
     data = try
