@@ -389,8 +389,8 @@ function _gen_jlconvert_immutable(typeinfo::JldTypeInfo, T::ANY)
             # true, but not by Julia
             obj = gensym("obj")
             push!(args, quote
-                obj = jlconvert($(T.types[i]), file, ptr+$h5offset)
-                unsafe_store!(convert(Ptr{Ptr{Void}}, out)+$jloffset, pointer_from_objref(obj))
+                $obj = jlconvert($(T.types[i]), file, ptr+$h5offset)
+                unsafe_store!(convert(Ptr{Ptr{Void}}, out)+$jloffset, pointer_from_objref($obj))
             end)
         else
             push!(args, :(jlconvert!(out+$jloffset, $(T.types[i]), file, ptr+$h5offset)))
