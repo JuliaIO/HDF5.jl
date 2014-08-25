@@ -450,12 +450,12 @@ end
 # Issue #106
 module Mod106
 bitstype 64 Typ{T}
-typ{T}(x::Int, ::Type{T}) = Base.box(Typ{T}, Base.unbox(Int,x))
+typ{T}(x::Int64, ::Type{T}) = Base.box(Typ{T}, Base.unbox(Int64,int64(x)))
 abstract UnexportedT
 end
-save(fn, "i106", Mod106.typ(1, Mod106.UnexportedT))
+save(fn, "i106", Mod106.typ(int64(1), Mod106.UnexportedT))
 i106 = load(fn, "i106")
-@assert i106 == Mod106.typ(1, Mod106.UnexportedT)
+@assert i106 == Mod106.typ(int64(1), Mod106.UnexportedT)
 
 # bracket syntax for datasets
 jldopen(fn, "w") do file
