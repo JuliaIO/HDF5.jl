@@ -9,10 +9,8 @@ Aarray = Vector{Float64}[[1.2,1.3],[2.2,2.3,2.4]]
 str = "Hello"
 stringsA = ASCIIString["It", "was", "a", "dark", "and", "stormy", "night"]
 stringsU = UTF8String["It", "was", "a", "dark", "and", "stormy", "night"]
-if VERSION >= v"0.3-"
-    strings16 = convert(Array{UTF16String}, stringsA)
-    strings16_2d = reshape(strings16[1:6], (2,3))
-end
+strings16 = convert(Array{UTF16String}, stringsA)
+strings16_2d = reshape(strings16[1:6], (2,3))
 empty_string = ""
 empty_string_array = ASCIIString[]
 empty_array_of_strings = ASCIIString[""]
@@ -217,10 +215,8 @@ fid = jldopen(fn, "w")
 @write fid str
 @write fid stringsA
 @write fid stringsU
-if VERSION >= v"0.3-"
-    @write fid strings16
-    @write fid strings16_2d
-end
+@write fid strings16
+@write fid strings16_2d
 @write fid empty_string
 @write fid empty_string_array
 @write fid empty_array_of_strings
@@ -297,10 +293,8 @@ for mmap = (true, false)
     @check fidr str
     @check fidr stringsA
     @check fidr stringsU
-    if VERSION >= v"0.3-"
-        @check fidr strings16
-        @check fidr strings16_2d
-    end
+    @check fidr strings16
+    @check fidr strings16_2d
     @check fidr empty_string
     @check fidr empty_string_array
     @check fidr empty_array_of_strings
@@ -450,7 +444,7 @@ end
 # Issue #106
 module Mod106
 bitstype 64 Typ{T}
-typ{T}(x::Int64, ::Type{T}) = Base.box(Typ{T}, Base.unbox(Int64,int64(x)))
+typ{T}(x::Int64, ::Type{T}) = Base.box(Typ{T}, Base.unbox(Int64,x))
 abstract UnexportedT
 end
 save(fn, "i106", Mod106.typ(int64(1), Mod106.UnexportedT))
