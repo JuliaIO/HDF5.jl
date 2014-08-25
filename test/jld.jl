@@ -285,7 +285,8 @@ write(fid, "group1/x", {1})
 write(fid, "group2/x", {2})
 close(fid)
 
-for mmap = (true, false)
+# mmapping currently fails on Windows; re-enable once it can work
+for mmap = (@windows ? false : (false, true))
     fidr = jldopen(fn, "r", mmaparrays=mmap)
     @check fidr x
     @check fidr A
