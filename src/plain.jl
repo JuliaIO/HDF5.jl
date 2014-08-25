@@ -5,7 +5,7 @@
 module HDF5
 
 ## Add methods to...
-import Base: close, convert, done, dump, eltype, endof, flush, getindex, isempty, isvalid, length, names, ndims, next, read, setindex!, show, size, start, write
+import Base: close, convert, done, dump, eltype, endof, flush, getindex, isempty, isvalid, length, names, ndims, next, read, setindex!, show, size, sizeof, start, write
 
 if VERSION <= v"0.2.99"
     import Base.has
@@ -133,10 +133,10 @@ const H5R_DATASET_REGION = 1
 const H5R_OBJ_REF_BUF_SIZE      = 8
 const H5R_DSET_REG_REF_BUF_SIZE = 12
 # Dataspace constants
-const H5S_ALL          = 0
-const H5S_SCALAR       = 0
-const H5S_SIMPLE       = 1
-const H5S_NULL         = 2
+const H5S_ALL          = convert(Hid, 0)
+const H5S_SCALAR       = convert(Hid, 0)
+const H5S_SIMPLE       = convert(Hid, 1)
+const H5S_NULL         = convert(Hid, 2)
 const H5S_UNLIMITED    = typemax(Hsize)
 const MAXIMUM_DIM = H5S_UNLIMITED
 # Dataspace selection constants
@@ -210,7 +210,10 @@ const H5T_NATIVE_INT64    = read_const(:H5T_NATIVE_INT64_g)
 const H5T_NATIVE_UINT64   = read_const(:H5T_NATIVE_UINT64_g)
 const H5T_NATIVE_FLOAT    = read_const(:H5T_NATIVE_FLOAT_g)
 const H5T_NATIVE_DOUBLE   = read_const(:H5T_NATIVE_DOUBLE_g)
-
+# Library versions
+const H5F_LIBVER_EARLIEST = 0
+const H5F_LIBVER_18 = 1
+const H5F_LIBVER_LATEST = 1
 
 ## Conversion between Julia types and HDF5 atomic types
 hdf5_type_id(::Type{Int8})       = H5T_NATIVE_INT8
@@ -321,9 +324,18 @@ show(io::IO, dset::HDF5Dataset) = isvalid(dset) ? print(io, "HDF5 dataset: ", na
 type HDF5Datatype
     id::Hid
     toclose::Bool
+    file::HDF5File
 
     function HDF5Datatype(id, toclose::Bool=false)
-        nt = new(id)
+        nt = new(id, toclose)
+        if toclose
+            finalizer(nt, close)
+        end
+        nt
+    end
+    function HDF5Datatype(id, file::HDF5File)
+        toclose = h5t_committed(id)
+        nt = new(id, toclose, file)
         if toclose
             finalizer(nt, close)
         end
@@ -332,6 +344,8 @@ type HDF5Datatype
 end
 convert(::Type{Cint}, dtype::HDF5Datatype) = dtype.id
 show(io::IO, dtype::HDF5Datatype) = print(io, "HDF5 datatype ", dtype.id) # TODO: compound datatypes?
+hash(dtype::HDF5Datatype) = dtype.id
+==(dt1::HDF5Datatype, dt2::HDF5Datatype) = h5t_equal(dt1, dt2) > 0
 
 # Define an H5O Object type
 typealias HDF5Object Union(HDF5Group, HDF5Dataset, HDF5Datatype)
@@ -382,11 +396,13 @@ immutable HDF5ReferenceObj
     r::Uint64 # Size must be H5R_OBJ_REF_BUF_SIZE
 end
 const HDF5ReferenceObj_NULL = HDF5ReferenceObj(uint64(0))
+const REF_TEMP_ARRAY = Array(HDF5ReferenceObj, 1)
 function HDF5ReferenceObj(parent::Union(HDF5File, HDF5Group, HDF5Dataset), name::ByteString)
-    a = Array(HDF5ReferenceObj, 1)
-    h5r_create(a, checkvalid(parent).id, name, H5R_OBJECT, -1)
-    a[1]
+    h5r_create(REF_TEMP_ARRAY, checkvalid(parent).id, name, H5R_OBJECT, -1)
+    REF_TEMP_ARRAY[1]
 end
+==(a::HDF5ReferenceObj, b::HDF5ReferenceObj) = a.r == b.r
+hash(x::HDF5ReferenceObj) = hash(x.r)
 
 # Compound types
 # These are "raw" and not mapped to any Julia type
@@ -620,6 +636,8 @@ ishdf5(name::String) = h5f_is_hdf5(name)
 file(f::HDF5File) = f
 file(g::HDF5Group) = g.file
 file(dset::HDF5Dataset) = dset.file
+file(dtype::HDF5Datatype) = dtype.file
+file(a::HDF5Attribute) = a.file
 fd(obj::HDF5Object) = h5i_get_file_id(checkvalid(obj).id)
 
 # Flush buffers
@@ -630,8 +648,8 @@ flush(f::Union(HDF5Object, HDF5Attribute, HDF5Datatype, HDF5File)) = flush(f, H5
 g_open(parent::Union(HDF5File, HDF5Group), name::ByteString) = HDF5Group(h5g_open(checkvalid(parent).id, name, H5P_DEFAULT), file(parent))
 d_open(parent::Union(HDF5File, HDF5Group), name::ByteString, apl::HDF5Properties) = HDF5Dataset(h5d_open(checkvalid(parent).id, name, apl.id), file(parent))
 d_open(parent::Union(HDF5File, HDF5Group), name::ByteString) = HDF5Dataset(h5d_open(checkvalid(parent).id, name, H5P_DEFAULT), file(parent))
-t_open(parent::Union(HDF5File, HDF5Group), name::ByteString, apl::HDF5Properties) = HDF5Datatype(h5t_open(checkvalid(parent).id, name, apl.id))
-t_open(parent::Union(HDF5File, HDF5Group), name::ByteString) = HDF5Datatype(h5t_open(checkvalid(parent).id, name, H5P_DEFAULT))
+t_open(parent::Union(HDF5File, HDF5Group), name::ByteString, apl::HDF5Properties) = HDF5Datatype(h5t_open(checkvalid(parent).id, name, apl.id), file(parent))
+t_open(parent::Union(HDF5File, HDF5Group), name::ByteString) = HDF5Datatype(h5t_open(checkvalid(parent).id, name, H5P_DEFAULT), file(parent))
 a_open(parent::Union(HDF5File, HDF5Object), name::ByteString) = HDF5Attribute(h5a_open(checkvalid(parent).id, name, H5P_DEFAULT), file(parent))
 # Object (group, named datatype, or dataset) open
 function h5object(obj_id::Hid, parent)
@@ -674,34 +692,11 @@ function split1(path::ByteString)
     end
 end
 
-# Create objects
-function parents_create(parent::Union(HDF5File, HDF5Group), path::ByteString, args...)
-    g = split(path, "/")
-    if isempty(g[1])
-        g[1] = oftype(path, "/")
-    end
-    keepflag = Bool[!isempty(x) for x in g]
-    g = g[keepflag]   # NOTE: performance bottleneck up to here; find a better way
-    for i = 1:length(g)-1
-        gstr = ascii(g[i])
-        if !exists(parent, gstr)
-            g_create(parent, gstr)
-        end
-        parent = g_open(parent, gstr)
-    end
-    tuple(parent.id, bytestring(g[end]), args...)
+function g_create(parent::Union(HDF5File, HDF5Group), path::ByteString,
+                  lcpl::HDF5Properties=_link_properties(path),
+                  dcpl::HDF5Properties=DEFAULT_PROPERTIES)
+    HDF5Group(h5g_create(checkvalid(parent).id, path, lcpl.id, dcpl.id), file(parent))
 end
-
-function g_create(parent::Union(HDF5File, HDF5Group), path::ByteString, lcpl::HDF5Properties, dcpl::HDF5Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    HDF5Group(h5g_create(parents_create(checkvalid(parent), path, lcpl.id, dcpl.id)...), file(parent))
-end
-function g_create(parent::Union(HDF5File, HDF5Group), path::ByteString, lcpl::HDF5Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    HDF5Group(h5g_create(parents_create(checkvalid(parent), path, lcpl.id, H5P_DEFAULT)...), file(parent))
-end
-g_create(parent::Union(HDF5File, HDF5Group), path::ASCIIString) = HDF5Group(h5g_create(parents_create(checkvalid(parent), path, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
-g_create(parent::Union(HDF5File, HDF5Group), path::UTF8String) = g_create(parent, path, p_create(H5P_LINK_CREATE))
 function g_create(f::Function, parent::Union(HDF5File, HDF5Group), args...)
     g = g_create(parent, args...)
     try
@@ -711,19 +706,14 @@ function g_create(f::Function, parent::Union(HDF5File, HDF5Group), args...)
     end
 end
 
-function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties, dapl::HDF5Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, lcpl.id, dcpl.id, dapl.id)...), file(parent))
+function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype,
+         dspace::HDF5Dataspace, lcpl::HDF5Properties=_link_properties(path),
+         dcpl::HDF5Properties=DEFAULT_PROPERTIES,
+         dapl::HDF5Properties=DEFAULT_PROPERTIES)
+    HDF5Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, lcpl.id,
+                dcpl.id, dapl.id), file(parent))
 end
-function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, lcpl.id, dcpl.id, H5P_DEFAULT)...), file(parent))
-end
-function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT)...), file(parent))
-end
-d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = d_create(parent, path, dtype, dspace, p_create(H5P_LINK_CREATE))
+
 # Setting dset creation properties with name/value pairs
 function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace, prop1::ASCIIString, val1, pv...)
     if !iseven(length(pv))
@@ -738,9 +728,7 @@ function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::H
         end
         p[thisname] = pv[i+1]
     end
-    lcpl = p_create(H5P_LINK_CREATE)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    HDF5Dataset(h5d_create(parents_create(checkvalid(parent), path, dtype.id, dspace.id, lcpl, p.id, H5P_DEFAULT)...), file(parent))
+    HDF5Dataset(h5d_create(parent, path, dtype.id, dspace.id, _link_properties(path), p.id, H5P_DEFAULT), file(parent))
 end
 d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace_dims::Dims, prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims), prop1, val1, pv...)
 d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace_dims::(Dims,Dims), prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]), prop1, val1, pv...)
@@ -819,26 +807,29 @@ function exists(parent::Union(HDF5File, HDF5Group), path::ByteString, lapl::HDF5
     ret
 end
 exists(attr::HDF5Attributes, path::ByteString) = h5a_exists(checkvalid(attr.parent).id, path)
-exists(dset::HDF5Dataset, path::ByteString) = h5a_exists(checkvalid(dset).id, path)
+exists(dset::Union(HDF5Dataset, HDF5Datatype), path::ByteString) = h5a_exists(checkvalid(dset).id, path)
 exists(parent::Union(HDF5File, HDF5Group), path::ByteString) = exists(parent, path, HDF5Properties())
 has(parent::Union(HDF5File, HDF5Group, HDF5Dataset), path::ByteString) = exists(parent, path)
 
 # Querying items in the file
+const H5GINFO_TEMP_ARRAY = Array(H5Ginfo, 1)
 function info(obj::Union(HDF5Group,HDF5File))
-    info = Array(H5Ginfo, 1)
-    h5g_get_info(obj, info)
-    info[1]
+    h5g_get_info(obj, H5GINFO_TEMP_ARRAY)
+    H5GINFO_TEMP_ARRAY[1]
 end
+
+const H5OINFO_TEMP_ARRAY = Array(H5Oinfo, 1)
 function objinfo(obj::Union(HDF5File, HDF5Object))
-    info = Array(H5Oinfo, 1)
-    h5o_get_info(obj.id, info)
-    info[1]
+    h5o_get_info(obj.id, H5OINFO_TEMP_ARRAY)
+    H5OINFO_TEMP_ARRAY[1]
 end
+
+const LENGTH_TEMP_ARRAY = Array(Uint64, 1)
 function length(x::Union(HDF5Group,HDF5File))
-    buf = [uint64(0)]
-    h5g_get_num_objs(x.id, buf)
-    buf[1]
+    h5g_get_num_objs(x.id, LENGTH_TEMP_ARRAY)
+    LENGTH_TEMP_ARRAY[1]
 end
+
 function length(x::HDF5Attributes)
     objinfo(x.parent).num_attrs
 end
@@ -848,7 +839,7 @@ function size(obj::Union(HDF5Dataset, HDF5Attribute))
     dspace = dataspace(obj)
     dims, maxdims = get_dims(dspace)
     close(dspace)
-    map(int, dims)
+    convert((Int...), dims)
 end
 size(dset::Union(HDF5Dataset, HDF5Attribute), d) = d > ndims(dset) ? 1 : size(dset)[d]
 length(dset::Union(HDF5Dataset, HDF5Attribute)) = prod(size(dset))
@@ -965,9 +956,9 @@ function dump(io::IO, x::Union(HDF5File, HDF5Group), n::Int, indent)
 end
 
 # Get the datatype of a dataset
-datatype(dset::HDF5Dataset) = HDF5Datatype(h5d_get_type(checkvalid(dset).id))
+datatype(dset::HDF5Dataset) = HDF5Datatype(h5d_get_type(checkvalid(dset).id), file(dset))
 # Get the datatype of an attribute
-datatype(dset::HDF5Attribute) = HDF5Datatype(h5a_get_type(checkvalid(dset).id))
+datatype(dset::HDF5Attribute) = HDF5Datatype(h5a_get_type(checkvalid(dset).id), file(dset))
 
 # Create a datatype from in-memory types
 datatype{T<:HDF5BitsKind}(x::T) = HDF5Datatype(hdf5_type_id(T), false)
@@ -994,6 +985,8 @@ function datatype{C<:CharType}(str::HDF5Vlen{C})
     HDF5Datatype(h5t_vlen_create(type_id))
 end
 
+sizeof(dtype::HDF5Datatype) = h5t_get_size(dtype)
+
 # Get the dataspace of a dataset
 dataspace(dset::HDF5Dataset) = HDF5Dataspace(h5d_get_space(checkvalid(dset).id))
 # Get the dataspace of an attribute
@@ -1001,12 +994,18 @@ dataspace(attr::HDF5Attribute) = HDF5Dataspace(h5a_get_space(checkvalid(attr).id
 
 # Create a dataspace from in-memory types
 dataspace{T<:HDF5BitsKind}(x::T) = HDF5Dataspace(h5s_create(H5S_SCALAR))
-function _dataspace(sz::Int...; max_dims::Union(Dims, ())  = ())
-    dims = convert(Array{Hsize, 1}, [reverse(sz)...])
-    if any(dims .== 0)
+function _dataspace(sz::(Int...), max_dims::Union(Dims, ())=())
+    dims = Array(Hsize, length(sz))
+    any_zero = false
+    for i = 1:length(sz)
+        dims[end-i+1] = sz[i]
+        any_zero |= sz[i] == 0
+    end
+
+    if any_zero
         space_id = h5s_create(H5S_NULL)
     else
-        if max_dims  == ()
+        if max_dims == ()
             space_id = h5s_create_simple(length(dims), dims, dims)
         else
             space_id = h5s_create_simple(length(dims), dims, convert(Array{Hsize, 1},[reverse(max_dims)...]))
@@ -1014,13 +1013,13 @@ function _dataspace(sz::Int...; max_dims::Union(Dims, ())  = ())
     end
     HDF5Dataspace(space_id)
 end
-dataspace(A::Array; max_dims::Union(Dims, ())  = ()) = _dataspace(size(A)..., max_dims=max_dims)
+dataspace(A::Array; max_dims::Union(Dims, ())  = ()) = _dataspace(size(A), max_dims)
 dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
-dataspace(R::Array{HDF5ReferenceObj}; max_dims::Union(Dims, ())  = ()) = _dataspace(size(R)..., max_dims=max_dims)
-dataspace(v::HDF5Vlen; max_dims::Union(Dims, ())  = ()) = _dataspace(size(v.data)..., max_dims=max_dims)
+dataspace(R::Array{HDF5ReferenceObj}; max_dims::Union(Dims, ())=()) = _dataspace(size(R), max_dims)
+dataspace(v::HDF5Vlen; max_dims::Union(Dims, ())=()) = _dataspace(size(v.data), max_dims)
 dataspace(n::Nothing) = HDF5Dataspace(h5s_create(H5S_NULL))
-dataspace(sz::Dims; max_dims::Union(Dims, ())  = ()) = _dataspace(sz..., max_dims=max_dims)
-dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union(Dims, ())  = ()) = _dataspace(sz1, sz2, sz3..., max_dims=max_dims)
+dataspace(sz::Dims; max_dims::Union(Dims, ())=()) = _dataspace(sz, max_dims)
+dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union(Dims, ())=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
 
 # Get the array dimensions from a dataspace or a dataset
 # Returns both dims and maxdims
@@ -1034,7 +1033,7 @@ set_dims!(dset::HDF5Dataset, new_dims::Dims) = h5d_set_extent(checkvalid(dset), 
 # Generic read functions
 for (fsym, osym, ptype) in
     ((:d_read, :d_open, Union(HDF5File, HDF5Group)),
-     (:a_read, :a_open, Union(HDF5File, HDF5Group, HDF5Dataset)))
+     (:a_read, :a_open, Union(HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype)))
     @eval begin
         function ($fsym)(parent::$ptype, name::ByteString)
             local ret
@@ -1307,7 +1306,7 @@ read(attr::HDF5Attributes, name::ByteString) = a_read(attr.parent, name)
 function iscontiguous(obj::HDF5Dataset)
     prop = h5d_get_create_plist(checkvalid(obj).id)
     try
-        h5p_get_layout(prop) != H5D_CHUNKED
+        h5p_get_layout(prop) == H5D_CONTIGUOUS
     finally
         h5p_close(prop)
     end
@@ -1371,7 +1370,7 @@ end
 # You can also pass in property lists
 for (privatesym, fsym, ptype) in
     ((:_d_create, :d_create, Union(HDF5File, HDF5Group)),
-     (:_a_create, :a_create, Union(HDF5Group, HDF5Dataset)))
+     (:_a_create, :a_create, Union(HDF5Group, HDF5Dataset, HDF5Datatype)))
     @eval begin
         # Generic create (hidden)
         function ($privatesym)(parent::$ptype, name::ByteString, data, plists...)
@@ -1706,7 +1705,7 @@ function h5d_write{S<:ByteString}(dataset_id::Hid, memtype_id::Hid, strs::Array{
     len = length(strs)
     p = Array(Ptr{Uint8}, size(strs))
     for i = 1:len
-        p[i] = convert(Ptr{Uint8}, !isdefined(strs, i) || isempty(strs[i]) ? EMPTY_STRING : strs[i])
+        p[i] = !isdefined(strs, i) || isempty(strs[i]) ? pointer(EMPTY_STRING) : pointer(strs[i])
     end
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, p)
 end
@@ -1797,10 +1796,13 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5p_get_userblock, :H5Pget_userblock, Herr, (Hid, Ptr{Hsize}), (:plist_id, :len), "Error getting userblock"),
      (:h5p_set_char_encoding, :H5Pset_char_encoding, Herr, (Hid, Cint), (:plist_id, :encoding), "Error setting char encoding"),
      (:h5p_set_chunk, :H5Pset_chunk, Herr, (Hid, Cint, Ptr{Hsize}), (:plist_id, :ndims, :dims), "Error setting chunk size"),
+     (:h5p_set_create_intermediate_group, :H5Pset_create_intermediate_group, Herr, (Hid, Cuint), (:plist_id, :setting), "Error setting create intermediate group"),
      (:h5p_set_external, :H5Pset_external, Herr, (Hid, Ptr{Uint8}, Int, Csize_t), (:plist_id, :name, :offset, :size), "Error setting external property"),
      (:h5p_set_fclose_degree, :H5Pset_fclose_degree, Herr, (Hid, Cint), (:plist_id, :fc_degree), "Error setting close degree"),
      (:h5p_set_deflate, :H5Pset_deflate, Herr, (Hid, Cuint), (:plist_id, :setting), "Error setting compression method and level (deflate)"),
      (:h5p_set_layout, :H5Pset_layout, Herr, (Hid, Cint), (:plist_id, :setting), "Error setting layout"),
+     (:h5p_set_libver_bounds, :H5Pset_libver_bounds, Herr, (Hid, Cint, Cint), (:fapl_id, :libver_low, :libver_high), "Error setting library version bounds"),
+     (:h5p_set_local_heap_size_hint, :H5Pset_local_heap_size_hint, Herr, (Hid, Cuint), (:fapl_id, :size_hint), "Error setting local heap size hint"),
      (:h5p_set_userblock, :H5Pset_userblock, Herr, (Hid, Hsize), (:plist_id, :len), "Error setting userblock"),
      (:h5s_close, :H5Sclose, Herr, (Hid,), (:space_id,), "Error closing dataspace"),
      (:h5s_select_hyperslab, :H5Sselect_hyperslab, Herr, (Hid, Cint, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}), (:dspace_id, :seloper, :start, :stride, :count, :block), "Error selecting hyperslab"),
@@ -1869,6 +1871,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5l_get_info, :H5Lget_info, Herr, (Hid, Ptr{Uint8}, Ptr{H5LInfo}, Hid), (:link_loc_id, :link_name, :link_buf, :lapl_id), :(error("Error getting info for link ", link_name))),
      (:h5o_open, :H5Oopen, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :pathname, :lapl_id), :(error("Error opening object ", h5i_get_name(loc_id), "/", pathname))),
      (:h5o_open_by_idx, :H5Oopen_by_idx, Hid, (Hid, Ptr{Uint8}, Cint, Cint, Hsize, Hid), (:loc_id, :group_name, :index_type, :order, :n, :lapl_id), :(error("Error opening object of index ", n))),
+     (:h5o_open_by_addr, :H5Oopen_by_addr, Hid, (Hid, Haddr), (:loc_id, :addr), :(error("Error opening object by address"))),
      (:h5p_create, :H5Pcreate, Hid, (Hid,), (:cls_id,), "Error creating property list"),
      (:h5p_get_chunk, :H5Pget_chunk, Cint, (Hid, Cint, Ptr{Hsize}), (:plist_id, :n_dims, :dims), :(error("Error getting chunk size"))),
      (:h5p_get_layout, :H5Pget_layout, Cint, (Hid,), (:plist_id,), :(error("Error getting layout"))),
@@ -1884,7 +1887,8 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5s_get_simple_extent_type, :H5Sget_simple_extent_type, Cint, (Hid,), (:space_id,), :(error("Error getting the dataspace type"))),
      (:h5t_array_create, :H5Tarray_create2, Hid, (Hid, Cuint, Ptr{Hsize}), (:basetype_id, :ndims, :sz), :(error("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz))),
      (:h5t_copy, :H5Tcopy, Hid, (Hid,), (:dtype_id,), :(error("Error copying datatype"))),
-     (:h5t_create, :H5Tcreate, Hid, (Cint, Csize_t), (:class_id, :sz), :(error("Error creating datatype of id ", classid))),
+     (:h5t_create, :H5Tcreate, Hid, (Cint, Csize_t), (:class_id, :sz), :(error("Error creating datatype of id ", class_id))),
+     (:h5t_equal, :H5Tequal, Hid, (Hid, Hid), (:dtype_id1, :dtype_id2), :(error("Error checking datatype equality"))),
      (:h5t_get_array_dims, :H5Tget_array_dims2, Cint, (Hid, Ptr{Hsize}), (:dtype_id, :dims), :(error("Error getting dimensions of array"))),
      (:h5t_get_array_ndims, :H5Tget_array_ndims, Cint, (Hid,), (:dtype_id,), :(error("Error getting ndims of array"))),
      (:h5t_get_class, :H5Tget_class, Cint, (Hid,), (:dtype_id,), :(error("Error getting class"))),
@@ -1900,6 +1904,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5t_get_super, :H5Tget_super, Hid, (Hid,), (:dtype_id,), :(error("Error getting super type"))),
      (:h5t_get_strpad, :H5Tget_strpad, Cint, (Hid,), (:dtype_id,), :(error("Error getting string padding"))),
      (:h5t_insert, :H5Tinsert, Herr, (Hid, Ptr{Uint8}, Csize_t, Hid), (:dtype_id, :fieldname, :offset, :field_id), :(error("Error adding field ", fieldname, " to compound datatype"))),
+     (:h5t_open, :H5Topen2, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :name, :tapl_id), :(error("Error opening type ", h5i_get_name(loc_id), "/", name))),
      (:h5t_vlen_create, :H5Tvlen_create, Hid, (Hid,), (:base_type_id,), :(error("Error creating vlen type"))),
      ## The following doesn't work because it's in libhdf5_hl.so.
      ## (:h5tb_get_field_info, :H5TBget_field_info, Herr, (Hid, Ptr{Uint8}, Ptr{Ptr{Uint8}}, Ptr{Uint8}, Ptr{Uint8}, Ptr{Uint8}), (:loc_id, :table_name, :field_names, :field_sizes, :field_offsets, :type_size), :(error("Error getting field information")))
@@ -1929,6 +1934,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5l_exists, :H5Lexists, Htri, (Hid, Ptr{Uint8}, Hid), (:loc_id, :pathname, :lapl_id), :(error("Cannot determine whether ", pathname, " exists"))),
      (:h5s_is_simple, :H5Sis_simple, Htri, (Hid,), (:space_id,), :(error("Error determining whether dataspace is simple"))),
      (:h5t_is_variable_str, :H5Tis_variable_str, Htri, (Hid,), (:type_id,), :(error("Error determining whether string is of variable length"))),
+     (:h5t_committed, :H5Tcommitted, Htri, (Hid,), (:dtype_id,), :(error("Error determining whether datatype is committed"))),
 )
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
     ex_ccall = ccallexpr(libname, h5name, outtype, argtypes, argsyms)
@@ -1987,7 +1993,7 @@ function h5s_get_simple_extent_dims(space_id::Hid)
     dims = Array(Hsize, n)
     maxdims = Array(Hsize, n)
     h5s_get_simple_extent_dims(space_id, dims, maxdims)
-    return tuple(reverse(dims)...), tuple(reverse(maxdims)...)
+    return tuple(reverse!(dims)...), tuple(reverse!(maxdims)...)
 end
 function h5t_get_member_name(type_id::Hid, index::Integer)
     pn = ccall((:H5Tget_member_name, libname),
@@ -1997,7 +2003,7 @@ function h5t_get_member_name(type_id::Hid, index::Integer)
     if pn == C_NULL
         error("Error getting name of compound datatype member #", index)
     end
-    ascii(bytestring(pn))
+    bytestring(pn)
 end
 function h5t_get_tag(type_id::Hid)
     pc = ccall((:H5Tget_tag, libname),
@@ -2007,7 +2013,7 @@ function h5t_get_tag(type_id::Hid)
     if pc == C_NULL
         error("Error getting opaque tag")
     end
-    ascii(bytestring(pc))
+    bytestring(pc)
 end
 
 function vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5Dataspace)
@@ -2058,6 +2064,17 @@ function get_fclose_degree(p::HDF5Properties)
     h5p_get_fclose_degee(p.id, out)
     out[1]
 end
+
+const ASCII_LINK_PROPERTIES = p_create(H5P_LINK_CREATE)
+h5p_set_char_encoding(ASCII_LINK_PROPERTIES.id, cset(ASCIIString))
+h5p_set_create_intermediate_group(ASCII_LINK_PROPERTIES.id, 1)
+_link_properties(path::ASCIIString) = ASCII_LINK_PROPERTIES
+const UTF8_LINK_PROPERTIES = p_create(H5P_LINK_CREATE)
+h5p_set_char_encoding(UTF8_LINK_PROPERTIES.id, cset(UTF8String))
+h5p_set_create_intermediate_group(UTF8_LINK_PROPERTIES.id, 1)
+_link_properties(path::UTF8String) = UTF8_LINK_PROPERTIES
+const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT)
+
 # property function get/set pairs
 const hdf5_prop_get_set = {
     "chunk"         => (get_chunk, set_chunk),

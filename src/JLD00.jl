@@ -2,7 +2,7 @@
 ## Reading and writing Julia data .jld files ##
 ###############################################
 
-module JLD
+module JLD00
 using HDF5
 # Add methods to...
 import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o_delete, name, names, read, size, write,

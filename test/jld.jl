@@ -76,9 +76,27 @@ sa_utf8 = [:α, :β]
 subarray = sub([1:5], 1:5)
 # Array of empty tuples (to test tuple type params)
 arr_empty_tuple = ()[]
-immutable EmptyType
-end
+immutable EmptyImmutable end
+emptyimmutable = EmptyImmutable()
+type EmptyType end
 emptytype = EmptyType()
+immutable EmptyII
+    x::EmptyImmutable
+end
+emptyii = EmptyII(EmptyImmutable())
+immutable EmptyIT
+    x::EmptyType
+end
+emptyit = EmptyIT(EmptyType())
+type EmptyTI
+    x::EmptyImmutable
+end
+emptyti = EmptyTI(EmptyImmutable())
+type EmptyTT
+    x::EmptyType
+end
+emptytt = EmptyTT(EmptyType())
+
 # Unicode type field names (#118)
 type MyUnicodeStruct☺{τ}
     α::τ
@@ -88,10 +106,52 @@ end
 unicodestruct☺ = MyUnicodeStruct☺{Float64}(1.0, -1.0)
 # Arrays of matrices (#131)
 array_of_matrices = Matrix{Int}[[1 2; 3 4], [5 6; 7 8]]
-
+# Tuple of arrays and bitstype
+tup = (1, 2, [1, 2], [1 2; 3 4], bt)
+# Empty tuple
+empty_tup = ()
+# Non-pointer-free immutable
+immutable MyImmutable{T}
+    x::Int
+    y::Vector{T}
+    z::Bool
+end
+nonpointerfree_immutable_1 = MyImmutable(1, [1., 2., 3.], false)
+nonpointerfree_immutable_2 = MyImmutable(2, {3., 4., 5.}, true)
+immutable MyImmutable2
+    x::Vector{Int}
+    MyImmutable2() = new()
+end
+nonpointerfree_immutable_3 = MyImmutable2()
+# Array references
+arr_contained = [1, 2, 3]
+arr_ref = typeof(arr_contained)[]
+push!(arr_ref, arr_contained, arr_contained)
+# Object references
+type ObjRefType
+    x::ObjRefType
+    y::ObjRefType
+    ObjRefType() = new()
+    ObjRefType(x, y) = new(x, y)
+end
+ref1 = ObjRefType()
+obj_ref = ObjRefType(ObjRefType(ref1, ref1), ObjRefType(ref1, ref1))
+# Immutable that requires padding between elements in array
+immutable PaddingTest
+    x::Int64
+    y::Int8
+end
+padding_test = PaddingTest[PaddingTest(i, i) for i = 1:8]
+# Empty arrays of various types and sizes
+empty_arr_1 = Int[]
+empty_arr_2 = Array(Int, 56, 0)
+empty_arr_3 = {}
+empty_arr_4 = cell(0, 97)
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
+iseq(x::MyImmutable, y::MyImmutable) = (isequal(x.x, y.x) && isequal(x.y, y.y) && isequal(x.z, y.z))
+iseq(x::Union(EmptyTI, EmptyTT), y::Union(EmptyTI, EmptyTT)) = isequal(x.x, y.x)
 iseq(c1::Array{Base.Sys.CPUinfo}, c2::Array{Base.Sys.CPUinfo}) = length(c1) == length(c2) && all([iseq(c1[i], c2[i]) for i = 1:length(c1)])
 function iseq(c1::Base.Sys.CPUinfo, c2::Base.Sys.CPUinfo)
     for n in Base.Sys.CPUinfo.names
@@ -112,7 +172,8 @@ macro check(fid, sym)
                 rethrow(e)
             end
             if !iseq(tmp, $sym)
-                error("For ", $(string(sym)), ", read value does not agree with written value")
+                written = $sym
+                error("For ", $(string(sym)), ", read value $tmp does not agree with written value $written")
             end
             written_type = typeof($sym)
             if typeof(tmp) != written_type
@@ -191,15 +252,32 @@ end
 @write fid undef
 @write fid undefs
 @write fid ms_undef
-@write fid objwithpointer  # This should not write anything
+@test_throws JLD.PointerException @write fid objwithpointer
 @write fid bt
 @write fid sa_asc
 @write fid sa_utf8
 @write fid subarray
 @write fid arr_empty_tuple
+@write fid emptyimmutable
 @write fid emptytype
+@write fid emptyii
+@write fid emptyit
+@write fid emptyti
+@write fid emptytt
 @write fid unicodestruct☺
 @write fid array_of_matrices
+@write fid tup
+@write fid empty_tup
+@write fid nonpointerfree_immutable_1
+@write fid nonpointerfree_immutable_2
+@write fid nonpointerfree_immutable_3
+@write fid arr_ref
+@write fid obj_ref
+@write fid padding_test
+@write fid empty_arr_1
+@write fid empty_arr_2
+@write fid empty_arr_3
+@write fid empty_arr_4
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -266,15 +344,38 @@ for mmap = (true, false)
         error("For ms_undef, read value does not agree with written value")
     end
     
-    @assert !in("objwithpointer", names(fidr))
     @check fidr bt
     @check fidr sa_asc
     @check fidr sa_utf8
     @check fidr subarray
     @check fidr arr_empty_tuple
+    @check fidr emptyimmutable
     @check fidr emptytype
+    @check fidr emptyii
+    @check fidr emptyit
+    @check fidr emptyti
+    @check fidr emptytt
     @check fidr unicodestruct☺
     @check fidr array_of_matrices
+    @check fidr tup
+    @check fidr empty_tup
+    @check fidr nonpointerfree_immutable_1
+    @check fidr nonpointerfree_immutable_2
+    @check fidr nonpointerfree_immutable_3
+
+    arr = read(fidr, "arr_ref")
+    @test arr == arr_ref
+    @test arr[1] === arr[2]
+
+    obj = read(fidr, "obj_ref")
+    @test obj.x.x === obj.x.y == obj.y.x === obj.y.y
+    @test obj.x !== obj.y
+
+    @check fidr padding_test
+    @check fidr empty_arr_1
+    @check fidr empty_arr_2
+    @check fidr empty_arr_3
+    @check fidr empty_arr_4
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}
@@ -282,6 +383,27 @@ for mmap = (true, false)
     @assert x2 == {2}
 
     close(fidr)
+end
+
+# object references in a write session
+x = ObjRefType()
+a = [x, x]
+b = [x, x]
+@save fn a b
+jldopen(fn, "r") do fid
+    a = read(fid, "a")
+    b = read(fid, "b")
+    @test a[1] === a[2] === b[2] === a[1]
+
+    # Let gc get rid of a and b
+    a = nothing
+    b = nothing
+    gc()
+
+    a = read(fid, "a")
+    b = read(fid, "b")
+    @test typeof(a[1]) == ObjRefType
+    @test a[1] === a[2] === b[2] === a[1]
 end
 
 # do syntax
@@ -335,13 +457,24 @@ i106 = load(fn, "i106")
 jldopen(fn, "w") do file
     file["a"] = [1:100]
     file["b"] = [x*y for x=1:10,y=1:10]
+    file["c"] = {1, 2, 3}
+    file["d"] = [1//2, 1//4, 1//8]
 end
-jldopen(fn, "r") do file
-    @assert(file["a"][1:50] == [1:50])
-    @assert(file["b"][5,6][1]==5*6)
+jldopen(fn, "r+") do file
+    @test(file["a"][1:50] == [1:50])
+    file["a"][1:50] = 1:2:100
+    @test(file["a"][1:50] == [1:2:100])
+    @test(file["b"][5,6][1]==5*6)
+    @test(file["c"][1:2] == [1, 2])
+    file["c"][2:3] = [5, 7]
+    @test(read(file, "c") == [1, 5, 7])
+    @test(file["d"][2:3] == [1//4, 1//8])
+    file["d"][1:1] = [9]
+    @test(read(file, "d") == [9, 1//4, 1//8])
 end
 
 # bracket syntax when created by HDF5
+println("The following unrecognized JLD file warning is a sign of normal operation.")
 h5open(fn, "w") do file
     file["a"] = [1:100]
     file["a"][51:100] = [1:50]
@@ -360,7 +493,7 @@ jldopen(fn, "w") do file
     file["ms"] = β
     g = g_create(file,"g")
     file["g/ms"] = ms
-    @test_throws_02 ErrorException delete!(file, "_refs/g/ms")
+    @test_throws ErrorException delete!(file, "_refs/g/ms")
     delete!(file, "g/ms")
     file["g/ms"] = ms
     delete!(file, "/g/ms")
@@ -378,4 +511,78 @@ jldopen(fn, "r") do file
     @assert(read(file["ms"]) == β)
     @assert(!exists(file, "g/ms"))
     @assert(!exists(file, "g"))
+end
+
+# mismatched and missing types
+module JLDTemp1
+using JLD
+import ..fn, Core.Intrinsics.box
+
+type TestType1
+    x::Int
+end
+type TestType2
+    x::Int
+end
+immutable TestType3
+    x::TestType2
+end
+
+type TestType4
+    x::Int
+end
+type TestType5
+    x::TestType4
+end
+type TestType6 end
+bitstype 8 TestType7
+immutable TestType8
+    a::TestType4
+    b::TestType5
+    c::TestType6
+    d::TestType7
+end
+
+jldopen(fn, "w") do file
+    truncate_module_path(file, JLDTemp1)
+    write(file, "x1", TestType1(1))
+    write(file, "x2", TestType3(TestType2(1)))
+    write(file, "x3", TestType4(1))
+    write(file, "x4", TestType5(TestType4(2)))
+    write(file, "x5", [TestType5(TestType4(i)) for i = 1:5])
+    write(file, "x6", TestType6())
+    write(file, "x7", reinterpret(TestType7, 0x77))
+    write(file, "x8", TestType8(TestType4(2), TestType5(TestType4(3)),
+                                TestType6(), reinterpret(TestType7, 0x12)))
+end
+end
+
+type TestType1
+    x::Float64
+end
+type TestType2
+    x::Int
+end
+immutable TestType3
+    x::TestType1
+end
+
+import Core.Intrinsics.box, Core.Intrinsics.unbox
+jldopen(fn, "r") do file
+    @test_throws JLD.TypeMismatchException read(file, "x1")
+    @test_throws TypeError read(file, "x2")
+    println("The following missing type warnings are a sign of normal operation.")
+    @test read(file, "x3").x == 1
+    @test read(file, "x4").x.x == 2
+    x = read(file, "x5")
+    for i = 1:5
+        @test x[i].x.x == i
+    end
+    @test typeof(read(file, "x6")).names == ()
+    @test reinterpret(Uint8, read(file, "x7")) == 0x77
+    x = read(file, "x8")
+    @test x.a.x == 2
+    @test x.b.x.x == 3
+    @test typeof(x.c).names == ()
+    @test reinterpret(Uint8, x.d) == 0x12
 end
