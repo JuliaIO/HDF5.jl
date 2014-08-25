@@ -33,12 +33,11 @@ end
 @windows_only begin
 let
     global libhdf5, libname
-    const OS_ARCH = WORD_SIZE == 64 ? "x86_64" : "x86"
-    push!(DL_LOAD_PATH, joinpath(Pkg.dir("HDF5/deps/usr/lib/"), OS_ARCH))
-    dl = dlopen_e("hdf5")
+    push!(DL_LOAD_PATH, joinpath(dirname(dirname(@__FILE__)), "deps/usr/$(Sys.MACHINE)/bin"))
+    dl = dlopen_e("libhdf5-0")
     if dl != C_NULL
         const libhdf5 = dl
-        const libname = "hdf5"
+        const libname = "libhdf5-0"
     else
         error("Library not found. See the README for installation instructions.")
     end
