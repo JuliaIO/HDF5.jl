@@ -147,6 +147,8 @@ empty_arr_1 = Int[]
 empty_arr_2 = Array(Int, 56, 0)
 empty_arr_3 = {}
 empty_arr_4 = cell(0, 97)
+# Moderately big dataset (which will be mmapped)
+bigdata = [1:10000]
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -278,6 +280,7 @@ end
 @write fid empty_arr_2
 @write fid empty_arr_3
 @write fid empty_arr_4
+@write fid bigdata
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -376,6 +379,7 @@ for mmap = (true, false)
     @check fidr empty_arr_2
     @check fidr empty_arr_3
     @check fidr empty_arr_4
+    @check fidr bigdata
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}
