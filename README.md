@@ -39,12 +39,10 @@ how to do it:
 
 - Debian/(K)Ubuntu: `apt-get -u install hdf5-tools`
 - OSX: `brew tap homebrew/science; brew install hdf5` (using [Homebrew](http://brew.sh))
-- Windows: determine whether you're running 32bit or 64bit Julia by
-  typing `Int` on the command line. Then
-  [download](http://www.hdfgroup.org/HDF5/release/obtain5.html) the
-  appropriate version, using the Visual Studio (VS) build. When you
-  run the installer, allow it to set up the system PATH variable as
-  suggested (Julia will use this to help find the library).
+- Windows: It is highly recommended that you use the HDF5 library
+  fetched by this package. Other HDF5 binaries may be compiled against
+  a different C runtime from the Julia binary, which will cause
+  Julia to crash when freeing memory allocated by libhdf5.
 
 If you've installed the library but discover that Julia is not finding
 it, you can add the path to Julia's `Sys.DL_LOAD_PATH` variable, e.g.,
