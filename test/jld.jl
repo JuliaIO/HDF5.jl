@@ -94,6 +94,11 @@ type EmptyTT
     x::EmptyType
 end
 emptytt = EmptyTT(EmptyType())
+immutable EmptyIIOtherField
+    x::EmptyImmutable
+    y::Float64
+end
+emptyiiotherfield = EmptyIIOtherField(EmptyImmutable(), 5.0)
 
 # Unicode type field names (#118)
 type MyUnicodeStruct☺{τ}
@@ -126,6 +131,21 @@ immutable Vague
     name::ByteString
 end
 vague = Vague("foo")
+# Immutable with a union of BitsTypes
+immutable BitsUnion
+    x::Union(Int64, Float64)
+end
+bitsunion = BitsUnion(5.0)
+# Immutable with a union of Types
+immutable TypeUnionField
+    x::Union(Type{Int64}, Type{Float64})
+end
+typeunionfield = TypeUnionField(Int64)
+# Generic union type field
+immutable GenericUnionField
+    x::Union(Vector{Int},Int)
+end
+genericunionfield = GenericUnionField(1)
 # Array references
 arr_contained = [1, 2, 3]
 arr_ref = typeof(arr_contained)[]
@@ -267,6 +287,7 @@ fid = jldopen(fn, "w")
 @write fid emptyit
 @write fid emptyti
 @write fid emptytt
+@write fid emptyiiotherfield
 @write fid unicodestruct☺
 @write fid array_of_matrices
 @write fid tup
@@ -275,6 +296,9 @@ fid = jldopen(fn, "w")
 @write fid nonpointerfree_immutable_2
 @write fid nonpointerfree_immutable_3
 @write fid vague
+@write fid bitsunion
+@write fid typeunionfield
+@write fid genericunionfield
 @write fid arr_ref
 @write fid obj_ref
 @write fid padding_test
@@ -359,6 +383,7 @@ for mmap = (@windows ? false : (false, true))
     @check fidr emptyit
     @check fidr emptyti
     @check fidr emptytt
+    @check fidr emptyiiotherfield
     @check fidr unicodestruct☺
     @check fidr array_of_matrices
     @check fidr tup
@@ -368,6 +393,9 @@ for mmap = (@windows ? false : (false, true))
     @check fidr nonpointerfree_immutable_3
     vaguer = read(fidr, "vague")
     @test typeof(vaguer) == typeof(vague) && vaguer.name == vague.name
+    @check fidr bitsunion
+    @check fidr typeunionfield
+    @check fidr genericunionfield
 
     arr = read(fidr, "arr_ref")
     @test arr == arr_ref

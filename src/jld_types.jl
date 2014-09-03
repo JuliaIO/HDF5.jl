@@ -7,6 +7,8 @@ const INLINE_POINTER_IMMUTABLE = false
 
 const JLD_REF_TYPE = JldDatatype(HDF5Datatype(HDF5.H5T_STD_REF_OBJ, false), 0)
 const BUILTIN_TYPES = Set([Symbol, Type, UTF16String])
+const H5CONVERT_DEFINED = ObjectIdDict()
+const JLCONVERT_DEFINED = ObjectIdDict()
 
 ## Helper functions
 
@@ -100,13 +102,16 @@ Base.convert(::Type{HDF5.Hid}, x::JldDatatype) = x.dtype.id
 
 ## HDF5 bits kinds
 
-h5fieldtype{T<:HDF5.HDF5BitsKind}(parent::JldFile, ::Type{T}, ::Bool) =
+# This construction prevents these methods from getting called on type unions
+@eval typealias BitsKindTypes Union($(map(x->Type{x}, HDF5.HDF5BitsKind.types)...))
+
+h5fieldtype(parent::JldFile, T::BitsKindTypes, ::Bool) =
     h5type(parent, T, false)
 
-h5type{T<:HDF5.HDF5BitsKind}(::JldFile, ::Type{T}, ::Bool) =
+h5type(::JldFile, T::BitsKindTypes, ::Bool) =
     JldDatatype(HDF5Datatype(HDF5.hdf5_type_id(T), false), 0)
 
-gen_h5convert{T<:HDF5.HDF5BitsKind}(::JldFile, ::Type{T}) = nothing
+gen_h5convert(::JldFile, ::BitsKindTypes) = nothing
 h5convert!{T<:HDF5.HDF5BitsKind}(out::Ptr, ::JldFile, x::T, ::JldWriteSession) =
     unsafe_store!(convert(Ptr{T}, out), x)
 
@@ -114,8 +119,8 @@ _jlconvert_bits{T}(::Type{T}, ptr::Ptr) = unsafe_load(convert(Ptr{T}, ptr))
 _jlconvert_bits!{T}(out::Ptr, ::Type{T}, ptr::Ptr) =
     (unsafe_store!(convert(Ptr{T}, out), unsafe_load(convert(Ptr{T}, ptr))); nothing)
 
-jlconvert{T<:HDF5.HDF5BitsKind}(::Type{T}, ::JldFile, ptr::Ptr) = _jlconvert_bits(T, ptr)
-jlconvert!{T<:HDF5.HDF5BitsKind}(out::Ptr, ::Type{T}, ::JldFile, ptr::Ptr) = _jlconvert_bits!(out, T, ptr)
+jlconvert(T::BitsKindTypes, ::JldFile, ptr::Ptr) = _jlconvert_bits(T, ptr)
+jlconvert!(out::Ptr, T::BitsKindTypes, ::JldFile, ptr::Ptr) = _jlconvert_bits!(out, T, ptr)
 
 ## ByteStrings
 
@@ -134,11 +139,14 @@ gen_h5convert{T<:ByteString}(::JldFile, ::Type{T}) = nothing
 h5convert!(out::Ptr, ::JldFile, x::ByteString, ::JldWriteSession) =
     unsafe_store!(convert(Ptr{Ptr{Uint8}}, out), pointer(x))
 
-function jlconvert{T<:ByteString}(::Type{T}, ::JldFile, ptr::Ptr)
+function jlconvert(T::Union(Type{ASCIIString}, Type{UTF8String}), ::JldFile, ptr::Ptr)
     strptr = unsafe_load(convert(Ptr{Ptr{Uint8}}, ptr))
     n = int(ccall(:strlen, Csize_t, (Ptr{Uint8},), strptr))
-    isleaftype(T) ? T(pointer_to_array(strptr, (n,), true)) : bytestring(pointer_to_array(strptr, (n,), true))
+    T(pointer_to_array(strptr, n, true))
 end
+
+jlconvert(T::Union(Type{ByteString}), ::JldFile, ptr::Ptr) =
+    bytestring(unsafe_load(convert(Ptr{Ptr{Uint8}}, ptr)))
 
 ## UTF16Strings
 
@@ -156,7 +164,7 @@ function h5type(parent::JldFile, ::Type{UTF16String}, commit::Bool)
     commit ? commit_datatype(parent, dtype, UTF16String) : JldDatatype(dtype, -1)
 end
 
-gen_h5convert{T<:UTF16String}(::JldFile, ::Type{T}) = nothing
+gen_h5convert(::JldFile, ::Type{UTF16String}) = nothing
 h5convert!(out::Ptr, ::JldFile, x::UTF16String, ::JldWriteSession) =
     unsafe_store!(convert(Ptr{HDF5.Hvl_t}, out), HDF5.Hvl_t(length(x.data), pointer(x.data)))
 
@@ -179,7 +187,7 @@ function h5type(parent::JldFile, ::Type{Symbol}, commit::Bool)
     commit ? commit_datatype(parent, dtype, Symbol) : JldDatatype(dtype, -1)
 end
 
-gen_h5convert{T<:Symbol}(::JldFile, ::Type{T}) = nothing
+gen_h5convert(::JldFile, ::Type{Symbol}) = nothing
 function h5convert!(out::Ptr, file::JldFile, x::Symbol, wsession::JldWriteSession)
     str = string(x)
     push!(wsession.persist, str)
@@ -210,7 +218,7 @@ function h5convert!(out::Ptr, file::JldFile, x::Type, wsession::JldWriteSession)
     h5convert!(out, file, str, wsession)
 end
 
-jlconvert(::Type{Type}, file::JldFile, ptr::Ptr) = julia_type(jlconvert(UTF8String, file, ptr))
+jlconvert{T<:Type}(::Type{T}, file::JldFile, ptr::Ptr) = julia_type(jlconvert(UTF8String, file, ptr))
 
 ## Pointers
 
@@ -268,7 +276,7 @@ function h5type(parent::JldFile, T::(Type...), commit::Bool)
 end
 
 function gen_jlconvert(typeinfo::JldTypeInfo, T::(Type...))
-    method_exists(jlconvert, (Type{T}, JldFile, Ptr)) && return
+    haskey(JLCONVERT_DEFINED, T) && return
 
     ex = Expr(:block)
     args = ex.args
@@ -286,6 +294,7 @@ function gen_jlconvert(typeinfo::JldTypeInfo, T::(Type...))
         push!(tupargs, field)
     end
     @eval jlconvert(::Type{$T}, file::JldFile, ptr::Ptr) = ($ex; $tup)
+    JLCONVERT_DEFINED[T] = true
     nothing
 end
 
@@ -423,7 +432,7 @@ function _gen_jlconvert_immutable(typeinfo::JldTypeInfo, T::ANY)
 end
 
 function gen_jlconvert(typeinfo::JldTypeInfo, T::ANY)
-    method_exists(jlconvert, (Type{T}, JldFile, Ptr)) && return
+    haskey(JLCONVERT_DEFINED, T) && return
 
     if isempty(T.names)
         if T.size == 0
@@ -439,11 +448,18 @@ function gen_jlconvert(typeinfo::JldTypeInfo, T::ANY)
             end
         end
         nothing
+    elseif T.size == 0
+        @eval begin
+            jlconvert(::Type{$T}, ::JldFile, ::Ptr) = ccall(:jl_new_struct_uninit, Any, (Any,), $T)::$T
+            jlconvert!(out::Ptr, ::Type{$T}, ::JldFile, ::Ptr) = nothing
+        end
     elseif T.mutable
         _gen_jlconvert_type(typeinfo, T)
     else
         _gen_jlconvert_immutable(typeinfo, T)
     end
+    JLCONVERT_DEFINED[T] = true
+    nothing
 end
 
 ## Common functions for all non-special types (including gen_h5convert)
@@ -457,8 +473,9 @@ opaquesize(t::(DataType...)) = 1
 opaquesize(t::DataType) = max(1, t.size)
 
 # Whether a type that is stored inline in HDF5 should be stored as a
-# reference in Julia. This will never be called such that it returns
-# true unless either INLINE_TUPLE or INLINE_POINTER_IMMUTABLE is true.
+# reference in Julia. This will only be called such that it returns
+# true for some unions of special types defined above, unless either
+# INLINE_TUPLE or INLINE_POINTER_IMMUTABLE is true.
 uses_reference(T::DataType) = !T.pointerfree
 uses_reference(::Tuple) = true
 uses_reference(::UnionType) = true
@@ -467,7 +484,6 @@ unknown_type_err() =
     error("""$T is not of a type supported by JLD
              Please report this error at https://github.com/timholy/HDF5.jl""")
 
-const H5CONVERT_DEFINED = ObjectIdDict()
 gen_h5convert(parent::JldFile, T) =
     haskey(H5CONVERT_DEFINED, T) || _gen_h5convert(parent, T)
 
