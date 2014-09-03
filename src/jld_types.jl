@@ -461,7 +461,7 @@ opaquesize(t::DataType) = max(1, t.size)
 # true unless either INLINE_TUPLE or INLINE_POINTER_IMMUTABLE is true.
 uses_reference(T::DataType) = !T.pointerfree
 uses_reference(::Tuple) = true
-uses_reference(T) = true
+uses_reference(::UnionType) = true
 
 unknown_type_err() =
     error("""$T is not of a type supported by JLD
