@@ -1646,6 +1646,11 @@ function hdf5_to_julia_eltype(objtype)
             is_signed = nothing
         end
         T = hdf5_type_map[(class_id, is_signed, native_size)]
+    elseif class_id == H5T_ENUM
+        native_type = h5t_get_native_type(h5t_get_super(objtype.id))
+        native_size = h5t_get_size(native_type)
+        is_signed = h5t_get_sign(native_type)
+        T = hdf5_type_map[(H5T_INTEGER, is_signed, native_size)]
     elseif class_id == H5T_REFERENCE
         # How to test whether it's a region reference or an object reference??
         T = HDF5ReferenceObj
