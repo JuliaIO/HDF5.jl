@@ -121,6 +121,11 @@ immutable MyImmutable2
     MyImmutable2() = new()
 end
 nonpointerfree_immutable_3 = MyImmutable2()
+# Immutable with a non-concrete datatype (issue #143)
+immutable Vague
+    name::ByteString
+end
+vague = Vague("foo")
 # Array references
 arr_contained = [1, 2, 3]
 arr_ref = typeof(arr_contained)[]
@@ -269,6 +274,7 @@ fid = jldopen(fn, "w")
 @write fid nonpointerfree_immutable_1
 @write fid nonpointerfree_immutable_2
 @write fid nonpointerfree_immutable_3
+@write fid vague
 @write fid arr_ref
 @write fid obj_ref
 @write fid padding_test
@@ -360,6 +366,8 @@ for mmap = (@windows ? false : (false, true))
     @check fidr nonpointerfree_immutable_1
     @check fidr nonpointerfree_immutable_2
     @check fidr nonpointerfree_immutable_3
+    vaguer = read(fidr, "vague")
+    @test typeof(vaguer) == typeof(vague) && vaguer.name == vague.name
 
     arr = read(fidr, "arr_ref")
     @test arr == arr_ref
