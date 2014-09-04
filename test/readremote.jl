@@ -11,6 +11,11 @@ icmp = [0 -1 -2 -3 -4 -5 -6;
     0 0 0 0 0 0 0;
     0 1 2 3 4 5 6;
     0 2 4 6 8 10 12]'
+const SOLID, LIQUID, GAS, PLASMA = 0, 1, 2, 3
+ecmp = [SOLID SOLID SOLID SOLID SOLID SOLID SOLID;
+        SOLID LIQUID GAS PLASMA SOLID LIQUID GAS;
+        SOLID GAS SOLID GAS SOLID GAS SOLID;
+        SOLID PLASMA GAS LIQUID SOLID PLASMA GAS]'
 scmp = ["Parting", "is such", "sweet", "sorrow."]
 vicmp = Array{Int32}[[3,2,1],[1,1,2,3,5,8,13,21,34,55,89,144]]
 opq = Array{Uint8}[[0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x30],
@@ -78,6 +83,21 @@ fid = h5open(file, "r")
 d = read(fid, "DS1")
 @assert d == icmp
 close(fid)
+
+if HDF5.h5_get_libversion() >= (1, 8, 11)
+  file = getfile("h5ex_t_enumatt.h5")
+  fid = h5open(file, "r")
+  dset = fid["DS1"]
+  a = a_read(dset, "A1")
+  @assert a == ecmp
+  close(fid)
+
+  file = getfile("h5ex_t_enum.h5")
+  fid = h5open(file, "r")
+  d = read(fid, "DS1")
+  @assert d == ecmp
+  close(fid)
+end
 
 file = getfile("h5ex_t_objrefatt.h5")
 fid = h5open(file, "r")
