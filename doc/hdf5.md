@@ -272,7 +272,7 @@ set_dims!(d, new_dims)
 ```
 where dims is a tuple of integers.  For example
 ```julia
-d = d_create(fid, "b", Int, ((1000,),(-1,)), "chunk", (100,)) #-1 is equivalent to typemax(Hsize)
+b = d_create(fid, "b", Int, ((1000,),(-1,)), "chunk", (100,)) #-1 is equivalent to typemax(Hsize)
 set_dims!(b, (10000,))
 b[1:10000] = [1:10000] 
 ```
