@@ -25,27 +25,15 @@ typealias Htri        Cint   # pseudo-boolean (negative if error)
 typealias Haddr       Uint64
 
 ### Load and initialize the HDF library ###
-@osx_only import Homebrew # Add Homebrew/lib to the DL_LOAD_PATH
-@unix_only begin
-    const libname = "libhdf5"
-    const libhdf5 = dlopen(libname)
+if isfile(joinpath(dirname(dirname(@__FILE__)),"deps","deps.jl"))
+    include("../deps/deps.jl")
+else
+    error("HDF5 not properly installed. Please run Pkg.build(\"HDF5\")")
 end
-@windows_only begin
-let
-    global libhdf5, libname
-    push!(DL_LOAD_PATH, joinpath(dirname(dirname(@__FILE__)), "deps/usr/$(Sys.MACHINE)/bin"))
-    dl = dlopen_e("libhdf5-0")
-    if dl != C_NULL
-        const libhdf5 = dl
-        const libname = "libhdf5-0"
-    else
-        error("Library not found. See the README for installation instructions.")
-    end
-end
-end
+const libhdf5handle = dlopen(libhdf5)
 
 function _init()
-    status = ccall((:H5open, libname), Herr, ())
+    status = ccall((:H5open, libhdf5), Herr, ())
     if status < 0
         error("Can't initialize the HDF5 library")
     end
@@ -60,7 +48,7 @@ _init()
 
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
-read_const(sym::Symbol) = unsafe_load(convert(Ptr{Cint}, dlsym(libhdf5, sym)))
+read_const(sym::Symbol) = unsafe_load(convert(Ptr{Cint}, dlsym(libhdf5handle, sym)))
 
 # iteration order constants
 const H5_ITER_UNKNOWN = -1
@@ -1727,7 +1715,7 @@ h5o_open(obj_id::Hid, name::ByteString) = h5o_open(obj_id, name, H5P_DEFAULT)
 #h5s_get_simple_extent_ndims(space_id::Hid) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 h5t_get_native_type(type_id::Hid) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
 function h5r_dereference(obj_id::Hid, ref_type::Integer, pointee::HDF5ReferenceObj)
-    ret = ccall((:H5Rdereference, libname), Hid, (Hid, Cint, Ptr{HDF5ReferenceObj}), obj_id, ref_type, &pointee)
+    ret = ccall((:H5Rdereference, libhdf5), Hid, (Hid, Cint, Ptr{HDF5ReferenceObj}), obj_id, ref_type, &pointee)
     if ret < 0
         error("Error dereferencing object")
     end
@@ -1817,7 +1805,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
     )
 
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
-    ex_ccall = ccallexpr(libname, h5name, outtype, argtypes, argsyms)
+    ex_ccall = ccallexpr(libhdf5, h5name, outtype, argtypes, argsyms)
     ex_body = quote
         status = $ex_ccall
         if status < 0
@@ -1915,7 +1903,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
 )
 
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
-    ex_ccall = ccallexpr(libname, h5name, outtype, argtypes, argsyms)
+    ex_ccall = ccallexpr(libhdf5, h5name, outtype, argtypes, argsyms)
     ex_body = quote
         ret = $ex_ccall
         if ret < 0
@@ -1941,7 +1929,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5t_committed, :H5Tcommitted, Htri, (Hid,), (:dtype_id,), :(error("Error determining whether datatype is committed"))),
 )
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
-    ex_ccall = ccallexpr(libname, h5name, outtype, argtypes, argsyms)
+    ex_ccall = ccallexpr(libhdf5, h5name, outtype, argtypes, argsyms)
     ex_body = quote
         ret = $ex_ccall
         if ret < 0
@@ -1960,7 +1948,7 @@ _majnum = Array(Cuint, 1)
 _minnum = Array(Cuint, 1)
 _relnum = Array(Cuint, 1)
 function h5_get_libversion()
-    status = ccall((:H5get_libversion, libname),
+    status = ccall((:H5get_libversion, libhdf5),
                    Herr,
                    (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}),
                    _majnum, _minnum, _relnum)
@@ -2000,7 +1988,7 @@ function h5s_get_simple_extent_dims(space_id::Hid)
     return tuple(reverse!(dims)...), tuple(reverse!(maxdims)...)
 end
 function h5t_get_member_name(type_id::Hid, index::Integer)
-    pn = ccall((:H5Tget_member_name, libname),
+    pn = ccall((:H5Tget_member_name, libhdf5),
                Ptr{Uint8},
                (Hid, Cuint),
                type_id, index)
@@ -2010,7 +1998,7 @@ function h5t_get_member_name(type_id::Hid, index::Integer)
     bytestring(pn)
 end
 function h5t_get_tag(type_id::Hid)
-    pc = ccall((:H5Tget_tag, libname),
+    pc = ccall((:H5Tget_tag, libhdf5),
                    Ptr{Uint8},
                    (Hid,),
                    type_id)
