@@ -25,6 +25,7 @@ typealias Htri        Cint   # pseudo-boolean (negative if error)
 typealias Haddr       Uint64
 
 ### Load and initialize the HDF library ###
+@osx_only import Homebrew # Add Homebrew/lib to the DL_LOAD_PATH
 if isfile(joinpath(dirname(dirname(@__FILE__)),"deps","deps.jl"))
     include("../deps/deps.jl")
 else
