@@ -11,12 +11,12 @@ before_install:
     - sudo add-apt-repository ppa:staticfloat/julia-deps -y
     - sudo add-apt-repository ppa:staticfloat/${JULIAVERSION} -y
     - sudo apt-get update -qq -y
-    - sudo apt-get install libpcre3-dev julia hdf5-tools -y
+    - sudo apt-get install libpcre3-dev julia -y
     - git config --global user.name "Travis User"
     - git config --global user.email "travis@example.net"
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 script:
-    - julia -e 'versioninfo(); Pkg.init(); Pkg.add("DataFrames"); Pkg.clone(pwd())'
+    - julia -e 'versioninfo(); Pkg.init(); Pkg.add("DataFrames"); Pkg.clone(pwd()); Pkg.build("HDF5")'
     - if [ $JULIAVERSION = "julianightlies" ]; then julia --code-coverage test/runtests.jl; fi
     - if [ $JULIAVERSION = "juliareleases" ]; then julia test/runtests.jl; fi
     - if [ $JULIAVERSION = "julianightlies" ]; then julia -e 'Pkg.add("JLDArchives"); cd(Pkg.dir("JLDArchives", "test")); include("runtests.jl")'; fi
