@@ -40,6 +40,8 @@ write(f, "empty_string_array", empty_string_array)
 empty_array_of_strings = ASCIIString[""]
 write(f, "empty_array_of_strings", empty_array_of_strings)
 # Attributes
+species = [["N", "C"], ["A", "B"]]
+attrs(f)["species"] = species
 dset = f["salut"]
 label = "This is a string"
 attrs(dset)["typeinfo"] = label
@@ -136,6 +138,7 @@ empty_string_arrayr = read(fr, "empty_string_array")
 @assert empty_string_arrayr == empty_string_array
 empty_array_of_stringsr = read(fr, "empty_array_of_strings")
 @assert empty_array_of_stringsr == empty_array_of_strings
+@assert a_read(fr, "species") == species
 dset = fr["salut"]
 @assert a_read(dset, "typeinfo") == label
 close(dset)

@@ -1358,7 +1358,7 @@ end
 # You can also pass in property lists
 for (privatesym, fsym, ptype) in
     ((:_d_create, :d_create, Union(HDF5File, HDF5Group)),
-     (:_a_create, :a_create, Union(HDF5Group, HDF5Dataset, HDF5Datatype)))
+     (:_a_create, :a_create, Union(HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype)))
     @eval begin
         # Generic create (hidden)
         function ($privatesym)(parent::$ptype, name::ByteString, data, plists...)
