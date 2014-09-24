@@ -357,7 +357,7 @@ function read_array(obj::JldDataset, dtype::HDF5Datatype, dspace_id::HDF5.Hid, d
 end
 
 # Arrays of basic HDF5 kinds
-function read_vals{T<:HDF5BitsKind}(obj::JldDataset, dtype::HDF5Datatype, ::Type{T},
+function read_vals{S<:HDF5BitsKind}(obj::JldDataset, dtype::HDF5Datatype, T::Union(Type{S}, Type{Complex{S}}),
                                     dspace_id::HDF5.Hid, dsel_id::HDF5.Hid, dims::(Int...))
     if obj.file.mmaparrays && HDF5.iscontiguous(obj.plain) && dsel_id == HDF5.H5S_ALL
         readmmap(obj.plain, Array{T})
@@ -381,7 +381,7 @@ function read_vals(obj::JldDataset, dtype::HDF5Datatype, T::Type, dspace_id::HDF
 
     f = file(obj)
     h5offset = pointer(buf)
-    if T.pointerfree
+    if T.pointerfree && !T.mutable
         jloffset = pointer(out)
         jlsz = T.size
 

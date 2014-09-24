@@ -63,7 +63,10 @@ cpus = Base.Sys.cpu_info()
 # Immutable type:
 rng = 1:5
 # Type with a pointer field (#84)
-objwithpointer = big(10)^10000
+immutable ObjWithPointer
+    a::Ptr{Void}
+end
+objwithpointer = ObjWithPointer(0)
 # Custom BitsType (#99)
 bitstype 64 MyBT
 bt = reinterpret(MyBT, int64(55))
@@ -172,6 +175,9 @@ empty_arr_3 = {}
 empty_arr_4 = cell(0, 97)
 # Moderately big dataset (which will be mmapped)
 bigdata = [1:10000]
+# BigFloats and BigInts
+bigints = big(3).^(1:100)
+bigfloats = big(3.2).^(1:100)
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -307,6 +313,8 @@ fid = jldopen(fn, "w")
 @write fid empty_arr_3
 @write fid empty_arr_4
 @write fid bigdata
+@write fid bigfloats
+@write fid bigints
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -411,6 +419,8 @@ for mmap = (@windows ? false : (false, true))
     @check fidr empty_arr_3
     @check fidr empty_arr_4
     @check fidr bigdata
+    @check fidr bigfloats
+    @check fidr bigints
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}

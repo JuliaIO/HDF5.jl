@@ -6,7 +6,7 @@ const INLINE_TUPLE = false
 const INLINE_POINTER_IMMUTABLE = false
 
 const JLD_REF_TYPE = JldDatatype(HDF5Datatype(HDF5.H5T_STD_REF_OBJ, false), 0)
-const BUILTIN_TYPES = Set([Symbol, Type, UTF16String])
+const BUILTIN_TYPES = Set([Symbol, Type, UTF16String, BigFloat, BigInt])
 const H5CONVERT_DEFINED = ObjectIdDict()
 const JLCONVERT_DEFINED = ObjectIdDict()
 
@@ -195,6 +195,38 @@ function h5convert!(out::Ptr, file::JldFile, x::Symbol, wsession::JldWriteSessio
 end
 
 jlconvert(::Type{Symbol}, file::JldFile, ptr::Ptr) = symbol(jlconvert(UTF8String, file, ptr))
+
+
+## BigInts and BigFloats
+
+h5fieldtype(parent::JldFile, T::Union(Type{BigInt}, Type{BigFloat}), commit::Bool) =
+    h5type(parent, T, commit)
+
+# Stored as a compound type that contains a variable length string
+function h5type(parent::JldFile, T::Union(Type{BigInt}, Type{BigFloat}), commit::Bool)
+    haskey(parent.jlh5type, T) && return parent.jlh5type[T]
+    id = HDF5.h5t_create(HDF5.H5T_COMPOUND, 8)
+    HDF5.h5t_insert(id, "data_", 0, h5fieldtype(parent, ASCIIString, commit))
+    dtype = HDF5Datatype(id, parent.plain)
+    commit ? commit_datatype(parent, dtype, T) : JldDatatype(dtype, -1)
+end
+
+gen_h5convert(::JldFile, ::Union(Type{BigInt}, Type{BigFloat})) = nothing
+function h5convert!(out::Ptr, file::JldFile, x::BigInt, wsession::JldWriteSession)
+    str = base(62, x)
+    push!(wsession.persist, str)
+    h5convert!(out, file, str, wsession)
+end
+function h5convert!(out::Ptr, file::JldFile, x::BigFloat, wsession::JldWriteSession)
+    str = string(x)
+    push!(wsession.persist, str)
+    h5convert!(out, file, str, wsession)
+end
+
+jlconvert(::Type{BigInt}, file::JldFile, ptr::Ptr) =
+    Base.parseint_nocheck(BigInt, jlconvert(ASCIIString, file, ptr), 62)
+jlconvert(::Type{BigFloat}, file::JldFile, ptr::Ptr) =
+    BigFloat(jlconvert(ASCIIString, file, ptr))
 
 ## Types
 
