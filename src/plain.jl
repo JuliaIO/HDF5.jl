@@ -162,7 +162,7 @@ const H5T_STR_NULLTERM = 0
 const H5T_STR_NULLPAD  = 1
 const H5T_STR_SPACEPAD = 2
 # Other type constants
-const H5T_VARIABLE     = -1
+const H5T_VARIABLE     = reinterpret(Uint64, int64(-1))
 # Type_id constants (LE = little endian, I16 = Int16, etc)
 const H5T_STD_I8LE        = read_const(:H5T_STD_I8LE_g)
 const H5T_STD_I8BE        = read_const(:H5T_STD_I8BE_g)
@@ -996,7 +996,12 @@ function _dataspace(sz::(Int...), max_dims::Union(Dims, ())=())
         if max_dims == ()
             space_id = h5s_create_simple(length(dims), dims, dims)
         else
-            space_id = h5s_create_simple(length(dims), dims, convert(Array{Hsize, 1},[reverse(max_dims)...]))
+            # This allows max_dims to be specified as -1 without
+            # triggering an overflow exception due to the signed->
+            # unsigned conversion.
+            space_id = h5s_create_simple(length(dims), dims,
+                                         reinterpret(Hsize, convert(Vector{Hssize},
+                                                                    [reverse(max_dims)...])))
         end
     end
     HDF5Dataspace(space_id)
@@ -1321,7 +1326,7 @@ function readmmap{T<:HDF5BitsKind}(obj::HDF5Dataset, ::Type{Array{T}})
     end
 
     offset = h5d_get_offset(obj.id)
-    if offset == uint64(-1)
+    if offset == reinterpret(Hsize, convert(Hssize, -1))
         error("Error mmapping array")
     end
     mmap_array(T, dims, fdio(fd), convert(FileOffset, offset))
