@@ -145,8 +145,12 @@ function jlconvert(T::Union(Type{ASCIIString}, Type{UTF8String}), ::JldFile, ptr
     T(pointer_to_array(strptr, n, true))
 end
 
-jlconvert(T::Union(Type{ByteString}), ::JldFile, ptr::Ptr) =
-    bytestring(unsafe_load(convert(Ptr{Ptr{Uint8}}, ptr)))
+function jlconvert(T::Union(Type{ByteString}), ::JldFile, ptr::Ptr)
+    strptr = unsafe_load(convert(Ptr{Ptr{Uint8}}, ptr))
+    str = bytestring(strptr)
+    c_free(strptr)
+    str
+end
 
 ## UTF16Strings
 

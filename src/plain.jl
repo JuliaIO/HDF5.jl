@@ -314,15 +314,14 @@ type HDF5Datatype
     toclose::Bool
     file::HDF5File
 
-    function HDF5Datatype(id, toclose::Bool=false)
+    function HDF5Datatype(id, toclose::Bool=true)
         nt = new(id, toclose)
         if toclose
             finalizer(nt, close)
         end
         nt
     end
-    function HDF5Datatype(id, file::HDF5File)
-        toclose = h5t_committed(id)
+    function HDF5Datatype(id, file::HDF5File, toclose::Bool=true)
         nt = new(id, toclose, file)
         if toclose
             finalizer(nt, close)
@@ -1218,22 +1217,26 @@ end
 # Read compound type
 function read(obj::HDF5Dataset, ::Type{Array{HDF5Compound}})
     t = datatype(obj)
-    n = h5t_get_nmembers(t.id)
-    membertype = Array(Type, n)
-    membername = Array(ASCIIString, n)
-    memberoffset = Array(Uint64, n)
-    sz = 0
-    for i = 1:n
-        filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
-        T = hdf5_to_julia_eltype(filetype)
-        if T == ASCIIString
-            error("Not yet supported")  # need to handle the vlen issues
-#             T = Ptr{Uint8}
+    try
+        n = h5t_get_nmembers(t.id)
+        membertype = Array(Type, n)
+        membername = Array(ASCIIString, n)
+        memberoffset = Array(Uint64, n)
+        sz = 0
+        for i = 1:n
+            filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
+            T = hdf5_to_julia_eltype(filetype)
+            if T == ASCIIString
+                error("Not yet supported")  # need to handle the vlen issues
+    #             T = Ptr{Uint8}
+            end
+            membertype[i] = T
+            memberoffset[i] = sz
+            sz += sizeof(T)
+            membername[i] = h5t_get_member_name(t.id, i-1)
         end
-        membertype[i] = T
-        memberoffset[i] = sz
-        sz += sizeof(T)
-        membername[i] = h5t_get_member_name(t.id, i-1)
+    finally
+        close(t)
     end
     # Build the "memory type"
     memtype_id = h5t_create(H5T_COMPOUND, sz)
@@ -1271,8 +1274,8 @@ end
 # Read VLEN arrays and character arrays
 atype{T<:HDF5BitsKind}(::Type{T}) = Array{T}
 atype{C<:CharType}(::Type{C}) = stringtype(C)
-p2a{T<:HDF5BitsKind}(p::Ptr{T}, len::Int) = pointer_to_array(p, (len,), true)
-p2a{C<:CharType}(p::Ptr{C}, len::Int) = convert(stringtype(C), bytestring(convert(Ptr{Uint8}, p), len))
+p2a{T<:HDF5BitsKind}(p::Ptr{T}, len::Int) = pointer_to_array(p, len, true)
+p2a{C<:CharType}(p::Ptr{C}, len::Int) = stringtype(C)(pointer_to_array(p, len, true))
 t2p{T<:HDF5BitsKind}(::Type{T}) = Ptr{T}
 t2p{C<:CharType}(::Type{C}) = Ptr{Uint8}
 function read{T<:Union(HDF5BitsKind,CharType)}(obj::DatasetOrAttribute, ::Type{HDF5Vlen{T}})
@@ -1290,7 +1293,6 @@ function read{T<:Union(HDF5BitsKind,CharType)}(obj::DatasetOrAttribute, ::Type{H
         h = structbuf[i]
         data[i] = p2a(convert(Ptr{T}, h.p), int(h.len))
     end
-    # FIXME? Ownership of buffer (no need to call reclaim, right?)
     data
 end
 read(attr::HDF5Attributes, name::ByteString) = a_read(attr.parent, name)
@@ -1608,14 +1610,15 @@ function hdf5_to_julia(obj::Union(HDF5Dataset, HDF5Attribute))
     try
         stype = h5s_get_simple_extent_type(objspace.id)
         if stype == H5S_SIMPLE
-            T = Array{T}
+            return Array{T}
         elseif stype == H5S_NULL
-            T = EmptyArray{T}
+            return EmptyArray{T}
+        else
+            return T
         end
     finally
         close(objspace)
     end
-    T
 end
 
 function hdf5_to_julia_eltype(objtype)
@@ -1633,18 +1636,31 @@ function hdf5_to_julia_eltype(objtype)
         end
     elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
         native_type = h5t_get_native_type(objtype.id)
-        native_size = h5t_get_size(native_type)
-        if class_id == H5T_INTEGER
-            is_signed = h5t_get_sign(native_type)
-        else
-            is_signed = nothing
+        try
+            native_size = h5t_get_size(native_type)
+            if class_id == H5T_INTEGER
+                is_signed = h5t_get_sign(native_type)
+            else
+                is_signed = nothing
+            end
+            T = hdf5_type_map[(class_id, is_signed, native_size)]
+        finally
+            h5t_close(native_type)
         end
-        T = hdf5_type_map[(class_id, is_signed, native_size)]
     elseif class_id == H5T_ENUM
-        native_type = h5t_get_native_type(h5t_get_super(objtype.id))
-        native_size = h5t_get_size(native_type)
-        is_signed = h5t_get_sign(native_type)
-        T = hdf5_type_map[(H5T_INTEGER, is_signed, native_size)]
+        super_type = h5t_get_super(objtype.id)
+        try
+            native_type = h5t_get_native_type(super_type)
+            try
+                native_size = h5t_get_size(native_type)
+                is_signed = h5t_get_sign(native_type)
+                T = hdf5_type_map[(H5T_INTEGER, is_signed, native_size)]
+            finally
+                h5t_close(native_type)
+            end
+        finally
+            h5t_close(super_type)
+        end
     elseif class_id == H5T_REFERENCE
         # How to test whether it's a region reference or an object reference??
         T = HDF5ReferenceObj
@@ -2001,7 +2017,9 @@ function h5t_get_member_name(type_id::Hid, index::Integer)
     if pn == C_NULL
         error("Error getting name of compound datatype member #", index)
     end
-    bytestring(pn)
+    s = bytestring(pn)
+    c_free(pn)
+    s
 end
 function h5t_get_tag(type_id::Hid)
     pc = ccall((:H5Tget_tag, libhdf5),
@@ -2011,7 +2029,9 @@ function h5t_get_tag(type_id::Hid)
     if pc == C_NULL
         error("Error getting opaque tag")
     end
-    bytestring(pc)
+    s = bytestring(pc)
+    c_free(pc)
+    s
 end
 
 function vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5Dataspace)
