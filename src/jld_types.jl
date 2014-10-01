@@ -256,6 +256,10 @@ jlconvert{T<:Type}(::Type{T}, file::JldFile, ptr::Ptr) = julia_type(jlconvert(UT
 
 h5type{T<:Ptr}(parent::JldFile, ::Type{T}, ::Bool) = throw(PointerException())
 
+## Union()
+
+h5fieldtype(parent::JldFile, ::Type{Union()}, ::Bool) = JLD_REF_TYPE
+
 ## Arrays
 
 # These show up as having T.size == 0, hence the need for

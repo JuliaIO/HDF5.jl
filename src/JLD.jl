@@ -504,6 +504,12 @@ function _write{T}(parent::Union(JldFile, JldGroup),
     end
 end
 
+# Dispatch correct method for Array{Union()}
+_write(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{Union()},
+       wsession::JldWriteSession) =
+    invoke(_write, (Union(JldFile, JldGroup), ByteString, Array, JldWriteSession), parent,
+           path, data, wsession)
+
 # Convert an array to the format to be written to the HDF5 file, either
 # references or values
 function h5convert_array(f::JldFile, data::Array,
@@ -721,10 +727,12 @@ end
 ### Converting Julia types to fully qualified names
 function full_typename(io::IO, file::JldFile, jltype::UnionType)
     print(io, "Union(")
-    full_typename(io, file, jltype.types[1])
-    for i = 2:length(jltype.types)
-        print(io, ',')
-        full_typename(io, file, jltype.types[i])
+    if !isempty(jltype.types)
+        full_typename(io, file, jltype.types[1])
+        for i = 2:length(jltype.types)
+            print(io, ',')
+            full_typename(io, file, jltype.types[i])
+        end
     end
     print(io, ')')
 end

@@ -178,6 +178,9 @@ bigdata = [1:10000]
 # BigFloats and BigInts
 bigints = big(3).^(1:100)
 bigfloats = big(3.2).^(1:100)
+# None
+none = Union()
+nonearr = Array(Union(), 5)
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -193,6 +196,7 @@ function iseq(c1::Base.Sys.CPUinfo, c2::Base.Sys.CPUinfo)
     true
 end
 iseq(x::MyUnicodeStruct☺, y::MyUnicodeStruct☺) = (x.α == y.α && x.∂ₓα == y.∂ₓα)
+iseq(x::Array{None}, y::Array{None}) = size(x) == size(y)
 macro check(fid, sym)
     ex = quote
         let tmp
@@ -315,6 +319,8 @@ fid = jldopen(fn, "w")
 @write fid bigdata
 @write fid bigfloats
 @write fid bigints
+@write fid none
+@write fid nonearr
 # Make sure we can create groups (i.e., use HDF5 features)
 g = g_create(fid, "mygroup")
 i = 7
@@ -421,6 +427,8 @@ for mmap = (@windows ? false : (false, true))
     @check fidr bigdata
     @check fidr bigfloats
     @check fidr bigints
+    @check fidr none
+    @check fidr nonearr
     
     x1 = read(fidr, "group1/x")
     @assert x1 == {1}
