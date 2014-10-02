@@ -1312,7 +1312,7 @@ ismmappable(::Type) = false
 ismmappable{T}(obj::HDF5Dataset, ::Type{T}) = ismmappable(T) && iscontiguous(obj)
 ismmappable(obj::HDF5Dataset) = ismmappable(obj, hdf5_to_julia(obj))
 
-function readmmap{T<:HDF5BitsKind}(obj::HDF5Dataset, ::Type{Array{T}})
+function readmmap{T}(obj::HDF5Dataset, ::Type{Array{T}})
     dims = size(obj)
     if dims == ()
         return T[]
