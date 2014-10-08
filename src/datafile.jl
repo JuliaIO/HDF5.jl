@@ -38,7 +38,7 @@ read(f::Base.Callable, parent::DataFile, name::ASCIIString...) =
 	f(read(parent, name...)...)
 
 # Read every variable in the file
-if VERSION < v"0.4-"
+if VERSION < v"0.4.0-dev+980"
     function read(f::DataFile)
         vars = names(f)
         vals = Array(Any, length(vars))

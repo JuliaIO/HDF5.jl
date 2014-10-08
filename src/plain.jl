@@ -10,7 +10,7 @@ import Base: close, convert, done, dump, eltype, endof, flush, getindex, isempty
 if VERSION <= v"0.2.99"
     import Base.has
 end
-if VERSION < v"0.4-"
+if VERSION < v"0.4.0-dev+980"
     macro Dict(pairs...)
         Expr(:dict, pairs...)
     end
