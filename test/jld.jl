@@ -39,7 +39,7 @@ ms = MyStruct(2, [3.2, -1.7])
 msempty = MyStruct(5, Float64[])
 sym = :TestSymbol
 syms = [:a, :b]
-d = Dict(syms, ["aardvark", "banana"])
+d = Dict([(syms[1],"aardvark"), (syms[2], "banana")])
 ex = quote
     function incrementby1(x::Int)
         x+1
@@ -474,7 +474,7 @@ close(g)
 close(fid)
 
 # Function load() and save() syntax
-d = ["x"=>3.2, "β"=>β, "A"=>A]
+d = Dict([("x",3.2), ("β",β), ("A",A)])
 save(fn, d)
 d2 = load(fn)
 @assert d == d2

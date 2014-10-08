@@ -709,7 +709,9 @@ is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == 
                             (e.head == :call && (e.args[1] == :Union || e.args[1] == :TypeVar))
 
 # Work around https://github.com/JuliaLang/julia/issues/8226
-const _typedict = (String=>Type)["Core.Type{TypeVar(:T,Union(Core.Any,Core.Undef))}"=>Type]
+const _typedict = Dict{String,Type}()
+_typedict["Core.Type{TypeVar(:T,Union(Core.Any,Core.Undef))}"] = Type
+
 function julia_type(s::String)
     typ = get(_typedict, s, UnconvertedType)
     if typ == UnconvertedType

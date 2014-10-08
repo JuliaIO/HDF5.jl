@@ -38,11 +38,22 @@ read(f::Base.Callable, parent::DataFile, name::ASCIIString...) =
 	f(read(parent, name...)...)
 
 # Read every variable in the file
-function read(f::DataFile)
-    vars = names(f)
-    vals = Array(Any, length(vars))
-    for i = 1:length(vars)
-        vals[i] = read(f, vars[i])
+if VERSION < v"0.4-"
+    function read(f::DataFile)
+        vars = names(f)
+        vals = Array(Any, length(vars))
+        for i = 1:length(vars)
+            vals[i] = read(f, vars[i])
+        end
+        Dict(vars, vals)
     end
-    Dict(vars, vals)
+else
+    function read(f::DataFile)
+        vars = names(f)
+        vals = Array(Any, length(vars))
+        for i = 1:length(vars)
+            vals[i] = read(f, vars[i])
+        end
+        Dict(zip(vars, vals))
+    end
 end

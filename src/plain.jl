@@ -10,6 +10,16 @@ import Base: close, convert, done, dump, eltype, endof, flush, getindex, isempty
 if VERSION <= v"0.2.99"
     import Base.has
 end
+if VERSION < v"0.4-"
+    macro Dict(pairs...)
+        Expr(:dict, pairs...)
+    end
+else
+    macro Dict(pairs...)
+        Expr(:call, :Dict, pairs...)
+    end
+end
+
 
 include("datafile.jl")
 
@@ -219,7 +229,7 @@ typealias HDF5BitsKind Union(Int8, Uint8, Int16, Uint16, Int32, Uint32, Int64, U
 typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
-const hdf5_type_map = {
+const hdf5_type_map = @Dict(
     (H5T_INTEGER, H5T_SGN_2, convert(Csize_t, 1)) => Int8,
     (H5T_INTEGER, H5T_SGN_2, convert(Csize_t, 2)) => Int16,
     (H5T_INTEGER, H5T_SGN_2, convert(Csize_t, 4)) => Int32,
@@ -230,7 +240,7 @@ const hdf5_type_map = {
     (H5T_INTEGER, H5T_SGN_NONE, convert(Csize_t, 8)) => Uint64,
     (H5T_FLOAT, nothing, convert(Csize_t, 4)) => Float32,
     (H5T_FLOAT, nothing, convert(Csize_t, 8)) => Float64,
-}
+)
 
 hdf5_type_id{S<:String}(::Type{S})  = H5T_C_S1
 
@@ -2094,14 +2104,14 @@ _link_properties(path::UTF8String) = UTF8_LINK_PROPERTIES
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT)
 
 # property function get/set pairs
-const hdf5_prop_get_set = {
+const hdf5_prop_get_set = @Dict(
     "chunk"         => (get_chunk, set_chunk),
     "fclose_degree" => (get_fclose_degree, h5p_set_fclose_degree),
     "compress"      => (nothing, h5p_set_deflate),
     "deflate"       => (nothing, h5p_set_deflate),
     "layout"        => (h5p_get_layout, h5p_set_layout),
     "userblock"     => (get_userblock, h5p_set_userblock),
-}
+)
 
 
 # Turn off automatic error printing
