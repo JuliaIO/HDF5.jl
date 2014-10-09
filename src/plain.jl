@@ -750,7 +750,7 @@ function t_commit(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::H
 end
 t_commit(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype) = t_commit(parent, path, dtype, p_create(H5P_LINK_CREATE))
 
-a_create(parent::Union(HDF5File, HDF5Object), path::ASCIIString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(checkvalid(parent).id, path, dtype.id, dspace.id), file(parent))
+a_create(parent::Union(HDF5File, HDF5Object), name::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(checkvalid(parent).id, name, dtype.id, dspace.id), file(parent))
 p_create(class) = HDF5Properties(h5p_create(class))
 
 # Delete objects
@@ -1712,7 +1712,7 @@ function h5a_write{T<:Union(HDF5BitsKind,CharType)}(attr_id::Hid, memtype_id::Hi
     vp = vlenpack(v)
     h5a_write(attr_id, memtype_id, vp)
 end
-h5a_create(loc_id::Hid, name::ByteString, type_id::Hid, space_id::Hid) = h5a_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT)
+h5a_create(loc_id::Hid, name::ByteString, type_id::Hid, space_id::Hid) = h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P_DEFAULT)
 h5a_open(obj_id::Hid, name::ByteString) = h5a_open(obj_id, name, H5P_DEFAULT)
 h5d_create(loc_id::Hid, name::ByteString, type_id::Hid, space_id::Hid) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
 h5d_open(obj_id::Hid, name::ByteString) = h5d_open(obj_id, name, H5P_DEFAULT)
@@ -2102,6 +2102,13 @@ h5p_set_char_encoding(UTF8_LINK_PROPERTIES.id, cset(UTF8String))
 h5p_set_create_intermediate_group(UTF8_LINK_PROPERTIES.id, 1)
 _link_properties(path::UTF8String) = UTF8_LINK_PROPERTIES
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT)
+
+const ASCII_ATTRIBUTE_PROPERTIES = p_create(H5P_ATTRIBUTE_CREATE)
+h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES.id, cset(ASCIIString))
+_attr_properties(path::ASCIIString) = ASCII_ATTRIBUTE_PROPERTIES
+const UTF8_ATTRIBUTE_PROPERTIES = p_create(H5P_ATTRIBUTE_CREATE)
+h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES.id, cset(UTF8String))
+_attr_properties(path::UTF8String) = UTF8_ATTRIBUTE_PROPERTIES
 
 # property function get/set pairs
 const hdf5_prop_get_set = @Dict(
