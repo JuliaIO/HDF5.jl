@@ -42,6 +42,8 @@ write(f, "empty_array_of_strings", empty_array_of_strings)
 # Attributes
 species = [["N", "C"], ["A", "B"]]
 attrs(f)["species"] = species
+C∞ = 42
+attrs(f)["C∞"] = C∞
 dset = f["salut"]
 label = "This is a string"
 attrs(dset)["typeinfo"] = label
@@ -139,6 +141,7 @@ empty_string_arrayr = read(fr, "empty_string_array")
 empty_array_of_stringsr = read(fr, "empty_array_of_strings")
 @assert empty_array_of_stringsr == empty_array_of_strings
 @assert a_read(fr, "species") == species
+@assert a_read(fr, "C∞") == C∞
 dset = fr["salut"]
 @assert a_read(dset, "typeinfo") == label
 close(dset)
