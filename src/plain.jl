@@ -759,6 +759,10 @@ o_delete(parent::Union(HDF5File, HDF5Group), path::ByteString, lapl::HDF5Propert
 o_delete(parent::Union(HDF5File, HDF5Group), path::ByteString) = h5l_delete(checkvalid(parent).id, path, H5P_DEFAULT)
 o_delete(obj::HDF5Object) = o_delete(parent(obj), ascii(split(name(obj),"/")[end]))
 
+# Copy objects
+o_copy(src_parent::Union(HDF5File, HDF5Group), src_path::ByteString, dst_parent::Union(HDF5File, HDF5Group), dst_path::ByteString) = h5o_copy(checkvalid(src_parent).id, src_path, checkvalid(dst_parent).id, dst_path, H5P_DEFAULT, _link_properties(dst_path))
+o_copy(src_obj::HDF5Object, dst_parent::Union(HDF5File, HDF5Group), dst_path::ByteString) = h5o_copy(checkvalid(src_obj).id, ".", checkvalid(dst_parent).id, dst_path, H5P_DEFAULT, _link_properties(dst_path))
+
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
 setindex!(parent::Union(HDF5File, HDF5Group), val, path::ByteString) = write(parent, path, val)
@@ -1896,6 +1900,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5o_open, :H5Oopen, Hid, (Hid, Ptr{Uint8}, Hid), (:loc_id, :pathname, :lapl_id), :(error("Error opening object ", h5i_get_name(loc_id), "/", pathname))),
      (:h5o_open_by_idx, :H5Oopen_by_idx, Hid, (Hid, Ptr{Uint8}, Cint, Cint, Hsize, Hid), (:loc_id, :group_name, :index_type, :order, :n, :lapl_id), :(error("Error opening object of index ", n))),
      (:h5o_open_by_addr, :H5Oopen_by_addr, Hid, (Hid, Haddr), (:loc_id, :addr), :(error("Error opening object by address"))),
+     (:h5o_copy, :H5Ocopy, Herr, (Hid, Ptr{Uint8}, Hid, Ptr{Uint8}, Hid, Hid), (:src_loc_id, :src_name, :dst_loc_id, :dst_name, :ocpypl_id, :lcpl_id), :(error("Error copying object ", h5i_get_name(src_loc_id), "/", src_name, " to ", h5i_get_name(dst_loc_id), "/", dst_name))),
      (:h5p_create, :H5Pcreate, Hid, (Hid,), (:cls_id,), "Error creating property list"),
      (:h5p_get_chunk, :H5Pget_chunk, Cint, (Hid, Cint, Ptr{Hsize}), (:plist_id, :n_dims, :dims), :(error("Error getting chunk size"))),
      (:h5p_get_layout, :H5Pget_layout, Cint, (Hid,), (:plist_id,), :(error("Error getting layout"))),
@@ -2171,6 +2176,7 @@ export
     length,
     name,
     names,
+    o_copy,
     o_delete,
     o_open,
     p_create,
