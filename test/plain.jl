@@ -54,6 +54,12 @@ g = g_create(f, "mygroup")
 R = rand(1:20, 20, 40);
 g["CompressedA", "chunk", (5,6), "compress", 9] = R
 close(g)
+# Copy group containing dataset
+o_copy(f, "mygroup", f, "mygroup2")
+# Copy dataset
+g = g_create(f, "mygroup3")
+o_copy(f["mygroup/CompressedA"], g, "CompressedA")
+close(g)
 # Writing hyperslabs
 dset = d_create(f,"slab",datatype(Float64),dataspace(20,20,5),"chunk",(5,5,1))
 Xslab = randn(20,20,5)
@@ -119,6 +125,10 @@ salut_splitr = read(fr, "salut_split")
 @assert salut_splitr == salut_split
 Rr = read(fr, "mygroup/CompressedA")
 @assert Rr == R
+Rr2 = read(fr, "mygroup2/CompressedA")
+@assert Rr2 == R
+Rr3 = read(fr, "mygroup3/CompressedA")
+@assert Rr3 == R
 dset = fr["mygroup/CompressedA"]
 @assert get_chunk(dset) == (5,6)
 @assert name(dset) == "/mygroup/CompressedA"
