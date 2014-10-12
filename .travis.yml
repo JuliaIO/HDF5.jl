@@ -1,4 +1,4 @@
-language: objective-c # force travis to run on mac
+language: cpp
 os:
     - linux
     - osx
