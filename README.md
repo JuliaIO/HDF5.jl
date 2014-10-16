@@ -1,5 +1,7 @@
 # HDF5 interface for the Julia language
 
+[![Build Status](https://travis-ci.org/timholy/HDF5.jl.svg?branch=master)](https://travis-ci.org/timholy/HDF5.jl) [![Coverage Status](https://coveralls.io/repos/timholy/HDF5.jl/badge.png)](https://coveralls.io/r/timholy/HDF5.jl)
+
 [HDF5][HDF5] is a file format and library for storing and accessing
 data, commonly used for scientific data. HDF5 files can be created and
 read by numerous [programming
