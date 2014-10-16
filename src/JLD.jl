@@ -33,7 +33,7 @@ immutable JldWriteSession
     persist::Vector{Any} # To hold objects that should not be garbage-collected
     h5ref::ObjectIdDict  # To hold mapping from Object/Array -> HDF5ReferenceObject
 
-    JldWriteSession() = new({}, ObjectIdDict())
+    JldWriteSession() = new(Any[], ObjectIdDict())
 end
 
 # The Julia Data file type

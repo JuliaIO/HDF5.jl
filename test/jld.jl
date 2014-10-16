@@ -123,7 +123,7 @@ immutable MyImmutable{T}
     z::Bool
 end
 nonpointerfree_immutable_1 = MyImmutable(1, [1., 2., 3.], false)
-nonpointerfree_immutable_2 = MyImmutable(2, {3., 4., 5.}, true)
+nonpointerfree_immutable_2 = MyImmutable(2, Any[3., 4., 5.], true)
 immutable MyImmutable2
     x::Vector{Int}
     MyImmutable2() = new()
@@ -171,7 +171,7 @@ padding_test = PaddingTest[PaddingTest(i, i) for i = 1:8]
 # Empty arrays of various types and sizes
 empty_arr_1 = Int[]
 empty_arr_2 = Array(Int, 56, 0)
-empty_arr_3 = {}
+empty_arr_3 = Any[]
 empty_arr_4 = cell(0, 97)
 # Moderately big dataset (which will be mmapped)
 bigdata = [1:10000]
@@ -325,8 +325,8 @@ fid = jldopen(fn, "w")
 g = g_create(fid, "mygroup")
 i = 7
 @write g i
-write(fid, "group1/x", {1})
-write(fid, "group2/x", {2})
+write(fid, "group1/x", Any[1])
+write(fid, "group2/x", Any[2])
 close(fid)
 
 # mmapping currently fails on Windows; re-enable once it can work
@@ -431,9 +431,9 @@ for mmap = (@windows ? false : (false, true))
     @check fidr nonearr
     
     x1 = read(fidr, "group1/x")
-    @assert x1 == {1}
+    @assert x1 == Any[1]
     x2 = read(fidr, "group2/x")
-    @assert x2 == {2}
+    @assert x2 == Any[2]
 
     close(fidr)
 end
@@ -510,7 +510,7 @@ i106 = load(fn, "i106")
 jldopen(fn, "w") do file
     file["a"] = [1:100]
     file["b"] = [x*y for x=1:10,y=1:10]
-    file["c"] = {1, 2, 3}
+    file["c"] = Any[1, 2, 3]
     file["d"] = [1//2, 1//4, 1//8]
 end
 jldopen(fn, "r+") do file
