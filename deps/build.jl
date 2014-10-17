@@ -3,7 +3,7 @@ using BinDeps
 @BinDeps.setup
 
 @linux_only begin
-    hdf5 = library_dependency("libhdf5", aliases = ["libhdf5", "libhdf5_serial", "linhdf5_openmpi", "libhdf5_mpich"])
+    hdf5 = library_dependency("libhdf5", aliases = ["libhdf5", "libhdf5_serial", "libhdf5_openmpi", "libhdf5_mpich"])
     provides(AptGet, "hdf5-tools", hdf5)
     provides(Yum, "hdf5", hdf5)
 end
