@@ -845,6 +845,16 @@ end
 size(dset::Union(HDF5Dataset, HDF5Attribute), d) = d > ndims(dset) ? 1 : size(dset)[d]
 length(dset::Union(HDF5Dataset, HDF5Attribute)) = prod(size(dset))
 ndims(dset::Union(HDF5Dataset, HDF5Attribute)) = length(size(dset))
+function eltype(dset::Union(HDF5Dataset, HDF5Attribute))
+    T = Any
+    dtype = datatype(dset)
+    try
+        T = hdf5_to_julia_eltype(dtype)
+    finally
+        close(dtype)
+    end
+    T
+end
 function isnull(obj::Union(HDF5Dataset, HDF5Attribute))
     dspace = dataspace(obj)
     ret = h5s_get_simple_extent_type(dspace.id) == H5S_NULL
