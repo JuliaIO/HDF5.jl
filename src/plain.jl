@@ -1238,15 +1238,17 @@ function getindex(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5Refere
     obj_id = h5r_dereference(checkvalid(parent).id, H5R_OBJECT, r)
     h5object(obj_id, parent)
 end
+
 # Read compound type
 function read(obj::HDF5Dataset, ::Type{Array{HDF5Compound}})
     t = datatype(obj)
+    local sz = 0, n, membername, membertype, memberoffset, memberfiletype
     try
         n = h5t_get_nmembers(t.id)
+        memberfiletype = Array(HDF5Datatype, n)
         membertype = Array(Type, n)
         membername = Array(ASCIIString, n)
         memberoffset = Array(Uint64, n)
-        sz = 0
         for i = 1:n
             filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
             T = hdf5_to_julia_eltype(filetype)
@@ -1254,9 +1256,10 @@ function read(obj::HDF5Dataset, ::Type{Array{HDF5Compound}})
                 error("Not yet supported")  # need to handle the vlen issues
     #             T = Ptr{Uint8}
             end
+            memberfiletype[i] = filetype
             membertype[i] = T
             memberoffset[i] = sz
-            sz += sizeof(T)
+            sz += sizeof(filetype)
             membername[i] = h5t_get_member_name(t.id, i-1)
         end
     finally
@@ -1265,7 +1268,7 @@ function read(obj::HDF5Dataset, ::Type{Array{HDF5Compound}})
     # Build the "memory type"
     memtype_id = h5t_create(H5T_COMPOUND, sz)
     for i = 1:n
-        h5t_insert(memtype_id, membername[i], memberoffset[i], hdf5_type_id(membertype[i])) # FIXME strings
+        h5t_insert(memtype_id, membername[i], memberoffset[i], memberfiletype[i].id) # FIXME strings
     end
     # Read the raw data
     buf = Array(Uint8, length(obj)*sz)
