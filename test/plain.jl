@@ -93,6 +93,7 @@ Af32 = read(fr, "Afloat32")
 Af64 = read(fr, "Afloat64")
 @assert float64(A) == Af64
 @assert eltype(Af64) == Float64
+@assert eltype(fr["Afloat64"]) == Float64  # issue 167
 Ai8 = read(fr, "Aint8")
 @assert Ai == Ai8
 @assert eltype(Ai8) == Int8
