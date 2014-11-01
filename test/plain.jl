@@ -211,3 +211,11 @@ g = fid["mygroup"]
 @assert names(g) == ASCIIString["x"]
 close(g)
 close(fid)
+
+d = h5read("test/compound.h5", "/data")
+@assert typeof(d) == HDF5.HDF5Compound
+@assert typeof(d.data) == Array{Uint8,1}
+@assert length(d.data) == 128
+@assert d.membertype == Type[Float64, HDF5.FixedArray{Float64,(HDF5.DimSize{3},)}, HDF5.FixedArray{Float64,(HDF5.DimSize{3},)}, Float64]
+@assert d.membername == ASCIIString["wgt", "xyz", "uvw", "E"]
+@assert d.memberoffset == Uint64[0x00, 0x08, 0x20, 0x38]
