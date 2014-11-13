@@ -511,8 +511,33 @@ immutable H5LInfo
 end
 
 # Blosc compression:
-include("blosc.jl")
+include("blosc_filter.jl")
 register_blosc()
+
+# heuristic chunk layout (return empty array to disable chunking)
+function heuristic_chunk(T::Type, shape)
+    chunk = [shape...]
+    nd = length(chunk)
+    Ts = sizeof(T)
+    sz = prod(chunk)
+    sz == 0 && return Int[] # never return a zero-size chunk
+    # simplification of ugly heuristic target chunk size from PyTables/h5py:
+    target = min(1500000, max(12000, ifloor(300*cbrt(Ts*sz))))
+    Ts > target && return ones(chunk)
+    # divide last non-unit dimension by 2 until we get <= target
+    # (since Julia default to column-major, favor contiguous first dimension)
+    while Ts*prod(chunk) > target
+        i = nd
+        while chunk[i] == 1
+            i -= 1
+        end
+        chunk[i] >>= 1
+    end
+    return chunk
+end
+heuristic_chunk{T}(A::AbstractArray{T}) = heuristic_chunk(T, size(A))
+heuristic_chunk(s::ByteString) = heuristic_chunk(Uint8, (sizeof(s),))
+heuristic_chunk(x) = Int[]
 
 ### High-level interface ###
 # Open or create an HDF5 file
@@ -798,12 +823,22 @@ function setindex!(parent::Union(HDF5File, HDF5Group), val, path::ByteString, pr
     end
     p = p_create(H5P_DATASET_CREATE)
     p[prop1] = val1
+    need_chunks = prop1 in chunked_props
+    have_chunks = prop1 == "chunk"
     for i = 1:2:length(pv)
         thisname = pv[i]
         if !isa(thisname, ASCIIString)
             error("Argument ", i+3, " should be an ASCIIString, but it's a ", typeof(thisname))
         end
         p[thisname] = pv[i+1]
+        need_chunks = need_chunks || (thisname in chunked_props)
+        have_chunks = have_chunks || (thisname == "chunk")
+    end
+    if need_chunks && !have_chunks
+        chunk = heuristic_chunk(val)
+        if !isempty(chunk)
+            p["chunk"] = chunk
+        end
     end
     write(parent, path, val, p_create(H5P_LINK_CREATE), p)
 end
@@ -2140,6 +2175,8 @@ const hdf5_prop_get_set = @Dict(
     "layout"        => (h5p_get_layout, h5p_set_layout),
     "userblock"     => (get_userblock, h5p_set_userblock),
 )
+# properties that require chunks in order to work (e.g. any filter)
+const chunked_props = Set(["compress", "deflate", "blosc"])
 
 
 # Turn off automatic error printing
