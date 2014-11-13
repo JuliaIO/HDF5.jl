@@ -226,7 +226,6 @@ function h5_get_libversion()
     end
     return _majnum[1], _minnum[1], _relnum[1]
 end
-const version = VersionNumber(h5_get_libversion()...)
 
 ## Conversion between Julia types and HDF5 atomic types
 hdf5_type_id(::Type{Int8})       = H5T_NATIVE_INT8

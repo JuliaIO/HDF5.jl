@@ -123,9 +123,6 @@ const c_blosc_filter = cfunction(blosc_filter, Csize_t,
 
 # register the Blosc filter function with HDF5
 function register_blosc()
-    if version < v"1.8"
-        error("HDF5 $version is not yet supported")
-    end
     if ccall((:H5Zregister, libhdf5), Herr, (Ptr{H5Z_class2_t},),
              &H5Z_class2_t(H5Z_CLASS_T_VERS,
                            FILTER_BLOSC,
