@@ -213,6 +213,21 @@ const H5F_LIBVER_EARLIEST = 0
 const H5F_LIBVER_18 = 1
 const H5F_LIBVER_LATEST = 1
 
+_majnum = Array(Cuint, 1)
+_minnum = Array(Cuint, 1)
+_relnum = Array(Cuint, 1)
+function h5_get_libversion()
+    status = ccall((:H5get_libversion, libhdf5),
+                   Herr,
+                   (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}),
+                   _majnum, _minnum, _relnum)
+    if status < 0
+        error("Error getting HDF5 library version")
+    end
+    return _majnum[1], _minnum[1], _relnum[1]
+end
+const version = VersionNumber(h5_get_libversion()...)
+
 ## Conversion between Julia types and HDF5 atomic types
 hdf5_type_id(::Type{Int8})       = H5T_NATIVE_INT8
 hdf5_type_id(::Type{Uint8})      = H5T_NATIVE_UINT8
@@ -496,6 +511,9 @@ immutable H5LInfo
     u::Uint64
 end
 
+# Blosc compression:
+include("blosc.jl")
+register_blosc()
 
 ### High-level interface ###
 # Open or create an HDF5 file
@@ -1991,19 +2009,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
 end
 
 # Functions that require special handling
-_majnum = Array(Cuint, 1)
-_minnum = Array(Cuint, 1)
-_relnum = Array(Cuint, 1)
-function h5_get_libversion()
-    status = ccall((:H5get_libversion, libhdf5),
-                   Herr,
-                   (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}),
-                   _majnum, _minnum, _relnum)
-    if status < 0
-        error("Error getting HDF5 library version")
-    end
-    return _majnum[1], _minnum[1], _relnum[1]
-end
+
 function h5a_get_name(attr_id::Hid)
     len = h5a_get_name(attr_id, 0, C_NULL) # order of args differs from {f,i}_get_name
     buf = Array(Uint8, len+1)
@@ -2131,6 +2137,7 @@ const hdf5_prop_get_set = @Dict(
     "fclose_degree" => (get_fclose_degree, h5p_set_fclose_degree),
     "compress"      => (nothing, h5p_set_deflate),
     "deflate"       => (nothing, h5p_set_deflate),
+    "blosc"         => (nothing, h5p_set_blosc),
     "layout"        => (h5p_get_layout, h5p_set_layout),
     "userblock"     => (get_userblock, h5p_set_userblock),
 )
