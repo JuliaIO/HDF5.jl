@@ -182,6 +182,10 @@ bigfloats = big(3.2).^(1:100)
 none = Union()
 nonearr = Array(Union(), 5)
 
+# some data big enough to ensure that compression is used:
+Abig = kron(eye(10), rand(20,20))
+Sbig = "A test string "^1000
+
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
 iseq(x::MyImmutable, y::MyImmutable) = (isequal(x.x, y.x) && isequal(x.y, y.y) && isequal(x.z, y.z))
@@ -243,328 +247,352 @@ end
 
 fn = joinpath(tempdir(),"test.jld")
 
-fid = jldopen(fn, "w")
-@write fid x
-@write fid A
-@write fid Aarray
-@write fid str
-@write fid stringsA
-@write fid stringsU
-@write fid strings16
-@write fid strings16_2d
-@write fid empty_string
-@write fid empty_string_array
-@write fid empty_array_of_strings
-@write fid tf
-@write fid TF
-@write fid AB
-@write fid t
-@write fid c
-@write fid cint
-@write fid C
-@write fid emptyA
-@write fid emptyB
-@write fid ms
-@write fid msempty
-@write fid sym
-@write fid syms
-@write fid d
-@write fid ex
-@write fid T
-@write fid char
-@write fid unicode_char
-@write fid α
-@write fid β
-@write fid vv
-@write fid cpus
-@write fid rng
-@write fid typevar
-@write fid typevar_lb
-@write fid typevar_ub
-@write fid typevar_lb_ub
-@write fid undef
-@write fid undefs
-@write fid ms_undef
-@test_throws JLD.PointerException @write fid objwithpointer
-@write fid bt
-@write fid sa_asc
-@write fid sa_utf8
-@write fid subarray
-@write fid arr_empty_tuple
-@write fid emptyimmutable
-@write fid emptytype
-@write fid emptyii
-@write fid emptyit
-@write fid emptyti
-@write fid emptytt
-@write fid emptyiiotherfield
-@write fid unicodestruct☺
-@write fid array_of_matrices
-@write fid tup
-@write fid empty_tup
-@write fid nonpointerfree_immutable_1
-@write fid nonpointerfree_immutable_2
-@write fid nonpointerfree_immutable_3
-@write fid vague
-@write fid bitsunion
-@write fid typeunionfield
-@write fid genericunionfield
-@write fid arr_ref
-@write fid obj_ref
-@write fid padding_test
-@write fid empty_arr_1
-@write fid empty_arr_2
-@write fid empty_arr_3
-@write fid empty_arr_4
-@write fid bigdata
-@write fid bigfloats
-@write fid bigints
-@write fid none
-@write fid nonearr
-# Make sure we can create groups (i.e., use HDF5 features)
-g = g_create(fid, "mygroup")
-i = 7
-@write g i
-write(fid, "group1/x", Any[1])
-write(fid, "group2/x", Any[2])
-close(fid)
-
-# mmapping currently fails on Windows; re-enable once it can work
-for mmap = (@windows ? false : (false, true))
-    fidr = jldopen(fn, "r", mmaparrays=mmap)
-    @check fidr x
-    @check fidr A
-    @check fidr Aarray
-    @check fidr str
-    @check fidr stringsA
-    @check fidr stringsU
-    @check fidr strings16
-    @check fidr strings16_2d
-    @check fidr empty_string
-    @check fidr empty_string_array
-    @check fidr empty_array_of_strings
-    @check fidr tf
-    @check fidr TF
-    @check fidr AB
-    @check fidr t
-    @check fidr c
-    @check fidr cint
-    @check fidr C
-    @check fidr emptyA
-    @check fidr emptyB
-    @check fidr ms
-    @check fidr msempty
-    @check fidr sym
-    @check fidr syms
-    @check fidr d
-    exr = read(fidr, "ex")   # line numbers are stripped, don't expect equality
-    checkexpr(ex, exr)
-    @check fidr T
-    @check fidr char
-    @check fidr unicode_char
-    @check fidr α
-    @check fidr β
-    @check fidr vv
-    @check fidr cpus
-    @check fidr rng
-    @check fidr typevar
-    @check fidr typevar_lb
-    @check fidr typevar_ub
-    @check fidr typevar_lb_ub
-
-    # Special cases for reading undefs
-    undef = read(fidr, "undef")
-    if !isa(undef, Array{Any, 1}) || length(undef) != 1 || isdefined(undef, 1)
-        error("For undef, read value does not agree with written value")
-    end
-    undefs = read(fidr, "undefs")
-    if !isa(undefs, Array{Any, 2}) || length(undefs) != 4 || any(map(i->isdefined(undefs, i), 1:4))
-        error("For undefs, read value does not agree with written value")
-    end
-    ms_undef = read(fidr, "ms_undef")
-    if !isa(ms_undef, MyStruct) || ms_undef.len != 0 || isdefined(ms_undef, :data)
-        error("For ms_undef, read value does not agree with written value")
-    end
-    
-    @check fidr bt
-    @check fidr sa_asc
-    @check fidr sa_utf8
-    @check fidr subarray
-    @check fidr arr_empty_tuple
-    @check fidr emptyimmutable
-    @check fidr emptytype
-    @check fidr emptyii
-    @check fidr emptyit
-    @check fidr emptyti
-    @check fidr emptytt
-    @check fidr emptyiiotherfield
-    @check fidr unicodestruct☺
-    @check fidr array_of_matrices
-    @check fidr tup
-    @check fidr empty_tup
-    @check fidr nonpointerfree_immutable_1
-    @check fidr nonpointerfree_immutable_2
-    @check fidr nonpointerfree_immutable_3
-    vaguer = read(fidr, "vague")
-    @test typeof(vaguer) == typeof(vague) && vaguer.name == vague.name
-    @check fidr bitsunion
-    @check fidr typeunionfield
-    @check fidr genericunionfield
-
-    arr = read(fidr, "arr_ref")
-    @test arr == arr_ref
-    @test arr[1] === arr[2]
-
-    obj = read(fidr, "obj_ref")
-    @test obj.x.x === obj.x.y == obj.y.x === obj.y.y
-    @test obj.x !== obj.y
-
-    @check fidr padding_test
-    @check fidr empty_arr_1
-    @check fidr empty_arr_2
-    @check fidr empty_arr_3
-    @check fidr empty_arr_4
-    @check fidr bigdata
-    @check fidr bigfloats
-    @check fidr bigints
-    @check fidr none
-    @check fidr nonearr
-    
-    x1 = read(fidr, "group1/x")
-    @assert x1 == Any[1]
-    x2 = read(fidr, "group2/x")
-    @assert x2 == Any[2]
-
-    close(fidr)
-end
-
-# object references in a write session
-x = ObjRefType()
-a = [x, x]
-b = [x, x]
-@save fn a b
-jldopen(fn, "r") do fid
-    a = read(fid, "a")
-    b = read(fid, "b")
-    @test a[1] === a[2] === b[2] === a[1]
-
-    # Let gc get rid of a and b
-    a = nothing
-    b = nothing
-    gc()
-
-    a = read(fid, "a")
-    b = read(fid, "b")
-    @test typeof(a[1]) == ObjRefType
-    @test a[1] === a[2] === b[2] === a[1]
-end
-
-# do syntax
-jldopen(fn, "w") do fid
-    g_create(fid, "mygroup") do g
-        write(g, "x", 3.2)
-    end
-end
-fid = jldopen(fn, "r")
-@assert names(fid) == ASCIIString["mygroup"]
-g = fid["mygroup"]
-@assert names(g) == ASCIIString["x"]
-@assert read(g, "x") == 3.2
-close(g)
-close(fid)
-
-# Function load() and save() syntax
-d = Dict([("x",3.2), ("β",β), ("A",A)])
-save(fn, d)
-d2 = load(fn)
-@assert d == d2
-β2 = load(fn, "β")
-@assert β == β2
-β2, A2 = load(fn, "β", "A")
-@assert β == β2
-@assert A == A2
-
-save(fn, "x", 3.2, "β", β, "A", A)
-d3 = load(fn)
-@assert d == d3
-
-# #71
-jldopen(fn, "w") do file
-    file["a"] = 1
-end
-jldopen(fn, "r") do file
-    @assert read(file, "a") == 1
-end
-
 # Issue #106
 module Mod106
 bitstype 64 Typ{T}
 typ{T}(x::Int64, ::Type{T}) = Base.box(Typ{T}, Base.unbox(Int64,x))
 abstract UnexportedT
 end
-save(fn, "i106", Mod106.typ(int64(1), Mod106.UnexportedT))
-i106 = load(fn, "i106")
-@assert i106 == Mod106.typ(int64(1), Mod106.UnexportedT)
 
-# bracket syntax for datasets
-jldopen(fn, "w") do file
-    file["a"] = [1:100]
-    file["b"] = [x*y for x=1:10,y=1:10]
-    file["c"] = Any[1, 2, 3]
-    file["d"] = [1//2, 1//4, 1//8]
-end
-jldopen(fn, "r+") do file
-    @test(file["a"][1:50] == [1:50])
-    file["a"][1:50] = 1:2:100
-    @test(file["a"][1:50] == [1:2:100])
-    @test(file["b"][5,6][1]==5*6)
-    @test(file["c"][1:2] == [1, 2])
-    file["c"][2:3] = [5, 7]
-    @test(read(file, "c") == [1, 5, 7])
-    @test(file["d"][2:3] == [1//4, 1//8])
-    file["d"][1:1] = [9]
-    @test(read(file, "d") == [9, 1//4, 1//8])
-end
+for compress in (true,false)
+    fnc = compress ? fn*".c" : fn # workaround #176
+    fid = jldopen(fnc, "w", compress=compress)
+    @write fid x
+    @write fid A
+    @write fid Aarray
+    @write fid str
+    @write fid stringsA
+    @write fid stringsU
+    @write fid strings16
+    @write fid strings16_2d
+    @write fid empty_string
+    @write fid empty_string_array
+    @write fid empty_array_of_strings
+    @write fid tf
+    @write fid TF
+    @write fid AB
+    @write fid t
+    @write fid c
+    @write fid cint
+    @write fid C
+    @write fid emptyA
+    @write fid emptyB
+    @write fid ms
+    @write fid msempty
+    @write fid sym
+    @write fid syms
+    @write fid d
+    if compress # work around #176
+        @write fid ex
+    end
+    @write fid T
+    @write fid char
+    @write fid unicode_char
+    @write fid α
+    @write fid β
+    @write fid vv
+    @write fid cpus
+    @write fid rng
+    @write fid typevar
+    @write fid typevar_lb
+    @write fid typevar_ub
+    @write fid typevar_lb_ub
+    @write fid undef
+    @write fid undefs
+    @write fid ms_undef
+    @test_throws JLD.PointerException @write fid objwithpointer
+    @write fid bt
+    @write fid sa_asc
+    @write fid sa_utf8
+    @write fid subarray
+    @write fid arr_empty_tuple
+    @write fid emptyimmutable
+    @write fid emptytype
+    @write fid emptyii
+    @write fid emptyit
+    @write fid emptyti
+    @write fid emptytt
+    @write fid emptyiiotherfield
+    @write fid unicodestruct☺
+    @write fid array_of_matrices
+    @write fid tup
+    @write fid empty_tup
+    @write fid nonpointerfree_immutable_1
+    @write fid nonpointerfree_immutable_2
+    @write fid nonpointerfree_immutable_3
+    @write fid vague
+    @write fid bitsunion
+    @write fid typeunionfield
+    @write fid genericunionfield
+    @write fid arr_ref
+    @write fid obj_ref
+    @write fid padding_test
+    @write fid empty_arr_1
+    @write fid empty_arr_2
+    @write fid empty_arr_3
+    @write fid empty_arr_4
+    @write fid bigdata
+    @write fid bigfloats
+    @write fid bigints
+    @write fid none
+    @write fid nonearr
+    @write fid Abig
+    @write fid Sbig
+    # Make sure we can create groups (i.e., use HDF5 features)
+    g = g_create(fid, "mygroup")
+    i = 7
+    @write g i
+    write(fid, "group1/x", Any[1])
+    write(fid, "group2/x", Any[2])
+    close(fid)
 
-# bracket syntax when created by HDF5
-println("The following unrecognized JLD file warning is a sign of normal operation.")
-h5open(fn, "w") do file
-    file["a"] = [1:100]
-    file["a"][51:100] = [1:50]
-    file["b"] = [x*y for x=1:10,y=1:10]
-end
-jldopen(fn, "r") do file
-    @assert(file["a"][1:50] == [1:50])
-    @assert(file["a"][:] == [[1:50],[1:50]])
-    @assert(file["b"][5,6][1]==5*6)
-end
+    # mmapping currently fails on Windows; re-enable once it can work
+    for mmap = (@windows ? false : (false, true))
+        fidr = jldopen(fnc, "r", mmaparrays=mmap)
+        @check fidr x
+        @check fidr A
+        @check fidr Aarray
+        @check fidr str
+        @check fidr stringsA
+        @check fidr stringsU
+        @check fidr strings16
+        @check fidr strings16_2d
+        @check fidr empty_string
+        @check fidr empty_string_array
+        @check fidr empty_array_of_strings
+        @check fidr tf
+        @check fidr TF
+        @check fidr AB
+        @check fidr t
+        @check fidr c
+        @check fidr cint
+        @check fidr C
+        @check fidr emptyA
+        @check fidr emptyB
+        @check fidr ms
+        @check fidr msempty
+        @check fidr sym
+        @check fidr syms
+        @check fidr d
+        if compress # work around #176
+            exr = read(fidr, "ex")   # line numbers are stripped, don't expect equality
+            checkexpr(ex, exr)
+        end
+        @check fidr T
+        @check fidr char
+        @check fidr unicode_char
+        @check fidr α
+        @check fidr β
+        @check fidr vv
+        @check fidr cpus
+        @check fidr rng
+        @check fidr typevar
+        @check fidr typevar_lb
+        @check fidr typevar_ub
+        @check fidr typevar_lb_ub
+        
+        # Special cases for reading undefs
+        undef = read(fidr, "undef")
+        if !isa(undef, Array{Any, 1}) || length(undef) != 1 || isdefined(undef, 1)
+            error("For undef, read value does not agree with written value")
+        end
+        undefs = read(fidr, "undefs")
+        if !isa(undefs, Array{Any, 2}) || length(undefs) != 4 || any(map(i->isdefined(undefs, i), 1:4))
+            error("For undefs, read value does not agree with written value")
+        end
+        ms_undef = read(fidr, "ms_undef")
+        if !isa(ms_undef, MyStruct) || ms_undef.len != 0 || isdefined(ms_undef, :data)
+            error("For ms_undef, read value does not agree with written value")
+        end
+        
+        @check fidr bt
+        @check fidr sa_asc
+        @check fidr sa_utf8
+        @check fidr subarray
+        @check fidr arr_empty_tuple
+        @check fidr emptyimmutable
+        @check fidr emptytype
+        @check fidr emptyii
+        @check fidr emptyit
+        @check fidr emptyti
+        @check fidr emptytt
+        @check fidr emptyiiotherfield
+        @check fidr unicodestruct☺
+        @check fidr array_of_matrices
+        @check fidr tup
+        @check fidr empty_tup
+        @check fidr nonpointerfree_immutable_1
+        @check fidr nonpointerfree_immutable_2
+        @check fidr nonpointerfree_immutable_3
+        vaguer = read(fidr, "vague")
+        @test typeof(vaguer) == typeof(vague) && vaguer.name == vague.name
+        @check fidr bitsunion
+        @check fidr typeunionfield
+        @check fidr genericunionfield
+        
+        arr = read(fidr, "arr_ref")
+        @test arr == arr_ref
+        @test arr[1] === arr[2]
+        
+        obj = read(fidr, "obj_ref")
+        @test obj.x.x === obj.x.y == obj.y.x === obj.y.y
+        @test obj.x !== obj.y
+        
+        @check fidr padding_test
+        @check fidr empty_arr_1
+        @check fidr empty_arr_2
+        @check fidr empty_arr_3
+        @check fidr empty_arr_4
+        @check fidr bigdata
+        @check fidr bigfloats
+        @check fidr bigints
+        @check fidr none
+        @check fidr nonearr
+        @check fidr Abig
+        @check fidr Sbig
+        
+        x1 = read(fidr, "group1/x")
+        @assert x1 == Any[1]
+        x2 = read(fidr, "group2/x")
+        @assert x2 == Any[2]
+        
+        close(fidr)
+    end
+end # compress in (true,false)
 
-# delete!
-jldopen(fn, "w") do file
-    file["ms"] = ms
-    delete!(file, "ms")
-    file["ms"] = β
-    g = g_create(file,"g")
-    file["g/ms"] = ms
-    @test_throws ErrorException delete!(file, "_refs/g/ms")
-    delete!(file, "g/ms")
-    file["g/ms"] = ms
-    delete!(file, "/g/ms")
-    g["ms"] = ms
-    delete!(g,"ms")
-    g["ms"] = ms
-    delete!(g["ms"])
-    g["ms"] = ms
-    delete!(g)
-    g = g_create(file,"g")
-    g["ms"] = ms
-    delete!(g)
-end
-jldopen(fn, "r") do file
-    @assert(read(file["ms"]) == β)
-    @assert(!exists(file, "g/ms"))
-    @assert(!exists(file, "g"))
-end
+for compress in (false,true)
+    # object references in a write session
+    x = ObjRefType()
+    a = [x, x]
+    b = [x, x]
+    @save fn a b
+    jldopen(fn, "r") do fid
+        a = read(fid, "a")
+        b = read(fid, "b")
+        @test a[1] === a[2] === b[2] === a[1]
+        
+        # Let gc get rid of a and b
+        a = nothing
+        b = nothing
+        gc()
+        
+        a = read(fid, "a")
+        b = read(fid, "b")
+        @test typeof(a[1]) == ObjRefType
+        @test a[1] === a[2] === b[2] === a[1]
+    end
+    
+    # do syntax
+    jldopen(fn, "w"; compress=compress) do fid
+        g_create(fid, "mygroup") do g
+            write(g, "x", 3.2)
+        end
+    end
+    fid = jldopen(fn, "r")
+    @assert names(fid) == ASCIIString["mygroup"]
+    g = fid["mygroup"]
+    @assert names(g) == ASCIIString["x"]
+    @assert read(g, "x") == 3.2
+    close(g)
+    close(fid)
+    
+    # Function load() and save() syntax
+    d = Dict([("x",3.2), ("β",β), ("A",A)])
+    save(fn, d, compress=compress)
+    d2 = load(fn)
+    @assert d == d2
+    β2 = load(fn, "β")
+    @assert β == β2
+    β2, A2 = load(fn, "β", "A")
+    @assert β == β2
+    @assert A == A2
+    
+    save(fn, "x", 3.2, "β", β, "A", A, compress=compress)
+    d3 = load(fn)
+    @assert d == d3
+    
+    # #71
+    jldopen(fn, "w", compress=compress) do file
+        file["a"] = 1
+    end
+    jldopen(fn, "r") do file
+        @assert read(file, "a") == 1
+    end
+    
+    # Issue #106
+    save(fn, "i106", Mod106.typ(int64(1), Mod106.UnexportedT), compress=compress)
+    i106 = load(fn, "i106")
+    @assert i106 == Mod106.typ(int64(1), Mod106.UnexportedT)
+    
+    # bracket syntax for datasets
+    jldopen(fn, "w", compress=compress) do file
+        file["a"] = [1:100]
+        file["b"] = [x*y for x=1:10,y=1:10]
+        file["c"] = Any[1, 2, 3]
+        file["d"] = [1//2, 1//4, 1//8]
+    end
+    jldopen(fn, "r+", compress=compress) do file
+        @test(file["a"][1:50] == [1:50])
+        file["a"][1:50] = 1:2:100
+        @test(file["a"][1:50] == [1:2:100])
+        @test(file["b"][5,6][1]==5*6)
+        @test(file["c"][1:2] == [1, 2])
+        file["c"][2:3] = [5, 7]
+        @test(read(file, "c") == [1, 5, 7])
+        @test(file["d"][2:3] == [1//4, 1//8])
+        file["d"][1:1] = [9]
+        @test(read(file, "d") == [9, 1//4, 1//8])
+    end
+    
+    # bracket syntax when created by HDF5
+    println("The following unrecognized JLD file warning is a sign of normal operation.")
+    if compress
+        h5open(fn, "w") do file
+            file["a", "blosc",5] = [1:100]
+            file["a"][51:100] = [1:50]
+            file["b", "blosc",5] = [x*y for x=1:10,y=1:10]
+        end
+    else
+        h5open(fn, "w") do file
+            file["a"] = [1:100]
+            file["a"][51:100] = [1:50]
+            file["b"] = [x*y for x=1:10,y=1:10]
+        end
+    end
+    jldopen(fn, "r") do file
+        @assert(file["a"][1:50] == [1:50])
+        @assert(file["a"][:] == [[1:50],[1:50]])
+        @assert(file["b"][5,6][1]==5*6)
+    end
+    
+    # delete!
+    jldopen(fn, "w", compress=compress) do file
+        file["ms"] = ms
+        delete!(file, "ms")
+        file["ms"] = β
+        g = g_create(file,"g")
+        file["g/ms"] = ms
+        @test_throws ErrorException delete!(file, "_refs/g/ms")
+        delete!(file, "g/ms")
+        file["g/ms"] = ms
+        delete!(file, "/g/ms")
+        g["ms"] = ms
+        delete!(g,"ms")
+        g["ms"] = ms
+        delete!(g["ms"])
+        g["ms"] = ms
+        delete!(g)
+        g = g_create(file,"g")
+        g["ms"] = ms
+        delete!(g)
+    end
+    jldopen(fn, "r") do file
+        @assert(read(file["ms"]) == β)
+        @assert(!exists(file, "g/ms"))
+        @assert(!exists(file, "g"))
+    end
+
+end # compress in (false,true)
 
 # mismatched and missing types
 module JLDTemp1

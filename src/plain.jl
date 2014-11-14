@@ -536,8 +536,10 @@ function heuristic_chunk(T::Type, shape)
     return chunk
 end
 heuristic_chunk{T}(A::AbstractArray{T}) = heuristic_chunk(T, size(A))
-heuristic_chunk(s::ByteString) = heuristic_chunk(Uint8, (sizeof(s),))
 heuristic_chunk(x) = Int[]
+
+# strings are saved as scalars, and hence cannot be chunked or compressed
+# heuristic_chunk(s::ByteString) = heuristic_chunk(Uint8, (sizeof(s),))
 
 ### High-level interface ###
 # Open or create an HDF5 file
