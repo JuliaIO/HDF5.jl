@@ -1,4 +1,5 @@
 using HDF5
+const test_path = splitdir(@__FILE__)[1]
 
 # Create a new file
 fn = joinpath(tempdir(),"test.h5")
@@ -212,7 +213,7 @@ g = fid["mygroup"]
 close(g)
 close(fid)
 
-d = h5read("test/compound.h5", "/data")
+d = h5read(joinpath(test_path, "compound.h5"), "/data")
 @assert typeof(d) == HDF5.HDF5Compound
 @assert typeof(d.data) == Array{Uint8,1}
 @assert length(d.data) == 128
