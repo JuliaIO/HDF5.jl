@@ -213,6 +213,20 @@ const H5F_LIBVER_EARLIEST = 0
 const H5F_LIBVER_18 = 1
 const H5F_LIBVER_LATEST = 1
 
+_majnum = Array(Cuint, 1)
+_minnum = Array(Cuint, 1)
+_relnum = Array(Cuint, 1)
+function h5_get_libversion()
+    status = ccall((:H5get_libversion, libhdf5),
+                   Herr,
+                   (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}),
+                   _majnum, _minnum, _relnum)
+    if status < 0
+        error("Error getting HDF5 library version")
+    end
+    return _majnum[1], _minnum[1], _relnum[1]
+end
+
 ## Conversion between Julia types and HDF5 atomic types
 hdf5_type_id(::Type{Int8})       = H5T_NATIVE_INT8
 hdf5_type_id(::Type{Uint8})      = H5T_NATIVE_UINT8
@@ -496,6 +510,34 @@ immutable H5LInfo
     u::Uint64
 end
 
+# Blosc compression:
+include("blosc_filter.jl")
+register_blosc()
+
+# heuristic chunk layout (return empty array to disable chunking)
+function heuristic_chunk(T::Type, shape)
+    Ts = sizeof(T)
+    sz = prod(shape)
+    sz == 0 && return Int[] # never return a zero-size chunk
+    chunk = [shape...]
+    nd = length(chunk)
+    # simplification of ugly heuristic target chunk size from PyTables/h5py:
+    target = min(1500000, max(12000, ifloor(300*cbrt(Ts*sz))))
+    Ts > target && return ones(chunk)
+    # divide last non-unit dimension by 2 until we get <= target
+    # (since Julia default to column-major, favor contiguous first dimension)
+    while Ts*prod(chunk) > target
+        i = nd
+        while chunk[i] == 1
+            i -= 1
+        end
+        chunk[i] >>= 1
+    end
+    return chunk
+end
+heuristic_chunk{T}(A::AbstractArray{T}) = heuristic_chunk(T, size(A))
+heuristic_chunk(x) = Int[]
+# (strings are saved as scalars, and hence cannot be chunked)
 
 ### High-level interface ###
 # Open or create an HDF5 file
@@ -781,12 +823,22 @@ function setindex!(parent::Union(HDF5File, HDF5Group), val, path::ByteString, pr
     end
     p = p_create(H5P_DATASET_CREATE)
     p[prop1] = val1
+    need_chunks = prop1 in chunked_props
+    have_chunks = prop1 == "chunk"
     for i = 1:2:length(pv)
         thisname = pv[i]
         if !isa(thisname, ASCIIString)
             error("Argument ", i+3, " should be an ASCIIString, but it's a ", typeof(thisname))
         end
         p[thisname] = pv[i+1]
+        need_chunks = need_chunks || (thisname in chunked_props)
+        have_chunks = have_chunks || (thisname == "chunk")
+    end
+    if need_chunks && !have_chunks
+        chunk = heuristic_chunk(val)
+        if !isempty(chunk)
+            p["chunk"] = chunk
+        end
     end
     write(parent, path, val, p_create(H5P_LINK_CREATE), p)
 end
@@ -1994,19 +2046,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
 end
 
 # Functions that require special handling
-_majnum = Array(Cuint, 1)
-_minnum = Array(Cuint, 1)
-_relnum = Array(Cuint, 1)
-function h5_get_libversion()
-    status = ccall((:H5get_libversion, libhdf5),
-                   Herr,
-                   (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}),
-                   _majnum, _minnum, _relnum)
-    if status < 0
-        error("Error getting HDF5 library version")
-    end
-    return _majnum[1], _minnum[1], _relnum[1]
-end
+
 function h5a_get_name(attr_id::Hid)
     len = h5a_get_name(attr_id, 0, C_NULL) # order of args differs from {f,i}_get_name
     buf = Array(Uint8, len+1)
@@ -2132,11 +2172,14 @@ _attr_properties(path::UTF8String) = UTF8_ATTRIBUTE_PROPERTIES
 const hdf5_prop_get_set = @Dict(
     "chunk"         => (get_chunk, set_chunk),
     "fclose_degree" => (get_fclose_degree, h5p_set_fclose_degree),
-    "compress"      => (nothing, h5p_set_deflate),
+    "compress"      => (nothing, h5p_set_blosc),
     "deflate"       => (nothing, h5p_set_deflate),
+    "blosc"         => (nothing, h5p_set_blosc),
     "layout"        => (h5p_get_layout, h5p_set_layout),
     "userblock"     => (get_userblock, h5p_set_userblock),
 )
+# properties that require chunks in order to work (e.g. any filter)
+const chunked_props = Set(["compress", "deflate", "blosc"])
 
 
 # Turn off automatic error printing

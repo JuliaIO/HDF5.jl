@@ -103,7 +103,15 @@ A = rand(100,100)
 g["A", "chunk", (5,5), "compress", 3] = A
 ```
 
-stores the matrix `A` in 5-by-5 chunks and uses a compression level 3. Chunking can be useful if you will typically extract small segments of an array. Chunking is required if you plan to use compression.
+stores the matrix `A` in 5-by-5 chunks and uses a compression level
+`3`. Instead of `"compress"`, you can use `"deflate"` to specify
+[deflate/zlib](http://en.wikipedia.org/wiki/DEFLATE) compression, or
+`"blosc"` to specify [Blosc](http://www.blosc.org/) compress (which is
+generally much faster than deflate); currently, `"compress"`
+corresponds to `"blosc"`. Chunking can be useful if you will typically
+extract small segments of an array.  A heuristic chunking is
+automatically used if you specify compression but don't specify
+chunking.
 
 It is also possible to write to subsets of an on-disk HDF5 dataset. This is
 useful to incrementally save to very large datasets you don't want to keep in
