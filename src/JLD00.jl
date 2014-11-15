@@ -16,6 +16,13 @@ if !isdefined(:read!)
     const read! = read
 end
 
+# See julia issue #8907
+if VERSION >= v"0.4.0-dev+1419"
+    julia_type(s::String) = _julia_type(replace(s, r"Uint(?=\d{1,3})", "UInt"))
+else
+    julia_type(s::String) = _julia_type(s)
+end
+
 const magic_base = "Julia data file (HDF5), version "
 const version_current = "0.0.2"
 const pathrefs = "/_refs"
@@ -922,7 +929,7 @@ is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == 
                             (e.head == :call && (e.args[1] == :Union || e.args[1] == :TypeVar))
 
 _typedict = Dict{String, DataType}()
-function julia_type(s::String)
+function _julia_type(s::String)
     typ = get(_typedict, s, UnconvertedType)
     if typ == UnconvertedType
         e = parse(s)

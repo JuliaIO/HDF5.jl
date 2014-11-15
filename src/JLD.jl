@@ -9,6 +9,15 @@ import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
 import Base: length, endof, show, done, next, start, delete!
 
+# .jld files written before v"0.4.0-dev+1419" might have Uint32 instead of UInt32 as the typename string.
+# See julia issue #8907
+if VERSION >= v"0.4.0-dev+1419"
+    julia_type(s::String) = _julia_type(replace(s, r"Uint(?=\d{1,3})", "UInt"))
+else
+    julia_type(s::String) = _julia_type(s)
+end
+
+
 const magic_base = "Julia data file (HDF5), version "
 const version_current = v"0.1"
 const pathrefs = "/_refs"
@@ -725,7 +734,7 @@ is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == 
 const _typedict = Dict{String,Type}()
 _typedict["Core.Type{TypeVar(:T,Union(Core.Any,Core.Undef))}"] = Type
 
-function julia_type(s::String)
+function _julia_type(s::String)
     typ = get(_typedict, s, UnconvertedType)
     if typ == UnconvertedType
         typ = julia_type(parse(s))
