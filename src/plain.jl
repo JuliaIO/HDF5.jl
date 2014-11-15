@@ -516,11 +516,11 @@ register_blosc()
 
 # heuristic chunk layout (return empty array to disable chunking)
 function heuristic_chunk(T::Type, shape)
+    Ts = sizeof(T)
+    sz = prod(shape)
+    sz == 0 && return Int[] # never return a zero-size chunk
     chunk = [shape...]
     nd = length(chunk)
-    Ts = sizeof(T)
-    sz = prod(chunk)
-    sz == 0 && return Int[] # never return a zero-size chunk
     # simplification of ugly heuristic target chunk size from PyTables/h5py:
     target = min(1500000, max(12000, ifloor(300*cbrt(Ts*sz))))
     Ts > target && return ones(chunk)
@@ -537,9 +537,7 @@ function heuristic_chunk(T::Type, shape)
 end
 heuristic_chunk{T}(A::AbstractArray{T}) = heuristic_chunk(T, size(A))
 heuristic_chunk(x) = Int[]
-
-# strings are saved as scalars, and hence cannot be chunked or compressed
-# heuristic_chunk(s::ByteString) = heuristic_chunk(Uint8, (sizeof(s),))
+# (strings are saved as scalars, and hence cannot be chunked)
 
 ### High-level interface ###
 # Open or create an HDF5 file

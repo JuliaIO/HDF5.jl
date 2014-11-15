@@ -78,9 +78,9 @@ immutable JldDataset
     file::JldFile
 end
 
-docompress(f::JldFile) = f.compress
-docompress(g::JldGroup) = g.file.compress
-docompress(d::JldGroup) = d.file.compress
+iscompressed(f::JldFile) = f.compress
+iscompressed(g::JldGroup) = g.file.compress
+iscompressed(d::JldGroup) = d.file.compress
 
 immutable PointerException <: Exception; end
 show(io::IO, ::PointerException) = print(io, "cannot write a pointer to JLD file")
@@ -168,7 +168,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
                     if !isdefined(JLD, :JLD00)
                         eval(:(include(joinpath($(dirname(@__FILE__)), "JLD00.jl"))))
                     end
-                    fj = JLD00.jldopen(filename, rd, wr, cr, tr, ff; mmaparrays=mmaparrays, compress=compress)
+                    fj = JLD00.jldopen(filename, rd, wr, cr, tr, ff; mmaparrays=mmaparrays)
                 else
                     f = HDF5.h5f_open(filename, wr ? HDF5.H5F_ACC_RDWR : HDF5.H5F_ACC_RDONLY, pa.id)
                     fj = JldFile(HDF5File(f, filename), version, true, true, mmaparrays, compress)
@@ -464,7 +464,7 @@ const COMPACT_PROPERTIES = p_create(HDF5.H5P_DATASET_CREATE)
 HDF5.h5p_set_layout(COMPACT_PROPERTIES.id, HDF5.H5D_COMPACT)
 function dset_create_properties(parent, sz::Int, obj)
     sz <= 8192 && return COMPACT_PROPERTIES
-    if docompress(parent)
+    if iscompressed(parent)
         chunk = HDF5.heuristic_chunk(obj)
         if !isempty(chunk)
             p = p_create(HDF5.H5P_DATASET_CREATE)

@@ -82,7 +82,7 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
     # Compression level:
     clevel = cd_nelmts >= 5 ? unsafe_load(cd_values, 5) : convert(Cuint, 5)
     # Do shuffle:
-    doshuffle = cd_nelmts >= 6 ? Bool(unsafe_load(cd_values, 6)) : true
+    doshuffle = cd_nelmts >= 6 ? bool(unsafe_load(cd_values, 6)) : true
     # to do: set compressor based on compcode in unsafe_load(cd_values, 7)?
 
     if (flags & H5Z_FLAG_REVERSE) == 0 # compressing
