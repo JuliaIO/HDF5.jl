@@ -7,7 +7,7 @@ using HDF5
 # Add methods to...
 import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o_delete, name, names, read, size, write,
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
-import Base: length, endof, show, done, next, start, delete!
+import Base: length, endof, show, done, next, start, delete!, sizeof
 
 # .jld files written before v"0.4.0-dev+1419" might have Uint32 instead of UInt32 as the typename string.
 # See julia issue #8907
@@ -37,6 +37,7 @@ immutable JldDatatype
     dtype::HDF5Datatype
     index::Int
 end
+sizeof(T::JldDatatype) = sizeof(T.dtype)
 
 immutable JldWriteSession
     persist::Vector{Any} # To hold objects that should not be garbage-collected
@@ -483,18 +484,16 @@ write(parent::Union(JldFile, JldGroup), name::ByteString,
     close(_write(parent, name, data, wsession))
 
 # Pick whether to use compact or default storage based on data size
-function dset_create_properties(parent, sz::Int, obj)
-    sz <= 8192 && return compact_properties()
-    if iscompressed(parent)
-        chunk = HDF5.heuristic_chunk(obj)
-        if !isempty(chunk)
-            p = p_create(HDF5.H5P_DATASET_CREATE)
-            p["chunk"] = chunk
-            p["blosc"] = 5
-            return p
-        end
+function dset_create_properties(parent, sz::Int, obj, chunk=Int[])
+    sz <= 8192 && return compact_properties(), false
+    if iscompressed(parent) && !isempty(chunk)
+        p = p_create(HDF5.H5P_DATASET_CREATE)
+        p["chunk"] = chunk
+        p["blosc"] = 5
+        return p, true
+    else
+        return HDF5.DEFAULT_PROPERTIES, false
     end
-    return HDF5.DEFAULT_PROPERTIES
 end
 
 # Write "basic" types
@@ -502,7 +501,9 @@ function _write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGr
                                                     name::ByteString,
                                                     data::Union(T, Array{T}),
                                                     wsession::JldWriteSession)
-    dset, dtype = d_create(parent.plain, bytestring(name), data, HDF5._link_properties(name), dset_create_properties(parent, sizeof(data), data))
+    chunk = T <: ByteString ? Int[] : HDF5.heuristic_chunk(data)
+    dprop, dprop_close = dset_create_properties(parent, sizeof(data), data, chunk)
+    dset, dtype = d_create(parent.plain, bytestring(name), data, HDF5._link_properties(name), dprop)
     try
         # Write the attribute
         isa(data, Array) && isempty(data) && a_write(dset, "dims", [size(data)...])
@@ -510,6 +511,7 @@ function _write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGr
         HDF5.writearray(dset, dtype.id, data)
     finally
         close(dtype)
+        dprop_close && close(dprop)
     end
     dset
 end
@@ -523,8 +525,10 @@ function _write{T}(parent::Union(JldFile, JldGroup),
     buf = h5convert_array(f, data, dtype, wsession)
     dims = convert(Array{HDF5.Hsize, 1}, [reverse(size(data))...])
     dspace = dataspace(data)
+    chunk = HDF5.heuristic_chunk(dtype, size(data))
+    dprop, dprop_close = dset_create_properties(parent, sizeof(buf),buf, chunk)
     try
-        dset = d_create(parent.plain, path, dtype.dtype, dspace, HDF5._link_properties(path), dset_create_properties(parent, sizeof(buf), buf))
+        dset = d_create(parent.plain, path, dtype.dtype, dspace, HDF5._link_properties(path), dprop)
         if dtype == JLD_REF_TYPE
             a_write(dset, "julia eltype", full_typename(f, T))
         end
@@ -535,6 +539,7 @@ function _write{T}(parent::Union(JldFile, JldGroup),
         end
         return dset
     finally
+        dprop_close && close(dprop)
         close(dspace)
     end
 end
@@ -669,11 +674,13 @@ function write_compound(parent::Union(JldFile, JldGroup), name::ByteString,
     h5convert!(pointer(buf), file(parent), s, wsession)
 
     dspace = HDF5Dataspace(HDF5.h5s_create(HDF5.H5S_SCALAR))
+    dprop, dprop_close = dset_create_properties(parent, length(buf), buf)
     try
-        dset = HDF5.d_create(parent.plain, name, dtype.dtype, dspace, HDF5._link_properties(name), dset_create_properties(parent, length(buf), buf))
+        dset = HDF5.d_create(parent.plain, name, dtype.dtype, dspace, HDF5._link_properties(name), dprop)
         HDF5.writearray(dset, dtype.dtype.id, buf)
         return dset
     finally
+        dprop_close && close(dprop)
         close(dspace)
     end
 end
