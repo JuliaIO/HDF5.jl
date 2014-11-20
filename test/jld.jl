@@ -667,3 +667,15 @@ jldopen(fn, "r") do file
     @test typeof(x.c).names == ()
     @test reinterpret(Uint8, x.d) == 0x12
 end
+
+# Issue #176
+exx = quote
+    function incrementby1(x::Int)
+        x+1
+    end
+end
+for i = 1:2
+    fid = jldopen(fn, "w")
+    @write fid exx
+    close(fid)
+end

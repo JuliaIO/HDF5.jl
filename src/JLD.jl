@@ -115,6 +115,20 @@ file(x::Union(JldGroup, JldDataset)) = x.file
 
 function close(f::JldFile)
     if f.toclose
+        # Close types
+        for x in values(f.jlh5type)
+            close(x.dtype)
+        end
+
+        # Close reference group
+        isdefined(f, :gref) && close(f.gref)
+
+        # Ensure that all other datasets, groups, and datatypes are closed (ref #176)
+        for obj_id in HDF5.h5f_get_obj_ids(f.plain.id, HDF5.H5F_OBJ_DATASET | HDF5.H5F_OBJ_GROUP | HDF5.H5F_OBJ_DATATYPE)
+            HDF5.h5o_close(obj_id)
+        end
+
+        # Close file
         close(f.plain)
         if f.writeheader
             magic = zeros(Uint8, 512)

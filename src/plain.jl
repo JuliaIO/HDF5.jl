@@ -84,6 +84,14 @@ const H5F_ACC_TRUNC    = 0x02
 const H5F_ACC_EXCL     = 0x04
 const H5F_ACC_DEBUG    = 0x08
 const H5F_ACC_CREAT    = 0x10
+# object types
+const H5F_OBJ_FILE     = 0x0001
+const H5F_OBJ_DATASET  = 0x0002
+const H5F_OBJ_GROUP    = 0x0004
+const H5F_OBJ_DATATYPE = 0x0008
+const H5F_OBJ_ATTR     = 0x0010
+const H5F_OBJ_ALL      = (H5F_OBJ_FILE|H5F_OBJ_DATASET|H5F_OBJ_GROUP|H5F_OBJ_DATATYPE|H5F_OBJ_ATTR)
+const H5F_OBJ_LOCAL    = 0x0020
 # other file constants
 const H5F_SCOPE_LOCAL   = 0
 const H5F_SCOPE_GLOBAL  = 1
@@ -2100,6 +2108,17 @@ function h5t_get_tag(type_id::Hid)
     s = bytestring(pc)
     c_free(pc)
     s
+end
+
+function h5f_get_obj_ids(file_id::Hid, types::Integer)
+    sz = ccall((:H5Fget_obj_count, libhdf5), Int, (Hid, Uint32),
+               file_id, types)
+    sz >= 0 || error("error getting object count")
+    hids = Array(Hid, sz)
+    sz = ccall((:H5Fget_obj_ids, libhdf5), Int, (Hid, Uint32, Uint, Ptr{Hid}),
+          file_id, types, sz, hids)
+    sz >= 0 || error("error getting object count")
+    hids
 end
 
 function vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5Dataspace)
