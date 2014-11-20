@@ -686,7 +686,7 @@ length(dset::JldDataset) = prod(size(dset))
 endof(dset::JldDataset) = length(dset)
 
 ### Read/write via getindex/setindex! ###
-function getindex(dset::JldDataset, indices::Union(Integer, RangeIndex)...)
+function getindex(dset::JldDataset, indices::Union(Range{Int},Integer)...)
     sz = map(length, indices)
     dsel_id = HDF5.hyperslab(dset.plain, indices...)
     try
@@ -701,7 +701,7 @@ function getindex(dset::JldDataset, indices::Union(Integer, RangeIndex)...)
     end
 end
 
-function setindex!{T,N}(dset::JldDataset, X::AbstractArray{T,N}, indices::RangeIndex...)
+function setindex!{T,N}(dset::JldDataset, X::AbstractArray{T,N}, indices::Union(Range{Int},Integer)...)
     f = file(dset)
     sz = map(length, indices)
     dsel_id = HDF5.hyperslab(dset.plain, indices...)

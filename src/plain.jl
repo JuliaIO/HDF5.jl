@@ -604,7 +604,7 @@ function h5read(filename, name::ByteString)
     dat
 end
 
-function h5read(filename, name::ByteString, indices::(Union(RangeIndex,Colon)...))
+function h5read(filename, name::ByteString, indices::(Union(Range{Int},Int,Colon)...))
     local dat
     fid = h5open(filename, "r")
     try
@@ -1536,7 +1536,7 @@ write{T<:BitsKindOrByteString}(parent::Union(HDF5File, HDF5Group), name::ByteStr
 write{T<:BitsKindOrByteString}(parent::HDF5Dataset, name::ByteString, data::Union(T, Array{T}), plists...) = a_write(parent, name, data, plists...)
 
 # Reading arrays using getindex: data = dset[:,:,10]
-function getindex(dset::HDF5Dataset, indices::RangeIndex...)
+function getindex(dset::HDF5Dataset, indices::Union(Range{Int},Int)...)
     local T
     dtype = datatype(dset)
     try
@@ -1546,7 +1546,7 @@ function getindex(dset::HDF5Dataset, indices::RangeIndex...)
     end
     _getindex(dset,T, indices...)
 end
-function _getindex(dset::HDF5Dataset, T::Type, indices::RangeIndex...)
+function _getindex(dset::HDF5Dataset, T::Type, indices::Union(Range{Int},Int)...)
     if !(T<:HDF5BitsKind)    
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
@@ -1565,11 +1565,11 @@ function _getindex(dset::HDF5Dataset, T::Type, indices::RangeIndex...)
 end
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
-function setindex!(dset::HDF5Dataset, X::Array, indices::RangeIndex...)
+function setindex!(dset::HDF5Dataset, X::Array, indices::Union(Range{Int},Int)...)
     T = hdf5_to_julia(dset)
     _setindex!(dset, T, X, indices...)
 end
-function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::RangeIndex...)
+function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::Union(Range{Int},Int)...)
     if !(T<:Array)
         error("Dataset indexing (hyperslab) is available only for arrays")
     end
@@ -1596,7 +1596,7 @@ function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::RangeIndex...)
     end
     X
 end
-function setindex!(dset::HDF5Dataset, X::AbstractArray, indices::RangeIndex...)
+function setindex!(dset::HDF5Dataset, X::AbstractArray, indices::Union(Range{Int},Int)...)
     T = hdf5_to_julia(dset)
     if !(T<:Array)
         error("Hyperslab interface is available only for arrays")
@@ -1605,7 +1605,7 @@ function setindex!(dset::HDF5Dataset, X::AbstractArray, indices::RangeIndex...)
     setindex!(dset, Y, indices...)
 end
 
-function setindex!(dset::HDF5Dataset, x::Number, indices::RangeIndex...)
+function setindex!(dset::HDF5Dataset, x::Number, indices::Union(Range{Int},Int)...)
     T = hdf5_to_julia(dset)
     if !(T<:Array)
         error("Hyperslab interface is available only for arrays")
@@ -1614,10 +1614,10 @@ function setindex!(dset::HDF5Dataset, x::Number, indices::RangeIndex...)
     setindex!(dset, X, indices...)
 end
 
-getindex(dset::HDF5Dataset, I::Union(RangeIndex, Colon)...) = getindex(dset, ntuple(length(I), i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i])...)
-setindex!(dset::HDF5Dataset, x, I::Union(RangeIndex, Colon)...) = setindex!(dset, x, ntuple(length(I), i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i])...)
+getindex(dset::HDF5Dataset, I::Union(Range{Int},Int,Colon)...) = getindex(dset, ntuple(length(I), i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i])...)
+setindex!(dset::HDF5Dataset, x, I::Union(Range{Int},Int,Colon)...) = setindex!(dset, x, ntuple(length(I), i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i])...)
 
-function hyperslab(dset::HDF5Dataset, indices::RangeIndex...)
+function hyperslab(dset::HDF5Dataset, indices::Union(Range{Int},Int)...)
     local dsel_id
     dspace = dataspace(dset)
     try
