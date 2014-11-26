@@ -57,6 +57,22 @@ end
 
 _init()
 
+_majnum = Array(Cuint, 1)
+_minnum = Array(Cuint, 1)
+_relnum = Array(Cuint, 1)
+function h5_get_libversion()
+    status = ccall((:H5get_libversion, libhdf5),
+                   Herr,
+                   (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}),
+                   _majnum, _minnum, _relnum)
+    if status < 0
+        error("Error getting HDF5 library version")
+    end
+    return _majnum[1], _minnum[1], _relnum[1]
+end
+
+_libversion = h5_get_libversion()
+
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
 read_const(sym::Symbol) = unsafe_load(convert(Ptr{Cint}, dlsym(libhdf5handle, sym)))
@@ -117,22 +133,22 @@ const H5O_TYPE_DATASET = 1
 const H5O_TYPE_NAMED_DATATYPE = 2
 # Property constants
 const H5P_DEFAULT          = 0
-const H5P_OBJECT_CREATE    = read_const(:H5P_CLS_OBJECT_CREATE_g)
-const H5P_FILE_CREATE      = read_const(:H5P_CLS_FILE_CREATE_g)
-const H5P_FILE_ACCESS      = read_const(:H5P_CLS_FILE_ACCESS_g)
-const H5P_DATASET_CREATE   = read_const(:H5P_CLS_DATASET_CREATE_g)
-const H5P_DATASET_ACCESS   = read_const(:H5P_CLS_DATASET_ACCESS_g)
-const H5P_DATASET_XFER     = read_const(:H5P_CLS_DATASET_XFER_g)
-const H5P_FILE_MOUNT       = read_const(:H5P_CLS_FILE_MOUNT_g)
-const H5P_GROUP_CREATE     = read_const(:H5P_CLS_GROUP_CREATE_g)
-const H5P_GROUP_ACCESS     = read_const(:H5P_CLS_GROUP_ACCESS_g)
-const H5P_DATATYPE_CREATE  = read_const(:H5P_CLS_DATATYPE_CREATE_g)
-const H5P_DATATYPE_ACCESS  = read_const(:H5P_CLS_DATATYPE_ACCESS_g)
-const H5P_STRING_CREATE    = read_const(:H5P_CLS_STRING_CREATE_g)
-const H5P_ATTRIBUTE_CREATE = read_const(:H5P_CLS_ATTRIBUTE_CREATE_g)
-const H5P_OBJECT_COPY      = read_const(:H5P_CLS_OBJECT_COPY_g)
-const H5P_LINK_CREATE      = read_const(:H5P_CLS_LINK_CREATE_g)
-const H5P_LINK_ACCESS      = read_const(:H5P_CLS_LINK_ACCESS_g)
+const H5P_OBJECT_CREATE    = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_OBJECT_CREATE_ID_g    : :H5P_CLS_OBJECT_CREATE_g)
+const H5P_FILE_CREATE      = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_FILE_CREATE_ID_g      : :H5P_CLS_FILE_CREATE_g)
+const H5P_FILE_ACCESS      = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_FILE_ACCESS_ID_g      : :H5P_CLS_FILE_ACCESS_g)
+const H5P_DATASET_CREATE   = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_DATASET_CREATE_ID_g   : :H5P_CLS_DATASET_CREATE_g)
+const H5P_DATASET_ACCESS   = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_DATASET_ACCESS_ID_g   : :H5P_CLS_DATASET_ACCESS_g)
+const H5P_DATASET_XFER     = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_DATASET_XFER_ID_g     : :H5P_CLS_DATASET_XFER_g)
+const H5P_FILE_MOUNT       = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_FILE_MOUNT_ID_g       : :H5P_CLS_FILE_MOUNT_g)
+const H5P_GROUP_CREATE     = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_GROUP_CREATE_ID_g     : :H5P_CLS_GROUP_CREATE_g)
+const H5P_GROUP_ACCESS     = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_GROUP_ACCESS_ID_g     : :H5P_CLS_GROUP_ACCESS_g)
+const H5P_DATATYPE_CREATE  = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_DATATYPE_CREATE_ID_g  : :H5P_CLS_DATATYPE_CREATE_g)
+const H5P_DATATYPE_ACCESS  = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_DATATYPE_ACCESS_ID_g  : :H5P_CLS_DATATYPE_ACCESS_g)
+const H5P_STRING_CREATE    = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_STRING_CREATE_ID_g    : :H5P_CLS_STRING_CREATE_g)
+const H5P_ATTRIBUTE_CREATE = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_ATTRIBUTE_CREATE_ID_g : :H5P_CLS_ATTRIBUTE_CREATE_g)
+const H5P_OBJECT_COPY      = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_OBJECT_COPY_ID_g      : :H5P_CLS_OBJECT_COPY_g)
+const H5P_LINK_CREATE      = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_LINK_CREATE_ID_g      : :H5P_CLS_LINK_CREATE_g)
+const H5P_LINK_ACCESS      = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_LINK_ACCESS_ID_g      : :H5P_CLS_LINK_ACCESS_g)
 # Reference constants
 const H5R_OBJECT         = 0
 const H5R_DATASET_REGION = 1
@@ -220,20 +236,6 @@ const H5T_NATIVE_DOUBLE   = read_const(:H5T_NATIVE_DOUBLE_g)
 const H5F_LIBVER_EARLIEST = 0
 const H5F_LIBVER_18 = 1
 const H5F_LIBVER_LATEST = 1
-
-_majnum = Array(Cuint, 1)
-_minnum = Array(Cuint, 1)
-_relnum = Array(Cuint, 1)
-function h5_get_libversion()
-    status = ccall((:H5get_libversion, libhdf5),
-                   Herr,
-                   (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}),
-                   _majnum, _minnum, _relnum)
-    if status < 0
-        error("Error getting HDF5 library version")
-    end
-    return _majnum[1], _minnum[1], _relnum[1]
-end
 
 ## Conversion between Julia types and HDF5 atomic types
 hdf5_type_id(::Type{Int8})       = H5T_NATIVE_INT8
