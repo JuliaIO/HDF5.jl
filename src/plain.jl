@@ -2250,6 +2250,7 @@ const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false)
 
 function __init__()
     init_libhdf5()
+    register_blosc()
     # Turn off automatic error printing
     # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 

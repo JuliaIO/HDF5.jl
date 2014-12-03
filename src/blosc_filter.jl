@@ -72,7 +72,6 @@ function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
         end
     return convert(Herr, 1)
 end
-const c_blosc_set_local = cfunction(blosc_set_local, Herr, (Hid,Hid,Hid))
 
 function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
                       cd_values::Ptr{Cuint}, nbytes::Csize_t,
@@ -117,12 +116,13 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
     end
     c_free(outbuf); return convert(Csize_t, 0)
 end
-const c_blosc_filter = cfunction(blosc_filter, Csize_t,
-                                 (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
-                                  Ptr{Csize_t}, Ptr{Ptr{Void}}))
 
 # register the Blosc filter function with HDF5
 function register_blosc()
+    c_blosc_set_local = cfunction(blosc_set_local, Herr, (Hid,Hid,Hid))
+    c_blosc_filter = cfunction(blosc_filter, Csize_t,
+                                 (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
+                                  Ptr{Csize_t}, Ptr{Ptr{Void}}))
     if ccall((:H5Zregister, libhdf5), Herr, (Ptr{H5Z_class2_t},),
              &H5Z_class2_t(H5Z_CLASS_T_VERS,
                            FILTER_BLOSC,
