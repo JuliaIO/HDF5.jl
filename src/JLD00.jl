@@ -330,7 +330,7 @@ function readsafely(parent::Union(JldFile, JldGroup), name::ByteString)
     local ret
     obj = parent[name]
     try
-        ret = readsafely(JldDataset(obj))
+        ret = readsafely(JldDataset(obj.plain, obj.file))
     finally
         close(obj)
     end
