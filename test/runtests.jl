@@ -1,5 +1,4 @@
 using HDF5
-HDF5.init()
 
 include("plain.jl")
 include("jld.jl")

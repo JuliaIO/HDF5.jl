@@ -7,8 +7,9 @@ module HDF5
 using Compat
 
 ## Add methods to...
-import Base: close, convert, done, dump, eltype, endof, flush, getindex, isempty, isvalid, length, names, ndims, next, read, setindex!, show, size, sizeof, start, write
-
+import Base: close, convert, done, dump, eltype, endof, flush, getindex,
+             isempty, isvalid, length, names, ndims, next, parent, read,
+             setindex!, show, size, sizeof, start, write
 
 @osx_only import Homebrew # Add Homebrew/lib to the DL_LOAD_PATH
 
@@ -26,27 +27,20 @@ typealias Htri        Cint   # pseudo-boolean (negative if error)
 typealias Haddr       Uint64
 
 ### Load and initialize the HDF library ###
-@osx_only import Homebrew # Add Homebrew/lib to the DL_LOAD_PATH
 if isfile(joinpath(dirname(dirname(@__FILE__)),"deps","deps.jl"))
     include("../deps/deps.jl")
 else
     error("HDF5 not properly installed. Please run Pkg.build(\"HDF5\")")
 end
-const libhdf5handle = dlopen(libhdf5)
 
-function _init()
+function init_libhdf5()
     status = ccall((:H5open, libhdf5), Herr, ())
     if status < 0
         error("Can't initialize the HDF5 library")
     end
 end
-function init()
-    _init()
-    Base.rehash(hdf5_type_map, length(hdf5_type_map.keys))
-    nothing
-end
 
-_init()
+init_libhdf5()
 
 _majnum = Array(Cuint, 1)
 _minnum = Array(Cuint, 1)
@@ -66,6 +60,7 @@ _libversion = h5_get_libversion()
 
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
+const libhdf5handle = dlopen(libhdf5)
 read_const(sym::Symbol) = unsafe_load(convert(Ptr{Cint}, dlsym(libhdf5handle, sym)))
 
 # iteration order constants
@@ -394,9 +389,11 @@ attrs(p::Union(HDF5File, HDF5Group, HDF5Dataset)) = HDF5Attributes(p)
 type HDF5Properties
     id::Hid
 
-    function HDF5Properties(id)
+    function HDF5Properties(id, toclose::Bool=true)
         p = new(id)
-        finalizer(p, close)
+        if toclose
+            finalizer(p, close)
+        end
         p
     end
 end
@@ -2163,23 +2160,6 @@ function get_fclose_degree(p::HDF5Properties)
     out[1]
 end
 
-const ASCII_LINK_PROPERTIES = p_create(H5P_LINK_CREATE)
-h5p_set_char_encoding(ASCII_LINK_PROPERTIES.id, cset(ASCIIString))
-h5p_set_create_intermediate_group(ASCII_LINK_PROPERTIES.id, 1)
-_link_properties(path::ASCIIString) = ASCII_LINK_PROPERTIES
-const UTF8_LINK_PROPERTIES = p_create(H5P_LINK_CREATE)
-h5p_set_char_encoding(UTF8_LINK_PROPERTIES.id, cset(UTF8String))
-h5p_set_create_intermediate_group(UTF8_LINK_PROPERTIES.id, 1)
-_link_properties(path::UTF8String) = UTF8_LINK_PROPERTIES
-const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT)
-
-const ASCII_ATTRIBUTE_PROPERTIES = p_create(H5P_ATTRIBUTE_CREATE)
-h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES.id, cset(ASCIIString))
-_attr_properties(path::ASCIIString) = ASCII_ATTRIBUTE_PROPERTIES
-const UTF8_ATTRIBUTE_PROPERTIES = p_create(H5P_ATTRIBUTE_CREATE)
-h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES.id, cset(UTF8String))
-_attr_properties(path::UTF8String) = UTF8_ATTRIBUTE_PROPERTIES
-
 # property function get/set pairs
 const hdf5_prop_get_set = @compat Dict(
     "chunk"         => (get_chunk, set_chunk),
@@ -2192,10 +2172,6 @@ const hdf5_prop_get_set = @compat Dict(
 )
 # properties that require chunks in order to work (e.g. any filter)
 const chunked_props = Set(["compress", "deflate", "blosc"])
-
-
-# Turn off automatic error printing
-# h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
 export
     # Types
@@ -2261,5 +2237,44 @@ export
     t_commit,
     write,
     @write
+
+# Across initializations of the library, the id of various properties
+# will change. So don't hard-code the id (important for precompilation)
+const _runtime_properties = Array(HDF5Properties, 4)
+_link_properties(path::ASCIIString) = _runtime_properties[1]
+_link_properties(path::UTF8String) = _runtime_properties[2]
+_attr_properties(path::ASCIIString) = _runtime_properties[3]
+_attr_properties(path::UTF8String) = _runtime_properties[4]
+
+const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false)
+
+function __init__()
+    init_libhdf5()
+    register_blosc()
+    # Turn off automatic error printing
+    # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
+
+    const ASCII_LINK_PROPERTIES = p_create(H5P_LINK_CREATE)
+    h5p_set_char_encoding(ASCII_LINK_PROPERTIES.id, cset(ASCIIString))
+    h5p_set_create_intermediate_group(ASCII_LINK_PROPERTIES.id, 1)
+    const UTF8_LINK_PROPERTIES = p_create(H5P_LINK_CREATE)
+    h5p_set_char_encoding(UTF8_LINK_PROPERTIES.id, cset(UTF8String))
+    h5p_set_create_intermediate_group(UTF8_LINK_PROPERTIES.id, 1)
+    const ASCII_ATTRIBUTE_PROPERTIES = p_create(H5P_ATTRIBUTE_CREATE)
+    h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES.id, cset(ASCIIString))
+    const UTF8_ATTRIBUTE_PROPERTIES = p_create(H5P_ATTRIBUTE_CREATE)
+    h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES.id, cset(UTF8String))
+
+    global _runtime_properties
+    _runtime_properties[1] = ASCII_LINK_PROPERTIES
+    _runtime_properties[2] = UTF8_LINK_PROPERTIES
+    _runtime_properties[3] = ASCII_ATTRIBUTE_PROPERTIES
+    _runtime_properties[4] = UTF8_ATTRIBUTE_PROPERTIES
+
+    Base.rehash(hdf5_type_map, length(hdf5_type_map.keys))
+    Base.rehash(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
+
+    nothing
+end
 
 end  # module

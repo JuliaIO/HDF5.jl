@@ -270,8 +270,8 @@ exists(p::Union(JldFile, JldGroup, JldDataset), path::ByteString) = exists(p.pla
 root(p::Union(JldFile, JldGroup, JldDataset)) = g_open(file(p), "/")
 o_delete(parent::Union(JldFile, JldGroup), args...) = o_delete(parent.plain, args...)
 function ensurepathsafe(path::ByteString)
-    if any([beginswith(path, s) for s in (pathrefs,pathtypes,pathrequire)]) 
-        error("$name is internal to the JLD format, use o_delete if you really want to delete it") 
+    if any([beginswith(path, s) for s in (pathrefs,pathtypes,pathrequire)])
+        error("$name is internal to the JLD format, use o_delete if you really want to delete it")
     end
 end
 function delete!(o::JldDataset)
@@ -483,10 +483,8 @@ write(parent::Union(JldFile, JldGroup), name::ByteString,
     close(_write(parent, name, data, wsession))
 
 # Pick whether to use compact or default storage based on data size
-const COMPACT_PROPERTIES = p_create(HDF5.H5P_DATASET_CREATE)
-HDF5.h5p_set_layout(COMPACT_PROPERTIES.id, HDF5.H5D_COMPACT)
 function dset_create_properties(parent, sz::Int, obj)
-    sz <= 8192 && return COMPACT_PROPERTIES
+    sz <= 8192 && return compact_properties()
     if iscompressed(parent)
         chunk = HDF5.heuristic_chunk(obj)
         if !isempty(chunk)
@@ -920,7 +918,7 @@ macro load(filename, vars...)
                 push!(vars, sym)
             end
         end
-        return Expr(:block, 
+        return Expr(:block,
                     Expr(:global, vars...),
                     Expr(:try,  Expr(:block, readexprs...), false, false,
                          :(close($f))),
@@ -930,7 +928,7 @@ macro load(filename, vars...)
         for i = 1:length(vars)
             readexprs[i] = :($(esc(vars[i])) = read(f, $(string(vars[i]))))
         end
-        return Expr(:block, 
+        return Expr(:block,
                     Expr(:global, map(esc, vars)...),
                     :(local f = jldopen($(esc(filename)))),
                     Expr(:try,  Expr(:block, readexprs...), false, false,
@@ -950,7 +948,7 @@ function save(filename::String, dict::Associative; compress::Bool=false)
 end
 # Or the names and values may be specified as alternating pairs
 function save(filename::String, name::String, value, pairs...; compress::Bool=false)
-    if isodd(length(pairs)) || !isa(pairs[1:2:end], (String...)) 
+    if isodd(length(pairs)) || !isa(pairs[1:2:end], (String...))
         throw(ArgumentError("arguments must be in name-value pairs"))
     end
     jldopen(filename, "w"; compress=compress) do file
@@ -1001,5 +999,21 @@ export
     load,
     save,
     truncate_module_path
+
+const _runtime_properties = Array(HDF5.HDF5Properties, 1)
+compact_properties() = _runtime_properties[1]
+
+function __init__()
+    const COMPACT_PROPERTIES = p_create(HDF5.H5P_DATASET_CREATE)
+    HDF5.h5p_set_layout(COMPACT_PROPERTIES.id, HDF5.H5D_COMPACT)
+
+    global _runtime_properties
+    _runtime_properties[1] = COMPACT_PROPERTIES
+
+    Base.rehash(_typedict, length(_typedict.keys))
+    Base.rehash(BUILTIN_TYPES.dict, length(BUILTIN_TYPES.dict.keys))
+
+    nothing
+end
 
 end
