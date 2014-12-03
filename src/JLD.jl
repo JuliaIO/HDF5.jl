@@ -1011,6 +1011,7 @@ function __init__()
     _runtime_properties[1] = COMPACT_PROPERTIES
 
     Base.rehash(_typedict, length(_typedict.keys))
+    Base.rehash(BUILTIN_TYPES.dict, length(BUILTIN_TYPES.dict.keys))
 
     nothing
 end
