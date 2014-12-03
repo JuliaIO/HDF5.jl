@@ -4,22 +4,13 @@
 
 module HDF5
 
+using Compat
+
 ## Add methods to...
 import Base: close, convert, done, dump, eltype, endof, flush, getindex, isempty, isvalid, length, names, ndims, next, read, setindex!, show, size, sizeof, start, write
 
-if VERSION <= v"0.2.99"
-    import Base.has
-end
-if VERSION < v"0.4.0-dev+980"
-    macro Dict(pairs...)
-        Expr(:dict, pairs...)
-    end
-else
-    macro Dict(pairs...)
-        Expr(:call, :Dict, pairs...)
-    end
-end
 
+@osx_only import Homebrew # Add Homebrew/lib to the DL_LOAD_PATH
 
 include("datafile.jl")
 
@@ -253,7 +244,7 @@ typealias HDF5BitsKind Union(Int8, Uint8, Int16, Uint16, Int32, Uint32, Int64, U
 typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
-const hdf5_type_map = @Dict(
+const hdf5_type_map = @compat Dict(
     (H5T_INTEGER, H5T_SGN_2, convert(Csize_t, 1)) => Int8,
     (H5T_INTEGER, H5T_SGN_2, convert(Csize_t, 2)) => Int16,
     (H5T_INTEGER, H5T_SGN_2, convert(Csize_t, 4)) => Int32,
@@ -532,7 +523,7 @@ function heuristic_chunk(T::Type, shape)
     chunk = [shape...]
     nd = length(chunk)
     # simplification of ugly heuristic target chunk size from PyTables/h5py:
-    target = min(1500000, max(12000, ifloor(300*cbrt(Ts*sz))))
+    target = min(1500000, max(12000, floor(Int, 300*cbrt(Ts*sz))))
     Ts > target && return ones(chunk)
     # divide last non-unit dimension by 2 until we get <= target
     # (since Julia default to column-major, favor contiguous first dimension)
@@ -2190,7 +2181,7 @@ h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES.id, cset(UTF8String))
 _attr_properties(path::UTF8String) = UTF8_ATTRIBUTE_PROPERTIES
 
 # property function get/set pairs
-const hdf5_prop_get_set = @Dict(
+const hdf5_prop_get_set = @compat Dict(
     "chunk"         => (get_chunk, set_chunk),
     "fclose_degree" => (get_fclose_degree, h5p_set_fclose_degree),
     "compress"      => (nothing, h5p_set_blosc),
