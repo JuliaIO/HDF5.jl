@@ -1199,11 +1199,24 @@ function read{S<:ByteString}(obj::DatasetOrAttribute, ::Type{S})
     local ret::S
     objtype = datatype(obj)
     try
-        n = h5t_get_size(objtype.id)
-        pad = h5t_get_strpad(objtype.id)
-        buf = Array(Uint8, n)
-        readarray(obj, objtype.id, buf)
-        ret = unpad(bytestring(buf), pad)
+        if h5t_is_variable_str(objtype.id)
+            buf = Ptr{Uint8}[C_NULL]
+            memtype_id = h5t_copy(H5T_C_S1)
+            h5t_set_size(memtype_id, H5T_VARIABLE)
+            if isleaftype(S)
+                h5t_set_cset(memtype_id, cset(S))
+            else
+                h5t_set_cset(memtype_id, h5t_get_cset(datatype(obj)))
+            end
+            readarray(obj, memtype_id, buf)
+            ret = bytestring(buf[1])
+        else
+            n = h5t_get_size(objtype.id)
+            pad = h5t_get_strpad(objtype.id)
+            buf = Array(Uint8, n)
+            readarray(obj, objtype.id, buf)
+            ret = unpad(bytestring(buf), pad)
+        end
     finally
         close(objtype)
     end

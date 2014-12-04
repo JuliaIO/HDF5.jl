@@ -25,6 +25,14 @@ salut = "Hi there"
 ucode = "uniçº∂e"
 write(f, "salut", salut)
 write(f, "ucode", ucode)
+# Manually write a variable-length string (issue #187)
+let
+    dtype = HDF5Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
+    HDF5.h5t_set_size(dtype.id, HDF5.H5T_VARIABLE)
+    dspace = HDF5.dataspace(salut)
+    dset = HDF5.d_create(f, "salut-vlen", dtype, dspace)
+    HDF5.h5d_write(dset, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(salut.data)])
+end
 # Arrays of strings
 salut_split = ["Hi", "there"]
 write(f, "salut_split", salut_split)
@@ -120,6 +128,8 @@ Ai64 = read(fr, "Auint64")
 @assert Ai == Ai64
 @assert eltype(Ai64) == Uint64
 salutr = read(fr, "salut")
+@assert salut == salutr
+salutr = read(fr, "salut-vlen")
 @assert salut == salutr
 ucoder = read(fr, "ucode")
 @assert ucode == ucoder
