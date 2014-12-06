@@ -182,7 +182,7 @@ const H5T_STR_NULLTERM = 0
 const H5T_STR_NULLPAD  = 1
 const H5T_STR_SPACEPAD = 2
 # Other type constants
-const H5T_VARIABLE     = reinterpret(Uint64, int64(-1))
+const H5T_VARIABLE     = reinterpret(Uint, -1)
 # Type_id constants (LE = little endian, I16 = Int16, etc)
 const H5T_STD_I8LE        = read_const(:H5T_STD_I8LE_g)
 const H5T_STD_I8BE        = read_const(:H5T_STD_I8BE_g)
