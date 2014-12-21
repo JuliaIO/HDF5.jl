@@ -1010,8 +1010,8 @@ function __init__()
     global _runtime_properties
     _runtime_properties[1] = COMPACT_PROPERTIES
 
-    Base.rehash(_typedict, length(_typedict.keys))
-    Base.rehash(BUILTIN_TYPES.dict, length(BUILTIN_TYPES.dict.keys))
+    HDF5.rehash!(_typedict, length(_typedict.keys))
+    HDF5.rehash!(BUILTIN_TYPES.dict, length(BUILTIN_TYPES.dict.keys))
 
     nothing
 end

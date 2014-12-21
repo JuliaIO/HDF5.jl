@@ -2261,6 +2261,12 @@ _attr_properties(path::UTF8String) = _runtime_properties[4]
 
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false)
 
+if VERSION < v"0.4.0-dev+2014"
+    rehash! = Base.rehash
+else
+    rehash! = Base.rehash!
+end
+
 function __init__()
     init_libhdf5()
     register_blosc()
@@ -2284,8 +2290,8 @@ function __init__()
     _runtime_properties[3] = ASCII_ATTRIBUTE_PROPERTIES
     _runtime_properties[4] = UTF8_ATTRIBUTE_PROPERTIES
 
-    Base.rehash(hdf5_type_map, length(hdf5_type_map.keys))
-    Base.rehash(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
+    rehash!(hdf5_type_map, length(hdf5_type_map.keys))
+    rehash!(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
 
     nothing
 end
