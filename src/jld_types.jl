@@ -393,7 +393,7 @@ function h5type(parent::JldFile, T::ANY, commit::Bool)
 end
 
 # Normal objects
-function _gen_jlconvert_type(typeinfo::JldTypeInfo, T::ANY)
+function _gen_jlconvert_type(typeinfo::JldTypeInfo, T::ANY, fsym = :jlconvert)
     ex = Expr(:block)
     args = ex.args
     for i = 1:length(typeinfo.dtypes)
@@ -410,7 +410,7 @@ function _gen_jlconvert_type(typeinfo::JldTypeInfo, T::ANY)
             push!(args, :(out.$(T.names[i]) = jlconvert($(T.types[i]), file, ptr+$h5offset)))
         end
     end
-    @eval function jlconvert(::Type{$T}, file::JldFile, ptr::Ptr)
+    @eval function $fsym(::Type{$T}, file::JldFile, ptr::Ptr)
         out = ccall(:jl_new_struct_uninit, Any, (Any,), $T)::$T
         $ex
         out
