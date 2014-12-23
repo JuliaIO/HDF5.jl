@@ -3,7 +3,7 @@
 ###############################################
 
 module JLD
-using HDF5
+using HDF5, Compat
 # Add methods to...
 import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o_delete, name, names, read, size, write,
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
@@ -365,8 +365,8 @@ function after_read{K,V,T}(x::AssociativeWrapper{K,V,T})
     keys = x.keys
     values = x.values
     n = length(keys)
-    if applicable(sizehint, ret, n)
-        sizehint(ret, n)
+    if applicable(sizehint!, ret, n)
+        sizehint!(ret, n)
     end
     for i = 1:n
         ret[keys[i]] = values[i]
