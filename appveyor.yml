@@ -1,7 +1,7 @@
 environment:
   matrix:
-  - JULIAVERSION: "x86/0.3/julia-0.3.0-win32.exe"
-  - JULIAVERSION: "x64/0.3/julia-0.3.0-win64.exe"
+  - JULIAVERSION: "x86/0.3/julia-0.3-latest-win32.exe"
+  - JULIAVERSION: "x64/0.3/julia-0.3-latest-win64.exe"
 
 install:
 # Download most recent Julia Windows binary
@@ -12,7 +12,7 @@ install:
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
   - IF EXIST .git\shallow (git fetch --unshallow)
-  - C:\projects\julia\bin\julia -F -e "versioninfo(); Pkg.init(); Pkg.add(\"DataFrames\"); Pkg.clone(pwd(), \"HDF5\"); Pkg.build(\"HDF5\")"
+  - C:\projects\julia\bin\julia -F -e "versioninfo(); Pkg.clone(pwd(), \"HDF5\"); Pkg.build(\"HDF5\")"
 
 test_script:
-  - C:\projects\julia\bin\julia test\runtests.jl
+  - C:\projects\julia\bin\julia -e "Pkg.test(\"HDF5\")"
