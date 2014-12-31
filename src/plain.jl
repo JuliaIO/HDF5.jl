@@ -1391,7 +1391,8 @@ read(attr::HDF5Attributes, name::ByteString) = a_read(attr.parent, name)
 function iscontiguous(obj::HDF5Dataset)
     prop = h5d_get_create_plist(checkvalid(obj).id)
     try
-        h5p_get_layout(prop) == H5D_CONTIGUOUS
+        layout = h5p_get_layout(prop)
+        layout == H5D_CONTIGUOUS || layout == H5D_COMPACT
     finally
         h5p_close(prop)
     end
@@ -1550,7 +1551,7 @@ function getindex(dset::HDF5Dataset, indices::Union(Range{Int},Int)...)
     _getindex(dset,T, indices...)
 end
 function _getindex(dset::HDF5Dataset, T::Type, indices::Union(Range{Int},Int)...)
-    if !(T<:HDF5BitsKind)    
+    if !(T<:HDF5BitsKind)
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
     dsel_id = hyperslab(dset, indices...)
