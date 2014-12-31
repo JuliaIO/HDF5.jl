@@ -184,6 +184,7 @@ nonearr = Array(Union(), 5)
 
 # some data big enough to ensure that compression is used:
 Abig = kron(eye(10), rand(20,20))
+Bbig = Any[i for i=1:3000]
 Sbig = "A test string "^1000
 
 iseq(x,y) = isequal(x,y)
@@ -337,6 +338,7 @@ for compress in (true,false)
     @write fid none
     @write fid nonearr
     @write fid Abig
+    @write fid Bbig
     @write fid Sbig
     # Make sure we can create groups (i.e., use HDF5 features)
     g = g_create(fid, "mygroup")
@@ -449,6 +451,7 @@ for compress in (true,false)
         @check fidr none
         @check fidr nonearr
         @check fidr Abig
+        @check fidr Bbig
         @check fidr Sbig
         
         x1 = read(fidr, "group1/x")
