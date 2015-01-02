@@ -170,7 +170,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             finally
                 close(p)
             end
-            fj = JldFile(HDF5File(f, filename), version, true, true, mmaparrays, compress)
+            fj = JldFile(HDF5File(f, filename, false), version, true, true, mmaparrays, compress)
             # initialize empty require list
             write(fj, pathrequire, ByteString[])
         else
@@ -195,7 +195,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
                     fj = JLD00.jldopen(filename, rd, wr, cr, tr, ff; mmaparrays=mmaparrays)
                 else
                     f = HDF5.h5f_open(filename, wr ? HDF5.H5F_ACC_RDWR : HDF5.H5F_ACC_RDONLY, pa.id)
-                    fj = JldFile(HDF5File(f, filename), version, true, true, mmaparrays, compress)
+                    fj = JldFile(HDF5File(f, filename, false), version, true, true, mmaparrays, compress)
                     # Load any required files/packages
                     if exists(fj, pathrequire)
                         r = read(fj, pathrequire)
