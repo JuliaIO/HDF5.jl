@@ -294,9 +294,9 @@ type HDF5File <: DataFile
     id::Hid
     filename::String
 
-    function HDF5File(id, filename)
+    function HDF5File(id, filename, toclose::Bool=true)
         f = new(id, filename)
-        finalizer(f, close)
+        toclose && finalizer(f, close)
         f
     end
 end
