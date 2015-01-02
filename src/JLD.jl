@@ -68,6 +68,9 @@ type JldFile <: HDF5.DataFile
     function JldFile(plain::HDF5File, version::VersionNumber=version_current, toclose::Bool=true,
                      writeheader::Bool=false, mmaparrays::Bool=false,
                      compress::Bool=false)
+	    if compress && mmaparrays
+			error("A JLD file cannot have compress=true and mmaparrays=true set at the same time")
+		end
         f = new(plain, version, toclose, writeheader, mmaparrays, compress,
                 Dict{HDF5Datatype,Type}(), Dict{Type,HDF5Datatype}(),
                 Dict{HDF5ReferenceObj,WeakRef}(), ByteString[])
@@ -91,6 +94,10 @@ end
 iscompressed(f::JldFile) = f.compress
 iscompressed(g::JldGroup) = g.file.compress
 iscompressed(d::JldGroup) = d.file.compress
+
+ismmapped(f::JldFile) = f.mmaparrays
+ismmapped(g::JldGroup) = g.file.mmaparrays
+ismmapped(d::JldGroup) = d.file.mmaparrays
 
 immutable PointerException <: Exception; end
 show(io::IO, ::PointerException) = print(io, "cannot write a pointer to JLD file")
@@ -485,7 +492,9 @@ write(parent::Union(JldFile, JldGroup), name::ByteString,
 
 # Pick whether to use compact or default storage based on data size
 function dset_create_properties(parent, sz::Int, obj, chunk=Int[])
-    sz <= 8192 && return compact_properties(), false
+    if sz <= 8192 && !ismmapped(parent) 
+		return compact_properties(), false
+	end
     if iscompressed(parent) && !isempty(chunk)
         p = p_create(HDF5.H5P_DATASET_CREATE)
         p["chunk"] = chunk
