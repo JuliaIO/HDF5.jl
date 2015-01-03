@@ -1493,7 +1493,7 @@ end
 # Create and write, closing the objects upon exit
 for (privatesym, fsym, ptype, crsym) in
     ((:_d_write, :d_write, Union(HDF5File, HDF5Group), :d_create),
-     (:_a_write, :a_write, Union(HDF5File, HDF5Object{HDF5File}, HDF5Datatype), :a_create))
+     (:_a_write, :a_write, Union(HDF5File, HDF5Object, HDF5Datatype), :a_create))
     @eval begin
         # Generic write (hidden)
         function ($privatesym)(parent::$ptype, name::ByteString, data, plists...)
