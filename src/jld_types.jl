@@ -285,7 +285,7 @@ else
 end
 
 function h5type(parent::JldFile, T::(Type...), commit::Bool)
-    !isa(T, (DataType...)) && unknown_type_err()
+    !isa(T, (DataType...)) && unknown_type_err(T)
     T = T::(DataType...)
 
     haskey(parent.jlh5type, T) && return parent.jlh5type[T]
@@ -351,7 +351,7 @@ else
 end
 
 function h5type(parent::JldFile, T::ANY, commit::Bool)
-    !isa(T, DataType) && unknown_type_err()
+    !isa(T, DataType) && unknown_type_err(T)
     T = T::DataType
 
     haskey(parent.jlh5type, T) && return parent.jlh5type[T]
@@ -520,7 +520,7 @@ uses_reference(T::DataType) = !T.pointerfree
 uses_reference(::Tuple) = true
 uses_reference(::UnionType) = true
 
-unknown_type_err() =
+unknown_type_err(T) =
     error("""$T is not of a type supported by JLD
              Please report this error at https://github.com/timholy/HDF5.jl""")
 
