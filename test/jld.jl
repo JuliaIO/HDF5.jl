@@ -258,7 +258,7 @@ end
 # test mmapping of small arrays (Issue #192)
 fid = jldopen(fn, "w", mmaparrays=true)
 write(fid, "a", [1:3])
-assert(ismmappable(fid["a"]))
+@test ismmappable(fid["a"])
 close(fid)
 rm(fn)
 
