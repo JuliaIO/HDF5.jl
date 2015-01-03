@@ -68,10 +68,7 @@ type JldFile <: HDF5.DataFile
     function JldFile(plain::HDF5File, version::VersionNumber=version_current, toclose::Bool=true,
                      writeheader::Bool=false, mmaparrays::Bool=false,
                      compress::Bool=false)
-        if compress && mmaparrays
-            error("A JLD file cannot have compress=true and mmaparrays=true set at the same time")
-        end
-        f = new(plain, version, toclose, writeheader, mmaparrays, compress,
+        f = new(plain, version, toclose, writeheader, mmaparrays, compress & !mmaparrays,
                 Dict{HDF5Datatype,Type}(), Dict{Type,HDF5Datatype}(),
                 Dict{HDF5ReferenceObj,WeakRef}(), ByteString[])
         if toclose
