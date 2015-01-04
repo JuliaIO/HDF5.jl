@@ -68,7 +68,7 @@ type JldFile <: HDF5.DataFile
     function JldFile(plain::HDF5File, version::VersionNumber=version_current, toclose::Bool=true,
                      writeheader::Bool=false, mmaparrays::Bool=false,
                      compress::Bool=false)
-        f = new(plain, version, toclose, writeheader, mmaparrays, compress,
+        f = new(plain, version, toclose, writeheader, mmaparrays, compress & !mmaparrays,
                 Dict{HDF5Datatype,Type}(), Dict{Type,HDF5Datatype}(),
                 Dict{HDF5ReferenceObj,WeakRef}(), ByteString[])
         if toclose
@@ -90,7 +90,9 @@ end
 
 iscompressed(f::JldFile) = f.compress
 iscompressed(g::JldGroup) = g.file.compress
-iscompressed(d::JldGroup) = d.file.compress
+
+ismmapped(f::JldFile) = f.mmaparrays
+ismmapped(d::JldGroup) = d.file.mmaparrays
 
 immutable PointerException <: Exception; end
 show(io::IO, ::PointerException) = print(io, "cannot write a pointer to JLD file")
@@ -480,12 +482,14 @@ end
 ### Writing ###
 
 write(parent::Union(JldFile, JldGroup), name::ByteString,
-      data, wsession::JldWriteSession=JldWriteSession()) =
-    close(_write(parent, name, data, wsession))
+      data, wsession::JldWriteSession=JldWriteSession(); kargs...) =
+    close(_write(parent, name, data, wsession; kargs...))
 
 # Pick whether to use compact or default storage based on data size
-function dset_create_properties(parent, sz::Int, obj, chunk=Int[])
-    sz <= 8192 && return compact_properties(), false
+function dset_create_properties(parent, sz::Int, obj, chunk=Int[]; mmap = false)
+    if sz <= 8192 && !ismmapped(parent) && !mmap
+        return compact_properties(), false
+    end
     if iscompressed(parent) && !isempty(chunk)
         p = p_create(HDF5.H5P_DATASET_CREATE)
         p["chunk"] = chunk
@@ -500,9 +504,9 @@ end
 function _write{T<:Union(HDF5BitsKind, ByteString)}(parent::Union(JldFile, JldGroup),
                                                     name::ByteString,
                                                     data::Union(T, Array{T}),
-                                                    wsession::JldWriteSession)
+                                                    wsession::JldWriteSession; kargs...)
     chunk = T <: ByteString ? Int[] : HDF5.heuristic_chunk(data)
-    dprop, dprop_close = dset_create_properties(parent, sizeof(data), data, chunk)
+    dprop, dprop_close = dset_create_properties(parent, sizeof(data), data, chunk; kargs...)
     dset, dtype = d_create(parent.plain, bytestring(name), data, HDF5._link_properties(name), dprop)
     try
         # Write the attribute
@@ -519,14 +523,14 @@ end
 # General array types
 function _write{T}(parent::Union(JldFile, JldGroup),
                    path::ByteString, data::Array{T},
-                   wsession::JldWriteSession)
+                   wsession::JldWriteSession; kargs...)
     f = file(parent)
     dtype = h5fieldtype(f, T, true)
     buf = h5convert_array(f, data, dtype, wsession)
     dims = convert(Array{HDF5.Hsize, 1}, [reverse(size(data))...])
     dspace = dataspace(data)
     chunk = HDF5.heuristic_chunk(dtype, size(data))
-    dprop, dprop_close = dset_create_properties(parent, sizeof(buf),buf, chunk)
+    dprop, dprop_close = dset_create_properties(parent, sizeof(buf),buf, chunk; kargs...)
     try
         dset = d_create(parent.plain, path, dtype.dtype, dspace, HDF5._link_properties(path), dprop)
         if dtype == JLD_REF_TYPE
@@ -546,9 +550,9 @@ end
 
 # Dispatch correct method for Array{Union()}
 _write(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{Union()},
-       wsession::JldWriteSession) =
+       wsession::JldWriteSession; kargs...) =
     invoke(_write, (Union(JldFile, JldGroup), ByteString, Array, JldWriteSession), parent,
-           path, data, wsession)
+           path, data, wsession; kargs...)
 
 # Convert an array to the format to be written to the HDF5 file, either
 # references or values
@@ -629,7 +633,7 @@ write_ref(parent::JldGroup, data, wsession::JldWriteSession) =
 
 # Special case for associative, to rehash keys
 function _write(parent::Union(JldFile, JldGroup), name::ByteString,
-                d::Associative, wsession::JldWriteSession)
+                d::Associative, wsession::JldWriteSession; kargs...)
     n = length(d)
     K, V = eltype(d)
     ks = Array(K, n)
@@ -645,7 +649,7 @@ end
 # Expressions, drop line numbers
 function _write(parent::Union(JldFile, JldGroup),
                 name::ByteString, ex::Expr,
-                wsession::JldWriteSession)
+                wsession::JldWriteSession; kargs...)
     args = ex.args
     # Discard "line" expressions
     keep = trues(length(args))
@@ -661,10 +665,10 @@ end
 
 # Generic (tuples, immutables, and compound types)
 _write(parent::Union(JldFile, JldGroup), name::ByteString, s,
-      wsession::JldWriteSession) =
+      wsession::JldWriteSession; kargs...) =
     write_compound(parent, name, s, wsession)
 function write_compound(parent::Union(JldFile, JldGroup), name::ByteString,
-                        s, wsession::JldWriteSession)
+                        s, wsession::JldWriteSession; kargs...)
     T = typeof(s)
     f = file(parent)
     dtype = h5type(f, T, true)
@@ -674,7 +678,7 @@ function write_compound(parent::Union(JldFile, JldGroup), name::ByteString,
     h5convert!(pointer(buf), file(parent), s, wsession)
 
     dspace = HDF5Dataspace(HDF5.h5s_create(HDF5.H5S_SCALAR))
-    dprop, dprop_close = dset_create_properties(parent, length(buf), buf)
+    dprop, dprop_close = dset_create_properties(parent, length(buf), buf; kargs...)
     try
         dset = HDF5.d_create(parent.plain, name, dtype.dtype, dspace, HDF5._link_properties(name), dprop)
         HDF5.writearray(dset, dtype.dtype.id, buf)

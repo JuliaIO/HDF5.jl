@@ -255,6 +255,27 @@ typ{T}(x::Int64, ::Type{T}) = Base.box(Typ{T}, Base.unbox(Int64,x))
 abstract UnexportedT
 end
 
+
+# test mmapping of small arrays (Issue #192)
+fid = jldopen(fn, "w", mmaparrays = true)
+write(fid, "a", [1:3])
+@test ismmappable(fid["a"])
+close(fid)
+rm(fn)
+
+fid = jldopen(fn, "w", mmaparrays=false)
+write(fid, "a", [1:3]; mmap = true)
+@test ismmappable(fid["a"])
+close(fid)
+rm(fn)
+
+fid = jldopen(fn, "w", compress = true)
+write(fid, "a", [1:3])
+@test ismmappable(fid["a"]) == false
+close(fid)
+rm(fn)
+
+ 
 for compress in (true,false)
     fnc = compress ? fn*".c" : fn # workaround #176
     fid = jldopen(fnc, "w", compress=compress)
