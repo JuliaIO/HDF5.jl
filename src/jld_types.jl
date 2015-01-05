@@ -394,7 +394,7 @@ function _gen_jlconvert_type(typeinfo::JldTypeInfo, T::ANY)
             push!(args, quote
                 ref = unsafe_load(convert(Ptr{HDF5ReferenceObj}, ptr)+$h5offset)
                 if ref != HDF5.HDF5ReferenceObj_NULL
-                    out.$(T.names[i]) = read_ref(file, ref)::$(T.types[i])
+                    out.$(T.names[i]) = convert($(T.types[i]), read_ref(file, ref))
                 end
             end)
         else
