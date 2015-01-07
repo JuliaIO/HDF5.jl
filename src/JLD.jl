@@ -188,7 +188,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             finally
                 close(rawfid)
             end
-            if beginswith(magic, magic_base.data)
+            if startswith(magic, magic_base.data)
                 version = convert(VersionNumber, bytestring(convert(Ptr{Uint8}, magic) + length(magic_base)))
                 if version < v"0.1.0"
                     if !isdefined(JLD, :JLD00)
@@ -273,7 +273,7 @@ exists(p::Union(JldFile, JldGroup, JldDataset), path::ByteString) = exists(p.pla
 root(p::Union(JldFile, JldGroup, JldDataset)) = g_open(file(p), "/")
 o_delete(parent::Union(JldFile, JldGroup), args...) = o_delete(parent.plain, args...)
 function ensurepathsafe(path::ByteString)
-    if any([beginswith(path, s) for s in (pathrefs,pathtypes,pathrequire)])
+    if any([startswith(path, s) for s in (pathrefs,pathtypes,pathrequire)])
         error("$name is internal to the JLD format, use o_delete if you really want to delete it")
     end
 end
@@ -821,7 +821,7 @@ function full_typename(io::IO, file::JldFile, jltype::DataType)
     if mod != Main
         mname = string(mod)
         for x in file.truncatemodules
-            if beginswith(mname, x)
+            if startswith(mname, x)
                 mname = length(x) == length(mname) ? "" : mname[sizeof(x)+1:end]
                 break
             end

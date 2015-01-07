@@ -3,7 +3,7 @@
 ###############################################
 
 module JLD00
-using HDF5
+using HDF5, Compat
 # Add methods to...
 import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o_delete, name, names, read, size, write,
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
@@ -127,7 +127,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             finally
                 close(rawfid)
             end
-            if beginswith(magic, magic_base.data)
+            if startswith(magic, magic_base.data)
                 f = HDF5.h5f_open(filename, wr ? HDF5.H5F_ACC_RDWR : HDF5.H5F_ACC_RDONLY, pa.id)
                 version = bytestring(convert(Ptr{Uint8}, magic) + length(magic_base))
                 fj = JldFile(HDF5File(f, filename), version, true, true, mmaparrays)
@@ -205,7 +205,7 @@ exists(p::Union(JldFile, JldGroup, JldDataset), path::ByteString) = exists(p.pla
 root(p::Union(JldFile, JldGroup, JldDataset)) = g_open(file(p), "/")
 o_delete(parent::Union(JldFile, JldGroup), args...) = o_delete(parent.plain, args...)
 function ensurepathsafe(path::ByteString)
-    if any([beginswith(path, s) for s in (pathrefs,pathtypes,pathrequire)]) 
+    if any([startswith(path, s) for s in (pathrefs,pathtypes,pathrequire)]) 
         error("$name is internal to the JLD format, use o_delete if you really want to delete it") 
     end
 end
@@ -624,7 +624,7 @@ function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Arra
     local refs
     # Determine whether parent already exists in /_refs, so we can avoid group/dataset conflict
     pname = name(parent)
-    if beginswith(pname, pathrefs)
+    if startswith(pname, pathrefs)
         gref = g_create(parent, path*"g")
     else
         pathr = HDF5.joinpathh5(pathrefs, pname, path)
