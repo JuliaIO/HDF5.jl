@@ -187,6 +187,13 @@ Abig = kron(eye(10), rand(20,20))
 Bbig = Any[i for i=1:3000]
 Sbig = "A test string "^1000
 
+# Bitstype type parameters
+type BitsParams{x}; end
+bitsparamfloat = BitsParams{1.0}()
+bitsparambool  = BitsParams{true}()
+bitsparamimmut = BitsParams{PaddingTest(1,2)}()
+bitsparamsymbol = BitsParams{:x}()
+
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
 iseq(x::MyImmutable, y::MyImmutable) = (isequal(x.x, y.x) && isequal(x.y, y.y) && isequal(x.z, y.z))
@@ -361,6 +368,11 @@ for compress in (true,false)
     @write fid Abig
     @write fid Bbig
     @write fid Sbig
+    @write fid bitsparamfloat
+    @write fid bitsparambool
+    @write fid bitsparamimmut
+    @write fid bitsparamsymbol
+
     # Make sure we can create groups (i.e., use HDF5 features)
     g = g_create(fid, "mygroup")
     i = 7
@@ -474,6 +486,10 @@ for compress in (true,false)
         @check fidr Abig
         @check fidr Bbig
         @check fidr Sbig
+        @check fidr bitsparamfloat
+        @check fidr bitsparambool
+        @check fidr bitsparamimmut
+        @check fidr bitsparamsymbol
         
         x1 = read(fidr, "group1/x")
         @assert x1 == Any[1]

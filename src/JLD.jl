@@ -749,9 +749,9 @@ length(x::Union(JldFile, JldGroup)) = length(names(x))
 
 is_valid_type_ex(s::Symbol) = true
 is_valid_type_ex(s::QuoteNode) = true
-is_valid_type_ex(x::Int) = true
+is_valid_type_ex{T}(::T) = isbits(T)
 is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == :.) && all(map(is_valid_type_ex, e.args))) ||
-                            (e.head == :call && (e.args[1] == :Union || e.args[1] == :TypeVar))
+                            (e.head == :call && isa(e.args[1], Symbol))
 
 # Work around https://github.com/JuliaLang/julia/issues/8226
 const _typedict = Dict{String,Type}()
@@ -816,6 +816,7 @@ function full_typename(io::IO, file::JldFile, jltype::(Type...))
     print(io, ')')
 end
 full_typename(io::IO, ::JldFile, x) = print(io, x)
+full_typename(io::IO, ::JldFile, x::Symbol) = print(io, ":", x) # print(io, ::Symbol) doesn't show the leading colon
 function full_typename(io::IO, file::JldFile, jltype::DataType)
     mod = jltype.name.module
     if mod != Main
