@@ -751,7 +751,7 @@ is_valid_type_ex(s::Symbol) = true
 is_valid_type_ex(s::QuoteNode) = true
 is_valid_type_ex{T}(::T) = isbits(T)
 is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == :.) && all(map(is_valid_type_ex, e.args))) ||
-                            (e.head == :call && isa(e.args[1], Symbol))
+                            (e.head == :call && (e.args[1] == :Union || e.args[1] == :TypeVar))
 
 # Work around https://github.com/JuliaLang/julia/issues/8226
 const _typedict = Dict{String,Type}()

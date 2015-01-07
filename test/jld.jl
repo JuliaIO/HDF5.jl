@@ -191,7 +191,6 @@ Sbig = "A test string "^1000
 type BitsParams{x}; end
 bitsparamfloat = BitsParams{1.0}()
 bitsparambool  = BitsParams{true}()
-bitsparamimmut = BitsParams{PaddingTest(1,2)}()
 bitsparamsymbol = BitsParams{:x}()
 
 iseq(x,y) = isequal(x,y)
@@ -370,7 +369,6 @@ for compress in (true,false)
     @write fid Sbig
     @write fid bitsparamfloat
     @write fid bitsparambool
-    @write fid bitsparamimmut
     @write fid bitsparamsymbol
 
     # Make sure we can create groups (i.e., use HDF5 features)
@@ -488,7 +486,6 @@ for compress in (true,false)
         @check fidr Sbig
         @check fidr bitsparamfloat
         @check fidr bitsparambool
-        @check fidr bitsparamimmut
         @check fidr bitsparamsymbol
         
         x1 = read(fidr, "group1/x")
