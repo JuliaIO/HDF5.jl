@@ -181,6 +181,9 @@ bigfloats = big(3.2).^(1:100)
 # None
 none = Union()
 nonearr = Array(Union(), 5)
+# nothing/Void
+scalar_nothing = nothing
+vector_nothing = Union(Int,Nothing)[1,nothing]
 
 # some data big enough to ensure that compression is used:
 Abig = kron(eye(10), rand(20,20))
@@ -364,6 +367,8 @@ for compress in (true,false)
     @write fid bigints
     @write fid none
     @write fid nonearr
+    @write fid scalar_nothing
+    @write fid vector_nothing
     @write fid Abig
     @write fid Bbig
     @write fid Sbig
@@ -481,6 +486,8 @@ for compress in (true,false)
         @check fidr bigints
         @check fidr none
         @check fidr nonearr
+        @check fidr scalar_nothing
+        @check fidr vector_nothing
         @check fidr Abig
         @check fidr Bbig
         @check fidr Sbig

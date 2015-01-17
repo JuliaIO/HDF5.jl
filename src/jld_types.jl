@@ -122,6 +122,15 @@ _jlconvert_bits!{T}(out::Ptr, ::Type{T}, ptr::Ptr) =
 jlconvert(T::BitsKindTypes, ::JldFile, ptr::Ptr) = _jlconvert_bits(T, ptr)
 jlconvert!(out::Ptr, T::BitsKindTypes, ::JldFile, ptr::Ptr) = _jlconvert_bits!(out, T, ptr)
 
+## Void/Nothing
+
+typealias VoidType Type{Nothing}
+
+gen_jlconvert(typeinfo::JldTypeInfo, T::VoidType) = nothing
+
+jlconvert(T::VoidType, ::JldFile, ptr::Ptr) = nothing
+jlconvert!(out::Ptr, T::VoidType, ::JldFile, ptr::Ptr) = (unsafe_store!(convert(Ptr{T}, out), nothing); nothing)
+
 ## ByteStrings
 
 h5fieldtype{T<:ByteString}(parent::JldFile, ::Type{T}, ::Bool) =
