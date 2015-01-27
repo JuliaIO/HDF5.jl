@@ -192,9 +192,13 @@ Sbig = "A test string "^1000
 
 # Bitstype type parameters
 type BitsParams{x}; end
-bitsparamfloat = BitsParams{1.0}()
-bitsparambool  = BitsParams{true}()
+bitsparamfloat  = BitsParams{1.0}()
+bitsparambool   = BitsParams{true}()
 bitsparamsymbol = BitsParams{:x}()
+bitsparamint    = BitsParams{1}()
+bitsparamuint   = BitsParams{0x01}()
+bitsparamint16  = BitsParams{int16(1)}()
+
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -372,9 +376,12 @@ for compress in (true,false)
     @write fid Abig
     @write fid Bbig
     @write fid Sbig
+    @test_throws ErrorException @write fid bitsparamint16
     @write fid bitsparamfloat
     @write fid bitsparambool
     @write fid bitsparamsymbol
+    @write fid bitsparamint
+    @write fid bitsparamuint
 
     # Make sure we can create groups (i.e., use HDF5 features)
     g = g_create(fid, "mygroup")
@@ -494,6 +501,8 @@ for compress in (true,false)
         @check fidr bitsparamfloat
         @check fidr bitsparambool
         @check fidr bitsparamsymbol
+        @check fidr bitsparamint
+        @check fidr bitsparamuint
         
         x1 = read(fidr, "group1/x")
         @assert x1 == Any[1]
