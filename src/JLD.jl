@@ -815,7 +815,19 @@ function full_typename(io::IO, file::JldFile, jltype::(Type...))
     end
     print(io, ')')
 end
-full_typename(io::IO, ::JldFile, x) = print(io, x)
+function full_typename(io::IO, ::JldFile, x)
+    # Only allow bitstypes that show as AST literals and make sure that they
+    # read back exactly as they are saved. Use show here (instead of print) to
+    # preserve as many Julian type distinctions as we can e.g., 1 vs 0x01
+    # A different implementation will be required to support custom immutables
+    # or things as simple as Int16(1).
+    s = sprint(show, x)
+    if isbits(x) && parse(s) === x
+        print(io, s)
+    else
+        error("type parameters with objects of type ", typeof(x), " are currently unsupported")
+    end
+end
 full_typename(io::IO, ::JldFile, x::Symbol) = print(io, ":", x) # print(io, ::Symbol) doesn't show the leading colon
 function full_typename(io::IO, file::JldFile, jltype::DataType)
     mod = jltype.name.module
