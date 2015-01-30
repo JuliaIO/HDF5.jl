@@ -5,9 +5,9 @@
 module JLD
 using HDF5, Compat
 # Add methods to...
-import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o_delete, name, names, read, size, write,
+import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o_delete, name, names, read, write,
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
-import Base: length, endof, show, done, next, start, delete!, sizeof
+import Base: length, endof, show, done, next, ndims, start, delete!, size, sizeof
 
 # .jld files written before v"0.4.0-dev+1419" might have Uint32 instead of UInt32 as the typename string.
 # See julia issue #8907
@@ -691,8 +691,10 @@ end
 
 ### Size, length, etc ###
 size(dset::JldDataset) = size(dset.plain)
+size(dset::JldDataset, d) = size(dset.plain, d)
 length(dset::JldDataset) = prod(size(dset))
 endof(dset::JldDataset) = length(dset)
+ndims(dset::JldDataset) = ndims(dset.plain)
 
 ### Read/write via getindex/setindex! ###
 function getindex(dset::JldDataset, indices::Union(Range{Int},Integer)...)

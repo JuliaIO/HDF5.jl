@@ -396,6 +396,12 @@ for compress in (true,false)
         fidr = jldopen(fnc, "r", mmaparrays=mmap)
         @check fidr x
         @check fidr A
+        dsetA = fidr["A"]
+        @test ndims(dsetA) == ndims(A)
+        @test size(dsetA) == size(A)
+        @test size(dsetA, 1) == size(A, 1)
+        @test size(dsetA, 2) == size(A, 2)
+        @test size(dsetA, 3) == size(A, 3)
         @check fidr Aarray
         @check fidr str
         @check fidr stringsA
