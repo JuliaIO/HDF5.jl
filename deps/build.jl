@@ -1,4 +1,4 @@
-using BinDeps
+using BinDeps, Compat
 
 @BinDeps.setup
 
@@ -21,4 +21,4 @@ end
     provides(Homebrew.HB, "hdf5", hdf5, os = :Darwin )
 end
 
-@BinDeps.install [:libhdf5 => :libhdf5]
+@compat @BinDeps.install Dict(:libhdf5 => :libhdf5)
