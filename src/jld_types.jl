@@ -480,6 +480,7 @@ function _gen_jlconvert_immutable(typeinfo::JldTypeInfo, T::ANY)
     nothing
 end
 
+const DONT_STORE_SINGLETON_IMMUTABLES = VERSION >= v"0.4.0-dev+385"
 function gen_jlconvert(typeinfo::JldTypeInfo, T::ANY)
     haskey(JLCONVERT_DEFINED, T) && return
 
@@ -488,7 +489,8 @@ function gen_jlconvert(typeinfo::JldTypeInfo, T::ANY)
             @eval begin
                 jlconvert(::Type{$T}, ::JldFile, ::Ptr) = $T()
                 jlconvert!(out::Ptr, ::Type{$T}, ::JldFile, ::Ptr) =
-                    unsafe_store!(convert(Ptr{Ptr{Void}}, out), pointer_from_objref($T()))
+                    $(DONT_STORE_SINGLETON_IMMUTABLES && !T.mutable ? nothing :
+                      :(unsafe_store!(convert(Ptr{Ptr{Void}}, out), pointer_from_objref($T()))))
             end
         else
             @eval begin
