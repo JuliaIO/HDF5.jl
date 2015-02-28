@@ -582,7 +582,11 @@ write(parent::Union(JldFile, JldGroup), name::ByteString, n::Nothing) = write(pa
 
 # Types
 # the first is needed to avoid an ambiguity warning
-write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
+if isdefined(Core, :Top)
+    write{T<:Top}(parent::Union(JldFile, JldGroup), name::ByteString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
+else
+    write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
+end
 write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::Type{T}) = write(parent, name, nothing, string("Type{", full_typename(t), "}"))
 
 # Bools
