@@ -314,7 +314,7 @@ function readsafely(obj::Union(JldFile, JldDataset))
             try
                 n = read(objtype)
                 v = getrefs(obj, Any)
-                ret = Dict(n[1,:], v)
+                ret = Dict(zip(n[1,:], v))
             finally
                 close(objtype)
             end
@@ -582,7 +582,7 @@ write(parent::Union(JldFile, JldGroup), name::ByteString, n::Nothing) = write(pa
 
 # Types
 # the first is needed to avoid an ambiguity warning
-write{T<:Top}(parent::Union(JldFile, JldGroup), name::ByteString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
+write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
 write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::Type{T}) = write(parent, name, nothing, string("Type{", full_typename(t), "}"))
 
 # Bools

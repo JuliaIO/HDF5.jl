@@ -74,7 +74,7 @@ bt = reinterpret(MyBT, int64(55))
 sa_asc = [:a, :b]
 sa_utf8 = [:α, :β]
 # SubArray (to test tuple type params)
-subarray = sub([1:5], 1:5)
+subarray = sub([1:5;], 1:5)
 # Array of empty tuples (to test tuple type params)
 arr_empty_tuple = ()[]
 immutable EmptyImmutable end
@@ -174,7 +174,7 @@ empty_arr_2 = Array(Int, 56, 0)
 empty_arr_3 = Any[]
 empty_arr_4 = cell(0, 97)
 # Moderately big dataset (which will be mmapped)
-bigdata = [1:10000]
+bigdata = [1:10000;]
 # BigFloats and BigInts
 bigints = big(3).^(1:100)
 bigfloats = big(3.2).^(1:100)
@@ -271,19 +271,19 @@ end
 
 # test mmapping of small arrays (Issue #192)
 fid = jldopen(fn, "w", mmaparrays = true)
-write(fid, "a", [1:3])
+write(fid, "a", [1:3;])
 @test ismmappable(fid["a"])
 close(fid)
 rm(fn)
 
 fid = jldopen(fn, "w", mmaparrays=false)
-write(fid, "a", [1:3]; mmap = true)
+write(fid, "a", [1:3;]; mmap = true)
 @test ismmappable(fid["a"])
 close(fid)
 rm(fn)
 
 fid = jldopen(fn, "w", compress = true)
-write(fid, "a", [1:3])
+write(fid, "a", [1:3;])
 @test ismmappable(fid["a"]) == false
 close(fid)
 rm(fn)
@@ -585,15 +585,15 @@ for compress in (false,true)
     
     # bracket syntax for datasets
     jldopen(fn, "w", compress=compress) do file
-        file["a"] = [1:100]
+        file["a"] = [1:100;]
         file["b"] = [x*y for x=1:10,y=1:10]
         file["c"] = Any[1, 2, 3]
         file["d"] = [1//2, 1//4, 1//8]
     end
     jldopen(fn, "r+", compress=compress) do file
-        @test(file["a"][1:50] == [1:50])
+        @test(file["a"][1:50] == [1:50;])
         file["a"][1:50] = 1:2:100
-        @test(file["a"][1:50] == [1:2:100])
+        @test(file["a"][1:50] == [1:2:100;])
         @test(file["b"][5,6][1]==5*6)
         @test(file["c"][1:2] == [1, 2])
         file["c"][2:3] = [5, 7]
@@ -607,20 +607,20 @@ for compress in (false,true)
     println("The following unrecognized JLD file warning is a sign of normal operation.")
     if compress
         h5open(fn, "w") do file
-            file["a", "blosc",5] = [1:100]
-            file["a"][51:100] = [1:50]
+            file["a", "blosc",5] = [1:100;]
+            file["a"][51:100] = [1:50;]
             file["b", "blosc",5] = [x*y for x=1:10,y=1:10]
         end
     else
         h5open(fn, "w") do file
-            file["a"] = [1:100]
-            file["a"][51:100] = [1:50]
+            file["a"] = [1:100;]
+            file["a"][51:100] = [1:50;]
             file["b"] = [x*y for x=1:10,y=1:10]
         end
     end
     jldopen(fn, "r") do file
-        @assert(file["a"][1:50] == [1:50])
-        @assert(file["a"][:] == [[1:50],[1:50]])
+        @assert(file["a"][1:50] == [1:50;])
+        @assert(file["a"][:] == [1:50;1:50])
         @assert(file["b"][5,6][1]==5*6)
     end
     

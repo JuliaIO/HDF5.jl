@@ -4,8 +4,8 @@ using DataFrames
 
 fname = joinpath(tempdir(), "mydata.jld")
 
-df = DataFrame(Any[[2:6], pi*[1:5]])
-df2 = DataFrame(a = [1:5], b = pi * [1:5])
+df = DataFrame(Any[[2:6;], pi*[1:5;]])
+df2 = DataFrame(a = [1:5;], b = pi * [1:5;])
 
 file = jldopen(fname, "w")
 write(file, "df", df)

@@ -32,7 +32,7 @@ dims, max_dims = HDF5.get_dims(b)
 # so I defined endof(dset::HDF5Dataset) = length(dset), and exported endof
 # but that didn't fix the error, despite the endof function working
 # d[1] produces error ERROR: Wrong number of indices supplied, should datasets support linear indexing?
-b[1:10000] = [1:10000]
+b[1:10000] = [1:10000;]
 #println(b[1:100])
 
 close(fid)
@@ -44,7 +44,7 @@ dims, max_dims = HDF5.get_dims(d_again)
 @assert max_dims == (uint64(100),uint64(200))
 @assert (sum(d_again[1,1:5])-sum([1.1231,1.313,5.123,2.231,4.1231])) == 0
 #println("d is size current $(map(int,HDF5.get_dims(re_d)[1])) max $(map(int,HDF5.get_dims(re_d)[2]))")
-@assert fid["b"][1:10000] == [1:10000]
+@assert fid["b"][1:10000] == [1:10000;]
 b_again = fid["b"]
 dims, max_dims = HDF5.get_dims(b_again)
 @assert dims == (uint64(10000),)

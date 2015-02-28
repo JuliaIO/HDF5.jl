@@ -49,7 +49,7 @@ write(f, "empty_string_array", empty_string_array)
 empty_array_of_strings = ASCIIString[""]
 write(f, "empty_array_of_strings", empty_array_of_strings)
 # Attributes
-species = [["N", "C"], ["A", "B"]]
+species = [["N", "C"]; ["A", "B"]]
 attrs(f)["species"] = species
 C∞ = 42
 attrs(f)["C∞"] = C∞
@@ -153,7 +153,7 @@ target = fill(5, 10, 20)
 target[1] = 4
 @assert Xslab2r == target
 dset = fr["slab3"]
-@assert dset[3:5] == [3:5]
+@assert dset[3:5] == [3:5;]
 emptyr = read(fr, "empty")
 @assert isempty(emptyr)
 empty_stringr = read(fr, "empty_string")
