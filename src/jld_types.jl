@@ -294,11 +294,13 @@ else
 end
 
 function h5type(parent::JldFile, T::(Type...), commit::Bool)
-    !isa(T, (DataType...)) && unknown_type_err(T)
-    T = T::(DataType...)
+    !isa(T, (Union(Tuple, DataType)...)) && unknown_type_err(T)
+    T = T::(Union(Tuple, DataType)...)
 
     haskey(parent.jlh5type, T) && return parent.jlh5type[T]
-    isleaftype(T) || error("unexpected non-leaf type $T")
+    # Tuples should always be concretely typed, unless we're
+    # reconstructing a tuple, in which case commit will be false
+    !commit || isleaftype(T) || error("unexpected non-leaf type $T")
 
     typeinfo = JldTypeInfo(parent, T, commit)
     if isopaque(T)
@@ -516,7 +518,7 @@ end
 ## Common functions for all non-special types (including gen_h5convert)
 
 # Whether this datatype should be stored as opaque
-isopaque(t::(DataType...)) = isa(t, ())
+isopaque(t::(Type...)) = isa(t, ())
 isopaque(t::DataType) = isempty(t.names)
 
 # The size of this datatype in the HDF5 file (if opaque)
@@ -623,7 +625,7 @@ function jldatatype(parent::JldFile, dtype::HDF5Datatype)
         T = julia_type(typename)
         if T == UnsupportedType
             warn("type $typename not present in workspace; reconstructing")
-            T = reconstruct_type(parent, dtype, gensym(typename))
+            T = reconstruct_type(parent, dtype, typename)
         end
 
         if !(T in BUILTIN_TYPES)
@@ -659,7 +661,8 @@ end
 
 # Create a Julia type based on the HDF5Datatype from the file. Used
 # when the type is no longer available.
-function reconstruct_type(parent::JldFile, dtype::HDF5Datatype, name::Symbol)
+function reconstruct_type(parent::JldFile, dtype::HDF5Datatype, savedname::String)
+    name = gensym(savedname)
     class_id = HDF5.h5t_get_class(dtype.id)
     if class_id == HDF5.H5T_OPAQUE
         if exists(dtype, "empty")
@@ -669,26 +672,45 @@ function reconstruct_type(parent::JldFile, dtype::HDF5Datatype, name::Symbol)
             @eval (bitstype $sz $name; $name)
         end
     else
-        fields = Expr(:block)
-        for i = 0:HDF5.h5t_get_nmembers(dtype.id)-1
-            member_name = HDF5.h5t_get_member_name(dtype.id, i)
-            idx = rsearchindex(member_name, "_")
-            field_name = symbol(member_name[1:idx-1])
-            if idx != sizeof(member_name)
-                member_dtype = HDF5.t_open(parent.plain, string(pathtypes, '/', lpad(member_name[idx+1:end], 8, '0')))
-                push!(fields.args, :($(field_name)::$(jldatatype(parent, member_dtype))))
+        # Figure out field names and types
+        nfields = HDF5.h5t_get_nmembers(dtype.id)
+        fieldnames = Array(Symbol, nfields)
+        fieldtypes = Array(Type, nfields)
+        for i = 1:nfields
+            membername = HDF5.h5t_get_member_name(dtype.id, i-1)
+            idx = rsearchindex(membername, "_")
+            fieldname = fieldnames[i] = symbol(membername[1:idx-1])
+
+            if idx != sizeof(membername)
+                # There is something past the underscore in the HDF5 field
+                # name, so the type is stored in file
+                memberdtype = HDF5.t_open(parent.plain, string(pathtypes, '/', lpad(membername[idx+1:end], 8, '0')))
+                fieldtypes[i] = jldatatype(parent, memberdtype)
             else
-                member_class = HDF5.h5t_get_member_class(dtype.id, i)
-                if member_class == HDF5.H5T_REFERENCE
-                    push!(fields.args, field_name)
+                memberclass = HDF5.h5t_get_member_class(dtype.id, i-1)
+                if memberclass == HDF5.H5T_REFERENCE
+                    # Field is a reference, so use Any
+                    fieldtypes[i] = Any
                 else
-                    member_dtype = HDF5Datatype(HDF5.h5t_get_member_type(dtype.id, i), parent.plain)
-                    push!(fields.args, :($(field_name)::$(jldatatype(parent, member_dtype))))
+                    # Type is built-in
+                    memberdtype = HDF5Datatype(HDF5.h5t_get_member_type(dtype.id, i-1), parent.plain)
+                    fieldtypes[i] = jldatatype(parent, memberdtype)
                 end
             end
         end
 
-        @eval (immutable $name; $fields; end; $name)
+        if startswith(savedname, "(")
+            # We're reconstructing a tuple
+            tuple(fieldtypes...)
+        else
+            # We're reconstructing some other type
+            @eval begin
+                immutable $name
+                    $([:($(fieldnames[i])::$(fieldtypes[i])) for i = 1:nfields]...)
+                end
+                $name
+            end
+        end
     end
 end
 
