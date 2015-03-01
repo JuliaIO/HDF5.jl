@@ -199,6 +199,8 @@ bitsparamint    = BitsParams{1}()
 bitsparamuint   = BitsParams{0x01}()
 bitsparamint16  = BitsParams{int16(1)}()
 
+# Tuple of tuples
+tuple_of_tuples = (1, 2, (3, 4, [5, 6]), [7, 8])
 
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
@@ -382,6 +384,7 @@ for compress in (true,false)
     @write fid bitsparamsymbol
     @write fid bitsparamint
     @write fid bitsparamuint
+    @write fid tuple_of_tuples
 
     # Make sure we can create groups (i.e., use HDF5 features)
     g = g_create(fid, "mygroup")
@@ -509,6 +512,7 @@ for compress in (true,false)
         @check fidr bitsparamsymbol
         @check fidr bitsparamint
         @check fidr bitsparamuint
+        @check fidr tuple_of_tuples
         
         x1 = read(fidr, "group1/x")
         @assert x1 == Any[1]
@@ -694,6 +698,10 @@ jldopen(fn, "w") do file
     write(file, "x7", reinterpret(TestType7, 0x77))
     write(file, "x8", TestType8(TestType4(2), TestType5(TestType4(3)),
                                 TestType6(), reinterpret(TestType7, 0x12)))
+    write(file, "x9", (TestType4(1),
+                       (TestType5(TestType4(2)),
+                        [TestType5(TestType4(i)) for i = 1:5]),
+                       TestType6()))
 end
 end
 
@@ -714,17 +722,31 @@ jldopen(fn, "r") do file
     println("The following missing type warnings are a sign of normal operation.")
     @test read(file, "x3").x == 1
     @test read(file, "x4").x.x == 2
+
     x = read(file, "x5")
     for i = 1:5
         @test x[i].x.x == i
     end
     @test typeof(read(file, "x6")).names == ()
     @test reinterpret(Uint8, read(file, "x7")) == 0x77
+
     x = read(file, "x8")
     @test x.a.x == 2
     @test x.b.x.x == 3
     @test typeof(x.c).names == ()
     @test reinterpret(Uint8, x.d) == 0x12
+
+    x = read(file, "x9")
+    @test isa(x, Tuple)
+    @test length(x) == 3
+    @test x[1].x == 1
+    @test isa(x[2], Tuple)
+    @test length(x[2]) == 2
+    @test x[2][1].x.x == 2
+    for i = 1:5
+        @test x[2][2][i].x.x == i
+    end
+    @test typeof(x[3]).names == ()
 end
 
 # Issue #176
