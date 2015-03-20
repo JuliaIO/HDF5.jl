@@ -403,11 +403,13 @@ end
 # Arrays of immutables/bitstypes
 function read_vals(obj::JldDataset, dtype::HDF5Datatype, T::Type, dspace_id::HDF5.Hid,
                    dsel_id::HDF5.Hid, dims::(Int...))
-    n = prod(dims)
-    h5sz = sizeof(dtype)
     out = Array(T, dims)
+    # Empty objects don't need to be read at all
+    T.size == 0 && !T.mutable && return out
 
     # Read from file
+    n = prod(dims)
+    h5sz = sizeof(dtype)
     buf = Array(Uint8, h5sz*n)
     HDF5.h5d_read(obj.plain.id, dtype.id, dspace_id, dsel_id, HDF5.H5P_DEFAULT, buf)
 

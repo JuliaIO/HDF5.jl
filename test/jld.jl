@@ -79,8 +79,10 @@ subarray = sub([1:5;], 1:5)
 arr_empty_tuple = ()[]
 immutable EmptyImmutable end
 emptyimmutable = EmptyImmutable()
+arr_emptyimmutable = [emptyimmutable]
 type EmptyType end
 emptytype = EmptyType()
+arr_emptytype = [emptytype]
 immutable EmptyII
     x::EmptyImmutable
 end
@@ -345,6 +347,8 @@ for compress in (true,false)
     @write fid arr_empty_tuple
     @write fid emptyimmutable
     @write fid emptytype
+    @write fid arr_emptyimmutable
+    @write fid arr_emptytype
     @write fid emptyii
     @write fid emptyit
     @write fid emptyti
@@ -466,6 +470,8 @@ for compress in (true,false)
         @check fidr arr_empty_tuple
         @check fidr emptyimmutable
         @check fidr emptytype
+        @check fidr arr_emptyimmutable
+        @check fidr arr_emptytype
         @check fidr emptyii
         @check fidr emptyit
         @check fidr emptyti
