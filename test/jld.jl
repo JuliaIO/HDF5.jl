@@ -766,3 +766,11 @@ for i = 1:2
     @write fid exx
     close(fid)
 end
+
+# Issue #226
+t1 = mtime(fn)
+sleep(3)
+jldopen(fn, "r") do file
+end
+t2 = mtime(fn)
+@test t2 == t1
