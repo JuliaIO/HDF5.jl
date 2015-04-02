@@ -4,7 +4,7 @@
 
 module HDF5
 
-using Compat
+using BinDeps, Compat
 
 ## Add methods to...
 import Base: close, convert, done, dump, eltype, endof, flush, getindex,
@@ -26,12 +26,7 @@ typealias Hssize      Int64
 typealias Htri        Cint   # pseudo-boolean (negative if error)
 typealias Haddr       Uint64
 
-### Load and initialize the HDF library ###
-if isfile(joinpath(dirname(dirname(@__FILE__)),"deps","deps.jl"))
-    include("../deps/deps.jl")
-else
-    error("HDF5 not properly installed. Please run Pkg.build(\"HDF5\")")
-end
+include_deps("HDF5")
 
 function init_libhdf5()
     status = ccall((:H5open, libhdf5), Herr, ())
