@@ -472,7 +472,7 @@ function _gen_jlconvert_immutable(typeinfo::JldTypeInfo, T::ANY)
             quote
                 function jlconvert(::Type{$T}, file::JldFile, ptr::Ptr)
                     out = ccall(:jl_new_struct_uninit, Any, (Any,), $T)::$T
-                    jlconvert!(pointer_from_objref(out)+sizeof(Int), $T, file, ptr)
+                    jlconvert!(pointer_from_objref(out)+$(VERSION >= v"0.4.0-dev+3923" ? 0 : sizeof(Int)), $T, file, ptr)
                     out
                 end
             end
