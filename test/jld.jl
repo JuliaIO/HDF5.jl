@@ -1,5 +1,6 @@
 using HDF5
 using JLD
+using Compat
 using Base.Test
 
 # Define variables of different types
@@ -20,7 +21,7 @@ B = [-1.5 sqrt(2) NaN 6;
      0.0  Inf eps() -Inf]
 AB = Any[A, B]
 t = (3, "cat")
-c = float32(3)+float32(7)im
+c = Complex64(3,7)
 cint = 1+im  # issue 108
 C = reinterpret(Complex128, B, (4,))
 emptyA = zeros(0,2)
@@ -45,7 +46,7 @@ ex = quote
         x+1
     end
 end
-T = Uint8
+T = UInt8
 char = 'x'
 unicode_char = '\U10ffff'
 α = 22
@@ -69,7 +70,7 @@ end
 objwithpointer = ObjWithPointer(0)
 # Custom BitsType (#99)
 bitstype 64 MyBT
-bt = reinterpret(MyBT, int64(55))
+bt = reinterpret(MyBT, @compat Int64(55))
 # Symbol arrays (#100)
 sa_asc = [:a, :b]
 sa_utf8 = [:α, :β]
@@ -199,7 +200,7 @@ bitsparambool   = BitsParams{true}()
 bitsparamsymbol = BitsParams{:x}()
 bitsparamint    = BitsParams{1}()
 bitsparamuint   = BitsParams{0x01}()
-bitsparamint16  = BitsParams{int16(1)}()
+bitsparamint16  = BitsParams{@compat Int16(1)}()
 
 # Tuple of tuples
 tuple_of_tuples = (1, 2, (3, 4, [5, 6]), [7, 8])
@@ -589,9 +590,9 @@ for compress in (false,true)
     end
     
     # Issue #106
-    save(fn, "i106", Mod106.typ(int64(1), Mod106.UnexportedT), compress=compress)
+    save(fn, "i106", Mod106.typ(@compat(Int64(1)), Mod106.UnexportedT), compress=compress)
     i106 = load(fn, "i106")
-    @assert i106 == Mod106.typ(int64(1), Mod106.UnexportedT)
+    @assert i106 == Mod106.typ(@compat(Int64(1)), Mod106.UnexportedT)
     
     # bracket syntax for datasets
     jldopen(fn, "w", compress=compress) do file
@@ -734,13 +735,13 @@ jldopen(fn, "r") do file
         @test x[i].x.x == i
     end
     @test typeof(read(file, "x6")).names == ()
-    @test reinterpret(Uint8, read(file, "x7")) == 0x77
+    @test reinterpret(UInt8, read(file, "x7")) == 0x77
 
     x = read(file, "x8")
     @test x.a.x == 2
     @test x.b.x.x == 3
     @test typeof(x.c).names == ()
-    @test reinterpret(Uint8, x.d) == 0x12
+    @test reinterpret(UInt8, x.d) == 0x12
 
     x = read(file, "x9")
     @test isa(x, Tuple)

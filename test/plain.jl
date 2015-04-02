@@ -1,4 +1,4 @@
-using HDF5
+using HDF5, Compat
 const test_path = splitdir(@__FILE__)[1]
 
 # Create a new file
@@ -6,20 +6,20 @@ fn = joinpath(tempdir(),"test.h5")
 f = h5open(fn, "w")
 # Write scalars
 f["Float64"] = 3.2
-f["Int16"] = int16(4)
+f["Int16"] = @compat Int16(4)
 # Create arrays of different types
 A = randn(3,5)
-write(f, "Afloat64", float64(A))
-write(f, "Afloat32", float32(A))
+write(f, "Afloat64", convert(Matrix{Float64}, A))
+write(f, "Afloat32", convert(Matrix{Float32}, A))
 Ai = rand(1:20, 2, 4)
-write(f, "Aint8", int8(Ai))
-f["Aint16"] = int16(Ai)
-write(f, "Aint32", int32(Ai))
-write(f, "Aint64", int64(Ai))
-write(f, "Auint8", uint8(Ai))
-write(f, "Auint16", uint16(Ai))
-write(f, "Auint32", uint32(Ai))
-write(f, "Auint64", uint64(Ai))
+write(f, "Aint8", convert(Matrix{Int8}, Ai))
+f["Aint16"] = convert(Matrix{Int16}, Ai)
+write(f, "Aint32", convert(Matrix{Int32}, Ai))
+write(f, "Aint64", convert(Matrix{Int64}, Ai))
+write(f, "Auint8", convert(Matrix{UInt8}, Ai))
+write(f, "Auint16", convert(Matrix{UInt16}, Ai))
+write(f, "Auint32", convert(Matrix{UInt32}, Ai))
+write(f, "Auint64", convert(Matrix{UInt64}, Ai))
 # Test strings
 salut = "Hi there"
 ucode = "uniçº∂e"
@@ -37,7 +37,7 @@ end
 salut_split = ["Hi", "there"]
 write(f, "salut_split", salut_split)
 # Empty arrays
-empty = Array(Uint32, 0)
+empty = Array(UInt32, 0)
 write(f, "empty", empty)
 # Empty strings
 empty_string = ""
@@ -97,10 +97,10 @@ x = read(fr, "Float64")
 y = read(fr, "Int16")
 @assert y == 4 && isa(y, Int16)
 Af32 = read(fr, "Afloat32")
-@assert float32(A) == Af32
+@assert convert(Matrix{Float32}, A) == Af32
 @assert eltype(Af32) == Float32
 Af64 = read(fr, "Afloat64")
-@assert float64(A) == Af64
+@assert convert(Matrix{Float64}, A) == Af64
 @assert eltype(Af64) == Float64
 @assert eltype(fr["Afloat64"]) == Float64  # issue 167
 Ai8 = read(fr, "Aint8")
@@ -117,16 +117,16 @@ Ai64 = read(fr, "Aint64")
 @assert eltype(Ai64) == Int64
 Ai8 = read(fr, "Auint8")
 @assert Ai == Ai8
-@assert eltype(Ai8) == Uint8
+@assert eltype(Ai8) == UInt8
 Ai16 = read(fr, "Auint16")
 @assert Ai == Ai16
-@assert eltype(Ai16) == Uint16
+@assert eltype(Ai16) == UInt16
 Ai32 = read(fr, "Auint32")
 @assert Ai == Ai32
-@assert eltype(Ai32) == Uint32
+@assert eltype(Ai32) == UInt32
 Ai64 = read(fr, "Auint64")
 @assert Ai == Ai64
-@assert eltype(Ai64) == Uint64
+@assert eltype(Ai64) == UInt64
 salutr = read(fr, "salut")
 @assert salut == salutr
 salutr = read(fr, "salut-vlen")
@@ -225,8 +225,8 @@ close(fid)
 
 d = h5read(joinpath(test_path, "compound.h5"), "/data")
 @assert typeof(d) == HDF5.HDF5Compound
-@assert typeof(d.data) == Array{Uint8,1}
+@assert typeof(d.data) == Array{UInt8,1}
 @assert length(d.data) == 128
 @assert d.membertype == Type[Float64, HDF5.FixedArray{Float64,(HDF5.DimSize{3},)}, HDF5.FixedArray{Float64,(HDF5.DimSize{3},)}, Float64]
 @assert d.membername == ASCIIString["wgt", "xyz", "uvw", "E"]
-@assert d.memberoffset == Uint64[0x00, 0x08, 0x20, 0x38]
+@assert d.memberoffset == UInt64[0x00, 0x08, 0x20, 0x38]

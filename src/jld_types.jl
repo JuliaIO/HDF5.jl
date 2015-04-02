@@ -146,18 +146,18 @@ end
 
 gen_h5convert{T<:ByteString}(::JldFile, ::Type{T}) = nothing
 h5convert!(out::Ptr, ::JldFile, x::ByteString, ::JldWriteSession) =
-    unsafe_store!(convert(Ptr{Ptr{Uint8}}, out), pointer(x))
+    unsafe_store!(convert(Ptr{Ptr{UInt8}}, out), pointer(x))
 
 function jlconvert(T::Union(Type{ASCIIString}, Type{UTF8String}), ::JldFile, ptr::Ptr)
-    strptr = unsafe_load(convert(Ptr{Ptr{Uint8}}, ptr))
-    n = int(ccall(:strlen, Csize_t, (Ptr{Uint8},), strptr))
+    strptr = unsafe_load(convert(Ptr{Ptr{UInt8}}, ptr))
+    n = @compat Int(ccall(:strlen, Csize_t, (Ptr{UInt8},), strptr))
     T(pointer_to_array(strptr, n, true))
 end
 
 function jlconvert(T::Union(Type{ByteString}), ::JldFile, ptr::Ptr)
-    strptr = unsafe_load(convert(Ptr{Ptr{Uint8}}, ptr))
+    strptr = unsafe_load(convert(Ptr{Ptr{UInt8}}, ptr))
     str = bytestring(strptr)
-    c_free(strptr)
+    Libc.free(strptr)
     str
 end
 
@@ -183,7 +183,7 @@ h5convert!(out::Ptr, ::JldFile, x::UTF16String, ::JldWriteSession) =
 
 function jlconvert(::Type{UTF16String}, ::JldFile, ptr::Ptr)
     hvl = unsafe_load(convert(Ptr{HDF5.Hvl_t}, ptr))
-    UTF16String(pointer_to_array(convert(Ptr{Uint16}, hvl.p), hvl.len, true))
+    UTF16String(pointer_to_array(convert(Ptr{UInt16}, hvl.p), hvl.len, true))
 end
 
 ## Symbols
@@ -323,7 +323,7 @@ function h5type(parent::JldFile, T::(Type...), commit::Bool)
         jlddtype = commit_datatype(parent, dtype, T)
         if isempty(T)
             # to allow recovery of empty tuples, which HDF5 does not allow
-            a_write(dtype, "empty", uint8(1))
+            a_write(dtype, "empty", @compat UInt8(1))
         end
         jlddtype
     else
@@ -391,7 +391,7 @@ function h5type(parent::JldFile, T::ANY, commit::Bool)
         jlddtype = commit_datatype(parent, dtype, T)
         if T.size == 0
             # to allow recovery of empty types, which HDF5 does not allow
-            a_write(dtype, "empty", uint8(1))
+            a_write(dtype, "empty", @compat UInt8(1))
         end
         jlddtype
     else
@@ -615,12 +615,12 @@ function jldatatype(parent::JldFile, dtype::HDF5Datatype)
         HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_INT64) > 0 && return Int64
         HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_FLOAT) > 0 && return Float32
         HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_INT32) > 0 && return Int32
-        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_UINT8) > 0 && return Uint8
-        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_UINT64) > 0 && return Uint64
-        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_UINT32) > 0 && return Uint32
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_UINT8) > 0 && return UInt8
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_UINT64) > 0 && return UInt64
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_UINT32) > 0 && return UInt32
         HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_INT8) > 0 && return Int8
         HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_INT16) > 0 && return Int16
-        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_UINT16) > 0 && return Uint16
+        HDF5.h5t_equal(dtype.id, HDF5.H5T_NATIVE_UINT16) > 0 && return UInt16
         error("unrecognized integer or float type")
     elseif class_id == HDF5.H5T_COMPOUND || class_id == HDF5.H5T_OPAQUE
         addr = HDF5.objinfo(dtype).addr
@@ -666,14 +666,14 @@ end
 
 # Create a Julia type based on the HDF5Datatype from the file. Used
 # when the type is no longer available.
-function reconstruct_type(parent::JldFile, dtype::HDF5Datatype, savedname::String)
+function reconstruct_type(parent::JldFile, dtype::HDF5Datatype, savedname::AbstractString)
     name = gensym(savedname)
     class_id = HDF5.h5t_get_class(dtype.id)
     if class_id == HDF5.H5T_OPAQUE
         if exists(dtype, "empty")
             @eval (immutable $name; end; $name)
         else
-            sz = int(HDF5.h5t_get_size(dtype.id))*8
+            sz = @compat Int(HDF5.h5t_get_size(dtype.id))*8
             @eval (bitstype $sz $name; $name)
         end
     else

@@ -18,9 +18,9 @@ end
 
 # See julia issue #8907
 if VERSION >= v"0.4.0-dev+1419"
-    julia_type(s::String) = _julia_type(replace(s, r"Uint(?=\d{1,3})", "UInt"))
+    julia_type(s::AbstractString) = _julia_type(replace(s, r"Uint(?=\d{1,3})", "UInt"))
 else
-    julia_type(s::String) = _julia_type(s)
+    julia_type(s::AbstractString) = _julia_type(s)
 end
 
 const magic_base = "Julia data file (HDF5), version "
@@ -42,12 +42,12 @@ type CompositeKind; end   # here this means "a type with fields"
 # objects _started_.
 type JldFile <: HDF5.DataFile
     plain::HDF5File
-    version::String
+    version::UTF8String
     toclose::Bool
     writeheader::Bool
     mmaparrays::Bool
 
-    function JldFile(plain::HDF5File, version::String=version_current, toclose::Bool=true,
+    function JldFile(plain::HDF5File, version::AbstractString=version_current, toclose::Bool=true,
                      writeheader::Bool=false, mmaparrays::Bool=false)
         f = new(plain, version, toclose, writeheader, mmaparrays)
         if toclose
@@ -74,7 +74,7 @@ function close(f::JldFile)
     if f.toclose
         close(f.plain)
         if f.writeheader
-            magic = zeros(Uint8, 512)
+            magic = zeros(UInt8, 512)
             tmp = string(magic_base, f.version)
             magic[1:length(tmp)] = tmp.data
             rawfid = open(f.plain.filename, "r+")
@@ -88,7 +88,7 @@ end
 close(g::Union(JldGroup, JldDataset)) = close(g.plain)
 show(io::IO, fid::JldFile) = isvalid(fid.plain) ? print(io, "Julia data file version ", fid.version, ": ", fid.plain.filename) : print(io, "Julia data file (closed): ", fid.plain.filename)
 
-function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool; mmaparrays::Bool=false)
+function jldopen(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool; mmaparrays::Bool=false)
     local fj
     if ff && !wr
         error("Cannot append to a write-only file")
@@ -120,7 +120,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             if sz < 512
                 error("File size indicates $filename cannot be a Julia data file")
             end
-            magic = Array(Uint8, 512)
+            magic = Array(UInt8, 512)
             rawfid = open(filename, "r")
             try
                 magic = read!(rawfid, magic)
@@ -129,7 +129,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
             end
             if startswith(magic, magic_base.data)
                 f = HDF5.h5f_open(filename, wr ? HDF5.H5F_ACC_RDWR : HDF5.H5F_ACC_RDONLY, pa.id)
-                version = bytestring(convert(Ptr{Uint8}, magic) + length(magic_base))
+                version = bytestring(pointer(magic) + length(magic_base))
                 fj = JldFile(HDF5File(f, filename), version, true, true, mmaparrays)
                 # Load any required files/packages
                 if exists(fj, pathrequire)
@@ -153,7 +153,7 @@ function jldopen(filename::String, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::B
     return fj
 end
 
-function jldopen(fname::String, mode::String="r"; mmaparrays::Bool=false)
+function jldopen(fname::AbstractString, mode::AbstractString="r"; mmaparrays::Bool=false)
     mode == "r"  ? jldopen(fname, true , false, false, false, false, mmaparrays=mmaparrays) :
     mode == "r+" ? jldopen(fname, true , true , false, false, false, mmaparrays=mmaparrays) :
     mode == "w"  ? jldopen(fname, false, true , true , true , false, mmaparrays=mmaparrays) :
@@ -367,7 +367,7 @@ end
 
 # Nothing
 read(obj::JldDataset, ::Type{Nothing}) = nothing
-read(obj::JldDataset, ::Type{Bool}) = bool(read(obj, Uint8))
+read(obj::JldDataset, ::Type{Bool}) = bool(read(obj, UInt8))
 
 # Types
 read{T}(obj::JldDataset, ::Type{Type{T}}) = T
@@ -376,7 +376,7 @@ read{T}(obj::JldDataset, ::Type{Type{T}}) = T
 function read{N}(obj::JldDataset, ::Type{Array{Bool,N}})
     format = a_read(obj.plain, "julia_format")
     if format == "EachUint8"
-        bool(read(obj.plain, Array{Uint8}))
+        bool(read(obj.plain, Array{UInt8}))
     else
         error("bool format not recognized")
     end
@@ -397,12 +397,12 @@ read(obj::JldDataset, ::Type{Symbol}) = symbol(read(obj.plain, ByteString))
 read{N}(obj::JldDataset, ::Type{Array{Symbol,N}}) = map(symbol, read(obj.plain, Array{ByteString}))
 
 # Char
-read(obj::JldDataset, ::Type{Char}) = char(read(obj.plain, Uint32))
+read(obj::JldDataset, ::Type{Char}) = char(read(obj.plain, UInt32))
 
 # UTF16String (not defined in julia 0.2)
 if VERSION >= v"0.3-"
-    read(obj::JldDataset, ::Type{UTF16String}) = UTF16String(read(obj.plain, Array{Uint16}))
-    read{N}(obj::JldDataset, ::Type{Array{UTF16String,N}}) = map(x->UTF16String(x), read(obj, Array{Vector{Uint16},N}))
+    read(obj::JldDataset, ::Type{UTF16String}) = UTF16String(read(obj.plain, Array{UInt16}))
+    read{N}(obj::JldDataset, ::Type{Array{UTF16String,N}}) = map(x->UTF16String(x), read(obj, Array{Vector{UInt16},N}))
 end
 
 # General arrays
@@ -458,7 +458,7 @@ function read(obj::JldDataset, T::DataType)
             error("Wrong number of fields")
         end
         if !T.mutable
-            x = ccall(:jl_new_structv, Any, (Any,Ptr{Void},Uint32), T, v, length(T.names))
+            x = ccall(:jl_new_structv, Any, (Any,Ptr{Void},UInt32), T, v, length(T.names))
         else
             x = ccall(:jl_new_struct_uninit, Any, (Any,), T)
             for i = 1:length(v)
@@ -607,7 +607,7 @@ function write{T<:Complex}(parent::Union(JldFile, JldGroup), name::ByteString, C
     write(parent, name, reim, full_typename(typeof(C)))
 end
 
-# Int128/Uint128
+# Int128/UInt128
 
 # Symbols
 write(parent::Union(JldFile, JldGroup), name::ByteString, sym::Symbol) = write(parent, name, string(sym), "Symbol")
@@ -623,7 +623,7 @@ if VERSION >= v"0.3-"
 end
 
 # General array types (as arrays of references)
-function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T}, astype::String)
+function write{T}(parent::Union(JldFile, JldGroup), path::ByteString, data::Array{T}, astype::AbstractString)
     local gref  # a group, inside /_refs, for all the elements in data
     local refs
     # Determine whether parent already exists in /_refs, so we can avoid group/dataset conflict
@@ -780,13 +780,13 @@ end
 function write_bitstype(parent::Union(JldFile, JldGroup), name::ByteString, s)
     T = typeof(s)
     if T.size == 1
-        ub = reinterpret(Uint8, s)
+        ub = reinterpret(UInt8, s)
     elseif T.size == 2
-        ub = reinterpret(Uint16, s)
+        ub = reinterpret(UInt16, s)
     elseif T.size == 4
-        ub = reinterpret(Uint32, s)
+        ub = reinterpret(UInt32, s)
     elseif T.size == 8
-        ub = reinterpret(Uint64, s)
+        ub = reinterpret(UInt64, s)
     else
         error("Unsupported bitstype $T of size $(T.size)")
     end
@@ -868,7 +868,7 @@ function _getindex{T<:Complex,N}(dset::JldDataset, ::Type{Array{T,N}}, indices::
     reinterpret(T, HDF5._getindex(dset.plain, realtype(T), 1:2, indices...), ntuple(length(indices), i->length(indices[i])))
 end
 function _getindex{N}(dset::JldDataset, ::Type{Array{Bool,N}}, indices::RangeIndex...)
-    tf = HDF5._getindex(dset.plain, Uint8, indices...)
+    tf = HDF5._getindex(dset.plain, UInt8, indices...)
     bool(tf)
 end
 _getindex{T,N}(dset::JldDataset, ::Type{Array{T,N}}, indices::Union(Integer, RangeIndex)...) = getrefs(dset, T, indices...)
@@ -932,8 +932,8 @@ is_valid_type_ex(x::Int) = true
 is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == :.) && all(map(is_valid_type_ex, e.args))) ||
                             (e.head == :call && (e.args[1] == :Union || e.args[1] == :TypeVar))
 
-_typedict = Dict{String, DataType}()
-function _julia_type(s::String)
+const _typedict = Dict{UTF8String,Type}()
+function _julia_type(s::AbstractString)
     typ = get(_typedict, s, UnconvertedType)
     if typ == UnconvertedType
         e = parse(s)
@@ -989,7 +989,7 @@ function full_typename(jltype::DataType)
 end
 
 ### Version number utilities
-versionnum(v::String) = map(int, split(v, '.'))
+versionnum(v::AbstractString) = map(int, split(v, '.'))
 versionstring(v::Array{Int}) = join(v, '.')
 function isversionless(l::Array{Int}, r::Array{Int})
     len = min(length(l), length(r))
@@ -1084,7 +1084,7 @@ macro load(filename, vars...)
 end
 
 # Save all the key-value pairs in the dict as top-level variables of the JLD
-function save(filename::String, dict::Associative)
+function save(filename::AbstractString, dict::Associative)
     jldopen(filename, "w") do file
         for (k,v) in dict
             write(file, bytestring(k), v)
@@ -1092,8 +1092,8 @@ function save(filename::String, dict::Associative)
     end
 end
 # Or the names and values may be specified as alternating pairs
-function save(filename::String, name::String, value, pairs...)
-    if isodd(length(pairs)) || !isa(pairs[1:2:end], (String...)) 
+function save(filename::AbstractString, name::AbstractString, value, pairs...)
+    if isodd(length(pairs)) || !isa(pairs[1:2:end], (AbstractString...)) 
         throw(ArgumentError("arguments must be in name-value pairs"))
     end
     jldopen(filename, "w") do file
@@ -1105,25 +1105,25 @@ function save(filename::String, name::String, value, pairs...)
 end
 
 # load with just a filename returns a dictionary containing all the variables
-function load(filename::String)
+function load(filename::AbstractString)
     jldopen(filename, "r") do file
         (ByteString => Any)[var => read(file, var) for var in names(file)]
     end
 end
 # When called with explicitly requested variable names, return each one
-function load(filename::String, varname::String)
+function load(filename::AbstractString, varname::AbstractString)
     jldopen(filename, "r") do file
         read(file, varname)
     end
 end
-load(filename::String, varnames::String...) = load(filename, varnames)
-function load(filename::String, varnames::(String...))
+load(filename::AbstractString, varnames::AbstractString...) = load(filename, varnames)
+function load(filename::AbstractString, varnames::(AbstractString...))
     jldopen(filename, "r") do file
         map((var)->read(file, var), varnames)
     end
 end
 
-function addrequire(file::JldFile, filename::String)
+function addrequire(file::JldFile, filename::AbstractString)
     files = read(file, pathrequire)
     push!(files, filename)
     o_delete(file, pathrequire)
