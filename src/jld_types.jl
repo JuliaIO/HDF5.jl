@@ -236,8 +236,13 @@ function h5convert!(out::Ptr, file::JldFile, x::BigFloat, wsession::JldWriteSess
     h5convert!(out, file, str, wsession)
 end
 
-jlconvert(::Type{BigInt}, file::JldFile, ptr::Ptr) =
-    Base.parseint_nocheck(BigInt, jlconvert(ASCIIString, file, ptr), 62)
+if VERSION < v"0.4.0-dev+3864"
+    jlconvert(::Type{BigInt}, file::JldFile, ptr::Ptr) =
+        Base.parseint_nocheck(BigInt, jlconvert(ASCIIString, file, ptr), 62)
+else
+    jlconvert(::Type{BigInt}, file::JldFile, ptr::Ptr) =
+        get(tryparse(BigInt, jlconvert(ASCIIString, file, ptr), 62))
+end
 jlconvert(::Type{BigFloat}, file::JldFile, ptr::Ptr) =
     BigFloat(jlconvert(ASCIIString, file, ptr))
 
