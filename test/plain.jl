@@ -36,6 +36,9 @@ end
 # Arrays of strings
 salut_split = ["Hi", "there"]
 write(f, "salut_split", salut_split)
+# Arrays of strings as vlen
+vlen = HDF5Vlen(salut_split)
+d_write(f, "salut_vlen", vlen)
 # Empty arrays
 empty = Array(UInt32, 0)
 write(f, "empty", empty)
@@ -135,6 +138,8 @@ ucoder = read(fr, "ucode")
 @assert ucode == ucoder
 salut_splitr = read(fr, "salut_split")
 @assert salut_splitr == salut_split
+salut_vlenr = read(fr, "salut_vlen")
+@assert salut_vlenr == salut_split
 Rr = read(fr, "mygroup/CompressedA")
 @assert Rr == R
 Rr2 = read(fr, "mygroup2/CompressedA")

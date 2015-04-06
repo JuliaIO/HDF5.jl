@@ -5,6 +5,7 @@
 module HDF5
 
 using Compat
+using Compat: unsafe_convert
 
 ## Add methods to...
 import Base: close, convert, done, dump, eltype, endof, flush, getindex,
@@ -458,7 +459,7 @@ function vlenpack{T<:Union(HDF5BitsKind,CharType)}(v::HDF5Vlen{T})
     Tp = t2p(T)  # Ptr{UInt8} or Ptr{T}
     h = Array(Hvl_t, len)
     for i = 1:len
-        h[i] = Hvl_t(convert(Csize_t, length(v.data[i])), convert(Ptr{Void}, convert(Tp, v.data[i])))
+        h[i] = Hvl_t(convert(Csize_t, length(v.data[i])), convert(Ptr{Void}, unsafe_convert(Tp, v.data[i])))
     end
     h
 end
@@ -1365,7 +1366,7 @@ end
 atype{T<:HDF5BitsKind}(::Type{T}) = Array{T}
 atype{C<:CharType}(::Type{C}) = stringtype(C)
 p2a{T<:HDF5BitsKind}(p::Ptr{T}, len::Int) = pointer_to_array(p, len, true)
-p2a{C<:CharType}(p::Ptr{C}, len::Int) = stringtype(C)(pointer_to_array(p, len, true))
+p2a{C<:CharType}(p::Ptr{C}, len::Int) = stringtype(C)(pointer_to_array(convert(Ptr{UInt8}, p), len, true))
 t2p{T<:HDF5BitsKind}(::Type{T}) = Ptr{T}
 t2p{C<:CharType}(::Type{C}) = Ptr{UInt8}
 function read{T<:Union(HDF5BitsKind,CharType)}(obj::DatasetOrAttribute, ::Type{HDF5Vlen{T}})
