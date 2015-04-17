@@ -294,7 +294,7 @@ function delete!(parent::Union(JldFile, JldGroup), path::ByteString)
     exists(parent, path) || error("$path does not exist in $parent")
     delete!(parent[path])
 end
-delete!(parent::Union(JldFile, JldGroup), args::(ByteString...)) = for a in args delete!(parent,a) end
+delete!(parent::Union(JldFile, JldGroup), args::@compat Tuple{Vararg{ByteString}}) = for a in args delete!(parent,a) end
 ismmappable(obj::JldDataset) = ismmappable(obj.plain)
 readmmap(obj::JldDataset, args...) = readmmap(obj.plain, args...)
 setindex!(parent::Union(JldFile, JldGroup), val, path::ASCIIString) = write(parent, path, val)
@@ -380,7 +380,7 @@ end
 
 # Read an array
 function read_array(obj::JldDataset, dtype::HDF5Datatype, dspace_id::HDF5.Hid, dsel_id::HDF5.Hid,
-                    dims::(Int...)=convert((Int...), HDF5.h5s_get_simple_extent_dims(dspace_id)[1]))
+                    dims::(@compat Tuple{Vararg{Int}})=convert((@compat Tuple{Vararg{Int}}), HDF5.h5s_get_simple_extent_dims(dspace_id)[1]))
     if HDF5.h5t_get_class(dtype) == HDF5.H5T_REFERENCE
         return read_refs(obj, refarray_eltype(obj), dspace_id, dsel_id, dims)
     else
@@ -390,7 +390,7 @@ end
 
 # Arrays of basic HDF5 kinds
 function read_vals{S<:HDF5BitsKind}(obj::JldDataset, dtype::HDF5Datatype, T::Union(Type{S}, Type{Complex{S}}),
-                                    dspace_id::HDF5.Hid, dsel_id::HDF5.Hid, dims::(Int...))
+                                    dspace_id::HDF5.Hid, dsel_id::HDF5.Hid, dims::@compat Tuple{Vararg{Int}})
     if obj.file.mmaparrays && HDF5.iscontiguous(obj.plain) && dsel_id == HDF5.H5S_ALL
         readmmap(obj.plain, Array{T})
     else
@@ -402,7 +402,7 @@ end
 
 # Arrays of immutables/bitstypes
 function read_vals(obj::JldDataset, dtype::HDF5Datatype, T::Type, dspace_id::HDF5.Hid,
-                   dsel_id::HDF5.Hid, dims::(Int...))
+                   dsel_id::HDF5.Hid, dims::@compat Tuple{Vararg{Int}})
     out = Array(T, dims)
     # Empty objects don't need to be read at all
     T.size == 0 && !T.mutable && return out
@@ -437,7 +437,7 @@ end
 
 # Arrays of references
 function read_refs{T}(obj::JldDataset, ::Type{T}, dspace_id::HDF5.Hid, dsel_id::HDF5.Hid,
-                      dims::(Int...))
+                      dims::@compat Tuple{Vararg{Int}})
     refs = Array(HDF5ReferenceObj, dims)
     HDF5.h5d_read(obj.plain.id, HDF5.H5T_STD_REF_OBJ, dspace_id, dsel_id, HDF5.H5P_DEFAULT, refs)
 
@@ -625,7 +625,7 @@ function write_ref(parent::JldFile, data, wsession::JldWriteSession)
     # Add reference to reference list
     ref = HDF5ReferenceObj(HDF5.objinfo(dset).addr)
     close(dset)
-    if !isa(data, Tuple) && typeof(data).mutable
+    if !isa(data, @compat Tuple) && typeof(data).mutable
         wsession.h5ref[data] = ref
     end
     ref
@@ -811,7 +811,7 @@ function full_typename(io::IO, file::JldFile, tv::TypeVar)
         print(io, ')')
     end
 end
-function full_typename(io::IO, file::JldFile, jltype::(Type...))
+function full_typename(io::IO, file::JldFile, jltype::@compat Tuple{Vararg{Type}})
     print(io, '(')
     for t in jltype
         full_typename(io, file, t)
@@ -976,7 +976,7 @@ function save(filename::AbstractString, dict::Associative; compress::Bool=false)
 end
 # Or the names and values may be specified as alternating pairs
 function save(filename::AbstractString, name::AbstractString, value, pairs...; compress::Bool=false)
-    if isodd(length(pairs)) || !isa(pairs[1:2:end], (AbstractString...))
+    if isodd(length(pairs)) || !isa(pairs[1:2:end], @compat Tuple{Vararg{AbstractString}})
         throw(ArgumentError("arguments must be in name-value pairs"))
     end
     jldopen(filename, "w"; compress=compress) do file
@@ -1001,7 +1001,7 @@ function load(filename::AbstractString, varname::AbstractString)
     end
 end
 load(filename::AbstractString, varnames::AbstractString...) = load(filename, varnames)
-function load(filename::AbstractString, varnames::(AbstractString...))
+function load(filename::AbstractString, varnames::@compat Tuple{Vararg{AbstractString}})
     jldopen(filename, "r") do file
         map((var)->read(file, var), varnames)
     end

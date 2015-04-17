@@ -77,7 +77,7 @@ sa_utf8 = [:α, :β]
 # SubArray (to test tuple type params)
 subarray = sub([1:5;], 1:5)
 # Array of empty tuples (to test tuple type params)
-arr_empty_tuple = ()[]
+arr_empty_tuple = (@compat Tuple{})[]
 immutable EmptyImmutable end
 emptyimmutable = EmptyImmutable()
 arr_emptyimmutable = [emptyimmutable]

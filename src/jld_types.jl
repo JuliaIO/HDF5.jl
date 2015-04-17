@@ -20,7 +20,7 @@ immutable JldTypeInfo
 end
 
 # Get information about the HDF5 types corresponding to Julia types
-function JldTypeInfo(parent::JldFile, types::(Type...), commit::Bool)
+function JldTypeInfo(parent::JldFile, types::(@compat Tuple{Vararg{Type}}), commit::Bool)
     dtypes = Array(JldDatatype, length(types))
     offsets = Array(Int, length(types))
     offset = 0
@@ -292,15 +292,15 @@ h5fieldtype{T,N}(parent::JldFile, ::Type{Array{T,N}}, ::Bool) = JLD_REF_TYPE
 ## Tuples
 
 if INLINE_TUPLE
-    h5fieldtype(parent::JldFile, T::(Type...), commit::Bool) =
+    h5fieldtype(parent::JldFile, T::(@compat Tuple{Vararg{Type}}), commit::Bool) =
         isleaftype(T) ? h5type(parent, T, commit) : JLD_REF_TYPE
 else
-    h5fieldtype(parent::JldFile, T::(Type...), ::Bool) = JLD_REF_TYPE
+    h5fieldtype(parent::JldFile, T::(@compat Tuple{Vararg{Type}}), ::Bool) = JLD_REF_TYPE
 end
 
-function h5type(parent::JldFile, T::(Type...), commit::Bool)
-    !isa(T, (Union(Tuple, DataType)...)) && unknown_type_err(T)
-    T = T::(Union(Tuple, DataType)...)
+function h5type(parent::JldFile, T::(@compat Tuple{Vararg{Type}}), commit::Bool)
+    !isa(T, (@compat Tuple{Vararg{Union((@compat Tuple), DataType)}})) && unknown_type_err(T)
+    T = T::(@compat Tuple{Vararg{Union((@compat Tuple), DataType)}})
 
     haskey(parent.jlh5type, T) && return parent.jlh5type[T]
     # Tuples should always be concretely typed, unless we're
@@ -331,7 +331,7 @@ function h5type(parent::JldFile, T::(Type...), commit::Bool)
     end
 end
 
-function gen_jlconvert(typeinfo::JldTypeInfo, T::(Type...))
+function gen_jlconvert(typeinfo::JldTypeInfo, T::(@compat Tuple{Vararg{Type}}))
     haskey(JLCONVERT_DEFINED, T) && return
 
     ex = Expr(:block)
@@ -523,11 +523,11 @@ end
 ## Common functions for all non-special types (including gen_h5convert)
 
 # Whether this datatype should be stored as opaque
-isopaque(t::(Type...)) = isa(t, ())
+isopaque(t::@compat Tuple{Vararg{Type}}) = isa(t, ())
 isopaque(t::DataType) = isempty(t.names)
 
 # The size of this datatype in the HDF5 file (if opaque)
-opaquesize(t::(DataType...)) = 1
+opaquesize(t::@compat Tuple{Vararg{DataType}}) = 1
 opaquesize(t::DataType) = max(1, t.size)
 
 # Whether a type that is stored inline in HDF5 should be stored as a
@@ -535,7 +535,7 @@ opaquesize(t::DataType) = max(1, t.size)
 # true for some unions of special types defined above, unless either
 # INLINE_TUPLE or INLINE_POINTER_IMMUTABLE is true.
 uses_reference(T::DataType) = !T.pointerfree
-uses_reference(::Tuple) = true
+uses_reference(::@compat Tuple) = true
 uses_reference(::UnionType) = true
 
 unknown_type_err(T) =
@@ -548,7 +548,7 @@ gen_h5convert(parent::JldFile, T) =
 # There is no point in specializing this
 function _gen_h5convert(parent::JldFile, T::ANY)
     dtype = parent.jlh5type[T].dtype
-    istuple = isa(T, Tuple)
+    istuple = isa(T, @compat Tuple)
     if istuple
         types = T
     else

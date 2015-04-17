@@ -1,4 +1,4 @@
-using HDF5
+using HDF5, Compat
 
 fn = joinpath(tempdir(),"test.h5")
 
