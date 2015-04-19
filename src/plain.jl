@@ -12,8 +12,6 @@ import Base: close, convert, done, dump, eltype, endof, flush, getindex,
              isempty, isvalid, length, names, ndims, next, parent, read,
              setindex!, show, size, sizeof, start, write
 
-@osx_only import Homebrew # Add Homebrew/lib to the DL_LOAD_PATH
-
 include("datafile.jl")
 
 ## C types
