@@ -436,7 +436,7 @@ end
 
 # CompositeKind
 function read(obj::JldDataset, T::DataType)
-    if isempty(T.names) && T.size > 0
+    if isempty(getnames(T)) && T.size > 0
         return read_bitstype(obj, T)
     end
     local x
@@ -453,12 +453,12 @@ function read(obj::JldDataset, T::DataType)
     if length(v) == 0
         x = ccall(:jl_new_struct, Any, (Any,Any...), T)
     else
-        n = T.names
+        n = getnames(T)
         if length(v) != length(n)
             error("Wrong number of fields")
         end
         if !T.mutable
-            x = ccall(:jl_new_structv, Any, (Any,Ptr{Void},UInt32), T, v, length(T.names))
+            x = ccall(:jl_new_structv, Any, (Any,Ptr{Void},UInt32), T, v, length(getnames(T)))
         else
             x = ccall(:jl_new_struct_uninit, Any, (Any,), T)
             for i = 1:length(v)
@@ -720,7 +720,7 @@ write(parent::Union(JldFile, JldGroup), name::ByteString, s; rootmodule="") = wr
 
 function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; rootmodule="")
     T = typeof(s)
-    if isempty(T.names)
+    if isempty(getnames(T))
         if T.size > 0
             return write_bitstype(parent, name, s)
         end
@@ -730,7 +730,7 @@ function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; 
         return
     end
     Tname = string(T.name.name)
-    n = T.names
+    n = getnames(T)
     local gtypes
     if !exists(file(parent), pathtypes)
         gtypes = g_create(file(parent), pathtypes)
@@ -803,7 +803,7 @@ function has_pointer_field(obj::Tuple, name)
 end
 
 function has_pointer_field(obj, name)
-    names = typeof(obj).names
+    names = getnames(typeof(obj))
     for fieldname in names
         if isdefined(obj, fieldname)
             x = getfield(obj, fieldname)
