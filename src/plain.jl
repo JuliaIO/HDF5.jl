@@ -14,12 +14,6 @@ import Base: close, convert, done, dump, eltype, endof, flush, getindex,
 
 include("datafile.jl")
 
-if VERSION < v"0.4.0-dev+4319"
-    getnames(T::DataType) = T.names
-else
-    getnames(T::DataType) = T.name.names
-end
-
 ## C types
 typealias C_time_t Int
 

@@ -734,13 +734,13 @@ jldopen(fn, "r") do file
     for i = 1:5
         @test x[i].x.x == i
     end
-    @test HDF5.getnames(typeof(read(file, "x6"))) == (@compat Tuple{})
+    @test isempty(fieldnames(typeof(read(file, "x6"))))
     @test reinterpret(UInt8, read(file, "x7")) == 0x77
 
     x = read(file, "x8")
     @test x.a.x == 2
     @test x.b.x.x == 3
-    @test HDF5.getnames(typeof(x.c)) == (@compat Tuple{})
+    @test isempty(fieldnames(typeof(x.c)))
     @test reinterpret(UInt8, x.d) == 0x12
 
     x = read(file, "x9")
@@ -753,7 +753,7 @@ jldopen(fn, "r") do file
     for i = 1:5
         @test x[2][2][i].x.x == i
     end
-    @test HDF5.getnames(typeof(x[3])) == (@compat Tuple{})
+    @test isempty(fieldnames(typeof(x[3])))
 end
 
 # Issue #176

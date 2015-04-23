@@ -382,7 +382,7 @@ function h5type(parent::JldFile, T::ANY, commit::Bool)
         id = HDF5.h5t_create(HDF5.H5T_COMPOUND, typeinfo.size)
         for i = 1:length(typeinfo.offsets)
             fielddtype = typeinfo.dtypes[i]
-            HDF5.h5t_insert(id, mangle_name(fielddtype, HDF5.getnames(T)[i]), typeinfo.offsets[i], fielddtype)
+            HDF5.h5t_insert(id, mangle_name(fielddtype, fieldnames(T)[i]), typeinfo.offsets[i], fielddtype)
         end
     end
 
@@ -410,11 +410,11 @@ function _gen_jlconvert_type(typeinfo::JldTypeInfo, T::ANY)
             push!(args, quote
                 ref = unsafe_load(convert(Ptr{HDF5ReferenceObj}, ptr)+$h5offset)
                 if ref != HDF5.HDF5ReferenceObj_NULL
-                    out.$(HDF5.getnames(T)[i]) = convert($(T.types[i]), read_ref(file, ref))
+                    out.$(fieldnames(T)[i]) = convert($(T.types[i]), read_ref(file, ref))
                 end
             end)
         else
-            push!(args, :(out.$(HDF5.getnames(T)[i]) = jlconvert($(T.types[i]), file, ptr+$h5offset)))
+            push!(args, :(out.$(fieldnames(T)[i]) = jlconvert($(T.types[i]), file, ptr+$h5offset)))
         end
     end
     @eval function jlconvert(::Type{$T}, file::JldFile, ptr::Ptr)
@@ -491,7 +491,7 @@ const DONT_STORE_SINGLETON_IMMUTABLES = VERSION >= v"0.4.0-dev+385"
 function gen_jlconvert(typeinfo::JldTypeInfo, T::ANY)
     haskey(JLCONVERT_DEFINED, T) && return
 
-    if isempty(HDF5.getnames(T))
+    if isempty(fieldnames(T))
         if T.size == 0
             @eval begin
                 jlconvert(::Type{$T}, ::JldFile, ::Ptr) = $T()
@@ -524,7 +524,7 @@ end
 
 # Whether this datatype should be stored as opaque
 isopaque(t::@compat Tuple{Vararg{Type}}) = isa(t, ())
-isopaque(t::DataType) = isempty(HDF5.getnames(t))
+isopaque(t::DataType) = isempty(fieldnames(t))
 
 # The size of this datatype in the HDF5 file (if opaque)
 opaquesize(t::@compat Tuple{Vararg{DataType}}) = 1
