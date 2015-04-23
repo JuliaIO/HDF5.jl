@@ -2134,7 +2134,11 @@ function hdf5array(objtype)
     eltyp = HDF5Datatype(h5t_get_super(objtype.id))
     T = hdf5_to_julia_eltype(eltyp)
     dimsizes = ntuple(nd, i->DimSize{@compat Int(dims[nd-i+1])})  # reverse order
-    FixedArray{T, dimsizes}
+    if VERSION < v"0.4.0-dev+4319"
+        FixedArray{T, dimsizes}
+    else
+        FixedArray{T, Tuple{dimsizes...}}
+    end
 end
 
 ### Property manipulation ###
