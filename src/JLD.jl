@@ -625,7 +625,7 @@ function write_ref(parent::JldFile, data, wsession::JldWriteSession)
     # Add reference to reference list
     ref = HDF5ReferenceObj(HDF5.objinfo(dset).addr)
     close(dset)
-    if !isa(data, @compat Tuple) && typeof(data).mutable
+    if !isa(data, Tuple) && typeof(data).mutable
         wsession.h5ref[data] = ref
     end
     ref
