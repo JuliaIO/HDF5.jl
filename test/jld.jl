@@ -77,7 +77,7 @@ sa_utf8 = [:α, :β]
 # SubArray (to test tuple type params)
 subarray = sub([1:5;], 1:5)
 # Array of empty tuples (to test tuple type params)
-arr_empty_tuple = ()[]
+arr_empty_tuple = (@compat Tuple{})[]
 immutable EmptyImmutable end
 emptyimmutable = EmptyImmutable()
 arr_emptyimmutable = [emptyimmutable]
@@ -734,17 +734,17 @@ jldopen(fn, "r") do file
     for i = 1:5
         @test x[i].x.x == i
     end
-    @test typeof(read(file, "x6")).names == ()
+    @test isempty(fieldnames(typeof(read(file, "x6"))))
     @test reinterpret(UInt8, read(file, "x7")) == 0x77
 
     x = read(file, "x8")
     @test x.a.x == 2
     @test x.b.x.x == 3
-    @test typeof(x.c).names == ()
+    @test isempty(fieldnames(typeof(x.c)))
     @test reinterpret(UInt8, x.d) == 0x12
 
     x = read(file, "x9")
-    @test isa(x, Tuple)
+    @test isa(x, (@compat Tuple))
     @test length(x) == 3
     @test x[1].x == 1
     @test isa(x[2], Tuple)
@@ -753,7 +753,7 @@ jldopen(fn, "r") do file
     for i = 1:5
         @test x[2][2][i].x.x == i
     end
-    @test typeof(x[3]).names == ()
+    @test isempty(fieldnames(typeof(x[3])))
 end
 
 # Issue #176

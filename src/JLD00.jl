@@ -226,7 +226,7 @@ function delete!(parent::Union(JldFile, JldGroup), path::ByteString)
     exists(parent, path) || error("$path does not exist in $parent")
     delete!(parent[path])
 end
-delete!(parent::Union(JldFile, JldGroup), args::(ByteString...)) = for a in args delete!(parent,a) end
+delete!(parent::Union(JldFile, JldGroup), args::Tuple{Vararg{ByteString}}) = for a in args delete!(parent,a) end
 ismmappable(obj::JldDataset) = ismmappable(obj.plain)
 readmmap(obj::JldDataset, args...) = readmmap(obj.plain, args...)
 setindex!(parent::Union(JldFile, JldGroup), val, path::ASCIIString) = write(parent, path, val)
@@ -436,7 +436,7 @@ end
 
 # CompositeKind
 function read(obj::JldDataset, T::DataType)
-    if isempty(T.names) && T.size > 0
+    if isempty(fieldnames(T)) && T.size > 0
         return read_bitstype(obj, T)
     end
     local x
@@ -453,12 +453,12 @@ function read(obj::JldDataset, T::DataType)
     if length(v) == 0
         x = ccall(:jl_new_struct, Any, (Any,Any...), T)
     else
-        n = T.names
+        n = fieldnames(T)
         if length(v) != length(n)
             error("Wrong number of fields")
         end
         if !T.mutable
-            x = ccall(:jl_new_structv, Any, (Any,Ptr{Void},UInt32), T, v, length(T.names))
+            x = ccall(:jl_new_structv, Any, (Any,Ptr{Void},UInt32), T, v, length(fieldnames(T)))
         else
             x = ccall(:jl_new_struct_uninit, Any, (Any,), T)
             for i = 1:length(v)
@@ -583,9 +583,9 @@ write(parent::Union(JldFile, JldGroup), name::ByteString, n::Nothing) = write(pa
 # Types
 # the first is needed to avoid an ambiguity warning
 if isdefined(Core, :Top)
-    write{T<:Top}(parent::Union(JldFile, JldGroup), name::ByteString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
+    write{T<:Top}(parent::Union(JldFile, JldGroup), name::ByteString, t::Tuple{Vararg{Type{T}}}) = write(parent, name, Any[t...], "Tuple")
 else
-    write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
+    write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::Tuple{Vararg{Type{T}}}) = write(parent, name, Any[t...], "Tuple")
 end
 write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::Type{T}) = write(parent, name, nothing, string("Type{", full_typename(t), "}"))
 
@@ -720,7 +720,7 @@ write(parent::Union(JldFile, JldGroup), name::ByteString, s; rootmodule="") = wr
 
 function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; rootmodule="")
     T = typeof(s)
-    if isempty(T.names)
+    if isempty(fieldnames(T))
         if T.size > 0
             return write_bitstype(parent, name, s)
         end
@@ -730,7 +730,7 @@ function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; 
         return
     end
     Tname = string(T.name.name)
-    n = T.names
+    n = fieldnames(T)
     local gtypes
     if !exists(file(parent), pathtypes)
         gtypes = g_create(file(parent), pathtypes)
@@ -803,7 +803,7 @@ function has_pointer_field(obj::Tuple, name)
 end
 
 function has_pointer_field(obj, name)
-    names = typeof(obj).names
+    names = fieldnames(typeof(obj))
     for fieldname in names
         if isdefined(obj, fieldname)
             x = getfield(obj, fieldname)
@@ -1117,7 +1117,7 @@ function load(filename::AbstractString, varname::AbstractString)
     end
 end
 load(filename::AbstractString, varnames::AbstractString...) = load(filename, varnames)
-function load(filename::AbstractString, varnames::(AbstractString...))
+function load(filename::AbstractString, varnames::Tuple{Vararg{AbstractString}})
     jldopen(filename, "r") do file
         map((var)->read(file, var), varnames)
     end
