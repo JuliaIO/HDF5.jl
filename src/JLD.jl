@@ -9,15 +9,6 @@ import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
 import Base: length, endof, show, done, next, ndims, start, delete!, size, sizeof
 
-# .jld files written before v"0.4.0-dev+1419" might have UInt32 instead of UInt32 as the typename string.
-# See julia issue #8907
-if VERSION >= v"0.4.0-dev+1419"
-    julia_type(s::AbstractString) = _julia_type(replace(s, r"UInt(?=\d{1,3})", "UInt"))
-else
-    julia_type(s::AbstractString) = _julia_type(s)
-end
-
-
 const magic_base = "Julia data file (HDF5), version "
 const version_current = v"0.1"
 const pathrefs = "/_refs"
@@ -773,14 +764,66 @@ is_valid_type_ex{T}(::T) = isbits(T)
 is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == :.) && all(map(is_valid_type_ex, e.args))) ||
                             (e.head == :call && (e.args[1] == :Union || e.args[1] == :TypeVar))
 
-# Work around https://github.com/JuliaLang/julia/issues/8226
-const _typedict = Dict{UTF8String,Type}()
-_typedict["Core.Type{TypeVar(:T,Union(Core.Any,Core.Undef))}"] = Type
+if VERSION >= v"0.4.0-dev+1419"
+    const typemap_Core = @compat Dict(
+        :Uint8 => :UInt8,
+        :Uint16 => :Uint16,
+        :Uint32 => :UInt32,
+        :Uint64 => :UInt64,
+        :Nothing => :Void
+    )
+else
+    const typemap_Core = @compat Dict(
+        :UInt8 => :Uint8,
+        :UInt16 => :Uint16,
+        :UInt32 => :Uint32,
+        :UInt64 => :Uint64,
+        :Void => :Nothing
+    )
+end
 
-function _julia_type(s::AbstractString)
+const _typedict = Dict{UTF8String,Type}()
+
+fixtypes(typ) = typ
+@eval begin
+    function fixtypes(typ::Expr)
+        if typ.head == :.
+            if length(typ.args) == 2 && typ.args[1] == :Core
+                arg = typ.args[2].value
+                return Expr(:., :Core, QuoteNode(get(typemap_Core, arg, arg)))
+            else
+                return typ
+            end
+        elseif typ == :(Core.Type{TypeVar(:T,Union(Core.Any,Core.Undef))}) || typ == :(Core.Type{TypeVar(:T)})
+            # Work around https://github.com/JuliaLang/julia/issues/8226 and the removal of Top
+            return :(Core.Type)
+        end
+
+        for i = 1:length(typ.args)
+            typ.args[i] = fixtypes(typ.args[i])
+        end
+
+        $(if VERSION >= v"0.4.0-dev+4319"
+            quote
+                if typ.head == :tuple
+                    return Expr(:curly, :Tuple, typ.args...)
+                end
+            end
+        else
+            quote
+                if typ.head == :curly && !isempty(typ.args) && typ.args[1] == :(Core.Tuple)
+                    return Expr(:tuple, typ.args[2:end]...)
+                end
+            end
+        end)
+        typ
+    end
+end
+
+function julia_type(s::AbstractString)
     typ = get(_typedict, s, UnconvertedType)
     if typ == UnconvertedType
-        typ = julia_type(parse(s))
+        typ = julia_type(fixtypes(parse(s)))
         if typ != UnsupportedType
             _typedict[s] = typ
         end

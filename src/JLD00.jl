@@ -8,6 +8,7 @@ using HDF5, Compat
 import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o_delete, name, names, read, size, write,
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
 import Base: length, endof, show, done, next, start, delete!
+import JLD
 
 if !isdefined(:setfield!)
     const setfield! = setfield
@@ -367,7 +368,7 @@ end
 
 # Nothing
 read(obj::JldDataset, ::Type{Nothing}) = nothing
-read(obj::JldDataset, ::Type{Bool}) = bool(read(obj, UInt8))
+read(obj::JldDataset, ::Type{Bool}) = read(obj, UInt8) != 0
 
 # Types
 read{T}(obj::JldDataset, ::Type{Type{T}}) = T
@@ -397,7 +398,7 @@ read(obj::JldDataset, ::Type{Symbol}) = symbol(read(obj.plain, ByteString))
 read{N}(obj::JldDataset, ::Type{Array{Symbol,N}}) = map(symbol, read(obj.plain, Array{ByteString}))
 
 # Char
-read(obj::JldDataset, ::Type{Char}) = char(read(obj.plain, UInt32))
+read(obj::JldDataset, ::Type{Char}) = @compat Char(read(obj.plain, UInt32))
 
 # UTF16String (not defined in julia 0.2)
 if VERSION >= v"0.3-"
@@ -937,6 +938,7 @@ function _julia_type(s::AbstractString)
     typ = get(_typedict, s, UnconvertedType)
     if typ == UnconvertedType
         e = parse(s)
+        e = JLD.fixtypes(e)
         typ = UnsupportedType
         if is_valid_type_ex(e)
             try     # try needed to catch undefined symbols
@@ -975,8 +977,9 @@ function full_typename(tv::TypeVar)
         "TypeVar(:$(tv.name),$(full_typename(tv.lb)),$(full_typename(tv.ub)))"
     end
 end
-full_typename(jltype::(Type...)) = length(jltype) == 1 ? @sprintf("(%s,)", full_typename(jltype[1])) :
-                                   @sprintf("(%s)", join(map(full_typename, jltype), ","))
+full_typename(jltype::@compat Tuple{Vararg{Type}}) =
+    length(jltype) == 1 ? @sprintf("(%s,)", full_typename(jltype[1])) :
+                          @sprintf("(%s)", join(map(full_typename, jltype), ","))
 full_typename(x) = string(x)
 function full_typename(jltype::DataType)
     #tname = "$(jltype.name.module).$(jltype.name)"
