@@ -226,7 +226,7 @@ function delete!(parent::Union(JldFile, JldGroup), path::ByteString)
     exists(parent, path) || error("$path does not exist in $parent")
     delete!(parent[path])
 end
-delete!(parent::Union(JldFile, JldGroup), args::Tuple{Vararg{ByteString}}) = for a in args delete!(parent,a) end
+delete!(parent::Union(JldFile, JldGroup), args::@compat Tuple{Vararg{ByteString}}) = for a in args delete!(parent,a) end
 ismmappable(obj::JldDataset) = ismmappable(obj.plain)
 readmmap(obj::JldDataset, args...) = readmmap(obj.plain, args...)
 setindex!(parent::Union(JldFile, JldGroup), val, path::ASCIIString) = write(parent, path, val)
@@ -583,9 +583,9 @@ write(parent::Union(JldFile, JldGroup), name::ByteString, n::Nothing) = write(pa
 # Types
 # the first is needed to avoid an ambiguity warning
 if isdefined(Core, :Top)
-    write{T<:Top}(parent::Union(JldFile, JldGroup), name::ByteString, t::Tuple{Vararg{Type{T}}}) = write(parent, name, Any[t...], "Tuple")
+    write{T<:Top}(parent::Union(JldFile, JldGroup), name::ByteString, t::@compat Tuple{Vararg{Type{T}}}) = write(parent, name, Any[t...], "Tuple")
 else
-    write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::Tuple{Vararg{Type{T}}}) = write(parent, name, Any[t...], "Tuple")
+    write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::@compat Tuple{Vararg{Type{T}}}) = write(parent, name, Any[t...], "Tuple")
 end
 write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::Type{T}) = write(parent, name, nothing, string("Type{", full_typename(t), "}"))
 
@@ -1117,7 +1117,7 @@ function load(filename::AbstractString, varname::AbstractString)
     end
 end
 load(filename::AbstractString, varnames::AbstractString...) = load(filename, varnames)
-function load(filename::AbstractString, varnames::Tuple{Vararg{AbstractString}})
+function load(filename::AbstractString, varnames::@compat Tuple{Vararg{AbstractString}})
     jldopen(filename, "r") do file
         map((var)->read(file, var), varnames)
     end
