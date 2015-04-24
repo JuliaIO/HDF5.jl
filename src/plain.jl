@@ -431,10 +431,8 @@ end
 type EmptyArray{T}; end
 
 # Stub types to encode fixed-size arrays for H5T_ARRAY
-immutable DimSize{N}; end  # Int-wrapper (can't use tuple of Int as param)
-immutable FixedArray{T,D<:(@compat Tuple{Vararg{DimSize}})}; end
-dimsize{N}(::Type{DimSize{N}}) = N
-size{T,D}(::Type{FixedArray{T,D}}) = map(dimsize, D)::(@compat Tuple{Vararg{Int}})
+immutable FixedArray{T,D}; end
+size{T,D}(::Type{FixedArray{T,D}}) = D
 eltype{T,D}(::Type{FixedArray{T,D}}) = T
 
 # VLEN objects
@@ -2133,12 +2131,8 @@ function hdf5array(objtype)
     h5t_get_array_dims(objtype.id, dims)
     eltyp = HDF5Datatype(h5t_get_super(objtype.id))
     T = hdf5_to_julia_eltype(eltyp)
-    dimsizes = ntuple(nd, i->DimSize{@compat Int(dims[nd-i+1])})  # reverse order
-    if VERSION < v"0.4.0-dev+4319"
-        FixedArray{T, dimsizes}
-    else
-        FixedArray{T, Tuple{dimsizes...}}
-    end
+    dimsizes = ntuple(nd, i->@compat Int(dims[nd-i+1]))  # reverse order
+    FixedArray{T, dimsizes}
 end
 
 ### Property manipulation ###

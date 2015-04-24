@@ -1,4 +1,4 @@
-using HDF5, Compat
+using HDF5, Compat, Base.Test
 const test_path = splitdir(@__FILE__)[1]
 
 # Create a new file
@@ -232,6 +232,6 @@ d = h5read(joinpath(test_path, "compound.h5"), "/data")
 @assert typeof(d) == HDF5.HDF5Compound
 @assert typeof(d.data) == Array{UInt8,1}
 @assert length(d.data) == 128
-@assert d.membertype == Type[Float64, HDF5.FixedArray{Float64,(@compat Tuple{HDF5.DimSize{3}})}, HDF5.FixedArray{Float64,(@compat Tuple{HDF5.DimSize{3}})}, Float64]
+@test d.membertype == Type[Float64, HDF5.FixedArray{Float64,(3,)}, HDF5.FixedArray{Float64,(3,)}, Float64]
 @assert d.membername == ASCIIString["wgt", "xyz", "uvw", "E"]
 @assert d.memberoffset == UInt64[0x00, 0x08, 0x20, 0x38]
