@@ -205,13 +205,19 @@ bitsparamint16  = BitsParams{@compat Int16(1)}()
 # Tuple of tuples
 tuple_of_tuples = (1, 2, (3, 4, [5, 6]), [7, 8])
 
+# SimpleVector
+if VERSION >= v"0.4.0-dev+4319"
+    simplevec = Base.svec(1, 2, Int64, "foo")
+    iseq(x::SimpleVector, y::SimpleVector) = collect(x) == collect(y)
+end
+
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
 iseq(x::MyImmutable, y::MyImmutable) = (isequal(x.x, y.x) && isequal(x.y, y.y) && isequal(x.z, y.z))
 iseq(x::Union(EmptyTI, EmptyTT), y::Union(EmptyTI, EmptyTT)) = isequal(x.x, y.x)
 iseq(c1::Array{Base.Sys.CPUinfo}, c2::Array{Base.Sys.CPUinfo}) = length(c1) == length(c2) && all([iseq(c1[i], c2[i]) for i = 1:length(c1)])
 function iseq(c1::Base.Sys.CPUinfo, c2::Base.Sys.CPUinfo)
-    for n in Base.Sys.CPUinfo.names
+    for n in fieldnames(Base.Sys.CPUinfo)
         if getfield(c1, n) != getfield(c2, n)
             return false
         end
@@ -387,6 +393,7 @@ for compress in (true,false)
     @write fid bitsparamint
     @write fid bitsparamuint
     @write fid tuple_of_tuples
+    VERSION >= v"0.4.0-dev+4319" && @write fid simplevec
 
     # Make sure we can create groups (i.e., use HDF5 features)
     g = g_create(fid, "mygroup")
@@ -515,6 +522,7 @@ for compress in (true,false)
         @check fidr bitsparamint
         @check fidr bitsparamuint
         @check fidr tuple_of_tuples
+        VERSION >= v"0.4.0-dev+4319" && @check fidr simplevec
         
         x1 = read(fidr, "group1/x")
         @assert x1 == Any[1]
@@ -739,7 +747,7 @@ jldopen(fn, "r") do file
     @test reinterpret(UInt8, x.d) == 0x12
 
     x = read(file, "x9")
-    @test isa(x, (@compat Tuple))
+    @test isa(x, Tuple)
     @test length(x) == 3
     @test x[1].x == 1
     @test isa(x[2], Tuple)

@@ -111,6 +111,11 @@ immutable AssociativeWrapper{K,V,T<:Associative}
     values::Vector{V}
 end
 
+# Wrapper for SimpleVector
+immutable SimpleVectorWrapper
+    elements::Vector
+end
+
 include("jld_types.jl")
 
 file(x::JldFile) = x
@@ -376,6 +381,11 @@ function after_read{K,V,T}(x::AssociativeWrapper{K,V,T})
     ret
 end
 
+# Special case for SimpleVector
+if VERSION >= v"0.4.0-dev+4319"
+    after_read(x::SimpleVectorWrapper) = Base.svec(x.elements...)
+end
+
 ## Arrays
 
 # Read an array
@@ -488,7 +498,7 @@ write(parent::Union(JldFile, JldGroup), name::ByteString,
     close(_write(parent, name, data, wsession; kargs...))
 
 # Pick whether to use compact or default storage based on data size
-function dset_create_properties(parent, sz::Int, obj, chunk=Int[]; mmap = false)
+function dset_create_properties(parent, sz::Int, obj, chunk=Int[]; mmap::Bool=false)
     if sz <= 8192 && !ismmapped(parent) && !mmap
         return compact_properties(), false
     end
@@ -634,10 +644,9 @@ write_ref(parent::JldGroup, data, wsession::JldWriteSession) =
     write_ref(file(parent), data, wsession)
 
 # Special case for associative, to rehash keys
-function _write(parent::Union(JldFile, JldGroup), name::ByteString,
-                d::Associative, wsession::JldWriteSession; kargs...)
+function _write{K,V}(parent::Union(JldFile, JldGroup), name::ByteString,
+                     d::Associative{K,V}, wsession::JldWriteSession; kargs...)
     n = length(d)
-    K, V = eltype(d)
     ks = Array(K, n)
     vs = Array(V, n)
     i = 0
@@ -645,7 +654,14 @@ function _write(parent::Union(JldFile, JldGroup), name::ByteString,
         ks[i+=1] = k
         vs[i] = v
     end
-    write_compound(parent, name, AssociativeWrapper{K,V,typeof(d)}(ks, vs), wsession)
+    write_compound(parent, name, AssociativeWrapper{K,V,typeof(d)}(ks, vs), wsession; kargs...)
+end
+
+# Special case for SimpleVector
+if VERSION >= v"0.4.0-dev+4319"
+    _write(parent::Union(JldFile, JldGroup), name::ByteString,
+           d::SimpleVector, wsession::JldWriteSession; kargs...) =
+        write_compound(parent, name, SimpleVectorWrapper([d...]), wsession; kargs...)
 end
 
 # Expressions, drop line numbers
@@ -859,6 +875,8 @@ function full_typename(io::IO, file::JldFile, jltype::DataType)
             full_typename(io, file, jltype.parameters[i])
         end
         print(io, '}')
+    elseif jltype <: Tuple
+        print(io, "{}")
     end
 end
 function full_typename(file::JldFile, x)
