@@ -870,13 +870,15 @@ function full_typename(io::IO, file::JldFile, tv::TypeVar)
         print(io, ')')
     end
 end
-function full_typename(io::IO, file::JldFile, jltype::@compat Tuple{Vararg{Type}})
-    print(io, '(')
-    for t in jltype
-        full_typename(io, file, t)
-        print(io, ',')
+if VERSION < v"0.4.0-dev+4319"
+    function full_typename(io::IO, file::JldFile, jltype::@compat Tuple{Vararg{Type}})
+        print(io, '(')
+        for t in jltype
+            full_typename(io, file, t)
+            print(io, ',')
+        end
+        print(io, ')')
     end
-    print(io, ')')
 end
 function full_typename(io::IO, ::JldFile, x)
     # Only allow bitstypes that show as AST literals and make sure that they
@@ -885,7 +887,7 @@ function full_typename(io::IO, ::JldFile, x)
     # A different implementation will be required to support custom immutables
     # or things as simple as Int16(1).
     s = sprint(show, x)
-    if isbits(x) && parse(s) === x
+    if isbits(x) && parse(s) === x && !isa(x, Tuple)
         print(io, s)
     else
         error("type parameters with objects of type ", typeof(x), " are currently unsupported")
