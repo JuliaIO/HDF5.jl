@@ -402,6 +402,9 @@ for compress in (true,false)
     # mmapping currently fails on Windows; re-enable once it can work
     for mmap = (@windows ? false : (false, true))
         fidr = jldopen(fnc, "r", mmaparrays=mmap)
+        @test creator(fidr, "VERSION") == VERSION
+        @test creator(fidr, "WORD_SIZE") == WORD_SIZE
+        @test creator(fidr, "ENDIAN_BOM") == ENDIAN_BOM
         @check fidr x
         @check fidr A
         dsetA = fidr["A"]

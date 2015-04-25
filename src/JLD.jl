@@ -19,10 +19,11 @@ end
 
 
 const magic_base = "Julia data file (HDF5), version "
-const version_current = v"0.1"
+const version_current = v"0.1.1"
 const pathrefs = "/_refs"
 const pathtypes = "/_types"
 const pathrequire = "/_require"
+const pathcreator = "/_creator"
 const name_type_attr = "julia type"
 
 typealias BitsKindOrByteString Union(HDF5BitsKind, ByteString)
@@ -173,8 +174,21 @@ function jldopen(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Boo
                 close(p)
             end
             fj = JldFile(HDF5File(f, filename, false), version, true, true, mmaparrays, compress)
-            # initialize empty require list
+            # Initialize empty require list
             write(fj, pathrequire, ByteString[])
+            # Record creator information. Don't use any fancy types here, because we want
+            # to be able to read this even when formats change.
+            write(fj, joinpath(pathcreator, "JULIA_MAJOR"), VERSION.major)
+            write(fj, joinpath(pathcreator, "JULIA_MINOR"), VERSION.minor)
+            write(fj, joinpath(pathcreator, "JULIA_PATCH"), VERSION.patch)
+            if !isempty(VERSION.prerelease)
+                write(fj, joinpath(pathcreator, "JULIA_PRERELEASE"), VERSION.prerelease)
+            end
+            if !isempty(VERSION.build)
+                write(fj, joinpath(pathcreator, "JULIA_BUILD"), VERSION.build)
+            end
+            write(fj, joinpath(pathcreator, "WORD_SIZE"), WORD_SIZE)
+            write(fj, joinpath(pathcreator, "ENDIAN_BOM"), ENDIAN_BOM)
         else
             # Test whether this is a jld file
             sz = filesize(filename)
@@ -237,6 +251,27 @@ function jldopen(f::Function, args...; kws...)
         f(jld)
     finally
         close(jld)
+    end
+end
+
+function creator(file::JldFile, key::AbstractString)
+    if file.version < v"0.1.1"
+        return nothing
+    end
+    if key == "VERSION"
+        path_prerelease = joinpath(pathcreator, "JULIA_PRERELEASE")
+        prerelease = exists(file, path_prerelease) ? read(file, path_prerelease) : ()
+        path_build = joinpath(pathcreator, "JULIA_BUILD")
+        build = exists(file, path_build) ? read(file, path_build) : ()
+        return VersionNumber(read(file, joinpath(pathcreator, "JULIA_MAJOR")),
+                             read(file, joinpath(pathcreator, "JULIA_MINOR")),
+                             read(file, joinpath(pathcreator, "JULIA_PATCH")),
+                             prerelease,
+                             build)
+    elseif key in ("WORD_SIZE", "ENDIAN_BOM")
+        return read(file, joinpath(pathcreator, key))
+    else
+        error("$key not recognized")
     end
 end
 
@@ -875,7 +910,7 @@ end
 function names(parent::Union(JldFile, JldGroup))
     n = names(parent.plain)
     keep = trues(length(n))
-    const reserved = [pathrefs[2:end], pathtypes[2:end], pathrequire[2:end]]
+    const reserved = [pathrefs[2:end], pathtypes[2:end], pathrequire[2:end], pathcreator[2:end]]
     for i = 1:length(n)
         if in(n[i], reserved)
             keep[i] = false
@@ -1016,6 +1051,7 @@ end
 
 export
     addrequire,
+    creator,
     ismmappable,
     jldopen,
     o_delete,
