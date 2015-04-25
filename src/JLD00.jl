@@ -8,6 +8,7 @@ using HDF5, Compat
 import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o_delete, name, names, read, size, write,
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
 import Base: length, endof, show, done, next, start, delete!
+import JLD
 
 if !isdefined(:setfield!)
     const setfield! = setfield
@@ -226,7 +227,7 @@ function delete!(parent::Union(JldFile, JldGroup), path::ByteString)
     exists(parent, path) || error("$path does not exist in $parent")
     delete!(parent[path])
 end
-delete!(parent::Union(JldFile, JldGroup), args::(ByteString...)) = for a in args delete!(parent,a) end
+delete!(parent::Union(JldFile, JldGroup), args::@compat Tuple{Vararg{ByteString}}) = for a in args delete!(parent,a) end
 ismmappable(obj::JldDataset) = ismmappable(obj.plain)
 readmmap(obj::JldDataset, args...) = readmmap(obj.plain, args...)
 setindex!(parent::Union(JldFile, JldGroup), val, path::ASCIIString) = write(parent, path, val)
@@ -367,7 +368,7 @@ end
 
 # Nothing
 read(obj::JldDataset, ::Type{Nothing}) = nothing
-read(obj::JldDataset, ::Type{Bool}) = bool(read(obj, UInt8))
+read(obj::JldDataset, ::Type{Bool}) = read(obj, UInt8) != 0
 
 # Types
 read{T}(obj::JldDataset, ::Type{Type{T}}) = T
@@ -397,7 +398,7 @@ read(obj::JldDataset, ::Type{Symbol}) = symbol(read(obj.plain, ByteString))
 read{N}(obj::JldDataset, ::Type{Array{Symbol,N}}) = map(symbol, read(obj.plain, Array{ByteString}))
 
 # Char
-read(obj::JldDataset, ::Type{Char}) = char(read(obj.plain, UInt32))
+read(obj::JldDataset, ::Type{Char}) = @compat Char(read(obj.plain, UInt32))
 
 # UTF16String (not defined in julia 0.2)
 if VERSION >= v"0.3-"
@@ -436,7 +437,7 @@ end
 
 # CompositeKind
 function read(obj::JldDataset, T::DataType)
-    if isempty(T.names) && T.size > 0
+    if isempty(fieldnames(T)) && T.size > 0
         return read_bitstype(obj, T)
     end
     local x
@@ -453,12 +454,12 @@ function read(obj::JldDataset, T::DataType)
     if length(v) == 0
         x = ccall(:jl_new_struct, Any, (Any,Any...), T)
     else
-        n = T.names
+        n = fieldnames(T)
         if length(v) != length(n)
             error("Wrong number of fields")
         end
         if !T.mutable
-            x = ccall(:jl_new_structv, Any, (Any,Ptr{Void},UInt32), T, v, length(T.names))
+            x = ccall(:jl_new_structv, Any, (Any,Ptr{Void},UInt32), T, v, length(fieldnames(T)))
         else
             x = ccall(:jl_new_struct_uninit, Any, (Any,), T)
             for i = 1:length(v)
@@ -583,9 +584,9 @@ write(parent::Union(JldFile, JldGroup), name::ByteString, n::Nothing) = write(pa
 # Types
 # the first is needed to avoid an ambiguity warning
 if isdefined(Core, :Top)
-    write{T<:Top}(parent::Union(JldFile, JldGroup), name::ByteString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
+    write{T<:Top}(parent::Union(JldFile, JldGroup), name::ByteString, t::@compat Tuple{Vararg{Type{T}}}) = write(parent, name, Any[t...], "Tuple")
 else
-    write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::(Type{T}...)) = write(parent, name, Any[t...], "Tuple")
+    write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::@compat Tuple{Vararg{Type{T}}}) = write(parent, name, Any[t...], "Tuple")
 end
 write{T}(parent::Union(JldFile, JldGroup), name::ByteString, t::Type{T}) = write(parent, name, nothing, string("Type{", full_typename(t), "}"))
 
@@ -720,7 +721,7 @@ write(parent::Union(JldFile, JldGroup), name::ByteString, s; rootmodule="") = wr
 
 function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; rootmodule="")
     T = typeof(s)
-    if isempty(T.names)
+    if isempty(fieldnames(T))
         if T.size > 0
             return write_bitstype(parent, name, s)
         end
@@ -730,7 +731,7 @@ function write_composite(parent::Union(JldFile, JldGroup), name::ByteString, s; 
         return
     end
     Tname = string(T.name.name)
-    n = T.names
+    n = fieldnames(T)
     local gtypes
     if !exists(file(parent), pathtypes)
         gtypes = g_create(file(parent), pathtypes)
@@ -803,7 +804,7 @@ function has_pointer_field(obj::Tuple, name)
 end
 
 function has_pointer_field(obj, name)
-    names = typeof(obj).names
+    names = fieldnames(typeof(obj))
     for fieldname in names
         if isdefined(obj, fieldname)
             x = getfield(obj, fieldname)
@@ -937,6 +938,7 @@ function _julia_type(s::AbstractString)
     typ = get(_typedict, s, UnconvertedType)
     if typ == UnconvertedType
         e = parse(s)
+        e = JLD.fixtypes(e)
         typ = UnsupportedType
         if is_valid_type_ex(e)
             try     # try needed to catch undefined symbols
@@ -975,8 +977,9 @@ function full_typename(tv::TypeVar)
         "TypeVar(:$(tv.name),$(full_typename(tv.lb)),$(full_typename(tv.ub)))"
     end
 end
-full_typename(jltype::(Type...)) = length(jltype) == 1 ? @sprintf("(%s,)", full_typename(jltype[1])) :
-                                   @sprintf("(%s)", join(map(full_typename, jltype), ","))
+full_typename(jltype::@compat Tuple{Vararg{Type}}) =
+    length(jltype) == 1 ? @sprintf("(%s,)", full_typename(jltype[1])) :
+                          @sprintf("(%s)", join(map(full_typename, jltype), ","))
 full_typename(x) = string(x)
 function full_typename(jltype::DataType)
     #tname = "$(jltype.name.module).$(jltype.name)"
@@ -1117,7 +1120,7 @@ function load(filename::AbstractString, varname::AbstractString)
     end
 end
 load(filename::AbstractString, varnames::AbstractString...) = load(filename, varnames)
-function load(filename::AbstractString, varnames::(AbstractString...))
+function load(filename::AbstractString, varnames::@compat Tuple{Vararg{AbstractString}})
     jldopen(filename, "r") do file
         map((var)->read(file, var), varnames)
     end

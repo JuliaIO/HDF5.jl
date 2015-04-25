@@ -9,8 +9,8 @@ notifications:
     email: false
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e 'Pkg.clone(pwd()); Pkg.build("HDF5"); Pkg.add("JLDArchives")'
-    - if [ $TRAVIS_JULIA_VERSION = "nightly" ]; then julia --check-bounds=yes --inline=no --code-coverage=user -e 'include(Pkg.dir("HDF5", "test", "runtests.jl")); include(Pkg.dir("JLDArchives", "test", "runtests.jl"))'; fi
+    - julia -e 'Pkg.clone(pwd()); Pkg.build("HDF5"); Pkg.add("JLDArchives"); Pkg.checkout("JLDArchives")'
+    - if [ $TRAVIS_JULIA_VERSION = "nightly" ]; then julia --check-bounds=yes --inline=no --code-coverage=user -e 'reload("HDF5/test/runtests.jl"); workspace(); import LastMain.Compat, LastMain.HDF5; reload("HDF5/src/JLD.jl"); reload("JLDArchives/test/runtests.jl")'; fi
     - if [ $TRAVIS_JULIA_VERSION = "release" ]; then julia --check-bounds=yes -e 'Pkg.test("HDF5"); Pkg.test("JLDArchives")'; fi
 after_success:
     - if [ $TRAVIS_JULIA_VERSION = "nightly" ]; then julia -e 'cd(Pkg.dir("HDF5")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'; fi

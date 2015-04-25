@@ -431,10 +431,8 @@ end
 type EmptyArray{T}; end
 
 # Stub types to encode fixed-size arrays for H5T_ARRAY
-immutable DimSize{N}; end  # Int-wrapper (can't use tuple of Int as param)
-immutable FixedArray{T,D<:(DimSize...)}; end
-dimsize{N}(::Type{DimSize{N}}) = N
-size{T,D}(::Type{FixedArray{T,D}}) = map(dimsize, D)::(Int...)
+immutable FixedArray{T,D}; end
+size{T,D}(::Type{FixedArray{T,D}}) = D
 eltype{T,D}(::Type{FixedArray{T,D}}) = T
 
 # VLEN objects
@@ -593,7 +591,7 @@ function h5read(filename, name::ByteString)
     dat
 end
 
-function h5read(filename, name::ByteString, indices::(Union(Range{Int},Int,Colon)...))
+function h5read(filename, name::ByteString, indices::@compat Tuple{Vararg{Union(Range{Int},Int,Colon)}})
     local dat
     fid = h5open(filename, "r")
     try
@@ -767,7 +765,7 @@ function d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::H
     HDF5Dataset(h5d_create(parent, path, dtype.id, dspace.id, _link_properties(path), p.id, H5P_DEFAULT), file(parent))
 end
 d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace_dims::Dims, prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims), prop1, val1, pv...)
-d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace_dims::(Dims,Dims), prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]), prop1, val1, pv...)
+d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, dspace_dims::(@compat Tuple{Dims,Dims}), prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]), prop1, val1, pv...)
 d_create(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::Type, dspace_dims, prop1::ASCIIString, val1, pv...) = d_create(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]), prop1, val1, pv...)
 
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
@@ -889,7 +887,7 @@ function size(obj::Union(HDF5Dataset, HDF5Attribute))
     dspace = dataspace(obj)
     dims, maxdims = get_dims(dspace)
     close(dspace)
-    convert((Int...), dims)
+    convert((@compat Tuple{Vararg{Int}}), dims)
 end
 size(dset::Union(HDF5Dataset, HDF5Attribute), d) = d > ndims(dset) ? 1 : size(dset)[d]
 length(dset::Union(HDF5Dataset, HDF5Attribute)) = prod(size(dset))
@@ -1054,7 +1052,7 @@ dataspace(attr::HDF5Attribute) = HDF5Dataspace(h5a_get_space(checkvalid(attr).id
 
 # Create a dataspace from in-memory types
 dataspace{T<:HDF5BitsKind}(x::T) = HDF5Dataspace(h5s_create(H5S_SCALAR))
-function _dataspace(sz::(Int...), max_dims::Union(Dims, ())=())
+function _dataspace(sz::(@compat Tuple{Vararg{Int}}), max_dims::Union(Dims, @compat Tuple{})=())
     dims = Array(Hsize, length(sz))
     any_zero = false
     for i = 1:length(sz)
@@ -1078,13 +1076,13 @@ function _dataspace(sz::(Int...), max_dims::Union(Dims, ())=())
     end
     HDF5Dataspace(space_id)
 end
-dataspace(A::Array; max_dims::Union(Dims, ())  = ()) = _dataspace(size(A), max_dims)
+dataspace(A::Array; max_dims::Union(Dims, @compat Tuple{}) = ()) = _dataspace(size(A), max_dims)
 dataspace(str::ByteString) = HDF5Dataspace(h5s_create(H5S_SCALAR))
-dataspace(R::Array{HDF5ReferenceObj}; max_dims::Union(Dims, ())=()) = _dataspace(size(R), max_dims)
-dataspace(v::HDF5Vlen; max_dims::Union(Dims, ())=()) = _dataspace(size(v.data), max_dims)
+dataspace(R::Array{HDF5ReferenceObj}; max_dims::Union(Dims, @compat Tuple{})=()) = _dataspace(size(R), max_dims)
+dataspace(v::HDF5Vlen; max_dims::Union(Dims, @compat Tuple{})=()) = _dataspace(size(v.data), max_dims)
 dataspace(n::Nothing) = HDF5Dataspace(h5s_create(H5S_NULL))
-dataspace(sz::Dims; max_dims::Union(Dims, ())=()) = _dataspace(sz, max_dims)
-dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union(Dims, ())=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
+dataspace(sz::Dims; max_dims::Union(Dims, @compat Tuple{})=()) = _dataspace(sz, max_dims)
+dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union(Dims, @compat Tuple{})=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
 
 # Get the array dimensions from a dataspace or a dataset
 # Returns both dims and maxdims
@@ -1578,9 +1576,7 @@ function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::Union(Range{In
     if !(T.parameters[1]<:HDF5BitsKind)
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
-    if length(X) != prod([length(idxs) for idxs in
-                         filter(idx -> isa(idx, Ranges),
-                                [indices[i] for i in 1:length(indices)])])
+    if length(X) != prod(map(length, indices))
         error("number of elements in range and length of array must be equal")
     end
     if eltype(X) != T.parameters[1]
@@ -1835,7 +1831,7 @@ end
 
 ### Utilities for generating ccall wrapper functions programmatically ###
 
-function ccallexpr(lib::AbstractString, ccallsym::Symbol, outtype, argtypes::Tuple, argsyms::Tuple)
+function ccallexpr(lib::AbstractString, ccallsym::Symbol, outtype, argtypes::(@compat Tuple), argsyms::@compat Tuple)
     ccallargs = Any[Expr(:tuple, Expr(:quote, ccallsym), lib), outtype, Expr(:tuple, argtypes...)]
     ccallargs = ccallsyms(ccallargs, length(argtypes), argsyms)
     Expr(:ccall, ccallargs...)
@@ -2135,7 +2131,7 @@ function hdf5array(objtype)
     h5t_get_array_dims(objtype.id, dims)
     eltyp = HDF5Datatype(h5t_get_super(objtype.id))
     T = hdf5_to_julia_eltype(eltyp)
-    dimsizes = ntuple(nd, i->DimSize{@compat Int(dims[nd-i+1])})  # reverse order
+    dimsizes = ntuple(nd, i->@compat Int(dims[nd-i+1]))  # reverse order
     FixedArray{T, dimsizes}
 end
 

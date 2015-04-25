@@ -77,7 +77,7 @@ sa_utf8 = [:α, :β]
 # SubArray (to test tuple type params)
 subarray = sub([1:5;], 1:5)
 # Array of empty tuples (to test tuple type params)
-arr_empty_tuple = ()[]
+arr_empty_tuple = (@compat Tuple{})[]
 immutable EmptyImmutable end
 emptyimmutable = EmptyImmutable()
 arr_emptyimmutable = [emptyimmutable]
@@ -205,13 +205,19 @@ bitsparamint16  = BitsParams{@compat Int16(1)}()
 # Tuple of tuples
 tuple_of_tuples = (1, 2, (3, 4, [5, 6]), [7, 8])
 
+# SimpleVector
+if VERSION >= v"0.4.0-dev+4319"
+    simplevec = Base.svec(1, 2, Int64, "foo")
+    iseq(x::SimpleVector, y::SimpleVector) = collect(x) == collect(y)
+end
+
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
 iseq(x::MyImmutable, y::MyImmutable) = (isequal(x.x, y.x) && isequal(x.y, y.y) && isequal(x.z, y.z))
 iseq(x::Union(EmptyTI, EmptyTT), y::Union(EmptyTI, EmptyTT)) = isequal(x.x, y.x)
 iseq(c1::Array{Base.Sys.CPUinfo}, c2::Array{Base.Sys.CPUinfo}) = length(c1) == length(c2) && all([iseq(c1[i], c2[i]) for i = 1:length(c1)])
 function iseq(c1::Base.Sys.CPUinfo, c2::Base.Sys.CPUinfo)
-    for n in Base.Sys.CPUinfo.names
+    for n in fieldnames(Base.Sys.CPUinfo)
         if getfield(c1, n) != getfield(c2, n)
             return false
         end
@@ -295,8 +301,7 @@ rm(fn)
 
  
 for compress in (true,false)
-    fnc = compress ? fn*".c" : fn # workaround #176
-    fid = jldopen(fnc, "w", compress=compress)
+    fid = jldopen(fn, "w", compress=compress)
     @write fid x
     @write fid A
     @write fid Aarray
@@ -322,9 +327,7 @@ for compress in (true,false)
     @write fid sym
     @write fid syms
     @write fid d
-    if compress # work around #176
-        @write fid ex
-    end
+    @write fid ex
     @write fid T
     @write fid char
     @write fid unicode_char
@@ -390,6 +393,7 @@ for compress in (true,false)
     @write fid bitsparamint
     @write fid bitsparamuint
     @write fid tuple_of_tuples
+    VERSION >= v"0.4.0-dev+4319" && @write fid simplevec
 
     # Make sure we can create groups (i.e., use HDF5 features)
     g = g_create(fid, "mygroup")
@@ -401,7 +405,7 @@ for compress in (true,false)
 
     # mmapping currently fails on Windows; re-enable once it can work
     for mmap = (@windows ? false : (false, true))
-        fidr = jldopen(fnc, "r", mmaparrays=mmap)
+        fidr = jldopen(fn, "r", mmaparrays=mmap)
         @check fidr x
         @check fidr A
         dsetA = fidr["A"]
@@ -433,10 +437,8 @@ for compress in (true,false)
         @check fidr sym
         @check fidr syms
         @check fidr d
-        if compress # work around #176
-            exr = read(fidr, "ex")   # line numbers are stripped, don't expect equality
-            checkexpr(ex, exr)
-        end
+        exr = read(fidr, "ex")   # line numbers are stripped, don't expect equality
+        checkexpr(ex, exr)
         @check fidr T
         @check fidr char
         @check fidr unicode_char
@@ -520,6 +522,7 @@ for compress in (true,false)
         @check fidr bitsparamint
         @check fidr bitsparamuint
         @check fidr tuple_of_tuples
+        VERSION >= v"0.4.0-dev+4319" && @check fidr simplevec
         
         x1 = read(fidr, "group1/x")
         @assert x1 == Any[1]
@@ -734,13 +737,13 @@ jldopen(fn, "r") do file
     for i = 1:5
         @test x[i].x.x == i
     end
-    @test typeof(read(file, "x6")).names == ()
+    @test isempty(fieldnames(typeof(read(file, "x6"))))
     @test reinterpret(UInt8, read(file, "x7")) == 0x77
 
     x = read(file, "x8")
     @test x.a.x == 2
     @test x.b.x.x == 3
-    @test typeof(x.c).names == ()
+    @test isempty(fieldnames(typeof(x.c)))
     @test reinterpret(UInt8, x.d) == 0x12
 
     x = read(file, "x9")
@@ -753,7 +756,7 @@ jldopen(fn, "r") do file
     for i = 1:5
         @test x[2][2][i].x.x == i
     end
-    @test typeof(x[3]).names == ()
+    @test isempty(fieldnames(typeof(x[3])))
 end
 
 # Issue #176

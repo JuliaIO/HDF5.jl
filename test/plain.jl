@@ -1,4 +1,4 @@
-using HDF5, Compat
+using HDF5, Compat, Base.Test
 const test_path = splitdir(@__FILE__)[1]
 
 # Create a new file
@@ -187,7 +187,7 @@ end
 # Test reading multiple vars at once
 z = read(fr, "Float64", "Int16")
 @assert z == (3.2, 4)
-@assert typeof(z) == (Float64, Int16)
+@assert typeof(z) == @compat Tuple{Float64, Int16}
 # Test function syntax
 read(fr, "Float64") do x
 	@assert x == 3.2
@@ -232,6 +232,6 @@ d = h5read(joinpath(test_path, "compound.h5"), "/data")
 @assert typeof(d) == HDF5.HDF5Compound
 @assert typeof(d.data) == Array{UInt8,1}
 @assert length(d.data) == 128
-@assert d.membertype == Type[Float64, HDF5.FixedArray{Float64,(HDF5.DimSize{3},)}, HDF5.FixedArray{Float64,(HDF5.DimSize{3},)}, Float64]
+@test d.membertype == Type[Float64, HDF5.FixedArray{Float64,(3,)}, HDF5.FixedArray{Float64,(3,)}, Float64]
 @assert d.membername == ASCIIString["wgt", "xyz", "uvw", "E"]
 @assert d.memberoffset == UInt64[0x00, 0x08, 0x20, 0x38]

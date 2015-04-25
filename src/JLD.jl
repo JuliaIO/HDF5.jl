@@ -9,15 +9,6 @@ import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
 import Base: length, endof, show, done, next, ndims, start, delete!, size, sizeof
 
-# .jld files written before v"0.4.0-dev+1419" might have UInt32 instead of UInt32 as the typename string.
-# See julia issue #8907
-if VERSION >= v"0.4.0-dev+1419"
-    julia_type(s::AbstractString) = _julia_type(replace(s, r"UInt(?=\d{1,3})", "UInt"))
-else
-    julia_type(s::AbstractString) = _julia_type(s)
-end
-
-
 const magic_base = "Julia data file (HDF5), version "
 const version_current = v"0.1"
 const pathrefs = "/_refs"
@@ -109,6 +100,11 @@ show(io::IO, e::TypeMismatchException) =
 immutable AssociativeWrapper{K,V,T<:Associative}
     keys::Vector{K}
     values::Vector{V}
+end
+
+# Wrapper for SimpleVector
+immutable SimpleVectorWrapper
+    elements::Vector
 end
 
 include("jld_types.jl")
@@ -294,7 +290,7 @@ function delete!(parent::Union(JldFile, JldGroup), path::ByteString)
     exists(parent, path) || error("$path does not exist in $parent")
     delete!(parent[path])
 end
-delete!(parent::Union(JldFile, JldGroup), args::(ByteString...)) = for a in args delete!(parent,a) end
+delete!(parent::Union(JldFile, JldGroup), args::@compat Tuple{Vararg{ByteString}}) = for a in args delete!(parent,a) end
 ismmappable(obj::JldDataset) = ismmappable(obj.plain)
 readmmap(obj::JldDataset, args...) = readmmap(obj.plain, args...)
 setindex!(parent::Union(JldFile, JldGroup), val, path::ASCIIString) = write(parent, path, val)
@@ -376,11 +372,16 @@ function after_read{K,V,T}(x::AssociativeWrapper{K,V,T})
     ret
 end
 
+# Special case for SimpleVector
+if VERSION >= v"0.4.0-dev+4319"
+    after_read(x::SimpleVectorWrapper) = Base.svec(x.elements...)
+end
+
 ## Arrays
 
 # Read an array
 function read_array(obj::JldDataset, dtype::HDF5Datatype, dspace_id::HDF5.Hid, dsel_id::HDF5.Hid,
-                    dims::(Int...)=convert((Int...), HDF5.h5s_get_simple_extent_dims(dspace_id)[1]))
+                    dims::(@compat Tuple{Vararg{Int}})=convert((@compat Tuple{Vararg{Int}}), HDF5.h5s_get_simple_extent_dims(dspace_id)[1]))
     if HDF5.h5t_get_class(dtype) == HDF5.H5T_REFERENCE
         return read_refs(obj, refarray_eltype(obj), dspace_id, dsel_id, dims)
     else
@@ -390,7 +391,7 @@ end
 
 # Arrays of basic HDF5 kinds
 function read_vals{S<:HDF5BitsKind}(obj::JldDataset, dtype::HDF5Datatype, T::Union(Type{S}, Type{Complex{S}}),
-                                    dspace_id::HDF5.Hid, dsel_id::HDF5.Hid, dims::(Int...))
+                                    dspace_id::HDF5.Hid, dsel_id::HDF5.Hid, dims::@compat Tuple{Vararg{Int}})
     if obj.file.mmaparrays && HDF5.iscontiguous(obj.plain) && dsel_id == HDF5.H5S_ALL
         readmmap(obj.plain, Array{T})
     else
@@ -402,7 +403,7 @@ end
 
 # Arrays of immutables/bitstypes
 function read_vals(obj::JldDataset, dtype::HDF5Datatype, T::Type, dspace_id::HDF5.Hid,
-                   dsel_id::HDF5.Hid, dims::(Int...))
+                   dsel_id::HDF5.Hid, dims::@compat Tuple{Vararg{Int}})
     out = Array(T, dims)
     # Empty objects don't need to be read at all
     T.size == 0 && !T.mutable && return out
@@ -437,7 +438,7 @@ end
 
 # Arrays of references
 function read_refs{T}(obj::JldDataset, ::Type{T}, dspace_id::HDF5.Hid, dsel_id::HDF5.Hid,
-                      dims::(Int...))
+                      dims::@compat Tuple{Vararg{Int}})
     refs = Array(HDF5ReferenceObj, dims)
     HDF5.h5d_read(obj.plain.id, HDF5.H5T_STD_REF_OBJ, dspace_id, dsel_id, HDF5.H5P_DEFAULT, refs)
 
@@ -488,7 +489,7 @@ write(parent::Union(JldFile, JldGroup), name::ByteString,
     close(_write(parent, name, data, wsession; kargs...))
 
 # Pick whether to use compact or default storage based on data size
-function dset_create_properties(parent, sz::Int, obj, chunk=Int[]; mmap = false)
+function dset_create_properties(parent, sz::Int, obj, chunk=Int[]; mmap::Bool=false)
     if sz <= 8192 && !ismmapped(parent) && !mmap
         return compact_properties(), false
     end
@@ -634,10 +635,9 @@ write_ref(parent::JldGroup, data, wsession::JldWriteSession) =
     write_ref(file(parent), data, wsession)
 
 # Special case for associative, to rehash keys
-function _write(parent::Union(JldFile, JldGroup), name::ByteString,
-                d::Associative, wsession::JldWriteSession; kargs...)
+function _write{K,V}(parent::Union(JldFile, JldGroup), name::ByteString,
+                     d::Associative{K,V}, wsession::JldWriteSession; kargs...)
     n = length(d)
-    K, V = eltype(d)
     ks = Array(K, n)
     vs = Array(V, n)
     i = 0
@@ -645,7 +645,14 @@ function _write(parent::Union(JldFile, JldGroup), name::ByteString,
         ks[i+=1] = k
         vs[i] = v
     end
-    write_compound(parent, name, AssociativeWrapper{K,V,typeof(d)}(ks, vs), wsession)
+    write_compound(parent, name, AssociativeWrapper{K,V,typeof(d)}(ks, vs), wsession; kargs...)
+end
+
+# Special case for SimpleVector
+if VERSION >= v"0.4.0-dev+4319"
+    _write(parent::Union(JldFile, JldGroup), name::ByteString,
+           d::SimpleVector, wsession::JldWriteSession; kargs...) =
+        write_compound(parent, name, SimpleVectorWrapper([d...]), wsession; kargs...)
 end
 
 # Expressions, drop line numbers
@@ -757,14 +764,66 @@ is_valid_type_ex{T}(::T) = isbits(T)
 is_valid_type_ex(e::Expr) = ((e.head == :curly || e.head == :tuple || e.head == :.) && all(map(is_valid_type_ex, e.args))) ||
                             (e.head == :call && (e.args[1] == :Union || e.args[1] == :TypeVar))
 
-# Work around https://github.com/JuliaLang/julia/issues/8226
-const _typedict = Dict{UTF8String,Type}()
-_typedict["Core.Type{TypeVar(:T,Union(Core.Any,Core.Undef))}"] = Type
+if VERSION >= v"0.4.0-dev+1419"
+    const typemap_Core = @compat Dict(
+        :Uint8 => :UInt8,
+        :Uint16 => :Uint16,
+        :Uint32 => :UInt32,
+        :Uint64 => :UInt64,
+        :Nothing => :Void
+    )
+else
+    const typemap_Core = @compat Dict(
+        :UInt8 => :Uint8,
+        :UInt16 => :Uint16,
+        :UInt32 => :Uint32,
+        :UInt64 => :Uint64,
+        :Void => :Nothing
+    )
+end
 
-function _julia_type(s::AbstractString)
+const _typedict = Dict{UTF8String,Type}()
+
+fixtypes(typ) = typ
+@eval begin
+    function fixtypes(typ::Expr)
+        if typ.head == :.
+            if length(typ.args) == 2 && typ.args[1] == :Core
+                arg = typ.args[2].value
+                return Expr(:., :Core, QuoteNode(get(typemap_Core, arg, arg)))
+            else
+                return typ
+            end
+        elseif typ == :(Core.Type{TypeVar(:T,Union(Core.Any,Core.Undef))}) || typ == :(Core.Type{TypeVar(:T)})
+            # Work around https://github.com/JuliaLang/julia/issues/8226 and the removal of Top
+            return :(Core.Type)
+        end
+
+        for i = 1:length(typ.args)
+            typ.args[i] = fixtypes(typ.args[i])
+        end
+
+        $(if VERSION >= v"0.4.0-dev+4319"
+            quote
+                if typ.head == :tuple
+                    return Expr(:curly, :Tuple, typ.args...)
+                end
+            end
+        else
+            quote
+                if typ.head == :curly && !isempty(typ.args) && typ.args[1] == :(Core.Tuple)
+                    return Expr(:tuple, typ.args[2:end]...)
+                end
+            end
+        end)
+        typ
+    end
+end
+
+function julia_type(s::AbstractString)
     typ = get(_typedict, s, UnconvertedType)
     if typ == UnconvertedType
-        typ = julia_type(parse(s))
+        typ = julia_type(fixtypes(parse(s)))
         if typ != UnsupportedType
             _typedict[s] = typ
         end
@@ -811,13 +870,15 @@ function full_typename(io::IO, file::JldFile, tv::TypeVar)
         print(io, ')')
     end
 end
-function full_typename(io::IO, file::JldFile, jltype::(Type...))
-    print(io, '(')
-    for t in jltype
-        full_typename(io, file, t)
-        print(io, ',')
+if VERSION < v"0.4.0-dev+4319"
+    function full_typename(io::IO, file::JldFile, jltype::@compat Tuple{Vararg{Type}})
+        print(io, '(')
+        for t in jltype
+            full_typename(io, file, t)
+            print(io, ',')
+        end
+        print(io, ')')
     end
-    print(io, ')')
 end
 function full_typename(io::IO, ::JldFile, x)
     # Only allow bitstypes that show as AST literals and make sure that they
@@ -826,7 +887,7 @@ function full_typename(io::IO, ::JldFile, x)
     # A different implementation will be required to support custom immutables
     # or things as simple as Int16(1).
     s = sprint(show, x)
-    if isbits(x) && parse(s) === x
+    if isbits(x) && parse(s) === x && !isa(x, Tuple)
         print(io, s)
     else
         error("type parameters with objects of type ", typeof(x), " are currently unsupported")
@@ -859,6 +920,8 @@ function full_typename(io::IO, file::JldFile, jltype::DataType)
             full_typename(io, file, jltype.parameters[i])
         end
         print(io, '}')
+    elseif jltype <: Tuple
+        print(io, "{}")
     end
 end
 function full_typename(file::JldFile, x)
@@ -976,7 +1039,7 @@ function save(filename::AbstractString, dict::Associative; compress::Bool=false)
 end
 # Or the names and values may be specified as alternating pairs
 function save(filename::AbstractString, name::AbstractString, value, pairs...; compress::Bool=false)
-    if isodd(length(pairs)) || !isa(pairs[1:2:end], (AbstractString...))
+    if isodd(length(pairs)) || !isa(pairs[1:2:end], @compat Tuple{Vararg{AbstractString}})
         throw(ArgumentError("arguments must be in name-value pairs"))
     end
     jldopen(filename, "w"; compress=compress) do file
@@ -1001,7 +1064,7 @@ function load(filename::AbstractString, varname::AbstractString)
     end
 end
 load(filename::AbstractString, varnames::AbstractString...) = load(filename, varnames)
-function load(filename::AbstractString, varnames::(AbstractString...))
+function load(filename::AbstractString, varnames::@compat Tuple{Vararg{AbstractString}})
     jldopen(filename, "r") do file
         map((var)->read(file, var), varnames)
     end

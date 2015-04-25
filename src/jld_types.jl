@@ -10,6 +10,20 @@ const BUILTIN_TYPES = Set([Symbol, Type, UTF16String, BigFloat, BigInt])
 const H5CONVERT_DEFINED = ObjectIdDict()
 const JLCONVERT_DEFINED = ObjectIdDict()
 
+if VERSION >= v"0.4.0-dev+4319"
+    const EMPTY_TUPLE_TYPE = Tuple{}
+    typealias TypesType SimpleVector
+    typealias TupleType{T<:Tuple} Type{T}
+    tupletypes(T::TupleType) = T.parameters
+    typetuple(types) = Tuple{types...}
+else
+    const EMPTY_TUPLE_TYPE = ()
+    typealias TypesType (Type...)
+    typealias TupleType (Type...)
+    tupletypes(T::TupleType) = T
+    typetuple(types) = tuple(types...)
+end
+
 ## Helper functions
 
 # Holds information about the mapping between a Julia and HDF5 type
@@ -20,7 +34,7 @@ immutable JldTypeInfo
 end
 
 # Get information about the HDF5 types corresponding to Julia types
-function JldTypeInfo(parent::JldFile, types::(Type...), commit::Bool)
+function JldTypeInfo(parent::JldFile, types::TypesType, commit::Bool)
     dtypes = Array(JldDatatype, length(types))
     offsets = Array(Int, length(types))
     offset = 0
@@ -257,7 +271,7 @@ function h5type{T<:Type}(parent::JldFile, ::Type{T}, commit::Bool)
     id = HDF5.h5t_create(HDF5.H5T_COMPOUND, 8)
     HDF5.h5t_insert(id, "typename_", 0, h5fieldtype(parent, UTF8String, commit))
     dtype = HDF5Datatype(id, parent.plain)
-    commit ? commit_datatype(parent, dtype, Type) : JldDatatype(dtype, -1)
+    out = commit ? commit_datatype(parent, dtype, Type) : JldDatatype(dtype, -1)
 end
 
 gen_h5convert{T<:Type}(::JldFile, ::Type{T}) = nothing
@@ -292,16 +306,13 @@ h5fieldtype{T,N}(parent::JldFile, ::Type{Array{T,N}}, ::Bool) = JLD_REF_TYPE
 ## Tuples
 
 if INLINE_TUPLE
-    h5fieldtype(parent::JldFile, T::(Type...), commit::Bool) =
+    h5fieldtype(parent::JldFile, T::TupleType, commit::Bool) =
         isleaftype(T) ? h5type(parent, T, commit) : JLD_REF_TYPE
 else
-    h5fieldtype(parent::JldFile, T::(Type...), ::Bool) = JLD_REF_TYPE
+    h5fieldtype(parent::JldFile, T::TupleType, ::Bool) = JLD_REF_TYPE
 end
 
-function h5type(parent::JldFile, T::(Type...), commit::Bool)
-    !isa(T, (Union(Tuple, DataType)...)) && unknown_type_err(T)
-    T = T::(Union(Tuple, DataType)...)
-
+function h5type(parent::JldFile, T::TupleType, commit::Bool)
     haskey(parent.jlh5type, T) && return parent.jlh5type[T]
     # Tuples should always be concretely typed, unless we're
     # reconstructing a tuple, in which case commit will be false
@@ -321,7 +332,7 @@ function h5type(parent::JldFile, T::(Type...), commit::Bool)
     dtype = HDF5Datatype(id, parent.plain)
     if commit
         jlddtype = commit_datatype(parent, dtype, T)
-        if isempty(T)
+        if T == EMPTY_TUPLE_TYPE
             # to allow recovery of empty tuples, which HDF5 does not allow
             a_write(dtype, "empty", @compat UInt8(1))
         end
@@ -331,13 +342,14 @@ function h5type(parent::JldFile, T::(Type...), commit::Bool)
     end
 end
 
-function gen_jlconvert(typeinfo::JldTypeInfo, T::(Type...))
+function gen_jlconvert(typeinfo::JldTypeInfo, T::TupleType)
     haskey(JLCONVERT_DEFINED, T) && return
 
     ex = Expr(:block)
     args = ex.args
     tup = Expr(:tuple)
     tupargs = tup.args
+    types = tupletypes(T)
     for i = 1:length(typeinfo.dtypes)
         h5offset = typeinfo.offsets[i]
         field = symbol(string("field", i))
@@ -345,7 +357,7 @@ function gen_jlconvert(typeinfo::JldTypeInfo, T::(Type...))
         if HDF5.h5t_get_class(typeinfo.dtypes[i]) == HDF5.H5T_REFERENCE
             push!(args, :($field = read_ref(file, unsafe_load(convert(Ptr{HDF5ReferenceObj}, ptr)+$h5offset))))
         else
-            push!(args, :($field = jlconvert($(T[i]), file, ptr+$h5offset)))
+            push!(args, :($field = jlconvert($(types[i]), file, ptr+$h5offset)))
         end
         push!(tupargs, field)
     end
@@ -382,7 +394,7 @@ function h5type(parent::JldFile, T::ANY, commit::Bool)
         id = HDF5.h5t_create(HDF5.H5T_COMPOUND, typeinfo.size)
         for i = 1:length(typeinfo.offsets)
             fielddtype = typeinfo.dtypes[i]
-            HDF5.h5t_insert(id, mangle_name(fielddtype, T.names[i]), typeinfo.offsets[i], fielddtype)
+            HDF5.h5t_insert(id, mangle_name(fielddtype, fieldnames(T)[i]), typeinfo.offsets[i], fielddtype)
         end
     end
 
@@ -410,11 +422,11 @@ function _gen_jlconvert_type(typeinfo::JldTypeInfo, T::ANY)
             push!(args, quote
                 ref = unsafe_load(convert(Ptr{HDF5ReferenceObj}, ptr)+$h5offset)
                 if ref != HDF5.HDF5ReferenceObj_NULL
-                    out.$(T.names[i]) = convert($(T.types[i]), read_ref(file, ref))
+                    out.$(fieldnames(T)[i]) = convert($(T.types[i]), read_ref(file, ref))
                 end
             end)
         else
-            push!(args, :(out.$(T.names[i]) = jlconvert($(T.types[i]), file, ptr+$h5offset)))
+            push!(args, :(out.$(fieldnames(T)[i]) = jlconvert($(T.types[i]), file, ptr+$h5offset)))
         end
     end
     @eval function jlconvert(::Type{$T}, file::JldFile, ptr::Ptr)
@@ -434,7 +446,20 @@ function _gen_jlconvert_immutable(typeinfo::JldTypeInfo, T::ANY)
         h5offset = typeinfo.offsets[i]
         jloffset = jloffsets[i]
 
-        if HDF5.h5t_get_class(typeinfo.dtypes[i]) == HDF5.H5T_REFERENCE
+        if isa(T.types[i], TupleType) && VERSION >= v"0.4.0-dev+4319" && T.types[i].pointerfree
+            # We continue to store tuples as references for the sake of
+            # backwards compatibility, but on 0.4 they are now stored
+            # inline
+            push!(args, quote
+                ref = unsafe_load(convert(Ptr{HDF5ReferenceObj}, ptr)+$h5offset)
+                if ref == HDF5.HDF5ReferenceObj_NULL
+                    warn("""A pointerfree tuple field was undefined.
+                            This is not supported in Julia 0.4 and the corresponding tuple will be uninitialized.""")
+                else
+                    unsafe_store!(convert(Ptr{$(T.types[i])}, out)+$jloffset, read_ref(file, ref))
+                end
+            end)
+        elseif HDF5.h5t_get_class(typeinfo.dtypes[i]) == HDF5.H5T_REFERENCE
             obj = gensym("obj")
             push!(args, quote
                 ref = unsafe_load(convert(Ptr{HDF5ReferenceObj}, ptr)+$h5offset)
@@ -491,7 +516,7 @@ const DONT_STORE_SINGLETON_IMMUTABLES = VERSION >= v"0.4.0-dev+385"
 function gen_jlconvert(typeinfo::JldTypeInfo, T::ANY)
     haskey(JLCONVERT_DEFINED, T) && return
 
-    if isempty(T.names)
+    if isempty(fieldnames(T))
         if T.size == 0
             @eval begin
                 jlconvert(::Type{$T}, ::JldFile, ::Ptr) = $T()
@@ -523,11 +548,12 @@ end
 ## Common functions for all non-special types (including gen_h5convert)
 
 # Whether this datatype should be stored as opaque
-isopaque(t::(Type...)) = isa(t, ())
-isopaque(t::DataType) = isempty(t.names)
+isopaque(t::TupleType) = t == EMPTY_TUPLE_TYPE
+# isopaque(t::DataType) = isempty(fieldnames(t))
+isopaque(t::DataType) = isa(t, TupleType) ? t == EMPTY_TUPLE_TYPE : isempty(fieldnames(t))
 
 # The size of this datatype in the HDF5 file (if opaque)
-opaquesize(t::(DataType...)) = 1
+opaquesize(t::TupleType) = 1
 opaquesize(t::DataType) = max(1, t.size)
 
 # Whether a type that is stored inline in HDF5 should be stored as a
@@ -535,7 +561,7 @@ opaquesize(t::DataType) = max(1, t.size)
 # true for some unions of special types defined above, unless either
 # INLINE_TUPLE or INLINE_POINTER_IMMUTABLE is true.
 uses_reference(T::DataType) = !T.pointerfree
-uses_reference(::Tuple) = true
+uses_reference(::TupleType) = true
 uses_reference(::UnionType) = true
 
 unknown_type_err(T) =
@@ -548,19 +574,21 @@ gen_h5convert(parent::JldFile, T) =
 # There is no point in specializing this
 function _gen_h5convert(parent::JldFile, T::ANY)
     dtype = parent.jlh5type[T].dtype
-    istuple = isa(T, Tuple)
-    if istuple
-        types = T
-    else
-        if isopaque(T::DataType)
-            if (T::DataType).size == 0
-                @eval h5convert!(out::Ptr, ::JldFile, x::$T, ::JldWriteSession) = nothing
-            else
-                @eval h5convert!(out::Ptr, ::JldFile, x::$T, ::JldWriteSession) =
-                    unsafe_store!(convert(Ptr{$T}, out), x)
-            end
-            return
+    istuple = isa(T, TupleType)
+
+    if isopaque(T)
+        if T.size == 0
+            @eval h5convert!(out::Ptr, ::JldFile, x::$T, ::JldWriteSession) = nothing
+        else
+            @eval h5convert!(out::Ptr, ::JldFile, x::$T, ::JldWriteSession) =
+                unsafe_store!(convert(Ptr{$T}, out), x)
         end
+        return
+    end
+
+    if istuple
+        types = tupletypes(T)
+    else
         types = (T::DataType).types
     end
 
@@ -704,9 +732,9 @@ function reconstruct_type(parent::JldFile, dtype::HDF5Datatype, savedname::Abstr
             end
         end
 
-        if startswith(savedname, "(")
+        if startswith(savedname, "(") || startswith(savedname, "Core.Tuple{")
             # We're reconstructing a tuple
-            tuple(fieldtypes...)
+            typetuple(fieldtypes)
         else
             # We're reconstructing some other type
             @eval begin
