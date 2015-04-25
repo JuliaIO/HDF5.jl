@@ -295,8 +295,7 @@ rm(fn)
 
  
 for compress in (true,false)
-    fnc = compress ? fn*".c" : fn # workaround #176
-    fid = jldopen(fnc, "w", compress=compress)
+    fid = jldopen(fn, "w", compress=compress)
     @write fid x
     @write fid A
     @write fid Aarray
@@ -322,9 +321,7 @@ for compress in (true,false)
     @write fid sym
     @write fid syms
     @write fid d
-    if compress # work around #176
-        @write fid ex
-    end
+    @write fid ex
     @write fid T
     @write fid char
     @write fid unicode_char
@@ -401,7 +398,7 @@ for compress in (true,false)
 
     # mmapping currently fails on Windows; re-enable once it can work
     for mmap = (@windows ? false : (false, true))
-        fidr = jldopen(fnc, "r", mmaparrays=mmap)
+        fidr = jldopen(fn, "r", mmaparrays=mmap)
         @check fidr x
         @check fidr A
         dsetA = fidr["A"]
@@ -433,10 +430,8 @@ for compress in (true,false)
         @check fidr sym
         @check fidr syms
         @check fidr d
-        if compress # work around #176
-            exr = read(fidr, "ex")   # line numbers are stripped, don't expect equality
-            checkexpr(ex, exr)
-        end
+        exr = read(fidr, "ex")   # line numbers are stripped, don't expect equality
+        checkexpr(ex, exr)
         @check fidr T
         @check fidr char
         @check fidr unicode_char
