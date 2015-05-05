@@ -255,10 +255,10 @@ if VERSION < v"0.4.0-dev+3864"
         Base.parseint_nocheck(BigInt, jlconvert(ASCIIString, file, ptr), 62)
 else
     jlconvert(::Type{BigInt}, file::JldFile, ptr::Ptr) =
-        get(tryparse(BigInt, jlconvert(ASCIIString, file, ptr), 62))
+        parse(BigInt, jlconvert(ASCIIString, file, ptr), 62)
 end
 jlconvert(::Type{BigFloat}, file::JldFile, ptr::Ptr) =
-    BigFloat(jlconvert(ASCIIString, file, ptr))
+    parse(BigFloat, jlconvert(ASCIIString, file, ptr))
 
 ## Types
 
