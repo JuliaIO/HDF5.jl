@@ -1636,7 +1636,7 @@ function hyperslab(dset::HDF5Dataset, indices::Union(Range{Int},Int)...)
                 dsel_start[k] = index-1
                 dsel_stride[k] = 1
                 dsel_count[k] = 1
-            elseif isa(index, Ranges)
+            elseif isa(index, Range)
                 dsel_start[k] = first(index)-1
                 dsel_stride[k] = step(index)
                 dsel_count[k] = length(index)
