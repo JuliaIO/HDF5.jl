@@ -442,72 +442,72 @@ function _gen_jlconvert_immutable(typeinfo::JldTypeInfo, T::ANY)
     ex = Expr(:block)
     args = ex.args
     jloffsets = fieldoffsets(T)
-    for i = 1:length(typeinfo.dtypes)
-        h5offset = typeinfo.offsets[i]
-        jloffset = jloffsets[i]
+    if T.pointerfree
+        for i = 1:length(typeinfo.dtypes)
+            h5offset = typeinfo.offsets[i]
+            jloffset = jloffsets[i]
 
-        if isa(T.types[i], TupleType) && VERSION >= v"0.4.0-dev+4319" && T.types[i].pointerfree
-            # We continue to store tuples as references for the sake of
-            # backwards compatibility, but on 0.4 they are now stored
-            # inline
-            push!(args, quote
-                ref = unsafe_load(convert(Ptr{HDF5ReferenceObj}, ptr)+$h5offset)
-                if ref == HDF5.HDF5ReferenceObj_NULL
-                    warn("""A pointerfree tuple field was undefined.
-                            This is not supported in Julia 0.4 and the corresponding tuple will be uninitialized.""")
-                else
-                    unsafe_store!(convert(Ptr{$(T.types[i])}, out)+$jloffset, read_ref(file, ref))
-                end
-            end)
-        elseif HDF5.h5t_get_class(typeinfo.dtypes[i]) == HDF5.H5T_REFERENCE
-            obj = gensym("obj")
-            push!(args, quote
-                ref = unsafe_load(convert(Ptr{HDF5ReferenceObj}, ptr)+$h5offset)
-                local $obj # must keep alive to prevent collection
-                if ref == HDF5.HDF5ReferenceObj_NULL
-                    unsafe_store!(convert(Ptr{Int}, out)+$jloffset, 0)
-                else
-                    # The typeassert ensures that the reference type is
-                    # valid for this type
-                    $obj = read_ref(file, ref)::$(T.types[i])
-                    unsafe_store!(convert(Ptr{Ptr{Void}}, out)+$jloffset, pointer_from_objref($obj))
-                end
-            end)
-        elseif uses_reference(T.types[i])
-            # Tuple fields and non-pointerfree immutables are stored
-            # inline by JLD if INLINE_TUPLE/INLINE_POINTER_IMMUTABLE is
-            # true, but not by Julia
-            obj = gensym("obj")
-            push!(args, quote
-                $obj = jlconvert($(T.types[i]), file, ptr+$h5offset)
-                unsafe_store!(convert(Ptr{Ptr{Void}}, out)+$jloffset, pointer_from_objref($obj))
-            end)
-        else
-            push!(args, :(jlconvert!(out+$jloffset, $(T.types[i]), file, ptr+$h5offset)))
-        end
-    end
-    @eval begin
-        jlconvert!(out::Ptr, ::Type{$T}, file::JldFile, ptr::Ptr) = ($ex; nothing)
-        $(
-        if T.pointerfree
-            quote
-                function jlconvert(::Type{$T}, file::JldFile, ptr::Ptr)
-                    out = Array($T, 1)
-                    jlconvert!(pointer(out), $T, file, ptr)
-                    out[1]
-                end
-            end
-        else
-            # XXX can this be improved?
-            quote
-                function jlconvert(::Type{$T}, file::JldFile, ptr::Ptr)
-                    out = ccall(:jl_new_struct_uninit, Any, (Any,), $T)::$T
-                    jlconvert!(pointer_from_objref(out)+$(VERSION >= v"0.4.0-dev+3923" ? 0 : sizeof(Int)), $T, file, ptr)
-                    out
-                end
+            if isa(T.types[i], TupleType) && VERSION >= v"0.4.0-dev+4319" && T.types[i].pointerfree
+                # We continue to store tuples as references for the sake of
+                # backwards compatibility, but on 0.4 they are now stored
+                # inline
+                push!(args, quote
+                    ref = unsafe_load(convert(Ptr{HDF5ReferenceObj}, ptr)+$h5offset)
+                    if ref == HDF5.HDF5ReferenceObj_NULL
+                        warn("""A pointerfree tuple field was undefined.
+                                This is not supported in Julia 0.4 and the corresponding tuple will be uninitialized.""")
+                    else
+                        unsafe_store!(convert(Ptr{$(T.types[i])}, out)+$jloffset, read_ref(file, ref))
+                    end
+                end)
+            elseif HDF5.h5t_get_class(typeinfo.dtypes[i]) == HDF5.H5T_REFERENCE
+                error("reference encountered in pointerfree immutable; this is a bug")
+            else
+                push!(args, :(jlconvert!(out+$jloffset, $(T.types[i]), file, ptr+$h5offset)))
             end
         end
-        )
+        @eval begin
+            jlconvert!(out::Ptr, ::Type{$T}, file::JldFile, ptr::Ptr) = ($ex; nothing)
+            function jlconvert(::Type{$T}, file::JldFile, ptr::Ptr)
+                out = Array($T, 1)
+                jlconvert!(pointer(out), $T, file, ptr)
+                out[1]
+            end
+        end
+    else
+        for i = 1:length(typeinfo.dtypes)
+            h5offset = typeinfo.offsets[i]
+            jloffset = jloffsets[i]
+            obj = gensym("obj")
+            if isa(T.types[i], TupleType) && VERSION >= v"0.4.0-dev+4319" && T.types[i].pointerfree
+                # We continue to store tuples as references for the sake of
+                # backwards compatibility, but on 0.4 they are now stored
+                # inline
+                push!(args, quote
+                    ref = unsafe_load(convert(Ptr{HDF5ReferenceObj}, ptr)+$h5offset)
+                    if ref == HDF5.HDF5ReferenceObj_NULL
+                        warn("""A pointerfree tuple field was undefined.
+                                This is not supported in Julia 0.4 and the corresponding tuple will be uninitialized.""")
+                    else
+                        ccall(:jl_set_nth_field, Void, (Any, Csize_t, Any), out, $(i-1), convert($(T.types[i]), read_ref(file, ref)))
+                    end
+                end)
+            elseif HDF5.h5t_get_class(typeinfo.dtypes[i]) == HDF5.H5T_REFERENCE
+                push!(args, quote
+                    ref = unsafe_load(convert(Ptr{HDF5ReferenceObj}, ptr)+$h5offset)
+                    if ref != HDF5.HDF5ReferenceObj_NULL
+                        ccall(:jl_set_nth_field, Void, (Any, Csize_t, Any), out, $(i-1), convert($(T.types[i]), read_ref(file, ref)))
+                    end
+                end)
+            else
+                push!(args, :(ccall(:jl_set_nth_field, Void, (Any, Csize_t, Any), out, $(i-1), jlconvert($(T.types[i]), file, ptr+$h5offset))))
+            end
+        end
+        @eval function jlconvert(::Type{$T}, file::JldFile, ptr::Ptr)
+            out = ccall(:jl_new_struct_uninit, Any, (Any,), $T)::$T
+            $ex
+            out
+        end
     end
     nothing
 end

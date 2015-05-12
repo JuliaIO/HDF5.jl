@@ -728,7 +728,7 @@ end
 import Core.Intrinsics.box, Core.Intrinsics.unbox
 jldopen(fn, "r") do file
     @test_throws JLD.TypeMismatchException read(file, "x1")
-    @test_throws TypeError read(file, "x2")
+    @test_throws MethodError read(file, "x2")
     println("The following missing type warnings are a sign of normal operation.")
     @test read(file, "x3").x == 1
     @test read(file, "x4").x.x == 2
