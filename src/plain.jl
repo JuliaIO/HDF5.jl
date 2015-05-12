@@ -1,4 +1,4 @@
-####################
+read####################
 ## HDF5 interface ##
 ####################
 
@@ -645,7 +645,7 @@ end
 
 function close(obj::HDF5Datatype)
     if obj.toclose && obj.id != -1
-        if isvalid(obj)
+        if (!isdefined(obj, :file) || obj.file.id != -1) && isvalid(obj)
             h5o_close(obj.id)
         end
         obj.id = -1
@@ -689,7 +689,7 @@ a_open(parent::Union(HDF5File, HDF5Object), name::ByteString) = HDF5Attribute(h5
 function h5object(obj_id::Hid, parent)
     obj_type = h5i_get_type(obj_id)
     obj_type == H5I_GROUP ? HDF5Group(obj_id, file(parent)) :
-    obj_type == H5I_DATATYPE ? HDF5Datatype(obj_id) :
+    obj_type == H5I_DATATYPE ? HDF5Datatype(obj_id, file(parent)) :
     obj_type == H5I_DATASET ? HDF5Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
 end
@@ -773,16 +773,19 @@ t_create(class_id, sz) = HDF5Datatype(h5t_create(class_id, sz))
 function t_commit(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, lcpl::HDF5Properties, tcpl::HDF5Properties, tapl::HDF5Properties)
     h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
     h5t_commit(checkvalid(parent).id, path, dtype.id, lcpl.id, tcpl.id, tapl.id)
+    dtype.file = file(parent)
     dtype
 end
 function t_commit(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, lcpl::HDF5Properties, tcpl::HDF5Properties)
     h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
     h5t_commit(checkvalid(parent).id, path, dtype.id, lcpl.id, tcpl.id, H5P_DEFAULT)
+    dtype.file = file(parent)
     dtype
 end
 function t_commit(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype, lcpl::HDF5Properties)
     h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
     h5t_commit(checkvalid(parent).id, path, dtype.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT)
+    dtype.file = file(parent)
     dtype
 end
 t_commit(parent::Union(HDF5File, HDF5Group), path::ByteString, dtype::HDF5Datatype) = t_commit(parent, path, dtype, p_create(H5P_LINK_CREATE))

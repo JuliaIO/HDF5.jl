@@ -1,4 +1,4 @@
-using HDF5
+using HDF5, Base.Test
 
 macro gcvalid(args...)
     Expr(:block, quote
@@ -6,7 +6,7 @@ macro gcvalid(args...)
         gc()
         gc_disable()
     end,
-    [:(@assert HDF5.isvalid($x)) for x in args]...)
+    [:(@test HDF5.isvalid($x)) for x in args]...)
 end
 
 macro closederror(x)
