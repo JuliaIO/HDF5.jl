@@ -1303,7 +1303,7 @@ function getindex(parent::Union(HDF5File, HDF5Group, HDF5Dataset), r::HDF5Refere
 end
 
 # Read compound type
-function read(obj::HDF5Dataset, ::Type{Array{HDF5Compound}})
+function read(obj::HDF5Dataset, ::Union(Type{Array{HDF5Compound}},Type{HDF5Compound}))
     t = datatype(obj)
     local sz = 0, n, membername, membertype, memberoffset, memberfiletype
     try
@@ -1550,7 +1550,7 @@ function getindex(dset::HDF5Dataset, indices::Union(Range{Int},Int)...)
     _getindex(dset,T, indices...)
 end
 function _getindex(dset::HDF5Dataset, T::Type, indices::Union(Range{Int},Int)...)
-    if !(T<:HDF5BitsKind)    
+    if !(T<:HDF5BitsKind)
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
     dsel_id = hyperslab(dset, indices...)

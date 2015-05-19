@@ -20,3 +20,15 @@ close(file)
 using Base.Test
 @test isequal(df, x)
 @test isequal(df2, y)
+
+# Testing issue #236
+fname = joinpath(tempdir(), "int_str_data.jld")
+df3 = DataFrames.DataFrame(A = [1:4;], B = ["M", "F", "F", "M"])
+file = jldopen(fname, "w")
+write(file, "df3", df3)
+close(file)
+file = jldopen(fname, "r")
+dump(file)
+x = read(file, "df3")
+@test isequal(df3, x)
+
