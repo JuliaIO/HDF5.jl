@@ -999,7 +999,7 @@ function dump(io::IO, x::HDF5Dataset, n::Int, indent)
     println(io,)
 end
 function dump(io::IO, x::Union(HDF5File, HDF5Group), n::Int, indent)
-    println(typeof(x), " len ", length(x))
+    println(io, typeof(x), " len ", length(x))
     if n > 0
         i = 1
         for k in names(x)
