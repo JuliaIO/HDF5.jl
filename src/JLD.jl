@@ -1033,6 +1033,9 @@ function save(filename::AbstractString, dict::Associative; compress::Bool=false)
     jldopen(filename, "w"; compress=compress) do file
         wsession = JldWriteSession()
         for (k,v) in dict
+            if !isa(k, AbstractString)
+                error("Keys must be strings (the names of variables), got $k")
+            end
             write(file, bytestring(k), v, wsession)
         end
     end
