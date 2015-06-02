@@ -1615,8 +1615,8 @@ function setindex!(dset::HDF5Dataset, x::Number, indices::Union(Range{Int},Int).
     setindex!(dset, X, indices...)
 end
 
-getindex(dset::HDF5Dataset, I::Union(Range{Int},Int,Colon)...) = getindex(dset, ntuple(length(I), i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i])...)
-setindex!(dset::HDF5Dataset, x, I::Union(Range{Int},Int,Colon)...) = setindex!(dset, x, ntuple(length(I), i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i])...)
+getindex(dset::HDF5Dataset, I::Union(Range{Int},Int,Colon)...) = getindex(dset, ntuple(i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i], length(I))...)
+setindex!(dset::HDF5Dataset, x, I::Union(Range{Int},Int,Colon)...) = setindex!(dset, x, ntuple(i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i], length(I))...)
 
 function hyperslab(dset::HDF5Dataset, indices::Union(Range{Int},Int)...)
     local dsel_id
@@ -2134,7 +2134,7 @@ function hdf5array(objtype)
     h5t_get_array_dims(objtype.id, dims)
     eltyp = HDF5Datatype(h5t_get_super(objtype.id))
     T = hdf5_to_julia_eltype(eltyp)
-    dimsizes = ntuple(nd, i->@compat Int(dims[nd-i+1]))  # reverse order
+    dimsizes = ntuple(i->@compat(Int(dims[nd-i+1])), nd)  # reverse order
     FixedArray{T, dimsizes}
 end
 

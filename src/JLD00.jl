@@ -390,7 +390,7 @@ function read{T}(obj::JldDataset, ::Type{Complex{T}})
 end
 function read{T<:Complex,N}(obj::JldDataset, ::Type{Array{T,N}})
     A = read(obj, Array{realtype(T)})
-    reinterpret(T, A, ntuple(ndims(A)-1, i->size(A, i+1)))
+    reinterpret(T, A, ntuple(i->size(A, i+1), ndims(A)-1))
 end
 
 # Symbol
@@ -604,7 +604,7 @@ function write(parent::Union(JldFile, JldGroup), name::ByteString, c::Complex)
     write(parent, name, reim, full_typename(typeof(c)))
 end
 function write{T<:Complex}(parent::Union(JldFile, JldGroup), name::ByteString, C::Array{T})
-    reim = reinterpret(realtype(T), C, ntuple(ndims(C)+1, i->i==1?2:size(C,i-1)))
+    reim = reinterpret(realtype(T), C, ntuple(i->i==1?2:size(C,i-1), ndims(C)+1))
     write(parent, name, reim, full_typename(typeof(C)))
 end
 
@@ -866,7 +866,7 @@ end
 
 _getindex{T<:HDF5BitsKind,N}(dset::JldDataset, ::Type{Array{T,N}}, indices::RangeIndex...) = HDF5._getindex(dset.plain, T, indices...)
 function _getindex{T<:Complex,N}(dset::JldDataset, ::Type{Array{T,N}}, indices::RangeIndex...)
-    reinterpret(T, HDF5._getindex(dset.plain, realtype(T), 1:2, indices...), ntuple(length(indices), i->length(indices[i])))
+    reinterpret(T, HDF5._getindex(dset.plain, realtype(T), 1:2, indices...), ntuple(i->length(indices[i]), length(indices)))
 end
 function _getindex{N}(dset::JldDataset, ::Type{Array{Bool,N}}, indices::RangeIndex...)
     tf = HDF5._getindex(dset.plain, UInt8, indices...)
