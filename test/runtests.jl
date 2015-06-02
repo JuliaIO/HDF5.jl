@@ -1,11 +1,13 @@
 using HDF5
 
-include("plain.jl")
-include("jld.jl")
-include("readremote.jl")
-include("extend_test.jl")
-include("gc.jl")
-include("require.jl")
+runtest(filename) = (println(filename); include(filename))
+
+runtest("plain.jl")
+runtest("jld.jl")
+runtest("readremote.jl")
+runtest("extend_test.jl")
+runtest("gc.jl")
+runtest("require.jl")
 if Pkg.installed("DataFrames") != nothing
-    include("jld_dataframe.jl")
+    runtest("jld_dataframe.jl")
 end
