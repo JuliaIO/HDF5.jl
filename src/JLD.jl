@@ -169,8 +169,6 @@ function jldopen(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Boo
                 close(p)
             end
             fj = JldFile(HDF5File(f, filename, false), version, true, true, mmaparrays, compress)
-            # initialize empty require list
-            write(fj, pathrequire, ByteString[])
         else
             # Test whether this is a jld file
             sz = filesize(filename)
@@ -1077,7 +1075,7 @@ function load(filename::AbstractString, varnames::@compat Tuple{Vararg{AbstractS
 end
 
 function addrequire(file::JldFile, filename::AbstractString)
-    files = read(file, pathrequire)
+    files = exists(file, pathrequire) ? read(file, pathrequire) : ByteString[]
     push!(files, filename)
     o_delete(file, pathrequire)
     write(file, pathrequire, files)
