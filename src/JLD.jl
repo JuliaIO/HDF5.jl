@@ -754,6 +754,9 @@ function setindex!{T,N}(dset::JldDataset, X::AbstractArray{T,N}, indices::Union(
     end
 end
 
+getindex(dset::JldDataset, I::Union(Range{Int},Integer,Colon)...) = getindex(dset, ntuple(i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i], length(I))...)
+setindex!(dset::JldDataset, x, I::Union(Range{Int},Integer,Colon)...) = setindex!(dset, x, ntuple(i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i], length(I))...)
+
 length(x::Union(JldFile, JldGroup)) = length(names(x))
 
 ### Converting attribute strings to Julia types
