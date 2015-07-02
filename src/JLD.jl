@@ -1075,9 +1075,10 @@ function load(filename::AbstractString, varnames::@compat Tuple{Vararg{AbstractS
 end
 
 function addrequire(file::JldFile, filename::AbstractString)
-    files = exists(file, pathrequire) ? read(file, pathrequire) : ByteString[]
+    has_require = exists(file, pathrequire)
+    files = has_require ? read(file, pathrequire) : ByteString[]
     push!(files, filename)
-    o_delete(file, pathrequire)
+    has_require && o_delete(file, pathrequire)
     write(file, pathrequire, files)
 end
 
