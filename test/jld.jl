@@ -211,6 +211,14 @@ if VERSION >= v"0.4.0-dev+4319"
     iseq(x::SimpleVector, y::SimpleVector) = collect(x) == collect(y)
 end
 
+# Issue #243
+# Type that overloads != so that it is not boolean
+type NALikeType; end
+Base.(:(!=))(::NALikeType, ::NALikeType) = NALikeType()
+Base.(:(!=))(::NALikeType, ::Nothing) = NALikeType()
+Base.(:(!=))(::Nothing, ::NALikeType) = NALikeType()
+natyperef = Any[NALikeType(), NALikeType()]
+
 iseq(x,y) = isequal(x,y)
 iseq(x::MyStruct, y::MyStruct) = (x.len == y.len && x.data == y.data)
 iseq(x::MyImmutable, y::MyImmutable) = (isequal(x.x, y.x) && isequal(x.y, y.y) && isequal(x.z, y.z))
@@ -394,6 +402,7 @@ for compress in (true,false)
     @write fid bitsparamuint
     @write fid tuple_of_tuples
     VERSION >= v"0.4.0-dev+4319" && @write fid simplevec
+    @write fid natyperef
 
     # Make sure we can create groups (i.e., use HDF5 features)
     g = g_create(fid, "mygroup")
@@ -523,6 +532,7 @@ for compress in (true,false)
         @check fidr bitsparamuint
         @check fidr tuple_of_tuples
         VERSION >= v"0.4.0-dev+4319" && @check fidr simplevec
+        @check fidr natyperef
         
         x1 = read(fidr, "group1/x")
         @assert x1 == Any[1]

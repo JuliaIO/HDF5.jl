@@ -466,7 +466,7 @@ function read_ref(f::JldFile, ref::HDF5ReferenceObj)
     if haskey(f.jlref, ref)
         # Stored as WeakRefs and may no longer exist
         val = f.jlref[ref].value
-        val != nothing && return val
+        val !== nothing && return val
     end
 
     dset = f[ref]
