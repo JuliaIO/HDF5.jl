@@ -1,10 +1,10 @@
-using HDF5, Base.Test
+using HDF5, Base.Test, Compat
 
 macro gcvalid(args...)
     Expr(:block, quote
-        gc_enable()
+        gc_enable(true)
         gc()
-        gc_disable()
+        gc_enable(false)
     end,
     [:(@test HDF5.isvalid($x)) for x in args]...)
 end
@@ -20,7 +20,7 @@ macro closederror(x)
     end
 end
 
-gc_disable()
+gc_enable(false)
 fn = joinpath(tempdir(),"test.h5")
 for i = 1:10
     file = h5open(fn, "w")
@@ -59,4 +59,4 @@ for i = 1:10
     @gcvalid dt ds d g a
     close(file)
 end
-gc_enable()
+gc_enable(true)

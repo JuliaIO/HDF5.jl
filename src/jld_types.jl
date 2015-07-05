@@ -18,8 +18,8 @@ if VERSION >= v"0.4.0-dev+4319"
     typetuple(types) = Tuple{types...}
 else
     const EMPTY_TUPLE_TYPE = ()
-    typealias TypesType (Type...)
-    typealias TupleType (Type...)
+    typealias TypesType @compat Tuple{Vararg{Type}}
+    typealias TupleType @compat Tuple{Vararg{Type}}
     tupletypes(T::TupleType) = T
     typetuple(types) = tuple(types...)
 end
