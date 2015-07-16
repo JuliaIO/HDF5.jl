@@ -172,7 +172,7 @@ Attributes can be created using
 attrs(parent)[name] = value
 ```
 
-where `attrs` simply indicates that the object referenced by `name` (a string) is an attribute, not another group or dataset. (Datasets cannot have child datasets, but groups can have either.) `value` must be a simple type: `BitsKind`s, strings, and arrays of either of these. The HDF5 standard recommends against storing large objects as attributes. 
+where `attrs` simply indicates that the object referenced by `name` (a string) is an attribute, not another group or dataset. (Datasets cannot have child datasets, but groups can have either.) `value` must be a simple type: `BitsKind`s, strings, and arrays of either of these. The HDF5 standard recommends against storing large objects as attributes.
 
 Getting information
 -------------------
@@ -264,7 +264,7 @@ creates groups, datasets, and attributes without writing any data to them. You c
 
 Analogously, to create committed data types, use
 ```julia
-t = t_commit(parent, name, dtype[, lcpl, tcpl, tapl]) 
+t = t_commit(parent, name, dtype[, lcpl, tcpl, tapl])
 ```
 
 You can create and write data in one step,
@@ -282,7 +282,7 @@ where dims is a tuple of integers.  For example
 ```julia
 b = d_create(fid, "b", Int, ((1000,),(-1,)), "chunk", (100,)) #-1 is equivalent to typemax(Hsize)
 set_dims!(b, (10000,))
-b[1:10000] = [1:10000] 
+b[1:10000] = [1:10000]
 ```
 when dimensions are reduced, the truncated data is lost.  A maximum dimension of -1 is often referred to as unlimited dimensions, though it is limited by the maximum size of an unsigned integer.
 
@@ -308,8 +308,8 @@ Julia, like Fortran and Matlab, stores arrays in column-major order.
 HDF5 uses C's row-major order, and consequently every array's
 dimensions are inverted compared to what you see with tools like
 h5dump. This is the same convention as for the Fortran and Matlab HDF5
-interfaces. The advantage is that no data rearrangement takes place,
-neither when reading nor when writing.
+interfaces. The advantage is that no data rearrangement takes place
+when reading or writing.
 
 
 
