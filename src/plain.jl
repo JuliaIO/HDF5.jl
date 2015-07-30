@@ -8,7 +8,7 @@ using Compat
 using Compat: unsafe_convert
 
 ## Add methods to...
-import Base: close, convert, done, dump, eltype, endof, flush, getindex,
+import Base: ==, close, convert, done, dump, eltype, endof, flush, getindex,
              isempty, isvalid, length, names, ndims, next, parent, read,
              setindex!, show, size, sizeof, start, write
 
