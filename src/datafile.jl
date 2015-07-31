@@ -28,7 +28,7 @@ macro write(fid, sym)
 end
 
 # Read a list of variables, read(parent, "A", "B", "x", ...)
-read(parent::DataFile, name::ASCIIString...) =
+read(parent::DataFile, name::ByteString...) =
 	tuple([read(parent, x) for x in name]...)
 
 # Read one or more variables and pass them to a function. This is

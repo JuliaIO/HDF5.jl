@@ -6,3 +6,5 @@ runtest("plain.jl")
 runtest("readremote.jl")
 runtest("extend_test.jl")
 runtest("gc.jl")
+
+nothing
