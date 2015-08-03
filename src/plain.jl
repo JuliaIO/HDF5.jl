@@ -1421,7 +1421,7 @@ function readmmap{T}(obj::HDF5Dataset, ::Type{Array{T}})
     if offset == reinterpret(Hsize, convert(Hssize, -1))
         error("Error mmapping array")
     end
-    mmap_array(T, dims, fdio(fd), convert(FileOffset, offset))
+    Mmap.mmap(fdio(fd), Array{T,length(dims)}, dims, offset)
 end
 
 function readmmap(obj::HDF5Dataset)
