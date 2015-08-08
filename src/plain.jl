@@ -2251,11 +2251,14 @@ export
 
 # Across initializations of the library, the id of various properties
 # will change. So don't hard-code the id (important for precompilation)
-const _runtime_properties = Array(HDF5Properties, 4)
-_link_properties(path::ASCIIString) = _runtime_properties[1]
-_link_properties(path::UTF8String) = _runtime_properties[2]
-_attr_properties(path::ASCIIString) = _runtime_properties[3]
-_attr_properties(path::UTF8String) = _runtime_properties[4]
+const ASCII_LINK_PROPERTIES = Array(HDF5Properties)
+_link_properties(path::ASCIIString) = ASCII_LINK_PROPERTIES[]
+const UTF8_LINK_PROPERTIES = Array(HDF5Properties)
+_link_properties(path::UTF8String) = UTF8_LINK_PROPERTIES[]
+const ASCII_ATTRIBUTE_PROPERTIES = Array(HDF5Properties)
+_attr_properties(path::ASCIIString) = ASCII_ATTRIBUTE_PROPERTIES[]
+const UTF8_ATTRIBUTE_PROPERTIES = Array(HDF5Properties)
+_attr_properties(path::UTF8String) = UTF8_ATTRIBUTE_PROPERTIES[]
 
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false)
 
@@ -2271,22 +2274,16 @@ function __init__()
     # Turn off automatic error printing
     # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
-    const ASCII_LINK_PROPERTIES = p_create(H5P_LINK_CREATE)
-    h5p_set_char_encoding(ASCII_LINK_PROPERTIES.id, cset(ASCIIString))
-    h5p_set_create_intermediate_group(ASCII_LINK_PROPERTIES.id, 1)
-    const UTF8_LINK_PROPERTIES = p_create(H5P_LINK_CREATE)
-    h5p_set_char_encoding(UTF8_LINK_PROPERTIES.id, cset(UTF8String))
-    h5p_set_create_intermediate_group(UTF8_LINK_PROPERTIES.id, 1)
-    const ASCII_ATTRIBUTE_PROPERTIES = p_create(H5P_ATTRIBUTE_CREATE)
-    h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES.id, cset(ASCIIString))
-    const UTF8_ATTRIBUTE_PROPERTIES = p_create(H5P_ATTRIBUTE_CREATE)
-    h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES.id, cset(UTF8String))
-
-    global _runtime_properties
-    _runtime_properties[1] = ASCII_LINK_PROPERTIES
-    _runtime_properties[2] = UTF8_LINK_PROPERTIES
-    _runtime_properties[3] = ASCII_ATTRIBUTE_PROPERTIES
-    _runtime_properties[4] = UTF8_ATTRIBUTE_PROPERTIES
+    ASCII_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
+    h5p_set_char_encoding(ASCII_LINK_PROPERTIES[].id, cset(ASCIIString))
+    h5p_set_create_intermediate_group(ASCII_LINK_PROPERTIES[].id, 1)
+    UTF8_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
+    h5p_set_char_encoding(UTF8_LINK_PROPERTIES[].id, cset(UTF8String))
+    h5p_set_create_intermediate_group(UTF8_LINK_PROPERTIES[].id, 1)
+    ASCII_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE)
+    h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES[].id, cset(ASCIIString))
+    UTF8_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE)
+    h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES[].id, cset(UTF8String))
 
     rehash!(hdf5_type_map, length(hdf5_type_map.keys))
     rehash!(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
