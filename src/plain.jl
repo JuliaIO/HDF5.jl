@@ -820,20 +820,26 @@ function setindex!(parent::Union(HDF5File, HDF5Group), val, path::ByteString, pr
         error("Properties and values must come in pairs")
     end
     p = p_create(H5P_DATASET_CREATE)
-    p[prop1] = val1
     need_chunks = prop1 in chunked_props
     have_chunks = prop1 == "chunk"
+    chunk = heuristic_chunk(val)
+    # ignore chunked_props (== compression) for empty datasets (issue #246):
+    if !(need_chunks && isempty(chunk))
+        p[prop1] = val1
+    end
     for i = 1:2:length(pv)
         thisname = pv[i]
         if !isa(thisname, ASCIIString)
             error("Argument ", i+3, " should be an ASCIIString, but it's a ", typeof(thisname))
         end
-        p[thisname] = pv[i+1]
-        need_chunks = need_chunks || (thisname in chunked_props)
+        thisneeds_chunks = thisname in chunked_props
+        if !(thisneeds_chunks && isempty(chunk))
+            p[thisname] = pv[i+1]
+        end
+        need_chunks = need_chunks || thisneeds_chunks
         have_chunks = have_chunks || (thisname == "chunk")
     end
     if need_chunks && !have_chunks
-        chunk = heuristic_chunk(val)
         if !isempty(chunk)
             p["chunk"] = chunk
         end

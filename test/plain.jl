@@ -7,6 +7,8 @@ f = h5open(fn, "w")
 # Write scalars
 f["Float64"] = 3.2
 f["Int16"] = @compat Int16(4)
+# compression of empty array (issue #246)
+f["bloscempty", "blosc", 4] = Array(Int64, 0)
 # Create arrays of different types
 A = randn(3,5)
 write(f, "Afloat64", convert(Matrix{Float64}, A))
@@ -99,6 +101,8 @@ x = read(fr, "Float64")
 @assert x == 3.2 && isa(x, Float64)
 y = read(fr, "Int16")
 @assert y == 4 && isa(y, Int16)
+bloscempty = read(fr, "bloscempty")
+@assert bloscempty == Int64[] && isa(bloscempty, Vector{Int64})
 Af32 = read(fr, "Afloat32")
 @assert convert(Matrix{Float32}, A) == Af32
 @assert eltype(Af32) == Float32
