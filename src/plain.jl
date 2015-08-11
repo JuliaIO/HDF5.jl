@@ -507,7 +507,6 @@ end
 
 # Blosc compression:
 include("blosc_filter.jl")
-register_blosc()
 
 # heuristic chunk layout (return empty array to disable chunking)
 function heuristic_chunk(T, shape)
