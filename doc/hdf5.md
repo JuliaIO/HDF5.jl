@@ -106,7 +106,7 @@ g["A", "chunk", (5,5), "compress", 3] = A
 stores the matrix `A` in 5-by-5 chunks and uses a compression level
 `3`. Instead of `"compress"`, you can use `"deflate"` to specify
 [deflate/zlib](http://en.wikipedia.org/wiki/DEFLATE) compression, or
-`"blosc"` to specify [Blosc](http://www.blo sc.org/) compress. Blosc is
+`"blosc"` to specify [Blosc](http://www.blosc.org/) compress. Blosc is
 generally much faster than deflate, however, files with deflate compression are more 
 portable. Currently, `"compress"`
 corresponds to `"blosc"`. Chunking can be useful if you will typically
