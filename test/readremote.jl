@@ -2,6 +2,7 @@
 urlbase = "http://www.hdfgroup.org/ftp/HDF5/examples/files/exbyapi/"
 
 using HDF5
+using Compat
 
 fcmp = [0 1 2 3 4 5 6;
     2 1.66667 2.4 3.28571 4.22222 5.18182 6.15385;
@@ -18,7 +19,7 @@ ecmp = [SOLID SOLID SOLID SOLID SOLID SOLID SOLID;
         SOLID PLASMA GAS LIQUID SOLID PLASMA GAS]'
 scmp = ["Parting", "is such", "sweet", "sorrow."]
 vicmp = Array{Int32}[[3,2,1],[1,1,2,3,5,8,13,21,34,55,89,144]]
-opq = Array{Uint8}[[0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x30],
+opq = Array{UInt8}[[0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x30],
                    [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x31],
                    [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x32],
                    [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x33]]
