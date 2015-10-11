@@ -13,18 +13,18 @@ provides an interface to the HDF5 library for the
 ## Julia data (\*.jld) and Matlab (\*.mat) files
 
 The core HDF5 functionality is the foundation for two special-purpose
-modules, used to read and write HDF5 files with specific formatting
+packages, used to read and write HDF5 files with specific formatting
 conventions. The first is the
-[JLD](https://github.com/JuliaLang/JLD.jl) ("Julia data") module,
+[JLD](https://github.com/JuliaLang/JLD.jl) ("Julia data") package,
 which implements a generic mechanism for reading and writing Julia
 variables. While one can use "plain" HDF5 for this purpose, the
-advantage of the JLD module is that it preserves the exact type
+advantage of the JLD package is that it preserves the exact type
 information of each variable.
 
 The other functionality provided through HDF5 is the ability to read
 and write Matlab \*.mat files saved as "-v7.3". The Matlab-specific
 portions have been moved to Simon Kornblith's
-[MAT.jl](https://github.com/simonster/MAT.jl) repository.
+[MAT.jl](https://github.com/simonster/MAT.jl) package.
 
 ## Installation
 
