@@ -1970,8 +1970,9 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5i_get_name, :H5Iget_name, Cssize_t, (Hid, Ptr{UInt8}, Csize_t), (:obj_id, :buf, :buf_size), :(error("Error getting object name"))),
      (:h5i_get_ref, :H5Iget_ref, Cint, (Hid,), (:obj_id,), :(error("Error getting reference count"))),
      (:h5i_get_type, :H5Iget_type, Cint, (Hid,), (:obj_id,), :(error("Error getting type"))),
+     (:h5i_dec_ref, :H5Idec_ref, Cint, (Hid,), (:obj_id,), :(error("Error decementing reference"))),
      (:h5l_delete, :H5Ldelete, Herr, (Hid, Ptr{UInt8}, Hid), (:obj_id, :pathname, :lapl_id), :(error("Error deleting ", h5i_get_name(obj_id), "/", pathname))),
-     (:h5l_create_external, :H5Lcreate_hard_external, Herr, (Ptr{UInt8}, Ptr{UInt8}, Hid, Ptr{UInt8}, Hid, Hid), (:target_file_name, :target_obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name))),
+     (:h5l_create_external, :H5Lcreate_external, Herr, (Ptr{UInt8}, Ptr{UInt8}, Hid, Ptr{UInt8}, Hid, Hid), (:target_file_name, :target_obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name))),
      (:h5l_create_hard, :H5Lcreate_hard, Herr, (Hid, Ptr{UInt8}, Hid, Ptr{UInt8}, Hid, Hid), (:obj_loc_id, :obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating hard link ", link_name, " pointing to ", obj_name))),
      (:h5l_create_soft, :H5Lcreate_soft, Herr, (Ptr{UInt8}, Hid, Ptr{UInt8}, Hid, Hid), (:target_path, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating soft link ", link_name, " pointing to ", target_path))),
      (:h5l_exists, :H5Lexists, Htri, (Hid, Ptr{UInt8}, Hid), (:loc_id, :pathname, :lapl_id), :(error("Cannot determine whether link ", h5i_get_name(loc_id), "/", pathname, " exists, check each item along the path"))),
@@ -2188,6 +2189,15 @@ const hdf5_prop_get_set = @compat Dict(
 )
 # properties that require chunks in order to work (e.g. any filter)
 const chunked_props = Set(["compress", "deflate", "blosc"])
+
+# external link
+"create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path; lcpl_id=HDF5.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
+Create an external link such that `source[source_relpath]` points to `target_path` within the file with path `target_filename`. Calls `[H5Lcreate_external](https://www.hdfgroup.org/HDF5/doc/RM/RM_H5L.html#Link-CreateExternal)`
+"
+@compat function create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path; lcpl_id=H5P_DEFAULT, lapl_id=H5P_DEFAULT)
+  h5l_create_external(target_filename, target_path, source.id, source_relpath, lcpl_id, lapl_id)
+end
+
 
 export
     # Types
