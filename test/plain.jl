@@ -8,6 +8,7 @@ f = h5open(fn, "w")
 f["Float64"] = 3.2
 f["Int16"] = @compat Int16(4)
 # compression of empty array (issue #246)
+f["compressedempty", "shuffle", (), "compress", 4] = Array(Int64, 0)
 f["bloscempty", "blosc", 4] = Array(Int64, 0)
 # Create arrays of different types
 A = randn(3,5)
@@ -66,13 +67,15 @@ close(dset)
 g = g_create(f, "mygroup")
 # Test dataset with compression
 R = rand(1:20, 20, 40);
-g["CompressedA", "chunk", (5,6), "compress", 9] = R
+g["CompressedA", "chunk", (5,6), "shuffle", (), "compress", 9] = R
+g["BloscA", "chunk", (5,6), "shuffle", (), "blosc", 9] = R
 close(g)
 # Copy group containing dataset
 o_copy(f, "mygroup", f, "mygroup2")
 # Copy dataset
 g = g_create(f, "mygroup3")
 o_copy(f["mygroup/CompressedA"], g, "CompressedA")
+o_copy(f["mygroup/BloscA"], g, "BloscA")
 close(g)
 # Writing hyperslabs
 dset = d_create(f,"slab",datatype(Float64),dataspace(20,20,5),"chunk",(5,5,1))
@@ -150,9 +153,18 @@ Rr2 = read(fr, "mygroup2/CompressedA")
 @assert Rr2 == R
 Rr3 = read(fr, "mygroup3/CompressedA")
 @assert Rr3 == R
+Rr4 = read(fr, "mygroup/BloscA")
+@assert Rr4 == R
+Rr5 = read(fr, "mygroup2/BloscA")
+@assert Rr5 == R
+Rr6 = read(fr, "mygroup3/BloscA")
+@assert Rr6 == R
 dset = fr["mygroup/CompressedA"]
 @assert get_chunk(dset) == (5,6)
 @assert name(dset) == "/mygroup/CompressedA"
+dset2 = fr["mygroup/BloscA"]
+@assert get_chunk(dset2) == (5,6)
+@assert name(dset2) == "/mygroup/BloscA"
 Xslabr = read(fr, "slab")
 @assert Xslabr == Xslab
 Xslabr = h5read(fn, "slab", (:, :, :))  # issue #87

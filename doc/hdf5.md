@@ -96,23 +96,33 @@ g["mydataset"] = rand(3,5)
 write(g, "mydataset", rand(3,5))
 ```
 
-You can also optionally "chunk" and compress your data. For example,
+You can also optionally "chunk" and/or compress your data. For example,
 
 ```julia
 A = rand(100,100)
-g["A", "chunk", (5,5), "compress", 3] = A
+g["A", "chunk", (5,5)] = A
 ```
 
-stores the matrix `A` in 5-by-5 chunks and uses a compression level
-`3`. Instead of `"compress"`, you can use `"deflate"` to specify
-[deflate/zlib](http://en.wikipedia.org/wiki/DEFLATE) compression, or
-`"blosc"` to specify [Blosc](http://www.blosc.org/) compress. Blosc is
-generally much faster than deflate, however, files with deflate compression are more 
-portable. Currently, `"compress"`
-corresponds to `"blosc"`. Chunking can be useful if you will typically
-extract small segments of an array.  A heuristic chunking is
-automatically used if you specify compression but don't specify
-chunking.
+stores the matrix `A` in 5-by-5 chunks. Chunking improves efficiency if you
+write or extract small segments or slices of an array, if these are not stored
+contiguously.
+
+```julia
+A = rand(100,100)
+g1["A", "chunk", (5,5), "compress", 3] = A
+g2["A", "chunk", (5,5), "shuffle", (), "deflate", 3] = A
+g3["A", "chunk", (5,5), "blosc", 3] = A
+```
+
+Standard compression in HDF5 (`"compress"`) corresponds to (`"deflate"`) and
+uses the [deflate/zlib](http://en.wikipedia.org/wiki/DEFLATE) algorithm. The
+deflate algorithm is often more efficient if prefixed by a `"shuffle"` filter.
+Blosc is generally much faster than deflate -- however, reading Blosc-compressed
+HDF5 files require Blosc to be installed. This is the case for Julia, but often
+not for vanilla HDF5 distributions that may be used outside Julia. (In this
+case, the structure of the HDF5 file is still accessible, but compressed
+datasets cannot be read.) Compression requires chunking, and heuristic chunking
+is automatically used if you specify compression but don't specify chunking.
 
 It is also possible to write to subsets of an on-disk HDF5 dataset. This is
 useful to incrementally save to very large datasets you don't want to keep in

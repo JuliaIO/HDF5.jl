@@ -1910,6 +1910,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5p_set_layout, :H5Pset_layout, Herr, (Hid, Cint), (:plist_id, :setting), "Error setting layout"),
      (:h5p_set_libver_bounds, :H5Pset_libver_bounds, Herr, (Hid, Cint, Cint), (:fapl_id, :libver_low, :libver_high), "Error setting library version bounds"),
      (:h5p_set_local_heap_size_hint, :H5Pset_local_heap_size_hint, Herr, (Hid, Cuint), (:fapl_id, :size_hint), "Error setting local heap size hint"),
+     (:h5p_set_shuffle, :H5Pset_shuffle, Herr, (Hid,), (:plist_id,), "Error enabling shuffle filter"),
      (:h5p_set_userblock, :H5Pset_userblock, Herr, (Hid, Hsize), (:plist_id, :len), "Error setting userblock"),
      (:h5s_close, :H5Sclose, Herr, (Hid,), (:space_id,), "Error closing dataspace"),
      (:h5s_select_hyperslab, :H5Sselect_hyperslab, Herr, (Hid, Cint, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}), (:dspace_id, :seloper, :start, :stride, :count, :block), "Error selecting hyperslab"),
@@ -2181,14 +2182,15 @@ end
 const hdf5_prop_get_set = @compat Dict(
     "chunk"         => (get_chunk, set_chunk),
     "fclose_degree" => (get_fclose_degree, h5p_set_fclose_degree),
-    "compress"      => (nothing, h5p_set_blosc),
+    "compress"      => (nothing, h5p_set_deflate),
     "deflate"       => (nothing, h5p_set_deflate),
     "blosc"         => (nothing, h5p_set_blosc),
     "layout"        => (h5p_get_layout, h5p_set_layout),
+    "shuffle"       => (nothing, h5p_set_shuffle),
     "userblock"     => (get_userblock, h5p_set_userblock),
 )
 # properties that require chunks in order to work (e.g. any filter)
-const chunked_props = Set(["compress", "deflate", "blosc"])
+const chunked_props = Set(["compress", "deflate", "blosc", "shuffle"])
 
 # external link
 "create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path; lcpl_id=HDF5.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
