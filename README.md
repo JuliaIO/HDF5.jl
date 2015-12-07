@@ -1,6 +1,6 @@
 # HDF5 interface for the Julia language
 
-[![Build Status](https://travis-ci.org/JuliaLang/HDF5.jl.svg?branch=master)](https://travis-ci.org/JuliaLang/HDF5.jl) [![Build status](https://ci.appveyor.com/api/projects/status/r8to2ho7cx72qxa1/branch/master?svg=true)](https://ci.appveyor.com/project/JuliaLang/hdf5-jl/branch/master)
+[![Build Status](https://travis-ci.org/JuliaLang/HDF5.jl.svg?branch=master)](https://travis-ci.org/JuliaLang/HDF5.jl) [![Build status](https://ci.appveyor.com/api/projects/status/r8to2ho7cx72qxa1/branch/master?svg=true)](https://ci.appveyor.com/project/timholy/hdf5-jl/branch/master)
 [![Coverage Status](https://coveralls.io/repos/JuliaLang/HDF5.jl/badge.png?branch=master)](https://coveralls.io/r/JuliaLang/HDF5.jl?branch=master)
 
 [HDF5][HDF5] is a file format and library for storing and accessing
