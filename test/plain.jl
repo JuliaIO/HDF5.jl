@@ -94,9 +94,11 @@ d[3:5] = 3:5
 # Create a dataset designed to be deleted
 f["deleteme"] = 17.2
 close(f)
-# Test the h5read/write interface
+# Test the h5read/write interface, with attributes
 W = reshape(1:120, 15, 8)
+Wa = @compat Dict("a"=>1, "b"=>2)
 h5write(fn, "newgroup/W", W)
+h5writeattr(fn, "newgroup/W", Wa)
 
 # Read the file back in
 fr = h5open(fn)
@@ -230,6 +232,8 @@ Wr = h5read(fn, "newgroup/W")
 rng = (2:3:15, 3:5)
 Wr = h5read(fn, "newgroup/W", rng)
 @assert Wr == W[rng...]
+War = h5readattr(fn, "newgroup/W")
+@assert War == Wa
 
 # more do syntax
 h5open(fn, "w") do fid
