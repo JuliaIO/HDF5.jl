@@ -602,6 +602,29 @@ end
     dat
 end
 
+function h5writeattr(filename, name::ByteString, data::Dict)
+    fid = h5open(filename, true, true, true, false, true)
+    try
+        for x in keys(data)
+            attrs(fid[name])[x] = data[x]
+        end
+    finally
+        close(fid)
+    end
+end
+
+function h5readattr(filename, name::ByteString)
+    local dat
+    fid=h5open(filename,"r")
+    try
+        a=attrs(fid[name])
+        dat = @compat [x=>read(a[x]) for x in names(a)]
+    finally
+        close(fid)
+    end
+    dat
+end
+
 # Ensure that objects haven't been closed
 @compat isvalid(obj::Union{HDF5File, HDF5Properties, HDF5Datatype, HDF5Dataspace}) = obj.id != -1 && h5i_is_valid(obj.id)
 @compat isvalid(obj::Union{HDF5Group, HDF5Dataset, HDF5Attribute}) = obj.id != -1 && obj.file.id != -1 && h5i_is_valid(obj.id)
@@ -2240,6 +2263,8 @@ export
     getindex,
     h5open,
     h5read,
+    h5writeattr,
+    h5readattr,
     h5write,
     has,
     iscontiguous,
