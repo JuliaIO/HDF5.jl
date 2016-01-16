@@ -49,9 +49,10 @@ how to do it:
   Julia to crash when freeing memory allocated by libhdf5.
 
 If you've installed the library but discover that Julia is not finding
-it, you can add the path to Julia's `Sys.DL_LOAD_PATH` variable, e.g.,
+it, you can add the path to Julia's `Libdl.DL_LOAD_PATH` variable, e.g.,
 ```
-push!(Sys.DL_LOAD_PATH, "/opt/local/lib")
+push!(Libdl.DL_LOAD_PATH, "/opt/local/lib")
+Pkg.build("HDF5")
 ```
 Inserting this command into your `.juliarc.jl` file will cause this to
 happen automatically each time you start Julia.
