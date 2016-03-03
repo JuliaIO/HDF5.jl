@@ -11,7 +11,7 @@ end
 
 @windows_only begin
     using WinRPM
-    hdf5 = library_dependency("libhdf5")
+    hdf5 = library_dependency("libhdf5", aliases = ["hdf5_w64", "hdf5"])
     provides(WinRPM.RPM, "hdf5", hdf5, os = :Windows )
 end
 
