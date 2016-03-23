@@ -295,7 +295,9 @@ type HDF5File <: DataFile
 
     function HDF5File(id, filename, toclose::Bool=true)
         f = new(id, filename)
-        toclose && finalizer(f, close)
+        if toclose
+            finalizer(f, close)
+        end
         f
     end
 end
@@ -387,9 +389,10 @@ end
 
 type HDF5Properties
     id::Hid
+    toclose::Bool
 
     function HDF5Properties(id, toclose::Bool=true)
-        p = new(id)
+        p = new(id, toclose)
         if toclose
             finalizer(p, close)
         end
@@ -535,31 +538,54 @@ heuristic_chunk(x) = Int[]
 
 ### High-level interface ###
 # Open or create an HDF5 file
-function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool)
+function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool,
+        cpl::HDF5Properties=DEFAULT_PROPERTIES, apl::HDF5Properties=DEFAULT_PROPERTIES)
     if ff && !wr
         error("HDF5 does not support appending without writing")
     end
-    pa = p_create(H5P_FILE_ACCESS)
-    pa["fclose_degree"] = H5F_CLOSE_STRONG
+    close_apl = false
+    if apl.id == H5P_DEFAULT
+        apl = p_create(H5P_FILE_ACCESS, false)
+        close_apl = true
+        # With garbage collection, the other modes don't make sense
+        apl["fclose_degree"] = H5F_CLOSE_STRONG
+    end
     if cr && (tr || !isfile(filename))
-        fid = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, pa.id)
+        fid = h5f_create(filename, H5F_ACC_TRUNC, cpl.id, apl.id)
     else
         if !h5f_is_hdf5(filename)
             error("This does not appear to be an HDF5 file")
         end
-        fid = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, pa.id)
+        fid = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, apl.id)
     end
-    close(pa)
+    if close_apl
+        # Close properties manually to avoid errors when the file is
+        # closed before the properties are gc'ed
+        close(apl)
+    end
     HDF5File(fid, filename)
 end
 
-function h5open(filename::AbstractString, mode::AbstractString="r")
-    mode == "r"  ? h5open(filename, true,  false, false, false, false) :
-    mode == "r+" ? h5open(filename, true,  true , false, false, true)  :
-    mode == "w"  ? h5open(filename, false, true , true , true,  false)  :
-#     mode == "w+" ? h5open(filename, true,  true , true , true,  false)  :
-#     mode == "a"  ? h5open(filename, true,  true , true , true,  true)   :
-    error("invalid open mode: ", mode)
+function h5open(filename::AbstractString, mode::AbstractString="r", pv...)
+    p = p_create(H5P_FILE_ACCESS)
+    # With garbage collection, the other modes don't make sense
+    # (Set this first, so that the user-passed properties can overwrite this.)
+    p["fclose_degree"] = H5F_CLOSE_STRONG
+    for i = 1:2:length(pv)
+        thisname = pv[i]
+        if !isa(thisname, ASCIIString)
+            error("Argument ", i+2, " should be an ASCIIString, but it's a ", typeof(thisname))
+        end
+        p[thisname] = pv[i+1]
+    end
+    modes = 
+        mode == "r"  ? (true,  false, false, false, false) :
+        mode == "r+" ? (true,  true,  false, false, true ) :
+        mode == "w"  ? (false, true,  true,  true,  false) :
+        # mode == "w+" ? (true,  true,  true,  true,  false) :
+        # mode == "a"  ? (true,  true,  true,  true,  true ) :
+        error("invalid open mode: ", mode)
+    h5open(filename, modes..., DEFAULT_PROPERTIES, p)
 end
 function h5open(f::Function, args...)
     fid = h5open(args...)
@@ -631,19 +657,14 @@ end
 checkvalid(obj) = isvalid(obj) ? obj : error("File or object has been closed")
 
 # Close functions
-for (h5type, h5func) in
-    ((:HDF5File, :h5f_close),
-     (:HDF5Properties, :h5p_close))
-    # Close functions that should try calling close regardless
-    @eval begin
-        function close(obj::$h5type)
-            if obj.id != -1
-                $h5func(obj.id)
-                obj.id = -1
-            end
-            nothing
-        end
+
+# Close functions that should try calling close regardless
+function close(obj::HDF5File)
+    if obj.id != -1
+        h5f_close(obj.id)
+        obj.id = -1
     end
+    nothing
 end
 
 @compat for (h5type, h5func) in
@@ -680,6 +701,14 @@ function close(obj::HDF5Dataspace)
         if isvalid(obj)
             h5s_close(obj.id)
         end
+        obj.id = -1
+    end
+    nothing
+end
+
+function close(obj::HDF5Properties)
+    if obj.toclose && obj.id != -1
+        h5p_close(obj.id)
         obj.id = -1
     end
     nothing
@@ -813,7 +842,7 @@ end
 @compat t_commit(parent::Union{HDF5File, HDF5Group}, path::ByteString, dtype::HDF5Datatype) = t_commit(parent, path, dtype, p_create(H5P_LINK_CREATE))
 
 @compat a_create(parent::Union{HDF5File, HDF5Object}, name::ByteString, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(checkvalid(parent).id, name, dtype.id, dspace.id), file(parent))
-p_create(class) = HDF5Properties(h5p_create(class))
+p_create(class, toclose=false) = HDF5Properties(h5p_create(class), toclose)
 
 # Delete objects
 @compat a_delete(parent::Union{HDF5File, HDF5Object}, path::ByteString) = h5a_delete(checkvalid(parent).id, path)
@@ -2200,15 +2229,22 @@ function get_fclose_degree(p::HDF5Properties)
     h5p_get_fclose_degee(p.id, out)
     out[1]
 end
+function get_libver_bounds(p::HDF5Properties)
+    out1 = Array(Cint, 1)
+    out2 = Array(Cint, 1)
+    h5p_get_libver_bounds(p.id, out1, out2)
+    out1[1], out2[1]
+end
 
 # property function get/set pairs
 const hdf5_prop_get_set = @compat Dict(
+    "blosc"         => (nothing, h5p_set_blosc),
     "chunk"         => (get_chunk, set_chunk),
-    "fclose_degree" => (get_fclose_degree, h5p_set_fclose_degree),
     "compress"      => (nothing, h5p_set_deflate),
     "deflate"       => (nothing, h5p_set_deflate),
-    "blosc"         => (nothing, h5p_set_blosc),
+    "fclose_degree" => (get_fclose_degree, h5p_set_fclose_degree),
     "layout"        => (h5p_get_layout, h5p_set_layout),
+    "libver_bounds" => (get_libver_bounds, h5p_set_libver_bounds),
     "shuffle"       => (nothing, h5p_set_shuffle),
     "userblock"     => (get_userblock, h5p_set_userblock),
 )
@@ -2223,6 +2259,21 @@ Create an external link such that `source[source_relpath]` points to `target_pat
   h5l_create_external(target_filename, target_path, source.id, source_relpath, lcpl_id, lapl_id)
 end
 
+# error handling
+function hiding_errors(f)
+    error_stack = H5E_DEFAULT
+    # error_stack = ccall((:H5Eget_current_stack, libhdf5), Hid, ())
+    old_func = Array(Ptr{Void}, 1)
+    old_client_data = Array(Ptr{Void}, 1)
+    ccall((:H5Eget_auto2, libhdf5), Herr, (Hid, Ptr{Ptr{Void}}, Ptr{Ptr{Void}}),
+        error_stack, old_func, old_client_data)
+    ccall((:H5Eset_auto2, libhdf5), Herr, (Hid, Ptr{Void}, Ptr{Void}),
+        error_stack, C_NULL, C_NULL)
+    res = f()
+    ccall((:H5Eset_auto2, libhdf5), Herr, (Hid, Ptr{Void}, Ptr{Void}),
+        error_stack, old_func[1], old_client_data[1])
+    res
+end
 
 export
     # Types
