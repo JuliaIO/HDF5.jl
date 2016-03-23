@@ -23,7 +23,7 @@ write(f, "Auint8", convert(Matrix{UInt8}, Ai))
 write(f, "Auint16", convert(Matrix{UInt16}, Ai))
 write(f, "Auint32", convert(Matrix{UInt32}, Ai))
 write(f, "Auint64", convert(Matrix{UInt64}, Ai))
-# Test strings
+
 salut = "Hi there"
 ucode = "uniçº∂e"
 write(f, "salut", salut)
@@ -255,3 +255,17 @@ d = h5read(joinpath(test_path, "compound.h5"), "/data")
 @test d.membertype == Type[Float64, HDF5.FixedArray{Float64,(3,)}, HDF5.FixedArray{Float64,(3,)}, Float64]
 @assert d.membername == ASCIIString["wgt", "xyz", "uvw", "E"]
 @assert d.memberoffset == UInt64[0x00, 0x08, 0x20, 0x38]
+
+# File creation and access property lists
+cpl = HDF5Properties(p_create(HDF5.H5P_FILE_CREATE))
+cpl["userblock"] = 1024
+apl = HDF5Properties(p_create(HDF5.H5P_FILE_ACCESS))
+apl["libver_bounds"] = (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)
+h5open(fn, false, true, true, true, false, cpl, apl) do fid
+    write(fid, "intarray", [1,2,3])
+end
+h5open(fn, "r", "libver_bounds",
+        (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)) do fid
+    intarray = read(fid, "intarray")
+    @test intarray == [1,2,3]
+end
