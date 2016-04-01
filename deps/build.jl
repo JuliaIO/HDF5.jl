@@ -21,4 +21,7 @@ end
     provides(Homebrew.HB, "hdf5", hdf5, os = :Darwin )
 end
 
+provides(Sources, URI("http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar.gz"), hdf5)
+provides(BuildProcess, Autotools(libtarget = "libhdf5.la"), hdf5)
+
 @compat @BinDeps.install Dict(:libhdf5 => :libhdf5)
