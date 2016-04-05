@@ -14,17 +14,6 @@ import Base: ==, close, convert, done, dump, eltype, endof, flush, getindex,
 
 include("datafile.jl")
 
-## C types
-typealias C_time_t Int
-
-## HDF5 types and constants
-typealias Hid         Cint
-typealias Herr        Cint
-typealias Hsize       UInt64
-typealias Hssize      Int64
-typealias Htri        Cint   # pseudo-boolean (negative if error)
-typealias Haddr       UInt64
-
 ### Load and initialize the HDF library ###
 if isfile(joinpath(dirname(dirname(@__FILE__)),"deps","deps.jl"))
     include("../deps/deps.jl")
@@ -33,7 +22,7 @@ else
 end
 
 function init_libhdf5()
-    status = ccall((:H5open, libhdf5), Herr, ())
+    status = ccall((:H5open, libhdf5), Cint, ())
     if status < 0
         error("Can't initialize the HDF5 library")
     end
@@ -46,7 +35,7 @@ _minnum = Array(Cuint, 1)
 _relnum = Array(Cuint, 1)
 function h5_get_libversion()
     status = ccall((:H5get_libversion, libhdf5),
-                   Herr,
+                   Cint,
                    (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}),
                    _majnum, _minnum, _relnum)
     if status < 0
@@ -56,6 +45,21 @@ function h5_get_libversion()
 end
 
 _libversion = h5_get_libversion()
+
+## C types
+typealias C_time_t Int
+
+## HDF5 types and constants
+if _libversion >= (1, 10, 0)
+    typealias Hid     Int64
+else
+    typealias Hid     Cint
+end
+typealias Herr        Cint
+typealias Hsize       UInt64
+typealias Hssize      Int64
+typealias Htri        Cint   # pseudo-boolean (negative if error)
+typealias Haddr       UInt64
 
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
