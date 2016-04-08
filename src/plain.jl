@@ -41,7 +41,7 @@ function h5_get_libversion()
     if status < 0
         error("Error getting HDF5 library version")
     end
-    return _majnum[1], _minnum[1], _relnum[1]
+    Int(_majnum[1]), Int(_minnum[1]), Int(_relnum[1])
 end
 
 _libversion = h5_get_libversion()
