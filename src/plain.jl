@@ -64,7 +64,7 @@ typealias Haddr       UInt64
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
 const libhdf5handle = Libdl.dlopen(libhdf5)
-read_const(sym::Symbol) = unsafe_load(convert(Ptr{Cint}, Libdl.dlsym(libhdf5handle, sym)))
+read_const(sym::Symbol) = unsafe_load(convert(Ptr{Hid}, Libdl.dlsym(libhdf5handle, sym)))
 
 # iteration order constants
 const H5_ITER_UNKNOWN = -1
