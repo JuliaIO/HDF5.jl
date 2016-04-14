@@ -223,8 +223,7 @@ const H5T_NATIVE_FLOAT    = read_const(:H5T_NATIVE_FLOAT_g)
 const H5T_NATIVE_DOUBLE   = read_const(:H5T_NATIVE_DOUBLE_g)
 # Library versions
 const H5F_LIBVER_EARLIEST = 0
-const H5F_LIBVER_18 = 1
-const H5F_LIBVER_LATEST = 1
+const H5F_LIBVER_LATEST   = 1
 
 ## Conversion between Julia types and HDF5 atomic types
 hdf5_type_id(::Type{Int8})       = H5T_NATIVE_INT8
@@ -305,7 +304,7 @@ type HDF5File <: DataFile
         f
     end
 end
-convert(::Type{Cint}, f::HDF5File) = f.id
+convert(::Type{Hid}, f::HDF5File) = f.id
 show(io::IO, fid::HDF5File) = isvalid(fid) ? print(io, "HDF5 data file: ", fid.filename) : print(io, "Closed HFD5 data file: ", fid.filename)
 
 type HDF5Group <: DataFile
@@ -318,7 +317,7 @@ type HDF5Group <: DataFile
         g
     end
 end
-convert(::Type{Cint}, g::HDF5Group) = g.id
+convert(::Type{Hid}, g::HDF5Group) = g.id
 show(io::IO, g::HDF5Group) = isvalid(g) ? print(io, "HDF5 group: ", name(g), " (file: ", g.file.filename, ")") : print(io, "HDF5 group (invalid)")
 
 type HDF5Dataset
@@ -331,7 +330,7 @@ type HDF5Dataset
         dset
     end
 end
-convert(::Type{Cint}, dset::HDF5Dataset) = dset.id
+convert(::Type{Hid}, dset::HDF5Dataset) = dset.id
 show(io::IO, dset::HDF5Dataset) = isvalid(dset) ? print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, ")") : print(io, "HDF5 dataset (invalid)")
 
 type HDF5Datatype
@@ -354,9 +353,10 @@ type HDF5Datatype
         nt
     end
 end
-convert(::Type{Cint}, dtype::HDF5Datatype) = dtype.id
+convert(::Type{Hid}, dtype::HDF5Datatype) = dtype.id
 show(io::IO, dtype::HDF5Datatype) = print(io, "HDF5 datatype ", dtype.id) # TODO: compound datatypes?
-hash(dtype::HDF5Datatype) = dtype.id
+hash(dtype::HDF5Datatype, h::UInt) =
+    (dtype.id % UInt + h) ^ (0xadaf9b66bc962084 % UInt)
 ==(dt1::HDF5Datatype, dt2::HDF5Datatype) = h5t_equal(dt1, dt2) > 0
 
 # Define an H5O Object type
@@ -371,7 +371,7 @@ type HDF5Dataspace
         dspace
     end
 end
-convert(::Type{Cint}, dspace::HDF5Dataspace) = dspace.id
+convert(::Type{Hid}, dspace::HDF5Dataspace) = dspace.id
 
 type HDF5Attribute
     id::Hid
@@ -383,7 +383,7 @@ type HDF5Attribute
         dset
     end
 end
-convert(::Type{Cint}, attr::HDF5Attribute) = attr.id
+convert(::Type{Hid}, attr::HDF5Attribute) = attr.id
 show(io::IO, attr::HDF5Attribute) = isvalid(attr) ? print(io, "HDF5 attribute: ", name(attr)) : print(io, "HDF5 attribute (invalid)")
 
 @compat type HDF5Attributes
@@ -404,7 +404,7 @@ type HDF5Properties
     end
 end
 HDF5Properties() = HDF5Properties(H5P_DEFAULT)
-convert(::Type{Cint}, p::HDF5Properties) = p.id
+convert(::Type{Hid}, p::HDF5Properties) = p.id
 
 # Object reference types
 immutable HDF5ReferenceObj
@@ -417,7 +417,7 @@ const REF_TEMP_ARRAY = Array(HDF5ReferenceObj, 1)
     REF_TEMP_ARRAY[1]
 end
 ==(a::HDF5ReferenceObj, b::HDF5ReferenceObj) = a.r == b.r
-hash(x::HDF5ReferenceObj) = hash(x.r)
+hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
 
 # Compound types
 # These are "raw" and not mapped to any Julia type
@@ -1885,8 +1885,13 @@ h5l_exists(loc_id::Hid, name::ByteString) = h5l_exists(loc_id, name, H5P_DEFAULT
 h5o_open(obj_id::Hid, name::ByteString) = h5o_open(obj_id, name, H5P_DEFAULT)
 #h5s_get_simple_extent_ndims(space_id::Hid) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 h5t_get_native_type(type_id::Hid) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
+if _libversion >= (1, 10, 0)
+    const H5RDEREFERENCE = :H5Rdereference1
+else
+    const H5RDEREFERENCE = :H5Rdereference
+end
 function h5r_dereference(obj_id::Hid, ref_type::Integer, pointee::HDF5ReferenceObj)
-    ret = ccall((:H5Rdereference, libhdf5), Hid, (Hid, Cint, Ptr{HDF5ReferenceObj}), obj_id, ref_type, &pointee)
+    ret = ccall((H5RDEREFERENCE, libhdf5), Hid, (Hid, Cint, Ptr{HDF5ReferenceObj}), obj_id, ref_type, &pointee)
     if ret < 0
         error("Error dereferencing object")
     end
@@ -2010,7 +2015,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5d_get_create_plist, :H5Dget_create_plist, Hid, (Hid,), (:dataset_id,), :(error("Error getting dataset create property list"))),
      (:h5d_get_offset, :H5Dget_offset, Haddr, (Hid,), (:dataset_id,), :(error("Error getting offset"))),
      (:h5d_get_space, :H5Dget_space, Hid, (Hid,), (:dataset_id,), :(error("Error getting dataspace"))),
-     (:h5d_get_type, :H5Dget_type, Cint, (Hid,), (:dataset_id,), :(error("Error getting dataspace type"))),
+     (:h5d_get_type, :H5Dget_type, Hid, (Hid,), (:dataset_id,), :(error("Error getting dataspace type"))),
      (:h5d_open, :H5Dopen2, Hid, (Hid, Ptr{UInt8}, Hid), (:loc_id, :pathname, :dapl_id), :(error("Error opening dataset ", h5i_get_name(loc_id), "/", pathname))),
      (:h5d_read, :H5Dread, Herr, (Hid, Hid, Hid, Hid, Hid, Ptr{Void}), (:dataset_id, :mem_type_id, :mem_space_id, :file_space_id, :xfer_plist_id, :buf), :(error("Error reading dataset ", h5i_get_name(dataset_id)))),
      (:h5f_create, :H5Fcreate, Hid, (Ptr{UInt8}, Cuint, Hid, Hid), (:pathname, :flags, :fcpl_id, :fapl_id), :(error("Error creating file ", pathname))),
@@ -2359,12 +2364,6 @@ _attr_properties(path::UTF8String) = UTF8_ATTRIBUTE_PROPERTIES[]
 
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false)
 
-if VERSION < v"0.4.0-dev+2014"
-    rehash! = Base.rehash
-else
-    rehash! = Base.rehash!
-end
-
 function __init__()
     init_libhdf5()
     register_blosc()
@@ -2381,6 +2380,12 @@ function __init__()
     h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES[].id, cset(ASCIIString))
     UTF8_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE)
     h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES[].id, cset(UTF8String))
+
+    if VERSION < v"0.4.0-dev+2014"
+        rehash! = Base.rehash
+    else
+        rehash! = Base.rehash!
+    end
 
     rehash!(hdf5_type_map, length(hdf5_type_map.keys))
     rehash!(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
