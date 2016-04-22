@@ -582,7 +582,7 @@ function h5open(filename::AbstractString, mode::AbstractString="r", pv...)
         end
         p[thisname] = pv[i+1]
     end
-    modes = 
+    modes =
         mode == "r"  ? (true,  false, false, false, false) :
         mode == "r+" ? (true,  true,  false, false, true ) :
         mode == "w"  ? (false, true,  true,  true,  false) :
@@ -2350,6 +2350,13 @@ export
     write,
     @write
 
+# Define globally because JLD uses this, too
+if VERSION < v"0.4.0-dev+2014"
+    const rehash! = Base.rehash
+else
+    const rehash! = Base.rehash!
+end
+
 # Across initializations of the library, the id of various properties
 # will change. So don't hard-code the id (important for precompilation)
 const ASCII_LINK_PROPERTIES = Array(HDF5Properties)
@@ -2379,12 +2386,6 @@ function __init__()
     h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES[].id, cset(ASCIIString))
     UTF8_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE)
     h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES[].id, cset(UTF8String))
-
-    if VERSION < v"0.4.0-dev+2014"
-        rehash! = Base.rehash
-    else
-        rehash! = Base.rehash!
-    end
 
     rehash!(hdf5_type_map, length(hdf5_type_map.keys))
     rehash!(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
