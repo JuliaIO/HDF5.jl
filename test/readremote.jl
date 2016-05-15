@@ -2,7 +2,7 @@
 urlbase = "http://www.hdfgroup.org/ftp/HDF5/examples/files/exbyapi/"
 
 using HDF5
-using Compat
+using Compat; import Compat.String
 
 fcmp = [0 1 2 3 4 5 6;
     2 1.66667 2.4 3.28571 4.22222 5.18182 6.15385;

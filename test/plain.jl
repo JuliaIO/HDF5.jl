@@ -1,5 +1,5 @@
-using HDF5, Compat, Base.Test
-using Compat.String
+using HDF5, Base.Test
+using Compat; import Compat.String
 const test_path = splitdir(@__FILE__)[1]
 
 # Create a new file
@@ -51,10 +51,10 @@ write(f, "empty", empty)
 empty_string = ""
 write(f, "empty_string", empty_string)
 # Empty array of strings
-empty_string_array = Compat.ASCIIString[]
+empty_string_array = String[]
 write(f, "empty_string_array", empty_string_array)
 # Array of empty string
-empty_array_of_strings = Compat.ASCIIString[""]
+empty_array_of_strings = String[""]
 write(f, "empty_array_of_strings", empty_array_of_strings)
 # Attributes
 species = [["N", "C"]; ["A", "B"]]
@@ -244,9 +244,9 @@ h5open(fn, "w") do fid
     end
 end
 fid = h5open(fn, "r")
-@assert names(fid) == Compat.ASCIIString["mygroup"]
+@assert names(fid) == String["mygroup"]
 g = fid["mygroup"]
-@assert names(g) == Compat.ASCIIString["x"]
+@assert names(g) == String["x"]
 close(g)
 close(fid)
 
@@ -255,7 +255,7 @@ d = h5read(joinpath(test_path, "compound.h5"), "/data")
 @assert typeof(d.data) == Array{UInt8,1}
 @assert length(d.data) == 128
 @test d.membertype == Type[Float64, HDF5.FixedArray{Float64,(3,)}, HDF5.FixedArray{Float64,(3,)}, Float64]
-@assert d.membername == Compat.ASCIIString["wgt", "xyz", "uvw", "E"]
+@assert d.membername == String["wgt", "xyz", "uvw", "E"]
 @assert d.memberoffset == UInt64[0x00, 0x08, 0x20, 0x38]
 
 # File creation and access property lists

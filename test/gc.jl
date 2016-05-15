@@ -1,4 +1,5 @@
-using HDF5, Base.Test, Compat
+using HDF5, Base.Test
+using Compat; import Compat.String
 
 macro gcvalid(args...)
     Expr(:block, quote
