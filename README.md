@@ -1,7 +1,7 @@
 # HDF5 interface for the Julia language
 
-[![Build Status](https://travis-ci.org/JuliaLang/HDF5.jl.svg?branch=master)](https://travis-ci.org/JuliaLang/HDF5.jl) [![Build status](https://ci.appveyor.com/api/projects/status/r8to2ho7cx72qxa1/branch/master?svg=true)](https://ci.appveyor.com/project/timholy/hdf5-jl/branch/master)
-[![Coverage Status](https://coveralls.io/repos/JuliaLang/HDF5.jl/badge.png?branch=master)](https://coveralls.io/r/JuliaLang/HDF5.jl?branch=master)
+[![Build Status](https://travis-ci.org/JuliaIO/HDF5.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/HDF5.jl) [![Build status](https://ci.appveyor.com/api/projects/status/r8to2ho7cx72qxa1/branch/master?svg=true)](https://ci.appveyor.com/project/timholy/hdf5-jl/branch/master)
+[![Coverage Status](https://coveralls.io/repos/JuliaIO/HDF5.jl/badge.png?branch=master)](https://coveralls.io/r/JuliaIO/HDF5.jl?branch=master)
 
 [HDF5][HDF5] is a file format and library for storing and accessing
 data, commonly used for scientific data. HDF5 files can be created and
@@ -15,7 +15,7 @@ provides an interface to the HDF5 library for the
 The core HDF5 functionality is the foundation for two special-purpose
 packages, used to read and write HDF5 files with specific formatting
 conventions. The first is the
-[JLD](https://github.com/JuliaLang/JLD.jl) ("Julia data") package,
+[JLD](https://github.com/JuliaIO/JLD.jl) ("Julia data") package,
 which implements a generic mechanism for reading and writing Julia
 variables. While one can use "plain" HDF5 for this purpose, the
 advantage of the JLD package is that it preserves the exact type
@@ -124,7 +124,7 @@ Convenience functions for attributes attached to datasets are also provided:
 
 ## Specific file formats
 
-There is no conflict in having multiple modules (HDF5, [JLD](https://github.com/JuliaLang/JLD.jl), and
+There is no conflict in having multiple modules (HDF5, [JLD](https://github.com/JuliaIO/JLD.jl), and
 [MAT](https://github.com/simonster/MAT.jl)) available simultaneously;
 the formatting of the file is determined by the open command.
 
