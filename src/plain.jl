@@ -607,10 +607,8 @@ function h5open(f::Function, args...)
 end
 
 function h5rewrite(f::Function, filename::AbstractString, args...)
-    tmppath = string(filename, "tmpXXXXXX")
-    p = ccall(:mkstemp, Int32, (Cstring,), tmppath) # modifies tmppath
-    systemerror(:h5rewrite, p == -1)
-    close(fdio(p))
+    tmppath,tmpio = mktemp(dirname(filename))
+    close(tmpio)
 
     try
         fid = h5open(tmppath, "w", args...)
