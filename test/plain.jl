@@ -251,17 +251,19 @@ close(g)
 close(fid)
 
 # more do syntax: atomic rename version
-h5rewrite(fn) do fid
-    g_create(fid, "mygroup") do g
-        write(g, "y", 3.3)
+if VERSION >= v"0.4"
+    h5rewrite(fn) do fid
+        g_create(fid, "mygroup") do g
+            write(g, "y", 3.3)
+        end
     end
+    fid = h5open(fn, "r")
+    @assert names(fid) == Compat.ASCIIString["mygroup"]
+    g = fid["mygroup"]
+    @assert names(g) == Compat.ASCIIString["y"]
+    close(g)
+    close(fid)
 end
-fid = h5open(fn, "r")
-@assert names(fid) == Compat.ASCIIString["mygroup"]
-g = fid["mygroup"]
-@assert names(g) == Compat.ASCIIString["y"]
-close(g)
-close(fid)
 
 d = h5read(joinpath(test_path, "compound.h5"), "/data")
 @assert typeof(d) == HDF5.HDF5Compound
