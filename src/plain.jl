@@ -606,6 +606,27 @@ function h5open(f::Function, args...)
     end
 end
 
+function h5rewrite(f::Function, filename::AbstractString, args...)
+    tmppath = string(filename, "tmpXXXXXX")
+    p = ccall(:mkstemp, Int32, (Cstring,), tmppath) # modifies tmppath
+    systemerror(:h5rewrite, p == -1)
+    close(fdio(p))
+
+    try
+        fid = h5open(tmppath, "w", args...)
+        val = try
+            ret = f(fid)
+        finally
+            close(fid)
+        end
+        Base.FS.rename(tmppath, filename)
+        return val
+    catch
+        Base.FS.unlink(tmppath)
+        rethrow()
+    end
+end
+
 function h5write(filename, name::String, data)
     fid = h5open(filename, true, true, true, false, true)
     try
@@ -2324,6 +2345,7 @@ export
     getindex,
     h5open,
     h5read,
+    h5rewrite,
     h5writeattr,
     h5readattr,
     h5write,
