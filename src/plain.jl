@@ -612,12 +612,7 @@ if VERSION >= v"0.4"
         close(tmpio)
 
         try
-            fid = h5open(tmppath, "w", args...)
-            val = try
-                ret = f(fid)
-            finally
-                close(fid)
-            end
+            val = h5open(f, tmppath, "w", args...)
             Base.FS.rename(tmppath, filename)
             return val
         catch
