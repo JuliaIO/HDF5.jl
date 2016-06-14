@@ -654,7 +654,7 @@ function h5readattr(filename, name::String)
     fid=h5open(filename,"r")
     try
         a=attrs(fid[name])
-        dat = @compat [x=>read(a[x]) for x in names(a)]
+        dat = @compat Dict([x=>read(a[x]) for x in names(a)])
     finally
         close(fid)
     end
@@ -994,7 +994,7 @@ name(attr::HDF5Attribute) = h5a_get_name(attr.id)
             resize!(buf, len+10)
             len = h5g_get_objname_by_idx(x.id, i - 1, buf, length(buf))
         end
-        res[i] = bytestring(buf[1:len])
+        res[i] = @compat String(buf[1:len])
     end
     res
 end
@@ -1007,7 +1007,7 @@ function names(x::HDF5Attributes)
         len = h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, "", 0, H5P_DEFAULT)
         buf = Array(UInt8, len+1)
         len = h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, buf, len+1, H5P_DEFAULT)
-        res[i] = bytestring(buf[1:len])
+        res[i] = @compat String(buf[1:len])
     end
     res
 end
@@ -1276,13 +1276,14 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{S})
                 h5t_set_cset(memtype_id, h5t_get_cset(datatype(obj)))
             end
             readarray(obj, memtype_id, buf)
-            ret = bytestring(buf[1])
+            ret = @compat String(buf[1])
         else
             n = h5t_get_size(objtype.id)
             pad = h5t_get_strpad(objtype.id)
             buf = Array(UInt8, n)
             readarray(obj, objtype.id, buf)
-            ret = unpad(bytestring(buf), pad)
+			pbuf = @compat String(buf)
+            ret = unpad(pbuf, pad)
         end
     finally
         close(objtype)
@@ -1316,7 +1317,7 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
             readarray(obj, memtype_id, buf)
             # FIXME? Who owns the memory for each string? Will Julia free it?
             for i = 1:len
-                ret[i] = bytestring(buf[i])
+                ret[i] = @compat String(buf[i])
             end
         else
             # Fixed length
@@ -1326,7 +1327,7 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
             readarray(obj, memtype_id, buf)
             p = pointer(buf)
             for i = 1:len
-                ret[i] = bytestring(p)
+                ret[i] = @compat String(p)
                 p += ilen
             end
         end
@@ -2129,19 +2130,19 @@ function h5a_get_name(attr_id::Hid)
     len = h5a_get_name(attr_id, 0, C_NULL) # order of args differs from {f,i}_get_name
     buf = Array(UInt8, len+1)
     h5a_get_name(attr_id, len+1, buf)
-    bytestring(buf[1:len])
+    @compat String(buf[1:len])
 end
 function h5f_get_name(loc_id::Hid)
     len = h5f_get_name(loc_id, C_NULL, 0)
     buf = Array(UInt8, len+1)
     h5f_get_name(loc_id, buf, len+1)
-    bytestring(buf[1:len])
+    @compat String(buf[1:len])
 end
 function h5i_get_name(loc_id::Hid)
     len = h5i_get_name(loc_id, C_NULL, 0)
     buf = Array(UInt8, len+1)
     h5i_get_name(loc_id, buf, len+1)
-    bytestring(buf[1:len])
+    @compat String(buf[1:len])
 end
 function h5l_get_info(link_loc_id::Hid, link_name::String, lapl_id::Hid)
     info = Array(H5LInfo, 1)
@@ -2163,7 +2164,7 @@ function h5t_get_member_name(type_id::Hid, index::Integer)
     if pn == C_NULL
         error("Error getting name of compound datatype member #", index)
     end
-    s = bytestring(pn)
+    s = @compat String(pn)
     Libc.free(pn)
     s
 end
@@ -2175,7 +2176,7 @@ function h5t_get_tag(type_id::Hid)
     if pc == C_NULL
         error("Error getting opaque tag")
     end
-    s = bytestring(pc)
+    s = @compat String(pc)
     Libc.free(pc)
     s
 end
