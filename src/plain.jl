@@ -1007,7 +1007,7 @@ function names(x::HDF5Attributes)
         len = h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, "", 0, H5P_DEFAULT)
         buf = Array(UInt8, len+1)
         len = h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, buf, len+1, H5P_DEFAULT)
-        res[i] = @compat unsafe_string(buf[1:len])
+        res[i] = @compat String(buf[1:len])
     end
     res
 end
@@ -2136,7 +2136,7 @@ function h5f_get_name(loc_id::Hid)
     len = h5f_get_name(loc_id, C_NULL, 0)
     buf = Array(UInt8, len+1)
     h5f_get_name(loc_id, buf, len+1)
-    @compat unsafe_string(buf[1:len])
+    @compat String(buf[1:len])
 end
 function h5i_get_name(loc_id::Hid)
     len = h5i_get_name(loc_id, C_NULL, 0)
@@ -2176,7 +2176,7 @@ function h5t_get_tag(type_id::Hid)
     if pc == C_NULL
         error("Error getting opaque tag")
     end
-    s = @compat unsafe_string(pn)
+    s = @compat unsafe_string(pc)
     Libc.free(pc)
     s
 end
