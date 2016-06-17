@@ -606,6 +606,22 @@ function h5open(f::Function, args...)
     end
 end
 
+if VERSION >= v"0.4"
+    function h5rewrite(f::Function, filename::AbstractString, args...)
+        tmppath,tmpio = mktemp(dirname(filename))
+        close(tmpio)
+
+        try
+            val = h5open(f, tmppath, "w", args...)
+            Base.FS.rename(tmppath, filename)
+            return val
+        catch
+            Base.FS.unlink(tmppath)
+            rethrow()
+        end
+    end
+end
+
 function h5write(filename, name::String, data)
     fid = h5open(filename, true, true, true, false, true)
     try
@@ -2325,6 +2341,7 @@ export
     getindex,
     h5open,
     h5read,
+    h5rewrite,
     h5writeattr,
     h5readattr,
     h5write,
