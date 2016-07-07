@@ -18,7 +18,7 @@ end
 @osx_only begin
     using Homebrew
     hdf5 = library_dependency("libhdf5")
-    provides(Homebrew.HB, ["hdf5", "homebrew/science/hdf5"], hdf5, os = :Darwin )
+    provides(Homebrew.HB, "homebrew/science/hdf5", hdf5, os = :Darwin )
 end
 
 provides(Sources, URI("http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.gz"), hdf5)
