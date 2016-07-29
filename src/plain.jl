@@ -613,10 +613,10 @@ if VERSION >= v"0.4"
 
         try
             val = h5open(f, tmppath, "w", args...)
-            Base.FS.rename(tmppath, filename)
+            Compat.Filesystem.rename(tmppath, filename)
             return val
         catch
-            Base.FS.unlink(tmppath)
+            Compat.Filesystem.unlink(tmppath)
             rethrow()
         end
     end
@@ -1444,8 +1444,8 @@ end
 # Read VLEN arrays and character arrays
 atype{T<:HDF5BitsKind}(::Type{T}) = Array{T}
 atype{C<:CharType}(::Type{C}) = stringtype(C)
-p2a{T<:HDF5BitsKind}(p::Ptr{T}, len::Int) = pointer_to_array(p, len, true)
-p2a{C<:CharType}(p::Ptr{C}, len::Int) = stringtype(C)(pointer_to_array(convert(Ptr{UInt8}, p), len, true))
+p2a{T<:HDF5BitsKind}(p::Ptr{T}, len::Int) = unsafe_wrap(Array, p, len, true)
+p2a{C<:CharType}(p::Ptr{C}, len::Int) = stringtype(C)(unsafe_wrap(Array, convert(Ptr{UInt8}, p), len, true))
 t2p{T<:HDF5BitsKind}(::Type{T}) = Ptr{T}
 t2p{C<:CharType}(::Type{C}) = Ptr{UInt8}
 @compat function read{T<:Union{HDF5BitsKind,CharType}}(obj::DatasetOrAttribute, ::Type{HDF5Vlen{T}})
