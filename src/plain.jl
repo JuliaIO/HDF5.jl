@@ -670,7 +670,7 @@ function h5readattr(filename, name::String)
     fid=h5open(filename,"r")
     try
         a=attrs(fid[name])
-        dat = @compat Dict([x=>read(a[x]) for x in names(a)])
+        dat = @compat Dict([(x,read(a[x])) for x in names(a)]) # TODO: switch to generator syntax when 0.4 is no longer supported
     finally
         close(fid)
     end
