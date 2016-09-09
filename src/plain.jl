@@ -1883,11 +1883,15 @@ function h5d_write{T<:HDF5BitsKind}(dataset_id::Hid, memtype_id::Hid, x::T)
     tmp[1] = x
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, tmp)
 end
+if VERSION < v"0.4.0"
+    # Restricted version on 0.3 for the use in `h5d_write` below.
+    isassigned(ary, i) = isdefined(ary, i)
+end
 function h5d_write{S<:String}(dataset_id::Hid, memtype_id::Hid, strs::Array{S})
     len = length(strs)
     p = Array(Ptr{UInt8}, size(strs))
     for i = 1:len
-        p[i] = !isdefined(strs, i) || isempty(strs[i]) ? pointer(EMPTY_STRING) : pointer(strs[i])
+        p[i] = !isassigned(strs, i) || isempty(strs[i]) ? pointer(EMPTY_STRING) : pointer(strs[i])
     end
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, p)
 end
