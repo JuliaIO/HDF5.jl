@@ -251,49 +251,47 @@ close(g)
 close(fid)
 
 # more do syntax: atomic rename version
-if VERSION >= v"0.4"
-    tmpdir = mktempdir()
-    outfile = joinpath(tmpdir, "test.h5")
+tmpdir = mktempdir()
+outfile = joinpath(tmpdir, "test.h5")
 
-    # create a new file
-    h5rewrite(outfile) do fid
-        g_create(fid, "mygroup") do g
-            write(g, "x", 3.3)
-        end
+# create a new file
+h5rewrite(outfile) do fid
+    g_create(fid, "mygroup") do g
+        write(g, "x", 3.3)
     end
-    @test length(readdir(tmpdir)) == 1
-    h5open(outfile, "r") do fid
-        @test names(fid) == Compat.ASCIIString["mygroup"]
-        @test names(fid["mygroup"]) == Compat.ASCIIString["x"]
-    end
-
-    # fail to overwrite
-    @test_throws ErrorException h5rewrite(outfile) do fid
-        g_create(fid, "mygroup") do g
-            write(g, "oops", 3.3)
-        end
-        error("failed")
-    end
-    @test length(readdir(tmpdir)) == 1
-    h5open(outfile, "r") do fid
-        @test names(fid) == Compat.ASCIIString["mygroup"]
-        @test names(fid["mygroup"]) == Compat.ASCIIString["x"]
-    end
-
-    # overwrite
-    h5rewrite(outfile) do fid
-        g_create(fid, "mygroup") do g
-            write(g, "y", 3.3)
-        end
-    end
-    @test length(readdir(tmpdir)) == 1
-    h5open(outfile, "r") do fid
-        @test names(fid) == Compat.ASCIIString["mygroup"]
-        @test names(fid["mygroup"]) == Compat.ASCIIString["y"]
-    end
-
-    rm(tmpdir, recursive=true)
 end
+@test length(readdir(tmpdir)) == 1
+h5open(outfile, "r") do fid
+    @test names(fid) == Compat.ASCIIString["mygroup"]
+    @test names(fid["mygroup"]) == Compat.ASCIIString["x"]
+end
+
+# fail to overwrite
+@test_throws ErrorException h5rewrite(outfile) do fid
+    g_create(fid, "mygroup") do g
+        write(g, "oops", 3.3)
+    end
+    error("failed")
+end
+@test length(readdir(tmpdir)) == 1
+h5open(outfile, "r") do fid
+    @test names(fid) == Compat.ASCIIString["mygroup"]
+    @test names(fid["mygroup"]) == Compat.ASCIIString["x"]
+end
+
+# overwrite
+h5rewrite(outfile) do fid
+    g_create(fid, "mygroup") do g
+        write(g, "y", 3.3)
+    end
+end
+@test length(readdir(tmpdir)) == 1
+h5open(outfile, "r") do fid
+    @test names(fid) == Compat.ASCIIString["mygroup"]
+    @test names(fid["mygroup"]) == Compat.ASCIIString["y"]
+end
+
+rm(tmpdir, recursive=true)
 
 d = h5read(joinpath(test_path, "compound.h5"), "/data")
 @assert typeof(d) == HDF5.HDF5Compound

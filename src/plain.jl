@@ -606,19 +606,17 @@ function h5open(f::Function, args...)
     end
 end
 
-if VERSION >= v"0.4"
-    function h5rewrite(f::Function, filename::AbstractString, args...)
-        tmppath,tmpio = mktemp(dirname(filename))
-        close(tmpio)
+function h5rewrite(f::Function, filename::AbstractString, args...)
+    tmppath,tmpio = mktemp(dirname(filename))
+    close(tmpio)
 
-        try
-            val = h5open(f, tmppath, "w", args...)
-            Compat.Filesystem.rename(tmppath, filename)
-            return val
-        catch
-            Compat.Filesystem.unlink(tmppath)
-            rethrow()
-        end
+    try
+        val = h5open(f, tmppath, "w", args...)
+        Compat.Filesystem.rename(tmppath, filename)
+        return val
+    catch
+        Compat.Filesystem.unlink(tmppath)
+        rethrow()
     end
 end
 
@@ -1883,10 +1881,6 @@ function h5d_write{T<:HDF5BitsKind}(dataset_id::Hid, memtype_id::Hid, x::T)
     tmp[1] = x
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, tmp)
 end
-if VERSION < v"0.4.0"
-    # Restricted version on 0.3 for the use in `h5d_write` below.
-    isassigned(ary, i) = isdefined(ary, i)
-end
 function h5d_write{S<:String}(dataset_id::Hid, memtype_id::Hid, strs::Array{S})
     len = length(strs)
     p = Array(Ptr{UInt8}, size(strs))
@@ -2375,11 +2369,7 @@ export
     @write
 
 # Define globally because JLD uses this, too
-if VERSION < v"0.4.0-dev+2014"
-    const rehash! = Base.rehash
-else
-    const rehash! = Base.rehash!
-end
+const rehash! = Base.rehash!
 
 # Across initializations of the library, the id of various properties
 # will change. So don't hard-code the id (important for precompilation)
