@@ -1,5 +1,5 @@
 # Check that we can read the official HDF5 example files
-urlbase = "http://www.hdfgroup.org/ftp/HDF5/examples/files/exbyapi/"
+urlbase = "https://support.hdfgroup.org/ftp/HDF5/examples/files/exbyapi/"
 
 using HDF5
 using Compat
