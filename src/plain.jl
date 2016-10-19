@@ -2144,7 +2144,7 @@ function h5a_get_name(attr_id::Hid)
     len = h5a_get_name(attr_id, 0, C_NULL) # order of args differs from {f,i}_get_name
     buf = Array(UInt8, len+1)
     h5a_get_name(attr_id, len+1, buf)
-    @compat unsafe_string(buf[1:len])
+    @compat String(buf[1:len])
 end
 function h5f_get_name(loc_id::Hid)
     len = h5f_get_name(loc_id, C_NULL, 0)
