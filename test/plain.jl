@@ -315,6 +315,7 @@ h5open(fn, "r", "libver_bounds",
     @test intarray == [1,2,3]
 end
 
+
 fd = h5open(joinpath(test_path, "datasets.h5"), "w")
 fd["level_0"] = [1,2,3]
 grp = g_create(fd, "mygroup")
@@ -324,3 +325,9 @@ fd["mygroup/deep_group/level_2"] = [6.0, 7.0]
 datasets = get_datasets(fd)
 @assert sort(map(name, datasets)) ==  ["/level_0", "/mygroup/deep_group/level_2", "/mygroup/level_1"]
 close(fd)
+
+arr_float16 = Float16[1.0, 0.25, 0.5, 8.0]
+h5write("test_float16.h5", "x", arr_float16)
+arr_float16_2 = h5read("test_float16.h5", "x")
+@test isa(arr_float16_2, Vector{Float16})
+@test arr_float16_2 == arr_float16
