@@ -314,3 +314,13 @@ h5open(fn, "r", "libver_bounds",
     intarray = read(fid, "intarray")
     @test intarray == [1,2,3]
 end
+
+fd = h5open(joinpath(test_path, "datasets.h5"), "w")
+fd["level_0"] = [1,2,3]
+grp = g_create(fd, "mygroup")
+fd["mygroup/level_1"] = [4, 5]
+grp2 = g_create(grp, "deep_group")
+fd["mygroup/deep_group/level_2"] = [6.0, 7.0]
+datasets = get_datasets(fd)
+@assert sort(map(name, datasets)) ==  ["/level_0", "/mygroup/deep_group/level_2", "/mygroup/level_1"]
+close(fd)
