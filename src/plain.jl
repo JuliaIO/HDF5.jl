@@ -1284,11 +1284,7 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{S})
             buf = Ptr{UInt8}[C_NULL]
             memtype_id = h5t_copy(H5T_C_S1)
             h5t_set_size(memtype_id, H5T_VARIABLE)
-            if isleaftype(S)
-                h5t_set_cset(memtype_id, cset(S))
-            else
-                h5t_set_cset(memtype_id, h5t_get_cset(datatype(obj)))
-            end
+            h5t_set_cset(memtype_id, h5t_get_cset(datatype(obj)))
             readarray(obj, memtype_id, buf)
             ret = @compat unsafe_string(buf[1])
         else
@@ -2144,7 +2140,7 @@ function h5a_get_name(attr_id::Hid)
     len = h5a_get_name(attr_id, 0, C_NULL) # order of args differs from {f,i}_get_name
     buf = Array(UInt8, len+1)
     h5a_get_name(attr_id, len+1, buf)
-    @compat unsafe_string(buf[1:len])
+    @compat String(buf[1:len])
 end
 function h5f_get_name(loc_id::Hid)
     len = h5f_get_name(loc_id, C_NULL, 0)
@@ -2417,15 +2413,15 @@ function __init__()
     # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
     ASCII_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
-    h5p_set_char_encoding(ASCII_LINK_PROPERTIES[].id, cset(Compat.ASCIIString))
+    h5p_set_char_encoding(ASCII_LINK_PROPERTIES[].id, H5T_CSET_ASCII)
     h5p_set_create_intermediate_group(ASCII_LINK_PROPERTIES[].id, 1)
     UTF8_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
-    h5p_set_char_encoding(UTF8_LINK_PROPERTIES[].id, cset(Compat.UTF8String))
+    h5p_set_char_encoding(UTF8_LINK_PROPERTIES[].id, H5T_CSET_UTF8)
     h5p_set_create_intermediate_group(UTF8_LINK_PROPERTIES[].id, 1)
     ASCII_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE)
-    h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES[].id, cset(Compat.ASCIIString))
+    h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES[].id, H5T_CSET_ASCII)
     UTF8_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE)
-    h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES[].id, cset(Compat.UTF8String))
+    h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES[].id, H5T_CSET_UTF8)
 
     rehash!(hdf5_type_map, length(hdf5_type_map.keys))
     rehash!(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
