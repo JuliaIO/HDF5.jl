@@ -664,8 +664,12 @@ end
     dat
 end
 
-function h5writeattr(filename, name::String, data::Dict)
+function h5writeattr(filename::String, name::String, data::Dict)
     fid = h5open(filename, true, true, true, false, true)
+    h5writeattr(fid, name, data)
+end
+
+function h5writeattr(fid::HDF5.HDF5File, name::String, data::Dict)
     try
         for x in keys(data)
             attrs(fid[name])[x] = data[x]
@@ -675,17 +679,22 @@ function h5writeattr(filename, name::String, data::Dict)
     end
 end
 
-function h5readattr(filename, name::String)
-    local dat
+function h5readattr(filename::String, name::String)
     fid=h5open(filename,"r")
+    h5readattr(fid::HDF5.HDF5File, name::String)
+end
+
+function h5readattr(fid::HDF5.HDF5File, name::String)
+    local dat
     try
         a=attrs(fid[name])
-        dat = @compat Dict([(x,read(a[x])) for x in names(a)]) # TODO: switch to generator syntax when 0.4 is no longer supported
+        dat = @compat Dict((x,read(a[x])) for x in names(a))
     finally
         close(fid)
     end
     dat
 end
+
 
 # Ensure that objects haven't been closed
 @compat isvalid(obj::Union{HDF5File, HDF5Properties, HDF5Datatype, HDF5Dataspace}) = obj.id != -1 && h5i_is_valid(obj.id)
