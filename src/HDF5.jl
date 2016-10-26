@@ -1842,7 +1842,7 @@ function hdf5_to_julia_eltype(objtype)
             error("character set ", cset, " not recognized")
         end
     elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
-        # First look in the type last for a match
+        # First look in the type list for a match
         # otherwise fall back to a native datatype
         # Allows for users to dynamically add types to the typemap
         t_size = h5t_get_size(objtype)
@@ -2479,8 +2479,8 @@ function __init__()
     h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES[].id, cset(Compat.UTF8String))
 
     # Set up Float16 (must occur at runtime)
-    eval(:(const H5T_FLOAT16 = make_float16()))
-    eval(:(hdf5_type_id(::Type{Float16}) = H5T_FLOAT16))
+    @eval(const H5T_FLOAT16 = make_float16())
+    @eval(hdf5_type_id(::Type{Float16}) = H5T_FLOAT16)
 
     rehash!(hdf5_type_map, length(hdf5_type_map.keys))
     rehash!(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
