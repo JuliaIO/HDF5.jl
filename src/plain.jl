@@ -2200,9 +2200,10 @@ function h5f_get_obj_ids(file_id::Hid, types::Integer)
                file_id, types)
     sz >= 0 || error("error getting object count")
     hids = Array(Hid, sz)
-    sz = ccall((:H5Fget_obj_ids, libhdf5), Int, (Hid, UInt32, UInt, Ptr{Hid}),
+    sz2 = ccall((:H5Fget_obj_ids, libhdf5), Int, (Hid, UInt32, UInt, Ptr{Hid}),
           file_id, types, sz, hids)
-    sz >= 0 || error("error getting object count")
+    sz2 >= 0 || error("error getting objects")
+    sz2 != sz && resize!(hids, sz2)
     hids
 end
 
