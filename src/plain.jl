@@ -1654,14 +1654,15 @@ end
     if !(T<:Array)
         error("Dataset indexing (hyperslab) is available only for arrays")
     end
-    if !(T.parameters[1]<:HDF5BitsKind)
+    ET = eltype(T)
+    if !(ET<:HDF5BitsKind)
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
     if length(X) != prod(map(length, indices))
         error("number of elements in range and length of array must be equal")
     end
-    if eltype(X) != T.parameters[1]
-        X = convert(Array{T.parameters[1]}, X)
+    if eltype(X) != ET
+        X = convert(Array{ET}, X)
     end
     dsel_id = hyperslab(dset, indices...)
     memtype = datatype(X)
