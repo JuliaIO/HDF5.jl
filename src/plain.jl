@@ -1106,10 +1106,10 @@ datatype(dset::HDF5Attribute) = HDF5Datatype(h5a_get_type(checkvalid(dset).id), 
 datatype{T<:HDF5BitsKind}(x::T) = HDF5Datatype(hdf5_type_id(T), false)
 datatype{T<:HDF5BitsKind}(::Type{T}) = HDF5Datatype(hdf5_type_id(T), false)
 datatype{T<:HDF5BitsKind}(A::Array{T}) = HDF5Datatype(hdf5_type_id(T), false)
-function datatype{S<:String}(str::S)
-    type_id = h5t_copy(hdf5_type_id(S))
-    h5t_set_size(type_id, max(length(str.data), 1))
-    h5t_set_cset(type_id, cset(S))
+function datatype(str::String)
+    type_id = h5t_copy(hdf5_type_id(String))
+    h5t_set_size(type_id, max(sizeof(str), 1))
+    h5t_set_cset(type_id, cset(String))
     HDF5Datatype(type_id)
 end
 function datatype{S<:String}(str::Array{S})
@@ -1851,7 +1851,7 @@ end
 # These supply default values where possible
 # See also the "special handling" section below
 const EMPTY_STRING = UInt8[0x00]
-h5a_write(attr_id::Hid, mem_type_id::Hid, buf::String) = h5a_write(attr_id, mem_type_id, buf.data)
+h5a_write(attr_id::Hid, mem_type_id::Hid, buf::String) = h5a_write(attr_id, mem_type_id, Vector{UInt8}(buf))
 function h5a_write{T<:HDF5BitsKind}(attr_id::Hid, mem_type_id::Hid, x::T)
     tmp = Array(T, 1)
     tmp[1] = x
@@ -1876,7 +1876,7 @@ h5d_open(obj_id::Hid, name::String) = h5d_open(obj_id, name, H5P_DEFAULT)
 h5d_read(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
 h5d_write(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
 h5d_write(dataset_id::Hid, memtype_id::Hid, buf::String) =
-    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, isempty(buf) ? EMPTY_STRING : buf.data)
+    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, isempty(buf) ? EMPTY_STRING : Vector{UInt8}(buf))
 function h5d_write{T<:HDF5BitsKind}(dataset_id::Hid, memtype_id::Hid, x::T)
     tmp = Array(T, 1)
     tmp[1] = x
