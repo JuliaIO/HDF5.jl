@@ -1106,10 +1106,10 @@ datatype(dset::HDF5Attribute) = HDF5Datatype(h5a_get_type(checkvalid(dset).id), 
 datatype{T<:HDF5BitsKind}(x::T) = HDF5Datatype(hdf5_type_id(T), false)
 datatype{T<:HDF5BitsKind}(::Type{T}) = HDF5Datatype(hdf5_type_id(T), false)
 datatype{T<:HDF5BitsKind}(A::Array{T}) = HDF5Datatype(hdf5_type_id(T), false)
-function datatype(str::String)
-    type_id = h5t_copy(hdf5_type_id(String))
+function datatype{S<:String}(str::S)
+    type_id = h5t_copy(hdf5_type_id(S))
     h5t_set_size(type_id, max(sizeof(str), 1))
-    h5t_set_cset(type_id, cset(String))
+    h5t_set_cset(type_id, cset(S))
     HDF5Datatype(type_id)
 end
 function datatype{S<:String}(str::Array{S})
@@ -1681,7 +1681,7 @@ end
     if !(T<:Array)
         error("Hyperslab interface is available only for arrays")
     end
-    Y = convert(Array{T.parameters[1], ndims(X)}, X)
+    Y = convert(Array{eltype(T), ndims(X)}, X)
     setindex!(dset, Y, indices...)
 end
 
@@ -1690,7 +1690,7 @@ end
     if !(T<:Array)
         error("Hyperslab interface is available only for arrays")
     end
-    X = fill(convert(T.parameters[1], x), map(length, indices))
+    X = fill(convert(eltype(T), x), map(length, indices))
     setindex!(dset, X, indices...)
 end
 
