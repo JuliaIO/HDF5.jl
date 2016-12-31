@@ -112,16 +112,6 @@ h5open("test.h5", "w") do file
 end
 ```
 
-Convenience functions for attributes attached to datasets are also provided:
-
-```julia
-  A=[1:10]
-  h5write("bar.h5", "foo", A)
-  h5writeattr("bar.h5", "foo", Dict("c"=>"value for metadata parameter c","d"=>"metadata d"))
-  h5readattr("bar.h5", "foo")
-```
-
-
 ## Specific file formats
 
 There is no conflict in having multiple modules (HDF5, [JLD](https://github.com/JuliaIO/JLD.jl), and
