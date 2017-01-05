@@ -966,7 +966,7 @@ function length(x::HDF5Attributes)
     objinfo(x.parent).num_attrs
 end
 
-@compat isempty(x::Union{HDF5Group,HDF5File}) = length(x) == 0
+@compat isempty(x::Union{HDF5Dataset,HDF5Group,HDF5File}) = length(x) == 0
 @compat function size(obj::Union{HDF5Dataset, HDF5Attribute})
     dspace = dataspace(obj)
     dims, maxdims = get_dims(dspace)
