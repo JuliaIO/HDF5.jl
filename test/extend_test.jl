@@ -1,4 +1,5 @@
-using HDF5, Compat
+using HDF5
+using Compat; import Compat.String
 
 fn = joinpath(tempdir(),"test.h5")
 

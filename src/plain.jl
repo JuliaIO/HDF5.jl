@@ -269,17 +269,17 @@ type UTF8Char<:CharType
     c::UInt8
 end
 length(c::UTF8Char) = 1
-chartype(::Type{Compat.ASCIIString}) = ASCIIChar
+chartype(::Type{String}) = ASCIIChar
 if !newstring
-    chartype(::Type{Compat.UTF8String})  = UTF8Char
+    chartype(::Type{String})  = UTF8Char
 end
-stringtype(::Type{ASCIIChar}) = Compat.ASCIIString
-stringtype(::Type{UTF8Char})  = Compat.UTF8String
+stringtype(::Type{ASCIIChar}) = String
+stringtype(::Type{UTF8Char})  = String
 
-cset(::Type{Compat.UTF8String})  = H5T_CSET_UTF8
+cset(::Type{String})  = H5T_CSET_UTF8
 cset(::Type{UTF8Char})    = H5T_CSET_UTF8
 if !newstring
-    cset(::Type{Compat.ASCIIString}) = H5T_CSET_ASCII
+    cset(::Type{String}) = H5T_CSET_ASCII
     cset(::Type{String})  = H5T_CSET_UTF8
 end
 cset(::Type{ASCIIChar})   = H5T_CSET_ASCII
@@ -300,7 +300,7 @@ hdf5_type_id{C<:CharType}(::Type{C})  = H5T_C_S1
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
 type HDF5File <: DataFile
     id::Hid
-    filename::Compat.UTF8String
+    filename::String
 
     function HDF5File(id, filename, toclose::Bool=true)
         f = new(id, filename)
@@ -430,14 +430,14 @@ hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
 type HDF5Compound
     data::Array{UInt8}
     membertype::Vector{Type}
-    membername::Vector{Compat.ASCIIString}
+    membername::Vector{String}
     memberoffset::Vector{UInt}
 end
 
 # Opaque types
 type HDF5Opaque
     data
-    tag::Compat.ASCIIString
+    tag::String
 end
 
 # An empty array type
@@ -583,7 +583,7 @@ function h5open(filename::AbstractString, mode::AbstractString="r", pv...)
     p["fclose_degree"] = H5F_CLOSE_STRONG
     for i = 1:2:length(pv)
         thisname = pv[i]
-        if !isa(thisname, Compat.ASCIIString)
+        if !isa(thisname, String)
             error("Argument ", i+2, " should be a String, but it's a ", typeof(thisname))
         end
         p[thisname] = pv[i+1]
@@ -1388,7 +1388,7 @@ end
         n = h5t_get_nmembers(t.id)
         memberfiletype = Array(HDF5Datatype, n)
         membertype = Array(Type, n)
-        membername = Array(Compat.ASCIIString, n)
+        membername = Array(String, n)
         memberoffset = Array(UInt64, n)
         for i = 1:n
             filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
@@ -1795,9 +1795,9 @@ function hdf5_to_julia_eltype(objtype)
         cset = h5t_get_cset(objtype.id)
         n = h5t_get_size(objtype.id)
         if cset == H5T_CSET_ASCII
-            T = (n == 1) ? ASCIIChar : Compat.ASCIIString
+            T = (n == 1) ? ASCIIChar : String
         elseif cset == H5T_CSET_UTF8
-            T = (n == 1) ? UTF8Char : Compat.UTF8String
+            T = (n == 1) ? UTF8Char : String
         else
             error("character set ", cset, " not recognized")
         end
@@ -2376,14 +2376,14 @@ const rehash! = Base.rehash!
 # Across initializations of the library, the id of various properties
 # will change. So don't hard-code the id (important for precompilation)
 const UTF8_LINK_PROPERTIES = Array(HDF5Properties)
-_link_properties(path::Compat.UTF8String) = UTF8_LINK_PROPERTIES[]
+_link_properties(path::String) = UTF8_LINK_PROPERTIES[]
 const UTF8_ATTRIBUTE_PROPERTIES = Array(HDF5Properties)
-_attr_properties(path::Compat.UTF8String) = UTF8_ATTRIBUTE_PROPERTIES[]
+_attr_properties(path::String) = UTF8_ATTRIBUTE_PROPERTIES[]
 const ASCII_LINK_PROPERTIES = Array(HDF5Properties)
 const ASCII_ATTRIBUTE_PROPERTIES = Array(HDF5Properties)
 if !newstring
-    _link_properties(path::Compat.ASCIIString) = ASCII_LINK_PROPERTIES[]
-    _attr_properties(path::Compat.ASCIIString) = ASCII_ATTRIBUTE_PROPERTIES[]
+    _link_properties(path::String) = ASCII_LINK_PROPERTIES[]
+    _attr_properties(path::String) = ASCII_ATTRIBUTE_PROPERTIES[]
 end
 
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false)
@@ -2395,15 +2395,15 @@ function __init__()
     # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
     ASCII_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
-    h5p_set_char_encoding(ASCII_LINK_PROPERTIES[].id, cset(Compat.ASCIIString))
+    h5p_set_char_encoding(ASCII_LINK_PROPERTIES[].id, cset(String))
     h5p_set_create_intermediate_group(ASCII_LINK_PROPERTIES[].id, 1)
     UTF8_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
-    h5p_set_char_encoding(UTF8_LINK_PROPERTIES[].id, cset(Compat.UTF8String))
+    h5p_set_char_encoding(UTF8_LINK_PROPERTIES[].id, cset(String))
     h5p_set_create_intermediate_group(UTF8_LINK_PROPERTIES[].id, 1)
     ASCII_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE)
-    h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES[].id, cset(Compat.ASCIIString))
+    h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES[].id, cset(String))
     UTF8_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE)
-    h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES[].id, cset(Compat.UTF8String))
+    h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES[].id, cset(String))
 
     rehash!(hdf5_type_map, length(hdf5_type_map.keys))
     rehash!(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
