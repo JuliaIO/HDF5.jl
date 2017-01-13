@@ -2375,12 +2375,12 @@ const rehash! = Base.rehash!
 
 # Across initializations of the library, the id of various properties
 # will change. So don't hard-code the id (important for precompilation)
-const UTF8_LINK_PROPERTIES = Array{HDF5Properties}()
+const UTF8_LINK_PROPERTIES = Ref{HDF5Properties}()
 _link_properties(path::Compat.UTF8String) = UTF8_LINK_PROPERTIES[]
-const UTF8_ATTRIBUTE_PROPERTIES = Array{HDF5Properties}()
+const UTF8_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
 _attr_properties(path::Compat.UTF8String) = UTF8_ATTRIBUTE_PROPERTIES[]
-const ASCII_LINK_PROPERTIES = Array{HDF5Properties}()
-const ASCII_ATTRIBUTE_PROPERTIES = Array{HDF5Properties}()
+const ASCII_LINK_PROPERTIES = Ref{HDF5Properties}()
+const ASCII_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
 if !newstring
     _link_properties(path::Compat.ASCIIString) = ASCII_LINK_PROPERTIES[]
     _attr_properties(path::Compat.ASCIIString) = ASCII_ATTRIBUTE_PROPERTIES[]
