@@ -40,7 +40,7 @@ read(f::Base.Callable, parent::DataFile, name::String...) =
 # Read every variable in the file
 function read(f::DataFile)
     vars = names(f)
-    vals = Array(Any, length(vars))
+    vals = Vector{Any}(length(vars))
     for i = 1:length(vars)
         vals[i] = read(f, vars[i])
     end

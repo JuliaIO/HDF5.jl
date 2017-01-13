@@ -9,8 +9,8 @@ f = h5open(fn, "w")
 f["Float64"] = 3.2
 f["Int16"] = Int16(4)
 # compression of empty array (issue #246)
-f["compressedempty", "shuffle", (), "compress", 4] = Array(Int64, 0)
-f["bloscempty", "blosc", 4] = Array(Int64, 0)
+f["compressedempty", "shuffle", (), "compress", 4] = Int64[]
+f["bloscempty", "blosc", 4] = Int64[]
 # Create arrays of different types
 A = randn(3,5)
 write(f, "Afloat64", convert(Matrix{Float64}, A))
@@ -41,11 +41,13 @@ end
 # Arrays of strings
 salut_split = ["Hi", "there"]
 write(f, "salut_split", salut_split)
+salut_2d = ["Hi" "there"; "Salut" "friend"]
+write(f, "salut_2d", salut_2d)
 # Arrays of strings as vlen
 vlen = HDF5Vlen(salut_split)
 d_write(f, "salut_vlen", vlen)
 # Empty arrays
-empty = Array(UInt32, 0)
+empty = UInt32[]
 write(f, "empty", empty)
 # Empty strings
 empty_string = ""
@@ -149,6 +151,8 @@ ucoder = read(fr, "ucode")
 @assert ucode == ucoder
 salut_splitr = read(fr, "salut_split")
 @assert salut_splitr == salut_split
+salut_2dr = read(fr, "salut_2d")
+@assert salut_2d == salut_2dr
 salut_vlenr = read(fr, "salut_vlen")
 @assert salut_vlenr == salut_split
 Rr = read(fr, "mygroup/CompressedA")
