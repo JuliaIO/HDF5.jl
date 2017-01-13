@@ -7,7 +7,7 @@ fn = joinpath(tempdir(),"test.h5")
 f = h5open(fn, "w")
 # Write scalars
 f["Float64"] = 3.2
-f["Int16"] = @compat Int16(4)
+f["Int16"] = Int16(4)
 # compression of empty array (issue #246)
 f["compressedempty", "shuffle", (), "compress", 4] = Array(Int64, 0)
 f["bloscempty", "blosc", 4] = Array(Int64, 0)
@@ -98,7 +98,7 @@ f["deleteme"] = 17.2
 close(f)
 # Test the h5read/write interface, with attributes
 W = copy(reshape(1:120, 15, 8))
-Wa = @compat Dict("a"=>1, "b"=>2)
+Wa = Dict("a"=>1, "b"=>2)
 h5write(fn, "newgroup/W", W)
 h5writeattr(fn, "newgroup/W", Wa)
 
@@ -207,7 +207,7 @@ end
 # Test reading multiple vars at once
 z = read(fr, "Float64", "Int16")
 @assert z == (3.2, 4)
-@assert typeof(z) == @compat Tuple{Float64, Int16}
+@assert typeof(z) == Tuple{Float64, Int16}
 # Test function syntax
 read(fr, "Float64") do x
 	@assert x == 3.2
