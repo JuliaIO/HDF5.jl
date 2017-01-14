@@ -6,13 +6,13 @@ macro gcvalid(args...)
         gc()
         gc_enable(false)
     end,
-    [:(@test HDF5.isvalid($x)) for x in args]...)
+    [:(@test HDF5.isvalid($(esc(x)))) for x in args]...)
 end
 
 macro closederror(x)
     quote
         try
-            $x
+            $(esc(x))
         catch e
             isa(e, ErrorException) || rethrow(e)
             e.msg == "File or object has been closed" || error("Attempt to access closed object did not throw")

@@ -36,7 +36,7 @@ let
     HDF5.h5t_set_cset(dtype.id, HDF5.cset(typeof(salut)))
     dspace = HDF5.dataspace(salut)
     dset = HDF5.d_create(f, "salut-vlen", dtype, dspace)
-    HDF5.h5d_write(dset, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(salut.data)])
+    HDF5.h5d_write(dset, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(salut)])
 end
 # Arrays of strings
 salut_split = ["Hi", "there"]
