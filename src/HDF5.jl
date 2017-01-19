@@ -1,6 +1,4 @@
-####################
-## HDF5 interface ##
-####################
+__precompile__()
 
 module HDF5
 
