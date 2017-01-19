@@ -7,10 +7,10 @@ fn = joinpath(tempdir(),"test.h5")
 f = h5open(fn, "w")
 # Write scalars
 f["Float64"] = 3.2
-f["Int16"] = @compat Int16(4)
+f["Int16"] = Int16(4)
 # compression of empty array (issue #246)
-f["compressedempty", "shuffle", (), "compress", 4] = Array(Int64, 0)
-f["bloscempty", "blosc", 4] = Array(Int64, 0)
+f["compressedempty", "shuffle", (), "compress", 4] = Int64[]
+f["bloscempty", "blosc", 4] = Int64[]
 # Create arrays of different types
 A = randn(3,5)
 write(f, "Afloat64", convert(Matrix{Float64}, A))
@@ -36,16 +36,18 @@ let
     HDF5.h5t_set_cset(dtype.id, HDF5.cset(typeof(salut)))
     dspace = HDF5.dataspace(salut)
     dset = HDF5.d_create(f, "salut-vlen", dtype, dspace)
-    HDF5.h5d_write(dset, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(salut.data)])
+    HDF5.h5d_write(dset, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(salut)])
 end
 # Arrays of strings
 salut_split = ["Hi", "there"]
 write(f, "salut_split", salut_split)
+salut_2d = ["Hi" "there"; "Salut" "friend"]
+write(f, "salut_2d", salut_2d)
 # Arrays of strings as vlen
 vlen = HDF5Vlen(salut_split)
 d_write(f, "salut_vlen", vlen)
 # Empty arrays
-empty = Array(UInt32, 0)
+empty = UInt32[]
 write(f, "empty", empty)
 # Empty strings
 empty_string = ""
@@ -98,7 +100,7 @@ f["deleteme"] = 17.2
 close(f)
 # Test the h5read/write interface, with attributes
 W = copy(reshape(1:120, 15, 8))
-Wa = @compat Dict("a"=>1, "b"=>2)
+Wa = Dict("a"=>1, "b"=>2)
 h5write(fn, "newgroup/W", W)
 h5writeattr(fn, "newgroup/W", Wa)
 
@@ -149,6 +151,8 @@ ucoder = read(fr, "ucode")
 @assert ucode == ucoder
 salut_splitr = read(fr, "salut_split")
 @assert salut_splitr == salut_split
+salut_2dr = read(fr, "salut_2d")
+@assert salut_2d == salut_2dr
 salut_vlenr = read(fr, "salut_vlen")
 @assert salut_vlenr == salut_split
 Rr = read(fr, "mygroup/CompressedA")
@@ -207,7 +211,7 @@ end
 # Test reading multiple vars at once
 z = read(fr, "Float64", "Int16")
 @assert z == (3.2, 4)
-@assert typeof(z) == @compat Tuple{Float64, Int16}
+@assert typeof(z) == Tuple{Float64, Int16}
 # Test function syntax
 read(fr, "Float64") do x
 	@assert x == 3.2

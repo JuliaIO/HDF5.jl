@@ -24,10 +24,10 @@ const FILTER_BLOSC_VERSION = 2
 const FILTER_BLOSC = 32001 # Filter ID registered with the HDF Group for Blosc
 const blosc_name = "blosc"
 
-const blosc_flags_ = Array(Cuint, 1)
-const blosc_nelements_ = Array(Csize_t, 1)
-const blosc_values = Array(Cuint, 8)
-const blosc_chunkdims = Array(Hsize, 32)
+const blosc_flags_ = Vector{Cuint}(1)
+const blosc_nelements_ = Vector{Csize_t}(1)
+const blosc_values = Vector{Cuint}(8)
+const blosc_chunkdims = Vector{Hsize}(32)
 function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
     blosc_nelements_[1] = 8
     if ccall((:H5Pget_filter_by_id2,libhdf5), Herr,
