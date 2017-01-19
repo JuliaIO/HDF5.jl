@@ -1,3 +1,5 @@
 *~
 *.h5
 *.mat
+deps/builds
+deps/src
