@@ -1919,7 +1919,7 @@ end
 function ccallexpr(lib::AbstractString, ccallsym::Symbol, outtype, argtypes::Tuple, argsyms::Tuple)
     ccallargs = Any[Expr(:tuple, Expr(:quote, ccallsym), lib), outtype, Expr(:tuple, argtypes...)]
     ccallargs = ccallsyms(ccallargs, length(argtypes), argsyms)
-    Expr(:ccall, ccallargs...)
+    :(ccall($(ccallargs...)))
 end
 
 function ccallsyms(ccallargs, n, argsyms)
