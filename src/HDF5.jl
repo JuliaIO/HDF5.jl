@@ -426,10 +426,11 @@ hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
 # Compound types
 # These are "raw" and not mapped to any Julia type
 type HDF5Compound
-    data::Array{UInt8}
+    data::Array
     membertype::Vector{Type}
     membername::Vector{Compat.ASCIIString}
     memberoffset::Vector{UInt}
+    membersize::Vector{UInt8}
 end
 
 # Opaque types
@@ -1378,26 +1379,43 @@ function getindex(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, r::HDF5Refere
     h5object(obj_id, parent)
 end
 
+# Helper for reading compound types
+function read_row(io::IO, membertype, membersize)
+    row = []
+    for (dtype, dsize) in zip(membertype, membersize)
+        if dtype == String
+            push!(row, strip(String(read(io, UInt8, dsize)),'\0'))
+        else
+            push!(row, read(io, dtype))
+        end
+    end
+    return row
+end
+
 # Read compound type
 function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compound}})
     t = datatype(obj)
-    local sz = 0; local n; local membername; local membertype; local memberoffset; local memberfiletype
+    local sz = 0; local n;
+    local membername; local membertype;
+    local memberoffset; local memberfiletype; local membersize;
     try
         n = h5t_get_nmembers(t.id)
         memberfiletype = Vector{HDF5Datatype}(n)
         membertype = Vector{Type}(n)
         membername = Vector{Compat.ASCIIString}(n)
         memberoffset = Vector{UInt64}(n)
+        membersize = Vector{UInt8}(n)
         for i = 1:n
             filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
             T = hdf5_to_julia_eltype(filetype)
-            if T <: String
-                error("Not yet supported")  # need to handle the vlen issues
-    #             T = Ptr{UInt8}
-            end
+    #         if T <: String
+    #             error("Not yet supported")  # need to handle the vlen issues
+    # #             T = Ptr{UInt8}
+    #         end
             memberfiletype[i] = filetype
             membertype[i] = T
             memberoffset[i] = sz
+            membersize[i] = sizeof(filetype)
             sz += sizeof(filetype)
             membername[i] = h5t_get_member_name(t.id, i-1)
         end
@@ -1412,7 +1430,15 @@ function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compo
     # Read the raw data
     buf = Vector{UInt8}(length(obj)*sz)
     h5d_read(obj.id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
-    HDF5Compound(buf, membertype, membername, memberoffset)
+
+    # Convert to the appropriate data format using iobuffer
+    iobuff = IOBuffer(buf)
+    data = []
+    while !eof(iobuff)
+        push!(data, read_row(iobuff, membertype, membersize))
+    end
+
+    HDF5Compound(data, membertype, membername, memberoffset, membersize)
 end
 
 # Read OPAQUE datasets and attributes
