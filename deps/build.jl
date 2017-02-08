@@ -22,6 +22,6 @@ if is_apple()
 end
 
 provides(Sources, URI("http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.gz"), hdf5)
-provides(BuildProcess, Autotools(libtarget = "libhdf5.la"), hdf5)
+provides(BuildProcess, Autotools(libtarget = joinpath("src", "libhdf5.la")), hdf5)
 
 @BinDeps.install Dict(:libhdf5 => :libhdf5)
