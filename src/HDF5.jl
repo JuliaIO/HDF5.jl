@@ -1385,6 +1385,9 @@ function read_row(io::IO, membertype, membersize)
     for (dtype, dsize) in zip(membertype, membersize)
         if dtype == String
             push!(row, strip(String(read(io, UInt8, dsize)),'\0'))
+        # This is pretty awkward...
+        elseif dtype.name == HDF5.FixedArray.name
+            push!(row, read(io, eltype(dtype), size(dtype)[1]))
         else
             push!(row, read(io, dtype))
         end
@@ -1437,7 +1440,6 @@ function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compo
     while !eof(iobuff)
         push!(data, read_row(iobuff, membertype, membersize))
     end
-
     HDF5Compound(data, membertype, membername, memberoffset, membersize)
 end
 
