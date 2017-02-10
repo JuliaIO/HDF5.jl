@@ -299,11 +299,14 @@ rm(tmpdir, recursive=true)
 
 d = h5read(joinpath(test_path, "compound.h5"), "/data")
 @assert typeof(d) == HDF5.HDF5Compound
-@assert typeof(d.data) == Array{UInt8,1}
-@assert length(d.data) == 128
+@assert typeof(d.data[1][1]) == Float64
+@assert typeof(d.data[1][2][1]) == Float64 
+@assert length(d.data) == 2
+@assert length(d.data[1][2]) == 3
 @test d.membertype == Type[Float64, HDF5.FixedArray{Float64,(3,)}, HDF5.FixedArray{Float64,(3,)}, Float64]
 @assert d.membername == Compat.ASCIIString["wgt", "xyz", "uvw", "E"]
 @assert d.memberoffset == UInt64[0x00, 0x08, 0x20, 0x38]
+@assert d.membersize == UInt64[0x08, 0x18, 0x18, 0x08]
 
 # File creation and access property lists
 cpl = HDF5Properties(p_create(HDF5.H5P_FILE_CREATE))
