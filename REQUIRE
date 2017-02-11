@@ -1,6 +1,6 @@
 julia 0.4
 BinDeps
 Blosc
-Compat 0.8.0
+Compat 0.17.0
 @osx Homebrew 0.3.1
 @windows WinRPM
