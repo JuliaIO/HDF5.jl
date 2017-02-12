@@ -258,7 +258,7 @@ hdf5_type_id{S<:AbstractString}(::Type{S})  = H5T_C_S1
 
 # Single character types
 # These are needed to safely handle VLEN objects
-abstract CharType <: AbstractString
+@compat abstract type CharType <: AbstractString end
 type ASCIIChar<:CharType
     c::UInt8
 end

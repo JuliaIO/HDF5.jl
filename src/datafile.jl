@@ -9,7 +9,7 @@
 # Types inheriting from DataFile should have names, read, and write
 # methods
 
-abstract DataFile
+@compat abstract type DataFile end
 
 import Base: read, write
 
