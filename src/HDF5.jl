@@ -47,19 +47,19 @@ end
 _libversion = h5_get_libversion()
 
 ## C types
-typealias C_time_t Int
+const C_time_t = Int
 
 ## HDF5 types and constants
 if _libversion >= (1, 10, 0)
-    typealias Hid     Int64
+    const Hid     = Int64
 else
-    typealias Hid     Cint
+    const Hid     = Cint
 end
-typealias Herr        Cint
-typealias Hsize       UInt64
-typealias Hssize      Int64
-typealias Htri        Cint   # pseudo-boolean (negative if error)
-typealias Haddr       UInt64
+const Herr        = Cint
+const Hsize       = UInt64
+const Hssize      = Int64
+const Htri        = Cint   # pseudo-boolean (negative if error)
+const Haddr       = UInt64
 
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
@@ -237,8 +237,8 @@ hdf5_type_id(::Type{UInt64})     = H5T_NATIVE_UINT64
 hdf5_type_id(::Type{Float32})    = H5T_NATIVE_FLOAT
 hdf5_type_id(::Type{Float64})    = H5T_NATIVE_DOUBLE
 
-typealias HDF5BitsKind Union{Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
-typealias BitsKindOrString Union{HDF5BitsKind, String}
+const HDF5BitsKind = Union{Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
+const BitsKindOrString = Union{HDF5BitsKind, String}
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
 const hdf5_type_map = Dict(
@@ -364,7 +364,7 @@ hash(dtype::HDF5Datatype, h::UInt) =
 ==(dt1::HDF5Datatype, dt2::HDF5Datatype) = h5t_equal(dt1, dt2) > 0
 
 # Define an H5O Object type
-typealias HDF5Object Union{HDF5Group, HDF5Dataset, HDF5Datatype}
+const HDF5Object = Union{HDF5Group, HDF5Dataset, HDF5Datatype}
 
 type HDF5Dataspace
     id::Hid
@@ -1202,7 +1202,7 @@ end
 # "Plain" (unformatted) reads. These work only for simple types: scalars, arrays, and strings
 # See also "Reading arrays using getindex" below
 # This infers the Julia type from the HDF5Datatype. Specific file formats should provide their own read(dset).
-typealias DatasetOrAttribute Union{HDF5Dataset, HDF5Attribute}
+const DatasetOrAttribute = Union{HDF5Dataset, HDF5Attribute}
 function read(obj::DatasetOrAttribute)
     local T
     T = hdf5_to_julia(obj)
