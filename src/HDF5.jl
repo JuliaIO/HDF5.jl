@@ -427,10 +427,7 @@ hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
 # These are "raw" and not mapped to any Julia type
 type HDF5Compound
     data::Array
-    membertype::Vector{Type}
     membername::Vector{Compat.ASCIIString}
-    memberoffset::Vector{UInt}
-    membersize::Vector{UInt8}
 end
 
 # Opaque types
