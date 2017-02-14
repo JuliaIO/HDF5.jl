@@ -1378,7 +1378,7 @@ end
 
 # Helper for reading compound types
 function read_row(io::IO, membertype, membersize)
-    row = Vector{Any}()
+    row = Any[]
     for (dtype, dsize) in zip(membertype, membersize)
         if dtype === String
             push!(row, strip(String(read(io, UInt8, dsize)),'\0'))
