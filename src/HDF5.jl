@@ -426,7 +426,7 @@ hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
 # Compound types
 # These are "raw" and not mapped to any Julia type
 type HDF5Compound
-    data::Array
+    data::Vector{Any}
     membername::Vector{Compat.ASCIIString}
 end
 
@@ -1378,12 +1378,11 @@ end
 
 # Helper for reading compound types
 function read_row(io::IO, membertype, membersize)
-    row = []
+    row = Vector{Any}()
     for (dtype, dsize) in zip(membertype, membersize)
-        if dtype == String
+        if dtype === String
             push!(row, strip(String(read(io, UInt8, dsize)),'\0'))
-        # This is pretty awkward...
-        elseif dtype.name == HDF5.FixedArray.name
+        elseif dtype <: HDF5.FixedArray
             push!(row, read(io, eltype(dtype), size(dtype)[1]))
         else
             push!(row, read(io, dtype))
@@ -1408,10 +1407,6 @@ function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compo
         for i = 1:n
             filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
             T = hdf5_to_julia_eltype(filetype)
-    #         if T <: String
-    #             error("Not yet supported")  # need to handle the vlen issues
-    # #             T = Ptr{UInt8}
-    #         end
             memberfiletype[i] = filetype
             membertype[i] = T
             memberoffset[i] = sz
@@ -1437,7 +1432,7 @@ function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compo
     while !eof(iobuff)
         push!(data, read_row(iobuff, membertype, membersize))
     end
-    HDF5Compound(data, membertype, membername, memberoffset, membersize)
+    HDF5Compound(data, membername)
 end
 
 # Read OPAQUE datasets and attributes
