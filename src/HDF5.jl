@@ -1428,7 +1428,7 @@ function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compo
 
     # Convert to the appropriate data format using iobuffer
     iobuff = IOBuffer(buf)
-    data = []
+    data = Any[]
     while !eof(iobuff)
         push!(data, read_row(iobuff, membertype, membersize))
     end
