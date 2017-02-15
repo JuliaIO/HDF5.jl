@@ -1380,7 +1380,7 @@ function read_row(io::IO, membertype, membersize)
     row = Any[]
     for (dtype, dsize) in zip(membertype, membersize)
         if dtype === String
-            push!(row, strip(String(read(io, UInt8, dsize)),'\0'))
+            push!(row, unpad(read(io, UInt8, dsize), H5T_STR_NULLPAD))
         elseif dtype <: HDF5.FixedArray
             push!(row, read(io, eltype(dtype), size(dtype)[1]))
         else
