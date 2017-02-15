@@ -298,7 +298,7 @@ end
 rm(tmpdir, recursive=true)
 
 d = h5read(joinpath(test_path, "compound.h5"), "/data")
-@assert typeof(d) == Vector{HDF5.HDF5Compound{4}}
+@assert typeof(d[1]) === HDF5.HDF5Compound{4}
 @assert length(d) == 2
 dtypes = [typeof(x) for x in d[1].data]
 @assert dtypes == [Float64, Vector{Float64}, Vector{Float64}, Float64]
