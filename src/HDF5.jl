@@ -1392,7 +1392,7 @@ function read_row(io::IO, membertype, membersize)
 end
 
 # Read compound type
-function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compound}})
+function read(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound}},Type{HDF5Compound}})
     t = datatype(obj)
     local sz = 0; local n;
     local membername; local membertype;
@@ -1406,9 +1406,8 @@ function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compo
         membersize = Vector{UInt8}(n)
         for i = 1:n
             filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
-            T = hdf5_to_julia_eltype(filetype)
             memberfiletype[i] = filetype
-            membertype[i] = T
+            membertype[i] = hdf5_to_julia_eltype(filetype)
             memberoffset[i] = sz
             membersize[i] = sizeof(filetype)
             sz += sizeof(filetype)
@@ -1432,7 +1431,11 @@ function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compo
     while !eof(iobuff)
         push!(data, read_row(iobuff, membertype, membersize))
     end
-    HDF5Compound(data, membername)
+    if T === HDF5Compound
+        return HDF5Compound(data[1], membername)
+    else
+        return [HDF5Compound(elem, membername) for elem in data]
+    end
 end
 
 # Read OPAQUE datasets and attributes
