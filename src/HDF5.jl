@@ -424,10 +424,9 @@ end
 hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
 
 # Compound types
-# These are "raw" and not mapped to any Julia type
-type HDF5Compound
-    data::Vector{Any}
-    membername::Vector{Compat.ASCIIString}
+immutable HDF5Compound{N}
+    data::NTuple{N,Any}
+    membername::NTuple{N,Compat.ASCIIString}
 end
 
 # Opaque types
@@ -1388,7 +1387,7 @@ function read_row(io::IO, membertype, membersize)
             push!(row, read(io, dtype))
         end
     end
-    return row
+    return (row...)
 end
 
 # Read compound type
@@ -1431,7 +1430,9 @@ function read(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound}},Type{HDF5Comp
     while !eof(iobuff)
         push!(data, read_row(iobuff, membertype, membersize))
     end
-    if T === HDF5Compound
+    # convert membername to a tuple
+    membername = (membername...)
+    if T <: HDF5Compound
         return HDF5Compound(data[1], membername)
     else
         return [HDF5Compound(elem, membername) for elem in data]
