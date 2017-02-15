@@ -427,6 +427,7 @@ hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
 immutable HDF5Compound{N}
     data::NTuple{N,Any}
     membername::NTuple{N,Compat.ASCIIString}
+    membertype::NTuple{N,Type}
 end
 
 # Opaque types
@@ -1382,9 +1383,14 @@ function read_row(io::IO, membertype, membersize)
         if dtype === String
             push!(row, unpad(read(io, UInt8, dsize), H5T_STR_NULLPAD))
         elseif dtype <: HDF5.FixedArray
-            push!(row, read(io, eltype(dtype), size(dtype)[1]))
-        else
+            val = read(io, eltype(dtype), prod(size(dtype)))
+            push!(row, reshape(val, size(dtype)))
+        elseif dtype <: HDF5BitsKind
             push!(row, read(io, dtype))
+        else
+            # for other types, just store the raw bytes and let the user
+            # decide what to do
+            push!(row, read(io, UInt8, dsize))
         end
     end
     return (row...)
@@ -1430,12 +1436,13 @@ function read(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound}},Type{HDF5Comp
     while !eof(iobuff)
         push!(data, read_row(iobuff, membertype, membersize))
     end
-    # convert membername to a tuple
+    # convert HDF5Compound type parameters to tuples
     membername = (membername...)
+    membertype = (membertype...)
     if T <: HDF5Compound
-        return HDF5Compound(data[1], membername)
+        return HDF5Compound(data[1], membername, membertype)
     else
-        return [HDF5Compound(elem, membername) for elem in data]
+        return [HDF5Compound(elem, membername, membertype) for elem in data]
     end
 end
 
