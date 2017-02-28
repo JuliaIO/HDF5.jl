@@ -424,12 +424,10 @@ end
 hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
 
 # Compound types
-# These are "raw" and not mapped to any Julia type
-type HDF5Compound
-    data::Array{UInt8}
-    membertype::Vector{Type}
-    membername::Vector{Compat.ASCIIString}
-    memberoffset::Vector{UInt}
+immutable HDF5Compound{N}
+    data::NTuple{N,Any}
+    membername::NTuple{N,Compat.ASCIIString}
+    membertype::NTuple{N,Type}
 end
 
 # Opaque types
@@ -1378,26 +1376,44 @@ function getindex(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, r::HDF5Refere
     h5object(obj_id, parent)
 end
 
+# Helper for reading compound types
+function read_row(io::IO, membertype, membersize)
+    row = Any[]
+    for (dtype, dsize) in zip(membertype, membersize)
+        if dtype === String
+            push!(row, unpad(read(io, UInt8, dsize), H5T_STR_NULLPAD))
+        elseif dtype <: HDF5.FixedArray
+            val = read(io, eltype(dtype), prod(size(dtype)))
+            push!(row, reshape(val, size(dtype)))
+        elseif dtype <: HDF5BitsKind
+            push!(row, read(io, dtype))
+        else
+            # for other types, just store the raw bytes and let the user
+            # decide what to do
+            push!(row, read(io, UInt8, dsize))
+        end
+    end
+    return (row...)
+end
+
 # Read compound type
-function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compound}})
+function read{N}(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound{N}}},Type{HDF5Compound{N}}})
     t = datatype(obj)
-    local sz = 0; local n; local membername; local membertype; local memberoffset; local memberfiletype
+    local sz = 0; local n;
+    local membername; local membertype;
+    local memberoffset; local memberfiletype; local membersize;
     try
-        n = h5t_get_nmembers(t.id)
-        memberfiletype = Vector{HDF5Datatype}(n)
-        membertype = Vector{Type}(n)
-        membername = Vector{Compat.ASCIIString}(n)
-        memberoffset = Vector{UInt64}(n)
-        for i = 1:n
+        memberfiletype = Vector{HDF5Datatype}(N)
+        membertype = Vector{Type}(N)
+        membername = Vector{Compat.ASCIIString}(N)
+        memberoffset = Vector{UInt64}(N)
+        membersize = Vector{UInt8}(N)
+        for i = 1:N
             filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
-            T = hdf5_to_julia_eltype(filetype)
-            if T <: String
-                error("Not yet supported")  # need to handle the vlen issues
-    #             T = Ptr{UInt8}
-            end
             memberfiletype[i] = filetype
-            membertype[i] = T
+            membertype[i] = hdf5_to_julia_eltype(filetype)
             memberoffset[i] = sz
+            membersize[i] = sizeof(filetype)
             sz += sizeof(filetype)
             membername[i] = h5t_get_member_name(t.id, i-1)
         end
@@ -1406,13 +1422,27 @@ function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compo
     end
     # Build the "memory type"
     memtype_id = h5t_create(H5T_COMPOUND, sz)
-    for i = 1:n
+    for i = 1:N
         h5t_insert(memtype_id, membername[i], memberoffset[i], memberfiletype[i].id) # FIXME strings
     end
     # Read the raw data
     buf = Vector{UInt8}(length(obj)*sz)
     h5d_read(obj.id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
-    HDF5Compound(buf, membertype, membername, memberoffset)
+
+    # Convert to the appropriate data format using iobuffer
+    iobuff = IOBuffer(buf)
+    data = Any[]
+    while !eof(iobuff)
+        push!(data, read_row(iobuff, membertype, membersize))
+    end
+    # convert HDF5Compound type parameters to tuples
+    membername = (membername...)
+    membertype = (membertype...)
+    if T === HDF5Compound{N}
+        return HDF5Compound(data[1], membername, membertype)
+    else
+        return [HDF5Compound(elem, membername, membertype) for elem in data]
+    end
 end
 
 # Read OPAQUE datasets and attributes
@@ -1835,7 +1865,8 @@ function hdf5_to_julia_eltype(objtype)
         super_id = h5t_get_super(objtype.id)
         T = HDF5Vlen{hdf5_to_julia_eltype(HDF5Datatype(super_id))}
     elseif class_id == H5T_COMPOUND
-        T = HDF5Compound
+        N = Int(h5t_get_nmembers(objtype.id))
+        T = HDF5Compound{N}
     elseif class_id == H5T_ARRAY
         T = hdf5array(objtype)
     else
