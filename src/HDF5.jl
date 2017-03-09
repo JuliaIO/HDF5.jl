@@ -1258,6 +1258,13 @@ function read{A<:FixedArray}(obj::DatasetOrAttribute, ::Type{Array{A}})
     ret
 end
 
+# Read a scalar reference objected from an attribute
+function read{T<:HDF5ReferenceObj}(obj::HDF5Attribute, ::Type{T})
+    refs = Array{T}(1)
+    h5a_read(obj.id, H5T_STD_REF_OBJ, refs)
+    refs[1]
+end
+
 # Clean up string buffer according to padding mode
 function unpad(s::String, pad::Cint)
     if pad == H5T_STR_NULLTERM
