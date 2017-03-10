@@ -1260,9 +1260,9 @@ end
 
 # Read a scalar reference objected from an attribute
 function read{T<:HDF5ReferenceObj}(obj::HDF5Attribute, ::Type{T})
-    refs = Array{T}(1)
-    h5a_read(obj.id, H5T_STD_REF_OBJ, refs)
-    refs[1]
+    ref = Ref{T}()
+    h5a_read(obj.id, H5T_STD_REF_OBJ, ref)
+    ref[]
 end
 
 # Clean up string buffer according to padding mode
