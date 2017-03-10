@@ -115,7 +115,7 @@ end
 Convenience functions for attributes attached to datasets are also provided:
 
 ```julia
-  A=[1:10]
+  A = Vector{Int}(1:10)
   h5write("bar.h5", "foo", A)
   h5writeattr("bar.h5", "foo", Dict("c"=>"value for metadata parameter c","d"=>"metadata d"))
   h5readattr("bar.h5", "foo")
@@ -139,8 +139,7 @@ demonstrate usage.
 
 ## Credits
 
-- [Konrad Hinsen](https://github.com/khinsen/julia_hdf5) initiated
-  Julia's support for HDF5
+- Konrad Hinsen initiated Julia's support for HDF5
 
 - Tim Holy and Simon Kornblith (co-maintainers and primary authors)
 
