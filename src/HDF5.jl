@@ -1630,8 +1630,9 @@ for (privatesym, fsym, ptype, crsym) in
     end
 end
 
+# Write scalar reference to an attribute
 function a_write{T<:HDF5ReferenceObj}(parent::Union{HDF5File, HDF5Object, HDF5Datatype}, name::String, data::T, plists...)
-    dtype = HDF5Datatype(H5T_STD_REF_OBJ, false)
+    dtype = datatype(data)
     dspace = dataspace(data)
     obj = a_create(parent, name, dtype, dspace, plists...)
     close(dspace)
