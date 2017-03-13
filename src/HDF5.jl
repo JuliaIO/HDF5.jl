@@ -1634,13 +1634,8 @@ function a_write{T<:HDF5ReferenceObj}(parent::Union{HDF5File, HDF5Object, HDF5Da
     dtype = HDF5Datatype(H5T_STD_REF_OBJ, false)
     dspace = dataspace(data)
     obj = a_create(parent, name, dtype, dspace, plists...)
-    println(obj)
-    println(dspace)
     close(dspace)
-    ref = Ref{T}()
-    ref[] = data
-    writearray(obj, dtype.id, ref)
-    # HDF5Attribute(h5a_create(checkvalid(parent).id, name, dtype.id, dataspace(ref), file(parent))
+    writearray(obj, dtype.id, Ref{T}(data))
 end
 
 # Write to already-created objects
