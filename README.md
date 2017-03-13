@@ -50,7 +50,7 @@ how to do it:
 
 If you've installed the library but discover that Julia is not finding
 it, you can add the path to Julia's `Libdl.DL_LOAD_PATH` variable, e.g.,
-```
+```julia
 push!(Libdl.DL_LOAD_PATH, "/opt/local/lib")
 Pkg.build("HDF5")
 ```
