@@ -132,9 +132,9 @@ the formatting of the file is determined by the open command.
 
 The HDF5 API is much more extensive than suggested by this brief
 introduction.  More complete documentation is found in the
-[`doc/`](doc/) directory.
+[`doc`](doc/) directory.
 
-The `test/` directory contains a number of test scripts that also
+The [`test`](test/) directory contains a number of test scripts that also
 demonstrate usage.
 
 ## Credits
