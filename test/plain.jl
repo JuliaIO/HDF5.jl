@@ -324,4 +324,9 @@ using Compat.String
         @test intarray == [1,2,3]
     end
 
+    # Test null terminated ASCII string (e.g. exported by h5py) #332
+    h5open("test_nullterm_ascii.h5","r") do fid
+        str = read(fid["test"])
+        @test str == "Hello World"
+    end
 end
