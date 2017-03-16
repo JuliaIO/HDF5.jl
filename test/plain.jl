@@ -335,5 +335,3 @@ using Compat.String
     close(fd)
     
 end
-
-
