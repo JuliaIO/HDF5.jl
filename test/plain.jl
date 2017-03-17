@@ -72,6 +72,9 @@ using Compat.String
     label = "This is a string"
     attrs(dset)["typeinfo"] = label
     close(dset)
+    # Scalar reference values in attributes
+    attrs(f)["ref_test"] = HDF5.HDF5ReferenceObj(f, "empty_array_of_strings")
+    @test read(attrs(f)["ref_test"]) === HDF5.HDF5ReferenceObj(f, "empty_array_of_strings")
     # Group
     g = g_create(f, "mygroup")
     # Test dataset with compression
