@@ -1115,6 +1115,7 @@ function datatype{S<:String}(str::Array{S})
     HDF5Datatype(type_id)
 end
 datatype(R::Array{HDF5ReferenceObj}) = HDF5Datatype(H5T_STD_REF_OBJ, false)
+datatype(R::HDF5ReferenceObj) = HDF5Datatype(H5T_STD_REF_OBJ, false)
 datatype{T<:HDF5BitsKind}(A::HDF5Vlen{T}) = HDF5Datatype(h5t_vlen_create(hdf5_type_id(T)))
 function datatype{C<:CharType}(str::HDF5Vlen{C})
     type_id = h5t_copy(hdf5_type_id(C))
@@ -1124,6 +1125,7 @@ function datatype{C<:CharType}(str::HDF5Vlen{C})
 end
 
 sizeof(dtype::HDF5Datatype) = h5t_get_size(dtype)
+sizeof(dtype::HDF5ReferenceObj) = h5t_get_size(H5T_STD_REF_OBJ)
 
 # Get the dataspace of a dataset
 dataspace(dset::HDF5Dataset) = HDF5Dataspace(h5d_get_space(checkvalid(dset).id))
@@ -1159,6 +1161,7 @@ end
 dataspace(A::Array; max_dims::Union{Dims, Tuple{}} = ()) = _dataspace(size(A), max_dims)
 dataspace(str::String) = HDF5Dataspace(h5s_create(H5S_SCALAR))
 dataspace(R::Array{HDF5ReferenceObj}; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(size(R), max_dims)
+dataspace(R::HDF5ReferenceObj) = HDF5Dataspace(h5s_create(H5S_SCALAR))
 dataspace(v::HDF5Vlen; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(size(v.data), max_dims)
 dataspace(n::Void) = HDF5Dataspace(h5s_create(H5S_NULL))
 dataspace(sz::Dims; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(sz, max_dims)
@@ -1256,6 +1259,13 @@ function read{A<:FixedArray}(obj::DatasetOrAttribute, ::Type{Array{A}})
         ret[i] = reshape(data[(i-1)*L+1:i*L], sz)
     end
     ret
+end
+
+# Read a scalar reference objected from an attribute
+function read{T<:HDF5ReferenceObj}(obj::HDF5Attribute, ::Type{T})
+    ref = Ref{T}()
+    h5a_read(obj.id, H5T_STD_REF_OBJ, ref)
+    ref[]
 end
 
 # Clean up string buffer according to padding mode
@@ -1615,6 +1625,16 @@ for (privatesym, fsym, ptype, crsym) in
             ($privatesym)(parent, name, data, plists...)
     end
 end
+
+# Write scalar reference to an attribute
+function a_write{T<:HDF5ReferenceObj}(parent::Union{HDF5File, HDF5Object, HDF5Datatype}, name::String, data::T, plists...)
+    dtype = datatype(data)
+    dspace = dataspace(data)
+    obj = a_create(parent, name, dtype, dspace, plists...)
+    close(dspace)
+    writearray(obj, dtype.id, Ref{T}(data))
+end
+
 # Write to already-created objects
 # Scalars
 function write{T<:BitsKindOrString}(obj::DatasetOrAttribute, x::Union{T, Array{T}})
