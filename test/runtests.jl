@@ -1,11 +1,8 @@
 using HDF5
+using Base.Test
 
-runtest(filename) = (println(filename); include(filename))
-
-runtest("plain.jl")
-runtest("readremote.jl")
-runtest("extend_test.jl")
-runtest("gc.jl")
-runtest("external.jl")
-
-nothing
+include("plain.jl")
+include("readremote.jl")
+include("extend_test.jl")
+include("gc.jl")
+include("external.jl")

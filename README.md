@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/JuliaIO/HDF5.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/HDF5.jl) [![Build status](https://ci.appveyor.com/api/projects/status/c00htf9yte5swb1p/branch/master?svg=true)](https://ci.appveyor.com/project/timholy/hdf5-jl-1fndw/branch/master)
 [![Coverage Status](https://coveralls.io/repos/JuliaIO/HDF5.jl/badge.png?branch=master)](https://coveralls.io/r/JuliaIO/HDF5.jl?branch=master)
+[![codecov](https://codecov.io/gh/JuliaIO/HDF5.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaIO/HDF5.jl)
 
 [HDF5][HDF5] is a file format and library for storing and accessing
 data, commonly used for scientific data. HDF5 files can be created and
@@ -50,7 +51,7 @@ how to do it:
 
 If you've installed the library but discover that Julia is not finding
 it, you can add the path to Julia's `Libdl.DL_LOAD_PATH` variable, e.g.,
-```
+```julia
 push!(Libdl.DL_LOAD_PATH, "/opt/local/lib")
 Pkg.build("HDF5")
 ```
@@ -115,7 +116,7 @@ end
 Convenience functions for attributes attached to datasets are also provided:
 
 ```julia
-  A=[1:10]
+  A = Vector{Int}(1:10)
   h5write("bar.h5", "foo", A)
   h5writeattr("bar.h5", "foo", Dict("c"=>"value for metadata parameter c","d"=>"metadata d"))
   h5readattr("bar.h5", "foo")
@@ -132,15 +133,14 @@ the formatting of the file is determined by the open command.
 
 The HDF5 API is much more extensive than suggested by this brief
 introduction.  More complete documentation is found in the
-[`doc/`](doc/) directory.
+[`doc`](doc/) directory.
 
-The `test/` directory contains a number of test scripts that also
+The [`test`](test/) directory contains a number of test scripts that also
 demonstrate usage.
 
 ## Credits
 
-- [Konrad Hinsen](https://github.com/khinsen/julia_hdf5) initiated
-  Julia's support for HDF5
+- Konrad Hinsen initiated Julia's support for HDF5
 
 - Tim Holy and Simon Kornblith (co-maintainers and primary authors)
 

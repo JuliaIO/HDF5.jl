@@ -2,13 +2,13 @@ import Blosc
 
 # port of https://github.com/Blosc/c-blosc/blob/3a668dcc9f61ad22b5c0a0ab45fe8dad387277fd/hdf5/blosc_filter.c (copyright 2010 Francesc Alted, license: MIT/expat)
 
-typealias H5T_class_t Cint # C enum
+const H5T_class_t = Cint # C enum
 
 # The following definitions mirror those in H5Zpublic.h for HDF5 1.8.x:
 const H5Z_FLAG_REVERSE = 0x0100
 const H5Z_FLAG_OPTIONAL = 0x0001
 const H5Z_CLASS_T_VERS = 1
-typealias H5Z_filter_t Cint
+const H5Z_filter_t = Cint
 immutable H5Z_class2_t
     version::Cint # = H5Z_CLASS_T_VERS
     id::H5Z_filter_t # Filter ID number

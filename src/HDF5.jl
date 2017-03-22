@@ -47,19 +47,19 @@ end
 _libversion = h5_get_libversion()
 
 ## C types
-typealias C_time_t Int
+const C_time_t = Int
 
 ## HDF5 types and constants
 if _libversion >= (1, 10, 0)
-    typealias Hid     Int64
+    const Hid     = Int64
 else
-    typealias Hid     Cint
+    const Hid     = Cint
 end
-typealias Herr        Cint
-typealias Hsize       UInt64
-typealias Hssize      Int64
-typealias Htri        Cint   # pseudo-boolean (negative if error)
-typealias Haddr       UInt64
+const Herr        = Cint
+const Hsize       = UInt64
+const Hssize      = Int64
+const Htri        = Cint   # pseudo-boolean (negative if error)
+const Haddr       = UInt64
 
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
@@ -237,8 +237,8 @@ hdf5_type_id(::Type{UInt64})     = H5T_NATIVE_UINT64
 hdf5_type_id(::Type{Float32})    = H5T_NATIVE_FLOAT
 hdf5_type_id(::Type{Float64})    = H5T_NATIVE_DOUBLE
 
-typealias HDF5BitsKind Union{Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
-typealias BitsKindOrString Union{HDF5BitsKind, String}
+const HDF5BitsKind = Union{Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
+const BitsKindOrString = Union{HDF5BitsKind, String}
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
 const hdf5_type_map = Dict(
@@ -258,7 +258,7 @@ hdf5_type_id{S<:AbstractString}(::Type{S})  = H5T_C_S1
 
 # Single character types
 # These are needed to safely handle VLEN objects
-abstract CharType <: AbstractString
+@compat abstract type CharType <: AbstractString end
 type ASCIIChar<:CharType
     c::UInt8
 end
@@ -364,7 +364,7 @@ hash(dtype::HDF5Datatype, h::UInt) =
 ==(dt1::HDF5Datatype, dt2::HDF5Datatype) = h5t_equal(dt1, dt2) > 0
 
 # Define an H5O Object type
-typealias HDF5Object Union{HDF5Group, HDF5Dataset, HDF5Datatype}
+const HDF5Object = Union{HDF5Group, HDF5Dataset, HDF5Datatype}
 
 type HDF5Dataspace
     id::Hid
@@ -424,12 +424,10 @@ end
 hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
 
 # Compound types
-# These are "raw" and not mapped to any Julia type
-type HDF5Compound
-    data::Array{UInt8}
-    membertype::Vector{Type}
-    membername::Vector{Compat.ASCIIString}
-    memberoffset::Vector{UInt}
+immutable HDF5Compound{N}
+    data::NTuple{N,Any}
+    membername::NTuple{N,Compat.ASCIIString}
+    membertype::NTuple{N,Type}
 end
 
 # Opaque types
@@ -1202,7 +1200,7 @@ end
 # "Plain" (unformatted) reads. These work only for simple types: scalars, arrays, and strings
 # See also "Reading arrays using getindex" below
 # This infers the Julia type from the HDF5Datatype. Specific file formats should provide their own read(dset).
-typealias DatasetOrAttribute Union{HDF5Dataset, HDF5Attribute}
+const DatasetOrAttribute = Union{HDF5Dataset, HDF5Attribute}
 function read(obj::DatasetOrAttribute)
     local T
     T = hdf5_to_julia(obj)
@@ -1282,11 +1280,7 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{S})
             buf = Ptr{UInt8}[C_NULL]
             memtype_id = h5t_copy(H5T_C_S1)
             h5t_set_size(memtype_id, H5T_VARIABLE)
-            if isleaftype(S)
-                h5t_set_cset(memtype_id, cset(S))
-            else
-                h5t_set_cset(memtype_id, h5t_get_cset(datatype(obj)))
-            end
+            h5t_set_cset(memtype_id, h5t_get_cset(datatype(obj)))
             readarray(obj, memtype_id, buf)
             ret = unsafe_string(buf[1])
         else
@@ -1378,26 +1372,44 @@ function getindex(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, r::HDF5Refere
     h5object(obj_id, parent)
 end
 
+# Helper for reading compound types
+function read_row(io::IO, membertype, membersize)
+    row = Any[]
+    for (dtype, dsize) in zip(membertype, membersize)
+        if dtype === String
+            push!(row, unpad(read(io, UInt8, dsize), H5T_STR_NULLPAD))
+        elseif dtype <: HDF5.FixedArray
+            val = read(io, eltype(dtype), prod(size(dtype)))
+            push!(row, reshape(val, size(dtype)))
+        elseif dtype <: HDF5BitsKind
+            push!(row, read(io, dtype))
+        else
+            # for other types, just store the raw bytes and let the user
+            # decide what to do
+            push!(row, read(io, UInt8, dsize))
+        end
+    end
+    return (row...)
+end
+
 # Read compound type
-function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compound}})
+function read{N}(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound{N}}},Type{HDF5Compound{N}}})
     t = datatype(obj)
-    local sz = 0; local n; local membername; local membertype; local memberoffset; local memberfiletype
+    local sz = 0; local n;
+    local membername; local membertype;
+    local memberoffset; local memberfiletype; local membersize;
     try
-        n = h5t_get_nmembers(t.id)
-        memberfiletype = Vector{HDF5Datatype}(n)
-        membertype = Vector{Type}(n)
-        membername = Vector{Compat.ASCIIString}(n)
-        memberoffset = Vector{UInt64}(n)
-        for i = 1:n
+        memberfiletype = Vector{HDF5Datatype}(N)
+        membertype = Vector{Type}(N)
+        membername = Vector{Compat.ASCIIString}(N)
+        memberoffset = Vector{UInt64}(N)
+        membersize = Vector{UInt8}(N)
+        for i = 1:N
             filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
-            T = hdf5_to_julia_eltype(filetype)
-            if T <: String
-                error("Not yet supported")  # need to handle the vlen issues
-    #             T = Ptr{UInt8}
-            end
             memberfiletype[i] = filetype
-            membertype[i] = T
+            membertype[i] = hdf5_to_julia_eltype(filetype)
             memberoffset[i] = sz
+            membersize[i] = sizeof(filetype)
             sz += sizeof(filetype)
             membername[i] = h5t_get_member_name(t.id, i-1)
         end
@@ -1406,13 +1418,27 @@ function read(obj::HDF5Dataset, ::Union{Type{Array{HDF5Compound}},Type{HDF5Compo
     end
     # Build the "memory type"
     memtype_id = h5t_create(H5T_COMPOUND, sz)
-    for i = 1:n
+    for i = 1:N
         h5t_insert(memtype_id, membername[i], memberoffset[i], memberfiletype[i].id) # FIXME strings
     end
     # Read the raw data
     buf = Vector{UInt8}(length(obj)*sz)
     h5d_read(obj.id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
-    HDF5Compound(buf, membertype, membername, memberoffset)
+
+    # Convert to the appropriate data format using iobuffer
+    iobuff = IOBuffer(buf)
+    data = Any[]
+    while !eof(iobuff)
+        push!(data, read_row(iobuff, membertype, membersize))
+    end
+    # convert HDF5Compound type parameters to tuples
+    membername = (membername...)
+    membertype = (membertype...)
+    if T === HDF5Compound{N}
+        return HDF5Compound(data[1], membername, membertype)
+    else
+        return [HDF5Compound(elem, membername, membertype) for elem in data]
+    end
 end
 
 # Read OPAQUE datasets and attributes
@@ -1835,7 +1861,8 @@ function hdf5_to_julia_eltype(objtype)
         super_id = h5t_get_super(objtype.id)
         T = HDF5Vlen{hdf5_to_julia_eltype(HDF5Datatype(super_id))}
     elseif class_id == H5T_COMPOUND
-        T = HDF5Compound
+        N = Int(h5t_get_nmembers(objtype.id))
+        T = HDF5Compound{N}
     elseif class_id == H5T_ARRAY
         T = hdf5array(objtype)
     else
@@ -2393,15 +2420,15 @@ function __init__()
     # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
     ASCII_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
-    h5p_set_char_encoding(ASCII_LINK_PROPERTIES[].id, cset(Compat.ASCIIString))
+    h5p_set_char_encoding(ASCII_LINK_PROPERTIES[].id, H5T_CSET_ASCII)
     h5p_set_create_intermediate_group(ASCII_LINK_PROPERTIES[].id, 1)
     UTF8_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
-    h5p_set_char_encoding(UTF8_LINK_PROPERTIES[].id, cset(Compat.UTF8String))
+    h5p_set_char_encoding(UTF8_LINK_PROPERTIES[].id, H5T_CSET_UTF8)
     h5p_set_create_intermediate_group(UTF8_LINK_PROPERTIES[].id, 1)
     ASCII_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE)
-    h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES[].id, cset(Compat.ASCIIString))
+    h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES[].id, H5T_CSET_ASCII)
     UTF8_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE)
-    h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES[].id, cset(Compat.UTF8String))
+    h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES[].id, H5T_CSET_UTF8)
 
     rehash!(hdf5_type_map, length(hdf5_type_map.keys))
     rehash!(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
