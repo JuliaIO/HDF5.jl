@@ -2480,7 +2480,7 @@ function __init__()
 
     # Set up Float16 (must occur at runtime)
     @eval(const H5T_FLOAT16 = make_float16())
-    @eval(hdf5_type_id(::Type{Float16}) = H5T_FLOAT16)
+    @eval hdf5_type_id(::Type{Float16}) = H5T_FLOAT16
 
     rehash!(hdf5_type_map, length(hdf5_type_map.keys))
     rehash!(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
