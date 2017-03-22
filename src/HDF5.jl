@@ -5,8 +5,6 @@ module HDF5
 using Compat
 using Compat: unsafe_convert, String
 
-const newstring = isdefined(Core, :String) && isdefined(Core, :AbstractString)
-
 ## Add methods to...
 import Base: ==, close, convert, done, dump, eltype, endof, flush, getindex,
              isempty, isvalid, length, names, ndims, next, parent, read,
@@ -268,18 +266,11 @@ type UTF8Char<:CharType
 end
 length(c::UTF8Char) = 1
 chartype(::Type{Compat.ASCIIString}) = ASCIIChar
-if !newstring
-    chartype(::Type{Compat.UTF8String})  = UTF8Char
-end
 stringtype(::Type{ASCIIChar}) = Compat.ASCIIString
 stringtype(::Type{UTF8Char})  = Compat.UTF8String
 
 cset(::Type{Compat.UTF8String})  = H5T_CSET_UTF8
 cset(::Type{UTF8Char})    = H5T_CSET_UTF8
-if !newstring
-    cset(::Type{Compat.ASCIIString}) = H5T_CSET_ASCII
-    cset(::Type{String})  = H5T_CSET_UTF8
-end
 cset(::Type{ASCIIChar})   = H5T_CSET_ASCII
 
 hdf5_type_id{C<:CharType}(::Type{C})  = H5T_C_S1
@@ -2406,10 +2397,6 @@ const UTF8_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
 _attr_properties(path::Compat.UTF8String) = UTF8_ATTRIBUTE_PROPERTIES[]
 const ASCII_LINK_PROPERTIES = Ref{HDF5Properties}()
 const ASCII_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
-if !newstring
-    _link_properties(path::Compat.ASCIIString) = ASCII_LINK_PROPERTIES[]
-    _attr_properties(path::Compat.ASCIIString) = ASCII_ATTRIBUTE_PROPERTIES[]
-end
 
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false)
 
