@@ -324,6 +324,7 @@ using Compat.String
         @test intarray == [1,2,3]
     end
 
+    # get-datasets
     fd = h5open(joinpath(test_path, "datasets.h5"), "w")
     fd["level_0"] = [1,2,3]
     grp = g_create(fd, "mygroup")
@@ -333,5 +334,11 @@ using Compat.String
     datasets = get_datasets(fd)
     @test sort(map(name, datasets)) ==  ["/level_0", "/mygroup/deep_group/level_2", "/mygroup/level_1"]
     close(fd)
-    
+
+    # Test null terminated ASCII string (e.g. exported by h5py) #332
+    h5open("test_nullterm_ascii.h5","r") do fid
+        str = read(fid["test"])
+        @test str == "Hello World"
+    end
+
 end
