@@ -72,6 +72,9 @@ using Compat.String
     label = "This is a string"
     attrs(dset)["typeinfo"] = label
     close(dset)
+    # Scalar reference values in attributes
+    attrs(f)["ref_test"] = HDF5.HDF5ReferenceObj(f, "empty_array_of_strings")
+    @test read(attrs(f)["ref_test"]) === HDF5.HDF5ReferenceObj(f, "empty_array_of_strings")
     # Group
     g = g_create(f, "mygroup")
     # Test dataset with compression
@@ -324,6 +327,11 @@ using Compat.String
         @test intarray == [1,2,3]
     end
 
+    # Test null terminated ASCII string (e.g. exported by h5py) #332
+    h5open("test_nullterm_ascii.h5","r") do fid
+        str = read(fid["test"])
+        @test str == "Hello World"
+    end
 end
 
 arr_float16 = Float16[1.0, 0.25, 0.5, 8.0]
