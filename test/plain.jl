@@ -332,10 +332,12 @@ using Compat.String
         str = read(fid["test"])
         @test str == "Hello World"
     end
-end
+    
+    # Test Float16 support
+    arr_float16 = Float16[1.0, 0.25, 0.5, 8.0]
+    h5write("test_float16.h5", "x", arr_float16)
+    arr_float16_2 = h5read("test_float16.h5", "x")
+    @test isa(arr_float16_2, Vector{Float16})
+    @test arr_float16_2 == arr_float16
 
-arr_float16 = Float16[1.0, 0.25, 0.5, 8.0]
-h5write("test_float16.h5", "x", arr_float16)
-arr_float16_2 = h5read("test_float16.h5", "x")
-@test isa(arr_float16_2, Vector{Float16})
-@test arr_float16_2 == arr_float16
+end
