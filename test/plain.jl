@@ -10,7 +10,7 @@ using Compat.String
     tmpdir = mktempdir()
 
     # Create a new file
-    fn = joinpath(tmpdir, "test1.h5")
+    fn = joinpath(tmpdir, "test.h5")
     f = h5open(fn, "w")
     # Write scalars
     f["Float64"] = 3.2
@@ -267,7 +267,7 @@ using Compat.String
     # more do syntax: atomic rename version
     rm(tmpdir, recursive=true)
     tmpdir = mktempdir()
-    outfile = joinpath(tmpdir, "test2.h5")
+    outfile = joinpath(tmpdir, "test.h5")
 
     # create a new file
     h5rewrite(outfile) do fid
