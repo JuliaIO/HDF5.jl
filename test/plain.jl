@@ -6,9 +6,10 @@ using Compat.String
 @testset "plain" begin
 
     const test_path = splitdir(@__FILE__)[1]
+    const tmpdir = mktempdir()
 
     # Create a new file
-    fn = joinpath(tempdir(),"test.h5")
+    fn = joinpath(tempdir(), "test1.h5")
     f = h5open(fn, "w")
     # Write scalars
     f["Float64"] = 3.2
@@ -263,8 +264,7 @@ using Compat.String
     close(fid)
 
     # more do syntax: atomic rename version
-    tmpdir = mktempdir()
-    outfile = joinpath(tmpdir, "test.h5")
+    outfile = joinpath(tmpdir, "test2.h5")
 
     # create a new file
     h5rewrite(outfile) do fid
