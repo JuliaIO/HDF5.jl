@@ -9,7 +9,7 @@ using Compat.String
     const tmpdir = mktempdir()
 
     # Create a new file
-    fn = joinpath(tempdir(), "test1.h5")
+    fn = joinpath(tmpdir, "test1.h5")
     f = h5open(fn, "w")
     # Write scalars
     f["Float64"] = 3.2
