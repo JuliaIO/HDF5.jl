@@ -7,10 +7,8 @@ using Compat.String
 
     const test_path = splitdir(@__FILE__)[1]
     
-    tmpdir = mktempdir()
-
     # Create a new file
-    fn = joinpath(tmpdir, "test.h5")
+    fn = joinpath(tempdir(), "test.h5")
     f = h5open(fn, "w")
     # Write scalars
     f["Float64"] = 3.2
@@ -265,7 +263,6 @@ using Compat.String
     close(fid)
 
     # more do syntax: atomic rename version
-    rm(tmpdir, recursive=true)
     tmpdir = mktempdir()
     outfile = joinpath(tmpdir, "test.h5")
 
@@ -341,5 +338,7 @@ using Compat.String
     @test isa(arr_float16_2, Vector{Float16})
     @test arr_float16_2 == arr_float16
 
+    # Remove created files
+    rm(fn)
     rm(tmpdir, recursive=true)
 end
