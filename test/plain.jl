@@ -6,7 +6,7 @@ using Compat.String
 @testset "plain" begin
 
     const test_path = splitdir(@__FILE__)[1]
-    
+
     # Create a new file
     fn = joinpath(tempdir(), "test.h5")
     f = h5open(fn, "w")
