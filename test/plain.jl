@@ -303,8 +303,6 @@ using Compat.String
         @test names(fid["mygroup"]) == Compat.ASCIIString["y"]
     end
 
-    rm(tmpdir, recursive=true)
-
     d = h5read(joinpath(test_path, "compound.h5"), "/data")
     @test typeof(d[1]) === HDF5.HDF5Compound{4}
     @test length(d) == 2
@@ -332,12 +330,13 @@ using Compat.String
         str = read(fid["test"])
         @test str == "Hello World"
     end
-    
+
     # Test Float16 support
     arr_float16 = Float16[1.0, 0.25, 0.5, 8.0]
-    h5write("test_float16.h5", "x", arr_float16)
-    arr_float16_2 = h5read("test_float16.h5", "x")
+    h5write(joinpath(tmpdir, "test_float16.h5"), "x", arr_float16)
+    arr_float16_2 = h5read(joinpath(tmpdir, "test_float16.h5"), "x")
     @test isa(arr_float16_2, Vector{Float16})
     @test arr_float16_2 == arr_float16
 
+    rm(tmpdir, recursive=true)
 end
