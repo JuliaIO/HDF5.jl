@@ -6,7 +6,8 @@ using Compat.String
 @testset "plain" begin
 
     const test_path = splitdir(@__FILE__)[1]
-    const tmpdir = mktempdir()
+    
+    tmpdir = mktempdir()
 
     # Create a new file
     fn = joinpath(tmpdir, "test1.h5")
@@ -264,6 +265,8 @@ using Compat.String
     close(fid)
 
     # more do syntax: atomic rename version
+    rm(tmpdir, recursive=true)
+    tmpdir = mktempdir()
     outfile = joinpath(tmpdir, "test2.h5")
 
     # create a new file
