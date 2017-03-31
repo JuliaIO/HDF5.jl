@@ -33,9 +33,7 @@ function h5_get_libversion()
     minnum = Ref{Cuint}()
     relnum = Ref{Cuint}()
     status = ccall((:H5get_libversion, libhdf5),
-                   Cint,
-                   (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}),
-                   _majnum, _minnum, _relnum)
+                   Cint, (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}), majnum, minnum, relnum)
     status < 0 && error("Error getting HDF5 library version")
     VersionNumber(convert(Int, majnum[]), convert(Int, minnum[]), convert(Int, relnum[]))
 end
