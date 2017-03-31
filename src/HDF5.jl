@@ -22,9 +22,8 @@ end
 
 function init_libhdf5()
     status = ccall((:H5open, libhdf5), Cint, ())
-    if status < 0
-        error("Can't initialize the HDF5 library")
-    end
+    status < 0 && error("Can't initialize the HDF5 library")
+    nothing
 end
 
 init_libhdf5()
