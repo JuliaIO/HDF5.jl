@@ -1,5 +1,5 @@
-*~
 *.h5
-*.mat
 deps/builds
 deps/src
+deps/deps.jl
+deps/downloads
