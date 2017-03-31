@@ -1,6 +1,5 @@
 using HDF5
 using Base.Test
-using Compat
 
 @testset "readremote" begin
 
