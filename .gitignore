@@ -1,5 +1,1 @@
 *.h5
-deps/builds
-deps/src
-deps/deps.jl
-deps/downloads
