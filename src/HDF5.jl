@@ -13,8 +13,10 @@ import Base: ==, close, convert, done, dump, eltype, endof, flush, getindex,
 include("datafile.jl")
 
 ### Load and initialize the HDF library ###
-if isfile(joinpath(dirname(dirname(@__FILE__)),"deps","deps.jl"))
-    include("../deps/deps.jl")
+const depsfile = joinpath(dirname(dirname(@__FILE__)), "deps", "deps.jl")
+
+if isfile(depsfile)
+    include(depsfile)
 else
     error("HDF5 not properly installed. Please run Pkg.build(\"HDF5\")")
 end
@@ -28,9 +30,9 @@ end
 
 init_libhdf5()
 
-_majnum = Vector{Cuint}(1)
-_minnum = Vector{Cuint}(1)
-_relnum = Vector{Cuint}(1)
+const _majnum = Ref{Cuint}()
+const _minnum = Ref{Cuint}()
+const _relnum = Ref{Cuint}()
 function h5_get_libversion()
     status = ccall((:H5get_libversion, libhdf5),
                    Cint,
@@ -39,10 +41,10 @@ function h5_get_libversion()
     if status < 0
         error("Error getting HDF5 library version")
     end
-    convert(Int,_majnum[1]), convert(Int,_minnum[1]), convert(Int,_relnum[1])
+    convert(Int, _majnum[]), convert(Int, _minnum[]), convert(Int, _relnum[])
 end
 
-_libversion = h5_get_libversion()
+const _libversion = h5_get_libversion()
 
 ## C types
 const C_time_t = Int
