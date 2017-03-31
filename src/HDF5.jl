@@ -14,7 +14,6 @@ include("datafile.jl")
 
 ### Load and initialize the HDF library ###
 const depsfile = joinpath(dirname(dirname(@__FILE__)), "deps", "deps.jl")
-
 if isfile(depsfile)
     include(depsfile)
 else
@@ -38,9 +37,7 @@ function h5_get_libversion()
                    Cint,
                    (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}),
                    _majnum, _minnum, _relnum)
-    if status < 0
-        error("Error getting HDF5 library version")
-    end
+    status < 0 && error("Error getting HDF5 library version")
     convert(Int, _majnum[]), convert(Int, _minnum[]), convert(Int, _relnum[])
 end
 
