@@ -2344,7 +2344,6 @@ export
     o_open,
     p_create,
     parent,
-    plain,
     read,
     readmmap,
     @read,
