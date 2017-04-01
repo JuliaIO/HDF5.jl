@@ -656,10 +656,10 @@ end
 
 function h5readattr(filename, name::String)
     local dat
-    fid=h5open(filename,"r")
+    fid = h5open(filename,"r")
     try
-        a=attrs(fid[name])
-        dat = Dict([(x,read(a[x])) for x in names(a)]) # TODO: switch to generator syntax when 0.4 is no longer supported
+        a = attrs(fid[name])
+        dat = Dict(x => read(a[x]) for x in names(a))
     finally
         close(fid)
     end
