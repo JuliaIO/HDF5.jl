@@ -603,10 +603,10 @@ function h5rewrite(f::Function, filename::AbstractString, args...)
 
     try
         val = h5open(f, tmppath, "w", args...)
-        Compat.Filesystem.rename(tmppath, filename)
+        Base.Filesystem.rename(tmppath, filename)
         return val
     catch
-        Compat.Filesystem.unlink(tmppath)
+        Base.Filesystem.unlink(tmppath)
         rethrow()
     end
 end
