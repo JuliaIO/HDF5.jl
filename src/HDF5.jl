@@ -13,42 +13,38 @@ import Base: ==, close, convert, done, dump, eltype, endof, flush, getindex,
 include("datafile.jl")
 
 ### Load and initialize the HDF library ###
-if isfile(joinpath(dirname(dirname(@__FILE__)),"deps","deps.jl"))
-    include("../deps/deps.jl")
+const depsfile = joinpath(dirname(dirname(@__FILE__)), "deps", "deps.jl")
+if isfile(depsfile)
+    include(depsfile)
 else
     error("HDF5 not properly installed. Please run Pkg.build(\"HDF5\")")
 end
 
 function init_libhdf5()
     status = ccall((:H5open, libhdf5), Cint, ())
-    if status < 0
-        error("Can't initialize the HDF5 library")
-    end
+    status < 0 && error("Can't initialize the HDF5 library")
+    nothing
 end
 
 init_libhdf5()
 
-_majnum = Vector{Cuint}(1)
-_minnum = Vector{Cuint}(1)
-_relnum = Vector{Cuint}(1)
 function h5_get_libversion()
+    majnum = Ref{Cuint}()
+    minnum = Ref{Cuint}()
+    relnum = Ref{Cuint}()
     status = ccall((:H5get_libversion, libhdf5),
-                   Cint,
-                   (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}),
-                   _majnum, _minnum, _relnum)
-    if status < 0
-        error("Error getting HDF5 library version")
-    end
-    convert(Int,_majnum[1]), convert(Int,_minnum[1]), convert(Int,_relnum[1])
+                   Cint, (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}), majnum, minnum, relnum)
+    status < 0 && error("Error getting HDF5 library version")
+    VersionNumber(convert(Int, majnum[]), convert(Int, minnum[]), convert(Int, relnum[]))
 end
 
-_libversion = h5_get_libversion()
+const libversion = h5_get_libversion()
 
 ## C types
 const C_time_t = Int
 
 ## HDF5 types and constants
-if _libversion >= (1, 10, 0)
+if libversion >= v"1.10.0"
     const Hid     = Int64
 else
     const Hid     = Cint
@@ -120,22 +116,22 @@ const H5O_TYPE_DATASET = 1
 const H5O_TYPE_NAMED_DATATYPE = 2
 # Property constants
 const H5P_DEFAULT          = 0
-const H5P_OBJECT_CREATE    = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_OBJECT_CREATE_ID_g    : :H5P_CLS_OBJECT_CREATE_g)
-const H5P_FILE_CREATE      = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_FILE_CREATE_ID_g      : :H5P_CLS_FILE_CREATE_g)
-const H5P_FILE_ACCESS      = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_FILE_ACCESS_ID_g      : :H5P_CLS_FILE_ACCESS_g)
-const H5P_DATASET_CREATE   = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_DATASET_CREATE_ID_g   : :H5P_CLS_DATASET_CREATE_g)
-const H5P_DATASET_ACCESS   = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_DATASET_ACCESS_ID_g   : :H5P_CLS_DATASET_ACCESS_g)
-const H5P_DATASET_XFER     = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_DATASET_XFER_ID_g     : :H5P_CLS_DATASET_XFER_g)
-const H5P_FILE_MOUNT       = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_FILE_MOUNT_ID_g       : :H5P_CLS_FILE_MOUNT_g)
-const H5P_GROUP_CREATE     = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_GROUP_CREATE_ID_g     : :H5P_CLS_GROUP_CREATE_g)
-const H5P_GROUP_ACCESS     = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_GROUP_ACCESS_ID_g     : :H5P_CLS_GROUP_ACCESS_g)
-const H5P_DATATYPE_CREATE  = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_DATATYPE_CREATE_ID_g  : :H5P_CLS_DATATYPE_CREATE_g)
-const H5P_DATATYPE_ACCESS  = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_DATATYPE_ACCESS_ID_g  : :H5P_CLS_DATATYPE_ACCESS_g)
-const H5P_STRING_CREATE    = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_STRING_CREATE_ID_g    : :H5P_CLS_STRING_CREATE_g)
-const H5P_ATTRIBUTE_CREATE = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_ATTRIBUTE_CREATE_ID_g : :H5P_CLS_ATTRIBUTE_CREATE_g)
-const H5P_OBJECT_COPY      = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_OBJECT_COPY_ID_g      : :H5P_CLS_OBJECT_COPY_g)
-const H5P_LINK_CREATE      = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_LINK_CREATE_ID_g      : :H5P_CLS_LINK_CREATE_g)
-const H5P_LINK_ACCESS      = read_const(_libversion >= (1, 8, 14) ? :H5P_CLS_LINK_ACCESS_ID_g      : :H5P_CLS_LINK_ACCESS_g)
+const H5P_OBJECT_CREATE    = read_const(libversion >= v"1.8.14" ? :H5P_CLS_OBJECT_CREATE_ID_g    : :H5P_CLS_OBJECT_CREATE_g)
+const H5P_FILE_CREATE      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_FILE_CREATE_ID_g      : :H5P_CLS_FILE_CREATE_g)
+const H5P_FILE_ACCESS      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_FILE_ACCESS_ID_g      : :H5P_CLS_FILE_ACCESS_g)
+const H5P_DATASET_CREATE   = read_const(libversion >= v"1.8.14" ? :H5P_CLS_DATASET_CREATE_ID_g   : :H5P_CLS_DATASET_CREATE_g)
+const H5P_DATASET_ACCESS   = read_const(libversion >= v"1.8.14" ? :H5P_CLS_DATASET_ACCESS_ID_g   : :H5P_CLS_DATASET_ACCESS_g)
+const H5P_DATASET_XFER     = read_const(libversion >= v"1.8.14" ? :H5P_CLS_DATASET_XFER_ID_g     : :H5P_CLS_DATASET_XFER_g)
+const H5P_FILE_MOUNT       = read_const(libversion >= v"1.8.14" ? :H5P_CLS_FILE_MOUNT_ID_g       : :H5P_CLS_FILE_MOUNT_g)
+const H5P_GROUP_CREATE     = read_const(libversion >= v"1.8.14" ? :H5P_CLS_GROUP_CREATE_ID_g     : :H5P_CLS_GROUP_CREATE_g)
+const H5P_GROUP_ACCESS     = read_const(libversion >= v"1.8.14" ? :H5P_CLS_GROUP_ACCESS_ID_g     : :H5P_CLS_GROUP_ACCESS_g)
+const H5P_DATATYPE_CREATE  = read_const(libversion >= v"1.8.14" ? :H5P_CLS_DATATYPE_CREATE_ID_g  : :H5P_CLS_DATATYPE_CREATE_g)
+const H5P_DATATYPE_ACCESS  = read_const(libversion >= v"1.8.14" ? :H5P_CLS_DATATYPE_ACCESS_ID_g  : :H5P_CLS_DATATYPE_ACCESS_g)
+const H5P_STRING_CREATE    = read_const(libversion >= v"1.8.14" ? :H5P_CLS_STRING_CREATE_ID_g    : :H5P_CLS_STRING_CREATE_g)
+const H5P_ATTRIBUTE_CREATE = read_const(libversion >= v"1.8.14" ? :H5P_CLS_ATTRIBUTE_CREATE_ID_g : :H5P_CLS_ATTRIBUTE_CREATE_g)
+const H5P_OBJECT_COPY      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_OBJECT_COPY_ID_g      : :H5P_CLS_OBJECT_COPY_g)
+const H5P_LINK_CREATE      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_LINK_CREATE_ID_g      : :H5P_CLS_LINK_CREATE_g)
+const H5P_LINK_ACCESS      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_LINK_ACCESS_ID_g      : :H5P_CLS_LINK_ACCESS_g)
 # Reference constants
 const H5R_OBJECT         = 0
 const H5R_DATASET_REGION = 1
@@ -1890,7 +1886,7 @@ h5l_exists(loc_id::Hid, name::String) = h5l_exists(loc_id, name, H5P_DEFAULT)
 h5o_open(obj_id::Hid, name::String) = h5o_open(obj_id, name, H5P_DEFAULT)
 #h5s_get_simple_extent_ndims(space_id::Hid) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 h5t_get_native_type(type_id::Hid) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
-if _libversion >= (1, 10, 0)
+if libversion >= v"1.10.0"
     const H5RDEREFERENCE = :H5Rdereference1
 else
     const H5RDEREFERENCE = :H5Rdereference

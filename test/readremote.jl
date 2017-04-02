@@ -1,6 +1,5 @@
 using HDF5
 using Base.Test
-using Compat
 
 @testset "readremote" begin
 
@@ -88,7 +87,7 @@ using Compat
     @test d == icmp
     close(fid)
 
-    if HDF5.h5_get_libversion() >= (1, 8, 11)
+    if HDF5.h5_get_libversion() >= v"1.8.11"
       file = getfile("h5ex_t_enumatt.h5")
       fid = h5open(file, "r")
       dset = fid["DS1"]
