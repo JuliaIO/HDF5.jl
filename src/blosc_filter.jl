@@ -40,7 +40,7 @@ function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
     flags = blosc_flags_[1]
     nelements = max(blosc_nelements_[1], 4)
     # Set Blosc info in first two slots
-    blosc_values[1] = FILTER_BLOSC_VERSION;
+    blosc_values[1] = FILTER_BLOSC_VERSION
     blosc_values[2] = Blosc.VERSION_FORMAT
     ndims = ccall((:H5Pget_chunk,libhdf5), Cint, (Hid, Cint, Ptr{Hsize}),
                   dcpl, 32, blosc_chunkdims);
