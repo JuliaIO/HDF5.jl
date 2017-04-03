@@ -937,7 +937,7 @@ function info(obj::Union{HDF5Group,HDF5File})
     H5GINFO_TEMP_ARRAY[]
 end
 
-const H5OINFO_TEMP_ARRAY = Ref{H5Ginfo}()
+const H5OINFO_TEMP_ARRAY = Ref{H5Oinfo}()
 function objinfo(obj::Union{HDF5File, HDF5Object})
     h5o_get_info(obj.id, H5OINFO_TEMP_ARRAY)
     H5OINFO_TEMP_ARRAY[]
