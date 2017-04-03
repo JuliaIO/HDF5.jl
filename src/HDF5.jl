@@ -406,10 +406,10 @@ HDF5Properties() = HDF5Properties(H5P_DEFAULT)
 convert(::Type{Hid}, p::HDF5Properties) = p.id
 
 # Methods for reference types
+const REF_TEMP_ARRAY = Ref{HDF5ReferenceObj}()
 function HDF5ReferenceObj(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, name::String)
-    ref_temp_array = Ref{HDF5ReferenceObj}()
-    h5r_create(ref_temp_array, checkvalid(parent).id, name, H5R_OBJECT, -1)
-    ref_temp_array[]
+    h5r_create(REF_TEMP_ARRAY, checkvalid(parent).id, name, H5R_OBJECT, -1)
+    REF_TEMP_ARRAY[]
 end
 ==(a::HDF5ReferenceObj, b::HDF5ReferenceObj) = a.r == b.r
 hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
@@ -931,22 +931,22 @@ exists(parent::Union{HDF5File, HDF5Group}, path::String) = exists(parent, path, 
 has(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, path::String) = exists(parent, path)
 
 # Querying items in the file
+const H5GINFO_TEMP_ARRAY = Ref{H5Ginfo}()
 function info(obj::Union{HDF5Group,HDF5File})
-    h5ginfo_temp_array = Ref{H5Ginfo}()
-    h5g_get_info(obj, h5ginfo_temp_array)
-    h5ginfo_temp_array[]
+    h5g_get_info(obj, H5GINFO_TEMP_ARRAY)
+    H5GINFO_TEMP_ARRAY[]
 end
 
+const H5OINFO_TEMP_ARRAY = Ref{H5Ginfo}()
 function objinfo(obj::Union{HDF5File, HDF5Object})
-    h5oinfo_temp_array = Ref{H5Oinfo}()
-    h5o_get_info(obj.id, h5oinfo_temp_array)
-    h5oinfo_temp_array[]
+    h5o_get_info(obj.id, H5OINFO_TEMP_ARRAY)
+    H5OINFO_TEMP_ARRAY[]
 end
 
+const LENGTH_TEMP_ARRAY = Ref{UInt64}()
 function length(x::Union{HDF5Group,HDF5File})
-    length_temp_array = Ref{UInt64}()
-    h5g_get_num_objs(x.id, length_temp_array)
-    length_temp_array[]
+    h5g_get_num_objs(x.id, LENGTH_TEMP_ARRAY)
+    LENGTH_TEMP_ARRAY[]
 end
 
 function length(x::HDF5Attributes)
