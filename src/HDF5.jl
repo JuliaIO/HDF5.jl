@@ -13,7 +13,7 @@ import Base: ==, close, convert, done, dump, eltype, endof, flush, getindex,
 include("datafile.jl")
 
 ### Load and initialize the HDF library ###
-const depsfile = joinpath(dirname(dirname(@__FILE__)), "deps", "deps.jl")
+const depsfile = joinpath(dirname(@__DIR__), "deps", "deps.jl")
 if isfile(depsfile)
     include(depsfile)
 else
