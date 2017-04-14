@@ -40,8 +40,8 @@ function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
     flags = blosc_flags_[1]
     nelements = max(blosc_nelements_[1], 4)
     # Set Blosc info in first two slots
-    blosc_values[1] = FILTER_BLOSC_VERSION;
-    blosc_values[2] = Blosc.VERSION_FORMAT;
+    blosc_values[1] = FILTER_BLOSC_VERSION
+    blosc_values[2] = Blosc.VERSION_FORMAT
     ndims = ccall((:H5Pget_chunk,libhdf5), Cint, (Hid, Cint, Ptr{Hsize}),
                   dcpl, 32, blosc_chunkdims);
     chunksize = prod(resize!(blosc_chunkdims, ndims))
@@ -109,7 +109,7 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
     end
     
     if status != 0
-        Libc.free(unsafe_load(buf));
+        Libc.free(unsafe_load(buf))
         unsafe_store!(buf, outbuf)
         unsafe_store!(buf_size, outbuf_size)
         return convert(Csize_t, status) # size of compressed/decompressed data
@@ -135,7 +135,7 @@ function register_blosc()
     end
 end
 
-const _set_blosc_values = Cuint[0,0,0,0, 5,1,0]
+const _set_blosc_values = Cuint[0,0,0,0,5,1,0]
 function h5p_set_blosc(p::HDF5Properties, level::Integer=5)
     0 <= level <= 9 || throw(ArgumentError("blosc compression $level not in [0,9]"))
     _set_blosc_values[5] = level

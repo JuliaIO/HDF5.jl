@@ -406,10 +406,10 @@ HDF5Properties() = HDF5Properties(H5P_DEFAULT)
 convert(::Type{Hid}, p::HDF5Properties) = p.id
 
 # Methods for reference types
-const REF_TEMP_ARRAY = Vector{HDF5ReferenceObj}(1)
+const REF_TEMP_ARRAY = Ref{HDF5ReferenceObj}()
 function HDF5ReferenceObj(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, name::String)
     h5r_create(REF_TEMP_ARRAY, checkvalid(parent).id, name, H5R_OBJECT, -1)
-    REF_TEMP_ARRAY[1]
+    REF_TEMP_ARRAY[]
 end
 ==(a::HDF5ReferenceObj, b::HDF5ReferenceObj) = a.r == b.r
 hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
@@ -931,22 +931,22 @@ exists(parent::Union{HDF5File, HDF5Group}, path::String) = exists(parent, path, 
 has(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, path::String) = exists(parent, path)
 
 # Querying items in the file
-const H5GINFO_TEMP_ARRAY = Vector{H5Ginfo}(1)
+const H5GINFO_TEMP_ARRAY = Ref{H5Ginfo}()
 function info(obj::Union{HDF5Group,HDF5File})
     h5g_get_info(obj, H5GINFO_TEMP_ARRAY)
-    H5GINFO_TEMP_ARRAY[1]
+    H5GINFO_TEMP_ARRAY[]
 end
 
-const H5OINFO_TEMP_ARRAY = Vector{H5Oinfo}(1)
+const H5OINFO_TEMP_ARRAY = Ref{H5Oinfo}()
 function objinfo(obj::Union{HDF5File, HDF5Object})
     h5o_get_info(obj.id, H5OINFO_TEMP_ARRAY)
-    H5OINFO_TEMP_ARRAY[1]
+    H5OINFO_TEMP_ARRAY[]
 end
 
-const LENGTH_TEMP_ARRAY = Vector{UInt64}(1)
+const LENGTH_TEMP_ARRAY = Ref{UInt64}()
 function length(x::Union{HDF5Group,HDF5File})
     h5g_get_num_objs(x.id, LENGTH_TEMP_ARRAY)
-    LENGTH_TEMP_ARRAY[1]
+    LENGTH_TEMP_ARRAY[]
 end
 
 function length(x::HDF5Attributes)
@@ -2155,10 +2155,7 @@ function h5s_get_simple_extent_dims(space_id::Hid)
     return tuple(reverse!(dims)...), tuple(reverse!(maxdims)...)
 end
 function h5t_get_member_name(type_id::Hid, index::Integer)
-    pn = ccall((:H5Tget_member_name, libhdf5),
-               Ptr{UInt8},
-               (Hid, Cuint),
-               type_id, index)
+    pn = ccall((:H5Tget_member_name, libhdf5), Ptr{UInt8}, (Hid, Cuint), type_id, index)
     if pn == C_NULL
         error("Error getting name of compound datatype member #", index)
     end
@@ -2230,20 +2227,20 @@ function get_chunk(dset::HDF5Dataset)
 end
 set_chunk(p::HDF5Properties, dims...) = h5p_set_chunk(p.id, length(dims), Hsize[reverse(dims)...])
 function get_userblock(p::HDF5Properties)
-    alen = Vector{Hsize}(1)
+    alen = Ref{Hsize}()
     h5p_get_userblock(p.id, alen)
-    alen[1]
+    alen[]
 end
 function get_fclose_degree(p::HDF5Properties)
-    out = Vector{Cint}(1)
+    out = Ref{Cint}()
     h5p_get_fclose_degee(p.id, out)
-    out[1]
+    out[]
 end
 function get_libver_bounds(p::HDF5Properties)
-    out1 = Vector{Cint}(1)
-    out2 = Vector{Cint}(1)
+    out1 = Ref{Cint}()
+    out2 = Ref{Cint}()
     h5p_get_libver_bounds(p.id, out1, out2)
-    out1[1], out2[1]
+    out1[], out2[]
 end
 
 # property function get/set pairs
@@ -2273,15 +2270,15 @@ end
 function hiding_errors(f)
     error_stack = H5E_DEFAULT
     # error_stack = ccall((:H5Eget_current_stack, libhdf5), Hid, ())
-    old_func = Vector{Ptr{Void}}(1)
-    old_client_data = Vector{Ptr{Void}}(1)
+    old_func = Ref{Ptr{Void}}()
+    old_client_data = Ref{Ptr{Void}}()
     ccall((:H5Eget_auto2, libhdf5), Herr, (Hid, Ptr{Ptr{Void}}, Ptr{Ptr{Void}}),
         error_stack, old_func, old_client_data)
     ccall((:H5Eset_auto2, libhdf5), Herr, (Hid, Ptr{Void}, Ptr{Void}),
         error_stack, C_NULL, C_NULL)
     res = f()
     ccall((:H5Eset_auto2, libhdf5), Herr, (Hid, Ptr{Void}, Ptr{Void}),
-        error_stack, old_func[1], old_client_data[1])
+        error_stack, old_func[], old_client_data[])
     res
 end
 
