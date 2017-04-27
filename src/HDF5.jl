@@ -77,12 +77,14 @@ const H5D_CHUNKED      = 2
 # error-related constants
 const H5E_DEFAULT      = 0
 # file access modes
-const H5F_ACC_RDONLY   = 0x00
-const H5F_ACC_RDWR     = 0x01
-const H5F_ACC_TRUNC    = 0x02
-const H5F_ACC_EXCL     = 0x04
-const H5F_ACC_DEBUG    = 0x08
-const H5F_ACC_CREAT    = 0x10
+const H5F_ACC_RDONLY     = 0x0000
+const H5F_ACC_RDWR       = 0x0001
+const H5F_ACC_TRUNC      = 0x0002
+const H5F_ACC_EXCL       = 0x0004
+const H5F_ACC_DEBUG      = 0x0008
+const H5F_ACC_CREAT      = 0x0010
+const H5F_ACC_SWMR_WRITE = 0x0020
+const H5F_ACC_SWMR_READ  = 0x0040
 # object types
 const H5F_OBJ_FILE     = 0x0001
 const H5F_OBJ_DATASET  = 0x0002
@@ -143,7 +145,6 @@ const H5S_SCALAR       = convert(Hid, 0)
 const H5S_SIMPLE       = convert(Hid, 1)
 const H5S_NULL         = convert(Hid, 2)
 const H5S_UNLIMITED    = typemax(Hsize)
-const MAXIMUM_DIM = H5S_UNLIMITED
 # Dataspace selection constants
 const H5S_SELECT_SET   = 0
 const H5S_SELECT_OR    = 1
@@ -535,11 +536,17 @@ heuristic_chunk(x) = Int[]
 
 ### High-level interface ###
 # Open or create an HDF5 file
-function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool,
+"""h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool,
         cpl::HDF5Properties=DEFAULT_PROPERTIES, apl::HDF5Properties=DEFAULT_PROPERTIES)
-    if ff && !wr
-        error("HDF5 does not support appending without writing")
-    end
+Open or create an HDF5 file with filename `filename`.
+`wr` true provides write intent
+`cr` true provides create intent
+`tr` true provide truncate intent (write over exiting file)
+`swmr` true provides Single Reader Multiple Writer intent (requires version libversion >= v"1.10.0")
+"""
+function h5open(filename::AbstractString, wr::Bool, cr::Bool, tr::Bool, swmr::Bool,
+        cpl::HDF5Properties=DEFAULT_PROPERTIES, apl::HDF5Properties=DEFAULT_PROPERTIES)
+    swmr && HDF5.libversion < v"1.10.0" && error("SWMR requires libversion >= v\"1.10.0\"")
     close_apl = false
     if apl.id == H5P_DEFAULT
         apl = p_create(H5P_FILE_ACCESS, false)
@@ -548,12 +555,22 @@ function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool
         apl["fclose_degree"] = H5F_CLOSE_STRONG
     end
     if cr && (tr || !isfile(filename))
-        fid = h5f_create(filename, H5F_ACC_TRUNC, cpl.id, apl.id)
-    else
+        if swmr
+          fid = h5f_create(filename, H5F_ACC_TRUNC|H5F_ACC_SWMR_WRITE, cpl.id, apl.id)
+        else
+          fid = h5f_create(filename, H5F_ACC_TRUNC, cpl.id, apl.id)
+        end
+    elseif !swmr
         if !h5f_is_hdf5(filename)
             error("This does not appear to be an HDF5 file")
         end
         fid = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, apl.id)
+    elseif swmr
+        if wr
+          fid = h5f_open(filename, H5F_ACC_SWMR_WRITE|H5F_ACC_RDWR, apl.id)
+        else
+          fid = h5f_open(filename, H5F_ACC_SWMR_READ|H5F_ACC_RDONLY, apl.id)
+        end
     end
     if close_apl
         # Close properties manually to avoid errors when the file is
@@ -563,7 +580,15 @@ function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool
     HDF5File(fid, filename)
 end
 
+"""h5open(filename::AbstractString, mode::AbstractString="r")
+Open or create an HDF5 file wher `mode` is one of "r", "r+", "w", "r,swmr", "w,swmr", "r+,swmr".
+"""
+function h5open end
+
 function h5open(filename::AbstractString, mode::AbstractString="r", pv...)
+    # pv is interpreted as pairs of arguments
+    # the first of a pair is a key of hdf5_prop_get_set
+    # the second of a pair is a property value
     p = p_create(H5P_FILE_ACCESS)
     # With garbage collection, the other modes don't make sense
     # (Set this first, so that the user-passed properties can overwrite this.)
@@ -575,12 +600,14 @@ function h5open(filename::AbstractString, mode::AbstractString="r", pv...)
         end
         p[thisname] = pv[i+1]
     end
+    # bool flags are (write, create, truncate, swmr)
     modes =
-        mode == "r"  ? (true,  false, false, false, false) :
-        mode == "r+" ? (true,  true,  false, false, true ) :
-        mode == "w"  ? (false, true,  true,  true,  false) :
-        # mode == "w+" ? (true,  true,  true,  true,  false) :
-        # mode == "a"  ? (true,  true,  true,  true,  true ) :
+        mode == "r"  ?     (false, false, false, false) :
+        mode == "r+" ?     (true,  false, false, false) :
+        mode == "w"  ?     (true,  true,  true,  false) :
+        mode == "r,swmr" ? (false, false, false, true) :
+        mode == "w,swmr" ? (true, true, true, true)     :
+        mode == "r+,swmr" ? (true, false, false, true)  :
         error("invalid open mode: ", mode)
     h5open(filename, modes..., DEFAULT_PROPERTIES, p)
 end
@@ -608,7 +635,7 @@ function h5rewrite(f::Function, filename::AbstractString, args...)
 end
 
 function h5write(filename, name::String, data)
-    fid = h5open(filename, true, true, true, false, true)
+    fid = h5open(filename, "r+")
     try
         write(fid, name, data)
     finally
@@ -640,7 +667,7 @@ function h5read(filename, name::String, indices::Tuple{Vararg{Union{Range{Int},I
 end
 
 function h5writeattr(filename, name::String, data::Dict)
-    fid = h5open(filename, true, true, true, false, true)
+    fid = h5open(filename, "r+")
     try
         for x in keys(data)
             attrs(fid[name])[x] = data[x]
@@ -1153,14 +1180,28 @@ dataspace(n::Void) = HDF5Dataspace(h5s_create(H5S_NULL))
 dataspace(sz::Dims; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(sz, max_dims)
 dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
 
-# Get the array dimensions from a dataspace or a dataset
-# Returns both dims and maxdims
+
 get_dims(dspace::HDF5Dataspace) = h5s_get_simple_extent_dims(dspace.id)
+"""get_dims(dset::HDF5Dataset)
+Get the array dimensions from a dataset
+Returns a tuple of dims and maxdims
+"""
 get_dims(dset::HDF5Dataset) = get_dims(dataspace(checkvalid(dset)))
 
-# change the current dimensions of a dataset, new_dims fit in max_dims = get_dims(dset)[2]
-# reduction is possible, and leads to loss of truncated data
+"""set_dims!(dset::HDF5Dataset, new_dims::Dims)
+ change the current dimensions of a dataset, new_dims fit in max_dims = get_dims(dset)[2]
+reduction is possible, and leads to loss of truncated data
+"""
 set_dims!(dset::HDF5Dataset, new_dims::Dims) = h5d_set_extent(checkvalid(dset), Hsize[reverse(new_dims)...])
+
+"""
+start_swmr_write(h5::HDF5File)
+Start Single Reader Multiple Writer (SWMR) writing mode. See https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-StartSwmrWrite
+"""
+start_swmr_write(h5::HDF5File) = hf5start_swmr_write(h5.id)
+
+refresh(ds::HDF5Dataset) = HDF5.h5d_refresh(checkvalid(ds).id)
+flush(ds::HDF5Dataset) = HDF5.h5d_flush(HDF5.checkvalid(ds).id)
 
 # Generic read functions
 for (fsym, osym, ptype) in
@@ -1948,6 +1989,9 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5a_close, :H5Aclose, Herr, (Hid,), (:id,), "Error closing attribute"),
      (:h5a_write, :H5Awrite, Herr, (Hid, Hid, Ptr{Void}), (:attr_hid, :mem_type_id, :buf), "Error writing attribute data"),
      (:h5d_close, :H5Dclose, Herr, (Hid,), (:dataset_id,), "Error closing dataset"),
+     (:h5d_flush, :H5Dflush, Herr, (Hid,), (:dataset_id,), "Error flushing dataset"),
+     (:h5d_oappend, :H5DOappend, Herr, (Hid, Hid, Cuint, Hsize, Hid, Ptr{Void}) , (:dset_id, :dxpl_id, :index, :num_elem, :memtype, :buffer), "error appending"),
+     (:h5d_refresh, :H5Drefresh, Herr, (Hid,), (:dataset_id,), "Error refreshing dataset"),
      (:h5d_set_extent, :H5Dset_extent, Herr, (Hid, Ptr{Hsize}), (:dataset_id, :new_dims), "Error extending dataset dimensions"),
      (:h5d_vlen_get_buf_size, :H5Dvlen_get_buf_size, Herr, (Hid, Hid, Hid, Ptr{Hsize}), (:dset_id, :type_id, :space_id, :buf), "Error getting vlen buffer size"),
      (:h5d_vlen_reclaim, :H5Dvlen_reclaim, Herr, (Hid, Hid, Hid, Ptr{Void}), (:type_id, :space_id, :plist_id, :buf), "Error reclaiming vlen buffer"),
@@ -1955,6 +1999,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5e_set_auto, :H5Eset_auto2, Herr, (Hid, Ptr{Void}, Ptr{Void}), (:estack_id, :func, :client_data), "Error setting error reporting behavior"),  # FIXME callbacks, for now pass C_NULL for both pointers
      (:h5f_close, :H5Fclose, Herr, (Hid,), (:file_id,), "Error closing file"),
      (:h5f_flush, :H5Fflush, Herr, (Hid, Cint), (:object_id, :scope,), "Error flushing object to file"),
+     (:hf5start_swmr_write, :H5Fstart_swmr_write, Herr, (Hid,), (:id,), "Error starting SWMR write"),
      (:h5f_get_vfd_handle, :H5Fget_vfd_handle, Herr, (Hid, Hid, Ptr{Ptr{Cint}}), (:file_id, :fapl_id, :file_handle), "Error getting VFD handle"),
      (:h5g_close, :H5Gclose, Herr, (Hid,), (:group_id,), "Error closing group"),
      (:h5g_get_info, :H5Gget_info, Herr, (Hid, Ptr{H5Ginfo}), (:group_id, :buf), "Error getting group info"),
