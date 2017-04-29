@@ -9,7 +9,6 @@ end
 @everywhere using HDF5
 using Base.Test
 
-
 @testset "swmr" begin
 fname = tempname()
 @testset "h5d_oappend" begin
