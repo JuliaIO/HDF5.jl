@@ -12,7 +12,7 @@ using Base.Test
 
 @testset "swmr" begin
 fname = tempname()
-@testset begin "h5d_oappend"
+@testset "h5d_oappend" begin
   h5open(fname,"w") do h5
   g = g_create(h5, "shoe")
   d = d_create(g,"bar", datatype(Float64), ((1,),(-1,)), "chunk", (100,))
@@ -38,7 +38,7 @@ end
   n=length(d)
   nbigger=0
   while n < 100
-    sleep(0.02)
+    sleep(0.001)
     HDF5.refresh(d)
     nlast,n=n,length(d)
     vals = read(d)
