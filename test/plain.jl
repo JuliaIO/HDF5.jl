@@ -318,7 +318,7 @@ using Compat.String
     cpl["userblock"] = 1024
     apl = HDF5Properties(p_create(HDF5.H5P_FILE_ACCESS))
     apl["libver_bounds"] = (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)
-    h5open(fn, true, true, true, false, cpl, apl) do fid
+    h5open(fn, "w", cpl, apl) do fid
         write(fid, "intarray", [1,2,3])
     end
     h5open(fn, "r", "libver_bounds",

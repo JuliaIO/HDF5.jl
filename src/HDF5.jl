@@ -536,17 +536,9 @@ heuristic_chunk(x) = Int[]
 
 ### High-level interface ###
 # Open or create an HDF5 file
-"""h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool,
+function h5open(filename::AbstractString, mode::String,
         cpl::HDF5Properties=DEFAULT_PROPERTIES, apl::HDF5Properties=DEFAULT_PROPERTIES)
-Open or create an HDF5 file with filename `filename`.
-`wr` true provides write intent
-`cr` true provides create intent
-`tr` true provide truncate intent (write over exiting file)
-`swmr` true provides Single Reader Multiple Writer intent (requires version libversion >= v"1.10.0")
-"""
-function h5open(filename::AbstractString, wr::Bool, cr::Bool, tr::Bool, swmr::Bool,
-        cpl::HDF5Properties=DEFAULT_PROPERTIES, apl::HDF5Properties=DEFAULT_PROPERTIES)
-    swmr && HDF5.libversion < v"1.10.0" && error("SWMR requires libversion >= v\"1.10.0\"")
+    contains(mode,"swmr") && HDF5.libversion < v"1.10.0" && error("SWMR requires libversion >= v\"1.10.0\"")
     close_apl = false
     if apl.id == H5P_DEFAULT
         apl = p_create(H5P_FILE_ACCESS, false)
@@ -554,23 +546,23 @@ function h5open(filename::AbstractString, wr::Bool, cr::Bool, tr::Bool, swmr::Bo
         # With garbage collection, the other modes don't make sense
         apl["fclose_degree"] = H5F_CLOSE_STRONG
     end
-    if cr && (tr || !isfile(filename))
-        if swmr
-          fid = h5f_create(filename, H5F_ACC_TRUNC|H5F_ACC_SWMR_WRITE, cpl.id, apl.id)
-        else
-          fid = h5f_create(filename, H5F_ACC_TRUNC, cpl.id, apl.id)
-        end
-    elseif !swmr
-        if !h5f_is_hdf5(filename)
-            error("This does not appear to be an HDF5 file")
-        end
-        fid = h5f_open(filename, wr ? H5F_ACC_RDWR : H5F_ACC_RDONLY, apl.id)
-    elseif swmr
-        if wr
-          fid = h5f_open(filename, H5F_ACC_SWMR_WRITE|H5F_ACC_RDWR, apl.id)
-        else
-          fid = h5f_open(filename, H5F_ACC_SWMR_READ|H5F_ACC_RDONLY, apl.id)
-        end
+    if mode == "w"
+      fid = h5f_create(filename, H5F_ACC_TRUNC, cpl.id, apl.id)
+    elseif mode == "w,swmr"
+      fid = h5f_create(filename, H5F_ACC_TRUNC|H5F_ACC_SWMR_WRITE, cpl.id, apl.id)
+    else
+      !h5f_is_hdf5(filename) && error("This does not appear to be an HDF5 file")
+      if mode == "r"
+        fid = h5f_open(filename, H5F_ACC_RDONLY, apl.id)
+      elseif mode == "r+"
+        fid = h5f_open(filename, H5F_ACC_RDWR, apl.id)
+      elseif mode == "r,swmr"
+        fid = h5f_open(filename, H5F_ACC_RDONLY|H5F_ACC_SWMR_READ, apl.id)
+      elseif mode == "r+,swmr"
+        fid = h5f_open(filename, H5F_ACC_RDWR|H5F_ACC_SWMR_WRITE, apl.id)
+      else
+        error("$mode is invalid mode")
+      end
     end
     if close_apl
         # Close properties manually to avoid errors when the file is
@@ -581,7 +573,7 @@ function h5open(filename::AbstractString, wr::Bool, cr::Bool, tr::Bool, swmr::Bo
 end
 
 """h5open(filename::AbstractString, mode::AbstractString="r")
-Open or create an HDF5 file wher `mode` is one of "r", "r+", "w", "r,swmr", "w,swmr", "r+,swmr".
+Open or create an HDF5 file wher `mode` is one of "r", "r+", "w", "r,swmr", "w,swmr".
 """
 function h5open end
 
@@ -589,27 +581,18 @@ function h5open(filename::AbstractString, mode::AbstractString="r", pv...)
     # pv is interpreted as pairs of arguments
     # the first of a pair is a key of hdf5_prop_get_set
     # the second of a pair is a property value
-    p = p_create(H5P_FILE_ACCESS)
+    apl = p_create(H5P_FILE_ACCESS) # access property list
     # With garbage collection, the other modes don't make sense
     # (Set this first, so that the user-passed properties can overwrite this.)
-    p["fclose_degree"] = H5F_CLOSE_STRONG
+    apl["fclose_degree"] = H5F_CLOSE_STRONG
     for i = 1:2:length(pv)
         thisname = pv[i]
         if !isa(thisname, Compat.ASCIIString)
             error("Argument ", i+2, " should be a String, but it's a ", typeof(thisname))
         end
-        p[thisname] = pv[i+1]
+        apl[thisname] = pv[i+1]
     end
-    # bool flags are (write, create, truncate, swmr)
-    modes =
-        mode == "r"  ?     (false, false, false, false) :
-        mode == "r+" ?     (true,  false, false, false) :
-        mode == "w"  ?     (true,  true,  true,  false) :
-        mode == "r,swmr" ? (false, false, false, true) :
-        mode == "w,swmr" ? (true, true, true, true)     :
-        mode == "r+,swmr" ? (true, false, false, true)  :
-        error("invalid open mode: ", mode)
-    h5open(filename, modes..., DEFAULT_PROPERTIES, p)
+    h5open(filename, mode, DEFAULT_PROPERTIES, apl)
 end
 function h5open(f::Function, args...)
     fid = h5open(args...)
