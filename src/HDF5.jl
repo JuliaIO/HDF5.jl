@@ -6,7 +6,7 @@ using Compat
 using Compat: unsafe_convert, String
 
 ## Add methods to...
-import Base: ==, close, convert, done, dump, eltype, endof, flush, getindex,
+import Base: ==, close, convert, done, eltype, endof, flush, getindex,
              isempty, isvalid, length, names, ndims, next, parent, read,
              setindex!, show, size, sizeof, start, write
 
@@ -290,6 +290,8 @@ hdf5_type_id{C<:CharType}(::Type{C})  = H5T_C_S1
 # that occur when passing a freshly-created file to some other
 # application).
 
+const indent_width = 4
+
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
 type HDF5File <: DataFile
     id::Hid
@@ -304,7 +306,14 @@ type HDF5File <: DataFile
     end
 end
 convert(::Type{Hid}, f::HDF5File) = f.id
-show(io::IO, fid::HDF5File) = isvalid(fid) ? print(io, "HDF5 data file: ", fid.filename) : print(io, "Closed HFD5 data file: ", fid.filename)
+function show(io::IO, fid::HDF5File)
+    if isvalid(fid)
+        print(io, "HDF5 data file: ", fid.filename)
+    else
+        print(io, "HFD5 data file (closed): ", fid.filename)
+    end
+end
+
 
 type HDF5Group <: DataFile
     id::Hid
@@ -317,7 +326,13 @@ type HDF5Group <: DataFile
     end
 end
 convert(::Type{Hid}, g::HDF5Group) = g.id
-show(io::IO, g::HDF5Group) = isvalid(g) ? print(io, "HDF5 group: ", name(g), " (file: ", g.file.filename, ")") : print(io, "HDF5 group (invalid)")
+function show(io::IO, g::HDF5Group)
+    if isvalid(g)
+        print(io, "HDF5 group: ", name(g), " (file: ", g.file.filename, ")")
+    else
+        print(io, "HFD5 group  (invalid)")
+    end
+end
 
 type HDF5Dataset
     id::Hid
@@ -330,7 +345,13 @@ type HDF5Dataset
     end
 end
 convert(::Type{Hid}, dset::HDF5Dataset) = dset.id
-show(io::IO, dset::HDF5Dataset) = isvalid(dset) ? print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, ")") : print(io, "HDF5 dataset (invalid)")
+function show(io::IO, dset::HDF5Dataset)
+    if isvalid(dset)
+        print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, ")")
+    else
+        print(io, "HFD5 dataset (invalid)")
+    end
+end
 
 type HDF5Datatype
     id::Hid
@@ -1045,45 +1066,6 @@ function parent(obj::Union{HDF5File, HDF5Group, HDF5Dataset})
     end
 end
 
-# It would also be nice to print the first few elements.
-# FIXME: strings and array of variable-length strings
-function dump(io::IO, x::HDF5Dataset, n::Int, indent)
-    sz = size(x)
-    print(io, "HDF5Dataset $sz : ")
-    isshowall = isempty(sz) || prod(sz) == 1
-    if !isshowall
-        dtype = datatype(x)
-        try
-            T = hdf5_to_julia_eltype(dtype)
-            isshowall |= !(T<:HDF5BitsKind)
-        finally
-            close(dtype)
-        end
-    end
-    isshowall ? print(io, read(x)) :
-    # the following is a bit kludgy, but there's no way to do x[1:3] for the multidimensional case
-    length(sz) == 1 ? Base.show_delim_array(io, x[1:min(5,size(x)[1])], '[', ',', ' ', true) :
-    length(sz) == 2 ? Base.show_delim_array(io, x[1,1:min(5,size(x)[2])], '[', ',', ' ', true) : ""
-    println(io,)
-end
-function dump(io::IO, x::Union{HDF5File, HDF5Group}, n::Int, indent)
-    println(io, typeof(x), " len ", length(x))
-    if n > 0
-        i = 1
-        for k in names(x)
-            print(io, indent, "  ", k, ": ")
-            v = o_open(x, k)
-            dump(io, v, n - 1, string(indent, "  "))
-            close(v)
-            if i > 10
-                println(io, indent, "  ...")
-                break
-            end
-            i += 1
-        end
-    end
-end
-
 # Get the datatype of a dataset
 datatype(dset::HDF5Dataset) = HDF5Datatype(h5d_get_type(checkvalid(dset).id), file(dset))
 # Get the datatype of an attribute
@@ -1277,7 +1259,7 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{S})
             pad = h5t_get_strpad(objtype.id)
             buf = Vector{UInt8}(n)
             readarray(obj, objtype.id, buf)
-			pbuf = String(buf)
+            pbuf = String(buf)
             ret = unpad(pbuf, pad)
         end
     finally
