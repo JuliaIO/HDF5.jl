@@ -572,8 +572,10 @@ function h5open(filename::AbstractString, mode::String,
     HDF5File(fid, filename)
 end
 
-"""h5open(filename::AbstractString, mode::AbstractString="r")
-Open or create an HDF5 file wher `mode` is one of "r", "r+", "w", "r,swmr", "w,swmr".
+"""
+    h5open(filename::AbstractString, mode::AbstractString="r")
+
+Open or create an HDF5 file where `mode` is one of "r", "r+", "w", "r+,swmr", or "w,swmr".
 """
 function h5open end
 
@@ -1165,21 +1167,26 @@ dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims, Tuple{}}=()) = 
 
 
 get_dims(dspace::HDF5Dataspace) = h5s_get_simple_extent_dims(dspace.id)
-"""get_dims(dset::HDF5Dataset)
-Get the array dimensions from a dataset
-Returns a tuple of dims and maxdims
+"""
+    get_dims(dset::HDF5Dataset)
+
+Get the array dimensions from a dataset and return a tuple of dims and maxdims.
 """
 get_dims(dset::HDF5Dataset) = get_dims(dataspace(checkvalid(dset)))
 
-"""set_dims!(dset::HDF5Dataset, new_dims::Dims)
- change the current dimensions of a dataset, new_dims fit in max_dims = get_dims(dset)[2]
-reduction is possible, and leads to loss of truncated data
+"""
+    set_dims!(dset::HDF5Dataset, new_dims::Dims)
+
+Change the current dimensions of a dataset to `new_dims`, limited by
+`max_dims = get_dims(dset)[2]`. Reduction is possible and leads to loss of truncated data.
 """
 set_dims!(dset::HDF5Dataset, new_dims::Dims) = h5d_set_extent(checkvalid(dset), Hsize[reverse(new_dims)...])
 
 """
-start_swmr_write(h5::HDF5File)
-Start Single Reader Multiple Writer (SWMR) writing mode. See https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-StartSwmrWrite
+    start_swmr_write(h5::HDF5File)
+
+Start Single Reader Multiple Writer (SWMR) writing mode.
+See [SWMR documentation](https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-StartSwmrWrite).
 """
 start_swmr_write(h5::HDF5File) = hf5start_swmr_write(h5.id)
 
@@ -2286,10 +2293,13 @@ const hdf5_prop_get_set = Dict(
 # properties that require chunks in order to work (e.g. any filter)
 const chunked_props = Set(["compress", "deflate", "blosc", "shuffle"])
 
-# external link
-"create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path; lcpl_id=HDF5.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
-Create an external link such that `source[source_relpath]` points to `target_path` within the file with path `target_filename`. Calls `[H5Lcreate_external](https://www.hdfgroup.org/HDF5/doc/RM/RM_H5L.html#Link-CreateExternal)`
-"
+"""
+    create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename,
+    target_path; lcpl_id=HDF5.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
+
+Create an external link such that `source[source_relpath]` points to `target_path` within
+the file with path `target_filename`. Calls `[H5Lcreate_external](https://www.hdfgroup.org/HDF5/doc/RM/RM_H5L.html#Link-CreateExternal)`
+"""
 function create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path; lcpl_id=H5P_DEFAULT, lapl_id=H5P_DEFAULT)
   h5l_create_external(target_filename, target_path, source.id, source_relpath, lcpl_id, lapl_id)
 end
