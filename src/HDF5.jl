@@ -535,12 +535,8 @@ heuristic_chunk(x) = Int[]
 # (strings are saved as scalars, and hence cannot be chunked)
 
 ### High-level interface ###
-"""
-    h5open(filename::AbstractString, mode::AbstractString="r")
-
-Open or create an HDF5 file where `mode` is one of "r", "r+", "w", "r+,swmr", or "w,swmr".
-"""
-function h5open(filename::AbstractString, mode::AbstractString,
+# Open or create an HDF5 file
+function h5open(filename::AbstractString, mode::String,
         cpl::HDF5Properties=DEFAULT_PROPERTIES, apl::HDF5Properties=DEFAULT_PROPERTIES)
     contains(mode,"swmr") && HDF5.libversion < v"1.10.0" && error("SWMR requires libversion >= v\"1.10.0\"")
     close_apl = false
@@ -576,6 +572,12 @@ function h5open(filename::AbstractString, mode::AbstractString,
     HDF5File(fid, filename)
 end
 
+"""
+    h5open(filename::AbstractString, mode::AbstractString="r")
+
+Open or create an HDF5 file where `mode` is one of "r", "r+", "w", "r+,swmr", or "w,swmr".
+"""
+function h5open end
 
 function h5open(filename::AbstractString, mode::AbstractString="r", pv...)
     # pv is interpreted as pairs of arguments
