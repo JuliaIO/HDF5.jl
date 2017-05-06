@@ -5,10 +5,24 @@ module HDF5
 using Compat
 using Compat: unsafe_convert, String
 
-## Add methods to...
-import Base: ==, close, convert, done, dump, eltype, endof, flush, getindex,
-             isempty, isvalid, length, names, ndims, next, parent, read,
-             setindex!, show, size, sizeof, start, write
+import Base: 
+    ==, close, convert, done, dump, eltype, endof, flush, getindex,
+    isempty, isvalid, length, names, ndims, next, parent, read,
+    setindex!, show, size, sizeof, start, write
+
+export
+    # types
+    HDF5Attribute, HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype,
+    HDF5Dataspace, HDF5Object, HDF5Properties, HDF5Vlen,
+    # functions
+    a_create, a_delete, a_open, a_read, a_write, attrs,
+    d_create, d_create_external, d_open, d_read, d_write,
+    dataspace, datatype, exists, file, filename,
+    g_create, g_open, get_chunk, get_create_properties,
+    h5open, h5read, h5rewrite, h5writeattr, h5readattr, h5write,
+    has, iscontiguous, ishdf5, ismmappable, name,
+    o_copy, o_delete, o_open, p_create,
+    readmmap, @read, @write, root, set_dims!, t_create, t_commit
 
 include("datafile.jl")
 
@@ -25,8 +39,6 @@ function init_libhdf5()
     status < 0 && error("Can't initialize the HDF5 library")
     nothing
 end
-
-init_libhdf5()
 
 function h5_get_libversion()
     majnum = Ref{Cuint}()
@@ -45,15 +57,15 @@ const C_time_t = Int
 
 ## HDF5 types and constants
 if libversion >= v"1.10.0"
-    const Hid     = Int64
+    const Hid = Int64
 else
-    const Hid     = Cint
+    const Hid = Cint
 end
-const Herr        = Cint
-const Hsize       = UInt64
-const Hssize      = Int64
-const Htri        = Cint   # pseudo-boolean (negative if error)
-const Haddr       = UInt64
+const Herr    = Cint
+const Hsize   = UInt64
+const Hssize  = Int64
+const Htri    = Cint   # pseudo-boolean (negative if error)
+const Haddr   = UInt64
 
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
@@ -918,7 +930,7 @@ function exists(parent::Union{HDF5File, HDF5Group}, path::String, lapl::HDF5Prop
         return false
     end
     ret = true
-    if !(rest === nothing) && !isempty(rest)
+    if rest !== nothing && !isempty(rest)
         obj = parent[first]
         ret = exists(obj, rest, lapl)
         close(obj)
@@ -1686,9 +1698,7 @@ function hyperslab(dset::HDF5Dataset, indices::Union{Range{Int},Int}...)
         dims, maxdims = get_dims(dspace)
         n_dims = length(dims)
         if length(indices) != n_dims
-            @show n_dims
-            @show indices
-            error("Wrong number of indices supplied")
+            error("Wrong number of indices supplied; supplied indicies of length $length(indices) but expected $(n_dims).")
         end
         dsel_id = h5s_copy(dspace.id)
         dsel_start  = Vector{Hsize}(n_dims)
@@ -2282,71 +2292,6 @@ function hiding_errors(f)
     res
 end
 
-export
-    # Types
-    HDF5Attribute,
-    HDF5File,
-    HDF5Group,
-    HDF5Dataset,
-    HDF5Datatype,
-    HDF5Dataspace,
-    HDF5Object,
-    HDF5Properties,
-    HDF5Vlen,
-    HDF5File,
-    # Functions
-    a_create,
-    a_delete,
-    a_open,
-    a_read,
-    a_write,
-    attrs,
-    close,
-    d_create,
-    d_create_external,
-    d_open,
-    d_read,
-    d_write,
-    dataspace,
-    datatype,
-    exists,
-    file,
-    filename,
-    g_create,
-    g_open,
-    get_chunk,
-    get_create_properties,
-    getindex,
-    h5open,
-    h5read,
-    h5rewrite,
-    h5writeattr,
-    h5readattr,
-    h5write,
-    has,
-    iscontiguous,
-    ishdf5,
-    ismmappable,
-    length,
-    name,
-    names,
-    o_copy,
-    o_delete,
-    o_open,
-    p_create,
-    parent,
-    read,
-    readmmap,
-    @read,
-    root,
-    set_dims!,
-    setindex!,
-    size,
-    t_create,
-    t_commit,
-    write,
-    @write
-
 # Define globally because JLD uses this, too
 const rehash! = Base.rehash!
 
@@ -2361,11 +2306,15 @@ const ASCII_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
 
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false)
 
+const DEBUG = haskey(ENV, "DEBUG")
+
 function __init__()
     init_libhdf5()
     register_blosc()
-    # Turn off automatic error printing
-    # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
+    # Turn off automatic error printing unless DEBUG env variable set
+    if !DEBUG
+        h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
+    end
 
     ASCII_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
     h5p_set_char_encoding(ASCII_LINK_PROPERTIES[].id, H5T_CSET_ASCII)
