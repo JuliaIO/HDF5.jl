@@ -1698,7 +1698,7 @@ function hyperslab(dset::HDF5Dataset, indices::Union{Range{Int},Int}...)
         dims, maxdims = get_dims(dspace)
         n_dims = length(dims)
         if length(indices) != n_dims
-            error("Wrong number of indices supplied; supplied indicies of length $length(indices) but expected $(n_dims).")
+            error("Wrong number of indices supplied; supplied indicies of length $(length(indices)) but expected $(n_dims).")
         end
         dsel_id = h5s_copy(dspace.id)
         dsel_start  = Vector{Hsize}(n_dims)
