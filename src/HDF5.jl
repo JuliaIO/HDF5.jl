@@ -1698,7 +1698,7 @@ function hyperslab(dset::HDF5Dataset, indices::Union{Range{Int},Int}...)
         dims, maxdims = get_dims(dspace)
         n_dims = length(dims)
         if length(indices) != n_dims
-            error("Wrong number of indices supplied; supplied indicies of length $length(indices) but expected $(n_dims).")
+            error("Wrong number of indices supplied; supplied indicies of length $(length(indices)) but expected $(n_dims).")
         end
         dsel_id = h5s_copy(dspace.id)
         dsel_start  = Vector{Hsize}(n_dims)
@@ -2312,7 +2312,7 @@ const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false)
 function __init__()
     init_libhdf5()
     register_blosc()
-    # Turn off automatic error printing unless DEBUG env variable set
+    # Turn off automatic error printing
     # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
     ASCII_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
