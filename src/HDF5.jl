@@ -677,6 +677,7 @@ function close(obj::HDF5File)
     end
     nothing
 end
+
 """
     isopen(obj::HDF5File)
 
