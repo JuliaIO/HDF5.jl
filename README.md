@@ -116,10 +116,10 @@ end
 Convenience functions for attributes attached to datasets are also provided:
 
 ```julia
-  A = Vector{Int}(1:10)
-  h5write("bar.h5", "foo", A)
-  h5writeattr("bar.h5", "foo", Dict("c"=>"value for metadata parameter c","d"=>"metadata d"))
-  h5readattr("bar.h5", "foo")
+A = Vector{Int}(1:10)
+h5write("bar.h5", "foo", A)
+h5writeattr("bar.h5", "foo", Dict("c"=>"value for metadata parameter c","d"=>"metadata d"))
+h5readattr("bar.h5", "foo")
 ```
 
 
