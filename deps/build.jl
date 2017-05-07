@@ -12,7 +12,7 @@ function h5_get_libversion(n, h)
     status < 0 && error("Error getting HDF5 library version")
     VersionNumber(majnum[], minnum[], relnum[])
 end
-validate(n,h) = h5_get_libversion(n,h) > MINVERSION
+validate(n,h) = h5_get_libversion(n,h) >= MINVERSION
 
 if is_linux()
     hdf5 = library_dependency("libhdf5",
