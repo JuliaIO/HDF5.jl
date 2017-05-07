@@ -2269,11 +2269,14 @@ const hdf5_prop_get_set = Dict(
 const chunked_props = Set(["compress", "deflate", "blosc", "shuffle"])
 
 # external link
-"create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path; lcpl_id=HDF5.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
-Create an external link such that `source[source_relpath]` points to `target_path` within the file with path `target_filename`. Calls `[H5Lcreate_external](https://www.hdfgroup.org/HDF5/doc/RM/RM_H5L.html#Link-CreateExternal)`
+"
+    create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path; lcpl_id=HDF5.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
+
+Create an external link such that `source[source_relpath]` points to `target_path` within the file with path `target_filename`;
+Calls `[H5Lcreate_external](https://www.hdfgroup.org/HDF5/doc/RM/RM_H5L.html#Link-CreateExternal)`.
 "
 function create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path; lcpl_id=H5P_DEFAULT, lapl_id=H5P_DEFAULT)
-  h5l_create_external(target_filename, target_path, source.id, source_relpath, lcpl_id, lapl_id)
+    h5l_create_external(target_filename, target_path, source.id, source_relpath, lcpl_id, lapl_id)
 end
 
 # error handling
@@ -2306,15 +2309,11 @@ const ASCII_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
 
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false)
 
-const DEBUG = haskey(ENV, "DEBUG")
-
 function __init__()
     init_libhdf5()
     register_blosc()
     # Turn off automatic error printing unless DEBUG env variable set
-    if !DEBUG
-        h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
-    end
+    # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
     ASCII_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
     h5p_set_char_encoding(ASCII_LINK_PROPERTIES[].id, H5T_CSET_ASCII)
