@@ -92,7 +92,7 @@ function prep_h5_file(h5)
 end
 
 @testset "create by libver, then start_swmr_write" begin
-  #test this h5open signature with keyword arg
+  #test this h5open method with keyword arg
   h5open(fname, "w", "libver_bounds", (HDF5.H5F_LIBVER_LATEST, HDF5.H5F_LIBVER_LATEST),swmr=false) do h5
   prep_h5_file(h5)
   HDF5.start_swmr_write(h5) # after creating datasets
