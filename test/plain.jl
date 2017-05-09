@@ -69,6 +69,7 @@ using Compat.String
     C∞ = 42
     attrs(f)["C∞"] = C∞
     dset = f["salut"]
+    @test !isempty(dset)
     label = "This is a string"
     attrs(dset)["typeinfo"] = label
     close(dset)
