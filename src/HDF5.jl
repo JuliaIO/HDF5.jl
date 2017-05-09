@@ -537,8 +537,8 @@ heuristic_chunk(x) = Int[]
 ### High-level interface ###
 # Open or create an HDF5 file
 function h5open(filename::AbstractString, mode::AbstractString,
-        cpl::HDF5Properties=DEFAULT_PROPERTIES, apl::HDF5Properties=DEFAULT_PROPERTIES)
-    contains(mode,"swmr") && HDF5.libversion < v"1.10.0" && error("SWMR requires libversion >= v\"1.10.0\"")
+        cpl::HDF5Properties=DEFAULT_PROPERTIES, apl::HDF5Properties=DEFAULT_PROPERTIES;swmr=false)
+    swmr && HDF5.libversion < v"1.10.0" && error("SWMR requires libversion >= v\"1.10.0\"")
     close_apl = false
     if apl.id == H5P_DEFAULT
         apl = p_create(H5P_FILE_ACCESS, false)
@@ -547,19 +547,16 @@ function h5open(filename::AbstractString, mode::AbstractString,
         apl["fclose_degree"] = H5F_CLOSE_STRONG
     end
     if mode == "w"
-      fid = h5f_create(filename, H5F_ACC_TRUNC, cpl.id, apl.id)
-    elseif mode == "w,swmr"
-      fid = h5f_create(filename, H5F_ACC_TRUNC|H5F_ACC_SWMR_WRITE, cpl.id, apl.id)
+      flag = swmr ? H5F_ACC_TRUNC|H5F_ACC_SWMR_WRITE : H5F_ACC_TRUNC
+      fid = h5f_create(filename, flag, cpl.id, apl.id)
     else
       !h5f_is_hdf5(filename) && error("This does not appear to be an HDF5 file")
       if mode == "r"
-        fid = h5f_open(filename, H5F_ACC_RDONLY, apl.id)
+        flag = swmr ? H5F_ACC_RDONLY|H5F_ACC_SWMR_READ : H5F_ACC_RDONLY
+        fid = h5f_open(filename, flag, apl.id)
       elseif mode == "r+"
-        fid = h5f_open(filename, H5F_ACC_RDWR, apl.id)
-      elseif mode == "r,swmr"
-        fid = h5f_open(filename, H5F_ACC_RDONLY|H5F_ACC_SWMR_READ, apl.id)
-      elseif mode == "r+,swmr"
-        fid = h5f_open(filename, H5F_ACC_RDWR|H5F_ACC_SWMR_WRITE, apl.id)
+        flag = swmr ? H5F_ACC_RDWR|H5F_ACC_SWMR_WRITE : H5F_ACC_RDWR
+        fid = h5f_open(filename, flag, apl.id)
       else
         error("$mode is invalid mode")
       end
@@ -573,12 +570,16 @@ function h5open(filename::AbstractString, mode::AbstractString,
 end
 
 """
-    h5open(filename::AbstractString, mode::AbstractString="r")
+    h5open(filename::AbstractString, mode::AbstractString="r";swmr=false)
 
-Open or create an HDF5 file where `mode` is one of "r", "r+", "w", "r+,swmr", or "w,swmr".
+Open or create an HDF5 file where `mode` is one of:
+ * "r"  read only
+ * "r+" read and write
+ * "w"  read and write, create a new file
+
+Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for "w" and
+"r+", or SWMR read access for "r".
 """
-function h5open end
-
 function h5open(filename::AbstractString, mode::AbstractString="r", pv...)
     # pv is interpreted as pairs of arguments
     # the first of a pair is a key of hdf5_prop_get_set
@@ -596,8 +597,21 @@ function h5open(filename::AbstractString, mode::AbstractString="r", pv...)
     end
     h5open(filename, mode, DEFAULT_PROPERTIES, apl)
 end
-function h5open(f::Function, args...)
-    fid = h5open(args...)
+
+"""
+    function h5open(f::Function, args...;kwargs...)
+
+Apply the function f to the result of `h5open(args...;kwargs...)` and close the resulting
+`HDF5File` upon completion. For example with a `do` block:
+
+
+    h5open("foo.h5","w") do h5
+        h5["foo"]=[1,2,3]
+    end
+
+"""
+function h5open(f::Function, args...;kwargs...)
+    fid = h5open(args...;kwargs...)
     try
         f(fid)
     finally

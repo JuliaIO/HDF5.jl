@@ -16,13 +16,13 @@ using Base.Test
 fname = tempname()
 
 @testset "swmr modes" begin
-  h5open(fname,"w,swmr") do h5
+  h5open(fname,"w",swmr=true) do h5
     h5["foo"] = collect(1:10)
   end
-  h5open(fname,"r,swmr") do h5
+  h5open(fname,"r",swmr=true) do h5
     @test read(h5["foo"]) == collect(1:10)
   end
-  h5open(fname,"r+,swmr") do h5
+  h5open(fname,"r+",swmr=true) do h5
     @test read(h5["foo"]) == collect(1:10)
   end
 end
@@ -69,7 +69,7 @@ end
 end
 
 @everywhere function swmr_reader(fname, ch_written, ch_read)
-  h5open(fname,"r,swmr") do h5
+  h5open(fname,"r";swmr=true) do h5
   d=h5["foo"]
   dataset_read(d, ch_written, ch_read)
   end
@@ -100,11 +100,11 @@ end
 end
 
 @testset "create by swmr mode, then close and open again" begin
-  h5open(fname, "w,swmr") do h5
+  h5open(fname, "w",swmr=true) do h5
   prep_h5_file(h5)
   end
   # close the file after creating datasets, open again with swmr write access but not truncate
-  h5open(fname,"r+,swmr") do h5
+  h5open(fname,"r+",swmr=true) do h5
   remote_test(h5)
   end
 end
