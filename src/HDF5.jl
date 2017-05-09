@@ -580,7 +580,7 @@ Open or create an HDF5 file where `mode` is one of:
 Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for "w" and
 "r+", or SWMR read access for "r".
 """
-function h5open(filename::AbstractString, mode::AbstractString="r", pv...)
+function h5open(filename::AbstractString, mode::AbstractString="r", pv...;kwargs...)
     # pv is interpreted as pairs of arguments
     # the first of a pair is a key of hdf5_prop_get_set
     # the second of a pair is a property value
@@ -595,7 +595,7 @@ function h5open(filename::AbstractString, mode::AbstractString="r", pv...)
         end
         apl[thisname] = pv[i+1]
     end
-    h5open(filename, mode, DEFAULT_PROPERTIES, apl)
+    h5open(filename, mode, DEFAULT_PROPERTIES, apl;kwargs...)
 end
 
 """
