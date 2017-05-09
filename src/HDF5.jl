@@ -575,7 +575,7 @@ end
 Open or create an HDF5 file where `mode` is one of:
  * "r"  read only
  * "r+" read and write
- * "w"  read and write, create a new file
+ * "w"  read and write, create a new file (destroys any existing contents)
 
 Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for "w" and
 "r+", or SWMR read access for "r".
