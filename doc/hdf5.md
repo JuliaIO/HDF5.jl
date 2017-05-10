@@ -40,7 +40,7 @@ The mode can be any one of the following:
   </tr>
 </table>
 
-This produces an object of type `PlainHDF5File`, a subtype of the abstract type `HDF5File`. The subtypes of `HDF5File` are used in method dispatch to enforce any file-type-specific formatting. "Plain" files have no elements (groups, datasets, or attributes) that are not explicitly created by the user.
+This produces an object of type `HDF5File`, a subtype of the abstract type `DataFile`. This file will have no elements (groups, datasets, or attributes) that are not explicitly created by the user.
 
 When you're finished with a file, you should close it:
 

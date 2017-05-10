@@ -5,10 +5,24 @@ module HDF5
 using Compat
 using Compat: unsafe_convert, String
 
-## Add methods to...
-import Base: ==, close, convert, done, eltype, endof, flush, getindex,
-             isempty, isvalid, length, names, ndims, next, parent, read,
-             setindex!, show, size, sizeof, start, write
+import Base: 
+    ==, close, convert, done, eltype, endof, flush, getindex,
+    isempty, isvalid, length, names, ndims, next, parent, read,
+    setindex!, show, size, sizeof, start, write, isopen
+
+export
+    # types
+    HDF5Attribute, HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype,
+    HDF5Dataspace, HDF5Object, HDF5Properties, HDF5Vlen,
+    # functions
+    a_create, a_delete, a_open, a_read, a_write, attrs,
+    d_create, d_create_external, d_open, d_read, d_write,
+    dataspace, datatype, exists, file, filename,
+    g_create, g_open, get_chunk, get_create_properties,
+    h5open, h5read, h5rewrite, h5writeattr, h5readattr, h5write,
+    has, iscontiguous, ishdf5, ismmappable, name,
+    o_copy, o_delete, o_open, p_create,
+    readmmap, @read, @write, root, set_dims!, t_create, t_commit
 
 include("datafile.jl")
 
@@ -25,8 +39,6 @@ function init_libhdf5()
     status < 0 && error("Can't initialize the HDF5 library")
     nothing
 end
-
-init_libhdf5()
 
 function h5_get_libversion()
     majnum = Ref{Cuint}()
@@ -45,15 +57,15 @@ const C_time_t = Int
 
 ## HDF5 types and constants
 if libversion >= v"1.10.0"
-    const Hid     = Int64
+    const Hid = Int64
 else
-    const Hid     = Cint
+    const Hid = Cint
 end
-const Herr        = Cint
-const Hsize       = UInt64
-const Hssize      = Int64
-const Htri        = Cint   # pseudo-boolean (negative if error)
-const Haddr       = UInt64
+const Herr    = Cint
+const Hsize   = UInt64
+const Hssize  = Int64
+const Htri    = Cint   # pseudo-boolean (negative if error)
+const Haddr   = UInt64
 
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
@@ -699,6 +711,13 @@ function close(obj::HDF5File)
     nothing
 end
 
+"""
+    isopen(obj::HDF5File)
+
+Returns `true` if `obj` has not been closed, `false` if it has been closed.
+"""
+isopen(obj::HDF5File) = obj.id != -1
+
 for (h5type, h5func) in
     ((:(Union{HDF5Group, HDF5Dataset}), :h5o_close),
      (:HDF5Attribute, :h5a_close))
@@ -939,7 +958,7 @@ function exists(parent::Union{HDF5File, HDF5Group}, path::String, lapl::HDF5Prop
         return false
     end
     ret = true
-    if !(rest === nothing) && !isempty(rest)
+    if rest !== nothing && !isempty(rest)
         obj = parent[first]
         ret = exists(obj, rest, lapl)
         close(obj)
@@ -974,7 +993,7 @@ function length(x::HDF5Attributes)
     objinfo(x.parent).num_attrs
 end
 
-isempty(x::Union{HDF5Group,HDF5File}) = length(x) == 0
+isempty(x::Union{HDF5Dataset,HDF5Group,HDF5File}) = length(x) == 0
 function size(obj::Union{HDF5Dataset, HDF5Attribute})
     dspace = dataspace(obj)
     dims, maxdims = get_dims(dspace)
@@ -1668,9 +1687,7 @@ function hyperslab(dset::HDF5Dataset, indices::Union{Range{Int},Int}...)
         dims, maxdims = get_dims(dspace)
         n_dims = length(dims)
         if length(indices) != n_dims
-            @show n_dims
-            @show indices
-            error("Wrong number of indices supplied")
+            error("Wrong number of indices supplied, supplied length $(length(indices)) but expected $(n_dims).")
         end
         dsel_id = h5s_copy(dspace.id)
         dsel_start  = Vector{Hsize}(n_dims)
@@ -2241,11 +2258,14 @@ const hdf5_prop_get_set = Dict(
 const chunked_props = Set(["compress", "deflate", "blosc", "shuffle"])
 
 # external link
-"create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path; lcpl_id=HDF5.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
-Create an external link such that `source[source_relpath]` points to `target_path` within the file with path `target_filename`. Calls `[H5Lcreate_external](https://www.hdfgroup.org/HDF5/doc/RM/RM_H5L.html#Link-CreateExternal)`
-"
+"""
+    create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path; lcpl_id=HDF5.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
+
+Create an external link such that `source[source_relpath]` points to `target_path` within the file with path `target_filename`;
+Calls `[H5Lcreate_external](https://www.hdfgroup.org/HDF5/doc/RM/RM_H5L.html#Link-CreateExternal)`.
+"""
 function create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path; lcpl_id=H5P_DEFAULT, lapl_id=H5P_DEFAULT)
-  h5l_create_external(target_filename, target_path, source.id, source_relpath, lcpl_id, lapl_id)
+    h5l_create_external(target_filename, target_path, source.id, source_relpath, lcpl_id, lapl_id)
 end
 
 # error handling
@@ -2263,71 +2283,6 @@ function hiding_errors(f)
         error_stack, old_func[], old_client_data[])
     res
 end
-
-export
-    # Types
-    HDF5Attribute,
-    HDF5File,
-    HDF5Group,
-    HDF5Dataset,
-    HDF5Datatype,
-    HDF5Dataspace,
-    HDF5Object,
-    HDF5Properties,
-    HDF5Vlen,
-    HDF5File,
-    # Functions
-    a_create,
-    a_delete,
-    a_open,
-    a_read,
-    a_write,
-    attrs,
-    close,
-    d_create,
-    d_create_external,
-    d_open,
-    d_read,
-    d_write,
-    dataspace,
-    datatype,
-    exists,
-    file,
-    filename,
-    g_create,
-    g_open,
-    get_chunk,
-    get_create_properties,
-    getindex,
-    h5open,
-    h5read,
-    h5rewrite,
-    h5writeattr,
-    h5readattr,
-    h5write,
-    has,
-    iscontiguous,
-    ishdf5,
-    ismmappable,
-    length,
-    name,
-    names,
-    o_copy,
-    o_delete,
-    o_open,
-    p_create,
-    parent,
-    read,
-    readmmap,
-    @read,
-    root,
-    set_dims!,
-    setindex!,
-    size,
-    t_create,
-    t_commit,
-    write,
-    @write
 
 # Define globally because JLD uses this, too
 const rehash! = Base.rehash!
