@@ -57,6 +57,7 @@ end
   while n < 100
     if n>1
       i = take!(ch_written)
+      sleep(0.01)
     end
     HDF5.refresh(d)
     nlast,n=n,length(d)
@@ -75,14 +76,19 @@ end
   end
 end
 
+"Spawn a reader function in a 2nd process, provide two channels for synchronization.
+Run a writing function in this process. The writing function writes,
+then notifies `ch_read`, then the reading function reads, and notifies `ch_read`. So read
+attempts should always follow writes. In practice, I find that I still need a delay after
+being notified of a write. It seems that 1 ms is enough, so I use 10 ms to hopefully
+avoid system to system variantion causing the test to fail. If the test fails ocassionally,
+it can be made less strict by reducing the limit in nbigger."
 function remote_test(h5)
   ch_written, ch_read = RemoteChannel(1), RemoteChannel(1)
   a=@spawn(swmr_reader(fname, ch_written, ch_read))
   dataset_write(h5["foo"], ch_written, ch_read)
   nbigger=fetch(a)
-  @test nbigger>=9
-  # seems like itshould be 10, but the "create by libver" test reliably returns 9
-  # The reader does not see the state where length(h5["foo"]) == 10
+  @test nbigger==10
 end
 
 function prep_h5_file(h5)
