@@ -8,7 +8,7 @@ using Compat: unsafe_convert, String
 import Base: 
     ==, close, convert, done, dump, eltype, endof, flush, getindex,
     isempty, isvalid, length, names, ndims, next, parent, read,
-    setindex!, show, size, sizeof, start, write
+    setindex!, show, size, sizeof, start, write, isopen
 
 export
     # types
@@ -689,6 +689,13 @@ function close(obj::HDF5File)
     end
     nothing
 end
+
+"""
+    isopen(obj::HDF5File)
+
+Returns `true` if `obj` has not been closed, `false` if it has been closed.
+"""
+isopen(obj::HDF5File) = obj.id != -1
 
 for (h5type, h5func) in
     ((:(Union{HDF5Group, HDF5Dataset}), :h5o_close),
