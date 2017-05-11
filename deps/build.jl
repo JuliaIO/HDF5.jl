@@ -5,10 +5,10 @@ using BinDeps
 # https://support.hdfgroup.org/HDF5/ lists "Current Releases"
 # make sure we have one of those
 const MINVERSION = v"1.8.0"
-function h5_get_libversion(n, h)
-    f = Libdl.dlsym_e(h, "H5get_libversion")
+function h5_get_libversion(lib, handle)
+    sym = Libdl.dlsym_e(handle, "H5get_libversion")
     majnum, minnum, relnum = Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}()
-    status = ccall(f,Cint, (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}), majnum, minnum, relnum)
+    status = ccall(sym, Cint, (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}), majnum, minnum, relnum)
     status < 0 && error("Error getting HDF5 library version")
     VersionNumber(majnum[], minnum[], relnum[])
 end
