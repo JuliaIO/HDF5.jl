@@ -549,7 +549,7 @@ heuristic_chunk(x) = Int[]
 ### High-level interface ###
 # Open or create an HDF5 file
 function h5open(filename::AbstractString, mode::AbstractString,
-        cpl::HDF5Properties=DEFAULT_PROPERTIES, apl::HDF5Properties=DEFAULT_PROPERTIES;swmr=false)
+                cpl::HDF5Properties=DEFAULT_PROPERTIES, apl::HDF5Properties=DEFAULT_PROPERTIES; swmr=false)
     swmr && HDF5.libversion < v"1.10.0" && error("SWMR requires libversion >= v\"1.10.0\"")
     close_apl = false
     if apl.id == H5P_DEFAULT
@@ -592,7 +592,7 @@ Open or create an HDF5 file where `mode` is one of:
 Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for "w" and
 "r+", or SWMR read access for "r".
 """
-function h5open(filename::AbstractString, mode::AbstractString="r", pv...;kwargs...)
+function h5open(filename::AbstractString, mode::AbstractString="r", pv...; kwargs...)
     # pv is interpreted as pairs of arguments
     # the first of a pair is a key of hdf5_prop_get_set
     # the second of a pair is a property value
@@ -607,7 +607,7 @@ function h5open(filename::AbstractString, mode::AbstractString="r", pv...;kwargs
         end
         apl[thisname] = pv[i+1]
     end
-    h5open(filename, mode, DEFAULT_PROPERTIES, apl;kwargs...)
+    h5open(filename, mode, DEFAULT_PROPERTIES, apl; kwargs...)
 end
 
 """
@@ -622,7 +622,7 @@ Apply the function f to the result of `h5open(args...;kwargs...)` and close the 
     end
 
 """
-function h5open(f::Function, args...;kwargs...)
+function h5open(f::Function, args...; kwargs...)
     fid = h5open(args...;kwargs...)
     try
         f(fid)
