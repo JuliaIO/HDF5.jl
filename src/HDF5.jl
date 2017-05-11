@@ -623,7 +623,7 @@ Apply the function f to the result of `h5open(args...;kwargs...)` and close the 
 
 """
 function h5open(f::Function, args...; kwargs...)
-    fid = h5open(args...;kwargs...)
+    fid = h5open(args...; kwargs...)
     try
         f(fid)
     finally
@@ -1193,6 +1193,7 @@ dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims, Tuple{}}=()) = 
 
 
 get_dims(dspace::HDF5Dataspace) = h5s_get_simple_extent_dims(dspace.id)
+
 """
     get_dims(dset::HDF5Dataset)
 
