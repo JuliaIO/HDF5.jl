@@ -46,23 +46,25 @@ function dataset_write(d, ch_written, ch_read)
     inds, size(d)
     d[inds]=inds
     flush(d) # flush the dataset
-    i<10 && put!(ch_written,i)
+    put!(ch_written,i)
   end
 end
 
 @everywhere function dataset_read(d, ch_written, ch_read)
-  n=length(d)
+  n=nlast=length(d)
   nbigger=0
   i=0
+  put!(ch_read,true)
   while n < 100
-    if n>1
-      i = take!(ch_written)
-      sleep(0.01)
+    i = take!(ch_written)
+    for j = 1:1000 # wait for new data to be available to avoid CI failures
+      HDF5.refresh(d)
+      nlast,n=n,length(d)
+      n>nlast && break
+      sleep(0.001)
     end
-    HDF5.refresh(d)
-    nlast,n=n,length(d)
     vals = read(d)
-    n>1 && @assert vals == collect(1:n)
+    @assert vals == collect(1:n)
     n>nlast && (nbigger+=1)
     put!(ch_read,true)
   end
@@ -79,10 +81,8 @@ end
 "Spawn a reader function in a 2nd process, provide two channels for synchronization.
 Run a writing function in this process. The writing function writes,
 then notifies `ch_read`, then the reading function reads, and notifies `ch_read`. So read
-attempts should always follow writes. In practice, I find that I still need a delay after
-being notified of a write. It seems that 1 ms is enough, so I use 10 ms to hopefully
-avoid system to system variantion causing the test to fail. If the test fails ocassionally,
-it can be made less strict by reducing the limit in nbigger."
+attempts should always follow writes, though there may be a delay before the data is available
+so there is a step that sleeps until data is available."
 function remote_test(h5)
   ch_written, ch_read = RemoteChannel(1), RemoteChannel(1)
   a=@spawn(swmr_reader(fname, ch_written, ch_read))
