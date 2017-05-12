@@ -9,9 +9,6 @@ end
 @everywhere using HDF5
 using Base.Test
 
-
-
-
 @testset "swmr" begin
 fname = tempname()
 
@@ -115,6 +112,8 @@ end
   remote_test(h5)
   end
 end
+
+rm(fname) #cleanup temp file
 
 end #@testset "swmr"
 end # if libversion
