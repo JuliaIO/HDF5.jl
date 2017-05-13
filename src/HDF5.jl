@@ -5,7 +5,7 @@ module HDF5
 using Compat
 using Compat: unsafe_convert, String
 
-import Base: 
+import Base:
     ==, close, convert, done, dump, eltype, endof, flush, getindex,
     isempty, isvalid, length, names, ndims, next, parent, read,
     setindex!, show, size, sizeof, start, write
@@ -763,7 +763,11 @@ function close(obj::HDF5Properties)
     nothing
 end
 
-# Testing file type
+"""
+    ishdf5(name::AbstractString)
+
+Returns `true` if `name` is a path to a valid hdf5 file, `false` otherwise.
+"""
 ishdf5(name::AbstractString) = h5f_is_hdf5(name)
 
 # Extract the file
