@@ -88,6 +88,7 @@ function remote_test(h5)
   @test nbigger==10
 end
 
+# create datasets and attributes before staring swmr writing
 function prep_h5_file(h5)
   d = d_create(h5, "foo", datatype(Int), ((1,),(100,)), "chunk", (1,))
   attrs(h5)["bar"]="bar"
