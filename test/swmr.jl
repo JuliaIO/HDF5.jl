@@ -114,7 +114,6 @@ end
   end
 end
 
-rm(fname) #cleanup temp file
-
+rm(fname) #cleanup file created by swmr tests
 end #@testset "swmr"
 end # if libversion
