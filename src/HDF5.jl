@@ -302,7 +302,6 @@ hdf5_type_id{C<:CharType}(::Type{C})  = H5T_C_S1
 # that occur when passing a freshly-created file to some other
 # application).
 
-const indent_width = 4
 
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
 type HDF5File <: DataFile
@@ -342,7 +341,7 @@ function show(io::IO, g::HDF5Group)
     if isvalid(g)
         print(io, "HDF5 group: ", name(g), " (file: ", g.file.filename, ")")
     else
-        print(io, "HFD5 group  (invalid)")
+        print(io, "HFD5 group (invalid)")
     end
 end
 
