@@ -6,7 +6,7 @@ using Compat
 using Compat: unsafe_convert, String
 
 import Base: 
-    ==, close, convert, done, eltype, endof, flush, getindex,
+    close, convert, done, eltype, endof, flush, getindex, ==,
     isempty, isvalid, length, names, ndims, next, parent, read,
     setindex!, show, size, sizeof, start, write, isopen
 
@@ -301,7 +301,6 @@ hdf5_type_id{C<:CharType}(::Type{C})  = H5T_C_S1
 # directly on function exit. (This avoids certain problems, like those
 # that occur when passing a freshly-created file to some other
 # application).
-
 
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
 type HDF5File <: DataFile
