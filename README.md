@@ -34,6 +34,9 @@ Within Julia, use the package manager:
 Pkg.add("HDF5")
 ```
 
+Installation requires sudo rights on Unix-family systems and admin rights under recent versions of Windows.
+These rights are only used to install required HDF5 software, not the Julia HDF5 code.
+
 You also need to have the HDF5 library installed on your
 system (version 1.8 or higher is required), but **for most users
 no additional steps should be required; the HDF5 library should be
