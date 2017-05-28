@@ -5,10 +5,11 @@ using Compat.String
 
 @testset "plain" begin
 
-    const test_path = splitdir(@__FILE__)[1]
+    const test_path = @__DIR__
+    const tmpdir = mktempdir()
 
     # Create a new file
-    fn = joinpath(tempdir(),"test.h5")
+    fn = joinpath(tmpdir, "test.h5")
     f = h5open(fn, "w")
     @test isopen(f)
     # Write scalars
@@ -266,7 +267,6 @@ using Compat.String
     close(fid)
 
     # more do syntax: atomic rename version
-    tmpdir = mktempdir()
     outfile = joinpath(tmpdir, "test.h5")
 
     # create a new file
@@ -306,8 +306,6 @@ using Compat.String
         @test names(fid["mygroup"]) == Compat.ASCIIString["y"]
     end
 
-    rm(tmpdir, recursive=true)
-
     d = h5read(joinpath(test_path, "compound.h5"), "/data")
     @test typeof(d[1]) === HDF5.HDF5Compound{4}
     @test length(d) == 2
@@ -331,8 +329,11 @@ using Compat.String
     end
 
     # Test null terminated ASCII string (e.g. exported by h5py) #332
-    h5open("test_nullterm_ascii.h5","r") do fid
+    h5open(joinpath(test_path, "test_nullterm_ascii.h5"),"r") do fid
         str = read(fid["test"])
         @test str == "Hello World"
     end
+
+    # Remove created test files
+    rm(tmpdir, recursive=true)
 end
