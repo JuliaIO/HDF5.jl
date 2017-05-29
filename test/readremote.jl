@@ -49,10 +49,7 @@ AA = Array{Int,2}[
      12  11  10]]
 
 
-const savedir = joinpath(tempdir(), "h5")
-if !isdir(savedir)
-    mkdir(savedir)
-end
+const savedir = mktempdir()
 function getfile(name)
     file = joinpath(savedir, name)
     if !isfile(file)
