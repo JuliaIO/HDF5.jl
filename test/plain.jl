@@ -10,6 +10,7 @@ using Compat.String
     # Create a new file
     fn = joinpath(tempdir(),"test.h5")
     f = h5open(fn, "w")
+    @test isopen(f)
     # Write scalars
     f["Float64"] = 3.2
     f["Int16"] = Int16(4)
@@ -107,6 +108,7 @@ using Compat.String
     # Create a dataset designed to be deleted
     f["deleteme"] = 17.2
     close(f)
+    @test !isopen(f)
     # Test the h5read/write interface, with attributes
     W = copy(reshape(1:120, 15, 8))
     Wa = Dict("a"=>1, "b"=>2)
