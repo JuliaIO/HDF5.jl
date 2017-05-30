@@ -207,10 +207,7 @@ for obj in g
   println(data)
 end
 ```
-This gives you a straightforward way of recursively exploring an entire HDF5 file. A convenient way of examining the structure of an HDF5 file is the `dump` function, e.g.,
-```julia
-dump(fid)
-```
+This gives you a straightforward way of recursively exploring an entire HDF5 file.
 
 If you need to know whether group `g` has a dataset named `mydata`, you can test that with
 ```julia
