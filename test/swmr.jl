@@ -13,25 +13,25 @@ using Base.Test
 fname = tempname()
 
 @testset "swmr modes" begin
-    h5open(fname,"w",swmr=true) do h5
+    h5open(fname, "w", swmr=true) do h5
         h5["foo"] = collect(1:10)
     end
-    h5open(fname,"r",swmr=true) do h5
+    h5open(fname, "r", swmr=true) do h5
         @test read(h5["foo"]) == collect(1:10)
     end
-    h5open(fname,"r+",swmr=true) do h5
+    h5open(fname, "r+", swmr=true) do h5
         @test read(h5["foo"]) == collect(1:10)
     end
 end
 
 @testset "h5d_oappend" begin
-    h5open(fname,"w") do h5
+    h5open(fname, "w") do h5
         g = g_create(h5, "shoe")
-        d = d_create(g,"bar", datatype(Float64), ((1,),(-1,)), "chunk", (100,))
+        d = d_create(g, "bar", datatype(Float64), ((1,),(-1,)), "chunk", (100,))
         dxpl_id = HDF5.get_create_properties(d)
         v = [1.0, 2.0]
         memtype = datatype(Float64).id
-        # @test HDF5.h5d_oappend(d.id, dxpl_id, 0, length(v),memtype, v)
+        # @test HDF5.h5d_oappend(d.id, dxpl_id, 0, length(v), memtype, v)
     end
 end
 
@@ -51,7 +51,7 @@ end
     n = nlast = length(d)
     nbigger = 0
     i = 0
-    put!(ch_read,true)
+    put!(ch_read, true)
     while n < 100
         i = take!(ch_written)
         for j = 1:1000 # wait for new data to be available to avoid CI failures
@@ -69,7 +69,7 @@ end
 end
 
 @everywhere function swmr_reader(fname, ch_written, ch_read)
-    h5open(fname,"r", swmr=true) do h5
+    h5open(fname, "r", swmr=true) do h5
         d=h5["foo"]
         dataset_read(d, ch_written, ch_read)
     end
@@ -97,7 +97,7 @@ end
 
 @testset "create by libver, then start_swmr_write" begin
     #test this h5open method with keyword arg
-    h5open(fname, "w", "libver_bounds", (HDF5.H5F_LIBVER_LATEST, HDF5.H5F_LIBVER_LATEST),swmr=false) do h5
+    h5open(fname, "w", "libver_bounds", (HDF5.H5F_LIBVER_LATEST, HDF5.H5F_LIBVER_LATEST), swmr=false) do h5
         prep_h5_file(h5)
         HDF5.start_swmr_write(h5) # after creating datasets
         remote_test(h5)
