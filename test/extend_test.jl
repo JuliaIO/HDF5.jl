@@ -11,13 +11,12 @@ using Compat
     d = d_create(g, "foo", datatype(Float64), ((10,20),(100,200)), "chunk", (1,1))
     #println("d is size current $(map(int,HDF5.get_dims(d)[1])) max $(map(int,HDF5.get_dims(d)[2]))")
     dims, max_dims = HDF5.get_dims(d)
-    ui64(n) = UInt64(n)
-    @test dims == (ui64(10),ui64(20))
-    @test max_dims == (ui64(100),ui64(200))
+    @test dims == (UInt64(10),UInt64(20))
+    @test max_dims == (UInt64(100),UInt64(200))
     set_dims!(d, (100,150))
     dims, max_dims = HDF5.get_dims(d)
-    @test dims == (ui64(100),ui64(150))
-    @test max_dims == (ui64(100),ui64(200))
+    @test dims == (UInt64(100),UInt64(150))
+    @test max_dims == (UInt64(100),UInt64(200))
     d[1,1:5] = [1.1231,1.313,5.123,2.231,4.1231]
     set_dims!(d, (1,5))
     @test size(d) == (1,5)
@@ -26,12 +25,12 @@ using Compat
     #println("b is size current $(map(int,HDF5.get_dims(b)[1])) max $(map(int,HDF5.get_dims(b)[2]))")
     b[1:200] = ones(200)
     dims, max_dims = HDF5.get_dims(b)
-    @test dims == (ui64(1000),)
-    @test max_dims == (HDF5.MAXIMUM_DIM,)
+    @test dims == (UInt64(1000),)
+    @test max_dims == (HDF5.H5S_UNLIMITED,)
     set_dims!(b, (10000,))
     dims, max_dims = HDF5.get_dims(b)
-    @test dims == (ui64(10000),)
-    @test max_dims == (HDF5.MAXIMUM_DIM,)
+    @test dims == (UInt64(10000),)
+    @test max_dims == (HDF5.H5S_UNLIMITED,)
     #println("b is size current $(map(int,HDF5.get_dims(b)[1])) max $(map(int,HDF5.get_dims(b)[2]))")
     # b[:] = [1:10000] # gave error no method endof(HDF5Dataset{PlainHDF5File},),
     # so I defined endof(dset::HDF5Dataset) = length(dset), and exported endof
@@ -45,15 +44,15 @@ using Compat
     fid = h5open(fn, "r")
     d_again = fid["shoe/foo"]
     dims, max_dims = HDF5.get_dims(d_again)
-    @test dims==(ui64(1),ui64(5))
-    @test max_dims == (ui64(100),ui64(200))
+    @test dims==(UInt64(1),UInt64(5))
+    @test max_dims == (UInt64(100),UInt64(200))
     @test (sum(d_again[1,1:5])-sum([1.1231,1.313,5.123,2.231,4.1231])) == 0
     #println("d is size current $(map(int,HDF5.get_dims(re_d)[1])) max $(map(int,HDF5.get_dims(re_d)[2]))")
     @test fid["b"][1:10000] == [1:10000;]
     b_again = fid["b"]
     dims, max_dims = HDF5.get_dims(b_again)
-    @test dims == (ui64(10000),)
-    @test max_dims == (HDF5.MAXIMUM_DIM,)
+    @test dims == (UInt64(10000),)
+    @test max_dims == (HDF5.H5S_UNLIMITED,)
     #println("b is size current $(map(int,HDF5.get_dims(b)[1])) max $(map(int,HDF5.get_dims(b)[2]))")
 
     close(fid)
