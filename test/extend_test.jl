@@ -4,7 +4,7 @@ using Compat
 
 @testset "extendtest" begin
 
-fn = joinpath(tempdir(),"test.h5")
+fn = tempname()
 
 fid = h5open(fn, "w")
 g = g_create(fid, "shoe")
@@ -56,5 +56,6 @@ dims, max_dims = HDF5.get_dims(b_again)
 #println("b is size current $(map(int,HDF5.get_dims(b)[1])) max $(map(int,HDF5.get_dims(b)[2]))")
 
 close(fid)
+rm(fn)
 
 end # testset extend_test

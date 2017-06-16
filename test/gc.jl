@@ -25,7 +25,7 @@ end
 @testset "gc" begin
 
 gc_enable(false)
-fn = joinpath(tempdir(),"test.h5")
+fn = tempname()
 for i = 1:10
     file = h5open(fn, "w")
     memtype_id = HDF5.h5t_create(HDF5.H5T_COMPOUND, 2*sizeof(Float64))
@@ -64,5 +64,6 @@ for i = 1:10
     close(file)
 end
 gc_enable(true)
+rm(fn)
 
 end # testset gc

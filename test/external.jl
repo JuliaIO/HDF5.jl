@@ -4,9 +4,12 @@ using Base.Test
 @testset "external" begin
 
 # roughly following https://www.hdfgroup.org/ftp/HDF5/current/src/unpacked/examples/h5_extlink.c
-source_file = h5open(tempname(), "w")
+fn1 = tempname()
+fn2 = tempname()
+
+source_file = h5open(fn1, "w")
 agroup = g_create(source_file, "agroup")
-target_file = h5open(tempname(), "w")
+target_file = h5open(fn2, "w")
 target_group = g_create(target_file, "target_group")
 target_group["abc"]="abc"
 target_group["1"]=1
@@ -44,5 +47,8 @@ close(source_file)
 # @test read(group2["abc"])=="abc"
 # @test read(group2["1"])==1
 # @test read(group2["1.1"])==1.1
+
+rm(fn1)
+# rm(fn2)
 
 end # testset external
