@@ -2305,6 +2305,26 @@ function get_libver_bounds(p::HDF5Properties)
     out1[], out2[]
 end
 
+"""
+    get_datasets(file::HDF5File) -> datasets::Vector{HDF5Dataset}
+
+Get all datasets in an hdf5 file without loading the data.
+"""		
+function get_datasets(file::HDF5File)
+    list = HDF5Dataset[]
+    get_datasets!(list, file)
+    list
+end		
+ function get_datasets!(list::Vector{HDF5Dataset}, node::Union{HDF5File, HDF5Group, HDF5Dataset})
+     if isa(node, HDF5Dataset)
+         push!(list, node)
+     else
+         for c in names(node)
+             get_datasets!(list, node[c])
+         end
+     end
+ end
+
 # property function get/set pairs
 const hdf5_prop_get_set = Dict(
     "blosc"         => (nothing, h5p_set_blosc),
