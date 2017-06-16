@@ -115,5 +115,5 @@ end
 end
 
 rm(fname) # cleanup file created by swmr tests
-end # @testset "swmr"
-end # if libversion
+end # testset swmr
+end # libversion
