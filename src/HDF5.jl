@@ -1306,7 +1306,7 @@ function read{A<:FixedArray}(obj::DatasetOrAttribute, ::Type{Array{A}})
 end
 
 # Clean up string buffer according to padding mode
-function unpad(s::String, pad::Cint)
+function unpad(s::String, pad::Integer)
     if pad == H5T_STR_NULLTERM
         v = search(s, '\0')
         v == 0 ? s : s[1:v-1]
@@ -1318,6 +1318,8 @@ function unpad(s::String, pad::Cint)
         error("Unrecognized string padding mode $pad")
     end
 end
+unpad(s, pad::Integer) = unpad(String(s), pad)
+
 # Read string
 function read{S<:String}(obj::DatasetOrAttribute, ::Type{S})
     local ret::S

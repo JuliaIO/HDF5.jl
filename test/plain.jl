@@ -347,4 +347,5 @@ using Compat.String
         @test str == "Hello World"
     end
 
+    @test HDF5.unpad(UInt8[0x43, 0x43, 0x41], 1) == "CCA"
 end
