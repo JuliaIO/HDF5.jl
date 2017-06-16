@@ -308,7 +308,7 @@ using Compat.String
 
     rm(tmpdir, recursive=true)
 
-    d = h5read(joinpath(test_path, "compound.h5"), "/data")
+    d = h5read(joinpath(test_path, "test_files/compound.h5"), "/data")
     @test typeof(d[1]) === HDF5.HDF5Compound{4}
     @test length(d) == 2
     dtypes = [typeof(x) for x in d[1].data]
@@ -331,7 +331,7 @@ using Compat.String
     end
 
     # Test null terminated ASCII string (e.g. exported by h5py) #332
-    h5open("test_nullterm_ascii.h5","r") do fid
+    h5open("test_files/test_nullterm_ascii.h5","r") do fid
         str = read(fid["test"])
         @test str == "Hello World"
     end
