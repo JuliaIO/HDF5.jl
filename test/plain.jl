@@ -1,5 +1,6 @@
 using HDF5
 using Base.Test
+using Compat
 
 @testset "plain" begin
 
@@ -304,7 +305,9 @@ h5open(outfile, "r") do fid
 end
 rm(tmpdir, recursive=true)
 
-d = h5read(joinpath("test_files", "compound.h5"), "/data")
+test_files = joinpath(@__DIR__, "test_files")
+
+d = h5read(joinpath(test_dir, "compound.h5"), "/data")
 @test typeof(d[1]) === HDF5.HDF5Compound{4}
 @test length(d) == 2
 dtypes = [typeof(x) for x in d[1].data]
@@ -327,7 +330,7 @@ h5open(fn, "r", "libver_bounds",
 end
 
 # Test null terminated ASCII string (e.g. exported by h5py) #332
-h5open(joinpath("test_files", "nullterm_ascii.h5"), "r") do fid
+h5open(joinpath(test_files, "nullterm_ascii.h5"), "r") do fid
     str = read(fid["test"])
     @test str == "Hello World"
 end
