@@ -1,7 +1,5 @@
 using HDF5
 using Base.Test
-using Compat
-using Compat.String
 
 @testset "plain" begin
 
@@ -57,10 +55,10 @@ write(f, "empty", empty)
 empty_string = ""
 write(f, "empty_string", empty_string)
 # Empty array of strings
-empty_string_array = Compat.ASCIIString[]
+empty_string_array = String[]
 write(f, "empty_string_array", empty_string_array)
 # Array of empty string
-empty_array_of_strings = Compat.ASCIIString[""]
+empty_array_of_strings = [""]
 write(f, "empty_array_of_strings", empty_array_of_strings)
 # Attributes
 species = [["N", "C"]; ["A", "B"]]
@@ -257,9 +255,9 @@ h5open(fn, "w") do fid
     end
 end
 fid = h5open(fn, "r")
-@test names(fid) == Compat.ASCIIString["mygroup"]
+@test names(fid) == ["mygroup"]
 g = fid["mygroup"]
-@test names(g) == Compat.ASCIIString["x"]
+@test names(g) == ["x"]
 close(g)
 close(fid)
 rm(fn)
@@ -276,8 +274,8 @@ h5rewrite(outfile) do fid
 end
 @test length(readdir(tmpdir)) == 1
 h5open(outfile, "r") do fid
-    @test names(fid) == Compat.ASCIIString["mygroup"]
-    @test names(fid["mygroup"]) == Compat.ASCIIString["x"]
+    @test names(fid) == ["mygroup"]
+    @test names(fid["mygroup"]) == ["x"]
 end
 
 # fail to overwrite
@@ -289,8 +287,8 @@ end
 end
 @test length(readdir(tmpdir)) == 1
 h5open(outfile, "r") do fid
-    @test names(fid) == Compat.ASCIIString["mygroup"]
-    @test names(fid["mygroup"]) == Compat.ASCIIString["x"]
+    @test names(fid) == ["mygroup"]
+    @test names(fid["mygroup"]) == ["x"]
 end
 
 # overwrite
@@ -301,8 +299,8 @@ h5rewrite(outfile) do fid
 end
 @test length(readdir(tmpdir)) == 1
 h5open(outfile, "r") do fid
-    @test names(fid) == Compat.ASCIIString["mygroup"]
-    @test names(fid["mygroup"]) == Compat.ASCIIString["y"]
+    @test names(fid) == ["mygroup"]
+    @test names(fid["mygroup"]) == ["y"]
 end
 rm(tmpdir, recursive=true)
 
