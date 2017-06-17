@@ -20,33 +20,33 @@ const ecmp = [SOLID SOLID SOLID SOLID SOLID SOLID SOLID;
         SOLID GAS SOLID GAS SOLID GAS SOLID;
         SOLID PLASMA GAS LIQUID SOLID PLASMA GAS]'
 const scmp = ["Parting", "is such", "sweet", "sorrow."]
-const vicmp = Array{Int32}[[3,2,1],[1,1,2,3,5,8,13,21,34,55,89,144]]
+const vicmp = Array{Int32}[[3, 2, 1],[1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144]]
 const opq = Array{UInt8}[[0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x30],
                    [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x31],
                    [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x32],
                    [0x4f, 0x50, 0x41, 0x51, 0x55, 0x45, 0x33]]
 # For H5T_ARRAY
 const AA = Array{Int,2}[
-[ 0   0   0;
-  0  -1  -2;
-  0  -2  -4;
-  0  -3  -6;
-  0  -4  -8],
-[ 0   1   2;
-  1   1   1;
-  2   1   0;
-  3   1  -1;
-  4   1  -2],
-[ 0   2   4;
-  2   3   4;
-  4   4   4;
-  6   5   4;
-  8   6   4],
-[ 0   3   6;
-  3   5   7;
-  6   7   8;
-  9   9   9;
- 12  11  10]]
+    [0   0   0;
+     0  -1  -2;
+     0  -2  -4;
+     0  -3  -6;
+     0  -4  -8],
+    [0   1   2;
+     1   1   1;
+     2   1   0;
+     3   1  -1;
+     4   1  -2],
+    [0   2   4;
+     2   3   4;
+     4   4   4;
+     6   5   4;
+     8   6   4],
+    [0   3   6;
+     3   5   7;
+     6   7   8;
+     9   9   9;
+     12  11  10]]
 
 
 const savedir = "test_files"

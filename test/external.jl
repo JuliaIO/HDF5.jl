@@ -11,9 +11,9 @@ source_file = h5open(fn1, "w")
 agroup = g_create(source_file, "agroup")
 target_file = h5open(fn2, "w")
 target_group = g_create(target_file, "target_group")
-target_group["abc"]="abc"
-target_group["1"]=1
-target_group["1.1"]=1.1
+target_group["abc"] = "abc"
+target_group["1"] = 1
+target_group["1.1"] = 1.1
 close(target_file)
 
 # create external link such that source_file["ext_link"] points to target_file["target_group"]
@@ -22,20 +22,20 @@ HDF5.create_external(source_file, "ext_link", target_file.filename, "target_grou
 HDF5.create_external(agroup, "ext_link", target_file.filename, "target_group")
 # write some things via the external link
 new_group = g_create(source_file["ext_link"], "new_group")
-new_group["abc"]="abc"
-new_group["1"]=1
-new_group["1.1"]=1.1
+new_group["abc"] = "abc"
+new_group["1"] = 1
+new_group["1.1"] = 1.1
 
 # read things from target_group via exernal link created with HDF5File argument
 group = source_file["ext_link"]
-@test read(group["abc"])=="abc"
-@test read(group["1"])==1
-@test read(group["1.1"])==1.1
+@test read(group["abc"]) == "abc"
+@test read(group["1"]) == 1
+@test read(group["1.1"]) == 1.1
 # read things from target_group via the external link created with HDF5Group argument
 groupalt = source_file["agroup/ext_link"]
-@test read(groupalt["abc"])=="abc"
-@test read(groupalt["1"])==1
-@test read(groupalt["1.1"])==1.1
+@test read(groupalt["abc"]) == "abc"
+@test read(groupalt["1"]) == 1
+@test read(groupalt["1.1"]) == 1.1
 close(source_file)
 
 ##### tests that should be included but don't work

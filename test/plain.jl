@@ -16,7 +16,7 @@ f["Int16"] = Int16(4)
 f["compressedempty", "shuffle", (), "compress", 4] = Int64[]
 f["bloscempty", "blosc", 4] = Int64[]
 # Create arrays of different types
-A = randn(3,5)
+A = randn(3, 5)
 write(f, "Afloat64", convert(Matrix{Float64}, A))
 write(f, "Afloat32", convert(Matrix{Float32}, A))
 Ai = rand(1:20, 2, 4)
@@ -79,8 +79,8 @@ attrs(f)["ref_test"] = HDF5.HDF5ReferenceObj(f, "empty_array_of_strings")
 g = g_create(f, "mygroup")
 # Test dataset with compression
 R = rand(1:20, 20, 40);
-g["CompressedA", "chunk", (5,6), "shuffle", (), "compress", 9] = R
-g["BloscA", "chunk", (5,6), "shuffle", (), "blosc", 9] = R
+g["CompressedA", "chunk", (5, 6), "shuffle", (), "compress", 9] = R
+g["BloscA", "chunk", (5, 6), "shuffle", (), "blosc", 9] = R
 close(g)
 # Copy group containing dataset
 o_copy(f, "mygroup", f, "mygroup2")
@@ -90,17 +90,17 @@ o_copy(f["mygroup/CompressedA"], g, "CompressedA")
 o_copy(f["mygroup/BloscA"], g, "BloscA")
 close(g)
 # Writing hyperslabs
-dset = d_create(f,"slab",datatype(Float64),dataspace(20,20,5),"chunk",(5,5,1))
-Xslab = randn(20,20,5)
+dset = d_create(f, "slab", datatype(Float64), dataspace(20, 20, 5), "chunk", (5, 5, 1))
+Xslab = randn(20, 20, 5)
 for i = 1:5
     dset[:,:,i] = Xslab[:,:,i]
 end
 # More complex hyperslab and assignment with "incorrect" types (issue #34)
-d = d_create(f, "slab2", datatype(Float64), ((10,20),(100,200)), "chunk", (1,1))
+d = d_create(f, "slab2", datatype(Float64), ((10, 20), (100, 200)), "chunk", (1, 1))
 d[:,:] = 5
 d[1,1] = 4
 # 1d indexing
-d = d_create(f, "slab3", datatype(Int), ((10,),(-1,)), "chunk", (5,))
+d = d_create(f, "slab3", datatype(Int), ((10,), (-1,)), "chunk", (5,))
 @test d[:] == zeros(Int, 10)
 d[3:5] = 3:5
 # Create a dataset designed to be deleted
@@ -109,7 +109,7 @@ close(f)
 @test !isopen(f)
 # Test the h5read/write interface, with attributes
 W = copy(reshape(1:120, 15, 8))
-Wa = Dict("a"=>1, "b"=>2)
+Wa = Dict("a" => 1, "b" => 2)
 h5write(fn, "newgroup/W", W)
 h5writeattr(fn, "newgroup/W", Wa)
 
@@ -177,10 +177,10 @@ Rr5 = read(fr, "mygroup2/BloscA")
 Rr6 = read(fr, "mygroup3/BloscA")
 @test Rr6 == R
 dset = fr["mygroup/CompressedA"]
-@test get_chunk(dset) == (5,6)
+@test get_chunk(dset) == (5, 6)
 @test name(dset) == "/mygroup/CompressedA"
 dset2 = fr["mygroup/BloscA"]
-@test get_chunk(dset2) == (5,6)
+@test get_chunk(dset2) == (5, 6)
 @test name(dset2) == "/mygroup/BloscA"
 Xslabr = read(fr, "slab")
 @test Xslabr == Xslab
@@ -220,7 +220,7 @@ end
 # Test reading multiple vars at once
 z = read(fr, "Float64", "Int16")
 @test z == (3.2, 4)
-@test typeof(z) == Tuple{Float64, Int16}
+@test typeof(z) == Tuple{Float64,Int16}
 # Test function syntax
 read(fr, "Float64") do x
 	@test x == 3.2
@@ -320,12 +320,12 @@ cpl["userblock"] = 1024
 apl = HDF5Properties(p_create(HDF5.H5P_FILE_ACCESS))
 apl["libver_bounds"] = (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)
 h5open(fn, false, true, true, true, false, cpl, apl) do fid
-    write(fid, "intarray", [1,2,3])
+    write(fid, "intarray", [1, 2, 3])
 end
 h5open(fn, "r", "libver_bounds",
     (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)) do fid
     intarray = read(fid, "intarray")
-    @test intarray == [1,2,3]
+    @test intarray == [1, 2, 3]
 end
 
 # Test null terminated ASCII string (e.g. exported by h5py) #332
