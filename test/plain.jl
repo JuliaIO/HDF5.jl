@@ -307,7 +307,7 @@ rm(tmpdir, recursive=true)
 
 test_files = joinpath(@__DIR__, "test_files")
 
-d = h5read(joinpath(test_dir, "compound.h5"), "/data")
+d = h5read(joinpath(test_files, "compound.h5"), "/data")
 @test typeof(d[1]) === HDF5.HDF5Compound{4}
 @test length(d) == 2
 dtypes = [typeof(x) for x in d[1].data]
