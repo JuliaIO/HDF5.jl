@@ -3,7 +3,7 @@ __precompile__()
 module HDF5
 
 using Compat
-using Compat: unsafe_convert, String
+using Compat: unsafe_convert
 
 import Base: 
     close, convert, done, eltype, endof, flush, getindex, ==,
@@ -274,23 +274,26 @@ hdf5_type_id{S<:AbstractString}(::Type{S})  = H5T_C_S1
 # Single character types
 # These are needed to safely handle VLEN objects
 @compat abstract type CharType <: AbstractString end
-type ASCIIChar<:CharType
+
+type ASCIIChar <: CharType
     c::UInt8
 end
 length(c::ASCIIChar) = 1
-type UTF8Char<:CharType
+
+type UTF8Char <: CharType
     c::UInt8
 end
 length(c::UTF8Char) = 1
-chartype(::Type{Compat.ASCIIString}) = ASCIIChar
-stringtype(::Type{ASCIIChar}) = Compat.ASCIIString
-stringtype(::Type{UTF8Char})  = Compat.UTF8String
 
-cset(::Type{Compat.UTF8String})  = H5T_CSET_UTF8
-cset(::Type{UTF8Char})    = H5T_CSET_UTF8
-cset(::Type{ASCIIChar})   = H5T_CSET_ASCII
+chartype(::Type{String}) = ASCIIChar
+stringtype(::Type{ASCIIChar}) = String
+stringtype(::Type{UTF8Char}) = String
 
-hdf5_type_id{C<:CharType}(::Type{C})  = H5T_C_S1
+cset(::Type{String}) = H5T_CSET_UTF8
+cset(::Type{UTF8Char}) = H5T_CSET_UTF8
+cset(::Type{ASCIIChar}) = H5T_CSET_ASCII
+
+hdf5_type_id{C<:CharType}(::Type{C}) = H5T_C_S1
 
 ## HDF5 uses a plain integer to refer to each file, group, or
 ## dataset. These are wrapped into special types in order to allow
@@ -306,7 +309,7 @@ hdf5_type_id{C<:CharType}(::Type{C})  = H5T_C_S1
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
 type HDF5File <: DataFile
     id::Hid
-    filename::Compat.UTF8String
+    filename::String
 
     function HDF5File(id, filename, toclose::Bool=true)
         f = new(id, filename)
@@ -449,14 +452,14 @@ hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
 # Compound types
 immutable HDF5Compound{N}
     data::NTuple{N,Any}
-    membername::NTuple{N,Compat.ASCIIString}
+    membername::NTuple{N,String}
     membertype::NTuple{N,Type}
 end
 
 # Opaque types
 type HDF5Opaque
     data
-    tag::Compat.ASCIIString
+    tag::String
 end
 
 # An empty array type
@@ -623,7 +626,7 @@ function h5open(filename::AbstractString, mode::AbstractString="r", pv...; swmr=
     apl["fclose_degree"] = H5F_CLOSE_STRONG
     for i = 1:2:length(pv)
         thisname = pv[i]
-        if !isa(thisname, Compat.ASCIIString)
+        if !isa(thisname, String)
             error("Argument ", i+2, " should be a String, but it's a ", typeof(thisname))
         end
         apl[thisname] = pv[i+1]
@@ -1431,7 +1434,7 @@ function read{N}(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound{N}}},Type{HD
     try
         memberfiletype = Vector{HDF5Datatype}(N)
         membertype = Vector{Type}(N)
-        membername = Vector{Compat.ASCIIString}(N)
+        membername = Vector{String}(N)
         memberoffset = Vector{UInt64}(N)
         membersize = Vector{UInt8}(N)
         for i = 1:N
@@ -1835,9 +1838,9 @@ function hdf5_to_julia_eltype(objtype)
         cset = h5t_get_cset(objtype.id)
         n = h5t_get_size(objtype.id)
         if cset == H5T_CSET_ASCII
-            T = (n == 1) ? ASCIIChar : Compat.ASCIIString
+            T = (n == 1) ? ASCIIChar : String
         elseif cset == H5T_CSET_UTF8
-            T = (n == 1) ? UTF8Char : Compat.UTF8String
+            T = (n == 1) ? UTF8Char : String
         else
             error("character set ", cset, " not recognized")
         end
@@ -2353,9 +2356,9 @@ const rehash! = Base.rehash!
 # Across initializations of the library, the id of various properties
 # will change. So don't hard-code the id (important for precompilation)
 const UTF8_LINK_PROPERTIES = Ref{HDF5Properties}()
-_link_properties(path::Compat.UTF8String) = UTF8_LINK_PROPERTIES[]
+_link_properties(path::String) = UTF8_LINK_PROPERTIES[]
 const UTF8_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
-_attr_properties(path::Compat.UTF8String) = UTF8_ATTRIBUTE_PROPERTIES[]
+_attr_properties(path::String) = UTF8_ATTRIBUTE_PROPERTIES[]
 const ASCII_LINK_PROPERTIES = Ref{HDF5Properties}()
 const ASCII_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
 
