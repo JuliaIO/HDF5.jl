@@ -27,7 +27,7 @@ end
 @testset "h5d_oappend" begin
     h5open(fname, "w") do h5
         g = g_create(h5, "shoe")
-        d = d_create(g, "bar", datatype(Float64), ((1,),(-1,)), "chunk", (100,))
+        d = d_create(g, "bar", datatype(Float64), ((1,), (-1,)), "chunk", (100,))
         dxpl_id = HDF5.get_create_properties(d)
         v = [1.0, 2.0]
         memtype = datatype(Float64).id
@@ -70,7 +70,7 @@ end
 
 @everywhere function swmr_reader(fname, ch_written, ch_read)
     h5open(fname, "r", swmr=true) do h5
-        d=h5["foo"]
+        d = h5["foo"]
         dataset_read(d, ch_written, ch_read)
     end
 end
@@ -90,7 +90,7 @@ end
 
 # create datasets and attributes before staring swmr writing
 function prep_h5_file(h5)
-    d = d_create(h5, "foo", datatype(Int), ((1,),(100,)), "chunk", (1,))
+    d = d_create(h5, "foo", datatype(Int), ((1,), (100,)), "chunk", (1,))
     attrs(h5)["bar"] = "bar"
     g = g_create(h5, "group")
 end
@@ -115,5 +115,5 @@ end
 end
 
 rm(fname) # cleanup file created by swmr tests
-end # @testset "swmr"
-end # if libversion
+end # testset swmr
+end # libversion
