@@ -2329,6 +2329,7 @@ with path `target_filename`; Calls `[H5Lcreate_external](https://www.hdfgroup.or
 """
 function create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path; lcpl_id=H5P_DEFAULT, lapl_id=H5P_DEFAULT)
     h5l_create_external(target_filename, target_path, source.id, source_relpath, lcpl_id, lapl_id)
+    nothing
 end
 
 # error handling
