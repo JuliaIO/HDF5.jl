@@ -3,7 +3,9 @@ __precompile__()
 module HDF5
 
 using Compat
-using Compat: unsafe_convert, String
+using Compat.String
+
+using Base: unsafe_convert
 
 import Base: 
     close, convert, done, eltype, endof, flush, getindex, ==,
