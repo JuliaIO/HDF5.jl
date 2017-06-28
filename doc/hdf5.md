@@ -40,7 +40,7 @@ The mode can be any one of the following:
   </tr>
 </table>
 
-This produces an object of type `PlainHDF5File`, a subtype of the abstract type `HDF5File`. The subtypes of `HDF5File` are used in method dispatch to enforce any file-type-specific formatting. "Plain" files have no elements (groups, datasets, or attributes) that are not explicitly created by the user.
+This produces an object of type `HDF5File`, a subtype of the abstract type `DataFile`. This file will have no elements (groups, datasets, or attributes) that are not explicitly created by the user.
 
 When you're finished with a file, you should close it:
 
@@ -207,10 +207,7 @@ for obj in g
   println(data)
 end
 ```
-This gives you a straightforward way of recursively exploring an entire HDF5 file. A convenient way of examining the structure of an HDF5 file is the `dump` function, e.g.,
-```julia
-dump(fid)
-```
+This gives you a straightforward way of recursively exploring an entire HDF5 file.
 
 If you need to know whether group `g` has a dataset named `mydata`, you can test that with
 ```julia
@@ -293,7 +290,7 @@ where dims is a tuple of integers.  For example
 ```julia
 b = d_create(fid, "b", Int, ((1000,),(-1,)), "chunk", (100,)) #-1 is equivalent to typemax(Hsize)
 set_dims!(b, (10000,))
-b[1:10000] = [1:10000]
+b[1:10000] = collect(1:10000)
 ```
 when dimensions are reduced, the truncated data is lost.  A maximum dimension of -1 is often referred to as unlimited dimensions, though it is limited by the maximum size of an unsigned integer.
 
