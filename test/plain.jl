@@ -303,6 +303,14 @@ h5open(outfile, "r") do fid
     @test names(fid) == ["mygroup"]
     @test names(fid["mygroup"]) == ["y"]
 end
+
+# Test Float16 support
+arr_float16 = Float16[1.0, 0.25, 0.5, 8.0]
+h5write(joinpath(tmpdir, "test_float16.h5"), "x", arr_float16)
+arr_float16_2 = h5read(joinpath(tmpdir, "test_float16.h5"), "x")
+@test isa(arr_float16_2, Vector{Float16})
+@test arr_float16_2 == arr_float16
+
 rm(tmpdir, recursive=true)
 
 test_files = joinpath(@__DIR__, "test_files")
@@ -328,13 +336,6 @@ h5open(fn, "r", "libver_bounds",
     intarray = read(fid, "intarray")
     @test intarray == [1, 2, 3]
 end
-
-# Test Float16 support
-arr_float16 = Float16[1.0, 0.25, 0.5, 8.0]
-h5write(joinpath(tmpdir, "test_float16.h5"), "x", arr_float16)
-arr_float16_2 = h5read(joinpath(tmpdir, "test_float16.h5"), "x")
-@test isa(arr_float16_2, Vector{Float16})
-@test arr_float16_2 == arr_float16
 
 # Test null terminated ASCII string (e.g. exported by h5py) #332
 h5open(joinpath(test_files, "nullterm_ascii.h5"), "r") do fid
