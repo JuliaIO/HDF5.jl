@@ -1898,8 +1898,7 @@ end
 const EMPTY_STRING = UInt8[0x00]
 h5a_write(attr_id::Hid, mem_type_id::Hid, buf::String) = h5a_write(attr_id, mem_type_id, Vector{UInt8}(buf))
 function h5a_write{T<:HDF5Scalar}(attr_id::Hid, mem_type_id::Hid, x::T)
-    tmp = Vector{T}(1)
-    tmp[1] = x
+    tmp = Ref{T}(x)
     h5a_write(attr_id, mem_type_id, tmp)
 end
 function h5a_write{S<:String}(attr_id::Hid, memtype_id::Hid, strs::Array{S})
@@ -1923,8 +1922,7 @@ h5d_write(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_write(dataset_id, 
 h5d_write(dataset_id::Hid, memtype_id::Hid, buf::String) =
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, isempty(buf) ? EMPTY_STRING : Vector{UInt8}(buf))
 function h5d_write{T<:HDF5Scalar}(dataset_id::Hid, memtype_id::Hid, x::T)
-    tmp = Vector{T}(1)
-    tmp[1] = x
+    tmp = Ref{T}(x)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, tmp)
 end
 function h5d_write{S<:String}(dataset_id::Hid, memtype_id::Hid, strs::Array{S})
@@ -2209,9 +2207,9 @@ function h5i_get_name(loc_id::Hid)
     String(buf[1:len])
 end
 function h5l_get_info(link_loc_id::Hid, link_name::String, lapl_id::Hid)
-    info = Vector{H5LInfo}(1)
+    info = Ref{H5LInfo}()
     h5l_get_info(link_loc_id, link_name, info, lapl_id)
-    info[1]
+    info[]
 end
 function h5s_get_simple_extent_dims(space_id::Hid)
     n = h5s_get_simple_extent_ndims(space_id)
@@ -2255,9 +2253,9 @@ function h5f_get_obj_ids(file_id::Hid, types::Integer)
 end
 
 function vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5Dataspace)
-    sz = Vector{Hsize}(1)
+    sz = Ref{Hsize}()
     h5d_vlen_get_buf_size(dset.id, dtype.id, dspace.id, sz)
-    sz[1]
+    sz[]
 end
 
 function hdf5array(objtype)
