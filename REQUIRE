@@ -1,5 +1,5 @@
 julia 0.5
-BinDeps
+BinDeps 0.6.0
 Blosc
 Compat 0.17.0
 @osx Homebrew 0.3.1
