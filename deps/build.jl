@@ -26,7 +26,9 @@ provides(BSDPkg, "hdf5", hdf5, os=:FreeBSD)
 if is_windows()
     using WinRPM
     provides(WinRPM.RPM, "hdf5", hdf5, os=:Windows)
-elseif is_apple()
+end
+
+if is_apple()
     using Homebrew
     provides(Homebrew.HB, "hdf5", hdf5, os=:Darwin)
 end
