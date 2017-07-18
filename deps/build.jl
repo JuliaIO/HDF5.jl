@@ -31,7 +31,7 @@ end
 
 if is_apple()
     using Homebrew
-    provides(Homebrew.HB, "homebrew/science/hdf5", hdf5, os=:Darwin)
+    provides(Homebrew.HB, "hdf5", hdf5, os=:Darwin)
 end
 
 if Sys.KERNEL === :FreeBSD
