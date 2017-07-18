@@ -18,24 +18,17 @@ hdf5 = library_dependency("libhdf5",
     aliases = ["libhdf5", "libhdf5_serial", "libhdf5_serial.so.10", "libhdf5_openmpi", "libhdf5_mpich"],
     validate=compatible_version)
 
-if is_linux()
-    provides(AptGet, "hdf5-tools", hdf5)
-    provides(Pacman, "hdf5", hdf5)
-    provides(Yum, "hdf5", hdf5)
-end
+provides(AptGet, "hdf5-tools", hdf5, os=:Linux)
+provides(Pacman, "hdf5", hdf5, os=:Linux)
+provides(Yum, "hdf5", hdf5, os=:Linux)
+provides(BSDPkg, "hdf5", hdf5, os=:FreeBSD)
 
 if is_windows()
     using WinRPM
     provides(WinRPM.RPM, "hdf5", hdf5, os=:Windows)
-end
-
-if is_apple()
+elseif is_apple()
     using Homebrew
     provides(Homebrew.HB, "hdf5", hdf5, os=:Darwin)
-end
-
-if Sys.KERNEL === :FreeBSD
-    provides(BSDPkg, "hdf5", hdf5, os=:FreeBSD)
 end
 
 provides(Sources, URI("https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.gz"), hdf5)
