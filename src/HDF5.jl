@@ -5,13 +5,12 @@ module HDF5
 using Compat
 
 using Base: unsafe_convert
+using Compat: StringVector
 
 import Base:
     close, convert, done, eltype, endof, flush, getindex, ==,
     isempty, isvalid, length, names, ndims, next, parent, read,
     setindex!, show, size, sizeof, start, write, isopen
-
-import Compat: StringVector
 
 export
     # types
