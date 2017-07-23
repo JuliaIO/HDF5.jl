@@ -6,7 +6,7 @@ using Compat
 
 using Base: unsafe_convert
 
-import Base: 
+import Base:
     close, convert, done, eltype, endof, flush, getindex, ==,
     isempty, isvalid, length, names, ndims, next, parent, read,
     setindex!, show, size, sizeof, start, write, isopen
@@ -1411,16 +1411,16 @@ function read_row(io::IO, membertype, membersize)
     row = Any[]
     for (dtype, dsize) in zip(membertype, membersize)
         if dtype === String
-            push!(row, unpad(read(io, UInt8, dsize), H5T_STR_NULLPAD))
+            push!(row, unpad(read!(io, Vector{UInt8}(dsize)), H5T_STR_NULLPAD))
         elseif dtype <: HDF5.FixedArray && eltype(dtype) <: HDF5BitsKind
-            val = read(io, eltype(dtype), prod(size(dtype)))
+            val = read!(io, Vector{eltype(dtype)}(prod(size(dtype))))
             push!(row, reshape(val, size(dtype)))
         elseif dtype <: HDF5BitsKind
             push!(row, read(io, dtype))
         else
             # for other types, just store the raw bytes and let the user
             # decide what to do
-            push!(row, read(io, UInt8, dsize))
+            push!(row, read!(io, Vector{UInt8}(dsize)))
         end
     end
     return (row...)
