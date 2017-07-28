@@ -27,6 +27,8 @@ write(f, "Auint8", convert(Matrix{UInt8}, Ai))
 write(f, "Auint16", convert(Matrix{UInt16}, Ai))
 write(f, "Auint32", convert(Matrix{UInt32}, Ai))
 write(f, "Auint64", convert(Matrix{UInt64}, Ai))
+@test_throws ArgumentError write(f, "truncarr", ["hello","there","\0"]) # don't silently truncate data
+# @test_throws ArgumentError  write(f, "trunc", "\0")
 
 salut = "Hi there"
 ucode = "uniçº∂e"
