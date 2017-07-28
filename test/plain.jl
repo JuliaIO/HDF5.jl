@@ -337,4 +337,12 @@ end
 
 @test HDF5.unpad(UInt8[0x43, 0x43, 0x41], 1) == "CCA"
 
+# don't silently truncate data
+fn = tempname()
+f = h5open(fn, "w")
+@test_throws ArgumentError write(f, "test", ["hello","there","\0"])
+# @test_throws ArgumentError  write(f, "trunc", "\0")
+close(f)
+rm(fn)
+
 end # testset plain

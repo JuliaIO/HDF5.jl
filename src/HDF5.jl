@@ -5,6 +5,7 @@ module HDF5
 using Compat
 
 using Base: unsafe_convert
+using Compat: StringVector
 
 import Base:
     close, convert, done, eltype, endof, flush, getindex, ==,
@@ -1330,7 +1331,7 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{S})
     objtype = datatype(obj)
     try
         if h5t_is_variable_str(objtype.id)
-            buf = Ptr{UInt8}[C_NULL]
+            buf = Cstring[C_NULL]
             memtype_id = h5t_copy(H5T_C_S1)
             h5t_set_size(memtype_id, H5T_VARIABLE)
             h5t_set_cset(memtype_id, h5t_get_cset(datatype(obj)))
@@ -1371,10 +1372,10 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
         ret = Array{S}(sz)
         if isvar
             # Variable-length
-            buf = Vector{Ptr{UInt8}}(len)
+            buf = Vector{Cstring}(len)
             h5t_set_size(memtype_id, H5T_VARIABLE)
             readarray(obj, memtype_id, buf)
-            # FIXME? Who owns the memory for each string? Will Julia free it?
+            # FIXME? Who owns the memory for each string? Julia v0.6+ won't free it.
             for i = 1:len
                 ret[i] = unsafe_string(buf[i])
             end
@@ -1384,10 +1385,13 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
             buf = Vector{UInt8}(len*ilen)
             h5t_set_size(memtype_id, ilen)
             readarray(obj, memtype_id, buf)
-            p = pointer(buf)
+            src = 1
             for i = 1:len
-                ret[i] = unsafe_string(p)
-                p += ilen
+                slen = findnext(buf, 0x00, src) - src # find null terminator
+                sv = StringVector(slen)
+                copy!(sv, 1, buf, src, slen)
+                ret[i] = String(sv)
+                src += ilen
             end
         end
     end
@@ -1902,11 +1906,7 @@ function h5a_write{T<:HDF5Scalar}(attr_id::Hid, mem_type_id::Hid, x::T)
     h5a_write(attr_id, mem_type_id, tmp)
 end
 function h5a_write{S<:String}(attr_id::Hid, memtype_id::Hid, strs::Array{S})
-    len = length(strs)
-    p = Array{Ptr{UInt8}}(size(strs))
-    for i = 1:len
-        p[i] = pointer(strs[i])
-    end
+    p = Ref{Cstring}(strs)
     h5a_write(attr_id, memtype_id, p)
 end
 function h5a_write{T<:Union{HDF5Scalar,CharType}}(attr_id::Hid, memtype_id::Hid, v::HDF5Vlen{T})
@@ -1926,11 +1926,11 @@ function h5d_write{T<:HDF5Scalar}(dataset_id::Hid, memtype_id::Hid, x::T)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, tmp)
 end
 function h5d_write{S<:String}(dataset_id::Hid, memtype_id::Hid, strs::Array{S})
-    len = length(strs)
-    p = Array{Ptr{UInt8}}(size(strs))
-    for i = 1:len
-        p[i] = !isassigned(strs, i) || isempty(strs[i]) ? pointer(EMPTY_STRING) : pointer(strs[i])
+    nonnull_str = copy(strs)
+    for i = 1:length(nonnull_str)
+        isassigned(nonnull_str, i) || (nonnull_str[i] = "")
     end
+    p = Ref{Cstring}(nonnull_str)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, p)
 end
 function h5d_write{T<:Union{HDF5Scalar,CharType}}(dataset_id::Hid, memtype_id::Hid, v::HDF5Vlen{T})
