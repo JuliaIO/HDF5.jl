@@ -1358,6 +1358,7 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
     sz = size(obj)
     len = prod(sz)
     objtype = datatype(obj)
+    dspace = dataspace(obj)
     try
         isvar = h5t_is_variable_str(objtype.id)
         ilen = Int(h5t_get_size(objtype.id))
@@ -1375,7 +1376,6 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
             buf = Vector{Cstring}(len)
             h5t_set_size(memtype_id, H5T_VARIABLE)
             readarray(obj, memtype_id, buf)
-            # FIXME? Who owns the memory for each string? Julia v0.6+ won't free it.
             for i = 1:len
                 ret[i] = unsafe_string(buf[i])
             end
@@ -1395,7 +1395,12 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
             end
         end
     end
-    h5t_close(memtype_id)
+    try
+        h5d_vlen_reclaim(memtype_id, dspace.id, H5P_DEFAULT, buf)
+    finally
+        close(dspace)
+        h5t_close(memtype_id)
+    end
     ret
 end
 read{S<:CharType}(obj::DatasetOrAttribute, ::Type{Array{S}}) = read(obj, Array{stringtype(S)})
