@@ -1401,7 +1401,7 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
         close(dspace)
         h5t_close(memtype_id)
     end
-    return ret
+        return ret
     end
 end
 read{S<:CharType}(obj::DatasetOrAttribute, ::Type{Array{S}}) = read(obj, Array{stringtype(S)})
