@@ -1358,7 +1358,6 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
     sz = size(obj)
     len = prod(sz)
     objtype = datatype(obj)
-    dspace = dataspace(obj)
     try
         isvar = h5t_is_variable_str(objtype.id)
         ilen = Int(h5t_get_size(objtype.id))
@@ -1368,8 +1367,10 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
     memtype_id = h5t_copy(H5T_C_S1)
     h5t_set_cset(memtype_id, h5t_get_cset(datatype(obj)))
     if isempty(sz)
-        ret = S[]
+        h5t_close(memtype_id)
+        return S[]
     else
+        dspace = dataspace(obj)
         ret = Array{S}(sz)
         if isvar
             # Variable-length
@@ -1394,14 +1395,14 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
                 src += ilen
             end
         end
-    end
     try
         h5d_vlen_reclaim(memtype_id, dspace.id, H5P_DEFAULT, buf)
     finally
         close(dspace)
         h5t_close(memtype_id)
     end
-    ret
+    return ret
+    end
 end
 read{S<:CharType}(obj::DatasetOrAttribute, ::Type{Array{S}}) = read(obj, Array{stringtype(S)})
 # Empty Array of strings
