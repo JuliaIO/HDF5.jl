@@ -1334,7 +1334,7 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{S})
             buf = Cstring[C_NULL]
             memtype_id = h5t_copy(H5T_C_S1)
             h5t_set_size(memtype_id, H5T_VARIABLE)
-            h5t_set_cset(memtype_id, h5t_get_cset(datatype(obj)))
+            h5t_set_cset(memtype_id, h5t_get_cset(objtype))
             readarray(obj, memtype_id, buf)
             ret = unsafe_string(buf[1])
         else
@@ -1358,14 +1358,14 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
     sz = size(obj)
     len = prod(sz)
     objtype = datatype(obj)
+    memtype_id = h5t_copy(H5T_C_S1)
     try
         isvar = h5t_is_variable_str(objtype.id)
         ilen = Int(h5t_get_size(objtype.id))
+        h5t_set_cset(memtype_id, h5t_get_cset(objtype))
     finally
         close(objtype)
     end
-    memtype_id = h5t_copy(H5T_C_S1)
-    h5t_set_cset(memtype_id, h5t_get_cset(datatype(obj)))
     if isempty(sz)
         ret = S[]
     else
