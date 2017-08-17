@@ -111,9 +111,6 @@ W = copy(reshape(1:120, 15, 8))
 Wa = Dict("a" => 1, "b" => 2)
 h5write(fn, "newgroup/W", W)
 h5writeattr(fn, "newgroup/W", Wa)
-# Test the h5read/write interface with a filename as a first argument
-fn2 = tempname()
-h5write(fn2, "newgroup/W", W)
 
 
 # Read the file back in
@@ -253,10 +250,6 @@ Wr = h5read(fn, "newgroup/W", rng)
 War = h5readattr(fn, "newgroup/W")
 @test War == Wa
 
-# Test the h5read interface with a filename as first argument
-Wr = h5read(fn2, "newgroup/W")
-@test Wr == W
-
 # more do syntax
 h5open(fn, "w") do fid
     g_create(fid, "mygroup") do g
@@ -350,6 +343,13 @@ fn = tempname()
 f = h5open(fn, "w")
 @test_throws ArgumentError write(f, "test", ["hello","there","\0"])
 # @test_throws ArgumentError  write(f, "trunc", "\0")
+close(f)
+rm(fn)
+
+# Test the h5read/write interface with a filename as a first argument
+h5write(fn, "newgroup/W", W)
+Wr = h5read(fn, "newgroup/W")
+@test Wr == W
 close(f)
 rm(fn)
 
