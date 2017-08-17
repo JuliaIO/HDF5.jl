@@ -112,7 +112,6 @@ Wa = Dict("a" => 1, "b" => 2)
 h5write(fn, "newgroup/W", W)
 h5writeattr(fn, "newgroup/W", Wa)
 
-
 # Read the file back in
 fr = h5open(fn)
 x = read(fr, "Float64")
