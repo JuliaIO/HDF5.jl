@@ -679,7 +679,7 @@ function h5rewrite(f::Function, filename::AbstractString, args...)
 end
 
 function h5write(filename, name::String, data)
-    fid = h5open(filename, "r+")
+    fid = h5open(filename, true, true, true, false, true)
     try
         write(fid, name, data)
     finally
