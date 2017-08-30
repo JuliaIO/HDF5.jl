@@ -709,6 +709,16 @@ function h5read(filename, name::String, indices::Tuple{Vararg{Union{AbstractRang
     dat
 end
 
+function h5read(filename, name::String, cr::CartesianRange)
+    # transfer to unit range
+    @static if VERSION < v"0.7.0-DEV.879"
+        ur = map((x,y) -> x:y, first(cr).I, last(cr).I)
+    else
+        ur = cr.indices
+    end
+    h5read(filename, name, ur)
+end
+
 function h5writeattr(filename, name::String, data::Dict)
     fid = h5open(filename, "r+")
     try
@@ -844,6 +854,16 @@ root(obj::Union{HDF5Group, HDF5Dataset}) = g_open(file(obj), "/")
 getindex(parent::Union{HDF5File, HDF5Group}, path::String) = o_open(parent, path)
 getindex(dset::HDF5Dataset, name::String) = a_open(dset, name)
 getindex(x::HDF5Attributes, name::String) = a_open(x.parent, name)
+# getindex for cartesian range
+function getindex(dset::HDF5Dataset, cr::CartesianRange)
+    # transfer to unit range
+    @static if VERSION < v"0.7.0-DEV.879"
+        ur = map((x,y) -> x:y, first(cr).I, last(cr).I)
+    else
+        ur = cr.indices
+    end
+    dset[ur...]
+end 
 
 # Path manipulation
 function split1(path::String)
@@ -948,6 +968,18 @@ function setindex!(p::HDF5Properties, val, name::String)
     funcset(p, val...)
     return p
 end
+
+# cartesian range indexing 
+function setindex!(dset::HDF5Dataset, val, cr::CartesianRange)
+    # transfer to unit range
+    @static if VERSION < v"0.7.0-DEV.879"
+        ur = map((x,y) -> x:y, first(cr).I, last(cr).I)
+    else
+        ur = cr.indices
+    end
+    dset[ur...] = val
+end 
+
 # Create a dataset with properties: obj[path, prop1, set1, ...] = val
 function setindex!(parent::Union{HDF5File, HDF5Group}, val, path::String, prop1::String, val1, pv...)
     if !iseven(length(pv))
