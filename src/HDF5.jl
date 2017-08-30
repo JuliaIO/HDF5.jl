@@ -710,6 +710,12 @@ function h5read(filename, name::String, indices::Tuple{Vararg{Union{Range{Int},I
     dat
 end
 
+function h5read{N}(filename, name::String, cr::CartesianRange{CartesianIndex{N}})
+    # transfer to unit range
+    ur = ( map((x,y)->x:y, cr.start, cr.stop)...)
+    h5read(filename, name, ur)
+end 
+
 function h5writeattr(filename, name::String, data::Dict)
     fid = h5open(filename, "r+")
     try
@@ -958,6 +964,14 @@ function setindex!(p::HDF5Properties, val, name::String)
     funcset(p, val...)
     return p
 end
+
+# cartesian range indexing 
+function setindex!{N}(dset::HDF5Dataset, val, cr::CartesianRange{CartesianIndex{N}})
+    # transfer to unit range 
+    ur = ( map((x,y)->x:y, cr.start, cr.stop)...)
+    setindex!(dset, val, ur)
+end 
+
 # Create a dataset with properties: obj[path, prop1, set1, ...] = val
 function setindex!(parent::Union{HDF5File, HDF5Group}, val, path::String, prop1::String, val1, pv...)
     if !iseven(length(pv))

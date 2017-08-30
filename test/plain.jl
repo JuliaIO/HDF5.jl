@@ -102,6 +102,7 @@ d[1,1] = 4
 d = d_create(f, "slab3", datatype(Int), ((10,), (-1,)), "chunk", (5,))
 @test d[:] == zeros(Int, 10)
 d[3:5] = 3:5
+d[CartesianRange((3:5,))] = 3:5
 # Create a dataset designed to be deleted
 f["deleteme"] = 17.2
 close(f)
