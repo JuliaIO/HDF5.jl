@@ -102,7 +102,6 @@ d[1,1] = 4
 d = d_create(f, "slab3", datatype(Int), ((10,), (-1,)), "chunk", (5,))
 @test d[:] == zeros(Int, 10)
 d[3:5] = 3:5
-d[CartesianRange((3:5,))] = 3:5
 # Create a dataset designed to be deleted
 f["deleteme"] = 17.2
 close(f)
@@ -192,6 +191,9 @@ target[1] = 4
 @test Xslab2r == target
 dset = fr["slab3"]
 @test dset[3:5] == [3:5;]
+# setindex and getindex of cartesian range
+dset[CartesianRange((3:5,))] = [4:6;]
+@test dset[CartesianRange((3:5,))] == [4:6;]
 emptyr = read(fr, "empty")
 @test isempty(emptyr)
 empty_stringr = read(fr, "empty_string")
@@ -247,6 +249,10 @@ Wr = h5read(fn, "newgroup/W")
 rng = (2:3:15, 3:5)
 Wr = h5read(fn, "newgroup/W", rng)
 @test Wr == W[rng...]
+# test cartesian range
+range = (1:2,1:8)
+Wr = h5read(fn, "newgroup/W", CartesianRange(range))
+@test Wr == W[range...]
 War = h5readattr(fn, "newgroup/W")
 @test War == Wa
 
