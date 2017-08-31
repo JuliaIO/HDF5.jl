@@ -11,8 +11,8 @@ h5write(filename, "main", Array(1:10))
 f = h5open(filename,"r+")
 dset = f["main"]
 # setindex of cartesian range
-dset[CartesianRange((3:5,))] = [3:5;]
-@test dset[CartesianRange((3:5,))] == [3:5;]
+dset[CartesianRange((3:5,))] = [4:6;]
+@test dset[CartesianRange((3:5,))] == [4:6;]
 
 close(f)
 rm(filename)
