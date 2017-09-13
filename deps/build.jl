@@ -1,4 +1,5 @@
 using BinDeps
+using Compat
 
 @BinDeps.setup
 
@@ -23,12 +24,12 @@ provides(Pacman, "hdf5", hdf5, os=:Linux)
 provides(Yum, "hdf5", hdf5, os=:Linux)
 provides(BSDPkg, "hdf5", hdf5, os=:FreeBSD)
 
-if is_windows()
+if Compat.Sys.iswindows()
     using WinRPM
     provides(WinRPM.RPM, "hdf5", hdf5, os=:Windows)
 end
 
-if is_apple()
+if Compat.Sys.isapple()
     using Homebrew
     provides(Homebrew.HB, "hdf5", hdf5, os=:Darwin)
 end

@@ -107,7 +107,7 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
         status = Blosc.blosc_decompress(unsafe_load(buf), outbuf, outbuf_size)
         status <= 0 && (Libc.free(outbuf); return convert(Csize_t, 0))
     end
-    
+
     if status != 0
         Libc.free(unsafe_load(buf))
         unsafe_store!(buf, outbuf)
@@ -119,18 +119,18 @@ end
 
 # register the Blosc filter function with HDF5
 function register_blosc()
-    c_blosc_set_local = cfunction(blosc_set_local, Herr, (Hid,Hid,Hid))
+    c_blosc_set_local = cfunction(blosc_set_local, Herr, Tuple{Hid,Hid,Hid})
     c_blosc_filter = cfunction(blosc_filter, Csize_t,
-                                 (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
-                                  Ptr{Csize_t}, Ptr{Ptr{Void}}))
-    if ccall((:H5Zregister, libhdf5), Herr, (Ptr{H5Z_class2_t},),
-             &H5Z_class2_t(H5Z_CLASS_T_VERS,
-                           FILTER_BLOSC,
-                           1, 1,
-                           pointer(blosc_name),
-                           C_NULL,
-                           c_blosc_set_local,
-                           c_blosc_filter)) < 0
+                               Tuple{Cuint, Csize_t, Ptr{Cuint}, Csize_t,
+                                     Ptr{Csize_t}, Ptr{Ptr{Void}}})
+    if ccall((:H5Zregister, libhdf5), Herr, (Ref{H5Z_class2_t},),
+             H5Z_class2_t(H5Z_CLASS_T_VERS,
+                          FILTER_BLOSC,
+                          1, 1,
+                          pointer(blosc_name),
+                          C_NULL,
+                          c_blosc_set_local,
+                          c_blosc_filter)) < 0
         error("can't register Blosc filter")
     end
 end
