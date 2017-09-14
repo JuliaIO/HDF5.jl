@@ -1952,7 +1952,8 @@ else
     const H5RDEREFERENCE = :H5Rdereference
 end
 function h5r_dereference(obj_id::Hid, ref_type::Integer, pointee::HDF5ReferenceObj)
-    ret = ccall((H5RDEREFERENCE, libhdf5), Hid, (Hid, Cint, Ptr{HDF5ReferenceObj}), obj_id, ref_type, &pointee)
+    ret = ccall((H5RDEREFERENCE, libhdf5), Hid, (Hid, Cint, Ref{HDF5ReferenceObj}),
+                obj_id, ref_type, pointee)
     if ret < 0
         error("Error dereferencing object")
     end
