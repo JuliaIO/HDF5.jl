@@ -698,7 +698,7 @@ function h5read(filename, name::String)
     dat
 end
 
-function h5read(filename, name::String, indices::Tuple{Vararg{Union{Range{Int},Int,Colon}}})
+function h5read(filename, name::String, indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}})
     local dat
     fid = h5open(filename, "r")
     try
@@ -1667,7 +1667,7 @@ write{T<:ScalarOrString}(parent::Union{HDF5File, HDF5Group}, name::String, data:
 write{T<:ScalarOrString}(parent::HDF5Dataset, name::String, data::Union{T, Array{T}}, plists...) = a_write(parent, name, data, plists...)
 
 # Reading arrays using getindex: data = dset[:,:,10]
-function getindex(dset::HDF5Dataset, indices::Union{Range{Int},Int}...)
+function getindex(dset::HDF5Dataset, indices::Union{AbstractRange{Int},Int}...)
     local T
     dtype = datatype(dset)
     try
@@ -1677,7 +1677,7 @@ function getindex(dset::HDF5Dataset, indices::Union{Range{Int},Int}...)
     end
     _getindex(dset,T, indices...)
 end
-function _getindex(dset::HDF5Dataset, T::Type, indices::Union{Range{Int},Int}...)
+function _getindex(dset::HDF5Dataset, T::Type, indices::Union{AbstractRange{Int},Int}...)
     if !(T<:HDF5Scalar)
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
@@ -1696,11 +1696,11 @@ function _getindex(dset::HDF5Dataset, T::Type, indices::Union{Range{Int},Int}...
 end
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
-function setindex!(dset::HDF5Dataset, X::Array, indices::Union{Range{Int},Int}...)
+function setindex!(dset::HDF5Dataset, X::Array, indices::Union{AbstractRange{Int},Int}...)
     T = hdf5_to_julia(dset)
     _setindex!(dset, T, X, indices...)
 end
-function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::Union{Range{Int},Int}...)
+function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::Union{AbstractRange{Int},Int}...)
     if !(T<:Array)
         error("Dataset indexing (hyperslab) is available only for arrays")
     end
@@ -1726,7 +1726,7 @@ function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::Union{Range{In
     end
     X
 end
-function setindex!(dset::HDF5Dataset, X::AbstractArray, indices::Union{Range{Int},Int}...)
+function setindex!(dset::HDF5Dataset, X::AbstractArray, indices::Union{AbstractRange{Int},Int}...)
     T = hdf5_to_julia(dset)
     if !(T<:Array)
         error("Hyperslab interface is available only for arrays")
@@ -1735,7 +1735,7 @@ function setindex!(dset::HDF5Dataset, X::AbstractArray, indices::Union{Range{Int
     setindex!(dset, Y, indices...)
 end
 
-function setindex!(dset::HDF5Dataset, x::Number, indices::Union{Range{Int},Int}...)
+function setindex!(dset::HDF5Dataset, x::Number, indices::Union{AbstractRange{Int},Int}...)
     T = hdf5_to_julia(dset)
     if !(T<:Array)
         error("Hyperslab interface is available only for arrays")
@@ -1744,10 +1744,10 @@ function setindex!(dset::HDF5Dataset, x::Number, indices::Union{Range{Int},Int}.
     setindex!(dset, X, indices...)
 end
 
-getindex(dset::HDF5Dataset, I::Union{Range{Int},Int,Colon}...) = getindex(dset, ntuple(i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i], length(I))...)
-setindex!(dset::HDF5Dataset, x, I::Union{Range{Int},Int,Colon}...) = setindex!(dset, x, ntuple(i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i], length(I))...)
+getindex(dset::HDF5Dataset, I::Union{AbstractRange{Int},Int,Colon}...) = getindex(dset, ntuple(i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i], length(I))...)
+setindex!(dset::HDF5Dataset, x, I::Union{AbstractRange{Int},Int,Colon}...) = setindex!(dset, x, ntuple(i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i], length(I))...)
 
-function hyperslab(dset::HDF5Dataset, indices::Union{Range{Int},Int}...)
+function hyperslab(dset::HDF5Dataset, indices::Union{AbstractRange{Int},Int}...)
     local dsel_id
     dspace = dataspace(dset)
     try
@@ -1766,7 +1766,7 @@ function hyperslab(dset::HDF5Dataset, indices::Union{Range{Int},Int}...)
                 dsel_start[k] = index-1
                 dsel_stride[k] = 1
                 dsel_count[k] = 1
-            elseif isa(index, Range)
+            elseif isa(index, AbstractRange)
                 dsel_start[k] = first(index)-1
                 dsel_stride[k] = step(index)
                 dsel_count[k] = length(index)
