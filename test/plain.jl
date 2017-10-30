@@ -13,6 +13,8 @@ f["Float64"] = 3.2
 f["Int16"] = Int16(4)
 # compression of empty array (issue #246)
 f["compressedempty", "shuffle", (), "compress", 4] = Int64[]
+# compression of zero-dimensional array (pull request #445)
+f["compressed_zerodim", "shuffle", (), "compress", 4] = fill(Int32(42), ())
 f["bloscempty", "blosc", 4] = Int64[]
 # Create arrays of different types
 A = randn(3, 5)
@@ -118,6 +120,8 @@ x = read(fr, "Float64")
 @test x == 3.2 && isa(x, Float64)
 y = read(fr, "Int16")
 @test y == 4 && isa(y, Int16)
+zerodim = read(fr, "compressed_zerodim")
+@test zerodim == 42 && isa(zerodim, Int32)
 bloscempty = read(fr, "bloscempty")
 @test bloscempty == Int64[] && isa(bloscempty, Vector{Int64})
 Af32 = read(fr, "Afloat32")
