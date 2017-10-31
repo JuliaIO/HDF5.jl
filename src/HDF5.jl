@@ -566,6 +566,7 @@ function heuristic_chunk(T, shape)
     end
     return chunk
 end
+heuristic_chunk(T, ::Tuple{}) = Int[]
 heuristic_chunk{T}(A::AbstractArray{T}) = heuristic_chunk(T, size(A))
 heuristic_chunk(x) = Int[]
 # (strings are saved as scalars, and hence cannot be chunked)
