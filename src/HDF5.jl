@@ -1448,7 +1448,7 @@ function read{N}(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound{N}}},Type{HD
         membertype = Vector{Type}(N)
         membername = Vector{String}(N)
         memberoffset = Vector{UInt64}(N)
-        membersize = Vector{UInt8}(N)
+        membersize = Vector{UInt32}(N)
         for i = 1:N
             filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
             memberfiletype[i] = filetype
