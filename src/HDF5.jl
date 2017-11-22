@@ -1933,11 +1933,7 @@ function h5d_write{T<:HDF5Scalar}(dataset_id::Hid, memtype_id::Hid, x::T)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, tmp)
 end
 function h5d_write{S<:String}(dataset_id::Hid, memtype_id::Hid, strs::Array{S})
-    nonnull_str = copy(strs)
-    for i = 1:length(nonnull_str)
-        isassigned(nonnull_str, i) || (nonnull_str[i] = "")
-    end
-    p = Ref{Cstring}(nonnull_str)
+    p = Ref{Cstring}(strs)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, p)
 end
 function h5d_write{T<:Union{HDF5Scalar,CharType}}(dataset_id::Hid, memtype_id::Hid, v::HDF5Vlen{T})
