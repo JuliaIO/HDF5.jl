@@ -43,9 +43,7 @@ function init_libhdf5()
 end
 
 function h5_get_libversion()
-    majnum = Ref{Cuint}()
-    minnum = Ref{Cuint}()
-    relnum = Ref{Cuint}()
+    majnum, minnum, relnum = Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}()
     status = ccall((:H5get_libversion, libhdf5),
                    Cint, (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}), majnum, minnum, relnum)
     status < 0 && error("Error getting HDF5 library version")
@@ -235,7 +233,7 @@ const H5F_LIBVER_EARLIEST = 0
 const H5F_LIBVER_LATEST   = 1
 
 # Object reference types
-immutable HDF5ReferenceObj
+struct HDF5ReferenceObj
     r::UInt64 # Size must be H5R_OBJ_REF_BUF_SIZE
 end
 const HDF5ReferenceObj_NULL = HDF5ReferenceObj(UInt64(0))
@@ -271,18 +269,18 @@ const hdf5_type_map = Dict(
     (H5T_FLOAT, nothing, convert(Csize_t, 8)) => Float64,
 )
 
-hdf5_type_id{S<:AbstractString}(::Type{S})  = H5T_C_S1
+hdf5_type_id(::Type{S}) where {S<:AbstractString}  = H5T_C_S1
 
 # Single character types
 # These are needed to safely handle VLEN objects
-@compat abstract type CharType <: AbstractString end
+abstract type CharType<:AbstractString end
 
-type ASCIIChar <: CharType
+struct ASCIIChar<:CharType
     c::UInt8
 end
 length(c::ASCIIChar) = 1
 
-type UTF8Char <: CharType
+struct UTF8Char<:CharType
     c::UInt8
 end
 length(c::UTF8Char) = 1
@@ -295,7 +293,7 @@ cset(::Type{String}) = H5T_CSET_UTF8
 cset(::Type{UTF8Char}) = H5T_CSET_UTF8
 cset(::Type{ASCIIChar}) = H5T_CSET_ASCII
 
-hdf5_type_id{C<:CharType}(::Type{C}) = H5T_C_S1
+hdf5_type_id(::Type{C}) where {C<:CharType} = H5T_C_S1
 
 ## HDF5 uses a plain integer to refer to each file, group, or
 ## dataset. These are wrapped into special types in order to allow
@@ -309,7 +307,7 @@ hdf5_type_id{C<:CharType}(::Type{C}) = H5T_C_S1
 # application).
 
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
-type HDF5File <: DataFile
+mutable struct HDF5File <: DataFile
     id::Hid
     filename::String
 
@@ -331,7 +329,7 @@ function show(io::IO, fid::HDF5File)
 end
 
 
-type HDF5Group <: DataFile
+mutable struct HDF5Group <: DataFile
     id::Hid
     file::HDF5File         # the parent file
 
@@ -350,7 +348,7 @@ function show(io::IO, g::HDF5Group)
     end
 end
 
-type HDF5Dataset
+mutable struct HDF5Dataset
     id::Hid
     file::HDF5File
 
@@ -369,7 +367,7 @@ function show(io::IO, dset::HDF5Dataset)
     end
 end
 
-type HDF5Datatype
+mutable struct HDF5Datatype
     id::Hid
     toclose::Bool
     file::HDF5File
@@ -398,7 +396,7 @@ hash(dtype::HDF5Datatype, h::UInt) =
 # Define an H5O Object type
 const HDF5Object = Union{HDF5Group, HDF5Dataset, HDF5Datatype}
 
-type HDF5Dataspace
+mutable struct HDF5Dataspace
     id::Hid
 
     function HDF5Dataspace(id)
@@ -409,7 +407,7 @@ type HDF5Dataspace
 end
 convert(::Type{Hid}, dspace::HDF5Dataspace) = dspace.id
 
-type HDF5Attribute
+mutable struct HDF5Attribute
     id::Hid
     file::HDF5File
 
@@ -422,12 +420,12 @@ end
 convert(::Type{Hid}, attr::HDF5Attribute) = attr.id
 show(io::IO, attr::HDF5Attribute) = isvalid(attr) ? print(io, "HDF5 attribute: ", name(attr)) : print(io, "HDF5 attribute (invalid)")
 
-type HDF5Attributes
+mutable struct HDF5Attributes
     parent::Union{HDF5File, HDF5Group, HDF5Dataset}
 end
 attrs(p::Union{HDF5File, HDF5Group, HDF5Dataset}) = HDF5Attributes(p)
 
-type HDF5Properties
+mutable struct HDF5Properties
     id::Hid
     toclose::Bool
 
@@ -452,42 +450,42 @@ end
 hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
 
 # Compound types
-immutable HDF5Compound{N}
+struct HDF5Compound{N}
     data::NTuple{N,Any}
     membername::NTuple{N,String}
     membertype::NTuple{N,Type}
 end
 
 # Opaque types
-type HDF5Opaque
+struct HDF5Opaque
     data
     tag::String
 end
 
 # An empty array type
-type EmptyArray{T}; end
+struct EmptyArray{T} end
 
 # Stub types to encode fixed-size arrays for H5T_ARRAY
-immutable FixedArray{T,D}; end
-size{T,D}(::Type{FixedArray{T,D}}) = D
-eltype{T,D}(::Type{FixedArray{T,D}}) = T
+struct FixedArray{T,D} end
+size(::Type{FixedArray{T,D}}) where {T,D} = D
+eltype(::Type{FixedArray{T,D}}) where {T,D} = T
 
 # VLEN objects
-type HDF5Vlen{T}
+struct HDF5Vlen{T}
     data
 end
-HDF5Vlen{S<:String}(strs::Array{S}) = HDF5Vlen{chartype(S)}(strs)
-HDF5Vlen{T<:HDF5Scalar}(A::Array{Array{T}}) = HDF5Vlen{T}(A)
-HDF5Vlen{T<:HDF5Scalar,N}(A::Array{Array{T,N}}) = HDF5Vlen{T}(A)
+HDF5Vlen(strs::Array{S}) where {S<:String} = HDF5Vlen{chartype(S)}(strs)
+HDF5Vlen(A::Array{Array{T}}) where {T<:HDF5Scalar} = HDF5Vlen{T}(A)
+HDF5Vlen(A::Array{Array{T,N}}) where {T<:HDF5Scalar,N} = HDF5Vlen{T}(A)
 
 ## Types that correspond to C structs and get used for ccall
 # For VLEN
-immutable Hvl_t
+struct Hvl_t
     len::Csize_t
     p::Ptr{Void}
 end
 const HVL_SIZE = sizeof(Hvl_t) # and determine the size of the buffer needed
-function vlenpack{T<:Union{HDF5Scalar,CharType}}(v::HDF5Vlen{T})
+function vlenpack(v::HDF5Vlen{T}) where {T<:Union{HDF5Scalar,CharType}}
     len = length(v.data)
     Tp = t2p(T)  # Ptr{UInt8} or Ptr{T}
     h = Vector{Hvl_t}(len)
@@ -498,7 +496,7 @@ function vlenpack{T<:Union{HDF5Scalar,CharType}}(v::HDF5Vlen{T})
 end
 
 # For group information
-immutable H5Ginfo
+struct H5Ginfo
     storage_type::Cint
     nlinks::Hsize
     max_corder::Int64
@@ -506,11 +504,11 @@ immutable H5Ginfo
 end
 
 # For objects
-immutable Hmetainfo
+struct Hmetainfo
     index_size::Hsize
     heap_size::Hsize
 end
-immutable H5Oinfo
+struct H5Oinfo
     fileno::Cuint
     addr::Hsize
     otype::Cint
@@ -534,7 +532,7 @@ immutable H5Oinfo
     meta_attr::Hmetainfo
 end
 # For links
-immutable H5LInfo
+struct H5LInfo
     linktype::Cint
     corder_valid::Cuint
     corder::Int64
@@ -567,7 +565,7 @@ function heuristic_chunk(T, shape)
     return chunk
 end
 heuristic_chunk(T, ::Tuple{}) = Int[]
-heuristic_chunk{T}(A::AbstractArray{T}) = heuristic_chunk(T, size(A))
+heuristic_chunk(A::AbstractArray{T}) where {T} = heuristic_chunk(T, size(A))
 heuristic_chunk(x) = Int[]
 # (strings are saved as scalars, and hence cannot be chunked)
 
@@ -1134,23 +1132,23 @@ datatype(dset::HDF5Dataset) = HDF5Datatype(h5d_get_type(checkvalid(dset).id), fi
 datatype(dset::HDF5Attribute) = HDF5Datatype(h5a_get_type(checkvalid(dset).id), file(dset))
 
 # Create a datatype from in-memory types
-datatype{T<:HDF5Scalar}(x::T) = HDF5Datatype(hdf5_type_id(T), false)
-datatype{T<:HDF5Scalar}(::Type{T}) = HDF5Datatype(hdf5_type_id(T), false)
-datatype{T<:HDF5Scalar}(A::Array{T}) = HDF5Datatype(hdf5_type_id(T), false)
-function datatype{S<:String}(str::S)
+datatype(x::T) where {T<:HDF5Scalar} = HDF5Datatype(hdf5_type_id(T), false)
+datatype(::Type{T}) where {T<:HDF5Scalar} = HDF5Datatype(hdf5_type_id(T), false)
+datatype(A::Array{T}) where {T<:HDF5Scalar} = HDF5Datatype(hdf5_type_id(T), false)
+function datatype(str::S) where {S<:String}
     type_id = h5t_copy(hdf5_type_id(S))
     h5t_set_size(type_id, max(sizeof(str), 1))
     h5t_set_cset(type_id, cset(S))
     HDF5Datatype(type_id)
 end
-function datatype{S<:String}(str::Array{S})
+function datatype(str::Array{S}) where {S<:String}
     type_id = h5t_copy(hdf5_type_id(S))
     h5t_set_size(type_id, H5T_VARIABLE)
     h5t_set_cset(type_id, cset(S))
     HDF5Datatype(type_id)
 end
-datatype{T<:HDF5Scalar}(A::HDF5Vlen{T}) = HDF5Datatype(h5t_vlen_create(hdf5_type_id(T)))
-function datatype{C<:CharType}(str::HDF5Vlen{C})
+datatype(A::HDF5Vlen{T}) where {T<:HDF5Scalar} = HDF5Datatype(h5t_vlen_create(hdf5_type_id(T)))
+function datatype(str::HDF5Vlen{C}) where {C<:CharType}
     type_id = h5t_copy(hdf5_type_id(C))
     h5t_set_size(type_id, 1)
     h5t_set_cset(type_id, cset(C))
@@ -1165,7 +1163,7 @@ dataspace(dset::HDF5Dataset) = HDF5Dataspace(h5d_get_space(checkvalid(dset).id))
 dataspace(attr::HDF5Attribute) = HDF5Dataspace(h5a_get_space(checkvalid(attr).id))
 
 # Create a dataspace from in-memory types
-dataspace{T<:HDF5Scalar}(x::T) = HDF5Dataspace(h5s_create(H5S_SCALAR))
+dataspace(x::T) where {T<:HDF5Scalar} = HDF5Dataspace(h5s_create(H5S_SCALAR))
 function _dataspace(sz::Tuple{Vararg{Int}}, max_dims::Union{Dims, Tuple{}}=())
     dims = Vector{Hsize}(length(sz))
     any_zero = false
@@ -1260,12 +1258,12 @@ function read(obj::DatasetOrAttribute)
     read(obj, T)
 end
 # Read scalars
-function read{T<:HDF5Scalar}(obj::DatasetOrAttribute, ::Type{T})
+function read(obj::DatasetOrAttribute, ::Type{T}) where {T<:HDF5Scalar}
     x = read(obj, Array{T})
     x[1]
 end
 # Read array of scalars
-function read{T<:HDF5Scalar}(obj::DatasetOrAttribute, ::Type{Array{T}})
+function read(obj::DatasetOrAttribute, ::Type{Array{T}}) where {T<:HDF5Scalar}
     if isnull(obj)
         return T[]
     end
@@ -1275,20 +1273,20 @@ function read{T<:HDF5Scalar}(obj::DatasetOrAttribute, ::Type{Array{T}})
     data
 end
 # Empty arrays
-function read{T<:ScalarOrString}(obj::DatasetOrAttribute, ::Type{EmptyArray{T}})
+function read(obj::DatasetOrAttribute, ::Type{EmptyArray{T}}) where {T<:ScalarOrString}
     T[]
 end
 # Fixed-size arrays (H5T_ARRAY)
-function read{A<:FixedArray}(obj::DatasetOrAttribute, ::Type{A})
+function read(obj::DatasetOrAttribute, ::Type{A}) where {A<:FixedArray}
     T = eltype(A)
     sz = size(A)
     data = Array{T}(sz)
     readarray(obj, hdf5_type_id(T), data)
     data
 end
-function read{A<:FixedArray}(obj::DatasetOrAttribute, ::Type{Array{A}})
+function read(obj::DatasetOrAttribute, ::Type{Array{A}}) where {A<:FixedArray}
     T = eltype(A)
-    if !(T <: HDF5Scalar)
+    if !(T<:HDF5Scalar)
         error("Sorry, not yet supported")
     end
     sz = size(A)
@@ -1327,7 +1325,7 @@ end
 unpad(s, pad::Integer) = unpad(String(s), pad)
 
 # Read string
-function read{S<:String}(obj::DatasetOrAttribute, ::Type{S})
+function read(obj::DatasetOrAttribute, ::Type{S}) where {S<:String}
     local ret::S
     objtype = datatype(obj)
     try
@@ -1351,9 +1349,9 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{S})
     end
     ret
 end
-read{S<:CharType}(obj::DatasetOrAttribute, ::Type{S}) = read(obj, stringtype(S))
+read(obj::DatasetOrAttribute, ::Type{S}) where {S<:CharType} = read(obj, stringtype(S))
 # Read array of strings
-function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
+function read(obj::DatasetOrAttribute, ::Type{Array{S}}) where {S<:String}
     local isvar::Bool
     local ret::Array{S}
     sz = size(obj)
@@ -1405,9 +1403,9 @@ function read{S<:String}(obj::DatasetOrAttribute, ::Type{Array{S}})
         return ret
     end
 end
-read{S<:CharType}(obj::DatasetOrAttribute, ::Type{Array{S}}) = read(obj, Array{stringtype(S)})
+read(obj::DatasetOrAttribute, ::Type{Array{S}}) where {S<:CharType} = read(obj, Array{stringtype(S)})
 # Empty Array of strings
-function read{C<:CharType}(obj::DatasetOrAttribute, ::Type{EmptyArray{C}})
+function read(obj::DatasetOrAttribute, ::Type{EmptyArray{C}}) where {C<:CharType}
     stringtype(C)[]
 end
 # Dereference
@@ -1423,10 +1421,10 @@ function read_row(io::IO, membertype, membersize)
     for (dtype, dsize) in zip(membertype, membersize)
         if dtype === String
             push!(row, unpad(read!(io, Vector{UInt8}(dsize)), H5T_STR_NULLPAD))
-        elseif dtype <: HDF5.FixedArray && eltype(dtype) <: HDF5BitsKind
+        elseif dtype<:HDF5.FixedArray && eltype(dtype)<:HDF5BitsKind
             val = read!(io, Vector{eltype(dtype)}(prod(size(dtype))))
             push!(row, reshape(val, size(dtype)))
-        elseif dtype <: HDF5BitsKind
+        elseif dtype<:HDF5BitsKind
             push!(row, read(io, dtype))
         else
             # for other types, just store the raw bytes and let the user
@@ -1438,7 +1436,7 @@ function read_row(io::IO, membertype, membersize)
 end
 
 # Read compound type
-function read{N}(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound{N}}},Type{HDF5Compound{N}}})
+function read(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound{N}}},Type{HDF5Compound{N}}}) where {N}
     t = datatype(obj)
     local sz = 0; local n;
     local membername; local membertype;
@@ -1509,13 +1507,13 @@ function read(obj::DatasetOrAttribute, ::Type{Array{HDF5Opaque}})
 end
 
 # Read VLEN arrays and character arrays
-atype{T<:HDF5Scalar}(::Type{T}) = Array{T}
-atype{C<:CharType}(::Type{C}) = stringtype(C)
-p2a{T<:HDF5Scalar}(p::Ptr{T}, len::Int) = unsafe_wrap(Array, p, len, true)
-p2a{C<:CharType}(p::Ptr{C}, len::Int) = stringtype(C)(unsafe_wrap(Array, convert(Ptr{UInt8}, p), len, true))
-t2p{T<:HDF5Scalar}(::Type{T}) = Ptr{T}
-t2p{C<:CharType}(::Type{C}) = Ptr{UInt8}
-function read{T<:Union{HDF5Scalar,CharType}}(obj::DatasetOrAttribute, ::Type{HDF5Vlen{T}})
+atype(::Type{T}) where {T<:HDF5Scalar} = Array{T}
+atype(::Type{C}) where {C<:CharType} = stringtype(C)
+p2a(p::Ptr{T}, len::Int) where {T<:HDF5Scalar} = unsafe_wrap(Array, p, len, true)
+p2a(p::Ptr{C}, len::Int) where {C<:CharType} = stringtype(C)(unsafe_wrap(Array, convert(Ptr{UInt8}, p), len, true))
+t2p(::Type{T}) where {T<:HDF5Scalar} = Ptr{T}
+t2p(::Type{C}) where {C<:CharType} = Ptr{UInt8}
+function read(obj::DatasetOrAttribute, ::Type{HDF5Vlen{T}}) where {T<:Union{HDF5Scalar,CharType}}
     local data
     sz = size(obj)
     len = prod(sz)
@@ -1544,12 +1542,12 @@ function iscontiguous(obj::HDF5Dataset)
     end
 end
 
-ismmappable{T<:HDF5Scalar}(::Type{Array{T}}) = true
+ismmappable(::Type{Array{T}}) where {T<:HDF5Scalar} = true
 ismmappable(::Type) = false
-ismmappable{T}(obj::HDF5Dataset, ::Type{T}) = ismmappable(T) && iscontiguous(obj)
+ismmappable(obj::HDF5Dataset, ::Type{T}) where {T} = ismmappable(T) && iscontiguous(obj)
 ismmappable(obj::HDF5Dataset) = ismmappable(obj, hdf5_to_julia(obj))
 
-function readmmap{T}(obj::HDF5Dataset, ::Type{Array{T}})
+function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
     dims = size(obj)
     if isempty(dims)
         return T[]
@@ -1573,8 +1571,8 @@ end
 
 function readmmap(obj::HDF5Dataset)
     T = hdf5_to_julia(obj)
-    if !ismmappable(T); error("Cannot mmap datasets of type $T"); end
-    if !iscontiguous(obj); error("Cannot mmap discontiguous dataset"); end
+    ismmappable(T) || error("Cannot mmap datasets of type $T")
+    iscontiguous(obj) || error("Cannot mmap discontiguous dataset")
     readmmap(obj, T)
 end
 
@@ -1618,10 +1616,10 @@ for (privatesym, fsym, ptype) in
             obj, dtype
         end
         # Scalar types
-        ($fsym){T<:ScalarOrString}(parent::$ptype, name::String, data::Union{T, Array{T}}, plists...) =
+        ($fsym)(parent::$ptype, name::String, data::Union{T, Array{T}}, plists...) where {T<:ScalarOrString} =
             ($privatesym)(parent, name, data, plists...)
         # VLEN types
-        ($fsym){T<:Union{HDF5Scalar,CharType}}(parent::$ptype, name::String, data::HDF5Vlen{T}, plists...) =
+        ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T}, plists...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privatesym)(parent, name, data, plists...)
     end
 end
@@ -1641,16 +1639,16 @@ for (privatesym, fsym, ptype, crsym) in
             end
         end
         # Scalar types
-        ($fsym){T<:ScalarOrString}(parent::$ptype, name::String, data::Union{T, Array{T}}, plists...) =
+        ($fsym)(parent::$ptype, name::String, data::Union{T, Array{T}}, plists...) where {T<:ScalarOrString} =
             ($privatesym)(parent, name, data, plists...)
         # VLEN types
-        ($fsym){T<:Union{HDF5Scalar,CharType}}(parent::$ptype, name::String, data::HDF5Vlen{T}, plists...) =
+        ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T}, plists...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privatesym)(parent, name, data, plists...)
     end
 end
 # Write to already-created objects
 # Scalars
-function write{T<:ScalarOrString}(obj::DatasetOrAttribute, x::Union{T, Array{T}})
+function write(obj::DatasetOrAttribute, x::Union{T, Array{T}}) where {T<:ScalarOrString}
     dtype = datatype(x)
     try
         writearray(obj, dtype.id, x)
@@ -1659,7 +1657,7 @@ function write{T<:ScalarOrString}(obj::DatasetOrAttribute, x::Union{T, Array{T}}
     end
 end
 # VLEN types
-function write{T<:Union{HDF5Scalar,CharType}}(obj::DatasetOrAttribute, data::HDF5Vlen{T})
+function write(obj::DatasetOrAttribute, data::HDF5Vlen{T}) where {T<:Union{HDF5Scalar,CharType}}
     dtype = datatype(data)
     try
         writearray(obj, dtype.id, data)
@@ -1668,10 +1666,10 @@ function write{T<:Union{HDF5Scalar,CharType}}(obj::DatasetOrAttribute, data::HDF
     end
 end
 # For plain files and groups, let "write(obj, name, val)" mean "d_write"
-write{T<:ScalarOrString}(parent::Union{HDF5File, HDF5Group}, name::String, data::Union{T, Array{T}}, plists...) =
+write(parent::Union{HDF5File, HDF5Group}, name::String, data::Union{T, Array{T}}, plists...) where {T<:ScalarOrString} =
     d_write(parent, name, data, plists...)
 # For datasets, "write(dset, name, val)" means "a_write"
-write{T<:ScalarOrString}(parent::HDF5Dataset, name::String, data::Union{T, Array{T}}, plists...) = a_write(parent, name, data, plists...)
+write(parent::HDF5Dataset, name::String, data::Union{T, Array{T}}, plists...) where {T<:ScalarOrString} = a_write(parent, name, data, plists...)
 
 # Reading arrays using getindex: data = dset[:,:,10]
 function getindex(dset::HDF5Dataset, indices::Union{AbstractRange{Int},Int}...)
@@ -1685,7 +1683,7 @@ function getindex(dset::HDF5Dataset, indices::Union{AbstractRange{Int},Int}...)
     _getindex(dset,T, indices...)
 end
 function _getindex(dset::HDF5Dataset, T::Type, indices::Union{AbstractRange{Int},Int}...)
-    if !(T<:HDF5Scalar)
+    if !(T <: HDF5Scalar)
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
     dsel_id = hyperslab(dset, indices...)
@@ -1708,11 +1706,11 @@ function setindex!(dset::HDF5Dataset, X::Array, indices::Union{AbstractRange{Int
     _setindex!(dset, T, X, indices...)
 end
 function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::Union{AbstractRange{Int},Int}...)
-    if !(T<:Array)
+    if !(T <: Array)
         error("Dataset indexing (hyperslab) is available only for arrays")
     end
     ET = eltype(T)
-    if !(ET<:HDF5Scalar)
+    if !(ET <: HDF5Scalar)
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
     if length(X) != prod(map(length, indices))
@@ -1735,7 +1733,7 @@ function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::Union{Abstract
 end
 function setindex!(dset::HDF5Dataset, X::AbstractArray, indices::Union{AbstractRange{Int},Int}...)
     T = hdf5_to_julia(dset)
-    if !(T<:Array)
+    if !(T <: Array)
         error("Hyperslab interface is available only for arrays")
     end
     Y = convert(Array{eltype(T), ndims(X)}, X)
@@ -1744,7 +1742,7 @@ end
 
 function setindex!(dset::HDF5Dataset, x::Number, indices::Union{AbstractRange{Int},Int}...)
     T = hdf5_to_julia(dset)
-    if !(T<:Array)
+    if !(T <: Array)
         error("Hyperslab interface is available only for arrays")
     end
     X = fill(convert(eltype(T), x), map(length, indices))
@@ -1908,15 +1906,15 @@ end
 # See also the "special handling" section below
 const EMPTY_STRING = UInt8[0x00]
 h5a_write(attr_id::Hid, mem_type_id::Hid, buf::String) = h5a_write(attr_id, mem_type_id, Vector{UInt8}(buf))
-function h5a_write{T<:HDF5Scalar}(attr_id::Hid, mem_type_id::Hid, x::T)
+function h5a_write(attr_id::Hid, mem_type_id::Hid, x::T) where {T<:HDF5Scalar}
     tmp = Ref{T}(x)
     h5a_write(attr_id, mem_type_id, tmp)
 end
-function h5a_write{S<:String}(attr_id::Hid, memtype_id::Hid, strs::Array{S})
+function h5a_write(attr_id::Hid, memtype_id::Hid, strs::Array{S}) where {S<:String}
     p = Ref{Cstring}(strs)
     h5a_write(attr_id, memtype_id, p)
 end
-function h5a_write{T<:Union{HDF5Scalar,CharType}}(attr_id::Hid, memtype_id::Hid, v::HDF5Vlen{T})
+function h5a_write(attr_id::Hid, memtype_id::Hid, v::HDF5Vlen{T}) where {T<:Union{HDF5Scalar,CharType}}
     vp = vlenpack(v)
     h5a_write(attr_id, memtype_id, vp)
 end
@@ -1928,11 +1926,11 @@ h5d_read(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_read(dataset_id, me
 h5d_write(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
 h5d_write(dataset_id::Hid, memtype_id::Hid, buf::String) =
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, isempty(buf) ? EMPTY_STRING : Vector{UInt8}(buf))
-function h5d_write{T<:HDF5Scalar}(dataset_id::Hid, memtype_id::Hid, x::T)
+function h5d_write(dataset_id::Hid, memtype_id::Hid, x::T) where {T<:HDF5Scalar}
     tmp = Ref{T}(x)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, tmp)
 end
-function h5d_write{S<:String}(dataset_id::Hid, memtype_id::Hid, strs::Array{S})
+function h5d_write(dataset_id::Hid, memtype_id::Hid, strs::Array{S}) where {S<:String}
     nonnull_str = copy(strs)
     for i = 1:length(nonnull_str)
         isassigned(nonnull_str, i) || (nonnull_str[i] = "")
@@ -1940,7 +1938,7 @@ function h5d_write{S<:String}(dataset_id::Hid, memtype_id::Hid, strs::Array{S})
     p = Ref{Cstring}(nonnull_str)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, p)
 end
-function h5d_write{T<:Union{HDF5Scalar,CharType}}(dataset_id::Hid, memtype_id::Hid, v::HDF5Vlen{T})
+function h5d_write(dataset_id::Hid, memtype_id::Hid, v::HDF5Vlen{T}) where {T<:Union{HDF5Scalar,CharType}}
     vp = vlenpack(v)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, vp)
 end
