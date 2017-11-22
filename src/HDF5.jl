@@ -848,15 +848,6 @@ getindex(dset::HDF5Dataset, name::String) = a_open(dset, name)
 getindex(x::HDF5Attributes, name::String) = a_open(x.parent, name)
 
 # Path manipulation
-function joinpathh5(a::String, b::String)
-    isempty(a) && return b
-    isempty(b) && return a
-    endswith(a, '/') && beginswith(b, '/') && return a * b[2:end]
-    (endswith(a, '/') || beginswith(b, '/')) && return a * b
-    return a*"/"*b
-end
-joinpathh5(a::String, b::String, c::String) = joinpathh5(joinpathh5(a, b), c)
-
 function split1(path::String)
     off = search(path, '/')
     if off == 0
