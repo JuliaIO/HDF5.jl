@@ -1935,7 +1935,7 @@ end
 function h5d_write{S<:String}(dataset_id::Hid, memtype_id::Hid, strs::Array{S})
     nonnull_str = copy(strs)
     for i = 1:length(nonnull_str)
-        isassigned(nonnull_str, i) || isempty(nonnull_str[i])
+        isassigned(nonnull_str, i) || (nonnull_str[i] = "")
     end
     p = Ref{Cstring}(nonnull_str)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, p)
