@@ -1196,7 +1196,11 @@ dataspace(n::Void) = HDF5Dataspace(h5s_create(H5S_NULL))
 dataspace(sz::Dims; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(sz, max_dims)
 dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
 
+"""
+    get_dims(dset::HDF5Dataspace)
 
+Get the dataspace dimensions from a dataset and return a tuple of dims and maxdims.
+"""
 get_dims(dspace::HDF5Dataspace) = h5s_get_simple_extent_dims(dspace.id)
 
 """
@@ -2038,6 +2042,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5p_set_local_heap_size_hint, :H5Pset_local_heap_size_hint, Herr, (Hid, Cuint), (:fapl_id, :size_hint), "Error setting local heap size hint"),
      (:h5p_set_shuffle, :H5Pset_shuffle, Herr, (Hid,), (:plist_id,), "Error enabling shuffle filter"),
      (:h5p_set_userblock, :H5Pset_userblock, Herr, (Hid, Hsize), (:plist_id, :len), "Error setting userblock"),
+     (:h5p_set_virtual, :H5Pset_virtual, Herr, (Hid, Hid, Ptr{UInt8}, Ptr{UInt8}, Hid), (:dcpl_id, :vspace_id, :src_file_name, :src_dset_name, :src_space_id), "Error setting mapping between virtual and source datasets"),
      (:h5s_close, :H5Sclose, Herr, (Hid,), (:space_id,), "Error closing dataspace"),
      (:h5s_select_hyperslab, :H5Sselect_hyperslab, Herr, (Hid, Cint, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}), (:dspace_id, :seloper, :start, :stride, :count, :block), "Error selecting hyperslab"),
      (:h5t_commit, :H5Tcommit2, Herr, (Hid, Ptr{UInt8}, Hid, Hid, Hid, Hid), (:loc_id, :name, :dtype_id, :lcpl_id, :tcpl_id, :tapl_id), "Error committing type"),
