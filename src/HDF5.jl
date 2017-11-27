@@ -846,15 +846,6 @@ getindex(dset::HDF5Dataset, name::String) = a_open(dset, name)
 getindex(x::HDF5Attributes, name::String) = a_open(x.parent, name)
 
 # Path manipulation
-function joinpathh5(a::String, b::String)
-    isempty(a) && return b
-    isempty(b) && return a
-    endswith(a, '/') && beginswith(b, '/') && return a * b[2:end]
-    (endswith(a, '/') || beginswith(b, '/')) && return a * b
-    return a*"/"*b
-end
-joinpathh5(a::String, b::String, c::String) = joinpathh5(joinpathh5(a, b), c)
-
 function split1(path::String)
     off = search(path, '/')
     if off == 0
@@ -1904,7 +1895,6 @@ end
 ### Convenience wrappers ###
 # These supply default values where possible
 # See also the "special handling" section below
-const EMPTY_STRING = UInt8[0x00]
 h5a_write(attr_id::Hid, mem_type_id::Hid, buf::String) = h5a_write(attr_id, mem_type_id, Vector{UInt8}(buf))
 function h5a_write(attr_id::Hid, mem_type_id::Hid, x::T) where {T<:HDF5Scalar}
     tmp = Ref{T}(x)
@@ -1925,7 +1915,7 @@ h5d_open(obj_id::Hid, name::String) = h5d_open(obj_id, name, H5P_DEFAULT)
 h5d_read(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
 h5d_write(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
 h5d_write(dataset_id::Hid, memtype_id::Hid, buf::String) =
-    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, isempty(buf) ? EMPTY_STRING : Vector{UInt8}(buf))
+    ccall((:H5Dwrite, libhdf5), Herr, (Hid, Hid, Hid, Hid, Hid, Cstring), dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, str)
 function h5d_write(dataset_id::Hid, memtype_id::Hid, x::T) where {T<:HDF5Scalar}
     tmp = Ref{T}(x)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, tmp)

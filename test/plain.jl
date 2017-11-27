@@ -345,7 +345,8 @@ end
 fn = tempname()
 f = h5open(fn, "w")
 @test_throws ArgumentError write(f, "test", ["hello","there","\0"])
-# @test_throws ArgumentError  write(f, "trunc", "\0")
+@test_throws ArgumentError write(f, "trunc1", "\0")
+@test_throws ArgumentError write(f, "trunc2", "trunc\0ateme")
 close(f)
 rm(fn)
 
