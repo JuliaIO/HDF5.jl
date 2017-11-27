@@ -1914,8 +1914,9 @@ h5d_create(loc_id::Hid, name::String, type_id::Hid, space_id::Hid) = h5d_create(
 h5d_open(obj_id::Hid, name::String) = h5d_open(obj_id, name, H5P_DEFAULT)
 h5d_read(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
 h5d_write(dataset_id::Hid, memtype_id::Hid, buf::Array) = h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
-h5d_write(dataset_id::Hid, memtype_id::Hid, buf::String) =
+function h5d_write(dataset_id::Hid, memtype_id::Hid, str::String)
     ccall((:H5Dwrite, libhdf5), Herr, (Hid, Hid, Hid, Hid, Hid, Cstring), dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, str)
+end
 function h5d_write(dataset_id::Hid, memtype_id::Hid, x::T) where {T<:HDF5Scalar}
     tmp = Ref{T}(x)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, tmp)
