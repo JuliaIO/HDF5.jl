@@ -9,7 +9,7 @@ const H5Z_FLAG_REVERSE = 0x0100
 const H5Z_FLAG_OPTIONAL = 0x0001
 const H5Z_CLASS_T_VERS = 1
 const H5Z_filter_t = Cint
-immutable H5Z_class2_t
+struct H5Z_class2_t
     version::Cint # = H5Z_CLASS_T_VERS
     id::H5Z_filter_t # Filter ID number
     encoder_present::Cuint # Does this filter have an encoder?
