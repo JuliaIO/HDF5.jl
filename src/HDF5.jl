@@ -273,14 +273,14 @@ hdf5_type_id(::Type{S}) where {S<:AbstractString}  = H5T_C_S1
 
 # Single character types
 # These are needed to safely handle VLEN objects
-abstract type CharType<:AbstractString end
+abstract type CharType <: AbstractString end
 
-struct ASCIIChar<:CharType
+struct ASCIIChar <: CharType
     c::UInt8
 end
 length(c::ASCIIChar) = 1
 
-struct UTF8Char<:CharType
+struct UTF8Char <: CharType
     c::UInt8
 end
 length(c::UTF8Char) = 1
