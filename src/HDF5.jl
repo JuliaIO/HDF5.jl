@@ -1423,7 +1423,7 @@ function read_row(io::IO, membertype, membersize)
             push!(row, read!(io, Vector{UInt8}(dsize)))
         end
     end
-    return (row...)
+    return (row...,)
 end
 
 # Read compound type
@@ -1466,8 +1466,8 @@ function read(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound{N}}},Type{HDF5C
         push!(data, read_row(iobuff, membertype, membersize))
     end
     # convert HDF5Compound type parameters to tuples
-    membername = (membername...)
-    membertype = (membertype...)
+    membername = (membername...,)
+    membertype = (membertype...,)
     if T === HDF5Compound{N}
         return HDF5Compound(data[1], membername, membertype)
     else
