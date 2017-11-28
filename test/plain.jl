@@ -324,7 +324,7 @@ fd["mygroup/level_1"] = [4, 5]
 grp2 = g_create(grp, "deep_group")
 fd["mygroup/deep_group/level_2"] = [6.0, 7.0]
 datasets = get_datasets(fd)
-@test sort(map(name, datasets)) ==  ["/level_0", "/mygroup/deep_group/level_2", "/mygroup/level_1"]
+@test sort(map(name, datasets)) ==  sort(["/level_0", "/mygroup/deep_group/level_2", "/mygroup/level_1"])
 close(fd)
 rm(fn)
 
