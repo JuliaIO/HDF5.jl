@@ -20,7 +20,7 @@ export
     a_create, a_delete, a_open, a_read, a_write, attrs,
     d_create, d_create_external, d_open, d_read, d_write,
     dataspace, datatype, exists, file, filename,
-    g_create, g_open, get_chunk, get_create_properties,
+    g_create, g_open, get_chunk, get_create_properties, get_datasets,
     h5open, h5read, h5rewrite, h5writeattr, h5readattr, h5write,
     has, iscontiguous, ishdf5, ismmappable, name,
     o_copy, o_delete, o_open, p_create,
@@ -2302,6 +2302,26 @@ function get_libver_bounds(p::HDF5Properties)
     out2 = Ref{Cint}()
     h5p_get_libver_bounds(p.id, out1, out2)
     out1[], out2[]
+end
+
+"""
+    get_datasets(file::HDF5File) -> datasets::Vector{HDF5Dataset}
+
+Get all the datasets in an hdf5 file without loading the data.
+"""		
+function get_datasets(file::HDF5File)
+    list = HDF5Dataset[]
+    get_datasets!(list, file)
+    list
+end
+ function get_datasets!(list::Vector{HDF5Dataset}, node::Union{HDF5File,HDF5Group,HDF5Dataset})
+    if isa(node, HDF5Dataset)
+        push!(list, node)
+    else
+        for c in names(node)
+            get_datasets!(list, node[c])
+        end
+    end
 end
 
 # property function get/set pairs

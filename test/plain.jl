@@ -319,6 +319,19 @@ dtypes = [typeof(x) for x in d[1].data]
 @test length(d[1].data[2]) == 3
 @test d[1].membername == ("wgt", "xyz", "uvw", "E")
 
+# get-datasets
+fn = tempname()
+fd = h5open(fn, "w")
+fd["level_0"] = [1,2,3]
+grp = g_create(fd, "mygroup")
+fd["mygroup/level_1"] = [4, 5]
+grp2 = g_create(grp, "deep_group")
+fd["mygroup/deep_group/level_2"] = [6.0, 7.0]
+datasets = get_datasets(fd)
+@test sort(map(name, datasets)) ==  sort(["/level_0", "/mygroup/deep_group/level_2", "/mygroup/level_1"])
+close(fd)
+rm(fn)
+
 # File creation and access property lists
 cpl = HDF5Properties(p_create(HDF5.H5P_FILE_CREATE))
 cpl["userblock"] = 1024
