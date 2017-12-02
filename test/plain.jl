@@ -341,15 +341,24 @@ end
 
 @test HDF5.unpad(UInt8[0x43, 0x43, 0x41], 1) == "CCA"
 
-# don't silently truncate data
+# test strings with null and undefined references
+@testset "undefined and null" begin
 fn = tempname()
 f = h5open(fn, "w")
+
+# don't silently truncate data
 @test_throws ArgumentError write(f, "test", ["hello","there","\0"])
 @test_throws ArgumentError write(f, "trunc1", "\0")
 @test_throws ArgumentError write(f, "trunc2", "trunc\0ateme")
+
+# test writing uninitialized string arrays
+undefstrarr = similar(Vector(1:3), String) # strs = String[#undef, #undef, #undef]
+@test_throws UndefRefError h5write(f, "undef", undefstrarr)
+
 close(f)
 rm(fn)
-
+end
+	
 # Test the h5read/write interface with a filename as a first argument, when
 # the file does not exist
 h5write(fn, "newgroup/W", W)
