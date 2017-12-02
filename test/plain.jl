@@ -353,7 +353,7 @@ f = h5open(fn, "w")
 
 # test writing uninitialized string arrays
 undefstrarr = similar(Vector(1:3), String) # strs = String[#undef, #undef, #undef]
-@test_throws UndefRefError h5write(f, "undef", undefstrarr)
+@test_throws UndefRefError write(f, "undef", undefstrarr)
 
 close(f)
 rm(fn)
