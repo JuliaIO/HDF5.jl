@@ -341,6 +341,16 @@ end
 
 @test HDF5.unpad(UInt8[0x43, 0x43, 0x41], 1) == "CCA"
 
+# Test the h5read/write interface with a filename as a first argument, when
+# the file does not exist
+h5write(fn, "newgroup/W", W)
+Wr = h5read(fn, "newgroup/W")
+@test Wr == W
+close(f)
+rm(fn)
+
+end # testset plain
+
 # test strings with null and undefined references
 @testset "undefined and null" begin
 fn = tempname()
@@ -357,14 +367,4 @@ undefstrarr = similar(Vector(1:3), String) # strs = String[#undef, #undef, #unde
 
 close(f)
 rm(fn)
-end
-	
-# Test the h5read/write interface with a filename as a first argument, when
-# the file does not exist
-h5write(fn, "newgroup/W", W)
-Wr = h5read(fn, "newgroup/W")
-@test Wr == W
-close(f)
-rm(fn)
-
-end # testset plain
+end # testset null and undefined
