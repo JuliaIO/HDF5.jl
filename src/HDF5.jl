@@ -36,6 +36,12 @@ else
     error("HDF5 not properly installed. Please run Pkg.build(\"HDF5\")")
 end
 
+let d = dirname(libhdf5), b = basename(libhdf5)
+    base,ext = split(b, ".", limit=2)
+    hl = joinpath(d, "libhdf5_hl.$ext")
+    global const libhdf5_hl = isfile(hl) ? hl : ""
+end
+
 function init_libhdf5()
     status = ccall((:H5open, libhdf5), Cint, ())
     status < 0 && error("Can't initialize the HDF5 library")
@@ -2062,7 +2068,12 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
     )
 
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
-    ex_ccall = ccallexpr(libhdf5, h5name, outtype, argtypes, argsyms)
+    library = startswith(string(h5name), "H5DO") ? libhdf5_hl : libhdf5
+    if library == ""
+        # If the high-level library is not installed, then skip these functions
+        continue
+    end
+    ex_ccall = ccallexpr(library, h5name, outtype, argtypes, argsyms)
     ex_body = quote
         status = $ex_ccall
         if status < 0
