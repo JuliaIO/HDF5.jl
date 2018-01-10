@@ -1810,7 +1810,7 @@ function do_write_chunk(dataset::HDF5Dataset, offset, chunk_bytes::Vector{UInt8}
     h5do_write_chunk(dataset, H5P_DEFAULT, UInt32(filter_mask), offs, length(chunk_bytes), chunk_bytes)
 end
 
-immutable HDF5ChunkStorage
+struct HDF5ChunkStorage
     dataset::HDF5Dataset
 end
 
