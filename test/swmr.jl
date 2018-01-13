@@ -7,7 +7,7 @@ if nprocs() == 1
     addprocs(1)
 end
 @everywhere using HDF5
-using Base.Test
+using Compat.Test
 
 @testset "swmr" begin
 fname = tempname()
