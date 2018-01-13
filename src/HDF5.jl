@@ -488,7 +488,7 @@ const HVL_SIZE = sizeof(Hvl_t) # and determine the size of the buffer needed
 function vlenpack(v::HDF5Vlen{T}) where {T<:Union{HDF5Scalar,CharType}}
     len = length(v.data)
     Tp = t2p(T)  # Ptr{UInt8} or Ptr{T}
-    h = Vector{Hvl_t}(len)
+    h = @compat Vector{Hvl_t}(uninitialized, len)
     for i = 1:len
         h[i] = Hvl_t(convert(Csize_t, length(v.data[i])), convert(Ptr{Void}, unsafe_convert(Tp, v.data[i])))
     end
@@ -1059,8 +1059,8 @@ name(attr::HDF5Attribute) = h5a_get_name(attr.id)
 function names(x::Union{HDF5Group,HDF5File})
     checkvalid(x)
     n = length(x)
-    res = Vector{String}(n)
-    buf = Vector{UInt8}(100)
+    res = @compat Vector{String}(uninitialized, n)
+    buf = @compat Vector{UInt8}(uninitialized, 100)
     for i in 1:n
         len = h5g_get_objname_by_idx(x.id, i - 1, buf, length(buf))
         if len >= length(buf)
@@ -1075,10 +1075,10 @@ end
 function names(x::HDF5Attributes)
     checkvalid(x.parent)
     n = length(x)
-    res = Vector{String}(n)
+    res = @compat Vector{String}(uninitialized, n)
     for i in 1:n
         len = h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, "", 0, H5P_DEFAULT)
-        buf = Vector{UInt8}(len+1)
+        buf = @compat Vector{UInt8}(uninitialized, len+1)
         len = h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, buf, len+1, H5P_DEFAULT)
         res[i] = String(buf[1:len])
     end
@@ -1156,7 +1156,7 @@ dataspace(attr::HDF5Attribute) = HDF5Dataspace(h5a_get_space(checkvalid(attr).id
 # Create a dataspace from in-memory types
 dataspace(x::T) where {T<:HDF5Scalar} = HDF5Dataspace(h5s_create(H5S_SCALAR))
 function _dataspace(sz::Tuple{Vararg{Int}}, max_dims::Union{Dims, Tuple{}}=())
-    dims = Vector{Hsize}(length(sz))
+    dims = @compat Vector{Hsize}(uninitialized, length(sz))
     any_zero = false
     for i = 1:length(sz)
         dims[end-i+1] = sz[i]
@@ -1330,7 +1330,7 @@ function read(obj::DatasetOrAttribute, ::Type{S}) where {S<:String}
         else
             n = h5t_get_size(objtype.id)
             pad = h5t_get_strpad(objtype.id)
-            buf = Vector{UInt8}(n)
+            buf = @compat Vector{UInt8}(uninitialized, n)
             readarray(obj, objtype.id, buf)
             pbuf = String(buf)
             ret = unpad(pbuf, pad)
@@ -1364,7 +1364,7 @@ function read(obj::DatasetOrAttribute, ::Type{Array{S}}) where {S<:String}
         ret = Array{S}(sz)
         if isvar
             # Variable-length
-            buf = Vector{Cstring}(len)
+            buf = @compat Vector{Cstring}(uninitialized, len)
             h5t_set_size(memtype_id, H5T_VARIABLE)
             readarray(obj, memtype_id, buf)
             for i = 1:len
@@ -1373,7 +1373,7 @@ function read(obj::DatasetOrAttribute, ::Type{Array{S}}) where {S<:String}
         else
             # Fixed length
             ilen += 1  # for null terminator
-            buf = Vector{UInt8}(len*ilen)
+            buf = @compat Vector{UInt8}(uninitialized, len*ilen)
             h5t_set_size(memtype_id, ilen)
             readarray(obj, memtype_id, buf)
             src = 1
@@ -1411,16 +1411,16 @@ function read_row(io::IO, membertype, membersize)
     row = Any[]
     for (dtype, dsize) in zip(membertype, membersize)
         if dtype === String
-            push!(row, unpad(read!(io, Vector{UInt8}(dsize)), H5T_STR_NULLPAD))
+            push!(row, unpad(read!(io, @compat Vector{UInt8}(uninitialized, dsize)), H5T_STR_NULLPAD))
         elseif dtype<:HDF5.FixedArray && eltype(dtype)<:HDF5BitsKind
-            val = read!(io, Vector{eltype(dtype)}(prod(size(dtype))))
+            val = read!(io, @compat Vector{eltype(dtype)}(uninitialized, prod(size(dtype))))
             push!(row, reshape(val, size(dtype)))
         elseif dtype<:HDF5BitsKind
             push!(row, read(io, dtype))
         else
             # for other types, just store the raw bytes and let the user
             # decide what to do
-            push!(row, read!(io, Vector{UInt8}(dsize)))
+            push!(row, read!(io, @compat Vector{UInt8}(uninitialized, dsize)))
         end
     end
     return (row...,)
@@ -1433,11 +1433,11 @@ function read(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound{N}}},Type{HDF5C
     local membername; local membertype;
     local memberoffset; local memberfiletype; local membersize;
     try
-        memberfiletype = Vector{HDF5Datatype}(N)
-        membertype = Vector{Type}(N)
-        membername = Vector{String}(N)
-        memberoffset = Vector{UInt64}(N)
-        membersize = Vector{UInt32}(N)
+        memberfiletype = @compat Vector{HDF5Datatype}(uninitialized, N)
+        membertype = @compat Vector{Type}(uninitialized, N)
+        membername = @compat Vector{String}(uninitialized, N)
+        memberoffset = @compat Vector{UInt64}(uninitialized, N)
+        membersize = @compat Vector{UInt32}(uninitialized, N)
         for i = 1:N
             filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
             memberfiletype[i] = filetype
@@ -1456,7 +1456,7 @@ function read(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound{N}}},Type{HDF5C
         h5t_insert(memtype_id, membername[i], memberoffset[i], memberfiletype[i].id) # FIXME strings
     end
     # Read the raw data
-    buf = Vector{UInt8}(length(obj)*sz)
+    buf = @compat Vector{UInt8}(uninitialized, length(obj)*sz)
     h5d_read(obj.id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
 
     # Convert to the appropriate data format using iobuffer
@@ -1484,7 +1484,7 @@ function read(obj::DatasetOrAttribute, ::Type{Array{HDF5Opaque}})
     objtype = datatype(obj)
     try
         len = h5t_get_size(objtype)
-        buf = Vector{UInt8}(prod(sz)*len)
+        buf = @compat Vector{UInt8}(uninitialized, prod(sz)*len)
         tag = h5t_get_tag(objtype.id)
         readarray(obj, objtype.id, buf)
     finally
@@ -1509,7 +1509,7 @@ function read(obj::DatasetOrAttribute, ::Type{HDF5Vlen{T}}) where {T<:Union{HDF5
     sz = size(obj)
     len = prod(sz)
     # Read the data
-    structbuf = Vector{Hvl_t}(len)
+    structbuf = @compat Vector{Hvl_t}(uninitialized, len)
     memtype_id = h5t_vlen_create(hdf5_type_id(T))
     readarray(obj, memtype_id, structbuf)
     h5t_close(memtype_id)
@@ -1753,9 +1753,9 @@ function hyperslab(dset::HDF5Dataset, indices::Union{AbstractRange{Int},Int}...)
             error("Wrong number of indices supplied, supplied length $(length(indices)) but expected $(n_dims).")
         end
         dsel_id = h5s_copy(dspace.id)
-        dsel_start  = Vector{Hsize}(n_dims)
-        dsel_stride = Vector{Hsize}(n_dims)
-        dsel_count  = Vector{Hsize}(n_dims)
+        dsel_start  = @compat Vector{Hsize}(uninitialized, n_dims)
+        dsel_stride = @compat Vector{Hsize}(uninitialized, n_dims)
+        dsel_count  = @compat Vector{Hsize}(uninitialized, n_dims)
         for k = 1:n_dims
             index = indices[n_dims-k+1]
             if isa(index, Integer)
@@ -2183,19 +2183,19 @@ end
 
 function h5a_get_name(attr_id::Hid)
     len = h5a_get_name(attr_id, 0, C_NULL) # order of args differs from {f,i}_get_name
-    buf = Vector{UInt8}(len+1)
+    buf = @compat Vector{UInt8}(uninitialized, len+1)
     h5a_get_name(attr_id, len+1, buf)
     String(buf[1:len])
 end
 function h5f_get_name(loc_id::Hid)
     len = h5f_get_name(loc_id, C_NULL, 0)
-    buf = Vector{UInt8}(len+1)
+    buf = @compat Vector{UInt8}(uninitialized, len+1)
     h5f_get_name(loc_id, buf, len+1)
     String(buf[1:len])
 end
 function h5i_get_name(loc_id::Hid)
     len = h5i_get_name(loc_id, C_NULL, 0)
-    buf = Vector{UInt8}(len+1)
+    buf = @compat Vector{UInt8}(uninitialized, len+1)
     h5i_get_name(loc_id, buf, len+1)
     String(buf[1:len])
 end
@@ -2206,8 +2206,8 @@ function h5l_get_info(link_loc_id::Hid, link_name::String, lapl_id::Hid)
 end
 function h5s_get_simple_extent_dims(space_id::Hid)
     n = h5s_get_simple_extent_ndims(space_id)
-    dims = Vector{Hsize}(n)
-    maxdims = Vector{Hsize}(n)
+    dims = @compat Vector{Hsize}(uninitialized, n)
+    maxdims = @compat Vector{Hsize}(uninitialized, n)
     h5s_get_simple_extent_dims(space_id, dims, maxdims)
     return tuple(reverse!(dims)...), tuple(reverse!(maxdims)...)
 end
@@ -2237,7 +2237,7 @@ function h5f_get_obj_ids(file_id::Hid, types::Integer)
     sz = ccall((:H5Fget_obj_count, libhdf5), Int, (Hid, UInt32),
                file_id, types)
     sz >= 0 || error("error getting object count")
-    hids = Vector{Hid}(sz)
+    hids = @compat Vector{Hid}(uninitialized, sz)
     sz2 = ccall((:H5Fget_obj_ids, libhdf5), Int, (Hid, UInt32, UInt, Ptr{Hid}),
           file_id, types, sz, hids)
     sz2 >= 0 || error("error getting objects")
@@ -2253,7 +2253,7 @@ end
 
 function hdf5array(objtype)
     nd = h5t_get_array_ndims(objtype.id)
-    dims = Vector{Hsize}(nd)
+    dims = @compat Vector{Hsize}(uninitialized, nd)
     h5t_get_array_dims(objtype.id, dims)
     eltyp = HDF5Datatype(h5t_get_super(objtype.id))
     T = hdf5_to_julia_eltype(eltyp)
@@ -2268,7 +2268,7 @@ get_create_properties(g::HDF5File) = HDF5Properties(h5f_get_create_plist(dset.id
 get_create_properties(g::HDF5Attribute) = HDF5Properties(h5a_get_create_plist(dset.id))
 function get_chunk(p::HDF5Properties)
     n = h5p_get_chunk(p, 0, C_NULL)
-    cdims = Vector{Hsize}(n)
+    cdims = @compat Vector{Hsize}(uninitialized, n)
     h5p_get_chunk(p, n, cdims)
     tuple(convert(Array{Int}, reverse(cdims))...)
 end
