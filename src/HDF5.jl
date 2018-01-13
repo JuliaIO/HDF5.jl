@@ -12,6 +12,8 @@ import Base:
     isempty, isvalid, length, names, ndims, next, parent, read,
     setindex!, show, size, sizeof, start, write, isopen
 
+import Compat.Libdl
+
 export
     # types
     HDF5Attribute, HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype,
