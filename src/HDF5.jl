@@ -2030,7 +2030,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5d_close, :H5Dclose, Herr, (Hid,), (:dataset_id,), "Error closing dataset"),
      (:h5d_flush, :H5Dflush, Herr, (Hid,), (:dataset_id,), "Error flushing dataset"),
      (:h5d_oappend, :H5DOappend, Herr, (Hid, Hid, Cuint, Hsize, Hid, Ptr{Void}) , (:dset_id, :dxpl_id, :index, :num_elem, :memtype, :buffer), "error appending"),
-     (:h5do_write_chunk, :H5DOwrite_chunk, Herr, (Hid, Hid, Int32, Ptr{Hsize}, Hsize, Ptr{Void}), (:dset_id, :dxpl_id, :filter_mask, :offset, :bufsize, :buf), "Error writing chunk"),
+     (:h5do_write_chunk, :H5DOwrite_chunk, Herr, (Hid, Hid, Int32, Ptr{Hsize}, Csize_t, Ptr{Void}), (:dset_id, :dxpl_id, :filter_mask, :offset, :bufsize, :buf), "Error writing chunk"),
      (:h5d_refresh, :H5Drefresh, Herr, (Hid,), (:dataset_id,), "Error refreshing dataset"),
      (:h5d_set_extent, :H5Dset_extent, Herr, (Hid, Ptr{Hsize}), (:dataset_id, :new_dims), "Error extending dataset dimensions"),
      (:h5d_vlen_get_buf_size, :H5Dvlen_get_buf_size, Herr, (Hid, Hid, Hid, Ptr{Hsize}), (:dset_id, :type_id, :space_id, :buf), "Error getting vlen buffer size"),
