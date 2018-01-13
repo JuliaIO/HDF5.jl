@@ -1259,7 +1259,7 @@ function read(obj::DatasetOrAttribute, ::Type{Array{T}}) where {T<:HDF5Scalar}
         return T[]
     end
     dims = size(obj)
-    data = Array{T}(dims)
+    data = @compat Array{T}(uninitialized, dims)
     readarray(obj, hdf5_type_id(T), data)
     data
 end
@@ -1271,7 +1271,7 @@ end
 function read(obj::DatasetOrAttribute, ::Type{A}) where {A<:FixedArray}
     T = eltype(A)
     sz = size(A)
-    data = Array{T}(sz)
+    data = @compat Array{T}(uninitialized, sz)
     readarray(obj, hdf5_type_id(T), data)
     data
 end
@@ -1282,7 +1282,7 @@ function read(obj::DatasetOrAttribute, ::Type{Array{A}}) where {A<:FixedArray}
     end
     sz = size(A)
     dims = size(obj)
-    data = Array{T}(sz..., dims...)
+    data = @compat Array{T}(uninitialized, sz..., dims...)
     nd = length(sz)
     hsz = Hsize[convert(Hsize,sz[nd-i+1]) for i = 1:nd]
     memtype_id = h5t_array_create(hdf5_type_id(T), convert(Cuint, length(sz)), hsz)
@@ -1291,7 +1291,7 @@ function read(obj::DatasetOrAttribute, ::Type{Array{A}}) where {A<:FixedArray}
     finally
         h5t_close(memtype_id)
     end
-    ret = Array{Array{T}}(dims)
+    ret = @compat Array{Array{T}}(uninitialized, dims)
     # Because of garbage-collection concerns, it's best to copy the data
     L = prod(sz)
     for i = 1:prod(dims)
@@ -1361,7 +1361,7 @@ function read(obj::DatasetOrAttribute, ::Type{Array{S}}) where {S<:String}
         return S[]
     else
         dspace = dataspace(obj)
-        ret = Array{S}(sz)
+        ret = @compat Array{S}(uninitialized, sz)
         if isvar
             # Variable-length
             buf = @compat Vector{Cstring}(uninitialized, len)
@@ -1490,7 +1490,7 @@ function read(obj::DatasetOrAttribute, ::Type{Array{HDF5Opaque}})
     finally
         close(objtype)
     end
-    data = Array{Array{UInt8}}(sz)
+    data = @compat Array{Array{UInt8}}(uninitialized, sz)
     for i = 1:prod(sz)
         data[i] = buf[(i-1)*len+1:i*len]
     end
@@ -1514,7 +1514,7 @@ function read(obj::DatasetOrAttribute, ::Type{HDF5Vlen{T}}) where {T<:Union{HDF5
     readarray(obj, memtype_id, structbuf)
     h5t_close(memtype_id)
     # Unpack the data
-    data = Array{atype(T)}(sz)
+    data = @compat Array{atype(T)}(uninitialized, sz)
     for i = 1:len
         h = structbuf[i]
         data[i] = p2a(convert(Ptr{T}, h.p), Int(h.len))
@@ -1678,7 +1678,7 @@ function _getindex(dset::HDF5Dataset, T::Type, indices::Union{AbstractRange{Int}
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
     dsel_id = hyperslab(dset, indices...)
-    ret = Array{T}(map(length, indices))
+    ret = @compat Array{T}(uninitialized, map(length, indices))
     memtype = datatype(ret)
     memspace = dataspace(ret)
     try
