@@ -15,7 +15,7 @@ import Base:
 export
     # types
     HDF5Attribute, HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype,
-    HDF5Dataspace, HDF5Object, HDF5Properties, HDF5Vlen,
+    HDF5Dataspace, HDF5Object, HDF5Properties, HDF5Vlen, HDF5ChunkStorage,
     # functions
     a_create, a_delete, a_open, a_read, a_write, attrs,
     d_create, d_create_external, d_open, d_read, d_write,
@@ -34,6 +34,12 @@ if isfile(depsfile)
     include(depsfile)
 else
     error("HDF5 not properly installed. Please run Pkg.build(\"HDF5\")")
+end
+
+let d = dirname(libhdf5), b = basename(libhdf5)
+    base,ext = split(b, ".", limit=2)
+    hl = joinpath(d, "libhdf5_hl.$ext")
+    global const libhdf5_hl = isfile(hl) ? hl : ""
 end
 
 function init_libhdf5()
@@ -1794,6 +1800,20 @@ function d_create_external(parent::Union{HDF5File, HDF5Group}, name::String, fil
 end
 d_create_external(parent::Union{HDF5File, HDF5Group}, name::String, filepath::String, t::Type, sz::Dims) = d_create_external(parent, name, filepath, t, sz, 0)
 
+function do_write_chunk(dataset::HDF5Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
+    checkvalid(dataset)
+    offs = collect(Hsize, reverse(offset))-1
+    h5do_write_chunk(dataset, H5P_DEFAULT, UInt32(filter_mask), offs, length(chunk_bytes), chunk_bytes)
+end
+
+struct HDF5ChunkStorage
+    dataset::HDF5Dataset
+end
+
+function setindex!(chunk_storage::HDF5ChunkStorage, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer...)
+    do_write_chunk(chunk_storage.dataset, Hsize.(index), v[2], UInt32(v[1]))
+end
+
 # end of high-level interface
 
 
@@ -2003,6 +2023,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5d_close, :H5Dclose, Herr, (Hid,), (:dataset_id,), "Error closing dataset"),
      (:h5d_flush, :H5Dflush, Herr, (Hid,), (:dataset_id,), "Error flushing dataset"),
      (:h5d_oappend, :H5DOappend, Herr, (Hid, Hid, Cuint, Hsize, Hid, Ptr{Void}) , (:dset_id, :dxpl_id, :index, :num_elem, :memtype, :buffer), "error appending"),
+     (:h5do_write_chunk, :H5DOwrite_chunk, Herr, (Hid, Hid, Int32, Ptr{Hsize}, Csize_t, Ptr{Void}), (:dset_id, :dxpl_id, :filter_mask, :offset, :bufsize, :buf), "Error writing chunk"),
      (:h5d_refresh, :H5Drefresh, Herr, (Hid,), (:dataset_id,), "Error refreshing dataset"),
      (:h5d_set_extent, :H5Dset_extent, Herr, (Hid, Ptr{Hsize}), (:dataset_id, :new_dims), "Error extending dataset dimensions"),
      (:h5d_vlen_get_buf_size, :H5Dvlen_get_buf_size, Herr, (Hid, Hid, Hid, Ptr{Hsize}), (:dset_id, :type_id, :space_id, :buf), "Error getting vlen buffer size"),
@@ -2040,7 +2061,12 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
     )
 
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
-    ex_ccall = ccallexpr(libhdf5, h5name, outtype, argtypes, argsyms)
+    library = startswith(string(h5name), "H5DO") ? libhdf5_hl : libhdf5
+    if library == ""
+        # If the high-level library is not installed, then skip these functions
+        continue
+    end
+    ex_ccall = ccallexpr(library, h5name, outtype, argtypes, argsyms)
     ex_body = quote
         status = $ex_ccall
         if status < 0
