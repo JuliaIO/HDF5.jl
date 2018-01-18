@@ -15,9 +15,9 @@ struct H5Z_class2_t
     encoder_present::Cuint # Does this filter have an encoder?
     decoder_present::Cuint # Does this filter have a decoder?
     name::Ptr{UInt8} # Comment for debugging
-    can_apply::Ptr{Nothing} # The "can apply" callback
-    set_local::Ptr{Nothing} # The "set local" callback
-    filter::Ptr{Nothing} # The filter callback
+    can_apply::Ptr{Cvoid} # The "can apply" callback
+    set_local::Ptr{Cvoid} # The "set local" callback
+    filter::Ptr{Cvoid} # The filter callback
 end
 
 const FILTER_BLOSC_VERSION = 2
@@ -75,7 +75,7 @@ end
 
 function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
                       cd_values::Ptr{Cuint}, nbytes::Csize_t,
-                      buf_size::Ptr{Csize_t}, buf::Ptr{Ptr{Nothing}})
+                      buf_size::Ptr{Csize_t}, buf::Ptr{Ptr{Cvoid}})
     typesize = unsafe_load(cd_values, 3) # The datatype size
     outbuf_size = unsafe_load(cd_values, 4)
     # Compression level:
@@ -122,7 +122,7 @@ function register_blosc()
     c_blosc_set_local = cfunction(blosc_set_local, Herr, Tuple{Hid,Hid,Hid})
     c_blosc_filter = cfunction(blosc_filter, Csize_t,
                                Tuple{Cuint, Csize_t, Ptr{Cuint}, Csize_t,
-                                     Ptr{Csize_t}, Ptr{Ptr{Nothing}}})
+                                     Ptr{Csize_t}, Ptr{Ptr{Cvoid}}})
     if ccall((:H5Zregister, libhdf5), Herr, (Ref{H5Z_class2_t},),
              H5Z_class2_t(H5Z_CLASS_T_VERS,
                           FILTER_BLOSC,
