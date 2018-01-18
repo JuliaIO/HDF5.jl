@@ -6,13 +6,12 @@ using Compat
 
 using Base: unsafe_convert
 using Compat: StringVector
+using Compat.Libdl
 
 import Base:
     close, convert, done, eltype, endof, flush, getindex, ==,
     isempty, isvalid, length, names, ndims, next, parent, read,
     setindex!, show, size, sizeof, start, write, isopen
-
-using Compat.Libdl
 
 export
     # types
@@ -490,7 +489,7 @@ HDF5Vlen(A::Array{Array{T,N}}) where {T<:HDF5Scalar,N} = HDF5Vlen{T}(A)
 # For VLEN
 struct Hvl_t
     len::Csize_t
-    p::Ptr{Nothing}
+    p::Ptr{Cvoid}
 end
 const HVL_SIZE = sizeof(Hvl_t) # and determine the size of the buffer needed
 function vlenpack(v::HDF5Vlen{T}) where {T<:Union{HDF5Scalar,CharType}}
