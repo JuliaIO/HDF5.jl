@@ -854,7 +854,7 @@ getindex(x::HDF5Attributes, name::String) = a_open(x.parent, name)
 
 # Path manipulation
 function split1(path::String)
-    off = search(path, '/')
+    off = findfirst(equalto('/'), path)
     if off == 0
         return path, nothing
     else
@@ -1310,7 +1310,7 @@ end
 # Clean up string buffer according to padding mode
 function unpad(s::String, pad::Integer)
     if pad == H5T_STR_NULLTERM
-        v = search(s, '\0')
+        v = findfirst(equalto('\0'), s)
         v == 0 ? s : s[1:v-1]
     elseif pad == H5T_STR_NULLPAD
         rstrip(s, '\0')
