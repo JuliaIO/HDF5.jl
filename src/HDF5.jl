@@ -408,7 +408,7 @@ mutable struct HDF5Dataspace
 
     function HDF5Dataspace(id)
         dspace = new(id)
-        finalizer(close, dspace)
+        @compat finalizer(close, dspace)
         dspace
     end
 end
