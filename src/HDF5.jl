@@ -321,7 +321,7 @@ mutable struct HDF5File <: DataFile
     function HDF5File(id, filename, toclose::Bool=true)
         f = new(id, filename)
         if toclose
-            finalizer(close, f)
+            @compat finalizer(close, f)
         end
         f
     end
@@ -342,7 +342,7 @@ mutable struct HDF5Group <: DataFile
 
     function HDF5Group(id, file)
         g = new(id, file)
-        finalizer(close, g)
+        @compat finalizer(close, g)
         g
     end
 end
@@ -361,7 +361,7 @@ mutable struct HDF5Dataset
 
     function HDF5Dataset(id, file)
         dset = new(id, file)
-        finalizer(close, dset)
+        @compat finalizer(close, dset)
         dset
     end
 end
@@ -382,14 +382,14 @@ mutable struct HDF5Datatype
     function HDF5Datatype(id, toclose::Bool=true)
         nt = new(id, toclose)
         if toclose
-            finalizer(close, nt)
+            @compat finalizer(close, nt)
         end
         nt
     end
     function HDF5Datatype(id, file::HDF5File, toclose::Bool=true)
         nt = new(id, toclose, file)
         if toclose
-            finalizer(close, nt)
+            @compat finalizer(close, nt)
         end
         nt
     end
@@ -420,7 +420,7 @@ mutable struct HDF5Attribute
 
     function HDF5Attribute(id, file)
         dset = new(id, file)
-        finalizer(close, dset)
+        @compat finalizer(close, dset)
         dset
     end
 end
@@ -439,7 +439,7 @@ mutable struct HDF5Properties
     function HDF5Properties(id, toclose::Bool=true)
         p = new(id, toclose)
         if toclose
-            finalizer(close, p)
+            @compat finalizer(close, p)
         end
         p
     end
