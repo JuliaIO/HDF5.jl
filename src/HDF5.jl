@@ -152,7 +152,7 @@ const H5O_TYPE_GROUP   = 0
 const H5O_TYPE_DATASET = 1
 const H5O_TYPE_NAMED_DATATYPE = 2
 # Property constants
-const H5P_DEFAULT          = 0
+const H5P_DEFAULT          = convert(Hid, 0)
 const H5P_OBJECT_CREATE    = read_const(libversion >= v"1.8.14" ? :H5P_CLS_OBJECT_CREATE_ID_g    : :H5P_CLS_OBJECT_CREATE_g)
 const H5P_FILE_CREATE      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_FILE_CREATE_ID_g      : :H5P_CLS_FILE_CREATE_g)
 const H5P_FILE_ACCESS      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_FILE_ACCESS_ID_g      : :H5P_CLS_FILE_ACCESS_g)
@@ -2366,10 +2366,10 @@ function hdf5array(objtype)
 end
 
 ### Property manipulation ###
-get_create_properties(dset::HDF5Dataset) = HDF5Properties(h5d_get_create_plist(dset.id))
-get_create_properties(g::HDF5Group) = HDF5Properties(h5g_get_create_plist(dset.id),class=:gcpl)
-get_create_properties(g::HDF5File) = HDF5Properties(h5f_get_create_plist(dset.id))
-get_create_properties(g::HDF5Attribute) = HDF5Properties(h5a_get_create_plist(dset.id))
+get_create_properties(d::HDF5Dataset)   = HDF5Properties(h5d_get_create_plist(d.id),true,H5P_DATASET_CREATE)
+get_create_properties(g::HDF5Group)     = HDF5Properties(h5g_get_create_plist(g.id),true,H5P_GROUP_CREATE)
+get_create_properties(f::HDF5File)      = HDF5Properties(h5f_get_create_plist(f.id),true,H5P_FILE_CREATE)
+get_create_properties(a::HDF5Attribute) = HDF5Properties(h5a_get_create_plist(a.id),true,H5P_ATTRIBUTE_CREATE)
 function get_chunk(p::HDF5Properties)
     n = h5p_get_chunk(p, 0, C_NULL)
     cdims = Vector{Hsize}(undef,n)
