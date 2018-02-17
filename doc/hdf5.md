@@ -36,6 +36,9 @@ The mode can be any one of the following:
     <td>"r+"</td> <td>read-write, preserving any existing contents</td>
   </tr>
   <tr>
+    <td>"cw"</td> <td>read-write, create file if not existing, preserve existing contents</td>
+  </tr>
+  <tr>
     <td>"w"</td> <td>read-write, destroying any existing contents (if any)</td>
   </tr>
 </table>
@@ -95,6 +98,39 @@ Datasets can be created with either
 g["mydataset"] = rand(3,5)
 write(g, "mydataset", rand(3,5))
 ```
+
+Passing parameters
+------------------------
+
+It is often required to pass parameters to specific routines, which are collected 
+in so-called property lists in HDF5. There are different property lists for
+different tasks, e.g. for the access/creation of files, datasets, groups.
+In this high level framework multiple parameters can be simply applied by
+appending them at the end of function calls as a list of key/value pairs.
+
+```julia
+g["A"] = A  # basic
+g["A", "chunk", (5,5)] = A # add chunks
+
+B=h5read(fn,"mygroup/B", # two parameters
+  "fapl_mpio", (ccomm,cinfo), # if parameter requires multiple args use tuples
+  "dxpl_mpio", HDF5.H5FD_MPIO_COLLECTIVE ) 
+```
+
+This will automatically create the correct property lists, add the properties,
+and apply the property list while reading/writing the data.
+The naming of the properties generally follows that of HDF5, i.e. the key
+`fapl_mpio` returns the HDF5 functions `h5pget/set_fapl_mpio` and their
+corresponding property list type `H5P_FILE_ACCESS`.
+The complete list if routines and their interfaces is available at the
+[H5P: Property List Interface](https://support.hdfgroup.org/HDF5/doc/RM/RM_H5P.html)
+documentation. Note that not all properties are available. When searching
+for a property check whether the corresponding `h5pget/set` functions are
+available.
+
+
+Chunking and compression
+------------------------
 
 You can also optionally "chunk" and/or compress your data. For example,
 

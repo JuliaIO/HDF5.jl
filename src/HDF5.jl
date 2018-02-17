@@ -649,7 +649,7 @@ end
 Open or create an HDF5 file where `mode` is one of:
  - "r"  read only
  - "r+" read and write
- - "cw" read and write, create file if not existing, to not truncate
+ - "cw" read and write, create file if not existing, do not truncate
  - "w"  read and write, create a new file (destroys any existing contents)
 
 Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for "w" and
@@ -2290,18 +2290,14 @@ function h5l_get_info(link_loc_id::Hid, link_name::String, lapl_id::Hid)
     info[]
 end
 
-"""
-Set MPIO properties in HDF5.
-Note: HDF5 creates a COPY of the comm and info objects.
-"""
+# Set MPIO properties in HDF5.
+# Note: HDF5 creates a COPY of the comm and info objects.
 function h5p_set_fapl_mpio(fapl_id,comm,info)
     h5comm = h5_mpihandle(comm)
     h5info = h5_mpihandle(info)
     sizeof(comm) == 4 ? h5p_set_fapl_mpio32(fapl_id, comm, info) : h5p_set_fapl_mpio64(fapl_id, comm, info)
 end
-"""
-Retrieves the copies of the comm and info MPIO objects from the HDF5 property list. 
-"""
+# Retrieves the copies of the comm and info MPIO objects from the HDF5 property list. 
 function h5p_get_fapl_mpio(fapl_id,h)
     comm, info = Ref{h}(), Ref{h}()
     h == Hmpih32 ? h5p_get_fapl_mpio32(fapl_id, comm, info) : h5p_get_fapl_mpio64(fapl_id, comm, info)
@@ -2425,18 +2421,26 @@ end
 end
 
 # Map property names to function and attribute symbol
+# Property names should follow the naming introduced by HDF5, i.e.
+# keyname => (h5p_get_keyname, h5p_set_keyname, id )
 const hdf5_prop_get_set = Dict(
-    "blosc"         => (nothing, h5p_set_blosc,                   H5P_DATASET_CREATE),
-    "chunk"         => (get_chunk, set_chunk,                     H5P_DATASET_CREATE),
-    "compress"      => (nothing, h5p_set_deflate,                 H5P_DATASET_CREATE),
-    "deflate"       => (nothing, h5p_set_deflate,                 H5P_DATASET_CREATE),
-    "fclose_degree" => (get_fclose_degree, h5p_set_fclose_degree, H5P_FILE_ACCESS),
-    "layout"        => (h5p_get_layout, h5p_set_layout,           H5P_DATASET_CREATE),
-    "libver_bounds" => (get_libver_bounds, h5p_set_libver_bounds, H5P_FILE_ACCESS),
-    "shuffle"       => (nothing, h5p_set_shuffle,                 H5P_DATASET_CREATE),
-    "userblock"     => (get_userblock, h5p_set_userblock,         H5P_FILE_CREATE),
-    "fapl_mpio"     => (h5p_get_fapl_mpio, h5p_set_fapl_mpio,     H5P_FILE_ACCESS),
-    "dxpl_mpio"     => (h5p_get_dxpl_mpio, h5p_set_dxpl_mpio,     H5P_DATASET_XFER),
+    "blosc"         => (nothing, h5p_set_blosc,                       H5P_DATASET_CREATE),
+    "char_encoding" => (nothing, h5p_set_char_encoding,               H5P_LINK_CREATE),
+    "chunk"         => (get_chunk, set_chunk,                         H5P_DATASET_CREATE),
+    "compress"      => (nothing, h5p_set_deflate,                     H5P_DATASET_CREATE),
+    "create_intermediate_group" => (nothing, h5p_set_create_intermediate_group, H5P_LINK_CREATE),
+    "deflate"       => (nothing, h5p_set_deflate,                     H5P_DATASET_CREATE),
+    "driver"        => (h5p_get_driver, nothing,                      H5P_FILE_ACCESS),
+    "driver_info"   => (h5p_get_driver_info, nothing,                 H5P_FILE_ACCESS),
+    "external"      => (nothing, h5p_set_external,                    H5P_DATASET_CREATE),
+    "fclose_degree" => (get_fclose_degree, h5p_set_fclose_degree,     H5P_FILE_ACCESS),
+    "layout"        => (h5p_get_layout, h5p_set_layout,               H5P_DATASET_CREATE),
+    "libver_bounds" => (get_libver_bounds, h5p_set_libver_bounds,     H5P_FILE_ACCESS),
+    "local_heap_size_hint" => (nothing, h5p_set_local_heap_size_hint, H5P_GROUP_CREATE),
+    "shuffle"       => (nothing, h5p_set_shuffle,                     H5P_DATASET_CREATE),
+    "userblock"     => (get_userblock, h5p_set_userblock,             H5P_FILE_CREATE),
+    "fapl_mpio"     => (h5p_get_fapl_mpio, h5p_set_fapl_mpio,         H5P_FILE_ACCESS),
+    "dxpl_mpio"     => (h5p_get_dxpl_mpio, h5p_set_dxpl_mpio,         H5P_DATASET_XFER),
 )
 
 # properties that require chunks in order to work (e.g. any filter)
