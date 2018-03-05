@@ -2,10 +2,15 @@ __precompile__()
 
 module HDF5
 
-using Compat
+using Compat: 
+    AbstractRange, @compat, equalto, StringVector, findfirst
 
+<<<<<<< HEAD
 using Base: unsafe_convert, StringVector
 using Compat: findfirst
+=======
+using Base: unsafe_convert
+>>>>>>> Bump Compat version and explicitly specify all used symbols. Remove readp and add dummy variable to read instead, to avoid conflicts between read with parameters and read for multiple datasets.
 
 import Base:
     close, convert, done, eltype, endof, flush, getindex, ==,
@@ -26,7 +31,7 @@ export
     h5open, h5read, h5rewrite, h5writeattr, h5readattr, h5write,
     has, iscontiguous, ishdf5, ismmappable, name,
     o_copy, o_delete, o_open, p_create,
-    readmmap, @read, readp, @write, root, set_dims!, t_create, t_commit
+    readmmap, @read, @write, root, set_dims!, t_create, t_commit
 
 include("datafile.jl")
 
@@ -1283,14 +1288,9 @@ for (fsym, osym, ptype) in
     end
 end
 
-# Datafile.jl defines generic read for multiple datasets, so we cannot add properties here. Define readp as read with props.
-function read(parent::Union{HDF5File, HDF5Group}, name::String)
-    obj = parent[name]
-    val = read(obj)
-    close(obj)
-    val
-end
-function readp(parent::Union{HDF5File, HDF5Group}, name::String, pv...)
+# Datafile.jl defines generic read for multiple datasets, so we cannot simply add properties here.
+# Add `withargs` as unused dummy argument, to provide a distinct interface and enable arguments.
+function read(parent::Union{HDF5File, HDF5Group}, name::String, withargs::Bool=true, pv...)
     obj = parent[name, pv...]
     val = read(obj)
     close(obj)
