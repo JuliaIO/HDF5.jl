@@ -394,4 +394,14 @@ undefstrarr = similar(Vector(1:3), String) # strs = String[#undef, #undef, #unde
 
 close(f)
 rm(fn)
+
+# issue 463
+fn = tempname()
+s = SharedArray{UInt16}(3,4,5)
+s[1:end] = 1:length(s)
+h5write(fn,"/data",s)
+s2 = h5read(fn,"/data")
+@test s==s2
+rm(fn)
+
 end # testset null and undefined
