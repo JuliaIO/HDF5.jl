@@ -400,9 +400,9 @@ fn = tempname()
 f = h5open(fn, "w")
 s = SharedArray{UInt16}(3,4,5)
 s[1:end] = 1:length(s)
-h5write(fn,"/data",s)
-s2 = h5read(fn,"/data")
-@test s==s2
+write(fn,"/data",s)
+s2 = read(f,"/data")
+@test s == s2
 close(f)
 rm(fn)
 
