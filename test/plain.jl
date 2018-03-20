@@ -356,6 +356,7 @@ end
 
 # Test the h5read/write interface with a filename as a first argument, when
 # the file does not exist
+rm(fn)
 h5write(fn, "newgroup/W", W)
 Wr = h5read(fn, "newgroup/W")
 @test Wr == W
@@ -376,6 +377,17 @@ end
   vec(f["dataset"][:,:])
 end == collect(1:16)
 
+# issue 463
+fn = tempname()
+f = h5open(fn, "w")
+s = SharedArray{UInt16}(3,4,5)
+s[1:end] = 1:length(s)
+write(f,"/data",s)
+s2 = read(f,"/data")
+@test s == s2
+close(f)
+rm(fn)
+
 end # testset plain
 
 # test strings with null and undefined references
@@ -392,17 +404,6 @@ f = h5open(fn, "w")
 undefstrarr = similar(Vector(1:3), String) # strs = String[#undef, #undef, #undef]
 @test_throws UndefRefError write(f, "undef", undefstrarr)
 
-close(f)
-rm(fn)
-
-# issue 463
-fn = tempname()
-f = h5open(fn, "w")
-s = SharedArray{UInt16}(3,4,5)
-s[1:end] = 1:length(s)
-write(f,"/data",s)
-s2 = read(f,"/data")
-@test s == s2
 close(f)
 rm(fn)
 
