@@ -35,7 +35,7 @@ function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
               Csize_t, Ptr{UInt8}, Ptr{Cuint}),
              dcpl, FILTER_BLOSC, blosc_flags_, blosc_nelements_, blosc_values,
              0, C_NULL, C_NULL) < 0
-        return convert(Herr, -1)
+        return Herr(-1)
     end
     flags = blosc_flags_[1]
     nelements = max(blosc_nelements_[1], 4)
@@ -46,10 +46,10 @@ function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
                   dcpl, 32, blosc_chunkdims);
     chunksize = prod(resize!(blosc_chunkdims, ndims))
     if ndims < 0 || ndims > 32 || chunksize > Blosc.MAX_BUFFERSIZE
-        return convert(Herr, -1)
+        return Herr(-1)
     end
     htypesize = ccall((:H5Tget_size,libhdf5), Csize_t, (Hid,), htype)
-    htypesize == 0 && returnconvert(Herr, -1)
+    htypesize == 0 && return Herr(-1)
     if ccall((:H5Tget_class,libhdf5),H5T_class_t,(Hid,),htype) == H5T_ARRAY
         hsuper = ccall((:H5Tget_super,libhdf5), Hid, (Hid,), htype)
         basetypesize = ccall((:H5Tget_size,libhdf5),Csize_t,(Hid,), hsuper)
@@ -68,9 +68,9 @@ function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
     if ccall((:H5Pmodify_filter,libhdf5), Herr, 
              (Hid, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}),
              dcpl, FILTER_BLOSC, flags, nelements, blosc_values) < 0
-        return convert(Herr, -1)
+        return Herr(-1)
         end
-    return convert(Herr, 1)
+    return Herr(1)
 end
 
 function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
@@ -79,7 +79,7 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
     typesize = unsafe_load(cd_values, 3) # The datatype size
     outbuf_size = unsafe_load(cd_values, 4)
     # Compression level:
-    clevel = cd_nelmts >= 5 ? unsafe_load(cd_values, 5) : convert(Cuint, 5)
+    clevel = cd_nelmts >= 5 ? unsafe_load(cd_values, 5) : Cuint(5)
     # Do shuffle:
     doshuffle = cd_nelmts >= 6 ? unsafe_load(cd_values, 6) != 0 : true
     # to do: set compressor based on compcode in unsafe_load(cd_values, 7)?
@@ -90,10 +90,10 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
         # as optional, so HDF5 marks the chunk as uncompressed and proceeds.
         outbuf_size = unsafe_load(buf_size)
         outbuf = Libc.malloc(outbuf_size)
-        outbuf == C_NULL && return convert(Csize_t, 0)
+        outbuf == C_NULL && return Csize_t(0)
         status = Blosc.blosc_compress(clevel, doshuffle, typesize, nbytes,
                                       unsafe_load(buf), outbuf, nbytes)
-        status < 0 && (Libc.free(outbuf); return convert(Csize_t, 0))
+        status < 0 && (Libc.free(outbuf); return Csize_t(0))
     else # decompressing
         # Extract the exact outbuf_size from the buffer header.
         #
@@ -103,18 +103,18 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
         # size.
         outbuf_size, cbytes, blocksize = Blosc.cbuffer_sizes(unsafe_load(buf))
         outbuf = Libc.malloc(outbuf_size)
-        outbuf == C_NULL && return convert(Csize_t, 0)
+        outbuf == C_NULL && return Csize_t(0)
         status = Blosc.blosc_decompress(unsafe_load(buf), outbuf, outbuf_size)
-        status <= 0 && (Libc.free(outbuf); return convert(Csize_t, 0))
+        status <= 0 && (Libc.free(outbuf); return Csize_t(0))
     end
 
     if status != 0
         Libc.free(unsafe_load(buf))
         unsafe_store!(buf, outbuf)
         unsafe_store!(buf_size, outbuf_size)
-        return convert(Csize_t, status) # size of compressed/decompressed data
+        return Csize_t(status) # size of compressed/decompressed data
     end
-    Libc.free(outbuf); return convert(Csize_t, 0)
+    Libc.free(outbuf); return Csize_t(0)
 end
 
 # register the Blosc filter function with HDF5
