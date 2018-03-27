@@ -4,8 +4,8 @@ module HDF5
 
 using Compat
 
-using Base: unsafe_convert
-using Compat: StringVector, findfirst
+using Base: unsafe_convert, StringVector
+using Compat: findfirst
 
 import Base:
     close, convert, done, eltype, endof, flush, getindex, ==,
