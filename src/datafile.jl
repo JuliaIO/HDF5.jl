@@ -9,7 +9,7 @@
 # Types inheriting from DataFile should have names, read, and write
 # methods
 
-@compat abstract type DataFile end
+abstract type DataFile end
 
 import Base: read, write
 
@@ -40,7 +40,7 @@ read(f::Base.Callable, parent::DataFile, name::String...) =
 # Read every variable in the file
 function read(f::DataFile)
     vars = names(f)
-    vals = Vector{Any}(length(vars))
+    vals = Vector{Any}(undef,length(vars))
     for i = 1:length(vars)
         vals[i] = read(f, vars[i])
     end

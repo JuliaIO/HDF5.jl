@@ -1,11 +1,12 @@
 using HDF5
-using Base.Test
+using Compat.Test
+import Compat.GC
 
 macro gcvalid(args...)
     Expr(:block, quote
-        gc_enable(true)
-        gc()
-        gc_enable(false)
+        GC.enable(true)
+        GC.gc()
+        GC.enable(false)
     end,
     [:(@test HDF5.isvalid($(esc(x)))) for x in args]...)
 end
@@ -23,7 +24,7 @@ end
 
 @testset "gc" begin
 
-gc_enable(false)
+GC.enable(false)
 fn = tempname()
 for i = 1:10
     file = h5open(fn, "w")
@@ -62,7 +63,7 @@ for i = 1:10
     @gcvalid dt ds d g a
     close(file)
 end
-gc_enable(true)
+GC.enable(true)
 rm(fn)
 
 end # testset gc

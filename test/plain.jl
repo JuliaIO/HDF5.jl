@@ -1,6 +1,6 @@
 using HDF5
-using Base.Test
 using Compat
+using Compat.Test
 
 @testset "plain" begin
 

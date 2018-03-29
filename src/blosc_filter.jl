@@ -15,19 +15,19 @@ struct H5Z_class2_t
     encoder_present::Cuint # Does this filter have an encoder?
     decoder_present::Cuint # Does this filter have a decoder?
     name::Ptr{UInt8} # Comment for debugging
-    can_apply::Ptr{Void} # The "can apply" callback
-    set_local::Ptr{Void} # The "set local" callback
-    filter::Ptr{Void} # The filter callback
+    can_apply::Ptr{Cvoid} # The "can apply" callback
+    set_local::Ptr{Cvoid} # The "set local" callback
+    filter::Ptr{Cvoid} # The filter callback
 end
 
 const FILTER_BLOSC_VERSION = 2
 const FILTER_BLOSC = 32001 # Filter ID registered with the HDF Group for Blosc
 const blosc_name = "blosc"
 
-const blosc_flags_ = Vector{Cuint}(1)
-const blosc_nelements_ = Vector{Csize_t}(1)
-const blosc_values = Vector{Cuint}(8)
-const blosc_chunkdims = Vector{Hsize}(32)
+const blosc_flags_ = Vector{Cuint}(undef,1)
+const blosc_nelements_ = Vector{Csize_t}(undef,1)
+const blosc_values = Vector{Cuint}(undef,8)
+const blosc_chunkdims = Vector{Hsize}(undef,32)
 function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
     blosc_nelements_[1] = 8
     if ccall((:H5Pget_filter_by_id2,libhdf5), Herr,
@@ -75,7 +75,7 @@ end
 
 function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
                       cd_values::Ptr{Cuint}, nbytes::Csize_t,
-                      buf_size::Ptr{Csize_t}, buf::Ptr{Ptr{Void}})
+                      buf_size::Ptr{Csize_t}, buf::Ptr{Ptr{Cvoid}})
     typesize = unsafe_load(cd_values, 3) # The datatype size
     outbuf_size = unsafe_load(cd_values, 4)
     # Compression level:
@@ -122,7 +122,7 @@ function register_blosc()
     c_blosc_set_local = cfunction(blosc_set_local, Herr, Tuple{Hid,Hid,Hid})
     c_blosc_filter = cfunction(blosc_filter, Csize_t,
                                Tuple{Cuint, Csize_t, Ptr{Cuint}, Csize_t,
-                                     Ptr{Csize_t}, Ptr{Ptr{Void}}})
+                                     Ptr{Csize_t}, Ptr{Ptr{Cvoid}}})
     if ccall((:H5Zregister, libhdf5), Herr, (Ref{H5Z_class2_t},),
              H5Z_class2_t(H5Z_CLASS_T_VERS,
                           FILTER_BLOSC,
