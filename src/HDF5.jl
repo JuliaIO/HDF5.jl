@@ -1616,7 +1616,7 @@ for (privatesym, fsym, ptype) in
         end
         # Scalar types
         ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}, plists...) where {T<:ScalarOrString} =
-            ($privatesym)(parent, name, isa(data,AbstractArray) ? collect(data) : data, plists...)
+            ($privatesym)(parent, name, data, plists...)
         # VLEN types
         ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T}, plists...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privatesym)(parent, name, data, plists...)
@@ -1639,7 +1639,7 @@ for (privatesym, fsym, ptype, crsym) in
         end
         # Scalar types
         ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}, plists...) where {T<:ScalarOrString} =
-            ($privatesym)(parent, name, isa(data,AbstractArray) ? collect(data) : data, plists...)
+            ($privatesym)(parent, name, data, plists...)
         # VLEN types
         ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T}, plists...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privatesym)(parent, name, data, plists...)
@@ -1666,10 +1666,9 @@ function write(obj::DatasetOrAttribute, data::HDF5Vlen{T}) where {T<:Union{HDF5S
 end
 # For plain files and groups, let "write(obj, name, val)" mean "d_write"
 write(parent::Union{HDF5File, HDF5Group}, name::String, data::Union{T, AbstractArray{T}}, plists...) where {T<:ScalarOrString} =
-    d_write(parent, name, isa(data,AbstractArray) ? collect(data) : data, plists...)
+    d_write(parent, name, data, plists...)
 # For datasets, "write(dset, name, val)" means "a_write"
-write(parent::HDF5Dataset, name::String, data::Union{T, AbstractArray{T}}, plists...) where {T<:ScalarOrString} =
-    a_write(parent, name, data, plists...)
+write(parent::HDF5Dataset, name::String, data::Union{T, AbstractArray{T}}, plists...) where {T<:ScalarOrString} = a_write(parent, name, data, plists...)
 
 # Reading arrays using getindex: data = dset[:,:,10]
 function getindex(dset::HDF5Dataset, indices::Union{AbstractRange{Int},Int}...)
@@ -1931,16 +1930,12 @@ function h5a_write(attr_id::Hid, memtype_id::Hid, v::HDF5Vlen{T}) where {T<:Unio
     vp = vlenpack(v)
     h5a_write(attr_id, memtype_id, vp)
 end
-h5a_create(loc_id::Hid, name::String, type_id::Hid, space_id::Hid) =
-    h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P_DEFAULT)
+h5a_create(loc_id::Hid, name::String, type_id::Hid, space_id::Hid) = h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P_DEFAULT)
 h5a_open(obj_id::Hid, name::String) = h5a_open(obj_id, name, H5P_DEFAULT)
-h5d_create(loc_id::Hid, name::String, type_id::Hid, space_id::Hid) =
-    h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
+h5d_create(loc_id::Hid, name::String, type_id::Hid, space_id::Hid) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
 h5d_open(obj_id::Hid, name::String) = h5d_open(obj_id, name, H5P_DEFAULT)
-h5d_read(dataset_id::Hid, memtype_id::Hid, buf::AbstractArray) =
-    h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
-h5d_write(dataset_id::Hid, memtype_id::Hid, buf::AbstractArray) =
-    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
+h5d_read(dataset_id::Hid, memtype_id::Hid, buf::AbstractArray) = h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
+h5d_write(dataset_id::Hid, memtype_id::Hid, buf::AbstractArray) = h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
 function h5d_write(dataset_id::Hid, memtype_id::Hid, str::String)
     ccall((:H5Dwrite, libhdf5), Herr, (Hid, Hid, Hid, Hid, Hid, Cstring), dataset_id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, str)
 end
