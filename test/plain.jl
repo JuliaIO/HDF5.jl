@@ -377,14 +377,6 @@ end
   vec(f["dataset"][:,:])
 end == collect(1:16)
 
-# issue 463
-fn = tempname()
-f = h5open(fn, "w")
-s = SharedArray{UInt16}(3,4,5)
-s[1:end] = 1:length(s)
-write(f,"/data",s)
-s2 = read(f,"/data")
-@test s == s2
 close(f)
 rm(fn)
 
