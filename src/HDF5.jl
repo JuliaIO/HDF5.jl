@@ -2,15 +2,10 @@ __precompile__()
 
 module HDF5
 
-using Compat: 
-    AbstractRange, @compat, equalto, StringVector, findfirst
-
-<<<<<<< HEAD
-using Base: unsafe_convert, StringVector
+using Compat
 using Compat: findfirst
-=======
-using Base: unsafe_convert
->>>>>>> Bump Compat version and explicitly specify all used symbols. Remove readp and add dummy variable to read instead, to avoid conflicts between read with parameters and read for multiple datasets.
+
+using Base: unsafe_convert, StringVector
 
 import Base:
     close, convert, done, eltype, endof, flush, getindex, ==,
@@ -85,7 +80,7 @@ abstract  type Hmpih end
 primitive type Hmpih32 <: Hmpih 32 end # MPICH C/Fortran, OpenMPI Fortran: 32 bit handles
 primitive type Hmpih64 <: Hmpih 64 end # OpenMPI C: pointers (mostly 64 bit)
 const mpihandles = Dict(4 => Hmpih32, 8 => Hmpih64)
-h5_mpihandle(handle) = reinterpret(mpihandles[sizeof(handle)],handle)
+h5_mpihandle(handle) = reinterpret(mpihandles[sizeof(handle)], handle)
 
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
@@ -157,7 +152,7 @@ const H5O_TYPE_GROUP   = 0
 const H5O_TYPE_DATASET = 1
 const H5O_TYPE_NAMED_DATATYPE = 2
 # Property constants
-const H5P_DEFAULT          = convert(Hid, 0)
+const H5P_DEFAULT          = Hid(0)
 const H5P_OBJECT_CREATE    = read_const(libversion >= v"1.8.14" ? :H5P_CLS_OBJECT_CREATE_ID_g    : :H5P_CLS_OBJECT_CREATE_g)
 const H5P_FILE_CREATE      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_FILE_CREATE_ID_g      : :H5P_CLS_FILE_CREATE_g)
 const H5P_FILE_ACCESS      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_FILE_ACCESS_ID_g      : :H5P_CLS_FILE_ACCESS_g)
@@ -381,7 +376,7 @@ mutable struct HDF5Dataset
     file::HDF5File
     xfer::Hid
 
-    function HDF5Dataset(id, file, xfer=H5P_DEFAULT)
+    function HDF5Dataset(id, file, xfer = H5P_DEFAULT)
         dset = new(id, file, xfer)
         @compat finalizer(close, dset)
         dset
@@ -459,7 +454,7 @@ mutable struct HDF5Properties
     toclose::Bool
     class::Hid
 
-    function HDF5Properties(id, toclose::Bool=true, class::Hid=H5P_DEFAULT)
+    function HDF5Properties(id, toclose::Bool = true, class::Hid = H5P_DEFAULT)
         p = new(id, toclose, class)
         if toclose
             @compat finalizer(close, p)
@@ -577,7 +572,7 @@ function checkprops(pv...)
     if !iseven(length(pv))
         error("Properties and values must come in pairs")
     end
-    for i=1:2:length(pv)
+    for i = 1:2:length(pv)
         if !isa(pv[i], AbstractString)
             error("Keyword argument $i of key/value pairs should be a String, but it's a ", typeof(pv[i]))
         end
@@ -876,8 +871,8 @@ function h5object(obj_id::Hid, parent)
 end
 o_open(parent, path::String) = h5object(h5o_open(checkvalid(parent).id, path), parent)
 function gettype(parent, path::String)
-    obj_id=h5o_open(checkvalid(parent).id, path)
-    t=h5i_get_type(h5o_open(checkvalid(parent).id, path))
+    obj_id = h5o_open(checkvalid(parent).id, path)
+    t = h5i_get_type(obj_id)
     h5o_close(obj_id)
     t
 end
@@ -933,10 +928,10 @@ function g_create(f::Function, parent::Union{HDF5File, HDF5Group}, args...)
 end
 
 function d_create(parent::Union{HDF5File, HDF5Group}, path::String, dtype::HDF5Datatype, dspace::HDF5Dataspace,
-         lcpl::HDF5Properties=_link_properties(path),
-         dcpl::HDF5Properties=DEFAULT_PROPERTIES,
-         dapl::HDF5Properties=DEFAULT_PROPERTIES,
-         dxpl::HDF5Properties=DEFAULT_PROPERTIES)
+         lcpl::HDF5Properties = _link_properties(path),
+         dcpl::HDF5Properties = DEFAULT_PROPERTIES,
+         dapl::HDF5Properties = DEFAULT_PROPERTIES,
+         dxpl::HDF5Properties = DEFAULT_PROPERTIES)
     HDF5Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, lcpl.id,
                 dcpl.id, dapl.id), file(parent), dxpl.id)
 end
@@ -945,7 +940,7 @@ end
 function d_create(parent::Union{HDF5File, HDF5Group}, path::String, dtype::HDF5Datatype, dspace::HDF5Dataspace, prop1::String, val1, pv...)
     t = (prop1, val1, pv...)
     checkprops(t...)
-    dcpl = p_create(H5P_DATASET_CREATE, false, t...) 
+    dcpl = p_create(H5P_DATASET_CREATE, false, t...)
     dxpl = p_create(H5P_DATASET_XFER, false, t...)
     dapl = p_create(H5P_DATASET_ACCESS, false, t...)
     HDF5Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, _link_properties(path), dcpl.id, dapl.id), file(parent), dxpl.id)
@@ -978,13 +973,13 @@ t_commit(parent::Union{HDF5File, HDF5Group}, path::String, dtype::HDF5Datatype) 
 
 a_create(parent::Union{HDF5File, HDF5Object}, name::String, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(checkvalid(parent).id, name, dtype.id, dspace.id), file(parent))
 p_create(class, toclose=false) = HDF5Properties(h5p_create(class), toclose, class)
-function p_create(class, toclose, prop1::String, val1, pv...) 
-    p=p_create(class, toclose)
+function p_create(class, toclose, prop1::String, val1, pv...)
+    p = p_create(class, toclose)
     t = (prop1, val1, pv...)
     checkprops(t...)
-    for i=1:2:length(t)
+    for i = 1:2:length(t)
         if hdf5_prop_get_set[t[i]][3] == class
-          p[t[i]] = t[i+1]
+          p[t[i]] = t[i + 1]
         end
     end
     p
@@ -1361,7 +1356,7 @@ end
 # Clean up string buffer according to padding mode
 function unpad(s::String, pad::Integer)
     if pad == H5T_STR_NULLTERM
-        v = Compat.findfirst(equalto('\0'), s)
+        v = findfirst(equalto('\0'), s)
         v === nothing ? s : s[1:v-1]
     elseif pad == H5T_STR_NULLPAD
         rstrip(s, '\0')
@@ -2292,16 +2287,16 @@ end
 
 # Set MPIO properties in HDF5.
 # Note: HDF5 creates a COPY of the comm and info objects.
-function h5p_set_fapl_mpio(fapl_id,comm,info)
+function h5p_set_fapl_mpio(fapl_id, comm, info)
     h5comm = h5_mpihandle(comm)
     h5info = h5_mpihandle(info)
     sizeof(comm) == 4 ? h5p_set_fapl_mpio32(fapl_id, comm, info) : h5p_set_fapl_mpio64(fapl_id, comm, info)
 end
-# Retrieves the copies of the comm and info MPIO objects from the HDF5 property list. 
-function h5p_get_fapl_mpio(fapl_id,h)
+# Retrieves the copies of the comm and info MPIO objects from the HDF5 property list.
+function h5p_get_fapl_mpio(fapl_id, h)
     comm, info = Ref{h}(), Ref{h}()
     h == Hmpih32 ? h5p_get_fapl_mpio32(fapl_id, comm, info) : h5p_get_fapl_mpio64(fapl_id, comm, info)
-    comm[],info[]
+    comm[], info[]
 end
 
 function h5s_get_simple_extent_dims(space_id::Hid)
