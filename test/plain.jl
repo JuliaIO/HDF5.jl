@@ -377,55 +377,6 @@ end
   vec(f["dataset"][:,:])
 end == collect(1:16)
 
-# issue 463
-f = h5open(fn, "w")
-s = SharedArray{UInt16}(3,4,5)
-s[1:end] = 1:length(s)
-write(f,"/data",s)
-s2 = read(f,"/data")
-@test s == s2
-close(f)
-rm(fn)
-
-# issue 466
-f = h5open(fn, "w")
-data = rand(UInt16,2,3);
-pda_data = PermutedDimsArray(data,(2,1));
-write(f,"/data",pda_data)
-pda_data_readback = read(f,"/data")
-@test pda_data == pda_data_readback
-close(f)
-rm(fn)
-
-f = h5open(fn, "w")
-d=reshape(1:6,2,3)
-write(f,"/data",d)
-d2 = read(f,"/data")
-@test d == d2
-close(f)
-rm(fn)
-
-f = h5open(fn, "w")
-d=view(rand(2,3),:,1)
-write(f,"/data",d)
-d2 = read(f,"/data")
-@test d == d2
-close(f)
-rm(fn)
-
-f = h5open(fn, "w")
-d=Diagonal(1:10)
-write(f,"/data",d)
-d2 = read(f,"/data")
-@test d == d2
-close(f)
-rm(fn)
-
-f = h5open(fn, "w")
-r=1:10
-write(f,"/data",r)
-r2 = read(f,"/data")
-@test collect(r) == r2
 close(f)
 rm(fn)
 
