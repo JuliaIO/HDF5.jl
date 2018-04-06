@@ -1356,7 +1356,7 @@ end
 # Clean up string buffer according to padding mode
 function unpad(s::String, pad::Integer)
     if pad == H5T_STR_NULLTERM
-        v = findfirst(equalto('\0'), s)
+        v = findfirst(isequal('\0'), s)
         v === nothing ? s : s[1:v-1]
     elseif pad == H5T_STR_NULLPAD
         rstrip(s, '\0')
