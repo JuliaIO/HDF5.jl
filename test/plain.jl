@@ -333,9 +333,9 @@ close(fd)
 rm(fn)
 
 # File creation and access property lists
-cpl = HDF5Properties(p_create(HDF5.H5P_FILE_CREATE))
+cpl = p_create(HDF5.H5P_FILE_CREATE)
 cpl["userblock"] = 1024
-apl = HDF5Properties(p_create(HDF5.H5P_FILE_ACCESS))
+apl = p_create(HDF5.H5P_FILE_ACCESS)
 apl["libver_bounds"] = (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)
 h5open(fn, false, true, true, true, false, cpl, apl) do fid
     write(fid, "intarray", [1, 2, 3])
