@@ -2,6 +2,8 @@ using HDF5
 using Compat.Test
 using Compat.Distributed
 
+println("HDF5 version ", HDF5.h5_get_libversion())
+
 include("plain.jl")
 include("readremote.jl")
 include("extend_test.jl")
