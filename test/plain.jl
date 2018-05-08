@@ -363,22 +363,24 @@ Wr = h5read(fn, "newgroup/W")
 close(f)
 rm(fn)
 
-# Test direct chunk writing
-h5open(fn, "w") do f
-  d = d_create(f, "dataset", datatype(Int), dataspace(4, 4), "chunk", (2, 2))
-  raw = HDF5ChunkStorage(d)
-  raw[1,1] = 0, collect(reinterpret(UInt8, [1,2,5,6]))
-  raw[3,1] = 0, collect(reinterpret(UInt8, [3,4,7,8]))
-  raw[1,3] = 0, collect(reinterpret(UInt8, [9,10,13,14]))
-  raw[3,3] = 0, collect(reinterpret(UInt8, [11,12,15,16]))
+if !isempty(HDF5.libhdf5_hl) 
+    # Test direct chunk writing
+    h5open(fn, "w") do f
+      d = d_create(f, "dataset", datatype(Int), dataspace(4, 4), "chunk", (2, 2))
+      raw = HDF5ChunkStorage(d)
+      raw[1,1] = 0, collect(reinterpret(UInt8, [1,2,5,6]))
+      raw[3,1] = 0, collect(reinterpret(UInt8, [3,4,7,8]))
+      raw[1,3] = 0, collect(reinterpret(UInt8, [9,10,13,14]))
+      raw[3,3] = 0, collect(reinterpret(UInt8, [11,12,15,16]))
+    end
+
+    @test h5open(fn, "r") do f
+      vec(f["dataset"][:,:])
+    end == collect(1:16)
+
+    close(f)
+    rm(fn)
 end
-
-@test h5open(fn, "r") do f
-  vec(f["dataset"][:,:])
-end == collect(1:16)
-
-close(f)
-rm(fn)
 
 end # testset plain
 
