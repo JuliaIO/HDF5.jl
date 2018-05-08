@@ -2115,7 +2115,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
 
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
     library = startswith(string(h5name), "H5DO") ? libhdf5_hl : libhdf5
-    if library == ""
+    if isempty(library)
         # If the high-level library is not installed, then skip these functions
         continue
     end
