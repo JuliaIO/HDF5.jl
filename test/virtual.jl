@@ -22,25 +22,21 @@ vfile = h5open(FILE,"w")
 
 space = dataspace(VDSDIM0, VDSDIM1)
 dcpl = HDF5.h5p_create(HDF5.H5P_DATASET_CREATE)
-start = [0, 0]
 count = [1, 1]
-block = [1, VDSDIM1]
+block = [VDSDIM1, 1]
 
 # watch out!! dataspace(5) creates a scalar dataspace, not a length 5 one dimensional dataspace
 src_space = dataspace((DIM0,))
 for i=1:3
-    start[1]=i-1
+    start=[0, i-1]
     HDF5.h5s_select_hyperslab(space, HDF5.H5S_SELECT_SET, start, C_NULL, count, block)
     HDF5.h5p_set_virtual(dcpl, space, SRC_FILE[i], SRC_DATASET[i], src_space)
 end
 
-space = dataspace(VDSDIM1, VDSDIM0) # this seems backwards, but the next line fails without it?
+space = dataspace(VDSDIM0, VDSDIM1)
 dset = HDF5.h5d_create(vfile.id, DATASET, HDF5.H5T_NATIVE_INT64, space, HDF5.H5P_DEFAULT, dcpl, HDF5.H5P_DEFAULT)
 close(space)
 close(src_space)
 HDF5.h5d_close(dset)
 close(vfile)
 HDF5.h5p_close(dcpl)
-
-file2 = h5open(FILE,"r")
-@show read(file2[DATASET])
