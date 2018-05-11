@@ -2404,7 +2404,6 @@ end
 
 """
     get_datasets(file::HDF5File) -> datasets::Vector{HDF5Dataset}
-
 Get all the datasets in an hdf5 file without loading the data.
 """
 function get_datasets(file::HDF5File)
