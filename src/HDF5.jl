@@ -252,7 +252,7 @@ const H5T_NATIVE_UINT64   = read_const(:H5T_NATIVE_UINT64_g)
 const H5T_NATIVE_FLOAT    = read_const(:H5T_NATIVE_FLOAT_g)
 const H5T_NATIVE_DOUBLE   = read_const(:H5T_NATIVE_DOUBLE_g)
 # Library versions
-if HDF5.libversion >= v"1.10.2"
+if libversion >= v"1.10.2"
     const H5F_LIBVER_EARLIEST = 0
     const H5F_LIBVER_V18      = 1
     const H5F_LIBVER_V110     = 2
