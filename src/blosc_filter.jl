@@ -145,3 +145,11 @@ function h5p_set_blosc(p::HDF5Properties, level::Integer=5)
     status < 0 && error("Error setting blosc compression level")
     nothing
 end
+
+export set_blosc_property
+function set_blosc_property(;shuffle=:none,compressor=:zstd)
+    _set_blosc_values[6] = _hdf5_blosc_shuffle[shuffle]
+    _set_blosc_values[7] = _hdf5_blosc_compressor[compressor]
+end
+const _hdf5_blosc_shuffle = Dict(:none=>0, :normal=>1, :bit=>2)
+const _hdf5_blosc_compressor = Dict(zip([:blosclz, :lz4, :lz4hc, :snappy, :zlib, :zstd], 1:6))
