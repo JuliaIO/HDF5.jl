@@ -66,13 +66,13 @@ file = getfile("h5ex_t_floatatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
 a = a_read(dset, "A1")
-@test norm(a - fcmp) < 1e-5
+@test norm(a - fcmp) < 1.5e-5
 close(fid)
 
 file = getfile("h5ex_t_float.h5")
 fid = h5open(file, "r")
 d = read(fid, "DS1")
-@test norm(d - fcmp) < 1e-5
+@test norm(d - fcmp) < 1.5e-5
 close(fid)
 
 file = getfile("h5ex_t_intatt.h5")
