@@ -119,10 +119,10 @@ end
 
 # register the Blosc filter function with HDF5
 function register_blosc()
-    c_blosc_set_local = cfunction(blosc_set_local, Herr, Tuple{Hid,Hid,Hid})
-    c_blosc_filter = cfunction(blosc_filter, Csize_t,
-                               Tuple{Cuint, Csize_t, Ptr{Cuint}, Csize_t,
-                                     Ptr{Csize_t}, Ptr{Ptr{Cvoid}}})
+    c_blosc_set_local = @cfunction(blosc_set_local, Herr, (Hid,Hid,Hid))
+    c_blosc_filter = @cfunction(blosc_filter, Csize_t,
+                                (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
+                                 Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
     if ccall((:H5Zregister, libhdf5), Herr, (Ref{H5Z_class2_t},),
              H5Z_class2_t(H5Z_CLASS_T_VERS,
                           FILTER_BLOSC,
