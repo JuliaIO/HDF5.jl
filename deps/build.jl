@@ -17,7 +17,7 @@ end
 compatible_version(lib, handle) = h5_get_libversion(lib, handle) >= MINVERSION
 
 hdf5 = library_dependency("libhdf5",
-    aliases = ["libhdf5_openmpi", "libhdf5_mpich", "libhdf5", "libhdf5_serial", "libhdf5_serial.so.10" ],
+    aliases = ["libhdf5", "libhdf5_serial", "libhdf5_serial.so.10", "libhdf5_openmpi", "libhdf5_mpich"],
     validate=compatible_version)
 
 provides(AptGet, "hdf5-tools", hdf5, os=:Linux)
