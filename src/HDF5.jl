@@ -3,6 +3,7 @@ __precompile__()
 module HDF5
 
 using Compat
+using Compat.Mmap
 using Compat: findfirst
 
 using Base: unsafe_convert, StringVector
@@ -1560,8 +1561,20 @@ end
 # Read VLEN arrays and character arrays
 atype(::Type{T}) where {T<:HDF5Scalar} = Array{T}
 atype(::Type{C}) where {C<:CharType} = stringtype(C)
-p2a(p::Ptr{T}, len::Int) where {T<:HDF5Scalar} = unsafe_wrap(Array, p, len, true)
-p2a(p::Ptr{C}, len::Int) where {C<:CharType} = stringtype(C)(unsafe_wrap(Array, convert(Ptr{UInt8}, p), len, true))
+function p2a(p::Ptr{T}, len::Int) where {T<:HDF5Scalar}
+    @static if VERSION < v"0.7.0-DEV.3526"
+        unsafe_wrap(Array, p, len, true)
+    else
+        unsafe_wrap(Array, p, len, own=true)
+    end
+end
+function p2a(p::Ptr{C}, len::Int) where {C<:CharType}
+    @static if VERSION < v"0.7.0-DEV.3526"
+        stringtype(C)(unsafe_wrap(Array, convert(Ptr{UInt8}, p), len, true))
+    else
+        stringtype(C)(unsafe_wrap(Array, convert(Ptr{UInt8}, p), len, own=true))
+    end
+end
 t2p(::Type{T}) where {T<:HDF5Scalar} = Ptr{T}
 t2p(::Type{C}) where {C<:CharType} = Ptr{UInt8}
 function read(obj::DatasetOrAttribute, ::Type{HDF5Vlen{T}}) where {T<:Union{HDF5Scalar,CharType}}
@@ -1969,7 +1982,7 @@ end
 ### Convenience wrappers ###
 # These supply default values where possible
 # See also the "special handling" section below
-h5a_write(attr_id::Hid, mem_type_id::Hid, buf::String) = h5a_write(attr_id, mem_type_id, Vector{UInt8}(buf))
+h5a_write(attr_id::Hid, mem_type_id::Hid, buf::String) = h5a_write(attr_id, mem_type_id, unsafe_wrap(Vector{UInt8}, pointer(buf), ncodeunits(buf)))
 function h5a_write(attr_id::Hid, mem_type_id::Hid, x::T) where {T<:HDF5Scalar}
     tmp = Ref{T}(x)
     h5a_write(attr_id, mem_type_id, tmp)

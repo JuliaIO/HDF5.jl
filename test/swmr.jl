@@ -39,7 +39,7 @@ function dataset_write(d, ch_written, ch_read)
     for i = 1:10
         @assert take!(ch_read) == true
         set_dims!(d, (i*10,))
-        inds = (1:10) + (i - 1) * 10
+        inds::UnitRange{Int} = VERSION < v"0.7.0-DEV.1759" ? (1:10) + (i - 1) * 10 : (1:10) .+ (i - 1) * 10
         d[inds] = inds
         flush(d) # flush the dataset
         put!(ch_written,i)
