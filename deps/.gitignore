@@ -2,3 +2,4 @@ builds
 src
 deps.jl
 downloads
+build.log
