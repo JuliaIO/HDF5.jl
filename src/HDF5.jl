@@ -9,9 +9,15 @@ using Compat: findfirst
 using Base: unsafe_convert, StringVector
 
 import Base:
-    close, convert, done, eltype, endof, flush, getindex, ==,
-    isempty, isvalid, length, names, ndims, next, parent, read,
-    setindex!, show, size, sizeof, start, write, isopen
+    close, convert, eltype, endof, flush, getindex, ==,
+    isempty, isvalid, length, names, ndims, parent, read,
+    setindex!, show, size, sizeof, write, isopen
+
+@static if VERSION < v"0.7.0-DEV.5126"
+    import Base: done, next, start
+else
+    import Base: iterate
+end
 
 import Compat.Libdl
 
@@ -1144,19 +1150,29 @@ function names(x::HDF5Attributes)
 end
 
 # iteration by objects
-# "next" opens new objects, "done" closes the old one. This prevents resource leaks.
-start(parent::Union{HDF5File, HDF5Group}) = Any[1, nothing]
-function done(parent::Union{HDF5File, HDF5Group}, iter::Array{Any})
-    obj = iter[2]
-    if !(obj === nothing)
-        close(obj)
+@static if VERSION < v"0.7.0-DEV.5126"
+    # "next" opens new objects, "done" closes the old one. This prevents resource leaks.
+    start(parent::Union{HDF5File, HDF5Group}) = Any[1, nothing]
+    function done(parent::Union{HDF5File, HDF5Group}, iter::Array{Any})
+        obj = iter[2]
+        if !(obj === nothing)
+            close(obj)
+        end
+        iter[1] > length(parent)
     end
-    iter[1] > length(parent)
-end
-function next(parent::Union{HDF5File, HDF5Group}, iter)
-    iter[2] = h5object(h5o_open_by_idx(checkvalid(parent).id, ".", H5_INDEX_NAME, H5_ITER_INC, iter[1]-1, H5P_DEFAULT), parent)
-    iter[1] += 1
-    (iter[2], iter)
+    function next(parent::Union{HDF5File, HDF5Group}, iter)
+        iter[2] = h5object(h5o_open_by_idx(checkvalid(parent).id, ".", H5_INDEX_NAME, H5_ITER_INC, iter[1]-1, H5P_DEFAULT), parent)
+        iter[1] += 1
+        (iter[2], iter)
+    end
+else
+    function iterate(parent::Union{HDF5File, HDF5Group}, iter = (1,nothing))
+        n, prev_obj = iter
+        prev_obj ≢ nothing && close(prev_obj)
+        n > length(parent) && return nothing
+        obj = h5object(h5o_open_by_idx(checkvalid(parent).id, ".", H5_INDEX_NAME, H5_ITER_INC, n-1, H5P_DEFAULT), parent)
+        return (obj, (n+1,obj))
+    end
 end
 
 endof(dset::HDF5Dataset) = length(dset)
