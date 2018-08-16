@@ -1,6 +1,6 @@
 using HDF5
-using Compat.Test
-using Compat.LinearAlgebra: norm
+using Test
+using LinearAlgebra: norm
 
 @testset "readremote" begin
 
