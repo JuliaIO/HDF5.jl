@@ -1,6 +1,6 @@
 # HDF5 interface for the Julia language
 
-[![Build Status](https://travis-ci.org/JuliaIO/HDF5.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/HDF5.jl) [![Build status](https://ci.appveyor.com/api/projects/status/c00htf9yte5swb1p/branch/master?svg=true)](https://ci.appveyor.com/project/timholy/hdf5-jl-1fndw/branch/master)
+[![Build Status](https://travis-ci.org/JuliaIO/HDF5.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/HDF5.jl) [![Build status](https://ci.appveyor.com/api/projects/status/4iagqqiqqo36sika/branch/master?svg=true)](https://ci.appveyor.com/project/musm/hdf5-jl/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/JuliaIO/HDF5.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaIO/HDF5.jl?branch=master)
 [![codecov](https://codecov.io/gh/JuliaIO/HDF5.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaIO/HDF5.jl)
 
