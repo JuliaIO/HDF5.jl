@@ -5,11 +5,12 @@ module HDF5
 using Compat
 using Compat.Mmap
 using Compat: findfirst
+import Compat: lastindex
 
 using Base: unsafe_convert, StringVector
 
 import Base:
-    close, convert, eltype, endof, flush, getindex, ==,
+    close, convert, eltype, flush, getindex, ==,
     isempty, isvalid, length, names, ndims, parent, read,
     setindex!, show, size, sizeof, write, isopen
 
@@ -1175,7 +1176,7 @@ else
     end
 end
 
-endof(dset::HDF5Dataset) = length(dset)
+lastindex(dset::HDF5Dataset) = length(dset)
 
 function parent(obj::Union{HDF5File, HDF5Group, HDF5Dataset})
     f = file(obj)

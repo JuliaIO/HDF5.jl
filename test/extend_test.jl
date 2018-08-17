@@ -31,9 +31,9 @@ dims, max_dims = HDF5.get_dims(b)
 @test dims == (UInt64(10000),)
 @test max_dims == (HDF5.H5S_UNLIMITED,)
 #println("b is size current $(map(int,HDF5.get_dims(b)[1])) max $(map(int,HDF5.get_dims(b)[2]))")
-# b[:] = [1:10000] # gave error no method endof(HDF5Dataset{PlainHDF5File},),
-# so I defined endof(dset::HDF5Dataset) = length(dset), and exported endof
-# but that didn't fix the error, despite the endof function working
+# b[:] = [1:10000] # gave error no method lastindex(HDF5Dataset{PlainHDF5File},),
+# so I defined lastindex(dset::HDF5Dataset) = length(dset), and exported lastindex
+# but that didn't fix the error, despite the lastindex function working
 # d[1] produces error ERROR: Wrong number of indices supplied, should datasets support linear indexing?
 b[1:10000] = [1:10000;]
 #println(b[1:100])
