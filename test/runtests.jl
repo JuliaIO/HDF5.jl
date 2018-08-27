@@ -1,9 +1,6 @@
 using HDF5
-using Compat.Test
-using Compat.Distributed
-@static if VERSION ≥ v"0.7.0-DEV.3637"
-    using Pkg
-end
+using Test
+using Pkg
 
 println("HDF5 version ", HDF5.h5_get_libversion())
 

@@ -1,6 +1,1 @@
-julia 0.6
-BinDeps 0.6.0
-Blosc
-Compat 0.68.0
-@osx Homebrew 0.3.1
-@windows WinRPM
+julia 0.7

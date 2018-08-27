@@ -1,6 +1,5 @@
 using HDF5
-using Compat.Test
-import Compat.GC
+using Test
 
 macro gcvalid(args...)
     Expr(:block, quote

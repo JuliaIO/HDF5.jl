@@ -1,26 +1,13 @@
-__precompile__()
-
 module HDF5
-
-using Compat
-using Compat.Mmap
-using Compat: findfirst
-import Compat: lastindex
 
 using Base: unsafe_convert, StringVector
 
 import Base:
-    close, convert, eltype, flush, getindex, ==,
+    close, convert, eltype, lastindex, flush, getindex, ==,
     isempty, isvalid, length, names, ndims, parent, read,
-    setindex!, show, size, sizeof, write, isopen
+    setindex!, show, size, sizeof, write, isopen, iterate
 
-@static if VERSION < v"0.7.0-DEV.5126"
-    import Base: done, next, start
-else
-    import Base: iterate
-end
-
-import Compat.Libdl
+import Libdl
 
 export
     # types
@@ -352,7 +339,7 @@ mutable struct HDF5File <: DataFile
     function HDF5File(id, filename, toclose::Bool=true)
         f = new(id, filename)
         if toclose
-            @compat finalizer(close, f)
+            finalizer(close, f)
         end
         f
     end
@@ -373,7 +360,7 @@ mutable struct HDF5Group <: DataFile
 
     function HDF5Group(id, file)
         g = new(id, file)
-        @compat finalizer(close, g)
+        finalizer(close, g)
         g
     end
 end
@@ -393,7 +380,7 @@ mutable struct HDF5Dataset
 
     function HDF5Dataset(id, file, xfer = H5P_DEFAULT)
         dset = new(id, file, xfer)
-        @compat finalizer(close, dset)
+        finalizer(close, dset)
         dset
     end
 end
@@ -414,14 +401,14 @@ mutable struct HDF5Datatype
     function HDF5Datatype(id, toclose::Bool=true)
         nt = new(id, toclose)
         if toclose
-            @compat finalizer(close, nt)
+            finalizer(close, nt)
         end
         nt
     end
     function HDF5Datatype(id, file::HDF5File, toclose::Bool=true)
         nt = new(id, toclose, file)
         if toclose
-            @compat finalizer(close, nt)
+            finalizer(close, nt)
         end
         nt
     end
@@ -440,7 +427,7 @@ mutable struct HDF5Dataspace
 
     function HDF5Dataspace(id)
         dspace = new(id)
-        @compat finalizer(close, dspace)
+        finalizer(close, dspace)
         dspace
     end
 end
@@ -452,7 +439,7 @@ mutable struct HDF5Attribute
 
     function HDF5Attribute(id, file)
         dset = new(id, file)
-        @compat finalizer(close, dset)
+        finalizer(close, dset)
         dset
     end
 end
@@ -472,7 +459,7 @@ mutable struct HDF5Properties
     function HDF5Properties(id, toclose::Bool = true, class::Hid = H5P_DEFAULT)
         p = new(id, toclose, class)
         if toclose
-            @compat finalizer(close, p)
+            finalizer(close, p)
         end
         p
     end
@@ -1151,29 +1138,12 @@ function names(x::HDF5Attributes)
 end
 
 # iteration by objects
-@static if VERSION < v"0.7.0-DEV.5126"
-    # "next" opens new objects, "done" closes the old one. This prevents resource leaks.
-    start(parent::Union{HDF5File, HDF5Group}) = Any[1, nothing]
-    function done(parent::Union{HDF5File, HDF5Group}, iter::Array{Any})
-        obj = iter[2]
-        if !(obj === nothing)
-            close(obj)
-        end
-        iter[1] > length(parent)
-    end
-    function next(parent::Union{HDF5File, HDF5Group}, iter)
-        iter[2] = h5object(h5o_open_by_idx(checkvalid(parent).id, ".", H5_INDEX_NAME, H5_ITER_INC, iter[1]-1, H5P_DEFAULT), parent)
-        iter[1] += 1
-        (iter[2], iter)
-    end
-else
-    function iterate(parent::Union{HDF5File, HDF5Group}, iter = (1,nothing))
-        n, prev_obj = iter
-        prev_obj ≢ nothing && close(prev_obj)
-        n > length(parent) && return nothing
-        obj = h5object(h5o_open_by_idx(checkvalid(parent).id, ".", H5_INDEX_NAME, H5_ITER_INC, n-1, H5P_DEFAULT), parent)
-        return (obj, (n+1,obj))
-    end
+function iterate(parent::Union{HDF5File, HDF5Group}, iter = (1,nothing))
+    n, prev_obj = iter
+    prev_obj ≢ nothing && close(prev_obj)
+    n > length(parent) && return nothing
+    obj = h5object(h5o_open_by_idx(checkvalid(parent).id, ".", H5_INDEX_NAME, H5_ITER_INC, n-1, H5P_DEFAULT), parent)
+    return (obj, (n+1,obj))
 end
 
 lastindex(dset::HDF5Dataset) = length(dset)
@@ -1579,18 +1549,10 @@ end
 atype(::Type{T}) where {T<:HDF5Scalar} = Array{T}
 atype(::Type{C}) where {C<:CharType} = stringtype(C)
 function p2a(p::Ptr{T}, len::Int) where {T<:HDF5Scalar}
-    @static if VERSION < v"0.7.0-DEV.3526"
-        unsafe_wrap(Array, p, len, true)
-    else
-        unsafe_wrap(Array, p, len, own=true)
-    end
+    unsafe_wrap(Array, p, len, own=true)
 end
 function p2a(p::Ptr{C}, len::Int) where {C<:CharType}
-    @static if VERSION < v"0.7.0-DEV.3526"
-        stringtype(C)(unsafe_wrap(Array, convert(Ptr{UInt8}, p), len, true))
-    else
-        stringtype(C)(unsafe_wrap(Array, convert(Ptr{UInt8}, p), len, own=true))
-    end
+   stringtype(C)(unsafe_wrap(Array, convert(Ptr{UInt8}, p), len, own=true))
 end
 t2p(::Type{T}) where {T<:HDF5Scalar} = Ptr{T}
 t2p(::Type{C}) where {C<:CharType} = Ptr{UInt8}

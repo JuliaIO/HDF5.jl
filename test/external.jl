@@ -1,5 +1,5 @@
 using HDF5
-using Compat.Test
+using Test
 
 @testset "external" begin
 

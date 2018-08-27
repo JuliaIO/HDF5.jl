@@ -1,13 +1,16 @@
 # following https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-StartSwmrWrite
 # and https://support.hdfgroup.org/HDF5/docNewFeatures/SWMR/HDF5_SWMR_Users_Guide.pdf
+using HDF5
+using Test
+using Distributed
 
 if HDF5.libversion >= v"1.10.0"
+
 
 if nprocs() == 1
     addprocs(1)
 end
 @everywhere using HDF5
-using Compat.Test
 
 @testset "swmr" begin
 fname = tempname()
@@ -39,7 +42,7 @@ function dataset_write(d, ch_written, ch_read)
     for i = 1:10
         @assert take!(ch_read) == true
         set_dims!(d, (i*10,))
-        inds::UnitRange{Int} = VERSION < v"0.7.0-DEV.1759" ? (1:10) + (i - 1) * 10 : (1:10) .+ (i - 1) * 10
+        inds::UnitRange{Int} = (1:10) .+ (i - 1) * 10
         d[inds] = inds
         flush(d) # flush the dataset
         put!(ch_written,i)

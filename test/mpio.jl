@@ -1,7 +1,6 @@
-using Compat
 using MPI
 using HDF5
-using Base.Test
+using Test
 
 @testset "mpio" begin
 
@@ -66,4 +65,3 @@ MPI.Barrier(MPI.COMM_WORLD)
 MPI.Finalize()
 
 end # testset mpio
-

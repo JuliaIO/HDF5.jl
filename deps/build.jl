@@ -1,9 +1,7 @@
 using BinDeps
-using Compat
-using Compat.Libdl
+using Libdl
 
 @BinDeps.setup
-
 # https://support.hdfgroup.org/HDF5/ lists "Current Releases"
 # make sure we have one of those
 const MINVERSION = v"1.8.0"
@@ -25,12 +23,12 @@ provides(Pacman, "hdf5", hdf5, os=:Linux)
 provides(Yum, "hdf5", hdf5, os=:Linux)
 provides(BSDPkg, "hdf5", hdf5, os=:FreeBSD)
 
-if Compat.Sys.iswindows()
+if Sys.iswindows()
     using WinRPM
     provides(WinRPM.RPM, "hdf5", hdf5, os=:Windows)
 end
 
-if Compat.Sys.isapple()
+if Sys.isapple()
     using Homebrew
     provides(Homebrew.HB, "hdf5", hdf5, os=:Darwin)
 end
