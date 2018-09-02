@@ -96,6 +96,9 @@ const H5_INDEX_CRT_ORDER = 1
 const H5D_COMPACT      = 0
 const H5D_CONTIGUOUS   = 1
 const H5D_CHUNKED      = 2
+const H5D_CHUNK_CACHE_NSLOTS_DEFAULT   =  typemax(Csize_t)
+const H5D_CHUNK_CACHE_NBYTES_DEFAULT   =  typemax(Csize_t)
+const H5D_CHUNK_CACHE_W0_DEFAULT       =  double(-1)
 # error-related constants
 const H5E_DEFAULT      = 0
 # file access modes
@@ -2094,6 +2097,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5p_get_userblock, :H5Pget_userblock, Herr, (Hid, Ptr{Hsize}), (:plist_id, :len), "Error getting userblock"),
      (:h5p_set_char_encoding, :H5Pset_char_encoding, Herr, (Hid, Cint), (:plist_id, :encoding), "Error setting char encoding"),
      (:h5p_set_chunk, :H5Pset_chunk, Herr, (Hid, Cint, Ptr{Hsize}), (:plist_id, :ndims, :dims), "Error setting chunk size"),
+     (:h5p_set_chunk_cache, :H5Pset_chunk_cache, Herr, (Hid, Csize_t, Csize_t, Cdouble), (:plist_id, :rdcc_nslots, :rdcc_nbytes, :rdcc_w0), "Error setting chunk cache"),
      (:h5p_set_create_intermediate_group, :H5Pset_create_intermediate_group, Herr, (Hid, Cuint), (:plist_id, :setting), "Error setting create intermediate group"),
      (:h5p_set_external, :H5Pset_external, Herr, (Hid, Ptr{UInt8}, Int, Csize_t), (:plist_id, :name, :offset, :size), "Error setting external property"),
      (:h5p_set_dxpl_mpio,   :H5Pset_dxpl_mpio, Herr, (Hid, Cint ), (:dxpl_id, :xfer_mode), "Error setting MPIO transfer mode"),
