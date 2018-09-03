@@ -98,7 +98,7 @@ const H5D_CONTIGUOUS   = 1
 const H5D_CHUNKED      = 2
 const H5D_CHUNK_CACHE_NSLOTS_DEFAULT   =  typemax(Csize_t)
 const H5D_CHUNK_CACHE_NBYTES_DEFAULT   =  typemax(Csize_t)
-const H5D_CHUNK_CACHE_W0_DEFAULT       =  double(-1)
+const H5D_CHUNK_CACHE_W0_DEFAULT       =  Cdouble(-1)
 # error-related constants
 const H5E_DEFAULT      = 0
 # file access modes
