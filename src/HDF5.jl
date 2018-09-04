@@ -2084,7 +2084,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5f_get_vfd_handle, :H5Fget_vfd_handle, Herr, (Hid, Hid, Ptr{Ptr{Cint}}), (:file_id, :fapl_id, :file_handle), "Error getting VFD handle"),
      (:h5g_close, :H5Gclose, Herr, (Hid,), (:group_id,), "Error closing group"),
      (:h5g_get_info, :H5Gget_info, Herr, (Hid, Ptr{H5Ginfo}), (:group_id, :buf), "Error getting group info"),
-     (:h5o_get_info, :H5Oget_info, Herr, (Hid, Ptr{H5Oinfo}), (:object_id, :buf), "Error getting object info"),
+     (:h5o_get_info, :H5Oget_info1, Herr, (Hid, Ptr{H5Oinfo}), (:object_id, :buf), "Error getting object info"),
      (:h5o_close, :H5Oclose, Herr, (Hid,), (:object_id,), "Error closing object"),
      (:h5p_close, :H5Pclose, Herr, (Hid,), (:id,), "Error closing property list"),
      (:h5p_get_dxpl_mpio,   :H5Pget_dxpl_mpio, Herr, (Hid, Ptr{Cint}), (:dxpl_id, :xfer_mode), "Error getting MPIO transfer mode"),
@@ -2113,6 +2113,11 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5t_set_cset, :H5Tset_cset, Herr, (Hid, Cint), (:dtype_id, :cset), "Error setting character set in datatype"),
      (:h5t_set_size, :H5Tset_size, Herr, (Hid, Csize_t), (:dtype_id, :sz), "Error setting size of datatype"),
     )
+
+    # emulate 1.8 and 1.10 release interface (new release should use HF0get_info2 or use the macro mapping H5Oget_info)
+    if h5name == :H5Oget_info1 && libversion <= v"1.10.2"
+        h5name = :H5Oget_info
+    end
 
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
     library = startswith(string(h5name), "H5DO") ? libhdf5_hl : libhdf5
