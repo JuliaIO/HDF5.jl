@@ -2138,6 +2138,34 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
     end
 end
 
+for (jlname, h5name, outtype, argtypes, argsyms, msg) in
+    ((:h5tb_make_table, :H5TBmake_table, Herr, (Cstring, Hid, Cstring, Hsize, Hsize, Hsize, Ptr{Ptr{Cchar}}, Ptr{Csize_t}, Ptr{Hid}, Hsize, Ptr{Cvoid}, Cint, Ptr{Cvoid}), (:table_title, :loc_id, :table_name, :nfields, :nrecords, :type_size, :field_names, :field_offset, :field_types, :chunk_size, :fill_data, :compress, :data), "Error making table."),
+     (:h5tb_append_records, :H5TBappend_records, Herr, (Hid, Cstring, Hsize, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), (:loc_id, :dset_name, :nrecords, :type_size, :field_offset, :field_sizes, :data), "Error appending records"),
+     (:h5tb_write_records, :H5TBwrite_records, Herr, (Hid, Cstring, Hsize, Hsize, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), (:loc_id, :table_name, :start, :nrecords, :type_size, :field_offset, :field_sizes, :data), "Error writing records."),
+     (:h5tb_read_table, :H5TBread_table, Herr, (Hid, Cstring, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), (:loc_id, :table_name, :dst_size, :dst_offset, :dst_sizes, :dst_buf), "Error reading table"),
+     (:h5tb_read_records, :H5TBread_records, Herr, (Hid, Cstring, Hsize, Hsize, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), (:loc_id, :table_name, :start, :nrecords, :type_size, :field_offset, :dst_sizes, :data), "Error reading records"),
+     (:h5tb_get_table_info, :H5TBget_table_info, Herr, (Hid, Cstring, Ptr{Hsize}, Ptr{Hsize}), (:loc_id, :table_name, :nfields, :nrecords), "Error getting table info"),
+     (:h5tb_get_field_info, :H5TBget_field_info, Herr, (Hid, Cstring, Ptr{Ptr{Cchar}}, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Csize_t}), (:loc_id, :table_name, :field_names, :field_sizes, :field_offsets, :type_size), "Error getting field info"),
+    )
+    ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
+    library = libhdf5_hl
+    if isempty(library)
+        # If the high-level library is not installed, then skip these functions
+        continue
+    end
+    ex_ccall = ccallexpr(library, h5name, outtype, argtypes, argsyms)
+    ex_body = quote
+        status = $ex_ccall
+        if status < 0
+            error($msg)
+        end
+    end
+    ex_func = Expr(:function, ex_dec, ex_body)
+    @eval begin
+        $ex_func
+    end
+end
+
 # Functions returning a single argument, and/or with more complex
 # error messages
 for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
