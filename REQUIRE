@@ -1,5 +1,6 @@
 julia 0.7
 BinDeps 0.6.0
 Blosc
+Mmap
 @osx Homebrew 0.3.1
 @windows WinRPM

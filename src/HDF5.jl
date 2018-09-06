@@ -1,7 +1,7 @@
 module HDF5
 
 using Base: unsafe_convert, StringVector
-
+using Mmap
 import Base:
     close, convert, eltype, lastindex, flush, getindex, ==,
     isempty, isvalid, length, names, ndims, parent, read,
