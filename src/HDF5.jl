@@ -8,6 +8,7 @@ import Base:
     setindex!, show, size, sizeof, write, isopen, iterate
 
 import Libdl
+import Mmap
 
 export
     # types

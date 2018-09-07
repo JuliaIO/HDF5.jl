@@ -8,6 +8,7 @@ BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
 Blosc = "a74b3585-a348-5f62-a45c-50e91977d574"
 Homebrew = "d9be37ee-ecc9-5288-90f1-b9ca67657a75"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
 WinRPM = "c17dfb99-b4f7-5aad-8812-456da1ad7187"
 
 [extras]
