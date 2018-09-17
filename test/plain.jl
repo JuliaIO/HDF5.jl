@@ -1,4 +1,5 @@
 using HDF5
+using CRC32c
 using Test
 
 @testset "plain" begin
@@ -380,6 +381,16 @@ if !isempty(HDF5.libhdf5_hl)
     close(f)
     rm(fn)
 end
+
+# Test that switching time tracking off results in identical files
+h5open("tt1.h5", "w") do f
+    f["x", "track_times", false] = [1, 2, 3]
+end
+h5open("tt2.h5", "w") do f
+    f["x", "track_times", false] = [1, 2, 3]
+end
+
+@test open(crc32c, "tt1.h5") == open(crc32c, "tt2.h5")
 
 end # testset plain
 
