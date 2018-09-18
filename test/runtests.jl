@@ -10,6 +10,7 @@ include("extend_test.jl")
 include("gc.jl")
 include("external.jl")
 include("swmr.jl")
+include("h5tb.jl")
 if !Sys.iswindows() # Mmap needs to be fixed on windows
   include("mmap.jl")
 end
