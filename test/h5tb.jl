@@ -11,7 +11,7 @@ using Test
             name = "mym"
             nfield = 2
             nrec = 3
-            recsize = 16
+            recsize = nfield * sizeof(data[1])
             colname = ["f1", "f2"]
             offset = [0,8]
             tid = [h5t.id, h5t.id]
