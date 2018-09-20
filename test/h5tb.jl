@@ -6,20 +6,21 @@ using Test
         h5open(fname, "w") do f
             fv = 3.14
             data = [1.,2.,3.,4.,5.,6.]
+            floatsize = sizeof(data[1])
             h5t = datatype(data[1])
             title = "lal"
             name = "mym"
             nfield = 2
             nrec = 3
-            recsize = nfield * sizeof(data[1])
+            recsize = nfield * floatsize
             colname = ["f1", "f2"]
-            offset = [0,8]
+            offset = [0,floatsize]
             tid = [h5t.id, h5t.id]
             chunk = 7
             fillvalue = [3.14, 2.71]
             compress = 1
             HDF5.h5tb_make_table(title, f.id, name, nfield, nrec, recsize, colname, offset, tid, chunk, fillvalue, compress, data)
-            fieldsize = [8,8]
+            fieldsize = [floatsize, floatsize]
             HDF5.h5tb_append_records(f.id, name, nrec, recsize, offset, fieldsize, data)
             HDF5.h5tb_write_records(f.id, name, 1, 4, recsize, offset, fieldsize, convert.(Float64,collect(1:8) .+ 20))
             buf = fill(0., 100)
