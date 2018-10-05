@@ -226,11 +226,11 @@ z = read(fr, "Float64", "Int16")
 @test typeof(z) == Tuple{Float64,Int16}
 # Test function syntax
 read(fr, "Float64") do x
-	@test x == 3.2
+    @test x == 3.2
 end
 read(fr, "Float64", "Int16") do x, y
-	@test x == 3.2
-	@test y == 4
+    @test x == 3.2
+    @test y == 4
 end
 # Test reading entire file at once
 z = read(fr)
@@ -363,7 +363,7 @@ Wr = h5read(fn, "newgroup/W")
 close(f)
 rm(fn)
 
-if !isempty(HDF5.libhdf5_hl) 
+if !isempty(HDF5.libhdf5_hl)
     # Test direct chunk writing
     h5open(fn, "w") do f
       d = d_create(f, "dataset", datatype(Int), dataspace(4, 4), "chunk", (2, 2))
@@ -412,3 +412,20 @@ close(f)
 rm(fn)
 
 end # testset null and undefined
+
+# test writing reinterpreted data
+@testset "reinterpreted data" begin
+fn = tempname()
+
+h5open(fn, "w") do f
+    data = reinterpret(UInt8, [true, false, false])
+    write(f, "reinterpret array", data)
+end
+
+@test h5open(fn, "r") do f
+    read(f, "reinterpret array")
+end == UInt8[0x01, 0x00, 0x00]
+
+rm(fn)
+
+end # writing reinterpreted data
