@@ -416,16 +416,17 @@ end # testset null and undefined
 # test writing reinterpreted data
 @testset "reinterpreted data" begin
 fn = tempname()
+try
+    h5open(fn, "w") do f
+        data = reinterpret(UInt8, [true, false, false])
+        write(f, "reinterpret array", data)
+    end
 
-h5open(fn, "w") do f
-    data = reinterpret(UInt8, [true, false, false])
-    write(f, "reinterpret array", data)
+    @test h5open(fn, "r") do f
+        read(f, "reinterpret array")
+    end == UInt8[0x01, 0x00, 0x00]
+finally
+    rm(fn)
 end
-
-@test h5open(fn, "r") do f
-    read(f, "reinterpret array")
-end == UInt8[0x01, 0x00, 0x00]
-
-rm(fn)
 
 end # writing reinterpreted data
