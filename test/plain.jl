@@ -413,8 +413,10 @@ rm(fn)
 
 end # testset null and undefined
 
+# test writing abstract arrays
+@testset "abstract arrays" begin
+
 # test writing reinterpreted data
-@testset "reinterpreted data" begin
 fn = tempname()
 try
     h5open(fn, "w") do f
@@ -429,4 +431,15 @@ finally
     rm(fn)
 end
 
-end # writing reinterpreted data
+# don't silently fail for arrays with a different stride
+fn = tempname()
+try
+    data = rand(UInt16, 2, 3);
+    pdv_data = PermutedDimsArray(data, (2, 1))
+
+    @test_throws ArgumentError h5write(fn, "pdv_data", pdv_data)
+finally
+    rm(fn)
+end
+
+end # writing abstract arrays
