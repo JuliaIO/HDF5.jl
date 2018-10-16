@@ -43,7 +43,7 @@ If you have to install the HDF5 library manually, here are some examples of
 how to do it:
 
 - Debian/(K)Ubuntu: `apt-get -u install hdf5-tools`
-- OSX: `brew tap homebrew/science; brew install hdf5` (using [Homebrew](http://brew.sh))
+- OSX: `brew install hdf5` (using [Homebrew](http://brew.sh))
 - Windows: It is highly recommended that you use the HDF5 library
   fetched by this package. Other HDF5 binaries may be compiled against
   a different C runtime from the Julia binary, which will cause
