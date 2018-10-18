@@ -1610,9 +1610,12 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
     if offset == reinterpret(Hsize, convert(Hssize, -1))
         error("Error mmapping array")
     end
-    # Mmap.mmap(fdio(fd), Array{T,length(dims)}, dims, offset) # does not work on julia 0.7
-    A = Mmap.mmap(fdio(fd), Array{UInt8,1}, prod(dims)*sizeof(T), offset)
-    return reshape(reinterpret(T,A),dims)
+    if offset % Base.datatype_alignment(T) == 0
+        return Mmap.mmap(fdio(fd), Array{T,length(dims)}, dims, offset)
+    else
+        A = Mmap.mmap(fdio(fd), Array{UInt8,1}, prod(dims)*sizeof(T), offset)
+        return reshape(reinterpret(T,A),dims)
+    end
 end
 
 function readmmap(obj::HDF5Dataset)
