@@ -31,7 +31,6 @@ end
 if Sys.isapple()
     using Homebrew
     Homebrew.brew(`install gcc`)
-    Homebrew.brew(`link --overwrite gcc`)
     provides(Homebrew.HB, "hdf5", hdf5, os=:Darwin)
 end
 
