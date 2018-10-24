@@ -16,6 +16,7 @@ Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+CRC32c = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
 
 [targets]
-test = ["Test", "Distributed", "LinearAlgebra","Pkg"]
+test = ["Test", "Distributed", "LinearAlgebra", "Pkg", "CRC32c"]
