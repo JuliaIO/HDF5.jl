@@ -19,7 +19,7 @@ addons:
     packages:
     - hdf5
 after_success:
-  - if [[ $TRAVIS_JULIA_VERSION = 1.0 ]] && [[ $TRAVIS_OS_NAME = linux ]]; then
+  - if [[ $TRAVIS_JULIA_VERSION = 1 ]] && [[ $TRAVIS_OS_NAME = linux ]]; then
       julia --project=test/coverage -e 'using Pkg; Pkg.instantiate();
           using Coverage; Codecov.submit(Codecov.process_folder())';
     fi
