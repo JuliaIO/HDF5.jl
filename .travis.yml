@@ -1,22 +1,22 @@
 language: julia
 os:
-    - linux
-    - osx
+  - linux
+  - osx
 julia:
-    - 0.7
-    - 1.0
-    - nightly
+  - 0.7
+  - 1.0
+  - nightly
 matrix:
   allow_failures:
     - julia: nightly
 addons:
-  apt:
-    packages:
-    - hdf5-tools
-  homebrew:
-    packages:
-    - hdf5
+apt:
+  packages:
+  - hdf5-tools
+homebrew:
+  packages:
+  - hdf5
 after_success:
-  - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder()); Codecov.submit(Codecov.process_folder())'
+- julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder()); Codecov.submit(Codecov.process_folder())'
 notifications:
-    email: false
+  email: false
