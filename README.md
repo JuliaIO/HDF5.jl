@@ -34,10 +34,10 @@ julia>]
 pkg> add HDF5
 ```
 
-If you run into installation errors, try to install the HDF5 library manually (version 1.8 or higher is required):
+If you run into installation errors, try to install the HDF5 library manually (v1.8+ is required):
 
 - **Debian/(K)Ubuntu**: `apt-get -u install hdf5-tools`
-- **OSX**: `brew install hdf5` (using [Homebrew](http://brew.sh))
+- **OSX**: `brew install hdf5` (using [Homebrew](http://brew.sh), please verify homebrew version is v1.8+)
 - **Windows**: Not recommended, as other HDF5 binaries may be compiled against
   a different C runtime from the Julia binary, which can cause Julia to crash when freeing memory allocated by libhdf5.
 
