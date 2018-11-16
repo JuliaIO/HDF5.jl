@@ -29,25 +29,17 @@ portions have been moved to Simon Kornblith's
 
 ## Installation
 
-Within Julia, use the package manager:
 ```julia
-Pkg.add("HDF5")
+julia>]
+pkg> add HDF5
 ```
 
-You also need to have the HDF5 library installed on your
-system (version 1.8 or higher is required), but **for most users
-no additional steps should be required; the HDF5 library should be
-installed for you automatically when you add the package.**
+If you run into installation errors, try to install the HDF5 library manually (version 1.8 or higher is required):
 
-If you have to install the HDF5 library manually, here are some examples of
-how to do it:
-
-- Debian/(K)Ubuntu: `apt-get -u install hdf5-tools`
-- OSX: `brew install hdf5` (using [Homebrew](http://brew.sh))
-- Windows: It is highly recommended that you use the HDF5 library
-  fetched by this package. Other HDF5 binaries may be compiled against
-  a different C runtime from the Julia binary, which will cause
-  Julia to crash when freeing memory allocated by libhdf5.
+- **Debian/(K)Ubuntu**: `apt-get -u install hdf5-tools`
+- **OSX**: `brew install hdf5` (using [Homebrew](http://brew.sh))
+- **Windows**: Not recommended, as other HDF5 binaries may be compiled against
+  a different C runtime from the Julia binary, which can cause Julia to crash when freeing memory allocated by libhdf5.
 
 If you've installed the library but discover that Julia is not finding
 it, you can add the path to Julia's `Libdl.DL_LOAD_PATH` variable, e.g.,
