@@ -1984,7 +1984,10 @@ h5a_create(loc_id::Hid, name::String, type_id::Hid, space_id::Hid) = h5a_create(
 h5a_open(obj_id::Hid, name::String) = h5a_open(obj_id, name, H5P_DEFAULT)
 h5d_create(loc_id::Hid, name::String, type_id::Hid, space_id::Hid) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
 h5d_open(obj_id::Hid, name::String) = h5d_open(obj_id, name, H5P_DEFAULT)
-h5d_read(dataset_id::Hid, memtype_id::Hid, buf::Array, xfer::Hid=H5P_DEFAULT) = h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
+function h5d_read(dataset_id::Hid, memtype_id::Hid, buf::AbstractArray, xfer::Hid=H5P_DEFAULT)
+    stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
+    h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
+end
 function h5d_write(dataset_id::Hid, memtype_id::Hid, buf::AbstractArray, xfer::Hid=H5P_DEFAULT)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
