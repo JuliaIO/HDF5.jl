@@ -29,6 +29,9 @@ write(f, "Auint8", convert(Matrix{UInt8}, Ai))
 write(f, "Auint16", convert(Matrix{UInt16}, Ai))
 write(f, "Auint32", convert(Matrix{UInt32}, Ai))
 write(f, "Auint64", convert(Matrix{UInt64}, Ai))
+# Arrays of bools (pull request #540)
+Abool = [false, true, false]
+write(f, "Abool", Abool)
 
 salut = "Hi there"
 ucode = "uniçº∂e"
@@ -155,6 +158,11 @@ Ai32 = read(fr, "Auint32")
 Ai64 = read(fr, "Auint64")
 @test Ai == Ai64
 @test eltype(Ai64) == UInt64
+
+Abool_read = read(fr, "Abool")
+@test Abool_read == Abool
+@test eltype(Abool_read) == Bool
+
 salutr = read(fr, "salut")
 @test salut == salutr
 salutr = read(fr, "salut-vlen")
