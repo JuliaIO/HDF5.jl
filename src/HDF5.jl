@@ -237,6 +237,7 @@ const H5T_C_S1            = read_const(:H5T_C_S1_g)
 const H5T_STD_REF_OBJ     = read_const(:H5T_STD_REF_OBJ_g)
 const H5T_STD_REF_DSETREG = read_const(:H5T_STD_REF_DSETREG_g)
 # Native types
+const H5T_NATIVE_B8       = read_const(:H5T_NATIVE_B8_g)
 const H5T_NATIVE_INT8     = read_const(:H5T_NATIVE_INT8_g)
 const H5T_NATIVE_UINT8    = read_const(:H5T_NATIVE_UINT8_g)
 const H5T_NATIVE_INT16    = read_const(:H5T_NATIVE_INT16_g)
@@ -265,6 +266,7 @@ end
 const HDF5ReferenceObj_NULL = HDF5ReferenceObj(UInt64(0))
 
 ## Conversion between Julia types and HDF5 atomic types
+hdf5_type_id(::Type{Bool})       = H5T_NATIVE_B8
 hdf5_type_id(::Type{Int8})       = H5T_NATIVE_INT8
 hdf5_type_id(::Type{UInt8})      = H5T_NATIVE_UINT8
 hdf5_type_id(::Type{Int16})      = H5T_NATIVE_INT16
@@ -277,7 +279,7 @@ hdf5_type_id(::Type{Float32})    = H5T_NATIVE_FLOAT
 hdf5_type_id(::Type{Float64})    = H5T_NATIVE_DOUBLE
 hdf5_type_id(::Type{HDF5ReferenceObj}) = H5T_STD_REF_OBJ
 
-const HDF5BitsKind = Union{Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
+const HDF5BitsKind = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
 const HDF5Scalar = Union{HDF5BitsKind, HDF5ReferenceObj}
 const ScalarOrString = Union{HDF5Scalar, String}
 
@@ -1930,6 +1932,10 @@ function hdf5_to_julia_eltype(objtype)
         finally
             h5t_close(native_type)
         end
+    elseif class_id == H5T_BITFIELD
+        T = Bool
+        type_id = h5t_copy(hdf5_type_id(T))
+        h5t_set_precision(type_id, 1)
     elseif class_id == H5T_ENUM
         super_type = h5t_get_super(objtype.id)
         try
@@ -2120,6 +2126,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5t_close, :H5Tclose, Herr, (Hid,), (:dtype_id,), "Error closing datatype"),
      (:h5t_set_cset, :H5Tset_cset, Herr, (Hid, Cint), (:dtype_id, :cset), "Error setting character set in datatype"),
      (:h5t_set_size, :H5Tset_size, Herr, (Hid, Csize_t), (:dtype_id, :sz), "Error setting size of datatype"),
+     (:h5t_set_precision, :H5Tset_precision, Herr, (Hid, Csize_t), (:dtype_id, :sz), "Error setting precision of datatype"),
     )
 
     # emulate 1.8 and 1.10 release interface (new release should use HF0get_info2 or use the macro mapping H5Oget_info)
