@@ -390,7 +390,7 @@ end
 convert(::Type{Hid}, dset::HDF5Dataset) = dset.id
 function show(io::IO, dset::HDF5Dataset)
     if isvalid(dset)
-        print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, "xfer_mode: ", dset.xfer ," )" )
+        print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, " xfer_mode: ", dset.xfer, ")")
     else
         print(io, "HFD5 dataset (invalid)")
     end
