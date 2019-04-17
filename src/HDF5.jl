@@ -1598,14 +1598,19 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
     if isempty(dims)
         return T[]
     end
-    local fd
-    prop = h5d_get_access_plist(checkvalid(obj).id)
-    try
-        ret = Ptr{Cint}[0]
-        h5f_get_vfd_handle(obj.file.id, prop, ret)
-        fd = unsafe_load(ret[1])
-    finally
-        HDF5.h5p_close(prop)
+    if !Sys.iswindows()
+        local fdint
+        prop = h5d_get_access_plist(checkvalid(obj).id)
+        try
+            ret = Ptr{Cint}[0]
+            h5f_get_vfd_handle(obj.file.id, prop, ret)
+            fdint = unsafe_load(ret[1])
+        finally
+            HDF5.h5p_close(prop)
+        end
+        fd = fdio(fdint)
+    else
+        fd = open(obj.file.filename,"r") # which acces rights?
     end
 
     offset = h5d_get_offset(obj.id)
@@ -1613,9 +1618,9 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
         error("Error mmapping array")
     end
     if offset % Base.datatype_alignment(T) == 0
-        return Mmap.mmap(fdio(fd), Array{T,length(dims)}, dims, offset)
+        return Mmap.mmap(fd, Array{T,length(dims)}, dims, offset)
     else
-        A = Mmap.mmap(fdio(fd), Array{UInt8,1}, prod(dims)*sizeof(T), offset)
+        A = Mmap.mmap(fd, Array{UInt8,1}, prod(dims)*sizeof(T), offset)
         return reshape(reinterpret(T,A),dims)
     end
 end
