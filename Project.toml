@@ -21,4 +21,4 @@ CRC32c = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
 test = ["Test", "Distributed", "LinearAlgebra", "Pkg", "CRC32c"]
 
 [compat]
-julia = "1"
+julia = "0.7, 1"
