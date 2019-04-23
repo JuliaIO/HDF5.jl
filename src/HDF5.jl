@@ -1602,9 +1602,9 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
         local fdint
         prop = h5d_get_access_plist(checkvalid(obj).id)
         try
-        ret = Ref{Ptr{Cint}}()
-        h5f_get_vfd_handle(obj.file.id, prop, ret)
-        fdint = unsafe_load(ret[])
+            ret = Ref{Ptr{Cint}}()
+            h5f_get_vfd_handle(obj.file.id, prop, ret)
+            fdint = unsafe_load(ret[])
         finally
             HDF5.h5p_close(prop)
         end
