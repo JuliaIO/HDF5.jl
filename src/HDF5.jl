@@ -43,7 +43,7 @@ end
 function init_libhdf5()
     status = ccall((:H5open, libhdf5), Cint, ())
     status < 0 && error("Can't initialize the HDF5 library")
-    nothing
+    return nothing
 end
 
 function h5_get_libversion()
@@ -1328,15 +1328,15 @@ function read(obj::DatasetOrAttribute, ::Type{A}) where {A<:FixedArray}
 end
 function read(obj::DatasetOrAttribute, ::Type{Array{A}}) where {A<:FixedArray}
     T = eltype(A)
-    if !(T<:HDF5Scalar)
+    if !(T <: HDF5Scalar)
         error("Sorry, not yet supported")
     end
     sz = size(A)
     dims = size(obj)
     data = Array{T}(undef,sz..., dims...)
     nd = length(sz)
-    hsz = Hsize[convert(Hsize,sz[nd-i+1]) for i = 1:nd]
-    memtype_id = h5t_array_create(hdf5_type_id(T), convert(Cuint, length(sz)), hsz)
+    hsz = Hsize[sz[nd-i+1] for i = 1:nd]
+    memtype_id = h5t_array_create(hdf5_type_id(T), length(sz), hsz)
     try
         h5d_read(obj.id, memtype_id, H5S_ALL, H5S_ALL, obj.xfer, data)
     finally
@@ -1602,9 +1602,9 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
         local fdint
         prop = h5d_get_access_plist(checkvalid(obj).id)
         try
-            ret = Ptr{Cint}[0]
+            ret = Ref{Ptr{Cint}}()
             h5f_get_vfd_handle(obj.file.id, prop, ret)
-            fdint = unsafe_load(ret[1])
+            fdint = unsafe_load(ret[])
         finally
             HDF5.h5p_close(prop)
         end
@@ -1635,7 +1635,7 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
     end
 
     offset = h5d_get_offset(obj.id)
-    if offset == reinterpret(Hsize, convert(Hssize, -1))
+    if offset == -1
         error("Error mmapping array")
     end
     if offset % Base.datatype_alignment(T) == 0
@@ -2563,7 +2563,7 @@ function __init__()
     rehash!(hdf5_obj_open, length(hdf5_obj_open.keys))
 
 
-    nothing
+    return nothing
 end
 
 end  # module
