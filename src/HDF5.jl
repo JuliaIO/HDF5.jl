@@ -1610,8 +1610,18 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
         end
         fd = fdio(fdint)
     else
-        # This is a workaround since h5f_get_vfd_handle gives a wrong result on
-        # windows. We therefore open a new file handle.
+        # This is a workaround since the regular code path does not work on windows
+        # (see #89 for background). The error is that "Mmap.mmap(fd, ...)" cannot
+        # create create a valid file mapping. The question is if the handler
+        # returned by "h5f_get_vfd_handle" has
+        # the correct format as required by the "fdio" function. The former
+        # calls
+        # https://gitlabext.iag.uni-stuttgart.de/libs/hdf5/blob/develop/src/H5FDcore.c#L1209
+        #
+        # The workaround is to create a new file handle, which should actually
+        # not make any problems. Since we need to know the permissions of the
+        # original file handle, we first retrieve them using the "h5f_get_intend"
+        # function
 
         # Check permissions
         intent = Ref{Cuint}()
