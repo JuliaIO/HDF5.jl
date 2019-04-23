@@ -43,7 +43,7 @@ end
 function init_libhdf5()
     status = ccall((:H5open, libhdf5), Cint, ())
     status < 0 && error("Can't initialize the HDF5 library")
-    nothing
+    return nothing
 end
 
 function h5_get_libversion()
@@ -1601,7 +1601,7 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
     local fd
     prop = h5d_get_access_plist(checkvalid(obj).id)
     try
-        ret = Ref{Ptr{CVoid}}()
+        ret = Ref{Ptr{Cint}}()
         h5f_get_vfd_handle(obj.file.id, prop, ret)
         fd = unsafe_load(ret[])
     finally
