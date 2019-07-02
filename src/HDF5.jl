@@ -2542,8 +2542,14 @@ const ASCII_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false, H5P_DEFAULT)
 
 function __init__()
+    # If we're running on 1.10.X, disable file locking as that can cause problems with mmap'ing
+    if libversion >= v"1.10.0" && !haskey(ENV, "HDF5_USE_FILE_LOCKING")
+        ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
+    end
+
     init_libhdf5()
     register_blosc()
+
     # Turn off automatic error printing
     # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
