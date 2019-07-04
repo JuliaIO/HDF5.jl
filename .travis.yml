@@ -8,13 +8,6 @@ julia:
 matrix:
   allow_failures:
     - julia: nightly
-addons:
-  apt:
-    packages:
-    - hdf5-tools
-  homebrew:
-    packages:
-    - hdf5
 after_success:
   - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder()); Codecov.submit(Codecov.process_folder())'
 notifications:
