@@ -390,6 +390,30 @@ if !isempty(HDF5.libhdf5_hl)
     rm(fn)
 end
 
+# Test h5read_compound
+struct Vec3
+    a::Float64
+    b::Float64
+    c::Float64
+end
+struct Data
+    wgt::Float64
+    xyz::Vec3
+    uvw::Vec3
+    E::Float64
+end
+function test_data(data)
+    @test 2 == length(data)
+    @test -2.45590412 ≈ data[1].xyz.a
+end
+fn = joinpath(test_files, "compound.h5")
+test_data(HDF5.h5read_compound(fn, "/data", Data))
+h5open(fn, "r") do f
+    test_data(HDF5.h5read_compound(f, "/data", Data))
+    test_data(HDF5.h5read_compound(f["/data"], Data))
+end
+
+
 # Test that switching time tracking off results in identical files
 h5open("tt1.h5", "w") do f
     f["x", "track_times", false] = [1, 2, 3]
