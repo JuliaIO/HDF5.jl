@@ -2,6 +2,20 @@ using HDF5
 using CRC32c
 using Test
 
+# Structures for the compound.h5 file
+struct Vec3
+    a::Float64
+    b::Float64
+    c::Float64
+end
+struct Data
+    wgt::Float64
+    xyz::Vec3
+    uvw::Vec3
+    E::Float64
+end
+
+
 @testset "plain" begin
 
 # Create a new file
@@ -391,17 +405,6 @@ if !isempty(HDF5.libhdf5_hl)
 end
 
 # Test h5read_compound
-struct Vec3
-    a::Float64
-    b::Float64
-    c::Float64
-end
-struct Data
-    wgt::Float64
-    xyz::Vec3
-    uvw::Vec3
-    E::Float64
-end
 function test_data(data)
     @test 2 == length(data)
     @test -2.45590412 ≈ data[1].xyz.a
