@@ -19,7 +19,7 @@ export
     d_create, d_create_external, d_open, d_read, d_write,
     dataspace, datatype, exists, file, filename,
     g_create, g_open, get_chunk, get_create_properties, get_datasets,
-    h5open, h5read, h5rewrite, h5writeattr, h5readattr, h5write,
+    h5open, h5read, h5read_compound, h5rewrite, h5writeattr, h5readattr, h5write,
     has, iscontiguous, ishdf5, ismmappable, name,
     o_copy, o_delete, o_open, p_create,
     readmmap, @read, @write, root, set_dims!, t_create, t_commit
@@ -731,6 +731,33 @@ function h5read(filename, name::String, indices::Tuple{Vararg{Union{AbstractRang
         close(fid)
     end
     dat
+end
+
+"""
+    function h5read_compound(dset::HDF5.HDF5Dataset, T::DataType)
+
+Reads a dataset directly using the given datatype and returns a `Vector{T}`.
+The implementation is based on @damiendr's post in HDF5.jl Issue#408.
+"""
+function h5read_compound(dset::HDF5Dataset, T::DataType)
+    filetype = datatype(dset)  # packed layout on disk
+    memtype_id = h5t_get_native_type(filetype.id)  # padded layout in memory
+    @assert sizeof(T) == h5t_get_size(memtype_id) "Type sizes mismatch!"
+    out = Vector{T}(undef, length(dset))
+    h5d_read(dset.id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, out)
+    h5t_close(memtype_id)
+    out
+end
+
+function h5read_compound(h5f::HDF5File, h5loc::AbstractString, T::DataType)
+    h5read_compound(h5f[h5loc], T)
+end
+
+function h5read_compound(filename::AbstractString, h5loc::AbstractString, T::DataType)
+    h5f = h5open(filename, "r")
+    out = h5read_compound(h5f[h5loc], T)
+    close(h5f)
+    out
 end
 
 function h5writeattr(filename, name::String, data::Dict)
