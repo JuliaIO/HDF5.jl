@@ -22,7 +22,8 @@ export
     h5open, h5read, h5rewrite, h5writeattr, h5readattr, h5write,
     has, iscontiguous, ishdf5, ismmappable, name,
     o_copy, o_delete, o_open, p_create,
-    readmmap, @read, @write, root, set_dims!, t_create, t_commit
+    readmmap, @read, @write, root, set_dims!, t_create, t_commit,
+    tree
 
 include("datafile.jl")
 
@@ -2471,6 +2472,48 @@ end
         end
     end
 end
+
+_elbow(indent, flag) = return flag ? string(indent[1:lastindex(indent)-7], "└─ ") : indent
+
+"""
+    tree(obj::Union{AbstractString,HDF5File,HDF5Group})
+
+Display the hierarchical structure of object `obj`, much like the bash
+`tree` command does for file system paths.  Similar to `h5dump` on the
+linux command line but more concise as it omits the full contents of
+datasets.
+"""
+function tree(obj::Union{HDF5File,HDF5Group}, indent="")
+    attributes = names(attrs(obj))
+    datasets = filter(x->typeof(obj[x])==HDF5Dataset, names(obj))
+    groups = filter(x->typeof(obj[x])==HDF5Group, names(obj))
+    for a in attributes
+        currindent = _elbow(indent, a==last(attributes) && isempty(datasets) && isempty(groups))
+        println(currindent, a, ": ", read(attrs(obj)[a]))
+    end
+    for d in datasets
+        currindent = _elbow(indent, d==last(datasets) && isempty(groups))
+        println(currindent, d, ' ', size(obj[d]), ' ', eltype(obj[d]))
+    end
+    for g in groups
+        currindent = _elbow(indent, g==last(groups))
+        println(currindent, g)
+        if indent==""
+            nextindent = indent
+        else
+            nextindent = indent[1:lastindex(indent)-7]
+        end
+        if g==last(groups)
+            nextindent = string(nextindent,"   ")
+        else
+            nextindent = string(nextindent,"│  ")
+        end
+        nextindent = string(nextindent, "├─ ")
+        tree(obj[g], nextindent)
+    end
+end
+tree(file::AbstractString) = h5open(file) do fid; tree(fid); end
+
 
 # Map property names to function and attribute symbol
 # Property names should follow the naming introduced by HDF5, i.e.

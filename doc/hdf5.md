@@ -225,6 +225,15 @@ Getting information
 -------------------
 
 ```julia
+tree(obj)
+```
+
+will display the hierarchical structure of object `obj`, much like the bash
+`tree` command does for file system paths.  Similar to `h5dump` on the
+linux command line but more concise as it omits the full contents of
+datasets.
+
+```julia
 name(obj)
 ```
 
