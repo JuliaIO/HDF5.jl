@@ -1171,13 +1171,13 @@ datatype(dset::HDF5Dataset) = HDF5Datatype(h5d_get_type(checkvalid(dset).id), fi
 datatype(dset::HDF5Attribute) = HDF5Datatype(h5a_get_type(checkvalid(dset).id), file(dset))
 
 # Create a datatype from in-memory types
-datatype(x::T) where {T<:HDF5Scalar} = HDF5Datatype(hdf5_type_id(T), false)
+datatype(x::HDF5Scalar) = HDF5Datatype(hdf5_type_id(typeof(x)), false)
 datatype(::Type{T}) where {T<:HDF5Scalar} = HDF5Datatype(hdf5_type_id(T), false)
 datatype(A::AbstractArray{T}) where {T<:HDF5Scalar} = HDF5Datatype(hdf5_type_id(T), false)
-function datatype(str::S) where {S<:String}
-    type_id = h5t_copy(hdf5_type_id(S))
+function datatype(str::String)
+    type_id = h5t_copy(hdf5_type_id(typeof(str)))
     h5t_set_size(type_id, max(sizeof(str), 1))
-    h5t_set_cset(type_id, cset(S))
+    h5t_set_cset(type_id, cset(typeof(str)))
     HDF5Datatype(type_id)
 end
 function datatype(str::Array{S}) where {S<:String}
