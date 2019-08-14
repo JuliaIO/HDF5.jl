@@ -1150,6 +1150,7 @@ function iterate(parent::Union{HDF5File, HDF5Group}, iter = (1,nothing))
 end
 
 lastindex(dset::HDF5Dataset) = length(dset)
+lastindex(dset::HDF5Dataset, d::Int) = size(dset, d)
 
 function parent(obj::Union{HDF5File, HDF5Group, HDF5Dataset})
     f = file(obj)
