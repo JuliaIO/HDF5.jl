@@ -402,6 +402,54 @@ end
 
 end # testset plain
 
+@testset "complex" begin
+  HDF5.enable_complex_support()
+
+  fn = tempname()
+  f = h5open(fn, "w")
+
+  f["ComplexF64"] = 1.0 + 2.0im
+  attrs(f["ComplexF64"])["ComplexInt64"] = 1im
+
+  Acmplx = rand(ComplexF64, 3, 5)
+  write(f, "Acmplx64", convert(Matrix{ComplexF64}, Acmplx))
+  write(f, "Acmplx32", convert(Matrix{ComplexF32}, Acmplx))
+
+  HDF5.disable_complex_support()
+  @test_throws ErrorException f["_ComplexF64"] = 1.0 + 2.0im
+  @test_throws ErrorException write(f, "_Acmplx64", convert(Matrix{ComplexF64}, Acmplx))
+  @test_throws ErrorException write(f, "_Acmplx32", convert(Matrix{ComplexF32}, Acmplx))
+  HDF5.enable_complex_support()
+
+  close(f)
+
+  fr = h5open(fn)
+  z = read(fr, "ComplexF64")
+  @test z == 1.0 + 2.0im && isa(z, ComplexF64)
+  z_attrs = attrs(fr["ComplexF64"])
+  @test read(z_attrs["ComplexInt64"]) == 1im
+
+  Acmplx32 = read(fr, "Acmplx32")
+  @test convert(Matrix{ComplexF32}, Acmplx) == Acmplx32
+  @test eltype(Acmplx32) == ComplexF32
+  Acmplx64 = read(fr, "Acmplx64")
+  @test convert(Matrix{ComplexF64}, Acmplx) == Acmplx64
+  @test eltype(Acmplx64) == ComplexF64
+
+  HDF5.disable_complex_support()
+  z = read(fr, "ComplexF64")
+  @test isa(z, HDF5.HDF5Compound{2})
+
+  Acmplx32 = read(fr, "Acmplx32")
+  @test eltype(Acmplx32) == HDF5.HDF5Compound{2}
+  Acmplx64 = read(fr, "Acmplx64")
+  @test eltype(Acmplx64) == HDF5.HDF5Compound{2}
+
+  close(fr)
+
+  HDF5.enable_complex_support()
+end
+
 # test strings with null and undefined references
 @testset "undefined and null" begin
 fn = tempname()
