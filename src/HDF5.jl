@@ -324,11 +324,11 @@ cset(::Type{ASCIIChar}) = H5T_CSET_ASCII
 hdf5_type_id(::Type{C}) where {C<:CharType} = H5T_C_S1
 
 # global configuration for complex support
-complex_support = true
-complex_field_names = ("r", "i")
-enable_complex_support() = global complex_support = true
-disable_complex_support() = global complex_support = false
-set_complex_field_names(real::String, imag::String) = global complex_field_names = (real, imag)
+const COMPLEX_SUPPORT = Ref(true)
+const COMPLEX_FIELD_NAMES = Ref(("r", "i"))
+enable_complex_support() = COMPLEX_SUPPORT[] = true
+disable_complex_support() = COMPLEX_SUPPORT[] = false
+set_complex_field_names(real::AbstractString, imag::AbstractString) =  COMPLEX_FIELD_NAMES[] = ((real, imag))
 
 ## HDF5 uses a plain integer to refer to each file, group, or
 ## dataset. These are wrapped into special types in order to allow
@@ -1183,10 +1183,10 @@ datatype(x::HDF5Scalar) = HDF5Datatype(hdf5_type_id(typeof(x)), false)
 datatype(::Type{T}) where {T<:HDF5Scalar} = HDF5Datatype(hdf5_type_id(T), false)
 datatype(A::AbstractArray{T}) where {T<:HDF5Scalar} = HDF5Datatype(hdf5_type_id(T), false)
 function datatype(::Type{Complex{T}}) where {T<:HDF5Scalar}
-  complex_support || error("complex support disabled. call HDF5.enable_complex_support() to enable")
+  COMPLEX_SUPPORT[] || error("complex support disabled. call HDF5.enable_complex_support() to enable")
   dtype = h5t_create(H5T_COMPOUND, 2*sizeof(T))
-  h5t_insert(dtype, complex_field_names[1], 0, hdf5_type_id(T))
-  h5t_insert(dtype, complex_field_names[2], sizeof(T), hdf5_type_id(T))
+  h5t_insert(dtype, COMPLEX_FIELD_NAMES[][1], 0, hdf5_type_id(T))
+  h5t_insert(dtype, COMPLEX_FIELD_NAMES[][2], sizeof(T), hdf5_type_id(T))
   return HDF5Datatype(dtype)
 end
 datatype(x::Complex{T}) where {T<:HDF5Scalar} = datatype(typeof(x))
@@ -2014,14 +2014,14 @@ function hdf5_to_julia_eltype(objtype)
     elseif class_id == H5T_COMPOUND
         N = Int(h5t_get_nmembers(objtype.id))
         # check if should be interpreted as complex
-        if complex_support && N == 2
+        if COMPLEX_SUPPORT[] && N == 2
           membernames = ntuple(N) do i
             h5t_get_member_name(objtype.id, i-1)
           end
           membertypes = ntuple(N) do i
             h5t_get_member_type(objtype.id, i-1) |> HDF5Datatype |> hdf5_to_julia_eltype
           end
-          iscomplex = membernames == complex_field_names && membertypes[1] == membertypes[2] && membertypes[1] <: HDF5.HDF5Scalar
+          iscomplex = membernames == COMPLEX_FIELD_NAMES[] && membertypes[1] == membertypes[2] && membertypes[1] <: HDF5.HDF5Scalar
           T = iscomplex ? Complex{membertypes[1]} : HDF5Compound{N}
         else
           T = HDF5Compound{N}
