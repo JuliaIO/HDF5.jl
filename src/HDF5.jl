@@ -43,7 +43,7 @@ end
 function init_libhdf5()
     status = ccall((:H5open, libhdf5), Cint, ())
     status < 0 && error("Can't initialize the HDF5 library")
-    nothing
+    return nothing
 end
 
 function h5_get_libversion()
@@ -237,6 +237,7 @@ const H5T_C_S1            = read_const(:H5T_C_S1_g)
 const H5T_STD_REF_OBJ     = read_const(:H5T_STD_REF_OBJ_g)
 const H5T_STD_REF_DSETREG = read_const(:H5T_STD_REF_DSETREG_g)
 # Native types
+const H5T_NATIVE_B8       = read_const(:H5T_NATIVE_B8_g)
 const H5T_NATIVE_INT8     = read_const(:H5T_NATIVE_INT8_g)
 const H5T_NATIVE_UINT8    = read_const(:H5T_NATIVE_UINT8_g)
 const H5T_NATIVE_INT16    = read_const(:H5T_NATIVE_INT16_g)
@@ -265,6 +266,7 @@ end
 const HDF5ReferenceObj_NULL = HDF5ReferenceObj(UInt64(0))
 
 ## Conversion between Julia types and HDF5 atomic types
+hdf5_type_id(::Type{Bool})       = H5T_NATIVE_B8
 hdf5_type_id(::Type{Int8})       = H5T_NATIVE_INT8
 hdf5_type_id(::Type{UInt8})      = H5T_NATIVE_UINT8
 hdf5_type_id(::Type{Int16})      = H5T_NATIVE_INT16
@@ -277,7 +279,7 @@ hdf5_type_id(::Type{Float32})    = H5T_NATIVE_FLOAT
 hdf5_type_id(::Type{Float64})    = H5T_NATIVE_DOUBLE
 hdf5_type_id(::Type{HDF5ReferenceObj}) = H5T_STD_REF_OBJ
 
-const HDF5BitsKind = Union{Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
+const HDF5BitsKind = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
 const HDF5Scalar = Union{HDF5BitsKind, HDF5ReferenceObj}
 const ScalarOrString = Union{HDF5Scalar, String}
 
@@ -388,7 +390,7 @@ end
 convert(::Type{Hid}, dset::HDF5Dataset) = dset.id
 function show(io::IO, dset::HDF5Dataset)
     if isvalid(dset)
-        print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, "xfer_mode: ", dset.xfer ," )" )
+        print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, " xfer_mode: ", dset.xfer, ")")
     else
         print(io, "HFD5 dataset (invalid)")
     end
@@ -1148,6 +1150,7 @@ function iterate(parent::Union{HDF5File, HDF5Group}, iter = (1,nothing))
 end
 
 lastindex(dset::HDF5Dataset) = length(dset)
+lastindex(dset::HDF5Dataset, d::Int) = size(dset, d)
 
 function parent(obj::Union{HDF5File, HDF5Group, HDF5Dataset})
     f = file(obj)
@@ -1169,13 +1172,13 @@ datatype(dset::HDF5Dataset) = HDF5Datatype(h5d_get_type(checkvalid(dset).id), fi
 datatype(dset::HDF5Attribute) = HDF5Datatype(h5a_get_type(checkvalid(dset).id), file(dset))
 
 # Create a datatype from in-memory types
-datatype(x::T) where {T<:HDF5Scalar} = HDF5Datatype(hdf5_type_id(T), false)
+datatype(x::HDF5Scalar) = HDF5Datatype(hdf5_type_id(typeof(x)), false)
 datatype(::Type{T}) where {T<:HDF5Scalar} = HDF5Datatype(hdf5_type_id(T), false)
-datatype(A::Array{T}) where {T<:HDF5Scalar} = HDF5Datatype(hdf5_type_id(T), false)
-function datatype(str::S) where {S<:String}
-    type_id = h5t_copy(hdf5_type_id(S))
+datatype(A::AbstractArray{T}) where {T<:HDF5Scalar} = HDF5Datatype(hdf5_type_id(T), false)
+function datatype(str::String)
+    type_id = h5t_copy(hdf5_type_id(typeof(str)))
     h5t_set_size(type_id, max(sizeof(str), 1))
-    h5t_set_cset(type_id, cset(S))
+    h5t_set_cset(type_id, cset(typeof(str)))
     HDF5Datatype(type_id)
 end
 function datatype(str::Array{S}) where {S<:String}
@@ -1225,7 +1228,7 @@ function _dataspace(sz::Tuple{Vararg{Int}}, max_dims::Union{Dims, Tuple{}}=())
     end
     HDF5Dataspace(space_id)
 end
-dataspace(A::Array; max_dims::Union{Dims, Tuple{}} = ()) = _dataspace(size(A), max_dims)
+dataspace(A::AbstractArray; max_dims::Union{Dims, Tuple{}} = ()) = _dataspace(size(A), max_dims)
 dataspace(str::String) = HDF5Dataspace(h5s_create(H5S_SCALAR))
 dataspace(v::HDF5Vlen; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(size(v.data), max_dims)
 dataspace(n::Nothing) = HDF5Dataspace(h5s_create(H5S_NULL))
@@ -1326,15 +1329,15 @@ function read(obj::DatasetOrAttribute, ::Type{A}) where {A<:FixedArray}
 end
 function read(obj::DatasetOrAttribute, ::Type{Array{A}}) where {A<:FixedArray}
     T = eltype(A)
-    if !(T<:HDF5Scalar)
+    if !(T <: HDF5Scalar)
         error("Sorry, not yet supported")
     end
     sz = size(A)
     dims = size(obj)
     data = Array{T}(undef,sz..., dims...)
     nd = length(sz)
-    hsz = Hsize[convert(Hsize,sz[nd-i+1]) for i = 1:nd]
-    memtype_id = h5t_array_create(hdf5_type_id(T), convert(Cuint, length(sz)), hsz)
+    hsz = Hsize[sz[nd-i+1] for i = 1:nd]
+    memtype_id = h5t_array_create(hdf5_type_id(T), length(sz), hsz)
     try
         h5d_read(obj.id, memtype_id, H5S_ALL, H5S_ALL, obj.xfer, data)
     finally
@@ -1596,23 +1599,58 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
     if isempty(dims)
         return T[]
     end
-    local fd
-    prop = h5d_get_access_plist(checkvalid(obj).id)
-    try
-        ret = Ptr{Cint}[0]
-        h5f_get_vfd_handle(obj.file.id, prop, ret)
-        fd = unsafe_load(ret[1])
-    finally
-        HDF5.h5p_close(prop)
+    if !Sys.iswindows()
+        local fdint
+        prop = h5d_get_access_plist(checkvalid(obj).id)
+        try
+            ret = Ref{Ptr{Cint}}()
+            h5f_get_vfd_handle(obj.file.id, prop, ret)
+            fdint = unsafe_load(ret[])
+        finally
+            HDF5.h5p_close(prop)
+        end
+        fd = fdio(fdint)
+    else
+        # This is a workaround since the regular code path does not work on windows
+        # (see #89 for background). The error is that "Mmap.mmap(fd, ...)" cannot
+        # create create a valid file mapping. The question is if the handler
+        # returned by "h5f_get_vfd_handle" has
+        # the correct format as required by the "fdio" function. The former
+        # calls
+        # https://gitlabext.iag.uni-stuttgart.de/libs/hdf5/blob/develop/src/H5FDcore.c#L1209
+        #
+        # The workaround is to create a new file handle, which should actually
+        # not make any problems. Since we need to know the permissions of the
+        # original file handle, we first retrieve them using the "h5f_get_intend"
+        # function
+
+        # Check permissions
+        intent = Ref{Cuint}()
+        h5f_get_intend(obj.file, intent)
+        if intent[] == HDF5.H5F_ACC_RDONLY || intent[] == HDF5.H5F_ACC_RDONLY
+            flag = "r"
+        else
+            flag = "r+"
+        end
+        fd = open(obj.file.filename, flag)
     end
 
     offset = h5d_get_offset(obj.id)
-    if offset == reinterpret(Hsize, convert(Hssize, -1))
+    if offset == -1
         error("Error mmapping array")
     end
-    # Mmap.mmap(fdio(fd), Array{T,length(dims)}, dims, offset) # does not work on julia 0.7
-    A = Mmap.mmap(fdio(fd), Array{UInt8,1}, prod(dims)*sizeof(T), offset)
-    return reshape(reinterpret(T,A),dims)
+    if offset % Base.datatype_alignment(T) == 0
+        A = Mmap.mmap(fd, Array{T,length(dims)}, dims, offset)
+    else
+        Aflat = Mmap.mmap(fd, Array{UInt8,1}, prod(dims)*sizeof(T), offset)
+        A = reshape(reinterpret(T, Aflat), dims)
+    end
+
+    if Sys.iswindows()
+        close(fd)
+    end
+
+    return A
 end
 
 function readmmap(obj::HDF5Dataset)
@@ -1927,6 +1965,10 @@ function hdf5_to_julia_eltype(objtype)
         finally
             h5t_close(native_type)
         end
+    elseif class_id == H5T_BITFIELD
+        T = Bool
+        type_id = h5t_copy(hdf5_type_id(T))
+        h5t_set_precision(type_id, 1)
     elseif class_id == H5T_ENUM
         super_type = h5t_get_super(objtype.id)
         try
@@ -1981,8 +2023,14 @@ h5a_create(loc_id::Hid, name::String, type_id::Hid, space_id::Hid) = h5a_create(
 h5a_open(obj_id::Hid, name::String) = h5a_open(obj_id, name, H5P_DEFAULT)
 h5d_create(loc_id::Hid, name::String, type_id::Hid, space_id::Hid) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
 h5d_open(obj_id::Hid, name::String) = h5d_open(obj_id, name, H5P_DEFAULT)
-h5d_read(dataset_id::Hid, memtype_id::Hid, buf::Array, xfer::Hid=H5P_DEFAULT) = h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
-h5d_write(dataset_id::Hid, memtype_id::Hid, buf::Array, xfer::Hid=H5P_DEFAULT) = h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
+function h5d_read(dataset_id::Hid, memtype_id::Hid, buf::AbstractArray, xfer::Hid=H5P_DEFAULT)
+    stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
+    h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
+end
+function h5d_write(dataset_id::Hid, memtype_id::Hid, buf::AbstractArray, xfer::Hid=H5P_DEFAULT)
+    stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
+    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
+end
 function h5d_write(dataset_id::Hid, memtype_id::Hid, str::String, xfer::Hid=H5P_DEFAULT)
     ccall((:H5Dwrite, libhdf5), Herr, (Hid, Hid, Hid, Hid, Hid, Cstring), dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, str)
 end
@@ -2083,6 +2131,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5f_flush, :H5Fflush, Herr, (Hid, Cint), (:object_id, :scope,), "Error flushing object to file"),
      (:hf5start_swmr_write, :H5Fstart_swmr_write, Herr, (Hid,), (:id,), "Error starting SWMR write"),
      (:h5f_get_vfd_handle, :H5Fget_vfd_handle, Herr, (Hid, Hid, Ptr{Ptr{Cint}}), (:file_id, :fapl_id, :file_handle), "Error getting VFD handle"),
+     (:h5f_get_intend, :H5Fget_intent, Herr, (Hid, Ptr{Cuint}), (:file_id, :intent), "Error getting file intent"),
      (:h5g_close, :H5Gclose, Herr, (Hid,), (:group_id,), "Error closing group"),
      (:h5g_get_info, :H5Gget_info, Herr, (Hid, Ptr{H5Ginfo}), (:group_id, :buf), "Error getting group info"),
      (:h5o_get_info, :H5Oget_info1, Herr, (Hid, Ptr{H5Oinfo}), (:object_id, :buf), "Error getting object info"),
@@ -2114,6 +2163,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5t_close, :H5Tclose, Herr, (Hid,), (:dtype_id,), "Error closing datatype"),
      (:h5t_set_cset, :H5Tset_cset, Herr, (Hid, Cint), (:dtype_id, :cset), "Error setting character set in datatype"),
      (:h5t_set_size, :H5Tset_size, Herr, (Hid, Csize_t), (:dtype_id, :sz), "Error setting size of datatype"),
+     (:h5t_set_precision, :H5Tset_precision, Herr, (Hid, Csize_t), (:dtype_id, :sz), "Error setting precision of datatype"),
     )
 
     # emulate 1.8 and 1.10 release interface (new release should use HF0get_info2 or use the macro mapping H5Oget_info)
@@ -2195,7 +2245,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5f_get_access_plist, :H5Fget_access_plist, Hid, (Hid,), (:file_id,), :(error("Error getting file access property list"))),
      (:h5f_get_create_plist, :H5Fget_create_plist, Hid, (Hid,), (:file_id,), :(error("Error getting file create property list"))),
      (:h5f_get_name, :H5Fget_name, Cssize_t, (Hid, Ptr{UInt8}, Csize_t), (:obj_id, :buf, :buf_size), :(error("Error getting file name"))),
-     (:h5f_open, :H5Fopen, Hid, (Ptr{UInt8}, Cuint, Hid), (:pathname, :flags, :fapl_id), :(error("Error opening file ", pathname))),
+     (:h5f_open, :H5Fopen, Hid, (Cstring, Cuint, Hid), (:pathname, :flags, :fapl_id), :(error("Error opening file ", pathname))),
      (:h5g_create, :H5Gcreate2, Hid, (Hid, Ptr{UInt8}, Hid, Hid, Hid), (:loc_id, :pathname, :lcpl_id, :gcpl_id, :gapl_id), :(error("Error creating group ", h5i_get_name(loc_id), "/", pathname))),
      (:h5g_get_create_plist, :H5Gget_create_plist, Hid, (Hid,), (:group_id,), :(error("Error getting group create property list"))),
      (:h5g_get_objname_by_idx, :H5Gget_objname_by_idx, Hid, (Hid, Hsize, Ptr{UInt8}, Csize_t), (:loc_id, :idx, :pathname, :size), :(error("Error getting group object name ", h5i_get_name(loc_id), "/", pathname))),
@@ -2273,7 +2323,7 @@ end
 for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
     ((:h5a_exists, :H5Aexists, Htri, (Hid, Ptr{UInt8}), (:obj_id, :attr_name), :(error("Error checking whether attribute ", attr_name, " exists"))),
      (:h5a_exists_by_name, :H5Aexists_by_name, Htri, (Hid, Ptr{UInt8}, Ptr{UInt8}, Hid), (:loc_id, :obj_name, :attr_name, :lapl_id), :(error("Error checking whether object ", obj_name, " has attribute ", attr_name))),
-     (:h5f_is_hdf5, :H5Fis_hdf5, Htri, (Ptr{UInt8},), (:pathname,), :(error("Cannot access file ", pathname))),
+     (:h5f_is_hdf5, :H5Fis_hdf5, Htri, (Cstring,), (:pathname,), :(error("Cannot access file ", pathname))),
      (:h5i_is_valid, :H5Iis_valid, Htri, (Hid,), (:obj_id,), :(error("Cannot determine whether object is valid"))),
      (:h5l_exists, :H5Lexists, Htri, (Hid, Ptr{UInt8}, Hid), (:loc_id, :pathname, :lapl_id), :(error("Cannot determine whether ", pathname, " exists"))),
      (:h5s_is_simple, :H5Sis_simple, Htri, (Hid,), (:space_id,), :(error("Error determining whether dataspace is simple"))),
@@ -2521,8 +2571,14 @@ const ASCII_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false, H5P_DEFAULT)
 
 function __init__()
+    # If we're running on 1.10.X, disable file locking as that can cause problems with mmap'ing
+    if libversion >= v"1.10.0" && !haskey(ENV, "HDF5_USE_FILE_LOCKING")
+        ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
+    end
+
     init_libhdf5()
     register_blosc()
+
     # Turn off automatic error printing
     # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
@@ -2542,7 +2598,7 @@ function __init__()
     rehash!(hdf5_obj_open, length(hdf5_obj_open.keys))
 
 
-    nothing
+    return nothing
 end
 
 end  # module

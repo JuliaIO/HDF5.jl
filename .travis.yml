@@ -1,18 +1,14 @@
 language: julia
 os:
-    - linux
-    - osx
+  - linux
+  - osx
 julia:
-    - 0.7
-    - 1.0
-    - nightly
-notifications:
-    email: false
-addons:
-  apt:
-    packages:
-    - hdf5-tools
-before_script:
-    - if [ $TRAVIS_OS_NAME = osx ]; then brew install gcc; brew link --overwrite gcc; brew install hdf5; fi
+  - 1.0
+  - nightly
+matrix:
+  allow_failures:
+    - julia: nightly
 after_success:
   - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder()); Codecov.submit(Codecov.process_folder())'
+notifications:
+  email: false

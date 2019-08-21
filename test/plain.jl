@@ -29,6 +29,9 @@ write(f, "Auint8", convert(Matrix{UInt8}, Ai))
 write(f, "Auint16", convert(Matrix{UInt16}, Ai))
 write(f, "Auint32", convert(Matrix{UInt32}, Ai))
 write(f, "Auint64", convert(Matrix{UInt64}, Ai))
+# Arrays of bools (pull request #540)
+Abool = [false, true, false]
+write(f, "Abool", Abool)
 
 salut = "Hi there"
 ucode = "uniçº∂e"
@@ -155,6 +158,11 @@ Ai32 = read(fr, "Auint32")
 Ai64 = read(fr, "Auint64")
 @test Ai == Ai64
 @test eltype(Ai64) == UInt64
+
+Abool_read = read(fr, "Abool")
+@test Abool_read == Abool
+@test eltype(Abool_read) == Bool
+
 salutr = read(fr, "salut")
 @test salut == salutr
 salutr = read(fr, "salut-vlen")
@@ -226,11 +234,11 @@ z = read(fr, "Float64", "Int16")
 @test typeof(z) == Tuple{Float64,Int16}
 # Test function syntax
 read(fr, "Float64") do x
-	@test x == 3.2
+    @test x == 3.2
 end
 read(fr, "Float64", "Int16") do x, y
-	@test x == 3.2
-	@test y == 4
+    @test x == 3.2
+    @test y == 4
 end
 # Test reading entire file at once
 z = read(fr)
@@ -363,7 +371,7 @@ Wr = h5read(fn, "newgroup/W")
 close(f)
 rm(fn)
 
-if !isempty(HDF5.libhdf5_hl) 
+if !isempty(HDF5.libhdf5_hl)
     # Test direct chunk writing
     h5open(fn, "w") do f
       d = d_create(f, "dataset", datatype(Int), dataspace(4, 4), "chunk", (2, 2))
@@ -412,3 +420,34 @@ close(f)
 rm(fn)
 
 end # testset null and undefined
+
+# test writing abstract arrays
+@testset "abstract arrays" begin
+
+# test writing reinterpreted data
+fn = tempname()
+try
+    h5open(fn, "w") do f
+        data = reinterpret(UInt8, [true, false, false])
+        write(f, "reinterpret array", data)
+    end
+
+    @test h5open(fn, "r") do f
+        read(f, "reinterpret array")
+    end == UInt8[0x01, 0x00, 0x00]
+finally
+    rm(fn)
+end
+
+# don't silently fail for arrays with a different stride
+fn = tempname()
+try
+    data = rand(UInt16, 2, 3);
+    pdv_data = PermutedDimsArray(data, (2, 1))
+
+    @test_throws ArgumentError h5write(fn, "pdv_data", pdv_data)
+finally
+    rm(fn)
+end
+
+end # writing abstract arrays

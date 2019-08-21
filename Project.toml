@@ -1,21 +1,22 @@
 name = "HDF5"
 uuid = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
-license = "MIT"
-repo = "https://github.com/JuliaIO/HDF5.jl.git"
+version = "0.12.1"
 
 [deps]
-BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
+BinaryProvider = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
 Blosc = "a74b3585-a348-5f62-a45c-50e91977d574"
-Homebrew = "d9be37ee-ecc9-5288-90f1-b9ca67657a75"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
-WinRPM = "c17dfb99-b4f7-5aad-8812-456da1ad7187"
+
+[compat]
+julia = "0.7, 1"
 
 [extras]
+CRC32c = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Distributed", "LinearAlgebra","Pkg"]
+test = ["Test", "Distributed", "LinearAlgebra", "Pkg", "CRC32c"]
