@@ -41,6 +41,10 @@ dl_info = choose_download(download_info, platform_key_abi())
 if dl_info !== nothing && unsatisfied || !isinstalled(dl_info...; prefix=prefix) && !force_compile
     # Download and install binaries
     install(dl_info...; prefix=prefix, force=true, verbose=verbose)
+
+    # check again whether the dependency is satisfied, which
+    # may not be true if dlopen fails due to a libc++ incompatibility
+    unsatisfied = any(!satisfied(p; verbose=verbose) for p in products)
 end
 
 if dl_info === nothing && unsatisfied || force_compile
@@ -53,13 +57,10 @@ if dl_info === nothing && unsatisfied || force_compile
     products = [
         LibraryProduct(prefix, [libname], :libhdf5)
     ]
-    unsatisfied = any(!satisfied(p; verbose=verbose) for p in products)
-
     source_path = joinpath(prefix, "downloads", "src.tar.gz")
     if !isfile(source_path) || !verify(source_path, source_hash; verbose=verbose) || unsatisfied
         compile(libname, source_url, source_hash, prefix=prefix, verbose=verbose)
     end
-
 end
 
 # Write out a deps.jl file that will contain mappings for our products
