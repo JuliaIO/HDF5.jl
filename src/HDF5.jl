@@ -2019,9 +2019,9 @@ function hdf5_to_julia_eltype(objtype)
             h5t_get_member_name(objtype.id, i-1)
           end
           membertypes = ntuple(N) do i
-            h5t_get_member_type(objtype.id, i-1) |> HDF5Datatype |> hdf5_to_julia_eltype
+            hdf5_to_julia_eltype(HDF5Datatype(h5t_get_member_type(objtype.id, i-1)))
           end
-          iscomplex = membernames == COMPLEX_FIELD_NAMES[] && membertypes[1] == membertypes[2] && membertypes[1] <: HDF5.HDF5Scalar
+          iscomplex = (membernames == COMPLEX_FIELD_NAMES[]) && (membertypes[1] == membertypes[2]) && (membertypes[1] <: HDF5.HDF5Scalar)
           T = iscomplex ? Complex{membertypes[1]} : HDF5Compound{N}
         else
           T = HDF5Compound{N}

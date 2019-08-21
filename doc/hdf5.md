@@ -102,7 +102,7 @@ write(g, "mydataset", rand(3,5))
 Passing parameters
 ------------------------
 
-It is often required to pass parameters to specific routines, which are collected 
+It is often required to pass parameters to specific routines, which are collected
 in so-called property lists in HDF5. There are different property lists for
 different tasks, e.g. for the access/creation of files, datasets, groups.
 In this high level framework multiple parameters can be simply applied by
@@ -114,7 +114,7 @@ g["A", "chunk", (5,5)] = A # add chunks
 
 B=h5read(fn,"mygroup/B", # two parameters
   "fapl_mpio", (ccomm,cinfo), # if parameter requires multiple args use tuples
-  "dxpl_mpio", HDF5.H5FD_MPIO_COLLECTIVE ) 
+  "dxpl_mpio", HDF5.H5FD_MPIO_COLLECTIVE )
 ```
 
 This will automatically create the correct property lists, add the properties,
@@ -198,7 +198,11 @@ This is in contrast to standard HDF5 datasets, where closing the file prevents f
 Supported data types
 --------------------
 
-PlainHDF5File knows how to store values of the following types: signed and unsigned integers of 8, 16, 32, and 64 bits, `Float32` and `Float64`; `Array`s of these numeric types; `ASCIIString` and `UTF8String`; and `Array`s of these two string types. `Array`s of strings are supported using HDF5's variable-length-strings facility.
+`HDF5.jl` knows how to store values of the following types: signed and unsigned integers of 8, 16, 32, and 64 bits, `Float32`, `Float64`; `Complex` versions of these numeric types; `Array`s of these numeric types (including complex versions); `ASCIIString` and `UTF8String`; and `Array`s of these two string types.
+`Array`s of strings are supported using HDF5's variable-length-strings facility.
+By default `Complex` numbers are stored as compound types with `r` and `i` fields following the `h5py` convention.
+When reading data, compound types with matching field names will be loaded as the corresponding `Complex` julia type.
+These field names are configurable with the `HDF5.set_complex_field_names(real::AbstractString, imag::AbstractString)` function and complex support can be completely enabled/disabled with `HDF5.enable/disable_complex_support()`.
 
 This module also supports HDF5's VLEN, OPAQUE, and REFERENCE types, which can be used to encode more complex types. In general, you need to specify how you want to combine these more advanced facilities to represent more complex data types. For many of the data types in Julia, the JLD module implements support. You can likewise define your own file format if, for example, you need to interact with some external program that has explicit formatting requirements.
 
