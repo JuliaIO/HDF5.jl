@@ -23,14 +23,8 @@ function compile(libname, tarball_url, hash; prefix=BinaryProvider.global_prefix
         run(`$cmake_executable -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON --DHDF_ENABLE_PARALLEL=ON  -DHDF5_BUILD_CPP_LIB=OFF ..`)
         run(`$cmake_executable --build . --config release`)
         mkpath(libdir(prefix))
-        if Sys.iswindows() # doesn't work
-            cp("bin/Release/hdf5.$dlext",       joinpath(libdir(prefix), libname*"."*dlext),       force=true, follow_symlinks=true)
-            cp("bin/Release/hdf5_hl.$dlext",    joinpath(libdir(prefix), libname*"_hl."*dlext),    force=true, follow_symlinks=true)
-            cp("bin/Release/hdf5_tools.$dlext", joinpath(libdir(prefix), libname*"_tools."*dlext), force=true, follow_symlinks=true)
-        else
-            cp("bin/libhdf5.$dlext",            joinpath(libdir(prefix), libname*"."*dlext),       force=true, follow_symlinks=true)
-            cp("bin/libhdf5_hl.$dlext",         joinpath(libdir(prefix), libname*"_hl."*dlext),    force=true, follow_symlinks=true)
-            cp("bin/libhdf5_tools.$dlext",      joinpath(libdir(prefix), libname*"_tools."*dlext), force=true, follow_symlinks=true)
-        end
+        cp("bin/libhdf5.$dlext",            joinpath(libdir(prefix), libname*"."*dlext),       force=true, follow_symlinks=true)
+        cp("bin/libhdf5_hl.$dlext",         joinpath(libdir(prefix), libname*"_hl."*dlext),    force=true, follow_symlinks=true)
+        cp("bin/libhdf5_tools.$dlext",      joinpath(libdir(prefix), libname*"_tools."*dlext), force=true, follow_symlinks=true)
     end
 end
