@@ -3,7 +3,8 @@ using BinaryProvider # requires BinaryProvider 0.3.0 or later
 include("compile.jl")
 
 # env var to force compilation from source, for testing purposes
-const force_compile = get(ENV, "FORCE_COMPILE_HDF5", "no") == "yes"
+# const force_compile = get(ENV, "FORCE_COMPILE_HDF5", "no") == "yes"
+force_compile = true
 
 # Parse some basic command-line arguments
 const verbose = "--verbose" in ARGS
@@ -29,8 +30,8 @@ download_info = Dict(
 )
 
 # source code tarball and hash for fallback compilation
-source_url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.5/src/hdf5-1.10.5.zip"
-source_hash = "9507d4aa295ce686453dce6c5be1abf2d609f558d4f0b571e94758e45a31ef41"
+source_url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.5/src/hdf5-1.10.5.tar.gz"
+source_hash = "6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8"
 
 # Install unsatisfied or updated dependencies:
 unsatisfied = any(!satisfied(p; verbose=verbose) for p in products)
