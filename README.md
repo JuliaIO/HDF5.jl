@@ -34,31 +34,7 @@ julia>]
 pkg> add HDF5
 ```
 
-If you run into installation errors, try to install the HDF5 library manually (version 1.8+ is required):
-
-- **Debian/(K)Ubuntu**: `apt-get -u install hdf5-tools`
-- **OSX**: `brew install hdf5` (using [Homebrew](http://brew.sh), please verify homebrew version is 1.8+ using `brew --version`)
-- **Windows**: Not recommended, as other HDF5 binaries may be compiled against
-  a different C runtime from the Julia binary, which can cause Julia to crash when freeing memory allocated by libhdf5.
-
-If you've installed the library but discover that Julia is not finding
-it, you can add the path to Julia's `Libdl.DL_LOAD_PATH` variable, e.g.,
-```julia
-push!(Libdl.DL_LOAD_PATH, "/opt/local/lib")
-Pkg.build("HDF5")
-```
-Inserting this command into your `.juliarc.jl` file will cause this to
-happen automatically each time you start Julia.
-
-If you're on Linux but you do not have root privileges on your machine (and
-you can't persuade the sysadmin to install the libraries for you), you can [download](http://www.hdfgroup.org/HDF5/release/obtain5.html) the
-binaries and place them somewhere in your home directory. To use HDF5,
-you'll have to start julia as
-```
-LD_LIBRARY_PATH=/path/to/hdf5/libs julia
-```
-You can set up an alias so this happens for you automatically each time
-you start julia.
+If your platform is not supported then we automatically attempt to build hdf5 from source. To manually force a source build set the environment variable `julia> ENV["FORCE_COMPILE_HDF5"] = "yes"`. If a suitable MPI compiler is detected hdf5 will be built with parallel support.
 
 ## Quickstart
 
