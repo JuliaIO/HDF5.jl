@@ -20,8 +20,10 @@ function compile(libname, tarball_url, hash; prefix=BinaryProvider.global_prefix
     mkdir(build_dir)
     verbose && @info("Compiling in $build_dir...")
     cd(build_dir) do
-        run(`$cmake_executable -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DHDF5_BUILD_CPP_LIB=OFF ..`)
-        run(`$cmake_executable --build . --config release`)
+        # build in parallel hdf5 mode if mpi is installed
+        parallel_mode_flag = Sys.which("mpicc") !== nothing ? "ON" : "OFF"
+        run(`$cmake_executable -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DHDF5_BUILD_CPP_LIB=OFF -DHDF5_ENABLE_PARALLEL=$parallel_mode_flag ..`)
+        run(`$cmake_executable --build . --config release -j $(Sys.CPU_THREADS + 1)`)
         mkpath(libdir(prefix))
         cp("bin/libhdf5.$dlext",       joinpath(libdir(prefix), libname*"."*dlext),       force=true, follow_symlinks=true)
         cp("bin/libhdf5_hl.$dlext",    joinpath(libdir(prefix), libname*"_hl."*dlext),    force=true, follow_symlinks=true)

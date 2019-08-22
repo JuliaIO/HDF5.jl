@@ -51,7 +51,8 @@ if dl_info === nothing && unsatisfied || force_compile
     # If we don't have a compatible .tar.gz to download
     # fall back to building from source, giving the library a different name
     # so that it is not overwritten by BinaryBuilder downloads or vice-versa.
-    verbose && @info "Building from source for your platform (\"$(Sys.MACHINE)\", parsed as \"$(triplet(platform_key_abi()))\")."
+    Sys.iswindows() && error("Manual compilation mode from source is not available for this platform.")
+    verbose && @info("Building from source for your platform (\"$(Sys.MACHINE)\", parsed as \"$(triplet(platform_key_abi()))\").")
 
     libname = "libhdf5_from_src"
     products = [
