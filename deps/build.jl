@@ -10,6 +10,7 @@ const verbose = "--verbose" in ARGS
 const prefix = Prefix(get([a for a in ARGS if a != "--verbose"], 1, joinpath(@__DIR__, "usr")))
 products = [
     LibraryProduct(prefix, ["libhdf5"], :libhdf5),
+    LibraryProduct(prefix, ["libhdf5_hl"], :libhdf5_hl),
 ]
 
 verbose && force_compile && @info("Forcing compilation from source.")
@@ -57,6 +58,7 @@ if dl_info === nothing && unsatisfied || force_compile
     libname = "libhdf5_from_src"
     products = [
         LibraryProduct(prefix, [libname], :libhdf5)
+        LibraryProduct(prefix, [libname*"_hl"], :libhdf5_hl)
     ]
     source_path = joinpath(prefix, "downloads", "src.tar.gz")
     if !isfile(source_path) || !verify(source_path, source_hash; verbose=verbose) || unsatisfied
