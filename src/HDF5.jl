@@ -27,24 +27,11 @@ export
 include("datafile.jl")
 
 ### Load and initialize the HDF library ###
-const depsfile = joinpath(dirname(@__DIR__), "deps", "deps.jl")
-if isfile(depsfile)
-    include(depsfile)
-else
-    error("HDF5 not properly installed. Please run Pkg.build(\"HDF5\")")
+const depsjl_path = joinpath(@__DIR__, "..", "deps", "deps.jl")
+if !isfile(depsjl_path)
+    error("HDF5 not installed properly, run Pkg.build(\"HDF5\"), restart Julia and try again")
 end
-
-let d = dirname(libhdf5), b = basename(libhdf5)
-    base,ext = split(b, ".", limit=2)
-    hl = joinpath(d, "libhdf5_hl.$ext")
-    global const libhdf5_hl = isfile(hl) ? hl : ""
-end
-
-function init_libhdf5()
-    status = ccall((:H5open, libhdf5), Cint, ())
-    status < 0 && error("Can't initialize the HDF5 library")
-    return nothing
-end
+include(depsjl_path)
 
 function h5_get_libversion()
     majnum, minnum, relnum = Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}()
@@ -2580,7 +2567,8 @@ function __init__()
         ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
     end
 
-    init_libhdf5()
+    check_deps()
+
     register_blosc()
 
     # Turn off automatic error printing
