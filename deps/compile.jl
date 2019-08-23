@@ -22,7 +22,7 @@ function compile(libname, tarball_url, hash; prefix=BinaryProvider.global_prefix
     cd(build_dir) do
         # build in parallel hdf5 mode if mpi is installed
         parallel_mode_flag = Sys.which("mpicc") !== nothing ? "ON" : "OFF"
-        run(`$cmake_executable -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DHDF5_BUILD_CPP_LIB=OFF -DHDF5_ENABLE_PARALLEL=$parallel_mode_flag ..`)
+        run(`$cmake_executable -DBUILD_TESTING:BOOL=OFF -DBUILD_SHARED_LIBS:BOOL=ON -DHDF5_BUILD_CPP_LIB:BOOL=OFF -DHDF5_BUILD_EXAMPLES:BOOL=OFF -DHDF5_ENABLE_PARALLEL:BOOL=$parallel_mode_flag ..`)
         run(`$cmake_executable --build . --config release -j $(Sys.CPU_THREADS + 1)`)
         mkpath(libdir(prefix))
         cp("bin/libhdf5.$dlext",       joinpath(libdir(prefix), libname*"."*dlext),       force=true, follow_symlinks=true)
