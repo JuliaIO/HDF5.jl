@@ -3,8 +3,7 @@ using BinaryProvider # requires BinaryProvider 0.3.0 or later
 include("compile.jl")
 
 # env var to force compilation from source, for testing purposes
-# const force_compile = get(ENV, "FORCE_COMPILE_HDF5", "no") == "yes"
-force_compile = true
+const force_compile = get(ENV, "FORCE_COMPILE_HDF5", "no") == "yes"
 
 # Parse some basic command-line arguments
 const verbose = "--verbose" in ARGS
