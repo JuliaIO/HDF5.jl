@@ -2170,7 +2170,6 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5t_set_precision, :H5Tset_precision, Herr, (Hid, Csize_t), (:dtype_id, :sz), "Error setting precision of datatype"),
     )
 
-    # emulate 1.8 and 1.10 release interface (new release should use HF0get_info2 or use the macro mapping H5Oget_info)
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
     library = startswith(string(h5name), "H5DO") ? libhdf5_hl : libhdf5
     ex_ccall = ccallexpr(library, h5name, outtype, argtypes, argsyms)
