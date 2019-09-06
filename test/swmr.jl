@@ -4,9 +4,6 @@ using HDF5
 using Test
 using Distributed
 
-if HDF5.libversion >= v"1.10.0"
-
-
 if nprocs() == 1
     addprocs(1)
 end
@@ -118,4 +115,3 @@ end
 
 rm(fname) # cleanup file created by swmr tests
 end # testset swmr
-end # libversion

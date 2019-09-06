@@ -47,16 +47,12 @@ const libversion = h5_get_libversion()
 const C_time_t = Int
 
 ## HDF5 types and constants
-if libversion >= v"1.10.0"
-    const Hid = Int64
-else
-    const Hid = Cint
-end
-const Herr    = Cint
-const Hsize   = UInt64
-const Hssize  = Int64
-const Htri    = Cint   # pseudo-boolean (negative if error)
-const Haddr   = UInt64
+const Hid    = Int64
+const Herr   = Cint
+const Hsize  = UInt64
+const Hssize = Int64
+const Htri   = Cint   # pseudo-boolean (negative if error)
+const Haddr  = UInt64
 
 # MPI communicators required by H5P
 abstract  type Hmpih end
@@ -136,22 +132,22 @@ const H5O_TYPE_DATASET = 1
 const H5O_TYPE_NAMED_DATATYPE = 2
 # Property constants
 const H5P_DEFAULT          = Hid(0)
-const H5P_OBJECT_CREATE    = read_const(libversion >= v"1.8.14" ? :H5P_CLS_OBJECT_CREATE_ID_g    : :H5P_CLS_OBJECT_CREATE_g)
-const H5P_FILE_CREATE      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_FILE_CREATE_ID_g      : :H5P_CLS_FILE_CREATE_g)
-const H5P_FILE_ACCESS      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_FILE_ACCESS_ID_g      : :H5P_CLS_FILE_ACCESS_g)
-const H5P_DATASET_CREATE   = read_const(libversion >= v"1.8.14" ? :H5P_CLS_DATASET_CREATE_ID_g   : :H5P_CLS_DATASET_CREATE_g)
-const H5P_DATASET_ACCESS   = read_const(libversion >= v"1.8.14" ? :H5P_CLS_DATASET_ACCESS_ID_g   : :H5P_CLS_DATASET_ACCESS_g)
-const H5P_DATASET_XFER     = read_const(libversion >= v"1.8.14" ? :H5P_CLS_DATASET_XFER_ID_g     : :H5P_CLS_DATASET_XFER_g)
-const H5P_FILE_MOUNT       = read_const(libversion >= v"1.8.14" ? :H5P_CLS_FILE_MOUNT_ID_g       : :H5P_CLS_FILE_MOUNT_g)
-const H5P_GROUP_CREATE     = read_const(libversion >= v"1.8.14" ? :H5P_CLS_GROUP_CREATE_ID_g     : :H5P_CLS_GROUP_CREATE_g)
-const H5P_GROUP_ACCESS     = read_const(libversion >= v"1.8.14" ? :H5P_CLS_GROUP_ACCESS_ID_g     : :H5P_CLS_GROUP_ACCESS_g)
-const H5P_DATATYPE_CREATE  = read_const(libversion >= v"1.8.14" ? :H5P_CLS_DATATYPE_CREATE_ID_g  : :H5P_CLS_DATATYPE_CREATE_g)
-const H5P_DATATYPE_ACCESS  = read_const(libversion >= v"1.8.14" ? :H5P_CLS_DATATYPE_ACCESS_ID_g  : :H5P_CLS_DATATYPE_ACCESS_g)
-const H5P_STRING_CREATE    = read_const(libversion >= v"1.8.14" ? :H5P_CLS_STRING_CREATE_ID_g    : :H5P_CLS_STRING_CREATE_g)
-const H5P_ATTRIBUTE_CREATE = read_const(libversion >= v"1.8.14" ? :H5P_CLS_ATTRIBUTE_CREATE_ID_g : :H5P_CLS_ATTRIBUTE_CREATE_g)
-const H5P_OBJECT_COPY      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_OBJECT_COPY_ID_g      : :H5P_CLS_OBJECT_COPY_g)
-const H5P_LINK_CREATE      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_LINK_CREATE_ID_g      : :H5P_CLS_LINK_CREATE_g)
-const H5P_LINK_ACCESS      = read_const(libversion >= v"1.8.14" ? :H5P_CLS_LINK_ACCESS_ID_g      : :H5P_CLS_LINK_ACCESS_g)
+const H5P_OBJECT_CREATE    = read_const(:H5P_CLS_OBJECT_CREATE_ID_g)
+const H5P_FILE_CREATE      = read_const(:H5P_CLS_FILE_CREATE_ID_g)
+const H5P_FILE_ACCESS      = read_const(:H5P_CLS_FILE_ACCESS_ID_g)
+const H5P_DATASET_CREATE   = read_const(:H5P_CLS_DATASET_CREATE_ID_g)
+const H5P_DATASET_ACCESS   = read_const(:H5P_CLS_DATASET_ACCESS_ID_g)
+const H5P_DATASET_XFER     = read_const(:H5P_CLS_DATASET_XFER_ID_g)
+const H5P_FILE_MOUNT       = read_const(:H5P_CLS_FILE_MOUNT_ID_g)
+const H5P_GROUP_CREATE     = read_const(:H5P_CLS_GROUP_CREATE_ID_g)
+const H5P_GROUP_ACCESS     = read_const(:H5P_CLS_GROUP_ACCESS_ID_g)
+const H5P_DATATYPE_CREATE  = read_const(:H5P_CLS_DATATYPE_CREATE_ID_g)
+const H5P_DATATYPE_ACCESS  = read_const(:H5P_CLS_DATATYPE_ACCESS_ID_g)
+const H5P_STRING_CREATE    = read_const(:H5P_CLS_STRING_CREATE_ID_g)
+const H5P_ATTRIBUTE_CREATE = read_const(:H5P_CLS_ATTRIBUTE_CREATE_ID_g)
+const H5P_OBJECT_COPY      = read_const(:H5P_CLS_OBJECT_COPY_ID_g)
+const H5P_LINK_CREATE      = read_const(:H5P_CLS_LINK_CREATE_ID_g)
+const H5P_LINK_ACCESS      = read_const(:H5P_CLS_LINK_ACCESS_ID_g)
 # Reference constants
 const H5R_OBJECT         = 0
 const H5R_DATASET_REGION = 1
@@ -236,15 +232,10 @@ const H5T_NATIVE_UINT64   = read_const(:H5T_NATIVE_UINT64_g)
 const H5T_NATIVE_FLOAT    = read_const(:H5T_NATIVE_FLOAT_g)
 const H5T_NATIVE_DOUBLE   = read_const(:H5T_NATIVE_DOUBLE_g)
 # Library versions
-if libversion >= v"1.10.2"
-    const H5F_LIBVER_EARLIEST = 0
-    const H5F_LIBVER_V18      = 1
-    const H5F_LIBVER_V110     = 2
-    const H5F_LIBVER_LATEST   = H5F_LIBVER_V110
-else
-    const H5F_LIBVER_EARLIEST = 0
-    const H5F_LIBVER_LATEST   = 1
-end
+const H5F_LIBVER_EARLIEST = 0
+const H5F_LIBVER_V18      = 1
+const H5F_LIBVER_V110     = 2
+const H5F_LIBVER_LATEST   = H5F_LIBVER_V110
 
 # Object reference types
 struct HDF5ReferenceObj
@@ -609,7 +600,6 @@ heuristic_chunk(x) = Int[]
 # Open or create an HDF5 file
 function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool,
         cpl::HDF5Properties=DEFAULT_PROPERTIES, apl::HDF5Properties=DEFAULT_PROPERTIES; swmr=false)
-    swmr && HDF5.libversion < v"1.10.0" && error("SWMR requires libversion >= v\"1.10.0\"")
     if ff && !wr
         error("HDF5 does not support appending without writing")
     end
@@ -2074,13 +2064,8 @@ h5l_exists(loc_id::Hid, name::String) = h5l_exists(loc_id, name, H5P_DEFAULT)
 h5o_open(obj_id::Hid, name::String) = h5o_open(obj_id, name, H5P_DEFAULT)
 #h5s_get_simple_extent_ndims(space_id::Hid) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 h5t_get_native_type(type_id::Hid) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
-if libversion >= v"1.10.0"
-    const H5RDEREFERENCE = :H5Rdereference1
-else
-    const H5RDEREFERENCE = :H5Rdereference
-end
 function h5r_dereference(obj_id::Hid, ref_type::Integer, pointee::HDF5ReferenceObj)
-    ret = ccall((H5RDEREFERENCE, libhdf5), Hid, (Hid, Cint, Ref{HDF5ReferenceObj}),
+    ret = ccall((:H5Rdereference1, libhdf5), Hid, (Hid, Cint, Ref{HDF5ReferenceObj}),
                 obj_id, ref_type, pointee)
     if ret < 0
         error("Error dereferencing object")
@@ -2185,17 +2170,8 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5t_set_precision, :H5Tset_precision, Herr, (Hid, Csize_t), (:dtype_id, :sz), "Error setting precision of datatype"),
     )
 
-    # emulate 1.8 and 1.10 release interface (new release should use HF0get_info2 or use the macro mapping H5Oget_info)
-    if h5name == :H5Oget_info1 && libversion <= v"1.10.2"
-        h5name = :H5Oget_info
-    end
-
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
     library = startswith(string(h5name), "H5DO") ? libhdf5_hl : libhdf5
-    if isempty(library)
-        # If the high-level library is not installed, then skip these functions
-        continue
-    end
     ex_ccall = ccallexpr(library, h5name, outtype, argtypes, argsyms)
     ex_body = quote
         status = $ex_ccall
@@ -2562,8 +2538,8 @@ const ASCII_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false, H5P_DEFAULT)
 
 function __init__()
-    # If we're running on 1.10.X, disable file locking as that can cause problems with mmap'ing
-    if libversion >= v"1.10.0" && !haskey(ENV, "HDF5_USE_FILE_LOCKING")
+    # disable file locking as that can cause problems with mmap'ing
+    if !haskey(ENV, "HDF5_USE_FILE_LOCKING")
         ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
     end
 
