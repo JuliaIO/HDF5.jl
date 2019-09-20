@@ -1843,9 +1843,9 @@ function hyperslab(dset::HDF5Dataset, indices::Union{AbstractRange{Int},Int}...)
             error("Wrong number of indices supplied, supplied length $(length(indices)) but expected $(n_dims).")
         end
         dsel_id = h5s_copy(dspace.id)
-        dsel_start  = Vector{Hsize}(undef,n_dims)
-        dsel_stride = Vector{Hsize}(undef,n_dims)
-        dsel_count  = Vector{Hsize}(undef,n_dims)
+        dsel_start  = Vector{Int64}(undef,n_dims)
+        dsel_stride = Vector{Int64}(undef,n_dims)
+        dsel_count  = Vector{Int64}(undef,n_dims)
         for k = 1:n_dims
             index = indices[n_dims-k+1]
             if isa(index, Integer)

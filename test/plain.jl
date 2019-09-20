@@ -258,6 +258,9 @@ Wr = h5read(fn, "newgroup/W")
 rng = (2:3:15, 3:5)
 Wr = h5read(fn, "newgroup/W", rng)
 @test Wr == W[rng...]
+rng = (15:-2:2, 5:-2:1)
+Wr = h5read(fn, "newgroup/W", rng)
+@test Wr == W[rng...]
 War = h5readattr(fn, "newgroup/W")
 @test War == Wa
 
