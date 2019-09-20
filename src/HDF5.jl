@@ -1788,7 +1788,8 @@ function _getindex(dset::HDF5Dataset, T::Type, indices::Union{AbstractRange{Int}
         close(memspace)
         h5s_close(dsel_id)
     end
-    ret
+    ret = dropdims(ret, dims = tuple(findall(map(x -> length(x) == 1, indices))...))
+    isempty(size(ret)) ? ret[] : ret
 end
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
