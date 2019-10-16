@@ -605,7 +605,7 @@ function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool
     end
     close_apl = false
     if apl.id == H5P_DEFAULT
-        apl = p_create(H5P_FILE_ACCESS, false)
+        apl = p_create(H5P_FILE_ACCESS, true)
         close_apl = true
         # With garbage collection, the other modes don't make sense
         apl["fclose_degree"] = H5F_CLOSE_STRONG
@@ -649,11 +649,11 @@ function h5open(filename::AbstractString, mode::AbstractString="r", pv...; swmr=
     # pv is interpreted as pairs of arguments
     # the first of a pair is a key of hdf5_prop_get_set
     # the second of a pair is a property value
-    fapl = p_create(H5P_FILE_ACCESS, false, pv...) # file access property list
+    fapl = p_create(H5P_FILE_ACCESS, true, pv...) # file access property list
     # With garbage collection, the other modes don't make sense
     # (Set this first, so that the user-passed properties can overwrite this.)
     fapl["fclose_degree"] = H5F_CLOSE_STRONG
-    fcpl = p_create(H5P_FILE_CREATE, false, pv...) # file create property list
+    fcpl = p_create(H5P_FILE_CREATE, true, pv...) # file create property list
     modes =
         mode == "r"  ? (true,  false, false, false, false) :
         mode == "r+" ? (true,  true,  false, false, true ) :
