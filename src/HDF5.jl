@@ -1764,7 +1764,7 @@ function getindex(dset::HDF5Dataset, indices::Union{AbstractRange{Int},Int}...)
     _getindex(dset,T, indices...)
 end
 function _getindex(dset::HDF5Dataset, T::Type, indices::Union{AbstractRange{Int},Int}...)
-    if !(T <: HDF5Scalar)
+    if !(T <: Union{HDF5Scalar, Complex{<:HDF5Scalar}})
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
     dsel_id = hyperslab(dset, indices...)
@@ -1791,7 +1791,7 @@ function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::Union{Abstract
         error("Dataset indexing (hyperslab) is available only for arrays")
     end
     ET = eltype(T)
-    if !(ET <: HDF5Scalar)
+    if !(ET <: Union{HDF5Scalar, Complex{<:HDF5Scalar}})
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
     if length(X) != prod(map(length, indices))
