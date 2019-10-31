@@ -415,6 +415,11 @@ end # testset plain
   write(f, "Acmplx64", convert(Matrix{ComplexF64}, Acmplx))
   write(f, "Acmplx32", convert(Matrix{ComplexF32}, Acmplx))
 
+  dset = d_create(f, "Acmplx64_hyperslab", datatype(Complex{Float64}), dataspace(Acmplx))
+  for i in 1:size(Acmplx, 2)
+    dset[:, i] = Acmplx[:,i]
+  end
+
   HDF5.disable_complex_support()
   @test_throws ErrorException f["_ComplexF64"] = 1.0 + 2.0im
   @test_throws ErrorException write(f, "_Acmplx64", convert(Matrix{ComplexF64}, Acmplx))
@@ -435,6 +440,13 @@ end # testset plain
   Acmplx64 = read(fr, "Acmplx64")
   @test convert(Matrix{ComplexF64}, Acmplx) == Acmplx64
   @test eltype(Acmplx64) == ComplexF64
+
+  dset = fr["Acmplx64_hyperslab"]
+  Acmplx64_hyperslab = zeros(eltype(dset), size(dset))
+  for i in 1:size(dset, 2)
+    Acmplx64_hyperslab[:,i] = dset[:,i]
+  end
+  @test convert(Matrix{ComplexF64}, Acmplx) == Acmplx64_hyperslab
 
   HDF5.disable_complex_support()
   z = read(fr, "ComplexF64")
