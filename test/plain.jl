@@ -320,12 +320,7 @@ rm(tmpdir, recursive=true)
 test_files = joinpath(@__DIR__, "test_files")
 
 d = h5read(joinpath(test_files, "compound.h5"), "/data")
-@test typeof(d[1]) === HDF5.HDF5Compound{4}
-@test length(d) == 2
-dtypes = [typeof(x) for x in d[1].data]
-@test dtypes == [Float64, Vector{Float64}, Vector{Float64}, Float64]
-@test length(d[1].data[2]) == 3
-@test d[1].membername == ("wgt", "xyz", "uvw", "E")
+@test typeof(d[1]) == NamedTuple{(:wgt, :xyz, :uvw, :E), Tuple{Float64, HDF5.FixedArray{Float64, (3,), 3}, HDF5.FixedArray{Float64, (3,), 3}, Float64}}
 
 # get-datasets
 fn = tempname()
@@ -450,12 +445,12 @@ end # testset plain
 
   HDF5.disable_complex_support()
   z = read(fr, "ComplexF64")
-  @test isa(z, HDF5.HDF5Compound{2})
+  @test isa(z, NamedTuple{(:r, :i), Tuple{Float64, Float64}})
 
   Acmplx32 = read(fr, "Acmplx32")
-  @test eltype(Acmplx32) == HDF5.HDF5Compound{2}
+  @test eltype(Acmplx32) == NamedTuple{(:r, :i), Tuple{Float32, Float32}}
   Acmplx64 = read(fr, "Acmplx64")
-  @test eltype(Acmplx64) == HDF5.HDF5Compound{2}
+  @test eltype(Acmplx64) == NamedTuple{(:r, :i), Tuple{Float64, Float64}}
 
   close(fr)
 

@@ -465,13 +465,6 @@ end
 ==(a::HDF5ReferenceObj, b::HDF5ReferenceObj) = a.r == b.r
 hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
 
-# Compound types
-struct HDF5Compound{N}
-    data::NTuple{N,Any}
-    membername::NTuple{N,String}
-    membertype::NTuple{N,Type}
-end
-
 # Opaque types
 struct HDF5Opaque
     data
@@ -482,9 +475,11 @@ end
 struct EmptyArray{T} end
 
 # Stub types to encode fixed-size arrays for H5T_ARRAY
-struct FixedArray{T,D} end
-size(::Type{FixedArray{T,D}}) where {T,D} = D
-eltype(::Type{FixedArray{T,D}}) where {T,D} = T
+struct FixedArray{T,D,L}
+  data::NTuple{L, T}
+end
+size(::Type{FixedArray{T,D,L}}) where {T,D,L} = D
+eltype(::Type{FixedArray{T,D,L}}) where {T,D,L} = T
 
 # VLEN objects
 struct HDF5Vlen{T}
@@ -1459,73 +1454,21 @@ function getindex(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, r::HDF5Refere
     h5object(obj_id, parent)
 end
 
-# Helper for reading compound types
-function read_row(io::IO, membertype, membersize)
-    row = Any[]
-    for (dtype, dsize) in zip(membertype, membersize)
-        if dtype === String
-            push!(row, unpad(read!(io, Vector{UInt8}(undef,dsize)), H5T_STR_NULLPAD))
-        elseif dtype<:HDF5.FixedArray && eltype(dtype)<:HDF5BitsKind
-            val = read!(io, Vector{eltype(dtype)}(undef,prod(size(dtype))))
-            push!(row, reshape(val, size(dtype)))
-        elseif dtype<:HDF5BitsKind
-            push!(row, read(io, dtype))
-        else
-            # for other types, just store the raw bytes and let the user
-            # decide what to do
-            push!(row, read!(io, Vector{UInt8}(undef,dsize)))
-        end
-    end
-    return (row...,)
-end
+function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: NamedTuple
+  filetype = HDF5.datatype(dset)
+  memtype_id = HDF5.h5t_get_native_type(filetype.id)  # padded layout in memory
+  @assert sizeof(U) == HDF5.h5t_get_size(memtype_id) "Type sizes mismatch!"
 
-# Read compound type
-function read(obj::HDF5Dataset, T::Union{Type{Array{HDF5Compound{N}}},Type{HDF5Compound{N}}}) where {N}
-    t = datatype(obj)
-    local sz = 0; local n;
-    local membername; local membertype;
-    local memberoffset; local memberfiletype; local membersize;
-    try
-        memberfiletype = Vector{HDF5Datatype}(undef,N)
-        membertype = Vector{Type}(undef,N)
-        membername = Vector{String}(undef,N)
-        memberoffset = Vector{UInt64}(undef,N)
-        membersize = Vector{UInt32}(undef,N)
-        for i = 1:N
-            filetype = HDF5Datatype(h5t_get_member_type(t.id, i-1))
-            memberfiletype[i] = filetype
-            membertype[i] = hdf5_to_julia_eltype(filetype)
-            memberoffset[i] = sz
-            membersize[i] = sizeof(filetype)
-            sz += sizeof(filetype)
-            membername[i] = h5t_get_member_name(t.id, i-1)
-        end
-    finally
-        close(t)
-    end
-    # Build the "memory type"
-    memtype_id = h5t_create(H5T_COMPOUND, sz)
-    for i = 1:N
-        h5t_insert(memtype_id, membername[i], memberoffset[i], memberfiletype[i].id) # FIXME strings
-    end
-    # Read the raw data
-    buf = Vector{UInt8}(undef,length(obj)*sz)
-    h5d_read(obj.id, memtype_id, H5S_ALL, H5S_ALL, obj.xfer, buf)
+  out = Array{U}(undef, size(dset))
 
-    # Convert to the appropriate data format using iobuffer
-    iobuff = IOBuffer(buf)
-    data = Any[]
-    while !eof(iobuff)
-        push!(data, read_row(iobuff, membertype, membersize))
-    end
-    # convert HDF5Compound type parameters to tuples
-    membername = (membername...,)
-    membertype = (membertype...,)
-    if T === HDF5Compound{N}
-        return HDF5Compound(data[1], membername, membertype)
-    else
-        return [HDF5Compound(elem, membername, membertype) for elem in data]
-    end
+  HDF5.h5d_read(dset.id, memtype_id, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, out)
+  HDF5.h5t_close(memtype_id)
+
+  if T <: NamedTuple
+    return out[1]
+  else
+    return out
+  end
 end
 
 # Read OPAQUE datasets and attributes
@@ -2007,18 +1950,26 @@ function hdf5_to_julia_eltype(objtype)
         T = HDF5Vlen{hdf5_to_julia_eltype(HDF5Datatype(super_id))}
     elseif class_id == H5T_COMPOUND
         N = Int(h5t_get_nmembers(objtype.id))
+
+        membernames = ntuple(N) do i
+          h5t_get_member_name(objtype.id, i-1)
+        end
+
+        membertypes = ntuple(N) do i
+          hdf5_to_julia_eltype(HDF5Datatype(h5t_get_member_type(objtype.id, i-1)))
+        end
+
         # check if should be interpreted as complex
-        if COMPLEX_SUPPORT[] && N == 2
-          membernames = ntuple(N) do i
-            h5t_get_member_name(objtype.id, i-1)
-          end
-          membertypes = ntuple(N) do i
-            hdf5_to_julia_eltype(HDF5Datatype(h5t_get_member_type(objtype.id, i-1)))
-          end
-          iscomplex = (membernames == COMPLEX_FIELD_NAMES[]) && (membertypes[1] == membertypes[2]) && (membertypes[1] <: HDF5.HDF5Scalar)
-          T = iscomplex ? Complex{membertypes[1]} : HDF5Compound{N}
+        iscomplex = COMPLEX_SUPPORT[] &&
+                    N == 2 &&
+                    (membernames == COMPLEX_FIELD_NAMES[]) &&
+                    (membertypes[1] == membertypes[2]) &&
+                    (membertypes[1] <: HDF5.HDF5Scalar)
+
+        if iscomplex
+          T = Complex{membertypes[1]}
         else
-          T = HDF5Compound{N}
+          T = NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
         end
     elseif class_id == H5T_ARRAY
         T = hdf5array(objtype)
@@ -2423,7 +2374,7 @@ function hdf5array(objtype)
     eltyp = HDF5Datatype(h5t_get_super(objtype.id))
     T = hdf5_to_julia_eltype(eltyp)
     dimsizes = ntuple(i -> Int(dims[nd-i+1]), nd)  # reverse order
-    FixedArray{T, dimsizes}
+    FixedArray{T, dimsizes, prod(dimsizes)}
 end
 
 ### Property manipulation ###
