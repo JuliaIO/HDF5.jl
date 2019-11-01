@@ -1491,7 +1491,8 @@ end
 # get a vector of all the leaf types in a (possibly nested) named tuple
 function get_all_types(::Type{NamedTuple{T, U}}) where T where U
   types = []
-  for Ui in fieldtypes(U)
+  for i in 1:fieldcount(U)
+    Ui = fieldtype(U, i)
     if Ui <: NamedTuple
       append!(types, get_all_types(Ui))
     else
