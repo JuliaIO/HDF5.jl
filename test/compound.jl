@@ -8,6 +8,7 @@ struct foo
   b::String
   c::String
   d::Array{ComplexF64,2}
+  e::Array{Int64,1}
 end
 
 struct foo_hdf5
@@ -15,10 +16,16 @@ struct foo_hdf5
   b::Cstring
   c::NTuple{10, Cchar}
   d::NTuple{9, ComplexF64}
+  e::HDF5.Hvl_t
 end
 
 function unsafe_convert(::Type{foo_hdf5}, x::foo)
-  foo_hdf5(x.a, Base.unsafe_convert(Cstring, x.b), ntuple(i -> x.c[i], length(x.c)), ntuple(i -> x.d[i], length(x.d)))
+  foo_hdf5(x.a,
+           Base.unsafe_convert(Cstring, x.b),
+           ntuple(i -> x.c[i], length(x.c)),
+           ntuple(i -> x.d[i], length(x.d)),
+           HDF5.Hvl_t(convert(Csize_t, length(x.e)), convert(Ptr{Cvoid}, pointer(x.e)))
+          )
 end
 
 function datatype(::Type{foo_hdf5})
@@ -39,12 +46,21 @@ function datatype(::Type{foo_hdf5})
   array_dtype = HDF5.h5t_array_create(datatype(ComplexF64).id, 2, hsz)
   HDF5.h5t_insert(dtype, "d", fieldoffset(foo_hdf5, 4), array_dtype)
 
+  vlen_dtype = HDF5.h5t_vlen_create(datatype(Int64))
+  HDF5.h5t_insert(dtype, "e", fieldoffset(foo_hdf5, 5), vlen_dtype)
+
   HDF5Datatype(dtype)
 end
 
 @testset "compound" begin
   N = 10
-  v = [foo(rand(), randstring(rand(10:100)), randstring(10), rand(ComplexF64, 3,3)) for _ in 1:N]
+  v = [foo(rand(),
+           randstring(rand(10:100)),
+           randstring(10),
+           rand(ComplexF64, 3,3),
+           rand(1:10, rand(10:100))
+          )
+       for _ in 1:N]
   v_write = unsafe_convert.(foo_hdf5, v)
 
   fn = tempname()
@@ -56,7 +72,7 @@ end
   end
 
   v_read = h5read(fn, "data")
-  for field in (:a, :b, :c, :d)
+  for field in (:a, :b, :c, :d, :e)
     f = x -> getfield(x, field)
     @test f.(v) == f.(v_read)
   end

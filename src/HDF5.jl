@@ -486,6 +486,12 @@ struct FixedString{N}
 end
 length(::Type{FixedString{N}}) where N = N
 
+struct VariableArray{T}
+  len::Csize_t
+  p::Ptr{Cvoid}
+end
+eltype(::Type{VariableArray{T}}) where T = T
+
 # VLEN objects
 struct HDF5Vlen{T}
     data
@@ -1459,7 +1465,6 @@ function getindex(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, r::HDF5Refere
     h5object(obj_id, parent)
 end
 
-
 # convert Cstring/FixedString to String
 function normalize_types(x::NamedTuple{T}) where T
 
@@ -1471,6 +1476,8 @@ function normalize_types(x::NamedTuple{T}) where T
       join(Char.(xi.data))
     elseif Ti <: FixedArray
       reshape(collect(xi.data), size(Ti)...)
+    elseif Ti <: VariableArray
+      copy(unsafe_wrap(Array, convert(Ptr{eltype(xi)}, xi.p), xi.len, own=false))
     elseif Ti <: NamedTuple
       normalize_types(xi)
     else
@@ -1504,10 +1511,10 @@ function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: N
   HDF5.h5d_read(dset.id, memtype_id, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, buf)
 
   types = get_all_types(U)
-  normalize = any(t -> t <: Union{Cstring, FixedString, FixedArray}, types)
+  normalize = any(t -> t <: Union{Cstring, FixedString, FixedArray, VariableArray}, types)
   out = normalize ? normalize_types.(buf) : buf
 
-  reclaim = any(t -> t <: Cstring, types)
+  reclaim = any(t -> t <: Union{Cstring, VariableArray}, types)
   if reclaim
     dspace = dataspace(dset)
     # NOTE I have seen this call fail but I cannot reproduce
@@ -1570,6 +1577,7 @@ function read(obj::DatasetOrAttribute, ::Type{HDF5Vlen{T}}) where {T<:Union{HDF5
     for i = 1:len
         h = structbuf[i]
         data[i] = p2a(convert(Ptr{T}, h.p), Int(h.len))
+
     end
     data
 end
@@ -2011,15 +2019,18 @@ function hdf5_to_julia_eltype(objtype)
           dtype = HDF5Datatype(h5t_get_member_type(objtype.id, i-1))
           ci = h5t_get_class(dtype.id)
 
-          if ci != H5T_STRING
-            return hdf5_to_julia_eltype(dtype)
-          else
+          if ci == H5T_STRING
             if h5t_is_variable_str(dtype.id)
               return Cstring
             else
               n = h5t_get_size(dtype.id)
               return FixedString{Int(n)}
             end
+          elseif ci == H5T_VLEN
+            superid = h5t_get_super(dtype.id)
+            T = VariableArray{hdf5_to_julia_eltype(HDF5Datatype(superid))}
+          else
+            return hdf5_to_julia_eltype(dtype)
           end
         end
 
