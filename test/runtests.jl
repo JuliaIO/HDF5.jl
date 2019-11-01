@@ -5,6 +5,7 @@ using Pkg
 println("HDF5 version ", HDF5.h5_get_libversion())
 
 include("plain.jl")
+include("compound.jl")
 include("readremote.jl")
 include("extend_test.jl")
 include("gc.jl")
