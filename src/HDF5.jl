@@ -1510,6 +1510,7 @@ function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: N
   reclaim = any(t -> t <: Cstring, types)
   if reclaim
     dspace = dataspace(dset)
+    # NOTE I have seen this call fail but I cannot reproduce
     h5d_vlen_reclaim(memtype_id, dspace.id, H5P_DEFAULT, buf)
   end
 
