@@ -481,6 +481,11 @@ end
 size(::Type{FixedArray{T,D,L}}) where {T,D,L} = D
 eltype(::Type{FixedArray{T,D,L}}) where {T,D,L} = T
 
+struct FixedString{N}
+  data::NTuple{N, Cchar}
+end
+length(::Type{FixedString{N}}) where N = N
+
 # VLEN objects
 struct HDF5Vlen{T}
     data
@@ -1454,14 +1459,60 @@ function getindex(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, r::HDF5Refere
     h5object(obj_id, parent)
 end
 
+
+# convert Cstring/FixedString to String
+function normalize_types(x::NamedTuple{T}) where T
+
+  vals = map(values(x)) do xi
+    Ti = typeof(xi)
+    if Ti == Cstring
+      unsafe_string(xi)
+    elseif Ti <: FixedString
+      join(Char.(xi.data))
+    elseif Ti <: FixedArray
+      reshape(collect(xi.data), size(Ti)...)
+    elseif Ti <: NamedTuple
+      normalize_types(xi)
+    else
+      xi
+    end
+  end
+
+  NamedTuple{T}(vals)
+end
+
+# get a vector of all the leaf types in a (possibly nested) named tuple
+function get_all_types(::Type{NamedTuple{T, U}}) where T where U
+  types = []
+  for Ui in fieldtypes(U)
+    if Ui <: NamedTuple
+      append!(types, get_all_types(Ui))
+    else
+      push!(types, Ui)
+    end
+  end
+  types
+end
+
 function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: NamedTuple
   filetype = HDF5.datatype(dset)
   memtype_id = HDF5.h5t_get_native_type(filetype.id)  # padded layout in memory
   @assert sizeof(U) == HDF5.h5t_get_size(memtype_id) "Type sizes mismatch!"
 
-  out = Array{U}(undef, size(dset))
+  buf = Array{U}(undef, size(dset))
 
-  HDF5.h5d_read(dset.id, memtype_id, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, out)
+  HDF5.h5d_read(dset.id, memtype_id, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, buf)
+
+  types = get_all_types(U)
+  normalize = any(t -> t <: Union{Cstring, FixedString, FixedArray}, types)
+  out = normalize ? normalize_types.(buf) : buf
+
+  reclaim = any(t -> t <: Cstring, types)
+  if reclaim
+    dspace = dataspace(dset)
+    h5d_vlen_reclaim(memtype_id, dspace.id, H5P_DEFAULT, buf)
+  end
+
   HDF5.h5t_close(memtype_id)
 
   if T <: NamedTuple
@@ -1956,7 +2007,19 @@ function hdf5_to_julia_eltype(objtype)
         end
 
         membertypes = ntuple(N) do i
-          hdf5_to_julia_eltype(HDF5Datatype(h5t_get_member_type(objtype.id, i-1)))
+          dtype = HDF5Datatype(h5t_get_member_type(objtype.id, i-1))
+          ci = h5t_get_class(dtype.id)
+
+          if ci != H5T_STRING
+            return hdf5_to_julia_eltype(dtype)
+          else
+            if h5t_is_variable_str(dtype.id)
+              return Cstring
+            else
+              n = h5t_get_size(dtype.id)
+              return FixedString{Int(n)}
+            end
+          end
         end
 
         # check if should be interpreted as complex

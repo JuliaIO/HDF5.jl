@@ -320,7 +320,7 @@ rm(tmpdir, recursive=true)
 test_files = joinpath(@__DIR__, "test_files")
 
 d = h5read(joinpath(test_files, "compound.h5"), "/data")
-@test typeof(d[1]) == NamedTuple{(:wgt, :xyz, :uvw, :E), Tuple{Float64, HDF5.FixedArray{Float64, (3,), 3}, HDF5.FixedArray{Float64, (3,), 3}, Float64}}
+@test typeof(d[1]) == NamedTuple{(:wgt, :xyz, :uvw, :E), Tuple{Float64, Array{Float64, 1}, Array{Float64, 1}, Float64}}
 
 # get-datasets
 fn = tempname()
