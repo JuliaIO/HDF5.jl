@@ -10,7 +10,6 @@ Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [compat]
-BinaryProvider = "0.5"
 julia = "0.7, 1"
 Blosc = "0.5.1"
 BinaryProvider = "0.5"
