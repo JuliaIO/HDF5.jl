@@ -5,11 +5,12 @@ version = "0.12.5"
 [deps]
 BinaryProvider = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
 Blosc = "a74b3585-a348-5f62-a45c-50e91977d574"
+CMakeWrapper = "d5fb7624-851a-54ee-a528-d3f3bac0b4a0"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
-CMakeWrapper = "d5fb7624-851a-54ee-a528-d3f3bac0b4a0"
 
 [compat]
+BinaryProvider = "0.5"
 julia = "0.7, 1"
 
 [extras]
