@@ -12,6 +12,9 @@ Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
 [compat]
 BinaryProvider = "0.5"
 julia = "0.7, 1"
+Blosc = "0.5.1"
+BinaryProvider = "0.5"
+CMakeWrapper = "0.2.3"
 
 [extras]
 CRC32c = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
