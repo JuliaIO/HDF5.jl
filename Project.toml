@@ -11,6 +11,9 @@ CMakeWrapper = "d5fb7624-851a-54ee-a528-d3f3bac0b4a0"
 
 [compat]
 julia = "0.7, 1"
+Blosc = "0.5.1"
+BinaryProvider = "0.5"
+CMakeWrapper = "0.2.3"
 
 [extras]
 CRC32c = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
