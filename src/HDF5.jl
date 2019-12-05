@@ -1,5 +1,7 @@
 module HDF5
 
+using HDF5_jll
+
 using Base: unsafe_convert, StringVector
 
 import Base:
@@ -25,13 +27,6 @@ export
     readmmap, @read, @write, root, set_dims!, t_create, t_commit
 
 include("datafile.jl")
-
-### Load and initialize the HDF library ###
-const depsjl_path = joinpath(@__DIR__, "..", "deps", "deps.jl")
-if !isfile(depsjl_path)
-    error("HDF5 not installed properly, run Pkg.build(\"HDF5\"), restart Julia and try again")
-end
-include(depsjl_path)
 
 function h5_get_libversion()
     majnum, minnum, relnum = Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}()
@@ -2542,8 +2537,6 @@ function __init__()
     if !haskey(ENV, "HDF5_USE_FILE_LOCKING")
         ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
     end
-
-    check_deps()
 
     register_blosc()
 
