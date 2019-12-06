@@ -5,7 +5,7 @@ using Base: unsafe_convert, StringVector
 import Base:
     close, convert, eltype, lastindex, flush, getindex, ==,
     isempty, isvalid, length, names, ndims, parent, read,
-    setindex!, show, size, sizeof, write, isopen, iterate
+    setindex!, show, size, sizeof, write, isopen, iterate, eachindex, axes
 
 import Libdl
 import Mmap
@@ -1752,8 +1752,15 @@ write(parent::Union{HDF5File, HDF5Group}, name::String, data::Union{T, AbstractA
 # For datasets, "write(dset, name, val)" means "a_write"
 write(parent::HDF5Dataset, name::String, data::Union{T, AbstractArray{T}}, plists...) where {T<:ScalarOrString} = a_write(parent, name, data, plists...)
 
-# Reading arrays using getindex: data = dset[:,:,10]
-function getindex(dset::HDF5Dataset, indices::Union{AbstractRange{Int},Int}...)
+
+# Indexing
+
+Base.eachindex(::IndexLinear, A::HDF5Dataset) = Base.OneTo(length(A))
+Base.axes(dset::HDF5Dataset) = map(Base.OneTo, size(dset))
+
+getindex(dset::HDF5Dataset, I::Union{AbstractRange,Integer,Colon}...) =
+    _getindex(dset, Base.to_indices(dset, I)...)
+function _getindex(dset::HDF5Dataset, I::Union{AbstractRange{Int},Int}...)
     local T
     dtype = datatype(dset)
     try
@@ -1761,14 +1768,14 @@ function getindex(dset::HDF5Dataset, indices::Union{AbstractRange{Int},Int}...)
     finally
         close(dtype)
     end
-    _getindex(dset,T, indices...)
+    _getindex(dset,T, I...)
 end
-function _getindex(dset::HDF5Dataset, T::Type, indices::Union{AbstractRange{Int},Int}...)
+function _getindex(dset::HDF5Dataset, T::Type, I::Union{AbstractRange{Int},Int}...)
     if !(T <: Union{HDF5Scalar, Complex{<:HDF5Scalar}})
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
-    dsel_id = hyperslab(dset, indices...)
-    ret = Array{T}(undef,map(length, indices))
+    dsel_id = hyperslab(dset, I...)
+    ret = Array{T}(undef,map(length, I))
     memtype = datatype(ret)
     memspace = dataspace(ret)
     try
@@ -1778,15 +1785,24 @@ function _getindex(dset::HDF5Dataset, T::Type, indices::Union{AbstractRange{Int}
         close(memspace)
         h5s_close(dsel_id)
     end
-    ret
+    dimsize = map(length, _dropint(I...))
+    dimsize == () ? ret[1] : reshape(ret, dimsize...)
 end
 
+_dropint(x::Int, args...) = _dropint(args...)
+_dropint(x::AbstractRange, args...) = (x, _dropint(args...)...)
+_dropint() = ()
+
+
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
-function setindex!(dset::HDF5Dataset, X::Array, indices::Union{AbstractRange{Int},Int}...)
+
+setindex!(dset::HDF5Dataset, x, I::Union{AbstractRange,Integer,Colon}...) = 
+    _setindex!(dset, x, Base.to_indices(dset, I)...)
+function _setindex!(dset::HDF5Dataset, X::Array, I::Union{AbstractRange{Int},Int}...)
     T = hdf5_to_julia(dset)
-    _setindex!(dset, T, X, indices...)
+    _setindex!(dset, T, X, I...)
 end
-function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::Union{AbstractRange{Int},Int}...)
+function _setindex!(dset::HDF5Dataset,T::Type, X::Array, I::Union{AbstractRange{Int},Int}...)
     if !(T <: Array)
         error("Dataset indexing (hyperslab) is available only for arrays")
     end
@@ -1794,13 +1810,13 @@ function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::Union{Abstract
     if !(ET <: Union{HDF5Scalar, Complex{<:HDF5Scalar}})
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
-    if length(X) != prod(map(length, indices))
+    if length(X) != prod(map(length, I))
         error("number of elements in range and length of array must be equal")
     end
     if eltype(X) != ET
         X = convert(Array{ET}, X)
     end
-    dsel_id = hyperslab(dset, indices...)
+    dsel_id = hyperslab(dset, I...)
     memtype = datatype(X)
     memspace = dataspace(X)
     try
@@ -1812,42 +1828,39 @@ function _setindex!(dset::HDF5Dataset,T::Type, X::Array, indices::Union{Abstract
     end
     X
 end
-function setindex!(dset::HDF5Dataset, X::AbstractArray, indices::Union{AbstractRange{Int},Int}...)
+function _setindex!(dset::HDF5Dataset, X::AbstractArray, I::Union{AbstractRange{Int},Int}...)
     T = hdf5_to_julia(dset)
     if !(T <: Array)
         error("Hyperslab interface is available only for arrays")
     end
     Y = convert(Array{eltype(T), ndims(X)}, X)
-    setindex!(dset, Y, indices...)
+    _setindex!(dset, Y, I...)
 end
-
-function setindex!(dset::HDF5Dataset, x::Number, indices::Union{AbstractRange{Int},Int}...)
+function _setindex!(dset::HDF5Dataset, x::Number, I::Union{AbstractRange{Int},Int}...)
     T = hdf5_to_julia(dset)
     if !(T <: Array)
         error("Hyperslab interface is available only for arrays")
     end
-    X = fill(convert(eltype(T), x), map(length, indices))
-    setindex!(dset, X, indices...)
+    X = fill(convert(eltype(T), x), map(length, I))
+    _setindex!(dset, X, I...)
 end
 
-getindex(dset::HDF5Dataset, I::Union{AbstractRange{Int},Int,Colon}...) = getindex(dset, ntuple(i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i], length(I))...)
-setindex!(dset::HDF5Dataset, x, I::Union{AbstractRange{Int},Int,Colon}...) = setindex!(dset, x, ntuple(i-> isa(I[i], Colon) ? (1:size(dset,i)) : I[i], length(I))...)
 
-function hyperslab(dset::HDF5Dataset, indices::Union{AbstractRange{Int},Int}...)
+function hyperslab(dset::HDF5Dataset, I::Union{AbstractRange{Int},Int}...)
     local dsel_id
     dspace = dataspace(dset)
     try
         dims, maxdims = get_dims(dspace)
         n_dims = length(dims)
-        if length(indices) != n_dims
-            error("Wrong number of indices supplied, supplied length $(length(indices)) but expected $(n_dims).")
+        if length(I) != n_dims
+            error("Wrong number of indices supplied, supplied length $(length(I)) but expected $(n_dims).")
         end
         dsel_id = h5s_copy(dspace.id)
         dsel_start  = Vector{Hsize}(undef,n_dims)
         dsel_stride = Vector{Hsize}(undef,n_dims)
         dsel_count  = Vector{Hsize}(undef,n_dims)
         for k = 1:n_dims
-            index = indices[n_dims-k+1]
+            index = I[n_dims-k+1]
             if isa(index, Integer)
                 dsel_start[k] = index-1
                 dsel_stride[k] = 1
