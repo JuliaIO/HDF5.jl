@@ -1344,6 +1344,9 @@ function read(obj::DatasetOrAttribute, ::Type{Array{A}}) where {A<:FixedArray}
     ret
 end
 
+# Array constructor for datasets
+Array(x::HDF5Dataset) = read(x)
+
 # Clean up string buffer according to padding mode
 function unpad(s::String, pad::Integer)
     if pad == H5T_STR_NULLTERM
