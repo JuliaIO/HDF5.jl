@@ -36,6 +36,9 @@ set_dims!(d, (1, 5))
 @test d[1, 1:2:5] == [1.1231, 5.123, 4.1231]
 @test d[1:1, 2:2:4] == [1.313 2.231]
 
+# Test Array constructor
+Array(d) == [1.1231 1.313 5.123 2.231 4.1231]
+
 #println("d is size current $(map(int,HDF5.get_dims(d)[1])) max $(map(int,HDF5.get_dims(d)[2]))")
 b = d_create(fid, "b", Int, ((1000,), (-1,)), "chunk", (100,)) #-1 is equivalent to typemax(Hsize) as far as I can tell
 #println("b is size current $(map(int,HDF5.get_dims(b)[1])) max $(map(int,HDF5.get_dims(b)[2]))")
