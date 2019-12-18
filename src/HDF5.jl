@@ -2563,6 +2563,8 @@ function __init__()
 
     register_blosc()
 
+    check_deps()
+
     # Turn off automatic error printing
     # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
