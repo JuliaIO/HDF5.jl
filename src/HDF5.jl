@@ -24,7 +24,6 @@ export
     o_copy, o_delete, o_open, p_create,
     readmmap, @read, @write, root, set_dims!, t_create, t_commit
 
-# This is taken from FFTW.jl
 const depsfile = joinpath(dirname(@__DIR__), "deps", "deps.jl")
 if isfile(depsfile)
     include(depsfile)
