@@ -38,8 +38,8 @@ else
                 end
                 """
                )
-        println(io, :( const libhdf5 = $libhdf5 ))
-        println(io, :( const libhdf5_hl = $libhdf5_hl ))
-        println(io, :( const libhdf5_size = $libhdf5_size ))
+        println(io, :(const libhdf5 = $libhdf5))
+        println(io, :(const libhdf5_hl = $libhdf5_hl))
+        println(io, :(const libhdf5_size = $libhdf5_size))
     end
 end
