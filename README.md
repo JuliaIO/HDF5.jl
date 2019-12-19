@@ -34,7 +34,13 @@ julia>]
 pkg> add HDF5
 ```
 
-If your platform is not supported then we automatically attempt to build hdf5 from source. To manually force a source build set the environment variable `julia> ENV["FORCE_COMPILE_HDF5"] = "yes"`. If a suitable MPI compiler is detected hdf5 will be built with parallel support.
+Starting from Julia 1.3, the HDF5 binaries are by default downloaded using the
+[HDF5_jll](https://github.com/JuliaBinaryWrappers/HDF5_jll.jl) package.
+To use system-provided HDF5 binaries instead, set the environment variable
+`JULIA_HDF5_LIBRARY_PATH` to the HDF5 library path and then run
+`Pkg.build("HDF5")`.
+This is in particular needed for parallel HDF5 support, which is not provided
+by the `HDF5_jll` binaries.
 
 ## Quickstart
 

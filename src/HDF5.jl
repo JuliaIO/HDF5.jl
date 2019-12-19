@@ -1,7 +1,5 @@
 module HDF5
 
-using HDF5_jll
-
 using Base: unsafe_convert, StringVector
 
 import Base:
@@ -25,6 +23,14 @@ export
     has, iscontiguous, ishdf5, ismmappable, name,
     o_copy, o_delete, o_open, p_create,
     readmmap, @read, @write, root, set_dims!, t_create, t_commit
+
+const depsfile = joinpath(dirname(@__DIR__), "deps", "deps.jl")
+if isfile(depsfile)
+    include(depsfile)
+else
+    error("HDF5 is not properly installed. Please run Pkg.build(\"HDF5\") ",
+          "and restart Julia.")
+end
 
 include("datafile.jl")
 
@@ -2549,6 +2555,8 @@ const ASCII_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, false, H5P_DEFAULT)
 
 function __init__()
+    check_deps()
+
     # disable file locking as that can cause problems with mmap'ing
     if !haskey(ENV, "HDF5_USE_FILE_LOCKING")
         ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
