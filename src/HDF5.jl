@@ -1578,7 +1578,6 @@ function read(obj::DatasetOrAttribute, ::Type{HDF5Vlen{T}}) where {T<:Union{HDF5
     for i = 1:len
         h = structbuf[i]
         data[i] = p2a(convert(Ptr{T}, h.p), Int(h.len))
-
     end
     data
 end
