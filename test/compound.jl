@@ -76,4 +76,20 @@ end
     f = x -> getfield(x, field)
     @test f.(v) == f.(v_read)
   end
+
+  T = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, Cstring}}
+  TT = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, T}}
+  TTT = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, TT}}
+  TTTT = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, TTT}}
+
+  @test HDF5.do_reclaim(TTTT) == true
+  @test HDF5.do_normalize(TTTT) == true
+
+  T = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, HDF5.FixedArray}}
+  TT = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, T}}
+  TTT = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, TT}}
+  TTTT = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, TTT}}
+
+  @test HDF5.do_reclaim(TTTT) == false
+  @test HDF5.do_normalize(TTTT) == true
 end

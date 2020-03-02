@@ -479,7 +479,9 @@ struct FixedArray{T,D,L}
   data::NTuple{L, T}
 end
 size(::Type{FixedArray{T,D,L}}) where {T,D,L} = D
+size(x::T) where T <: FixedArray = size(T)
 eltype(::Type{FixedArray{T,D,L}}) where {T,D,L} = T
+eltype(x::T) where T <: FixedArray = eltype(T)
 
 struct FixedString{N}
   data::NTuple{N, Cchar}
@@ -1465,42 +1467,21 @@ function getindex(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, r::HDF5Refere
     h5object(obj_id, parent)
 end
 
-# convert Cstring/FixedString to String
-function normalize_types(x::NamedTuple{T}) where T
+# convert special types to native julia types
+normalize_types(x) = x
+normalize_types(x::NamedTuple{T}) where T = NamedTuple{T}(map(normalize_types, values(x)))
+normalize_types(x::Cstring) = unsafe_string(x)
+normalize_types(x::FixedString) = join(Char.(x.data))
+normalize_types(x::FixedArray) = reshape(collect(x.data), size(x)...)
+normalize_types(x::VariableArray) = copy(unsafe_wrap(Array, convert(Ptr{eltype(x)}, x.p), x.len, own=false))
 
-  vals = map(values(x)) do xi
-    Ti = typeof(xi)
-    if Ti == Cstring
-      unsafe_string(xi)
-    elseif Ti <: FixedString
-      join(Char.(xi.data))
-    elseif Ti <: FixedArray
-      reshape(collect(xi.data), size(Ti)...)
-    elseif Ti <: VariableArray
-      copy(unsafe_wrap(Array, convert(Ptr{eltype(xi)}, xi.p), xi.len, own=false))
-    elseif Ti <: NamedTuple
-      normalize_types(xi)
-    else
-      xi
-    end
-  end
+do_normalize(::Type{T}) where T = false
+do_normalize(::Type{NamedTuple{T, U}}) where T where U = any(i -> do_normalize(fieldtype(U,i)), 1:fieldcount(U))
+do_normalize(::Type{T}) where T <: Union{Cstring, FixedString, FixedArray, VariableArray} = true
 
-  NamedTuple{T}(vals)
-end
-
-# get a vector of all the leaf types in a (possibly nested) named tuple
-function get_all_types(::Type{NamedTuple{T, U}}) where T where U
-  types = []
-  for i in 1:fieldcount(U)
-    Ui = fieldtype(U, i)
-    if Ui <: NamedTuple
-      append!(types, get_all_types(Ui))
-    else
-      push!(types, Ui)
-    end
-  end
-  types
-end
+do_reclaim(::Type{T}) where T = false
+do_reclaim(::Type{NamedTuple{T, U}}) where T where U =  any(i -> do_reclaim(fieldtype(U,i)), 1:fieldcount(U))
+do_reclaim(::Type{T}) where T <: Union{Cstring, VariableArray} = true
 
 function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: NamedTuple
   filetype = HDF5.datatype(dset)
@@ -1510,13 +1491,9 @@ function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: N
   buf = Array{U}(undef, size(dset))
 
   HDF5.h5d_read(dset.id, memtype_id, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, buf)
+  out = do_normalize(U) ? normalize_types.(buf) : buf
 
-  types = get_all_types(U)
-  normalize = any(t -> t <: Union{Cstring, FixedString, FixedArray, VariableArray}, types)
-  out = normalize ? normalize_types.(buf) : buf
-
-  reclaim = any(t -> t <: Union{Cstring, VariableArray}, types)
-  if reclaim
+  if do_reclaim(U)
     dspace = dataspace(dset)
     # NOTE I have seen this call fail but I cannot reproduce
     h5d_vlen_reclaim(memtype_id, dspace.id, H5P_DEFAULT, buf)
@@ -2009,7 +1986,7 @@ function hdf5_to_julia_eltype(objtype)
         super_id = h5t_get_super(objtype.id)
         T = HDF5Vlen{hdf5_to_julia_eltype(HDF5Datatype(super_id))}
     elseif class_id == H5T_COMPOUND
-        N = Int(h5t_get_nmembers(objtype.id))
+        N = h5t_get_nmembers(objtype.id)
 
         membernames = ntuple(N) do i
           h5t_get_member_name(objtype.id, i-1)
