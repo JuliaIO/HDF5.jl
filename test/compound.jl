@@ -24,7 +24,7 @@ function unsafe_convert(::Type{foo_hdf5}, x::foo)
            Base.unsafe_convert(Cstring, x.b),
            ntuple(i -> x.c[i], length(x.c)),
            ntuple(i -> x.d[i], length(x.d)),
-           HDF5.Hvl_t(convert(Csize_t, length(x.e)), convert(Ptr{Cvoid}, pointer(x.e)))
+           HDF5.Hvl_t(length(x.e), pointer(x.e))
           )
 end
 
