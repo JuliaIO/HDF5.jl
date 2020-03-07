@@ -483,10 +483,13 @@ size(x::T) where T <: FixedArray = size(T)
 eltype(::Type{FixedArray{T,D,L}}) where {T,D,L} = T
 eltype(x::T) where T <: FixedArray = eltype(T)
 
-struct FixedString{N}
+struct FixedString{N, PAD}
   data::NTuple{N, Cchar}
 end
-length(::Type{FixedString{N}}) where N = N
+length(::Type{FixedString{N, PAD}}) where {N, PAD} = N
+length(x::T) where T <: FixedString = length(T)
+pad(::Type{FixedString{N, PAD}}) where {N, PAD} = PAD
+pad(x::T) where T <: FixedString = pad(T)
 
 struct VariableArray{T}
   len::Csize_t
@@ -1471,7 +1474,7 @@ end
 normalize_types(x) = x
 normalize_types(x::NamedTuple{T}) where T = NamedTuple{T}(map(normalize_types, values(x)))
 normalize_types(x::Cstring) = unsafe_string(x)
-normalize_types(x::FixedString) = join(Char.(x.data))
+normalize_types(x::FixedString) = unpad(join(Char.(x.data)), pad(x))
 normalize_types(x::FixedArray) = reshape(collect(x.data), size(x)...)
 normalize_types(x::VariableArray) = copy(unsafe_wrap(Array, convert(Ptr{eltype(x)}, x.p), x.len, own=false))
 
@@ -2001,7 +2004,8 @@ function hdf5_to_julia_eltype(objtype)
               return Cstring
             else
               n = h5t_get_size(dtype.id)
-              return FixedString{Int(n)}
+              pad = h5t_get_strpad(dtype.id)
+              return FixedString{Int(n), pad}
             end
           elseif ci == H5T_VLEN
             superid = h5t_get_super(dtype.id)
