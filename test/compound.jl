@@ -14,7 +14,7 @@ end
 struct foo_hdf5
   a::Float64
   b::Cstring
-  c::NTuple{10, Cchar}
+  c::NTuple{20, Cchar}
   d::NTuple{9, ComplexF64}
   e::HDF5.Hvl_t
 end
@@ -22,7 +22,7 @@ end
 function unsafe_convert(::Type{foo_hdf5}, x::foo)
   foo_hdf5(x.a,
            Base.unsafe_convert(Cstring, x.b),
-           ntuple(i -> x.c[i], length(x.c)),
+           ntuple(i -> i <= length(x.c) ? x.c[i] : '\0', 20),
            ntuple(i -> x.d[i], length(x.d)),
            HDF5.Hvl_t(length(x.e), pointer(x.e))
           )
@@ -38,8 +38,9 @@ function datatype(::Type{foo_hdf5})
   HDF5.h5t_insert(dtype, "b", fieldoffset(foo_hdf5, 2), vlenstr_dtype)
 
   fixedstr_dtype = HDF5.h5t_copy(HDF5.H5T_C_S1)
-  HDF5.h5t_set_size(fixedstr_dtype, 10 * sizeof(Cchar))
+  HDF5.h5t_set_size(fixedstr_dtype, 20 * sizeof(Cchar))
   HDF5.h5t_set_cset(fixedstr_dtype, HDF5.H5T_CSET_UTF8)
+  HDF5.h5t_set_strpad(fixedstr_dtype, HDF5.H5T_STR_NULLPAD)
   HDF5.h5t_insert(dtype, "c", fieldoffset(foo_hdf5, 3), fixedstr_dtype)
 
   hsz = HDF5.Hsize[3,3]
