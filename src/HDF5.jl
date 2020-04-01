@@ -1780,7 +1780,7 @@ _dropint() = ()
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
 
-setindex!(dset::HDF5Dataset, x, I::Union{AbstractRange,Integer,Colon}...) = 
+setindex!(dset::HDF5Dataset, x, I::Union{AbstractRange,Integer,Colon}...) =
     _setindex!(dset, x, Base.to_indices(dset, I)...)
 function _setindex!(dset::HDF5Dataset, X::Array, I::Union{AbstractRange{Int},Int}...)
     T = hdf5_to_julia(dset)
@@ -2187,6 +2187,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5t_close, :H5Tclose, Herr, (Hid,), (:dtype_id,), "Error closing datatype"),
      (:h5t_set_cset, :H5Tset_cset, Herr, (Hid, Cint), (:dtype_id, :cset), "Error setting character set in datatype"),
      (:h5t_set_size, :H5Tset_size, Herr, (Hid, Csize_t), (:dtype_id, :sz), "Error setting size of datatype"),
+     (:h5t_set_strpad, :H5Tset_strpad, Herr, (Hid, Cint), (:dtype_id, :sz), "Error setting size of datatype"),
      (:h5t_set_precision, :H5Tset_precision, Herr, (Hid, Csize_t), (:dtype_id, :sz), "Error setting precision of datatype"),
     )
 
