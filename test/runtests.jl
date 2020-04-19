@@ -12,6 +12,7 @@ include("gc.jl")
 include("external.jl")
 include("swmr.jl")
 include("mmap.jl")
+include("virtual.jl")
 if get(Pkg.installed(), "MPI", nothing) !== nothing
   # basic MPI tests, for actual parallel tests we need to run in MPI mode
   include("mpio.jl")

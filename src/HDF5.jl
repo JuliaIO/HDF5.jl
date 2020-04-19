@@ -22,7 +22,8 @@ export
     h5open, h5read, h5rewrite, h5writeattr, h5readattr, h5write,
     has, iscontiguous, ishdf5, ismmappable, name,
     o_copy, o_delete, o_open, p_create,
-    readmmap, @read, @write, root, set_dims!, t_create, t_commit
+    readmmap, @read, @write, root, set_dims!, t_create, t_commit,
+    d_create_virtual, VirtualLayout, VirtualSource
 
 const depsfile = joinpath(dirname(@__DIR__), "deps", "deps.jl")
 if isfile(depsfile)
@@ -656,7 +657,7 @@ Open or create an HDF5 file where `mode` is one of:
 Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for "w" and
 "r+", or SWMR read access for "r".
 """
-function h5open(filename::AbstractString, mode::AbstractString="r", pv...; swmr=false)
+function h5open(filename::AbstractString, mode::AbstractString="r", pv...; swmr=false, fclose_degree = H5F_CLOSE_STRONG, auto_fclose = true)
     checkprops(pv...)
     # pv is interpreted as pairs of arguments
     # the first of a pair is a key of hdf5_prop_get_set
@@ -664,7 +665,8 @@ function h5open(filename::AbstractString, mode::AbstractString="r", pv...; swmr=
     fapl = p_create(H5P_FILE_ACCESS, true, pv...) # file access property list
     # With garbage collection, the other modes don't make sense
     # (Set this first, so that the user-passed properties can overwrite this.)
-    fapl["fclose_degree"] = H5F_CLOSE_STRONG
+    fclose_degree != H5F_CLOSE_STRONG && @eval GC.gc(true)
+    fapl["fclose_degree"] = fclose_degree
     fcpl = p_create(H5P_FILE_CREATE, true, pv...) # file create property list
     modes =
         mode == "r"  ? (true,  false, false, false, false) :
@@ -674,7 +676,18 @@ function h5open(filename::AbstractString, mode::AbstractString="r", pv...; swmr=
         # mode == "w+" ? (true,  true,  true,  true,  false) :
         # mode == "a"  ? (true,  true,  true,  true,  true ) :
         error("invalid open mode: ", mode)
-    h5open(filename, modes..., fcpl, fapl; swmr=swmr)
+    if auto_fclose
+        try
+            hiding_errors() do
+                h5open(filename, modes..., fcpl, fapl; swmr=swmr)
+            end
+        catch e
+            fapl["fclose_degree"] = H5F_CLOSE_DEFAULT
+            h5open(filename, modes..., fcpl, fapl; swmr=swmr)
+        end
+    else
+        h5open(filename, modes..., fcpl, fapl; swmr=swmr)
+    end
 end
 
 """
@@ -689,8 +702,8 @@ Apply the function f to the result of `h5open(args...;kwargs...)` and close the 
     end
 
 """
-function h5open(f::Function, args...; swmr=false)
-    fid = h5open(args...; swmr=swmr)
+function h5open(f::Function, args...; kwargs...)
+    fid = h5open(args...; kwargs...)
     try
         f(fid)
     finally
@@ -721,9 +734,9 @@ function h5write(filename, name::String, data, pv...)
     end
 end
 
-function h5read(filename, name::String, pv...)
+function h5read(filename, name::String, pv...; kwargs...)
     local dat
-    fid = h5open(filename, "r", pv...)
+    fid = h5open(filename, "r", pv...; kwargs...)
     try
         obj = fid[name, pv...]
         dat = read(obj)
@@ -733,7 +746,7 @@ function h5read(filename, name::String, pv...)
     dat
 end
 
-function h5read(filename, name::String, indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}}, pv...)
+function h5read(filename, name::String, indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}}, pv...; kwargs...)
     local dat
     fid = h5open(filename, "r", pv...)
     try
@@ -778,6 +791,7 @@ checkvalid(obj) = isvalid(obj) ? obj : error("File or object has been closed")
 # Close functions that should try calling close regardless
 function close(obj::HDF5File)
     if obj.id != -1
+        flush(obj)
         h5f_close(obj.id)
         obj.id = -1
     end
@@ -2186,7 +2200,8 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5p_set_userblock, :H5Pset_userblock, Herr, (Hid, Hsize), (:plist_id, :len), "Error setting userblock"),
      (:h5p_set_obj_track_times, :H5Pset_obj_track_times, Herr, (Hid, UInt8), (:plist_id, :track_times), "Error setting object time tracking"),
      (:h5p_get_alignment, :H5Pget_alignment, Herr, (Hid, Ptr{Hsize}, Ptr{Hsize}), (:plist_id, :threshold, :alignment), "Error getting alignment"),
-     (:h5p_set_alignment, :H5Pset_alignment, Herr, (Hid, Hsize, Hsize), (:plist_id, :threshold, :alignment), "Error setting alignment"),      
+     (:h5p_set_alignment, :H5Pset_alignment, Herr, (Hid, Hsize, Hsize), (:plist_id, :threshold, :alignment), "Error setting alignment"),
+     (:h5p_set_virtual, :H5Pset_virtual, Herr, (Hid, Hid, Ptr{UInt8}, Ptr{UInt8}, Hid), (:dcpl_id, :vspace_id, :src_file_name, :src_dset_name, :src_space_id), "Error setting virtual"),
      (:h5s_close, :H5Sclose, Herr, (Hid,), (:space_id,), "Error closing dataspace"),
      (:h5s_select_hyperslab, :H5Sselect_hyperslab, Herr, (Hid, Cint, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}), (:dspace_id, :seloper, :start, :stride, :count, :block), "Error selecting hyperslab"),
      (:h5t_commit, :H5Tcommit2, Herr, (Hid, Ptr{UInt8}, Hid, Hid, Hid, Hid), (:loc_id, :name, :dtype_id, :lcpl_id, :tcpl_id, :tapl_id), "Error committing type"),
@@ -2556,6 +2571,76 @@ function hiding_errors(f)
     ccall((:H5Eset_auto2, libhdf5), Herr, (Hid, Ptr{Cvoid}, Ptr{Cvoid}),
         error_stack, old_func[], old_client_data[])
     res
+end
+
+# virtual dataset interface
+mutable struct VirtualLayout{S, D, SS}
+    shape::S
+    dtype::D
+    sources::SS
+end
+
+VirtualLayout(shape, dtype) = VirtualLayout(tuple(shape...), dtype, [])
+
+repcolon(is, shape) = ifelse.(is .== Colon(), Base.OneTo.(shape), is)
+
+function Base.setindex!(layout::VirtualLayout, v, is...)
+    push!(layout.sources, (repcolon(is, layout.shape), v))
+    shape = collect(layout.shape)
+    for (vis, vs) in layout.sources
+        layout.shape = max.(layout.shape, last.(vis))
+    end
+end
+
+struct VirtualSource{P, N, S, D, I}
+    path::P
+    name::N
+    shape::S
+    dtype::D
+    is::I
+end
+
+function VirtualSource(path, name)
+    dset = h5open(path, "r")[name]
+    shape, dtype = size(dset), eltype(dset)
+    VirtualSource(path, name, shape, dtype, nothing)
+end
+
+VirtualSource(dset::HDF5Dataset) = 
+    VirtualSource(filename(dset), name(dset), size(dset), eltype(dset), nothing)
+
+Base.getindex(vs::VirtualSource, is...) = VirtualSource(vs.path, vs.name, vs.shape, vs.dtype, repcolon(is, vs.shape))
+
+function select_hyperslab(dspace, is)
+    isnothing(is) && return dspace
+    start = [i[1] - 1 for i in reverse(is)]
+    count = [1 for i in is]
+    stride = [step(i) for i in is]
+    block = [length(i) for i in reverse(is)]
+    h5s_select_hyperslab(dspace, H5S_SELECT_SET, start, stride, count, block)
+    return dspace
+end
+
+function d_create_virtual(parent::Union{HDF5File, HDF5Group}, name::String, layout, virtual = true)
+    checkvalid(parent)
+    dcpl = p_create(H5P_DATASET_CREATE)
+    dspace = dataspace(layout.shape)
+    dtype = datatype(layout.dtype)
+    if virtual
+        for (is, vs) in layout.sources
+            src_dspace = dataspace(vs.shape)
+            select_hyperslab(dspace, is)
+            select_hyperslab(src_dspace, vs.is)
+            h5p_set_virtual(dcpl, dspace, vs.path, vs.name, src_dspace)
+        end
+        d_create(parent, name, dtype, dspace, HDF5Properties(), dcpl)
+    else
+        d_create(parent, name, dtype, dspace, HDF5Properties(), dcpl)
+        for (is, vs) in layout.sources
+            vsis = something(vs.is, ntuple(i -> (:), length(vs.shape)))
+            parent[name][is...] = h5read(vs.path, vs.name, vsis)
+        end
+    end
 end
 
 # Define globally because JLD uses this, too
