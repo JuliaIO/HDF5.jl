@@ -678,9 +678,7 @@ function h5open(filename::AbstractString, mode::AbstractString="r", pv...; swmr=
         error("invalid open mode: ", mode)
     if auto_fclose
         try
-            hiding_errors() do
-                h5open(filename, modes..., fcpl, fapl; swmr=swmr)
-            end
+            h5open(filename, modes..., fcpl, fapl; swmr=swmr)
         catch e
             fapl["fclose_degree"] = H5F_CLOSE_DEFAULT
             h5open(filename, modes..., fcpl, fapl; swmr=swmr)
