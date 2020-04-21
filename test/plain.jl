@@ -505,4 +505,10 @@ finally
     rm(fn)
 end
 
+# test alignment
+fn = tempname()
+h5open(fn, "w", "alignment", (0, 8)) do fid
+    fid["x"] = zeros(10, 10)
+end
+
 end # writing abstract arrays

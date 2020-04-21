@@ -2185,6 +2185,8 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5p_set_shuffle, :H5Pset_shuffle, Herr, (Hid,), (:plist_id,), "Error enabling shuffle filter"),
      (:h5p_set_userblock, :H5Pset_userblock, Herr, (Hid, Hsize), (:plist_id, :len), "Error setting userblock"),
      (:h5p_set_obj_track_times, :H5Pset_obj_track_times, Herr, (Hid, UInt8), (:plist_id, :track_times), "Error setting object time tracking"),
+     (:h5p_get_alignment, :H5Pget_alignment, Herr, (Hid, Ptr{Hsize}, Ptr{Hsize}), (:plist_id, :threshold, :alignment), "Error getting alignment"),
+     (:h5p_set_alignment, :H5Pset_alignment, Herr, (Hid, Hsize, Hsize), (:plist_id, :threshold, :alignment), "Error setting alignment"),      
      (:h5s_close, :H5Sclose, Herr, (Hid,), (:space_id,), "Error closing dataspace"),
      (:h5s_select_hyperslab, :H5Sselect_hyperslab, Herr, (Hid, Cint, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}, Ptr{Hsize}), (:dspace_id, :seloper, :start, :stride, :count, :block), "Error selecting hyperslab"),
      (:h5t_commit, :H5Tcommit2, Herr, (Hid, Ptr{UInt8}, Hid, Hid, Hid, Hid), (:loc_id, :name, :dtype_id, :lcpl_id, :tcpl_id, :tapl_id), "Error committing type"),
@@ -2493,6 +2495,13 @@ end
     end
 end
 
+function get_alignment(p::HDF5Properties)
+    threshold = Ref{Hsize}()
+    alignment = Ref{Hsize}()
+    h5p_get_alignment(p, threshold, alignment)
+    return threshold[], alignment[]
+end
+
 # Map property names to function and attribute symbol
 # Property names should follow the naming introduced by HDF5, i.e.
 # keyname => (h5p_get_keyname, h5p_set_keyname, id )
@@ -2515,6 +2524,7 @@ const hdf5_prop_get_set = Dict(
     "fapl_mpio"     => (h5p_get_fapl_mpio, h5p_set_fapl_mpio,         H5P_FILE_ACCESS),
     "dxpl_mpio"     => (h5p_get_dxpl_mpio, h5p_set_dxpl_mpio,         H5P_DATASET_XFER),
     "track_times"   => (nothing, h5p_set_obj_track_times,             H5P_OBJECT_CREATE),
+    "alignment"     => (h5p_get_alignment, h5p_set_alignment,         H5P_FILE_ACCESS)
 )
 
 # properties that require chunks in order to work (e.g. any filter)
