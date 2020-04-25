@@ -64,9 +64,10 @@ for i = 1:10
 end
 GC.enable(true)
 
-h5open(identity, fn, "r", "alignment", (0, 64))  # issue 620
-HDF5.h5_close()
-@test_nowarn GC.gc()  # this will fail when trying to close objects already closed by h5_close
+let plist = p_create(HDF5.H5P_FILE_ACCESS, true)  # related to issue #620
+    HDF5.h5p_close(plist)
+    @test_nowarn finalize(plist)
+end
 
 rm(fn)
 
