@@ -50,3 +50,6 @@ h5p_get_fapl_mpio(fapl_id, comm::Ref{Hmpih64}, info::Ref{Hmpih64}) =
 
 hdf5_prop_get_set["fapl_mpio"] =
     (h5p_get_fapl_mpio, h5p_set_fapl_mpio, H5P_FILE_ACCESS)
+
+hdf5_prop_get_set["dxpl_mpio"] =
+    (h5p_get_dxpl_mpio, h5p_set_dxpl_mpio, H5P_DATASET_XFER)
