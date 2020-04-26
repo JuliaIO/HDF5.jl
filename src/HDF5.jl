@@ -2561,6 +2561,18 @@ const ASCII_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
 
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, H5P_DEFAULT)
 
+const HAS_PARALLEL = Ref(false)
+
+"""
+    has_parallel()
+
+Returns `true` if the HDF5 libraries were compiled with parallel support,
+and if parallel support was loaded into HDF5.jl.
+
+For the second condition to be true, MPI must be imported before HDF5.
+"""
+has_parallel() = HAS_PARALLEL[]
+
 function __init__()
     check_deps()
 

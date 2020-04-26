@@ -12,6 +12,8 @@ comm = MPI.COMM_WORLD
 nprocs = MPI.Comm_size(comm)
 myrank = MPI.Comm_rank(comm)
 
+@test HDF5.has_parallel()
+
 fileprop = p_create(HDF5.H5P_FILE_ACCESS)
 
 HDF5.h5p_set_fapl_mpio(fileprop, comm, info)
