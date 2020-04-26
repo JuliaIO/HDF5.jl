@@ -2601,7 +2601,7 @@ function __init__()
     rehash!(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
     rehash!(hdf5_obj_open, length(hdf5_obj_open.keys))
 
-    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" include("mpio.jl")
+    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" @eval include("mpio.jl")
 
     return nothing
 end
