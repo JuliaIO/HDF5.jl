@@ -63,6 +63,12 @@ for i = 1:10
     close(file)
 end
 GC.enable(true)
+
+let plist = p_create(HDF5.H5P_FILE_ACCESS, true)  # related to issue #620
+    HDF5.h5p_close(plist)
+    @test_nowarn finalize(plist)
+end
+
 rm(fn)
 
 end # testset gc

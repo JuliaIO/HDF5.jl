@@ -832,7 +832,9 @@ end
 
 function close(obj::HDF5Properties)
     if obj.toclose && obj.id != -1
-        h5p_close(obj.id)
+        if isvalid(obj)
+            h5p_close(obj.id)
+        end
         obj.id = -1
     end
     nothing
