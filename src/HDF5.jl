@@ -367,7 +367,7 @@ mutable struct HDF5Properties
     class::Hid
     function HDF5Properties(id, class::Hid = H5P_DEFAULT)
         p = new(id, class)
-        finalizer(close, p)
+        finalizer(close, p) #Essential, otherwise we get a memory leak, since closing file with CLOSE_STRONG is not doing it for us
         p
     end
 end
