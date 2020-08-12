@@ -2376,6 +2376,18 @@ function h5l_get_info(link_loc_id::Hid, link_name::String, lapl_id::Hid)
     info[]
 end
 
+function h5lt_dtype_to_text(dtype_id; max_len=512)
+  buf = Vector{UInt8}(undef, max_len)
+  sz = Csize_t[length(buf)]
+  status = ccall((:H5LTdtype_to_text, libhdf5_hl), Int, (HDF5.Hid, Ptr{UInt8}, Int, Ptr{Csize_t}), dtype_id, buf, 0, sz)
+  if status < 0
+    error("Error getting dtype text representation")
+  end
+  buf[end] = 0 # nullterm
+  dtype_text = rstrip(unsafe_string(pointer(buf)))
+  return dtype_text
+end
+
 # Set MPIO properties in HDF5.
 # Note: HDF5 creates a COPY of the comm and info objects.
 function h5p_set_fapl_mpio(fapl_id, comm, info)
