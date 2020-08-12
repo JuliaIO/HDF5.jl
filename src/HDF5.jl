@@ -1687,10 +1687,8 @@ function _setindex!(dset::HDF5Dataset, x::Number, I::Union{AbstractRange{Int},In
     _setindex!(dset, X, I...)
 end
 
-
-function hyperslab(dset::HDF5Dataset, I::Union{AbstractRange{Int},Int}...)
+function hyperslab(dspace::HDF5Dataspace, I::Union{AbstractRange{Int},Int}...)
     local dsel_id
-    dspace = dataspace(dset)
     try
         dims, maxdims = get_dims(dspace)
         n_dims = length(dims)
@@ -1726,7 +1724,12 @@ function hyperslab(dset::HDF5Dataset, I::Union{AbstractRange{Int},Int}...)
     finally
         close(dspace)
     end
-    dsel_id
+    HDF5Dataspace(dsel_id)
+end
+
+function hyperslab(dset::HDF5Dataset, I::Union{AbstractRange{Int},Int}...)
+    dspace = dataspace(dset)
+    return hyperslab(dspace, I...)
 end
 
 # Link to bytes in an external file
