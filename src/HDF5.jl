@@ -2157,6 +2157,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5s_get_simple_extent_dims, :H5Sget_simple_extent_dims, Cint, (Hid, Ptr{Hsize}, Ptr{Hsize}), (:space_id, :dims, :maxdims), :(error("Error getting the dimensions for a dataspace"))),
      (:h5s_get_simple_extent_ndims, :H5Sget_simple_extent_ndims, Cint, (Hid,), (:space_id,), :(error("Error getting the number of dimensions for a dataspace"))),
      (:h5s_get_simple_extent_type, :H5Sget_simple_extent_type, Cint, (Hid,), (:space_id,), :(error("Error getting the dataspace type"))),
+     (:h5s_get_select_npoints, :H5Sget_select_npoints, Cint, (Hid,), (:space_id,), :(error("Error getting the number of selected points in dataspace"))),
      (:h5t_array_create, :H5Tarray_create2, Hid, (Hid, Cuint, Ptr{Hsize}), (:basetype_id, :ndims, :sz), :(error("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz))),
      (:h5t_copy, :H5Tcopy, Hid, (Hid,), (:dtype_id,), :(error("Error copying datatype"))),
      (:h5t_create, :H5Tcreate, Hid, (Cint, Csize_t), (:class_id, :sz), :(error("Error creating datatype of id ", class_id))),
