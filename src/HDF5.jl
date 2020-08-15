@@ -1669,7 +1669,7 @@ for (privatesym, fsym, ptype) in
      (:_a_create, :a_create, Union{HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype}))
     @eval begin
         # Generic create (hidden)
-        function ($privatesym)(parent::$ptype, name::String, data, plists...)
+        function ($privatesym)(parent::$ptype, name::String, data, plists::HDF5Properties...)
             local dtype
             local obj
             dtype = datatype(data)
@@ -1682,10 +1682,10 @@ for (privatesym, fsym, ptype) in
             obj, dtype
         end
         # Scalar types
-        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}, plists...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
+        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}, plists::HDF5Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
             ($privatesym)(parent, name, data, plists...)
         # VLEN types
-        ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T}, plists...) where {T<:Union{HDF5Scalar,CharType}} =
+        ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T}, plists::HDF5Properties...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privatesym)(parent, name, data, plists...)
     end
 end
@@ -1695,7 +1695,7 @@ for (privatesym, fsym, ptype, crsym) in
      (:_a_write, :a_write, Union{HDF5File, HDF5Object, HDF5Datatype}, :a_create))
     @eval begin
         # Generic write (hidden)
-        function ($privatesym)(parent::$ptype, name::String, data, plists...)
+        function ($privatesym)(parent::$ptype, name::String, data, plists::HDF5Properties...)
             obj, dtype = ($crsym)(parent, name, data, plists...)
             try
                 writearray(obj, dtype.id, data)
@@ -1705,10 +1705,10 @@ for (privatesym, fsym, ptype, crsym) in
             end
         end
         # Scalar types
-        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}, plists...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
+        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}, plists::HDF5Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
             ($privatesym)(parent, name, data, plists...)
         # VLEN types
-        ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T}, plists...) where {T<:Union{HDF5Scalar,CharType}} =
+        ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T}, plists::HDF5Properties...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privatesym)(parent, name, data, plists...)
     end
 end
@@ -1732,10 +1732,10 @@ function write(obj::DatasetOrAttribute, data::HDF5Vlen{T}) where {T<:Union{HDF5S
     end
 end
 # For plain files and groups, let "write(obj, name, val)" mean "d_write"
-write(parent::Union{HDF5File, HDF5Group}, name::String, data::Union{T, AbstractArray{T}}, plists...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
+write(parent::Union{HDF5File, HDF5Group}, name::String, data::Union{T, AbstractArray{T}}, plists::HDF5Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
     d_write(parent, name, data, plists...)
 # For datasets, "write(dset, name, val)" means "a_write"
-write(parent::HDF5Dataset, name::String, data::Union{T, AbstractArray{T}}, plists...) where {T<:ScalarOrString} = a_write(parent, name, data, plists...)
+write(parent::HDF5Dataset, name::String, data::Union{T, AbstractArray{T}}, plists::HDF5Properties...) where {T<:ScalarOrString} = a_write(parent, name, data, plists...)
 
 
 # Indexing
