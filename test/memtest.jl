@@ -14,11 +14,11 @@ macro memtest(ex)
     end
 end
 @memtest h5open("/tmp/memtest.h5", "w") do file
-    dset = d_create(file, "A", datatype(DATA), dataspace(DATA), "chunk", (100,))
+    dset = d_create(file, "A", datatype(DATA), dataspace(DATA), chunk=(100,))
     dset[:] = DATA[:]
 end
 @memtest h5open("/tmp/memtest.h5", "w") do file
-    file["A", "chunk", (100,)] = DATA[:]
+    file["A", chunk=(100,)] = DATA[:]
 end
 @memtest h5open("/tmp/memtest.h5", "r") do file
     file["A","dxpl_mpio", 0]

@@ -28,12 +28,12 @@ end
 
 # open file in parallel and write dataset
 fn = String(MPI.bcast(collect(tempname()), 0, MPI.COMM_WORLD))
-f = h5open(fn, "w", "fapl_mpio", (ccomm, cinfo) )
+f = h5open(fn, "w", fapl_mpio=(ccomm, cinfo) )
 @test isopen(f)
 
 g = g_create(f, "mygroup")
 A = [ myrank + i for i = 1:10]
-dset = d_create(g, "B", datatype(Int64), dataspace(10, nprocs), "chunk", (10, 1), "dxpl_mpio", HDF5.H5FD_MPIO_COLLECTIVE)
+dset = d_create(g, "B", datatype(Int64), dataspace(10, nprocs), chunk=(10, 1), dxpl_mpio=HDF5.H5FD_MPIO_COLLECTIVE)
 dset[:,myrank+1] = A
 close(f)
 
@@ -52,10 +52,10 @@ B=f["mygroup/B", "dxpl_mpio", HDF5.H5FD_MPIO_COLLECTIVE]
 close(f)
 
 MPI.Barrier(MPI.COMM_WORLD)
-B = h5read(fn, "mygroup/B", "fapl_mpio", (ccomm, cinfo), "dxpl_mpio", HDF5.H5FD_MPIO_COLLECTIVE)
+B = h5read(fn, "mygroup/B", fapl_mpio=(ccomm, cinfo), dxpl_mpio=HDF5.H5FD_MPIO_COLLECTIVE)
 @test A == vec(B[:, myrank + 1])
 MPI.Barrier(MPI.COMM_WORLD)
-B = h5read(fn, "mygroup/B", (:, myrank + 1), "fapl_mpio", (ccomm, cinfo), "dxpl_mpio", HDF5.H5FD_MPIO_COLLECTIVE)
+B = h5read(fn, "mygroup/B", (:, myrank + 1), fapl_mpio=(ccomm, cinfo), dxpl_mpio=HDF5.H5FD_MPIO_COLLECTIVE)
 @test A == vec(B)
 
 # we need to close HDF5 and finalize the info object before finalizing MPI
