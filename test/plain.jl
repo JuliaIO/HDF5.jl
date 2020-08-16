@@ -27,8 +27,10 @@ write(f, "Aint32", convert(Matrix{Int32}, Ai))
 write(f, "Aint64", convert(Matrix{Int64}, Ai))
 write(f, "Auint8", convert(Matrix{UInt8}, Ai))
 write(f, "Auint16", convert(Matrix{UInt16}, Ai))
-write(f, "Auint32", convert(Matrix{UInt32}, Ai))
-write(f, "Auint64", convert(Matrix{UInt64}, Ai))
+
+# test writing multiple variable (issue #599)
+write(f, "Auint32", convert(Matrix{UInt32}, Ai), "Auint64", convert(Matrix{UInt64}, Ai))
+
 # Arrays of bools (pull request #540)
 Abool = [false, true, false]
 write(f, "Abool", Abool)
