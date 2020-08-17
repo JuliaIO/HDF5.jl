@@ -42,6 +42,10 @@ To use system-provided HDF5 binaries instead, set the environment variable
 This is in particular needed for parallel HDF5 support, which is not provided
 by the `HDF5_jll` binaries.
 
+For example, you can set `JULIA_HDF5_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/`
+if you're using the system package [`libhdf5-mpich-dev`](https://packages.ubuntu.com/focal/libhdf5-mpich-dev)
+on Ubuntu 20.04.
+
 ## Quickstart
 
 Begin your code with
