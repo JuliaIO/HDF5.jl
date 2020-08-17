@@ -30,10 +30,3 @@ jobs:
       os: windows
     - arch: arm64
       julia: nightly
-after_success:
-  - |
-    julia -e '
-      using Pkg
-      Pkg.add("Coverage")
-      using Coverage
-      Codecov.submit(process_folder())'
