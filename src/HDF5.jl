@@ -36,8 +36,7 @@ include("datafile.jl")
 
 function h5_get_libversion()
     majnum, minnum, relnum = Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}()
-    status = ccall((:H5get_libversion, libhdf5),
-                   Cint, (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}), majnum, minnum, relnum)
+    status = ccall((:H5get_libversion, libhdf5), Cint, (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}), majnum, minnum, relnum)
     status < 0 && error("Error getting HDF5 library version")
     VersionNumber(majnum[], minnum[], relnum[])
 end
@@ -1266,8 +1265,8 @@ See [SWMR documentation](https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#Fi
 """
 start_swmr_write(h5::HDF5File) = hf5start_swmr_write(h5.id)
 
-refresh(ds::HDF5Dataset) = HDF5.h5d_refresh(checkvalid(ds).id)
-flush(ds::HDF5Dataset) = HDF5.h5d_flush(HDF5.checkvalid(ds).id)
+refresh(ds::HDF5Dataset) = h5d_refresh(checkvalid(ds).id)
+flush(ds::HDF5Dataset) = h5d_flush(checkvalid(ds).id)
 
 # Generic read functions
 for (fsym, osym, ptype) in
@@ -1301,7 +1300,6 @@ end
 # This infers the Julia type from the HDF5Datatype. Specific file formats should provide their own read(dset).
 const DatasetOrAttribute = Union{HDF5Dataset, HDF5Attribute}
 function read(obj::DatasetOrAttribute)
-    local T
     T = hdf5_to_julia(obj)
     read(obj, T)
 end
@@ -1485,13 +1483,13 @@ do_reclaim(::Type{NamedTuple{T, U}}) where T where U =  any(i -> do_reclaim(fiel
 do_reclaim(::Type{T}) where T <: Union{Cstring, VariableArray} = true
 
 function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: NamedTuple
-  filetype = HDF5.datatype(dset)
-  memtype_id = HDF5.h5t_get_native_type(filetype.id)  # padded layout in memory
-  @assert sizeof(U) == HDF5.h5t_get_size(memtype_id) "Type sizes mismatch!"
+  filetype = datatype(dset)
+  memtype_id = h5t_get_native_type(filetype.id)  # padded layout in memory
+  @assert sizeof(U) == h5t_get_size(memtype_id) "Type sizes mismatch!"
 
   buf = Array{U}(undef, size(dset))
 
-  HDF5.h5d_read(dset.id, memtype_id, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, buf)
+  h5d_read(dset.id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
   out = do_normalize(U) ? normalize_types.(buf) : buf
 
   if do_reclaim(U)
@@ -1500,7 +1498,7 @@ function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: N
     h5d_vlen_reclaim(memtype_id, dspace.id, H5P_DEFAULT, buf)
   end
 
-  HDF5.h5t_close(memtype_id)
+  h5t_close(memtype_id)
 
   if T <: NamedTuple
     return out[1]
@@ -1589,7 +1587,7 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
             h5f_get_vfd_handle(obj.file.id, prop, ret)
             fdint = unsafe_load(ret[])
         finally
-            HDF5.h5p_close(prop)
+            h5p_close(prop)
         end
         fd = fdio(fdint)
     else
@@ -1609,7 +1607,7 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
         # Check permissions
         intent = Ref{Cuint}()
         h5f_get_intend(obj.file, intent)
-        if intent[] == HDF5.H5F_ACC_RDONLY || intent[] == HDF5.H5F_ACC_RDONLY
+        if intent[] == H5F_ACC_RDONLY || intent[] == H5F_ACC_RDONLY
             flag = "r"
         else
             flag = "r+"
@@ -1876,7 +1874,7 @@ end
 # If you need to link to multiple segments, use low-level interface
 function d_create_external(parent::Union{HDF5File, HDF5Group}, name::String, filepath::String, t, sz::Dims, offset::Integer)
     checkvalid(parent)
-    p = p_create(HDF5.H5P_DATASET_CREATE)
+    p = p_create(H5P_DATASET_CREATE)
     h5p_set_external(p, filepath, Int(offset), prod(sz)*sizeof(t))
     d_create(parent, name, datatype(t), dataspace(sz), HDF5Properties(), p)
 end
@@ -1994,23 +1992,23 @@ function hdf5_to_julia_eltype(objtype)
         end
 
         membertypes = ntuple(N) do i
-          dtype = HDF5Datatype(h5t_get_member_type(objtype.id, i-1))
-          ci = h5t_get_class(dtype.id)
+            dtype = HDF5Datatype(h5t_get_member_type(objtype.id, i-1))
+            ci = h5t_get_class(dtype.id)
 
-          if ci == H5T_STRING
-            if h5t_is_variable_str(dtype.id)
-              return Cstring
+            if ci == H5T_STRING
+                if h5t_is_variable_str(dtype.id)
+                    return Cstring
+                else
+                    n = h5t_get_size(dtype.id)
+                    pad = h5t_get_strpad(dtype.id)
+                    return FixedString{Int(n), pad}
+                end
+            elseif ci == H5T_VLEN
+                superid = h5t_get_super(dtype.id)
+                T = VariableArray{hdf5_to_julia_eltype(HDF5Datatype(superid))}
             else
-              n = h5t_get_size(dtype.id)
-              pad = h5t_get_strpad(dtype.id)
-              return FixedString{Int(n), pad}
+                return hdf5_to_julia_eltype(dtype)
             end
-          elseif ci == H5T_VLEN
-            superid = h5t_get_super(dtype.id)
-            T = VariableArray{hdf5_to_julia_eltype(HDF5Datatype(superid))}
-          else
-            return hdf5_to_julia_eltype(dtype)
-          end
         end
 
         # check if should be interpreted as complex
@@ -2018,19 +2016,20 @@ function hdf5_to_julia_eltype(objtype)
                     N == 2 &&
                     (membernames == COMPLEX_FIELD_NAMES[]) &&
                     (membertypes[1] == membertypes[2]) &&
-                    (membertypes[1] <: HDF5.HDF5Scalar)
+                    (membertypes[1] <: HDF5Scalar)
 
         if iscomplex
-          T = Complex{membertypes[1]}
+            T = Complex{membertypes[1]}
         else
-          T = NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
+            T = NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
         end
     elseif class_id == H5T_ARRAY
         T = hdf5array(objtype)
     else
         error("Class id ", class_id, " is not yet supported")
     end
-    T
+
+    return T
 end
 
 
