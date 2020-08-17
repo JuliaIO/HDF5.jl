@@ -1,8 +1,15 @@
-# HDF5 interface for the Julia language
 
-[![Build Status](https://travis-ci.org/JuliaIO/HDF5.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/HDF5.jl) [![Build status](https://ci.appveyor.com/api/projects/status/4iagqqiqqo36sika/branch/master?svg=true)](https://ci.appveyor.com/project/musm/hdf5-jl/branch/master)
-[![Coverage Status](https://coveralls.io/repos/github/JuliaIO/HDF5.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaIO/HDF5.jl?branch=master)
-[![codecov](https://codecov.io/gh/JuliaIO/HDF5.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaIO/HDF5.jl)
+# HDF5
+
+HDF5 interface for the Julia language
+
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaIO.github.io/HDF5.jl/stable)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaIO.github.io/HDF5.jl/dev)
+[![Build Status](https://github.com/JuliaIO/HDF5.jl/workflows/CI/badge.svg)](https://github.com/JuliaIO/HDF5.jl/actions)
+[![Build Status](https://travis-ci.com/JuliaIO/HDF5.jl.svg?branch=master)](https://travis-ci.com/JuliaIO/HDF5.jl)
+[![Build Status](https://ci.appveyor.com/api/projects/status/4iagqqiqqo36sika/branch/master?svg=true)](https://ci.appveyor.com/project/musm/HDF5-jl)
+[![Coverage](https://codecov.io/gh/JuliaIO/HDF5.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaIO/HDF5.jl)
+[![Coverage](https://coveralls.io/repos/github/JuliaIO/HDF5.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaIO/HDF5.jl?branch=master)
 
 [HDF5][HDF5] is a file format and library for storing and accessing
 data, commonly used for scientific data. HDF5 files can be created and
