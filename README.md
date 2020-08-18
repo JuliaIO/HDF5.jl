@@ -1,5 +1,5 @@
 
-<h1><img alt="HDF5.jl" src="https://raw.githubusercontent.com/JuliaIO/HDF5.jl/master/static/logo.svg" width=300 height=74 ></h1>
+<h1><img alt="HDF5.jl" src="https://raw.githubusercontent.com/JuliaIO/HDF5.jl/master/docs/src/assets/logo.svg" width=300 height=74 ></h1>
 
 _HDF5 interface for the Julia language_
 
@@ -117,8 +117,7 @@ the formatting of the file is determined by the open command.
 ## Complete documentation
 
 The HDF5 API is much more extensive than suggested by this brief
-introduction.  More complete documentation is found in the
-[`doc`](doc/) directory.
+introduction.  More complete documentation is found in [`doc`](docs/hdf5.md).
 
 The [`test`](test/) directory contains a number of test scripts that also
 demonstrate usage.
