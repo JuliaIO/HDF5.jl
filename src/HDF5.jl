@@ -1471,8 +1471,8 @@ normalize_types(x) = x
 normalize_types(x::NamedTuple{T}) where T = NamedTuple{T}(map(normalize_types, values(x)))
 normalize_types(x::Cstring) = unsafe_string(x)
 normalize_types(x::FixedString) = unpad(String(collect(x.data)), pad(x))
-normalize_types(x::FixedArray) = reshape(collect(x.data), size(x)...)
-normalize_types(x::VariableArray) = copy(unsafe_wrap(Array, convert(Ptr{eltype(x)}, x.p), x.len, own=false))
+normalize_types(x::FixedArray) = normalize_types.(reshape(collect(x.data), size(x)...))
+normalize_types(x::VariableArray) = normalize_types.(copy(unsafe_wrap(Array, convert(Ptr{eltype(x)}, x.p), x.len, own=false)))
 
 do_normalize(::Type{T}) where T = false
 do_normalize(::Type{NamedTuple{T, U}}) where T where U = any(i -> do_normalize(fieldtype(U,i)), 1:fieldcount(U))
