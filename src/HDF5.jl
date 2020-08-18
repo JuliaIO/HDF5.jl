@@ -1946,36 +1946,11 @@ function hdf5_to_julia_eltype(objtype)
             error("character set ", cset, " not recognized")
         end
     elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
-        native_type = h5t_get_native_type(objtype.id)
-        try
-            native_size = h5t_get_size(native_type)
-            if class_id == H5T_INTEGER
-                is_signed = h5t_get_sign(native_type)
-            else
-                is_signed = nothing
-            end
-            T = hdf5_type_map[(class_id, is_signed, native_size)]
-        finally
-            h5t_close(native_type)
-        end
+        T = get_mem_compatible_jl_type(objtype)
     elseif class_id == H5T_BITFIELD
-        T = Bool
-        type_id = h5t_copy(hdf5_type_id(T))
-        h5t_set_precision(type_id, 1)
+        T = get_mem_compatible_jl_type(objtype)
     elseif class_id == H5T_ENUM
-        super_type = h5t_get_super(objtype.id)
-        try
-            native_type = h5t_get_native_type(super_type)
-            try
-                native_size = h5t_get_size(native_type)
-                is_signed = h5t_get_sign(native_type)
-                T = hdf5_type_map[(H5T_INTEGER, is_signed, native_size)]
-            finally
-                h5t_close(native_type)
-            end
-        finally
-            h5t_close(super_type)
-        end
+        T = get_mem_compatible_jl_type(objtype)
     elseif class_id == H5T_REFERENCE
         # How to test whether it's a region reference or an object reference??
         T = HDF5ReferenceObj
@@ -1985,6 +1960,58 @@ function hdf5_to_julia_eltype(objtype)
         super_id = h5t_get_super(objtype.id)
         T = HDF5Vlen{hdf5_to_julia_eltype(HDF5Datatype(super_id))}
     elseif class_id == H5T_COMPOUND
+        T = get_mem_compatible_jl_type(objtype)
+    elseif class_id == H5T_ARRAY
+        T = get_mem_compatible_jl_type(objtype)
+    else
+        error("Class id ", class_id, " is not yet supported")
+    end
+    T
+end
+
+function get_mem_compatible_jl_type(objtype)
+    class_id = h5t_get_class(objtype.id)
+    if class_id == H5T_STRING
+        if h5t_is_variable_str(objtype.id)
+          return Cstring
+        else
+          n = h5t_get_size(objtype.id)
+          pad = h5t_get_strpad(objtype.id)
+          return FixedString{Int(n), pad}
+        end
+    elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
+        native_type = h5t_get_native_type(objtype.id)
+        try
+            native_size = h5t_get_size(native_type)
+            if class_id == H5T_INTEGER
+                is_signed = h5t_get_sign(native_type)
+            else
+                is_signed = nothing
+            end
+            return hdf5_type_map[(class_id, is_signed, native_size)]
+        finally
+            h5t_close(native_type)
+        end
+    elseif class_id == H5T_BITFIELD
+        return Bool
+    elseif class_id == H5T_ENUM
+        super_type = h5t_get_super(objtype.id)
+        try
+            native_type = h5t_get_native_type(super_type)
+            try
+                native_size = h5t_get_size(native_type)
+                is_signed = h5t_get_sign(native_type)
+                return hdf5_type_map[(H5T_INTEGER, is_signed, native_size)]
+            finally
+                h5t_close(native_type)
+            end
+        finally
+            h5t_close(super_type)
+        end
+    elseif class_id == H5T_VLEN
+        superid = h5t_get_super(objtype.id)
+        return VariableArray{get_mem_compatible_jl_type(HDF5Datatype(superid))}
+    elseif class_id == H5T_COMPOUND
         N = h5t_get_nmembers(objtype.id)
 
         membernames = ntuple(N) do i
@@ -1992,23 +2019,8 @@ function hdf5_to_julia_eltype(objtype)
         end
 
         membertypes = ntuple(N) do i
-            dtype = HDF5Datatype(h5t_get_member_type(objtype.id, i-1))
-            ci = h5t_get_class(dtype.id)
-
-            if ci == H5T_STRING
-                if h5t_is_variable_str(dtype.id)
-                    return Cstring
-                else
-                    n = h5t_get_size(dtype.id)
-                    pad = h5t_get_strpad(dtype.id)
-                    return FixedString{Int(n), pad}
-                end
-            elseif ci == H5T_VLEN
-                superid = h5t_get_super(dtype.id)
-                T = VariableArray{hdf5_to_julia_eltype(HDF5Datatype(superid))}
-            else
-                return hdf5_to_julia_eltype(dtype)
-            end
+          dtype = HDF5Datatype(h5t_get_member_type(objtype.id, i-1))
+          return get_mem_compatible_jl_type(dtype)
         end
 
         # check if should be interpreted as complex
@@ -2019,19 +2031,21 @@ function hdf5_to_julia_eltype(objtype)
                     (membertypes[1] <: HDF5Scalar)
 
         if iscomplex
-            T = Complex{membertypes[1]}
+          return Complex{membertypes[1]}
         else
-            T = NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
+          return NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
         end
     elseif class_id == H5T_ARRAY
-        T = hdf5array(objtype)
-    else
-        error("Class id ", class_id, " is not yet supported")
+        nd = h5t_get_array_ndims(objtype.id)
+        dims = Vector{Hsize}(undef,nd)
+        h5t_get_array_dims(objtype.id, dims)
+        eltyp = HDF5Datatype(h5t_get_super(objtype.id))
+        elT = get_mem_compatible_jl_type(eltyp)
+        dimsizes = ntuple(i -> Int(dims[nd-i+1]), nd)  # reverse order
+        return FixedArray{elT, dimsizes, prod(dimsizes)}
     end
-
-    return T
+    error("Class id ", class_id, " is not yet supported")
 end
-
 
 ### Convenience wrappers ###
 # These supply default values where possible
@@ -2428,7 +2442,7 @@ function hdf5array(objtype)
     dims = Vector{Hsize}(undef,nd)
     h5t_get_array_dims(objtype.id, dims)
     eltyp = HDF5Datatype(h5t_get_super(objtype.id))
-    T = hdf5_to_julia_eltype(eltyp)
+    T = get_mem_compatible_jl_type(objtype)
     dimsizes = ntuple(i -> Int(dims[nd-i+1]), nd)  # reverse order
     FixedArray{T, dimsizes, prod(dimsizes)}
 end
