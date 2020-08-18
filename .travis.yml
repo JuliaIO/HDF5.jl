@@ -28,5 +28,4 @@ jobs:
       os: osx
     - arch: arm64
       os: windows
-    - arch: arm64
-      julia: nightly
+
