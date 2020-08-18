@@ -1,14 +1,31 @@
+# Documentation: http://docs.travis-ci.com/user/languages/julia
 language: julia
+notifications:
+  email: false
+julia:
+  - 1.3
+  - 1.5
+  - nightly
 os:
   - linux
   - osx
-julia:
-  - 1.3
-  - nightly
-matrix:
+  - windows
+arch:
+  - x64
+  - x86
+  - arm64
+cache:
+  directories:
+    - ~/.julia/artifacts
+jobs:
+  fast_finish: true
   allow_failures:
     - julia: nightly
-after_success:
-  - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder()); Codecov.submit(Codecov.process_folder())'
-notifications:
-  email: false
+  exclude:
+    - arch: x86
+      os: osx
+    - arch: arm64
+      os: osx
+    - arch: arm64
+      os: windows
+
