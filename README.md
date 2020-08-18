@@ -10,28 +10,11 @@ _HDF5 interface for the Julia language_
 [![Coverage](https://codecov.io/gh/JuliaIO/HDF5.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaIO/HDF5.jl)
 <!-- [![Coverage](https://coveralls.io/repos/github/JuliaIO/HDF5.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaIO/HDF5.jl?branch=master) -->
 
-[HDF5][HDF5] is a file format and library for storing and accessing
+[HDF5](https://www.hdfgroup.org/solutions/hdf5/) is a file format and library for storing and accessing
 data, commonly used for scientific data. HDF5 files can be created and
 read by numerous [programming
 languages](https://en.wikipedia.org/wiki/Hierarchical_Data_Format#Interfaces).  This package
-provides an interface to the HDF5 library for the
-[Julia][Julia] language.
-
-## Julia data (\*.jld) and Matlab (\*.mat) files
-
-The core HDF5 functionality is the foundation for two special-purpose
-packages, used to read and write HDF5 files with specific formatting
-conventions. The first is the
-[JLD](https://github.com/JuliaIO/JLD.jl) ("Julia data") package,
-which implements a generic mechanism for reading and writing Julia
-variables. While one can use "plain" HDF5 for this purpose, the
-advantage of the JLD package is that it preserves the exact type
-information of each variable.
-
-The other functionality provided through HDF5 is the ability to read
-and write Matlab \*.mat files saved as "-v7.3". The Matlab-specific
-portions have been moved to Simon Kornblith's
-[MAT.jl](https://github.com/simonster/MAT.jl) package.
+provides an interface to the HDF5 library for the Julia language.
 
 ## Installation
 
@@ -142,6 +125,3 @@ demonstrate usage.
 
 - Thanks also to the users who have reported bugs and tested fixes
 
-
-[Julia]: http://julialang.org "Julia"
-[HDF5]: http://www.hdfgroup.org/HDF5/ "HDF5"
