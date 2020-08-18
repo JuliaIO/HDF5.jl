@@ -479,7 +479,7 @@ eltype(::Type{FixedArray{T,D,L}}) where {T,D,L} = T
 eltype(x::T) where T <: FixedArray = eltype(T)
 
 struct FixedString{N, PAD}
-  data::NTuple{N, Cchar}
+  data::NTuple{N, UInt8}
 end
 length(::Type{FixedString{N, PAD}}) where {N, PAD} = N
 length(x::T) where T <: FixedString = length(T)
@@ -1470,7 +1470,7 @@ end
 normalize_types(x) = x
 normalize_types(x::NamedTuple{T}) where T = NamedTuple{T}(map(normalize_types, values(x)))
 normalize_types(x::Cstring) = unsafe_string(x)
-normalize_types(x::FixedString) = unpad(join(Char.(x.data)), pad(x))
+normalize_types(x::FixedString) = unpad(String(collect(x.data)), pad(x))
 normalize_types(x::FixedArray) = reshape(collect(x.data), size(x)...)
 normalize_types(x::VariableArray) = copy(unsafe_wrap(Array, convert(Ptr{eltype(x)}, x.p), x.len, own=false))
 
