@@ -1484,21 +1484,31 @@ do_reclaim(::Type{T}) where T <: Union{Cstring, VariableArray} = true
 
 function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: NamedTuple
   filetype = datatype(dset)
-  memtype_id = h5t_get_native_type(filetype.id)  # padded layout in memory
-  @assert sizeof(U) == h5t_get_size(memtype_id) "Type sizes mismatch!"
+  memtype = HDF5Datatype(h5t_get_native_type(filetype.id))  # padded layout in memory
+  close(filetype)
+
+  if sizeof(U) != h5t_get_size(memtype.id)
+    h5type_str = h5lt_dtype_to_text(memtype.id)
+    error("""
+          Type size mismatch
+          sizeof($T) = $(sizeof(T))
+          sizeof($h5type_str) = $(h5t_get_size(memtype.id))
+          """)
+  end
 
   buf = Array{U}(undef, size(dset))
+  memspace = dataspace(buf)
 
-  h5d_read(dset.id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
+  h5d_read(dset.id, memtype.id, memspace.id, HDF5.H5S_ALL, dset.xfer.id, buf)
   out = do_normalize(U) ? normalize_types.(buf) : buf
 
   if do_reclaim(U)
-    dspace = dataspace(dset)
     # NOTE I have seen this call fail but I cannot reproduce
-    h5d_vlen_reclaim(memtype_id, dspace.id, H5P_DEFAULT, buf)
+    h5d_vlen_reclaim(memtype.id, memspace.id, dset.xfer, buf)
   end
 
-  h5t_close(memtype_id)
+  close(memtype)
+  close(memspace)
 
   if T <: NamedTuple
     return out[1]
