@@ -2386,15 +2386,16 @@ function h5l_get_info(link_loc_id::Hid, link_name::String, lapl_id::Hid)
     info[]
 end
 
-function h5lt_dtype_to_text(dtype_id; max_len=512)
-  buf = Vector{UInt8}(undef, max_len)
-  sz = Csize_t[length(buf)]
-  status = ccall((:H5LTdtype_to_text, libhdf5_hl), Int, (HDF5.Hid, Ptr{UInt8}, Int, Ptr{Csize_t}), dtype_id, buf, 0, sz)
-  if status < 0
-    error("Error getting dtype text representation")
-  end
-  buf[end] = 0 # nullterm
-  dtype_text = rstrip(unsafe_string(pointer(buf)))
+function h5lt_dtype_to_text(dtype_id)
+  len = Csize_t[0]
+  status = ccall((:H5LTdtype_to_text, libhdf5_hl), Int, (HDF5.Hid, Ptr{UInt8}, Int, Ptr{Csize_t}), dtype_id, C_NULL, 0, len)
+  status < 0 && error("Error getting dtype text representation")
+
+  buf = Vector{UInt8}(undef, len[1])
+  status = ccall((:H5LTdtype_to_text, libhdf5_hl), Int, (HDF5.Hid, Ptr{UInt8}, Int, Ptr{Csize_t}), dtype_id, buf, 0, len)
+  status < 0 && error("Error getting dtype text representation")
+
+  dtype_text = unsafe_string(pointer(buf))
   return dtype_text
 end
 
