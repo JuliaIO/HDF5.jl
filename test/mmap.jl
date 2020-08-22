@@ -8,8 +8,10 @@ fn = tempname()
 f = h5open(fn, "w")
 @test isopen(f)
 
-# Write  HDF5 file
+# Create unallocated dataset which cannot yet be mapped
 hdf5_A = d_create(f,"A",datatype(Int64),dataspace(3,3));
+@test_throws ErrorException("Error mmapping array") readmmap(f["A"])
+# then write and fill the dataset, making it mappable
 A = rand(Int64,3,3)
 hdf5_A[:,:] = A
 flush(f)
