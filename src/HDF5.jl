@@ -2239,7 +2239,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5f_open, :H5Fopen, Hid, (Cstring, Cuint, Hid), (:pathname, :flags, :fapl_id), :(error("Error opening file ", pathname))),
      (:h5g_create, :H5Gcreate2, Hid, (Hid, Ptr{UInt8}, Hid, Hid, Hid), (:loc_id, :pathname, :lcpl_id, :gcpl_id, :gapl_id), :(error("Error creating group ", h5i_get_name(loc_id), "/", pathname))),
      (:h5g_get_create_plist, :H5Gget_create_plist, Hid, (Hid,), (:group_id,), :(error("Error getting group create property list"))),
-     (:h5g_get_objname_by_idx, :H5Gget_objname_by_idx, Hid, (Hid, Hsize, Ptr{UInt8}, Csize_t), (:loc_id, :idx, :pathname, :size), :(error("Error getting group object name ", h5i_get_name(loc_id), "/", pathname))),
+     (:h5g_get_objname_by_idx, :H5Gget_objname_by_idx, Cssize_t, (Hid, Hsize, Ptr{UInt8}, Csize_t), (:loc_id, :idx, :pathname, :size), :(error("Error getting group object name ", h5i_get_name(loc_id), "/", pathname))),
      (:h5g_get_num_objs, :H5Gget_num_objs, Hid, (Hid, Ptr{Hsize}), (:loc_id, :num_obj), :(error("Error getting group length"))),
      (:h5g_open, :H5Gopen2, Hid, (Hid, Ptr{UInt8}, Hid), (:loc_id, :pathname, :gapl_id), :(error("Error opening group ", h5i_get_name(loc_id), "/", pathname))),
      (:h5i_get_file_id, :H5Iget_file_id, Hid, (Hid,), (:obj_id,), :(error("Error getting file identifier"))),
