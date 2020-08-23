@@ -1,6 +1,6 @@
 # This file is used to generate `api.jl`
 # To warp additional HDF5 API include them in the list below then run this file to generate the new wrappers, as follows:
-# julia> using HDF5; @eval HDF5 include("wrapper.jl")
+# julia> using HDF5; @eval HDF5 include("gen_wrappers.jl")
 
 io = open("api.jl", "w")
 write_func(io, ex_func) = write(io, string(Base.remove_linenums!(ex_func)), '\n', '\n')
