@@ -1616,7 +1616,7 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
     end
 
     offset = h5d_get_offset(obj.id)
-    if offset == -1
+    if offset == -1 % Haddr
         error("Error mmapping array")
     end
     if offset % Base.datatype_alignment(T) == 0
