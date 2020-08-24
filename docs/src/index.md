@@ -184,6 +184,31 @@ Note that `readmmap` returns an `Array` rather than an HDF5 object.
 **Note**: if you use `readmmap` on a dataset and subsequently close the file, the array data are still available---and file continues to be in use---until all of the arrays are garbage-collected.
 This is in contrast to standard HDF5 datasets, where closing the file prevents further access to any of the datasets, but the file is also detached and can safely be rewritten immediately.
 
+Under the default
+[allocation-time policy](https://support.hdfgroup.org/HDF5/doc/RM/RM_H5P.html#Property-SetAllocTime),
+a newly added `ismmappable` dataset can only be memory mapped after it has been written
+to.
+The following fails:
+```julia
+vec_dset = d_create(g, "v", datatype(Float64), dataspace(10_000,1))
+ismmappable(vec_dset)    # == true
+vec = readmmap(vec_dset) # throws ErrorException("Error mmapping array")
+```
+because although the dataset description has been added, the space within the HDF5 file
+has not yet actually been allocated (so the file region cannot be memory mapped by the OS).
+The storage can be allocated by making at least one write:
+```julia
+vec_dset[1,1] = 0.0      # force allocation of /g/v within the file
+vec = readmmap(vec_dset) # and now the memory mapping can succeed
+```
+
+Alternatlively, the policy can be set so that the space is allocated immediately upon
+creation of the data set with the `alloc_time` keyword:
+```julia
+mtx_dset = d_create(g, "M", datatype(Float64), dataspace(100, 1000),
+                    alloc_time = HDF5.H5D_ALLOC_TIME_EARLY)
+mtx = readmmap(mtx_dset) # succeeds immediately
+```
 
 ## Supported data types
 
