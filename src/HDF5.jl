@@ -485,7 +485,7 @@ eltype(::Type{FixedArray{T,D,L}}) where {T,D,L} = T
 eltype(x::T) where T <: FixedArray = eltype(T)
 
 struct FixedString{N, PAD}
-  data::NTuple{N, Cchar}
+  data::NTuple{N, UInt8}
 end
 length(::Type{FixedString{N, PAD}}) where {N, PAD} = N
 length(x::T) where T <: FixedString = length(T)
@@ -1446,9 +1446,9 @@ end
 normalize_types(x) = x
 normalize_types(x::NamedTuple{T}) where T = NamedTuple{T}(map(normalize_types, values(x)))
 normalize_types(x::Cstring) = unsafe_string(x)
-normalize_types(x::FixedString) = unpad(join(Char.(x.data)), pad(x))
-normalize_types(x::FixedArray) = reshape(collect(x.data), size(x)...)
-normalize_types(x::VariableArray) = copy(unsafe_wrap(Array, convert(Ptr{eltype(x)}, x.p), x.len, own=false))
+normalize_types(x::FixedString) = unpad(String(collect(x.data)), pad(x))
+normalize_types(x::FixedArray) = normalize_types.(reshape(collect(x.data), size(x)...))
+normalize_types(x::VariableArray) = normalize_types.(copy(unsafe_wrap(Array, convert(Ptr{eltype(x)}, x.p), x.len, own=false)))
 
 do_normalize(::Type{T}) where T = false
 do_normalize(::Type{NamedTuple{T, U}}) where T where U = any(i -> do_normalize(fieldtype(U,i)), 1:fieldcount(U))
@@ -1460,21 +1460,31 @@ do_reclaim(::Type{T}) where T <: Union{Cstring, VariableArray} = true
 
 function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: NamedTuple
   filetype = datatype(dset)
-  memtype_id = h5t_get_native_type(filetype.id)  # padded layout in memory
-  @assert sizeof(U) == h5t_get_size(memtype_id) "Type sizes mismatch!"
+  memtype = HDF5Datatype(h5t_get_native_type(filetype.id))  # padded layout in memory
+  close(filetype)
+
+  if sizeof(U) != h5t_get_size(memtype.id)
+    h5type_str = h5lt_dtype_to_text(memtype.id)
+    error("""
+          Type size mismatch
+          sizeof($U) = $(sizeof(U))
+          sizeof($h5type_str) = $(h5t_get_size(memtype.id))
+          """)
+  end
 
   buf = Array{U}(undef, size(dset))
+  memspace = dataspace(buf)
 
-  h5d_read(dset.id, memtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf)
+  h5d_read(dset.id, memtype.id, memspace.id, H5S_ALL, dset.xfer.id, buf)
   out = do_normalize(U) ? normalize_types.(buf) : buf
 
   if do_reclaim(U)
-    dspace = dataspace(dset)
     # NOTE I have seen this call fail but I cannot reproduce
-    h5d_vlen_reclaim(memtype_id, dspace.id, H5P_DEFAULT, buf)
+    h5d_vlen_reclaim(memtype.id, memspace.id, dset.xfer, buf)
   end
 
-  h5t_close(memtype_id)
+  close(memtype)
+  close(memspace)
 
   if T <: NamedTuple
     return out[1]
@@ -1922,36 +1932,11 @@ function hdf5_to_julia_eltype(objtype)
             error("character set ", cset, " not recognized")
         end
     elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
-        native_type = h5t_get_native_type(objtype.id)
-        try
-            native_size = h5t_get_size(native_type)
-            if class_id == H5T_INTEGER
-                is_signed = h5t_get_sign(native_type)
-            else
-                is_signed = nothing
-            end
-            T = hdf5_type_map[(class_id, is_signed, native_size)]
-        finally
-            h5t_close(native_type)
-        end
+        T = get_mem_compatible_jl_type(objtype)
     elseif class_id == H5T_BITFIELD
-        T = Bool
-        type_id = h5t_copy(hdf5_type_id(T))
-        h5t_set_precision(type_id, 1)
+        T = get_mem_compatible_jl_type(objtype)
     elseif class_id == H5T_ENUM
-        super_type = h5t_get_super(objtype.id)
-        try
-            native_type = h5t_get_native_type(super_type)
-            try
-                native_size = h5t_get_size(native_type)
-                is_signed = h5t_get_sign(native_type)
-                T = hdf5_type_map[(H5T_INTEGER, is_signed, native_size)]
-            finally
-                h5t_close(native_type)
-            end
-        finally
-            h5t_close(super_type)
-        end
+        T = get_mem_compatible_jl_type(objtype)
     elseif class_id == H5T_REFERENCE
         # How to test whether it's a region reference or an object reference??
         T = HDF5ReferenceObj
@@ -1961,6 +1946,58 @@ function hdf5_to_julia_eltype(objtype)
         super_id = h5t_get_super(objtype.id)
         T = HDF5Vlen{hdf5_to_julia_eltype(HDF5Datatype(super_id))}
     elseif class_id == H5T_COMPOUND
+        T = get_mem_compatible_jl_type(objtype)
+    elseif class_id == H5T_ARRAY
+        T = get_mem_compatible_jl_type(objtype)
+    else
+        error("Class id ", class_id, " is not yet supported")
+    end
+    return T
+end
+
+function get_mem_compatible_jl_type(objtype)
+    class_id = h5t_get_class(objtype.id)
+    if class_id == H5T_STRING
+        if h5t_is_variable_str(objtype.id)
+          return Cstring
+        else
+          n = h5t_get_size(objtype.id)
+          pad = h5t_get_strpad(objtype.id)
+          return FixedString{Int(n), pad}
+        end
+    elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
+        native_type = h5t_get_native_type(objtype.id)
+        try
+            native_size = h5t_get_size(native_type)
+            if class_id == H5T_INTEGER
+                is_signed = h5t_get_sign(native_type)
+            else
+                is_signed = nothing
+            end
+            return hdf5_type_map[(class_id, is_signed, native_size)]
+        finally
+            h5t_close(native_type)
+        end
+    elseif class_id == H5T_BITFIELD
+        return Bool
+    elseif class_id == H5T_ENUM
+        super_type = h5t_get_super(objtype.id)
+        try
+            native_type = h5t_get_native_type(super_type)
+            try
+                native_size = h5t_get_size(native_type)
+                is_signed = h5t_get_sign(native_type)
+                return hdf5_type_map[(H5T_INTEGER, is_signed, native_size)]
+            finally
+                h5t_close(native_type)
+            end
+        finally
+            h5t_close(super_type)
+        end
+    elseif class_id == H5T_VLEN
+        superid = h5t_get_super(objtype.id)
+        return VariableArray{get_mem_compatible_jl_type(HDF5Datatype(superid))}
+    elseif class_id == H5T_COMPOUND
         N = h5t_get_nmembers(objtype.id)
 
         membernames = ntuple(N) do i
@@ -1968,23 +2005,8 @@ function hdf5_to_julia_eltype(objtype)
         end
 
         membertypes = ntuple(N) do i
-            dtype = HDF5Datatype(h5t_get_member_type(objtype.id, i-1))
-            ci = h5t_get_class(dtype.id)
-
-            if ci == H5T_STRING
-                if h5t_is_variable_str(dtype.id)
-                    return Cstring
-                else
-                    n = h5t_get_size(dtype.id)
-                    pad = h5t_get_strpad(dtype.id)
-                    return FixedString{Int(n), pad}
-                end
-            elseif ci == H5T_VLEN
-                superid = h5t_get_super(dtype.id)
-                T = VariableArray{hdf5_to_julia_eltype(HDF5Datatype(superid))}
-            else
-                return hdf5_to_julia_eltype(dtype)
-            end
+          dtype = HDF5Datatype(h5t_get_member_type(objtype.id, i-1))
+          return get_mem_compatible_jl_type(dtype)
         end
 
         # check if should be interpreted as complex
@@ -1995,19 +2017,21 @@ function hdf5_to_julia_eltype(objtype)
                     (membertypes[1] <: HDF5Scalar)
 
         if iscomplex
-            T = Complex{membertypes[1]}
+          return Complex{membertypes[1]}
         else
-            T = NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
+          return NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
         end
     elseif class_id == H5T_ARRAY
-        T = hdf5array(objtype)
-    else
-        error("Class id ", class_id, " is not yet supported")
+        nd = h5t_get_array_ndims(objtype.id)
+        dims = Vector{Hsize}(undef,nd)
+        h5t_get_array_dims(objtype.id, dims)
+        eltyp = HDF5Datatype(h5t_get_super(objtype.id))
+        elT = get_mem_compatible_jl_type(eltyp)
+        dimsizes = ntuple(i -> Int(dims[nd-i+1]), nd)  # reverse order
+        return FixedArray{elT, dimsizes, prod(dimsizes)}
     end
-
-    return T
+    error("Class id ", class_id, " is not yet supported")
 end
-
 
 ### Convenience wrappers ###
 # These supply default values where possible
@@ -2340,6 +2364,19 @@ function h5l_get_info(link_loc_id::Hid, link_name::String, lapl_id::Hid)
     info[]
 end
 
+function h5lt_dtype_to_text(dtype_id)
+    len = Ref{Csize_t}()
+    status = ccall((:H5LTdtype_to_text, libhdf5_hl), Herr, (Hid, Ptr{UInt8}, Int, Ref{Csize_t}), dtype_id, C_NULL, 0, len)
+    status < 0 && error("Error getting dtype text representation")
+
+    buf = Vector{UInt8}(undef, len[])
+    status = ccall((:H5LTdtype_to_text, libhdf5_hl), Herr, (Hid, Ptr{UInt8}, Int, Ref{Csize_t}), dtype_id, buf, 0, len)
+    status < 0 && error("Error getting dtype text representation")
+
+    dtype_text = unsafe_string(pointer(buf))
+    return dtype_text
+end
+
 # Set MPIO properties in HDF5.
 # Note: HDF5 creates a COPY of the comm and info objects.
 function h5p_set_fapl_mpio(fapl_id, comm, info)
@@ -2399,16 +2436,6 @@ function vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5D
     sz = Ref{Hsize}()
     h5d_vlen_get_buf_size(dset.id, dtype.id, dspace.id, sz)
     sz[]
-end
-
-function hdf5array(objtype)
-    nd = h5t_get_array_ndims(objtype.id)
-    dims = Vector{Hsize}(undef,nd)
-    h5t_get_array_dims(objtype.id, dims)
-    eltyp = HDF5Datatype(h5t_get_super(objtype.id))
-    T = hdf5_to_julia_eltype(eltyp)
-    dimsizes = ntuple(i -> Int(dims[nd-i+1]), nd)  # reverse order
-    FixedArray{T, dimsizes, prod(dimsizes)}
 end
 
 ### Property manipulation ###
