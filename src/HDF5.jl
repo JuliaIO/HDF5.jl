@@ -1499,7 +1499,7 @@ function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: N
   buf = Array{U}(undef, size(dset))
   memspace = dataspace(buf)
 
-  h5d_read(dset.id, memtype.id, memspace.id, HDF5.H5S_ALL, dset.xfer.id, buf)
+  h5d_read(dset.id, memtype.id, memspace.id, H5S_ALL, dset.xfer.id, buf)
   out = do_normalize(U) ? normalize_types.(buf) : buf
 
   if do_reclaim(U)
@@ -1976,7 +1976,7 @@ function hdf5_to_julia_eltype(objtype)
     else
         error("Class id ", class_id, " is not yet supported")
     end
-    T
+    return T
 end
 
 function get_mem_compatible_jl_type(objtype)
@@ -2387,16 +2387,16 @@ function h5l_get_info(link_loc_id::Hid, link_name::String, lapl_id::Hid)
 end
 
 function h5lt_dtype_to_text(dtype_id)
-  len = Csize_t[0]
-  status = ccall((:H5LTdtype_to_text, libhdf5_hl), Int, (HDF5.Hid, Ptr{UInt8}, Int, Ptr{Csize_t}), dtype_id, C_NULL, 0, len)
-  status < 0 && error("Error getting dtype text representation")
+    len = Ref{Csize_t}()
+    status = ccall((:H5LTdtype_to_text, libhdf5_hl), Herr, (Hid, Ptr{UInt8}, Int, Ref{Csize_t}), dtype_id, C_NULL, 0, len)
+    status < 0 && error("Error getting dtype text representation")
 
-  buf = Vector{UInt8}(undef, len[1])
-  status = ccall((:H5LTdtype_to_text, libhdf5_hl), Int, (HDF5.Hid, Ptr{UInt8}, Int, Ptr{Csize_t}), dtype_id, buf, 0, len)
-  status < 0 && error("Error getting dtype text representation")
+    buf = Vector{UInt8}(undef, len[])
+    status = ccall((:H5LTdtype_to_text, libhdf5_hl), Herr, (Hid, Ptr{UInt8}, Int, Ref{Csize_t}), dtype_id, buf, 0, len)
+    status < 0 && error("Error getting dtype text representation")
 
-  dtype_text = unsafe_string(pointer(buf))
-  return dtype_text
+    dtype_text = unsafe_string(pointer(buf))
+    return dtype_text
 end
 
 # Set MPIO properties in HDF5.
