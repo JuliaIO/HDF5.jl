@@ -27,7 +27,7 @@ end
 @testset "h5d_oappend" begin
     h5open(fname, "w") do h5
         g = g_create(h5, "shoe")
-        d = d_create(g, "bar", datatype(Float64), ((1,), (-1,)), "chunk", (100,))
+        d = d_create(g, "bar", datatype(Float64), ((1,), (-1,)), chunk=(100,))
         dxpl_id = HDF5.get_create_properties(d)
         v = [1.0, 2.0]
         memtype = datatype(Float64).id
@@ -89,14 +89,14 @@ end
 
 # create datasets and attributes before staring swmr writing
 function prep_h5_file(h5)
-    d = d_create(h5, "foo", datatype(Int), ((1,), (100,)), "chunk", (1,))
+    d = d_create(h5, "foo", datatype(Int), ((1,), (100,)), chunk=(1,))
     attrs(h5)["bar"] = "bar"
     g = g_create(h5, "group")
 end
 
 @testset "create by libver, then start_swmr_write" begin
     #test this h5open method with keyword arg
-    h5open(fname, "w", "libver_bounds", (HDF5.H5F_LIBVER_LATEST, HDF5.H5F_LIBVER_LATEST), swmr=false) do h5
+    h5open(fname, "w", libver_bounds=(HDF5.H5F_LIBVER_LATEST, HDF5.H5F_LIBVER_LATEST), swmr=false) do h5
         prep_h5_file(h5)
         HDF5.start_swmr_write(h5) # after creating datasets
         remote_test(h5)

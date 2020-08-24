@@ -7,7 +7,7 @@ fn = tempname()
 
 fid = h5open(fn, "w")
 g = g_create(fid, "shoe")
-d = d_create(g, "foo", datatype(Float64), ((10, 20), (100, 200)), "chunk", (1, 1))
+d = d_create(g, "foo", datatype(Float64), ((10, 20), (100, 200)), chunk=(1, 1))
 #println("d is size current $(map(int,HDF5.get_dims(d)[1])) max $(map(int,HDF5.get_dims(d)[2]))")
 dims, max_dims = HDF5.get_dims(d)
 @test dims == (UInt64(10), UInt64(20))
@@ -40,7 +40,7 @@ set_dims!(d, (1, 5))
 Array(d) == [1.1231 1.313 5.123 2.231 4.1231]
 
 #println("d is size current $(map(int,HDF5.get_dims(d)[1])) max $(map(int,HDF5.get_dims(d)[2]))")
-b = d_create(fid, "b", Int, ((1000,), (-1,)), "chunk", (100,)) #-1 is equivalent to typemax(Hsize) as far as I can tell
+b = d_create(fid, "b", Int, ((1000,), (-1,)), chunk=(100,)) #-1 is equivalent to typemax(Hsize) as far as I can tell
 #println("b is size current $(map(int,HDF5.get_dims(b)[1])) max $(map(int,HDF5.get_dims(b)[2]))")
 b[1:200] = ones(200)
 dims, max_dims = HDF5.get_dims(b)

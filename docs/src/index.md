@@ -96,15 +96,15 @@ It is often required to pass parameters to specific routines, which are collecte
 in so-called property lists in HDF5. There are different property lists for
 different tasks, e.g. for the access/creation of files, datasets, groups.
 In this high level framework multiple parameters can be simply applied by
-appending them at the end of function calls as a list of key/value pairs.
+appending them at the end of function calls as keyword arguments.
 
 ```julia
 g["A"] = A  # basic
-g["A", "chunk", (5,5)] = A # add chunks
+g["A", chunk=(5,5)] = A # add chunks
 
 B=h5read(fn,"mygroup/B", # two parameters
-  "fapl_mpio", (ccomm,cinfo), # if parameter requires multiple args use tuples
-  "dxpl_mpio", HDF5.H5FD_MPIO_COLLECTIVE )
+  fapl_mpio=(ccomm,cinfo), # if parameter requires multiple args use tuples
+  dxpl_mpio=HDF5.H5FD_MPIO_COLLECTIVE )
 ```
 
 This will automatically create the correct property lists, add the properties,
@@ -125,7 +125,7 @@ You can also optionally "chunk" and/or compress your data. For example,
 
 ```julia
 A = rand(100,100)
-g["A", "chunk", (5,5)] = A
+g["A", chunk=(5,5)] = A
 ```
 
 stores the matrix `A` in 5-by-5 chunks. Chunking improves efficiency if you
@@ -134,9 +134,9 @@ contiguously.
 
 ```julia
 A = rand(100,100)
-g1["A", "chunk", (5,5), "compress", 3] = A
-g2["A", "chunk", (5,5), "shuffle", (), "deflate", 3] = A
-g3["A", "chunk", (5,5), "blosc", 3] = A
+g1["A", chunk=(5,5), compress=3] = A
+g2["A", chunk=(5,5), shuffle=(), deflate=3] = A
+g3["A", chunk=(5,5), blosc=3] = A
 ```
 
 Standard compression in HDF5 (`"compress"`) corresponds to (`"deflate"`) and
@@ -154,7 +154,7 @@ useful to incrementally save to very large datasets you don't want to keep in
 memory. For example,
 
 ```julia
-dset = d_create(g, "B", datatype(Float64), dataspace(1000,100,10), "chunk", (100,100,1))
+dset = d_create(g, "B", datatype(Float64), dataspace(1000,100,10), chunk=(100,100,1))
 dset[:,1,1] = rand(1000)
 ```
 
@@ -311,12 +311,12 @@ a_write(parent, name, data)
 
 You can use extendible dimensions,
 ```julia
-d = d_create(parent, name, dtype, (dims, max_dims), "chunk", (chunk_dims), [lcpl, dcpl, dapl])
+d = d_create(parent, name, dtype, (dims, max_dims), chunk=(chunk_dims))
 set_dims!(d, new_dims)
 ```
 where dims is a tuple of integers.  For example
 ```julia
-b = d_create(fid, "b", Int, ((1000,),(-1,)), "chunk", (100,)) #-1 is equivalent to typemax(Hsize)
+b = d_create(fid, "b", Int, ((1000,),(-1,)), chunk=(100,)) #-1 is equivalent to typemax(Hsize)
 set_dims!(b, (10000,))
 b[1:10000] = collect(1:10000)
 ```

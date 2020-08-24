@@ -12,10 +12,10 @@ f = h5open(fn, "w")
 f["Float64"] = 3.2
 f["Int16"] = Int16(4)
 # compression of empty array (issue #246)
-f["compressedempty", "shuffle", (), "compress", 4] = Int64[]
+f["compressedempty", shuffle=(), compress=4] = Int64[]
 # compression of zero-dimensional array (pull request #445)
-f["compressed_zerodim", "shuffle", (), "compress", 4] = fill(Int32(42), ())
-f["bloscempty", "blosc", 4] = Int64[]
+f["compressed_zerodim", shuffle=(), compress=4] = fill(Int32(42), ())
+f["bloscempty", blosc=4] = Int64[]
 # Create arrays of different types
 A = randn(3, 5)
 write(f, "Afloat64", convert(Matrix{Float64}, A))
@@ -85,8 +85,8 @@ attrs(f)["ref_test"] = HDF5.HDF5ReferenceObj(f, "empty_array_of_strings")
 g = g_create(f, "mygroup")
 # Test dataset with compression
 R = rand(1:20, 20, 40);
-g["CompressedA", "chunk", (5, 6), "shuffle", (), "compress", 9] = R
-g["BloscA", "chunk", (5, 6), "shuffle", (), "blosc", 9] = R
+g["CompressedA", chunk=(5, 6), shuffle=(), compress=9] = R
+g["BloscA", chunk=(5, 6), shuffle=(), blosc=9] = R
 close(g)
 # Copy group containing dataset
 o_copy(f, "mygroup", f, "mygroup2")
@@ -96,17 +96,17 @@ o_copy(f["mygroup/CompressedA"], g, "CompressedA")
 o_copy(f["mygroup/BloscA"], g, "BloscA")
 close(g)
 # Writing hyperslabs
-dset = d_create(f, "slab", datatype(Float64), dataspace(20, 20, 5), "chunk", (5, 5, 1))
+dset = d_create(f, "slab", datatype(Float64), dataspace(20, 20, 5), chunk=(5, 5, 1))
 Xslab = randn(20, 20, 5)
 for i = 1:5
     dset[:,:,i] = Xslab[:,:,i]
 end
 # More complex hyperslab and assignment with "incorrect" types (issue #34)
-d = d_create(f, "slab2", datatype(Float64), ((10, 20), (100, 200)), "chunk", (1, 1))
+d = d_create(f, "slab2", datatype(Float64), ((10, 20), (100, 200)), chunk=(1, 1))
 d[:,:] = 5
 d[1,1] = 4
 # 1d indexing
-d = d_create(f, "slab3", datatype(Int), ((10,), (-1,)), "chunk", (5,))
+d = d_create(f, "slab3", datatype(Int), ((10,), (-1,)), chunk=(5,))
 @test d[:] == zeros(Int, 10)
 d[3:5] = 3:5
 # Create a dataset designed to be deleted
@@ -339,14 +339,13 @@ rm(fn)
 
 # File creation and access property lists
 cpl = p_create(HDF5.H5P_FILE_CREATE)
-cpl["userblock"] = 1024
+cpl[:userblock] = 1024
 apl = p_create(HDF5.H5P_FILE_ACCESS)
-apl["libver_bounds"] = (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)
+apl[:libver_bounds] = (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)
 h5open(fn, false, true, true, true, false, cpl, apl) do fid
     write(fid, "intarray", [1, 2, 3])
 end
-h5open(fn, "r", "libver_bounds",
-    (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)) do fid
+h5open(fn, "r", libver_bounds=(HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)) do fid
     intarray = read(fid, "intarray")
     @test intarray == [1, 2, 3]
 end
@@ -371,7 +370,7 @@ rm(fn)
 if !isempty(HDF5.libhdf5_hl)
     # Test direct chunk writing
     h5open(fn, "w") do f
-      d = d_create(f, "dataset", datatype(Int), dataspace(4, 4), "chunk", (2, 2))
+      d = d_create(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
       raw = HDF5ChunkStorage(d)
       raw[1,1] = 0, collect(reinterpret(UInt8, [1,2,5,6]))
       raw[3,1] = 0, collect(reinterpret(UInt8, [3,4,7,8]))
@@ -389,10 +388,10 @@ end
 
 # Test that switching time tracking off results in identical files
 h5open("tt1.h5", "w") do f
-    f["x", "track_times", false] = [1, 2, 3]
+    f["x", track_times=false] = [1, 2, 3]
 end
 h5open("tt2.h5", "w") do f
-    f["x", "track_times", false] = [1, 2, 3]
+    f["x", track_times=false] = [1, 2, 3]
 end
 
 @test open(crc32c, "tt1.h5") == open(crc32c, "tt2.h5")
@@ -509,7 +508,7 @@ end
 
 # test alignment
 fn = tempname()
-h5open(fn, "w", "alignment", (0, 8)) do fid
+h5open(fn, "w", alignment=(0, 8)) do fid
     fid["x"] = zeros(10, 10)
 end
 
