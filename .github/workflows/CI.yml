@@ -23,7 +23,7 @@ jobs:
         exclude:
           - os: macOS-latest
             arch: x86
-          - version: '1.3'
+          - version: ['1.3', 'nightly']
             arch: x86
     steps:
       - uses: actions/checkout@v2
