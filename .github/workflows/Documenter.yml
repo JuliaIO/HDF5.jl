@@ -1,4 +1,4 @@
-name: Documenter
+name: CI
 
 on:
   push:
