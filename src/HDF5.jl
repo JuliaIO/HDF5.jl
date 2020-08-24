@@ -1491,7 +1491,7 @@ function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: N
     h5type_str = h5lt_dtype_to_text(memtype.id)
     error("""
           Type size mismatch
-          sizeof($T) = $(sizeof(T))
+          sizeof($U) = $(sizeof(U))
           sizeof($h5type_str) = $(h5t_get_size(memtype.id))
           """)
   end
