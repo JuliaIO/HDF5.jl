@@ -2460,16 +2460,6 @@ function vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5D
     sz[]
 end
 
-function hdf5array(objtype)
-    nd = h5t_get_array_ndims(objtype.id)
-    dims = Vector{Hsize}(undef,nd)
-    h5t_get_array_dims(objtype.id, dims)
-    eltyp = HDF5Datatype(h5t_get_super(objtype.id))
-    T = get_mem_compatible_jl_type(objtype)
-    dimsizes = ntuple(i -> Int(dims[nd-i+1]), nd)  # reverse order
-    FixedArray{T, dimsizes, prod(dimsizes)}
-end
-
 ### Property manipulation ###
 get_create_properties(d::HDF5Dataset)   = HDF5Properties(h5d_get_create_plist(d.id), H5P_DATASET_CREATE)
 get_create_properties(g::HDF5Group)     = HDF5Properties(h5g_get_create_plist(g.id), H5P_GROUP_CREATE)
