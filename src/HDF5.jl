@@ -414,7 +414,7 @@ mutable struct HDF5Datatype
     end
 end
 convert(::Type{Hid}, dtype::HDF5Datatype) = dtype.id
-show(io::IO, dtype::HDF5Datatype) = print(io, "HDF5 datatype ", dtype.id) # TODO: compound datatypes?
+show(io::IO, dtype::HDF5Datatype) = print(io, "HDF5 datatype: ", h5lt_dtype_to_text(dtype.id))
 hash(dtype::HDF5Datatype, h::UInt) =
     (dtype.id % UInt + h) ^ (0xadaf9b66bc962084 % UInt)
 ==(dt1::HDF5Datatype, dt2::HDF5Datatype) = h5t_equal(dt1, dt2) > 0
@@ -1488,11 +1488,10 @@ function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: N
   close(filetype)
 
   if sizeof(U) != h5t_get_size(memtype.id)
-    h5type_str = h5lt_dtype_to_text(memtype.id)
     error("""
           Type size mismatch
           sizeof($U) = $(sizeof(U))
-          sizeof($h5type_str) = $(h5t_get_size(memtype.id))
+          sizeof($memtype) = $(h5t_get_size(memtype.id))
           """)
   end
 
