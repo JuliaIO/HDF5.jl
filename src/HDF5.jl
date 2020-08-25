@@ -76,6 +76,7 @@ const H5_ITER_N       = 3
 const H5_INDEX_UNKNOWN   = -1
 const H5_INDEX_NAME      = 0
 const H5_INDEX_CRT_ORDER = 1
+const H5_INDEX_N = 2
 # dataset constants
 const H5D_COMPACT      = 0
 const H5D_CONTIGUOUS   = 1
@@ -1084,30 +1085,27 @@ name(attr::HDF5Attribute) = h5a_get_name(attr.id)
 function names(x::Union{HDF5Group,HDF5File})
     checkvalid(x)
     n = length(x)
-    res = Vector{String}(undef,n)
-    buf = Vector{UInt8}(undef,100)
-    for i in 1:n
-        len = h5g_get_objname_by_idx(x.id, i - 1, buf, length(buf))
-        if len >= length(buf)
-            resize!(buf, len+10)
-            len = h5g_get_objname_by_idx(x.id, i - 1, buf, length(buf))
-        end
-        res[i] = String(buf[1:len])
-    end
-    res
+    [h5l_get_name_by_idx(x,i) for i = 1:n]
+end
+
+function h5l_get_name_by_idx(x::Union{HDF5Group,HDF5File}, i)
+    len = h5l_get_name_by_idx(x.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, C_NULL, 0, H5P_DEFAULT)
+    buf = Base.StringVector(len)
+    h5l_get_name_by_idx(x.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, buf, len+1, H5P_DEFAULT)
+    return String(buf)
 end
 
 function names(x::HDF5Attributes)
     checkvalid(x.parent)
     n = length(x)
-    res = Vector{String}(undef,n)
-    for i in 1:n
-        len = h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, "", 0, H5P_DEFAULT)
-        buf = Vector{UInt8}(undef,len+1)
-        len = h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, buf, len+1, H5P_DEFAULT)
-        res[i] = String(buf[1:len])
-    end
-    res
+    [h5a_get_name_by_idx(x,i) for i = 1:n]
+end
+
+function h5a_get_name_by_idx(x::HDF5Attributes, i)
+    len = h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, C_NULL, 0, H5P_DEFAULT)
+    buf = Base.StringVector(len)
+    h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, buf, len+1, H5P_DEFAULT)
+    return String(buf)
 end
 
 # iteration by objects
@@ -2250,6 +2248,7 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5i_get_type, :H5Iget_type, Cint, (Hid,), (:obj_id,), :(error("Error getting type"))),
      (:h5i_dec_ref, :H5Idec_ref, Cint, (Hid,), (:obj_id,), :(error("Error decementing reference"))),
      (:h5l_delete, :H5Ldelete, Herr, (Hid, Ptr{UInt8}, Hid), (:obj_id, :pathname, :lapl_id), :(error("Error deleting ", h5i_get_name(obj_id), "/", pathname))),
+     (:h5l_get_name_by_idx, :H5Lget_name_by_idx, Cssize_t, (Hid, Ptr{UInt8}, Cint, Cint, Hsize, Ptr{UInt8}, Csize_t, Hid), (:loc_id, :group_name, :index_field, :order, :n, :name, :size, :lapl_id), :(error("Error getting object name"))),
      (:h5l_create_external, :H5Lcreate_external, Herr, (Ptr{UInt8}, Ptr{UInt8}, Hid, Ptr{UInt8}, Hid, Hid), (:target_file_name, :target_obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name))),
      (:h5l_create_hard, :H5Lcreate_hard, Herr, (Hid, Ptr{UInt8}, Hid, Ptr{UInt8}, Hid, Hid), (:obj_loc_id, :obj_name, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating hard link ", link_name, " pointing to ", obj_name))),
      (:h5l_create_soft, :H5Lcreate_soft, Herr, (Ptr{UInt8}, Hid, Ptr{UInt8}, Hid, Hid), (:target_path, :link_loc_id, :link_name, :lcpl_id, :lapl_id), :(error("Error creating soft link ", link_name, " pointing to ", target_path))),
@@ -2293,12 +2292,12 @@ for (jlname, h5name, outtype, argtypes, argsyms, ex_error) in
      (:h5t_insert, :H5Tinsert, Herr, (Hid, Ptr{UInt8}, Csize_t, Hid), (:dtype_id, :fieldname, :offset, :field_id), :(error("Error adding field ", fieldname, " to compound datatype"))),
      (:h5t_open, :H5Topen2, Hid, (Hid, Ptr{UInt8}, Hid), (:loc_id, :name, :tapl_id), :(error("Error opening type ", h5i_get_name(loc_id), "/", name))),
      (:h5t_vlen_create, :H5Tvlen_create, Hid, (Hid,), (:base_type_id,), :(error("Error creating vlen type"))),
-     ## The following doesn't work because it's in libhdf5_hl.so.
-     ## (:h5tb_get_field_info, :H5TBget_field_info, Herr, (Hid, Ptr{UInt8}, Ptr{Ptr{UInt8}}, Ptr{UInt8}, Ptr{UInt8}, Ptr{UInt8}), (:loc_id, :table_name, :field_names, :field_sizes, :field_offsets, :type_size), :(error("Error getting field information")))
+     (:h5tb_get_field_info, :H5TBget_field_info, Herr, (Hid, Ptr{UInt8}, Ptr{Ptr{UInt8}}, Ptr{UInt8}, Ptr{UInt8}, Ptr{UInt8}), (:loc_id, :table_name, :field_names, :field_sizes, :field_offsets, :type_size), :(error("Error getting field information")))
 )
 
     ex_dec = funcdecexpr(jlname, length(argtypes), argsyms)
-    ex_ccall = ccallexpr(libhdf5, h5name, outtype, argtypes, argsyms)
+    library = startswith(string(h5name), "H5TB") ? libhdf5_hl : libhdf5
+    ex_ccall = ccallexpr(library, h5name, outtype, argtypes, argsyms)
     ex_body = quote
         ret = $ex_ccall
         if ret < 0
@@ -2369,11 +2368,11 @@ function h5lt_dtype_to_text(dtype_id)
     status = ccall((:H5LTdtype_to_text, libhdf5_hl), Herr, (Hid, Ptr{UInt8}, Int, Ref{Csize_t}), dtype_id, C_NULL, 0, len)
     status < 0 && error("Error getting dtype text representation")
 
-    buf = Vector{UInt8}(undef, len[])
+    buf = Base.StringVector(len[]-1)
     status = ccall((:H5LTdtype_to_text, libhdf5_hl), Herr, (Hid, Ptr{UInt8}, Int, Ref{Csize_t}), dtype_id, buf, 0, len)
     status < 0 && error("Error getting dtype text representation")
 
-    dtype_text = unsafe_string(pointer(buf))
+    dtype_text = String(buf)
     return dtype_text
 end
 
