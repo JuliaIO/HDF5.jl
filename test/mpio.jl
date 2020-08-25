@@ -39,9 +39,7 @@ h5open(fn, "r", fapl_mpio=(comm, info)) do f
     @test isopen(f)
     @test names(f) == ["mygroup"]
 
-    # read(f, name, pv...) is already taken by multi-dataset read, bool withargs
-    # is only dummy argument
-    B = read(f, "mygroup/B", true, dxpl_mpio=HDF5.H5FD_MPIO_COLLECTIVE)
+    B = read(f, "mygroup/B", dxpl_mpio=HDF5.H5FD_MPIO_COLLECTIVE)
     @test !isempty(B)
     @test A == vec(B[:, myrank + 1])
 
