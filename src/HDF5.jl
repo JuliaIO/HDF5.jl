@@ -710,7 +710,7 @@ function h5read(filename, name::String; pv...)
     local dat
     fid = h5open(filename, "r"; pv...)
     try
-        obj = fid[name, pv...]
+        obj = getindex(fid, name; pv...)
         dat = read(obj)
     finally
         close(fid)
@@ -722,7 +722,7 @@ function h5read(filename, name::String, indices::Tuple{Vararg{Union{AbstractRang
     local dat
     fid = h5open(filename, "r"; pv...)
     try
-        dset = fid[name, pv...]
+        dset = getindex(fid, name; pv...)
         dat = dset[indices...]
     finally
         close(fid)
@@ -1265,7 +1265,7 @@ end
 
 # Datafile.jl defines generic read for multiple datasets, so we cannot simply add properties here.
 function read(parent::Union{HDF5File, HDF5Group}, name::String; pv...)
-    obj = parent[name, pv...]
+    obj = getindex(parent, name; pv...)
     val = read(obj)
     close(obj)
     val
