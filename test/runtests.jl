@@ -6,6 +6,7 @@ println("HDF5 version ", HDF5.h5_get_libversion())
 
 include("plain.jl")
 include("compound.jl")
+include("custom.jl")
 include("reference.jl")
 include("readremote.jl")
 include("extend_test.jl")
