@@ -18,7 +18,7 @@ end
   N = 10
   v = [Simple(rand(Float64), rand(Int)) for _ in 1:N]
 
-  fn = "output.h5"
+  fn = tempname()
   h5open(fn, "w") do h5f
     dtype = datatype(Simple)
     dspace = dataspace(v)
@@ -31,5 +31,6 @@ end
     v_read = read(dset, Simple)
     @test v_read == v
     @test_throws ErrorException read(dset, Float64)
+    @test_throws ErrorException read(dset, Union{Float64, Int})
   end
 end

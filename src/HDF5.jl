@@ -1285,6 +1285,8 @@ end
 
 # generic read function
 function read(obj::DatasetOrAttribute, ::Type{T}) where T
+  !isconcretetype(T) && error("type $T is not concrete")
+
   filetype = datatype(obj)
   memtype = HDF5Datatype(h5t_get_native_type(filetype.id))  # padded layout in memory
   close(filetype)
