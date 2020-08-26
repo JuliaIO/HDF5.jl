@@ -722,6 +722,18 @@ function h5read(filename, name::String; pv...)
     dat
 end
 
+function h5read(filename, name_type_pair::Pair{String, DataType}; pv...)
+    local dat
+    fid = h5open(filename, "r"; pv...)
+    try
+        obj = getindex(fid, name_type_pair[1]; pv...)
+        dat = read(obj, name_type_pair[2])
+    finally
+        close(fid)
+    end
+    dat
+end
+
 function h5read(filename, name::String, indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}}; pv...)
     local dat
     fid = h5open(filename, "r"; pv...)
@@ -1268,6 +1280,13 @@ end
 function read(parent::Union{HDF5File, HDF5Group}, name::String; pv...)
     obj = getindex(parent, name; pv...)
     val = read(obj)
+    close(obj)
+    val
+end
+
+function read(parent::Union{HDF5File, HDF5Group}, name_type_pair::Pair{String, DataType}; pv...)
+    obj = getindex(parent, name_type_pair[1]; pv...)
+    val = read(obj, name_type_pair[2])
     close(obj)
     val
 end

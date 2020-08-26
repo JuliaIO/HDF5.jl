@@ -28,9 +28,16 @@ end
 
   h5open(fn, "r") do h5f
     dset = h5f["data"]
-    v_read = read(dset, Simple)
-    @test v_read == v
     @test_throws ErrorException read(dset, Float64)
     @test_throws ErrorException read(dset, Union{Float64, Int})
+
+    v_read = read(dset, Simple)
+    @test v_read == v
+
+    v_read = read(h5f, "data"=>Simple)
+    @test v_read == v
   end
+
+  v_read = h5read(fn, "data"=>Simple)
+  @test v_read == v
 end
