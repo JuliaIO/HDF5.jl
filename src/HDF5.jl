@@ -1273,10 +1273,15 @@ end
 # See also "Reading arrays using getindex" below
 # This infers the Julia type from the HDF5Datatype. Specific file formats should provide their own read(dset).
 const DatasetOrAttribute = Union{HDF5Dataset, HDF5Attribute}
-function read(obj::DatasetOrAttribute)
-    T = hdf5_to_julia(obj)
-    read(obj, T)
-end
+
+include("interface.jl")
+read(obj::DatasetOrAttribute) = _read(obj)
+
+#function read(obj::DatasetOrAttribute)
+#    T = hdf5_to_julia(obj)
+#    read(obj, T)
+#end
+
 # Read scalars
 function read(obj::DatasetOrAttribute, ::Type{T}) where {T<:Union{HDF5Scalar, Complex{<:HDF5Scalar}}}
     x = read(obj, Array{T})
