@@ -514,6 +514,9 @@ struct Hvl_t
     p::Ptr{Cvoid}
 end
 const HVL_SIZE = sizeof(Hvl_t) # and determine the size of the buffer needed
+
+t2p(::Type{T}) where {T<:HDF5Scalar} = Ptr{T}
+t2p(::Type{C}) where {C<:CharType} = Ptr{UInt8}
 function vlenpack(v::HDF5Vlen{T}) where {T<:Union{HDF5Scalar,CharType}}
     len = length(v.data)
     Tp = t2p(T)  # Ptr{UInt8} or Ptr{T}
@@ -1274,66 +1277,81 @@ end
 # This infers the Julia type from the HDF5Datatype. Specific file formats should provide their own read(dset).
 const DatasetOrAttribute = Union{HDF5Dataset, HDF5Attribute}
 
-include("interface.jl")
-read(obj::DatasetOrAttribute) = _read(obj)
+function read(obj::DatasetOrAttribute)
+  dtype = datatype(obj)
+  T = get_jl_type(dtype)
+  read(obj, T)
+end
 
-#function read(obj::DatasetOrAttribute)
-#    T = hdf5_to_julia(obj)
-#    read(obj, T)
-#end
+# generic read function
+function read(obj::DatasetOrAttribute, ::Type{T}) where T
+  filetype = datatype(obj)
+  memtype = HDF5Datatype(h5t_get_native_type(filetype.id))  # padded layout in memory
+  close(filetype)
 
-# Read scalars
-function read(obj::DatasetOrAttribute, ::Type{T}) where {T<:Union{HDF5Scalar, Complex{<:HDF5Scalar}}}
-    x = read(obj, Array{T})
-    x[1]
+  if sizeof(T) != h5t_get_size(memtype.id)
+    h5type_str = h5lt_dtype_to_text(memtype.id)
+    error("""
+          Type size mismatch
+          sizeof($T) = $(sizeof(T))
+          sizeof($h5type_str) = $(h5t_get_size(memtype.id))
+          """)
+  end
+
+  dspace = dataspace(obj)
+  stype = h5s_get_simple_extent_type(dspace.id)
+  stype == H5S_NULL && return T[]
+
+  if stype == H5S_SCALAR
+    sz = (1,)
+  else
+    sz, _ = get_dims(dspace)
+  end
+
+  buf = Array{T}(undef, sz...)
+  memspace = dataspace(buf)
+
+  if obj isa HDF5Dataset
+    h5d_read(obj.id, memtype.id, memspace.id, H5S_ALL, obj.xfer.id, buf)
+  else
+    h5a_read(obj.id, memtype.id, buf)
+  end
+
+  out = do_normalize(T) ? normalize_types.(buf) : buf
+
+  xfer_id = obj isa HDF5Dataset ? obj.xfer.id : H5P_DEFAULT
+  do_reclaim(T) && h5d_vlen_reclaim(memtype.id, memspace.id, xfer_id, buf)
+
+  close(memtype)
+  close(memspace)
+
+  if stype == H5S_SCALAR
+    return out[1]
+  else
+    return out
+  end
 end
-# Read array of scalars
-function read(obj::DatasetOrAttribute, ::Type{Array{T}}) where {T<:Union{HDF5Scalar, Complex{<:HDF5Scalar}}}
-    if isnull(obj)
-        return T[]
-    end
-    dims = size(obj)
-    data = Array{T}(undef,dims)
-    dtype = datatype(data)
-    readarray(obj, dtype.id, data)
-    close(dtype)
-    data
-end
-# Empty arrays
-function read(obj::DatasetOrAttribute, ::Type{EmptyArray{T}}) where {T<:ScalarOrString}
-    T[]
-end
-# Fixed-size arrays (H5T_ARRAY)
-function read(obj::DatasetOrAttribute, ::Type{A}) where {A<:FixedArray}
-    T = eltype(A)
-    sz = size(A)
-    data = Array{T}(undef,sz)
-    readarray(obj, hdf5_type_id(T), data)
-    data
-end
-function read(obj::DatasetOrAttribute, ::Type{Array{A}}) where {A<:FixedArray}
-    T = eltype(A)
-    if !(T <: HDF5Scalar)
-        error("Sorry, not yet supported")
-    end
-    sz = size(A)
-    dims = size(obj)
-    data = Array{T}(undef,sz..., dims...)
-    nd = length(sz)
-    hsz = Hsize[sz[nd-i+1] for i = 1:nd]
-    memtype_id = h5t_array_create(hdf5_type_id(T), length(sz), hsz)
+
+# Read OPAQUE datasets and attributes
+function read(obj::DatasetOrAttribute, ::Type{HDF5Opaque})
+    local buf
+    local len
+    local tag
+    sz = size(obj)
+    objtype = datatype(obj)
     try
-        h5d_read(obj.id, memtype_id, H5S_ALL, H5S_ALL, obj.xfer.id, data)
+        len = h5t_get_size(objtype)
+        buf = Vector{UInt8}(undef,prod(sz)*len)
+        tag = h5t_get_tag(objtype.id)
+        readarray(obj, objtype.id, buf)
     finally
-        h5t_close(memtype_id)
+        close(objtype)
     end
-    ret = Array{Array{T}}(undef,dims)
-    # Because of garbage-collection concerns, it's best to copy the data
-    L = prod(sz)
-    for i = 1:prod(dims)
-        ret[i] = reshape(data[(i-1)*L+1:i*L], sz)
+    data = Array{Array{UInt8}}(undef,sz)
+    for i = 1:prod(sz)
+        data[i] = buf[(i-1)*len+1:i*len]
     end
-    ret
+    HDF5Opaque(data, tag)
 end
 
 # Array constructor for datasets
@@ -1354,90 +1372,6 @@ function unpad(s::String, pad::Integer)
 end
 unpad(s, pad::Integer) = unpad(String(s), pad)
 
-# Read string
-function read(obj::DatasetOrAttribute, ::Type{S}) where {S<:String}
-    local ret::S
-    objtype = datatype(obj)
-    try
-        if h5t_is_variable_str(objtype.id)
-            buf = Cstring[C_NULL]
-            memtype_id = h5t_copy(H5T_C_S1)
-            h5t_set_size(memtype_id, H5T_VARIABLE)
-            h5t_set_cset(memtype_id, h5t_get_cset(objtype))
-            readarray(obj, memtype_id, buf)
-            ret = unsafe_string(buf[1])
-        else
-            n = h5t_get_size(objtype.id)
-            pad = h5t_get_strpad(objtype.id)
-            buf = Vector{UInt8}(undef,n)
-            readarray(obj, objtype.id, buf)
-            pbuf = String(buf)
-            ret = unpad(pbuf, pad)
-        end
-    finally
-        close(objtype)
-    end
-    ret
-end
-read(obj::DatasetOrAttribute, ::Type{S}) where {S<:CharType} = read(obj, stringtype(S))
-# Read array of strings
-function read(obj::DatasetOrAttribute, ::Type{Array{S}}) where {S<:String}
-    local isvar::Bool
-    local ret::Array{S}
-    sz = size(obj)
-    len = prod(sz)
-    objtype = datatype(obj)
-    memtype_id = h5t_copy(H5T_C_S1)
-    try
-        isvar = h5t_is_variable_str(objtype.id)
-        ilen = Int(h5t_get_size(objtype.id))
-        h5t_set_cset(memtype_id, h5t_get_cset(objtype))
-    finally
-        close(objtype)
-    end
-    if isempty(sz)
-        h5t_close(memtype_id)
-        return S[]
-    else
-        dspace = dataspace(obj)
-        ret = Array{S}(undef,sz)
-        if isvar
-            # Variable-length
-            buf = Vector{Cstring}(undef,len)
-            h5t_set_size(memtype_id, H5T_VARIABLE)
-            readarray(obj, memtype_id, buf)
-            for i = 1:len
-                ret[i] = unsafe_string(buf[i])
-            end
-        else
-            # Fixed length
-            ilen += 1  # for null terminator
-            buf = Vector{UInt8}(undef,len*ilen)
-            h5t_set_size(memtype_id, ilen)
-            readarray(obj, memtype_id, buf)
-            src = 1
-            for i = 1:len
-                slen = coalesce(findnext(isequal(0x00), buf, src), 0) - src # find null terminator
-                sv = StringVector(slen)
-                copyto!(sv, 1, buf, src, slen)
-                ret[i] = String(sv)
-                src += ilen
-            end
-        end
-    try
-        h5d_vlen_reclaim(memtype_id, dspace.id, H5P_DEFAULT, buf)
-    finally
-        close(dspace)
-        h5t_close(memtype_id)
-    end
-        return ret
-    end
-end
-read(obj::DatasetOrAttribute, ::Type{Array{S}}) where {S<:CharType} = read(obj, Array{stringtype(S)})
-# Empty Array of strings
-function read(obj::DatasetOrAttribute, ::Type{EmptyArray{C}}) where {C<:CharType}
-    stringtype(C)[]
-end
 # Dereference
 function getindex(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, r::HDF5ReferenceObj)
     r == HDF5ReferenceObj_NULL && error("Reference is null")
@@ -1461,90 +1395,6 @@ do_reclaim(::Type{T}) where T = false
 do_reclaim(::Type{NamedTuple{T, U}}) where T where U =  any(i -> do_reclaim(fieldtype(U,i)), 1:fieldcount(U))
 do_reclaim(::Type{T}) where T <: Union{Cstring, VariableArray} = true
 
-function read(dset::HDF5Dataset, T::Union{Type{Array{U}}, Type{U}}) where U <: NamedTuple
-  filetype = datatype(dset)
-  memtype = HDF5Datatype(h5t_get_native_type(filetype.id))  # padded layout in memory
-  close(filetype)
-
-  if sizeof(U) != h5t_get_size(memtype.id)
-    error("""
-          Type size mismatch
-          sizeof($U) = $(sizeof(U))
-          sizeof($memtype) = $(h5t_get_size(memtype.id))
-          """)
-  end
-
-  buf = Array{U}(undef, size(dset))
-  memspace = dataspace(buf)
-
-  h5d_read(dset.id, memtype.id, memspace.id, H5S_ALL, dset.xfer.id, buf)
-  out = do_normalize(U) ? normalize_types.(buf) : buf
-
-  if do_reclaim(U)
-    # NOTE I have seen this call fail but I cannot reproduce
-    h5d_vlen_reclaim(memtype.id, memspace.id, dset.xfer, buf)
-  end
-
-  close(memtype)
-  close(memspace)
-
-  if T <: NamedTuple
-    return out[1]
-  else
-    return out
-  end
-end
-
-# Read OPAQUE datasets and attributes
-function read(obj::DatasetOrAttribute, ::Type{Array{HDF5Opaque}})
-    local buf
-    local len
-    local tag
-    sz = size(obj)
-    objtype = datatype(obj)
-    try
-        len = h5t_get_size(objtype)
-        buf = Vector{UInt8}(undef,prod(sz)*len)
-        tag = h5t_get_tag(objtype.id)
-        readarray(obj, objtype.id, buf)
-    finally
-        close(objtype)
-    end
-    data = Array{Array{UInt8}}(undef,sz)
-    for i = 1:prod(sz)
-        data[i] = buf[(i-1)*len+1:i*len]
-    end
-    HDF5Opaque(data, tag)
-end
-
-# Read VLEN arrays and character arrays
-atype(::Type{T}) where {T<:HDF5Scalar} = Array{T}
-atype(::Type{C}) where {C<:CharType} = stringtype(C)
-function p2a(p::Ptr{T}, len::Int) where {T<:HDF5Scalar}
-    unsafe_wrap(Array, p, len, own=true)
-end
-function p2a(p::Ptr{C}, len::Int) where {C<:CharType}
-   stringtype(C)(unsafe_wrap(Array, convert(Ptr{UInt8}, p), len, own=true))
-end
-t2p(::Type{T}) where {T<:HDF5Scalar} = Ptr{T}
-t2p(::Type{C}) where {C<:CharType} = Ptr{UInt8}
-function read(obj::DatasetOrAttribute, ::Type{HDF5Vlen{T}}) where {T<:Union{HDF5Scalar,CharType}}
-    local data
-    sz = size(obj)
-    len = prod(sz)
-    # Read the data
-    structbuf = Vector{Hvl_t}(undef,len)
-    memtype_id = h5t_vlen_create(hdf5_type_id(T))
-    readarray(obj, memtype_id, structbuf)
-    h5t_close(memtype_id)
-    # Unpack the data
-    data = Array{atype(T)}(undef,sz)
-    for i = 1:len
-        h = structbuf[i]
-        data[i] = p2a(convert(Ptr{T}, h.p), Int(h.len))
-    end
-    data
-end
 read(attr::HDF5Attributes, name::String) = a_read(attr.parent, name)
 
 # Reading with mmap
@@ -1954,6 +1804,15 @@ function hdf5_to_julia_eltype(objtype)
         error("Class id ", class_id, " is not yet supported")
     end
     return T
+end
+
+function get_jl_type(objtype)
+  class_id = h5t_get_class(objtype.id)
+  if class_id == H5T_OPAQUE
+    return HDF5Opaque
+  else
+    return get_mem_compatible_jl_type(objtype)
+  end
 end
 
 function get_mem_compatible_jl_type(objtype)
