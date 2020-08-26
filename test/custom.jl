@@ -15,8 +15,8 @@ function datatype(::Type{Simple})
 end
 
 @testset "custom" begin
-  N = 10
-  v = [Simple(rand(Float64), rand(Int)) for _ in 1:N]
+  N = 5
+  v = [Simple(rand(Float64), rand(Int)) for i in 1:N, j in 1:N]
 
   fn = tempname()
   h5open(fn, "w") do h5f
@@ -33,6 +33,10 @@ end
 
     v_read = read(dset, Simple)
     @test v_read == v
+
+    indices = (1, 1:2:4)
+    v_read = read(dset, Simple, indices...)
+    @test v_read == v[indices...]
 
     v_read = read(h5f, "data"=>Simple)
     @test v_read == v

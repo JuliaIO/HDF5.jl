@@ -1302,9 +1302,16 @@ function read(obj::DatasetOrAttribute)
   read(obj, T)
 end
 
+function getindex(dset::HDF5Dataset, I...)
+  dtype = datatype(dset)
+  T = get_jl_type(dtype)
+  read(dset, T, I...)
+end
+
 # generic read function
-function read(obj::DatasetOrAttribute, ::Type{T}) where T
+function read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
   !isconcretetype(T) && error("type $T is not concrete")
+  !isempty(I) && obj isa HDF5Attribute && error("HDF5 attributes do not support hyperslab selections")
 
   filetype = datatype(obj)
   memtype = HDF5Datatype(h5t_get_native_type(filetype.id))  # padded layout in memory
@@ -1323,17 +1330,30 @@ function read(obj::DatasetOrAttribute, ::Type{T}) where T
   stype = h5s_get_simple_extent_type(dspace.id)
   stype == H5S_NULL && return T[]
 
+  if !isempty(I)
+    indices = Base.to_indices(obj, I)
+    dspace = hyperslab(dspace, indices...)
+  end
+
+  scalar = false
   if stype == H5S_SCALAR
     sz = (1,)
-  else
+    scalar = true
+  elseif isempty(I)
     sz, _ = get_dims(dspace)
+  else
+    sz = map(length, filter(i -> !isa(i, Int), indices))
+    if isempty(sz)
+      sz = (1,)
+      scalar = true
+    end
   end
 
   buf = Array{T}(undef, sz...)
   memspace = dataspace(buf)
 
   if obj isa HDF5Dataset
-    h5d_read(obj.id, memtype.id, memspace.id, H5S_ALL, obj.xfer.id, buf)
+    h5d_read(obj.id, memtype.id, memspace.id, dspace.id, obj.xfer.id, buf)
   else
     h5a_read(obj.id, memtype.id, buf)
   end
@@ -1345,8 +1365,9 @@ function read(obj::DatasetOrAttribute, ::Type{T}) where T
 
   close(memtype)
   close(memspace)
+  close(dspace)
 
-  if stype == H5S_SCALAR
+  if scalar
     return out[1]
   else
     return out
@@ -1599,42 +1620,6 @@ write(parent::HDF5Dataset, name::String, data::Union{T, AbstractArray{T}}, plist
 
 Base.eachindex(::IndexLinear, A::HDF5Dataset) = Base.OneTo(length(A))
 Base.axes(dset::HDF5Dataset) = map(Base.OneTo, size(dset))
-
-getindex(dset::HDF5Dataset, I::Union{AbstractRange,Integer,Colon}...) =
-    _getindex(dset, Base.to_indices(dset, I)...)
-function _getindex(dset::HDF5Dataset, I::Union{AbstractRange{Int},Int}...)
-    local T
-    dtype = datatype(dset)
-    try
-        T = hdf5_to_julia_eltype(dtype)
-    finally
-        close(dtype)
-    end
-    _getindex(dset,T, I...)
-end
-function _getindex(dset::HDF5Dataset, T::Type, I::Union{AbstractRange{Int},Int}...)
-    if !(T <: Union{HDF5Scalar, Complex{<:HDF5Scalar}})
-        error("Dataset indexing (hyperslab) is available only for bits types")
-    end
-    dsel_id = hyperslab(dset, I...)
-    ret = Array{T}(undef,map(length, I))
-    memtype = datatype(ret)
-    memspace = dataspace(ret)
-    try
-        h5d_read(dset.id, memtype.id, memspace.id, dsel_id, dset.xfer.id, ret)
-    finally
-        close(memtype)
-        close(memspace)
-        h5s_close(dsel_id)
-    end
-    dimsize = map(length, _dropint(I...))
-    dimsize == () ? ret[1] : reshape(ret, dimsize...)
-end
-
-_dropint(x::Int, args...) = _dropint(args...)
-_dropint(x::AbstractRange, args...) = (x, _dropint(args...)...)
-_dropint() = ()
-
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
 
