@@ -1308,6 +1308,11 @@ function getindex(dset::HDF5Dataset, I...)
   read(dset, T, I...)
 end
 
+# could be replaced by filter(i -> !isa(i, Int), args) in julia 1.4
+_dropint(x::Int, args...) = _dropint(args...)
+_dropint(x::AbstractRange, args...) = (x, _dropint(args...)...)
+_dropint() = ()
+
 # generic read function
 function read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
   !isconcretetype(T) && error("type $T is not concrete")
@@ -1342,7 +1347,7 @@ function read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
   elseif isempty(I)
     sz, _ = get_dims(dspace)
   else
-    sz = map(length, filter(i -> !isa(i, Int), indices))
+    sz = map(length, _dropint(indices...))
     if isempty(sz)
       sz = (1,)
       scalar = true
