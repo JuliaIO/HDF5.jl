@@ -1935,8 +1935,7 @@ function hdf5_to_julia_eltype(objtype)
     elseif class_id == H5T_ENUM
         T = get_mem_compatible_jl_type(objtype)
     elseif class_id == H5T_REFERENCE
-        # How to test whether it's a region reference or an object reference??
-        T = HDF5ReferenceObj
+        T = get_mem_compatible_jl_type(objtype)
     elseif class_id == H5T_OPAQUE
         T = HDF5Opaque
     elseif class_id == H5T_VLEN
@@ -1991,6 +1990,9 @@ function get_mem_compatible_jl_type(objtype)
         finally
             h5t_close(super_type)
         end
+    elseif class_id == H5T_REFERENCE
+        # TODO update to use version 1.12 reference functions/types
+        return HDF5ReferenceObj
     elseif class_id == H5T_VLEN
         superid = h5t_get_super(objtype.id)
         return VariableArray{get_mem_compatible_jl_type(HDF5Datatype(superid))}
