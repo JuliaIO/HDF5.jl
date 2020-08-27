@@ -634,7 +634,7 @@ function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool
 end
 
 """
-    h5open(filename::AbstractString, mode::AbstractString="r"; swmr=false)
+    h5open(filename::AbstractString, mode::AbstractString="r"; swmr=false, pv...)
 
 Open or create an HDF5 file where `mode` is one of:
  - "r"  read only
@@ -663,7 +663,7 @@ function h5open(filename::AbstractString, mode::AbstractString="r"; swmr=false, 
 end
 
 """
-    function h5open(f::Function, args...; swmr=false)
+    function h5open(f::Function, args...; swmr=false, pv...)
 
 Apply the function f to the result of `h5open(args...;kwargs...)` and close the resulting
 `HDF5File` upon completion. For example with a `do` block:

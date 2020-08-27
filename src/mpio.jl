@@ -59,3 +59,36 @@ hdf5_prop_get_set[:fapl_mpio] =
 
 hdf5_prop_get_set[:dxpl_mpio] =
     (h5p_get_dxpl_mpio, h5p_set_dxpl_mpio, H5P_DATASET_XFER)
+
+function check_hdf5_parallel()
+    has_parallel() && return
+    error(
+        "HDF5.jl has no parallel support." *
+        " Make sure that you're using MPI-enabled HDF5 libraries, and that" *
+        " MPI was loaded before HDF5." *
+        " See HDF5.jl docs for details."
+    )
+end
+
+"""
+    h5open(filename, [mode="r"], comm::MPI.Comm, [info::MPI.Info]; pv...)
+
+Open or create a parallel HDF5 file using the MPI-IO driver.
+
+Equivalent to `h5open(filename, mode; fapl_mpio=(comm, info), pv...)`.
+Throws an informative error if the loaded HDF5 libraries do not include parallel
+support.
+
+See the [HDF5 docs](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MPIO)
+for details on the `comm` and `info` arguments.
+"""
+function h5open(
+        filename::AbstractString, mode::AbstractString,
+        comm::MPI.Comm, info::MPI.Info = MPI.Info(); pv...
+    )
+    check_hdf5_parallel()
+    h5open(filename, mode; fapl_mpio=(comm, info), pv...)
+end
+
+h5open(filename::AbstractString, comm::MPI.Comm, args...; pv...) =
+    h5open(filename, "r", comm, args...; pv...)
