@@ -2567,9 +2567,9 @@ const HAS_PARALLEL = Ref(false)
     has_parallel()
 
 Returns `true` if the HDF5 libraries were compiled with parallel support,
-and if parallel support was loaded into HDF5.jl.
+and if parallel functionality was loaded into HDF5.jl.
 
-For the second condition to be true, MPI must be imported before HDF5.
+For the second condition to be true, MPI.jl must be imported before HDF5.jl.
 """
 has_parallel() = HAS_PARALLEL[]
 

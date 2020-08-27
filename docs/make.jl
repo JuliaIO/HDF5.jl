@@ -1,3 +1,4 @@
+using MPI  # needed to generate docs for parallel HDF5 API
 using HDF5
 using Documenter
 
