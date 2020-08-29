@@ -1297,15 +1297,15 @@ end
 const DatasetOrAttribute = Union{HDF5Dataset, HDF5Attribute}
 
 function read(obj::DatasetOrAttribute)
-  dtype = datatype(obj)
-  T = get_jl_type(dtype)
-  read(obj, T)
+    dtype = datatype(obj)
+    T = get_jl_type(dtype)
+    read(obj, T)
 end
 
 function getindex(dset::HDF5Dataset, I...)
-  dtype = datatype(dset)
-  T = get_jl_type(dtype)
-  read(dset, T, I...)
+    dtype = datatype(dset)
+    T = get_jl_type(dtype)
+    read(dset, T, I...)
 end
 
 # could be replaced by filter(i -> !isa(i, Int), args) in julia 1.4
@@ -1315,68 +1315,68 @@ _dropint() = ()
 
 # generic read function
 function read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
-  !isconcretetype(T) && error("type $T is not concrete")
-  !isempty(I) && obj isa HDF5Attribute && error("HDF5 attributes do not support hyperslab selections")
+    !isconcretetype(T) && error("type $T is not concrete")
+    !isempty(I) && obj isa HDF5Attribute && error("HDF5 attributes do not support hyperslab selections")
 
-  filetype = datatype(obj)
-  memtype = HDF5Datatype(h5t_get_native_type(filetype.id))  # padded layout in memory
-  close(filetype)
+    filetype = datatype(obj)
+    memtype = HDF5Datatype(h5t_get_native_type(filetype.id))  # padded layout in memory
+    close(filetype)
 
-  if sizeof(T) != h5t_get_size(memtype.id)
-    h5type_str = h5lt_dtype_to_text(memtype.id)
-    error("""
-          Type size mismatch
-          sizeof($T) = $(sizeof(T))
-          sizeof($h5type_str) = $(h5t_get_size(memtype.id))
-          """)
-  end
-
-  dspace = dataspace(obj)
-  stype = h5s_get_simple_extent_type(dspace.id)
-  stype == H5S_NULL && return T[]
-
-  if !isempty(I)
-    indices = Base.to_indices(obj, I)
-    dspace = hyperslab(dspace, indices...)
-  end
-
-  scalar = false
-  if stype == H5S_SCALAR
-    sz = (1,)
-    scalar = true
-  elseif isempty(I)
-    sz, _ = get_dims(dspace)
-  else
-    sz = map(length, _dropint(indices...))
-    if isempty(sz)
-      sz = (1,)
-      scalar = true
+    if sizeof(T) != h5t_get_size(memtype.id)
+        h5type_str = h5lt_dtype_to_text(memtype.id)
+        error("""
+              Type size mismatch
+              sizeof($T) = $(sizeof(T))
+              sizeof($h5type_str) = $(h5t_get_size(memtype.id))
+              """)
     end
-  end
 
-  buf = Array{T}(undef, sz...)
-  memspace = dataspace(buf)
+    dspace = dataspace(obj)
+    stype = h5s_get_simple_extent_type(dspace.id)
+    stype == H5S_NULL && return T[]
 
-  if obj isa HDF5Dataset
-    h5d_read(obj.id, memtype.id, memspace.id, dspace.id, obj.xfer.id, buf)
-  else
-    h5a_read(obj.id, memtype.id, buf)
-  end
+    if !isempty(I)
+        indices = Base.to_indices(obj, I)
+        dspace = hyperslab(dspace, indices...)
+    end
 
-  out = do_normalize(T) ? normalize_types.(buf) : buf
+    scalar = false
+    if stype == H5S_SCALAR
+        sz = (1,)
+        scalar = true
+    elseif isempty(I)
+        sz, _ = get_dims(dspace)
+    else
+        sz = map(length, _dropint(indices...))
+        if isempty(sz)
+            sz = (1,)
+            scalar = true
+        end
+    end
 
-  xfer_id = obj isa HDF5Dataset ? obj.xfer.id : H5P_DEFAULT
-  do_reclaim(T) && h5d_vlen_reclaim(memtype.id, memspace.id, xfer_id, buf)
+    buf = Array{T}(undef, sz...)
+    memspace = dataspace(buf)
 
-  close(memtype)
-  close(memspace)
-  close(dspace)
+    if obj isa HDF5Dataset
+        h5d_read(obj.id, memtype.id, memspace.id, dspace.id, obj.xfer.id, buf)
+    else
+        h5a_read(obj.id, memtype.id, buf)
+    end
 
-  if scalar
-    return out[1]
-  else
-    return out
-  end
+    out = do_normalize(T) ? normalize_types.(buf) : buf
+
+    xfer_id = obj isa HDF5Dataset ? obj.xfer.id : H5P_DEFAULT
+    do_reclaim(T) && h5d_vlen_reclaim(memtype.id, memspace.id, xfer_id, buf)
+
+    close(memtype)
+    close(memspace)
+    close(dspace)
+
+    if scalar
+        return out[1]
+    else
+        return out
+    end
 end
 
 # Read OPAQUE datasets and attributes
@@ -1821,23 +1821,23 @@ function hdf5_to_julia_eltype(objtype)
 end
 
 function get_jl_type(objtype)
-  class_id = h5t_get_class(objtype.id)
-  if class_id == H5T_OPAQUE
-    return HDF5Opaque
-  else
-    return get_mem_compatible_jl_type(objtype)
-  end
+    class_id = h5t_get_class(objtype.id)
+    if class_id == H5T_OPAQUE
+        return HDF5Opaque
+    else
+        return get_mem_compatible_jl_type(objtype)
+    end
 end
 
 function get_mem_compatible_jl_type(objtype)
     class_id = h5t_get_class(objtype.id)
     if class_id == H5T_STRING
         if h5t_is_variable_str(objtype.id)
-          return Cstring
+            return Cstring
         else
-          n = h5t_get_size(objtype.id)
-          pad = h5t_get_strpad(objtype.id)
-          return FixedString{Int(n), pad}
+            n = h5t_get_size(objtype.id)
+            pad = h5t_get_strpad(objtype.id)
+            return FixedString{Int(n), pad}
         end
     elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
         native_type = h5t_get_native_type(objtype.id)
@@ -1878,12 +1878,12 @@ function get_mem_compatible_jl_type(objtype)
         N = h5t_get_nmembers(objtype.id)
 
         membernames = ntuple(N) do i
-          h5t_get_member_name(objtype.id, i-1)
+            h5t_get_member_name(objtype.id, i-1)
         end
 
         membertypes = ntuple(N) do i
-          dtype = HDF5Datatype(h5t_get_member_type(objtype.id, i-1))
-          return get_mem_compatible_jl_type(dtype)
+            dtype = HDF5Datatype(h5t_get_member_type(objtype.id, i-1))
+            return get_mem_compatible_jl_type(dtype)
         end
 
         # check if should be interpreted as complex
@@ -1894,9 +1894,9 @@ function get_mem_compatible_jl_type(objtype)
                     (membertypes[1] <: HDF5Scalar)
 
         if iscomplex
-          return Complex{membertypes[1]}
+            return Complex{membertypes[1]}
         else
-          return NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
+            return NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
         end
     elseif class_id == H5T_ARRAY
         nd = h5t_get_array_ndims(objtype.id)
