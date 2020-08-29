@@ -1819,7 +1819,7 @@ function hdf5_to_julia_eltype(objtype)
     return T
 end
 
-function get_jl_type(objtype)
+function get_jl_type(objtype::HDF5Datatype)
     class_id = h5t_get_class(objtype.id)
     if class_id == H5T_OPAQUE
         return HDF5Opaque
@@ -1828,7 +1828,16 @@ function get_jl_type(objtype)
     end
 end
 
-function get_mem_compatible_jl_type(objtype)
+function get_jl_type(obj)
+    dtype = datatype(obj)
+    try
+        return get_jl_type(dtype)
+    finally
+        close(dtype)
+    end
+end
+
+function get_mem_compatible_jl_type(objtype::HDF5Datatype)
     class_id = h5t_get_class(objtype.id)
     if class_id == H5T_STRING
         if h5t_is_variable_str(objtype.id)
