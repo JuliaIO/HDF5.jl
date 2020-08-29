@@ -1323,11 +1323,10 @@ function read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
     close(filetype)
 
     if sizeof(T) != h5t_get_size(memtype.id)
-        h5type_str = h5lt_dtype_to_text(memtype.id)
         error("""
               Type size mismatch
               sizeof($T) = $(sizeof(T))
-              sizeof($h5type_str) = $(h5t_get_size(memtype.id))
+              sizeof($memtype) = $(h5t_get_size(memtype.id))
               """)
     end
 
