@@ -2496,4 +2496,6 @@ function __init__()
     return nothing
 end
 
+include("deprecated.jl")
+
 end  # module
