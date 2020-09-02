@@ -1,6 +1,7 @@
 module HDF5
 
 using Base: unsafe_convert, StringVector
+using Requires: @require
 
 import Base:
     close, convert, eltype, lastindex, flush, getindex, ==,
@@ -58,8 +59,6 @@ const Haddr  = UInt64
 abstract  type Hmpih end
 primitive type Hmpih32 <: Hmpih 32 end # MPICH C/Fortran, OpenMPI Fortran: 32 bit handles
 primitive type Hmpih64 <: Hmpih 64 end # OpenMPI C: pointers (mostly 64 bit)
-const mpihandles = Dict(4 => Hmpih32, 8 => Hmpih64)
-h5_mpihandle(handle) = reinterpret(mpihandles[sizeof(handle)], handle)
 
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
@@ -635,7 +634,7 @@ function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool
 end
 
 """
-    h5open(filename::AbstractString, mode::AbstractString="r"; swmr=false)
+    h5open(filename::AbstractString, mode::AbstractString="r"; swmr=false, pv...)
 
 Open or create an HDF5 file where `mode` is one of:
  - "r"  read only
@@ -664,7 +663,7 @@ function h5open(filename::AbstractString, mode::AbstractString="r"; swmr=false, 
 end
 
 """
-    function h5open(f::Function, args...; swmr=false)
+    function h5open(f::Function, args...; swmr=false, pv...)
 
 Apply the function f to the result of `h5open(args...;kwargs...)` and close the resulting
 `HDF5File` upon completion. For example with a `do` block:
@@ -2375,20 +2374,6 @@ function h5lt_dtype_to_text(dtype_id)
     return dtype_text
 end
 
-# Set MPIO properties in HDF5.
-# Note: HDF5 creates a COPY of the comm and info objects.
-function h5p_set_fapl_mpio(fapl_id, comm, info)
-    h5comm = h5_mpihandle(comm)
-    h5info = h5_mpihandle(info)
-    sizeof(comm) == 4 ? h5p_set_fapl_mpio32(fapl_id, comm, info) : h5p_set_fapl_mpio64(fapl_id, comm, info)
-end
-# Retrieves the copies of the comm and info MPIO objects from the HDF5 property list.
-function h5p_get_fapl_mpio(fapl_id, h)
-    comm, info = Ref{h}(), Ref{h}()
-    h == Hmpih32 ? h5p_get_fapl_mpio32(fapl_id, comm, info) : h5p_get_fapl_mpio64(fapl_id, comm, info)
-    comm[], info[]
-end
-
 function h5s_get_simple_extent_dims(space_id::Hid)
     n = h5s_get_simple_extent_ndims(space_id)
     dims = Vector{Hsize}(undef,n)
@@ -2527,8 +2512,6 @@ const hdf5_prop_get_set = Dict(
     :local_heap_size_hint => (nothing, h5p_set_local_heap_size_hint, H5P_GROUP_CREATE),
     :shuffle       => (nothing, h5p_set_shuffle,                     H5P_DATASET_CREATE),
     :userblock     => (get_userblock, h5p_set_userblock,             H5P_FILE_CREATE),
-    :fapl_mpio     => (h5p_get_fapl_mpio, h5p_set_fapl_mpio,         H5P_FILE_ACCESS),
-    :dxpl_mpio     => (h5p_get_dxpl_mpio, h5p_set_dxpl_mpio,         H5P_DATASET_XFER),
     :track_times   => (nothing, h5p_set_obj_track_times,             H5P_OBJECT_CREATE),
     :alignment     => (h5p_get_alignment, h5p_set_alignment,         H5P_FILE_ACCESS)
 )
@@ -2578,6 +2561,18 @@ const ASCII_ATTRIBUTE_PROPERTIES = Ref{HDF5Properties}()
 
 const DEFAULT_PROPERTIES = HDF5Properties(H5P_DEFAULT, H5P_DEFAULT)
 
+const HAS_PARALLEL = Ref(false)
+
+"""
+    has_parallel()
+
+Returns `true` if the HDF5 libraries were compiled with parallel support,
+and if parallel functionality was loaded into HDF5.jl.
+
+For the second condition to be true, MPI.jl must be imported before HDF5.jl.
+"""
+has_parallel() = HAS_PARALLEL[]
+
 function __init__()
     check_deps()
 
@@ -2606,6 +2601,7 @@ function __init__()
     rehash!(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
     rehash!(hdf5_obj_open, length(hdf5_obj_open.keys))
 
+    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" @eval include("mpio.jl")
 
     return nothing
 end
