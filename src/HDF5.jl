@@ -80,6 +80,12 @@ const H5_INDEX_CRT_ORDER = 1
 const H5D_COMPACT      = 0
 const H5D_CONTIGUOUS   = 1
 const H5D_CHUNKED      = 2
+# allocation times (C enum H5D_alloc_time_t)
+const H5D_ALLOC_TIME_ERROR = -1
+const H5D_ALLOC_TIME_DEFAULT = 0
+const H5D_ALLOC_TIME_EARLY = 1
+const H5D_ALLOC_TIME_LATE = 2
+const H5D_ALLOC_TIME_INCR = 3
 # error-related constants
 const H5E_DEFAULT      = 0
 # file access modes
@@ -2185,11 +2191,13 @@ for (jlname, h5name, outtype, argtypes, argsyms, msg) in
      (:h5o_get_info, :H5Oget_info1, Herr, (Hid, Ptr{H5Oinfo}), (:object_id, :buf), "Error getting object info"),
      (:h5o_close, :H5Oclose, Herr, (Hid,), (:object_id,), "Error closing object"),
      (:h5p_close, :H5Pclose, Herr, (Hid,), (:id,), "Error closing property list"),
+     (:h5p_get_alloc_time, :H5Pget_alloc_time, Herr, (Hid, Ptr{Cint}), (:plist_id, :alloc_time), "Error getting allocation timing"),
      (:h5p_get_dxpl_mpio,   :H5Pget_dxpl_mpio, Herr, (Hid, Ptr{Cint}), (:dxpl_id, :xfer_mode), "Error getting MPIO transfer mode"),
      (:h5p_get_fapl_mpio32, :H5Pget_fapl_mpio, Herr, (Hid, Ptr{Hmpih32}, Ptr{Hmpih32}), (:fapl_id, :comm, :info), "Error getting MPIO properties"),
      (:h5p_get_fapl_mpio64, :H5Pget_fapl_mpio, Herr, (Hid, Ptr{Hmpih64}, Ptr{Hmpih64}), (:fapl_id, :comm, :info), "Error getting MPIO properties"),
      (:h5p_get_fclose_degree, :H5Pget_fclose_degree, Herr, (Hid, Ptr{Cint}), (:plist_id, :fc_degree), "Error getting close degree"),
      (:h5p_get_userblock, :H5Pget_userblock, Herr, (Hid, Ptr{Hsize}), (:plist_id, :len), "Error getting userblock"),
+     (:h5p_set_alloc_time, :H5Pset_alloc_time, Herr, (Hid, Cint), (:plist_id, :alloc_time), "Error setting allocation timing"),
      (:h5p_set_char_encoding, :H5Pset_char_encoding, Herr, (Hid, Cint), (:plist_id, :encoding), "Error setting char encoding"),
      (:h5p_set_chunk, :H5Pset_chunk, Herr, (Hid, Cint, Ptr{Hsize}), (:plist_id, :ndims, :dims), "Error setting chunk size"),
      (:h5p_set_create_intermediate_group, :H5Pset_create_intermediate_group, Herr, (Hid, Cuint), (:plist_id, :setting), "Error setting create intermediate group"),
@@ -2464,6 +2472,11 @@ get_create_properties(d::HDF5Dataset)   = HDF5Properties(h5d_get_create_plist(d.
 get_create_properties(g::HDF5Group)     = HDF5Properties(h5g_get_create_plist(g.id), H5P_GROUP_CREATE)
 get_create_properties(f::HDF5File)      = HDF5Properties(h5f_get_create_plist(f.id), H5P_FILE_CREATE)
 get_create_properties(a::HDF5Attribute) = HDF5Properties(h5a_get_create_plist(a.id), H5P_ATTRIBUTE_CREATE)
+function get_alloc_time(p::HDF5Properties)
+    alloc_time = Ref{Cint}()
+    h5p_get_alloc_time(p.id, alloc_time)
+    return alloc_time[]
+end
 function get_chunk(p::HDF5Properties)
     n = h5p_get_chunk(p, 0, C_NULL)
     cdims = Vector{Hsize}(undef,n)
@@ -2529,6 +2542,7 @@ end
 # Property names should follow the naming introduced by HDF5, i.e.
 # keyname => (h5p_get_keyname, h5p_set_keyname, id )
 const hdf5_prop_get_set = Dict(
+    "alloc_time"    => (get_alloc_time, h5p_set_alloc_time,           H5P_DATASET_CREATE),
     "blosc"         => (nothing, h5p_set_blosc,                       H5P_DATASET_CREATE),
     "char_encoding" => (nothing, h5p_set_char_encoding,               H5P_LINK_CREATE),
     "chunk"         => (get_chunk, set_chunk,                         H5P_DATASET_CREATE),
