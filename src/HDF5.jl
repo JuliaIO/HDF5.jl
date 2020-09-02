@@ -932,7 +932,13 @@ function g_create(f::Function, parent::Union{HDF5File, HDF5Group}, args...)
     end
 end
 
-function d_create(parent::Union{HDF5File, HDF5Group}, path::String, dtype::HDF5Datatype, dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties, dapl::HDF5Properties, dxpl::HDF5Properties)
+# Note: lcpl does not have a default to distinguish it from the no-keyword method of the
+#      following method.
+function d_create(parent::Union{HDF5File, HDF5Group}, path::String, dtype::HDF5Datatype,
+                  dspace::HDF5Dataspace, lcpl::HDF5Properties,
+                  dcpl::HDF5Properties = DEFAULT_PROPERTIES,
+                  dapl::HDF5Properties = DEFAULT_PROPERTIES,
+                  dxpl::HDF5Properties = DEFAULT_PROPERTIES)
     HDF5Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, lcpl.id,
                 dcpl.id, dapl.id), file(parent), dxpl)
 end
