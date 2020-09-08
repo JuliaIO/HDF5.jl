@@ -2383,6 +2383,7 @@ end
 # Property names should follow the naming introduced by HDF5, i.e.
 # keyname => (h5p_get_keyname, h5p_set_keyname, id )
 const hdf5_prop_get_set = Dict(
+    :alignment     => (get_alignment, h5p_set_alignment,             H5P_FILE_ACCESS),
     :alloc_time    => (get_alloc_time, h5p_set_alloc_time,           H5P_DATASET_CREATE),
     :blosc         => (nothing, h5p_set_blosc,                       H5P_DATASET_CREATE),
     :char_encoding => (nothing, h5p_set_char_encoding,               H5P_LINK_CREATE),
@@ -2400,7 +2401,6 @@ const hdf5_prop_get_set = Dict(
     :shuffle       => (nothing, h5p_set_shuffle,                     H5P_DATASET_CREATE),
     :userblock     => (get_userblock, h5p_set_userblock,             H5P_FILE_CREATE),
     :track_times   => (nothing, h5p_set_obj_track_times,             H5P_OBJECT_CREATE),
-    :alignment     => (h5p_get_alignment, h5p_set_alignment,         H5P_FILE_ACCESS)
 )
 
 # properties that require chunks in order to work (e.g. any filter)
