@@ -932,13 +932,9 @@ function g_create(f::Function, parent::Union{HDF5File, HDF5Group}, args...)
     end
 end
 
-# Note: lcpl does not have a default to distinguish it from the no-keyword method of the
-#      following method.
 function d_create(parent::Union{HDF5File, HDF5Group}, path::String, dtype::HDF5Datatype,
-                  dspace::HDF5Dataspace, lcpl::HDF5Properties,
-                  dcpl::HDF5Properties = DEFAULT_PROPERTIES,
-                  dapl::HDF5Properties = DEFAULT_PROPERTIES,
-                  dxpl::HDF5Properties = DEFAULT_PROPERTIES)
+                  dspace::HDF5Dataspace, lcpl::HDF5Properties, dcpl::HDF5Properties,
+                  dapl::HDF5Properties, dxpl::HDF5Properties)
     HDF5Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, lcpl.id,
                 dcpl.id, dapl.id), file(parent), dxpl)
 end
@@ -1007,28 +1003,23 @@ function setindex!(p::HDF5Properties, val, name::Symbol)
     funcset(p, val...)
     return p
 end
-# Create a dataset with properties: obj[path, prop1, set1, ...] = val
+# Create a dataset with properties: obj[path, prop = val, ...] = val
 function setindex!(parent::Union{HDF5File, HDF5Group}, val, path::String; pv...)
-    dcpl = p_create(H5P_DATASET_CREATE)
-    dxpl = p_create(H5P_DATASET_XFER; pv...)
-    dapl = p_create(H5P_DATASET_ACCESS; pv...)
-
-    need_chunks = any(k in chunked_props for k in keys(pv))
+    need_chunks = any(k in keys(chunked_props) for k in keys(pv))
     have_chunks = any(k == :chunk for k in keys(pv))
 
     chunk = need_chunks ? heuristic_chunk(val) : Int[]
-    discard_chunks = need_chunks && isempty(chunk)
-    if need_chunks && !have_chunks && !discard_chunks
-        dcpl[:chunk] = chunk
-    end
 
     # ignore chunked_props (== compression) for empty datasets (issue #246):
-    for (k,v) in pairs(pv)
-      if !(k in chunked_props && discard_chunks)
-        dcpl[k] = v
-      end
+    discard_chunks = need_chunks && isempty(chunk)
+    if discard_chunks
+        pv = pairs(Base.structdiff((; pv...), chunked_props))
+    else
+        if need_chunks && !have_chunks
+            pv = pairs((; chunk = chunk, pv...))
+        end
     end
-    write(parent, path, val, p_create(H5P_LINK_CREATE), dcpl, dapl, dxpl)
+    write(parent, path, val; pv...)
 end
 
 # Check existence
@@ -1548,31 +1539,29 @@ end
 # Due to method ambiguities we generate these explicitly
 
 # Create datasets and attributes with "native" types, but don't write the data.
-# The return syntax is: dset, dtype = d_create(parent, name, data)
-# You can also pass in property lists
+# The return syntax is: dset, dtype = d_create(parent, name, data; properties...)
 for (privatesym, fsym, ptype) in
     ((:_d_create, :d_create, Union{HDF5File, HDF5Group}),
      (:_a_create, :a_create, Union{HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype}))
     @eval begin
         # Generic create (hidden)
-        function ($privatesym)(parent::$ptype, name::String, data, plists::HDF5Properties...)
-            local dtype
+        function ($privatesym)(parent::$ptype, name::String, data; pv...)
             local obj
             dtype = datatype(data)
             dspace = dataspace(data)
             try
-                obj = ($fsym)(parent, name, dtype, dspace, plists...)
+                obj = ($fsym)(parent, name, dtype, dspace; pv...)
             finally
                 close(dspace)
             end
             obj, dtype
         end
         # Scalar types
-        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}, plists::HDF5Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
-            ($privatesym)(parent, name, data, plists...)
+        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
+            ($privatesym)(parent, name, data; pv...)
         # VLEN types
-        ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T}, plists::HDF5Properties...) where {T<:Union{HDF5Scalar,CharType}} =
-            ($privatesym)(parent, name, data, plists...)
+        ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T}; pv...) where {T<:Union{HDF5Scalar,CharType}} =
+            ($privatesym)(parent, name, data; pv...)
     end
 end
 # Create and write, closing the objects upon exit
@@ -1581,8 +1570,8 @@ for (privatesym, fsym, ptype, crsym) in
      (:_a_write, :a_write, Union{HDF5File, HDF5Object, HDF5Datatype}, :a_create))
     @eval begin
         # Generic write (hidden)
-        function ($privatesym)(parent::$ptype, name::String, data, plists::HDF5Properties...)
-            obj, dtype = ($crsym)(parent, name, data, plists...)
+        function ($privatesym)(parent::$ptype, name::String, data; pv...)
+            obj, dtype = ($crsym)(parent, name, data; pv...)
             try
                 writearray(obj, dtype.id, data)
             finally
@@ -1591,11 +1580,11 @@ for (privatesym, fsym, ptype, crsym) in
             end
         end
         # Scalar types
-        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}, plists::HDF5Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
-            ($privatesym)(parent, name, data, plists...)
+        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
+            ($privatesym)(parent, name, data; pv...)
         # VLEN types
-        ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T}, plists::HDF5Properties...) where {T<:Union{HDF5Scalar,CharType}} =
-            ($privatesym)(parent, name, data, plists...)
+        ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T}; pv...) where {T<:Union{HDF5Scalar,CharType}} =
+            ($privatesym)(parent, name, data; pv...)
     end
 end
 # Write to already-created objects
@@ -1617,11 +1606,12 @@ function write(obj::DatasetOrAttribute, data::HDF5Vlen{T}) where {T<:Union{HDF5S
         close(dtype)
     end
 end
-# For plain files and groups, let "write(obj, name, val)" mean "d_write"
-write(parent::Union{HDF5File, HDF5Group}, name::String, data::Union{T, AbstractArray{T}}, plists::HDF5Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
-    d_write(parent, name, data, plists...)
-# For datasets, "write(dset, name, val)" means "a_write"
-write(parent::HDF5Dataset, name::String, data::Union{T, AbstractArray{T}}, plists::HDF5Properties...) where {T<:ScalarOrString} = a_write(parent, name, data, plists...)
+# For plain files and groups, let "write(obj, name, val; properties...)" mean "d_write"
+write(parent::Union{HDF5File, HDF5Group}, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
+    d_write(parent, name, data; pv...)
+# For datasets, "write(dset, name, val; properties...)" means "a_write"
+write(parent::HDF5Dataset, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:ScalarOrString} =
+    a_write(parent, name, data; pv...)
 
 
 # Indexing
@@ -2413,7 +2403,8 @@ const hdf5_prop_get_set = Dict(
 )
 
 # properties that require chunks in order to work (e.g. any filter)
-const chunked_props = Set([:compress, :deflate, :blosc, :shuffle])
+# values do not matter -- just needed to form a NamedTuple with the desired keys
+const chunked_props = (; compress=nothing, deflate=nothing, blosc=nothing, shuffle=nothing)
 
 """
     create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path;
