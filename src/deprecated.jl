@@ -57,3 +57,7 @@ function p_create(class, prop1::String, val1, pv...)
     props = (prop1, val1, pv...)
     return p_create(class; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
 end
+
+### Changed in PR#652
+# - read takes array element type, not Array with eltype
+@deprecate read(obj::DatasetOrAttribute, ::Type{A}, I...) where {A<:Array} read(obj, eltype(A), I...)
