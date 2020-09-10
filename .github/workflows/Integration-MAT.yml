@@ -1,4 +1,4 @@
-name: Integration
+name: CI / Integration
 
 on: [push, pull_request]
 
