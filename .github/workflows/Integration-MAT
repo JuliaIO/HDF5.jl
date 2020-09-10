@@ -1,0 +1,33 @@
+name: IntegrationTest-MAT.jl
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1.5'
+          - 'nightly'
+        os:
+          - ubuntu-latest
+        arch:
+          - x64
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/julia-buildpkg@latest
+      - name: Clone MAT.jl
+        uses: actions/checkout@v2
+        with:
+          repository: JuliaIO/MAT.jl
+          path: "MAT.jl"
+      - name: Run the tests
+        run: julia --project="MAT.jl" -e "using Pkg; Pkg.develop(PackageSpec(path=\"./\")); Pkg.update(); Pkg.test()"
+        shell: bash
