@@ -66,8 +66,9 @@ primitive type Hmpih64 <: Hmpih 64 end # OpenMPI C: pointers (mostly 64 bit)
 
 # Function to extract exported library constants
 # Kudos to the library developers for making these available this way!
-const libhdf5handle = Libdl.dlopen(libhdf5)
-read_const(sym::Symbol) = unsafe_load(convert(Ptr{Hid}, Libdl.dlsym(libhdf5handle, sym)))
+let libhdf5handle = Libdl.dlopen(libhdf5)
+    global read_const(sym::Symbol) = unsafe_load(convert(Ptr{Hid}, Libdl.dlsym(libhdf5handle, sym)))
+end
 
 # iteration order constants
 const H5_ITER_UNKNOWN = -1
