@@ -58,13 +58,13 @@ function h5a_delete(loc_id, attr_name)
 end
 
 function h5a_delete_by_idx(loc_id, obj_name, idx_type, order, n, lapl_id)
-    var"#status#" = ccall((:H5delete_by_idx, libhdf5), Herr, (Hid, Ptr{UInt8}, Cint, Cint, Hsize, Hid), loc_id, obj_name, idx_type, order, n, lapl_id)
+    var"#status#" = ccall((:H5Adelete_by_idx, libhdf5), Herr, (Hid, Ptr{UInt8}, Cint, Cint, Hsize, Hid), loc_id, obj_name, idx_type, order, n, lapl_id)
     var"#status#" < 0 && error("Error deleting attribute ", n, " from object ", obj_name)
     return nothing
 end
 
 function h5a_delete_by_name(loc_id, obj_name, attr_name, lapl_id)
-    var"#status#" = ccall((:H5delete_by_name, libhdf5), Herr, (Hid, Ptr{UInt8}, Ptr{UInt8}, Hid), loc_id, obj_name, attr_name, lapl_id)
+    var"#status#" = ccall((:H5Adelete_by_name, libhdf5), Herr, (Hid, Ptr{UInt8}, Ptr{UInt8}, Hid), loc_id, obj_name, attr_name, lapl_id)
     var"#status#" < 0 && error("Error removing attribute ", attr_name, " from object ", obj_name)
     return nothing
 end
