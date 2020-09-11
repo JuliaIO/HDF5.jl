@@ -3,7 +3,7 @@ name: CI / Integration
 on: [push, pull_request]
 
 jobs:
-  test:
+  test1:
     name: MAT.jl - Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -32,7 +32,8 @@ jobs:
       - name: Run the tests
         run: julia --project="MAT.jl" -e "using Pkg; Pkg.develop(PackageSpec(path=\"./\")); Pkg.update(); Pkg.test()"
         shell: bash
-  test:
+        
+  test2:
     name: JLD.jl - Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     strategy:
