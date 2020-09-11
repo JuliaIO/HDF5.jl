@@ -1253,7 +1253,7 @@ set_dims!(dset::HDF5Dataset, new_dims::Dims) = h5d_set_extent(checkvalid(dset), 
 Start Single Reader Multiple Writer (SWMR) writing mode.
 See [SWMR documentation](https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-StartSwmrWrite).
 """
-start_swmr_write(h5::HDF5File) = hf5start_swmr_write(h5.id)
+start_swmr_write(h5::HDF5File) = h5f_start_swmr_write(h5.id)
 
 refresh(ds::HDF5Dataset) = h5d_refresh(checkvalid(ds).id)
 flush(ds::HDF5Dataset) = h5d_flush(checkvalid(ds).id)
@@ -1480,13 +1480,13 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
         #
         # The workaround is to create a new file handle, which should actually
         # not make any problems. Since we need to know the permissions of the
-        # original file handle, we first retrieve them using the "h5f_get_intend"
+        # original file handle, we first retrieve them using the "h5f_get_intent"
         # function
 
         # Check permissions
         intent = Ref{Cuint}()
-        h5f_get_intend(obj.file, intent)
-        if intent[] == H5F_ACC_RDONLY || intent[] == H5F_ACC_RDONLY
+        h5f_get_intent(obj.file, intent)
+        if intent[] == H5F_ACC_RDONLY
             flag = "r"
         else
             flag = "r+"

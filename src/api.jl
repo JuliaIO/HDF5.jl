@@ -255,7 +255,7 @@ function h5f_get_create_plist(file_id)
     return var"#status#"
 end
 
-function h5f_get_intend(file_id, intent)
+function h5f_get_intent(file_id, intent)
     var"#status#" = ccall((:H5Fget_intent, libhdf5), Herr, (Hid, Ptr{Cuint}), file_id, intent)
     var"#status#" < 0 && error("Error getting file intent")
     return nothing
@@ -285,7 +285,7 @@ function h5f_open(pathname, flags, fapl_id)
     return var"#status#"
 end
 
-function hf5start_swmr_write(id)
+function h5f_start_swmr_write(id)
     var"#status#" = ccall((:H5Fstart_swmr_write, libhdf5), Herr, (Hid,), id)
     var"#status#" < 0 && error("Error starting SWMR write")
     return nothing
@@ -873,7 +873,7 @@ function h5t_vlen_create(base_type_id)
     return var"#status#"
 end
 
-function h5d_oappend(dset_id, dxpl_id, index, num_elem, memtype, buffer)
+function h5do_append(dset_id, dxpl_id, index, num_elem, memtype, buffer)
     var"#status#" = ccall((:H5DOappend, libhdf5_hl), Herr, (Hid, Hid, Cuint, Hsize, Hid, Ptr{Cvoid}), dset_id, dxpl_id, index, num_elem, memtype, buffer)
     var"#status#" < 0 && error("error appending")
     return nothing

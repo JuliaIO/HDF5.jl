@@ -1,4 +1,4 @@
-import Base: @deprecate, depwarn
+import Base: @deprecate, @deprecate_binding, depwarn
 
 ### Changed in PR#629
 # - HDF5Dataset.xfer from ::Hid to ::HDF5Properties
@@ -166,3 +166,9 @@ function write(parent::HDF5Dataset, name::String, data::Union{T, AbstractArray{T
         close(dtype)
     end
 end
+
+### Changed in PR#664
+# - normalized naming of C function wrappers
+@deprecate_binding h5f_get_intend h5f_get_intent
+@deprecate_binding hf5start_swmr_write h5f_start_swmr_write
+@deprecate_binding h5d_oappend h5do_append

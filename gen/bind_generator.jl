@@ -24,10 +24,6 @@ push!(bind_exceptions, :h5p_get_fapl_mpio64 => :H5Pget_fapl_mpio)
 push!(bind_exceptions, :h5p_set_fapl_mpio32 => :H5Pset_fapl_mpio)
 push!(bind_exceptions, :h5p_set_fapl_mpio64 => :H5Pset_fapl_mpio)
 
-push!(bind_exceptions, :h5d_oappend => :H5DOappend)
-push!(bind_exceptions, :h5f_get_intend => :H5Fget_intent)
-push!(bind_exceptions, :hf5start_swmr_write => :H5Fstart_swmr_write)
-
 """
     @bind h5_function(arg1::Arg1Type, ...)::ReturnType ErrorStringOrExpression
 

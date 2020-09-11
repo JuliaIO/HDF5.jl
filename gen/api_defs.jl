@@ -80,12 +80,12 @@
 @bind h5f_flush(object_id::Hid, scope::Cint)::Herr "Error flushing object to file"
 @bind h5f_get_access_plist(file_id::Hid)::Hid "Error getting file access property list"
 @bind h5f_get_create_plist(file_id::Hid)::Hid "Error getting file create property list"
-@bind h5f_get_intend(file_id::Hid, intent::Ptr{Cuint})::Herr "Error getting file intent"
+@bind h5f_get_intent(file_id::Hid, intent::Ptr{Cuint})::Herr "Error getting file intent"
 @bind h5f_get_name(obj_id::Hid, buf::Ptr{UInt8}, buf_size::Csize_t)::Cssize_t "Error getting file name"
 @bind h5f_get_vfd_handle(file_id::Hid, fapl_id::Hid, file_handle::Ptr{Ptr{Cint}})::Herr "Error getting VFD handle"
 @bind h5f_is_hdf5(pathname::Cstring)::Htri error("Cannot access file ", pathname)
 @bind h5f_open(pathname::Cstring, flags::Cuint, fapl_id::Hid)::Hid error("Error opening file ", pathname)
-@bind hf5start_swmr_write(id::Hid)::Herr "Error starting SWMR write"
+@bind h5f_start_swmr_write(id::Hid)::Herr "Error starting SWMR write"
 
 ###
 ### Group Interface
@@ -228,7 +228,7 @@
 ### Optimized Functions Interface
 ###
 
-@bind h5d_oappend(dset_id::Hid, dxpl_id::Hid, index::Cuint, num_elem::Hsize, memtype::Hid, buffer::Ptr{Cvoid})::Herr "error appending"
+@bind h5do_append(dset_id::Hid, dxpl_id::Hid, index::Cuint, num_elem::Hsize, memtype::Hid, buffer::Ptr{Cvoid})::Herr "error appending"
 @bind h5do_write_chunk(dset_id::Hid, dxpl_id::Hid, filter_mask::Int32, offset::Ptr{Hsize}, bufsize::Csize_t, buf::Ptr{Cvoid})::Herr "Error writing chunk"
 
 ###
