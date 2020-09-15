@@ -101,6 +101,16 @@ macro bind(sig::Expr, err::Union{String,Expr})
 
     # The error condition expression
     errexpr = err isa String ? :(error($err)) : err
+    # Error typically indicated by negative values, but some return types are unsigned
+    # integers. From `H5public.h`:
+    #   ADDR_UNDEF => (haddr_t)(-1)
+    #   HSIZE_UNDEF => (hsize_t)(-1)
+    # which are both just `-1 % $type` in Julia
+    if rettype == :Haddr || rettype == :Hsize
+        errexpr = :($statsym == -1 % $rettype && $errexpr)
+    else
+        errexpr = :($statsym < 0 && $errexpr)
+    end
 
     # Three cases for handling the return type
     if rettype === :Htri
@@ -121,7 +131,7 @@ macro bind(sig::Expr, err::Union{String,Expr})
     jlfuncbody = Expr(:block,
                       __source__,
                       :($statsym = $ccallexpr),
-                      :($statsym < 0 && $errexpr),
+                      errexpr,
                       returnexpr)
     return esc(Expr(:function, jlfuncsig, jlfuncbody))
 end

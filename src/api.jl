@@ -161,7 +161,7 @@ end
 
 function h5d_get_offset(dataset_id)
     var"#status#" = ccall((:H5Dget_offset, libhdf5), Haddr, (Hid,), dataset_id)
-    var"#status#" < 0 && error("Error getting offset")
+    var"#status#" == -1 % Haddr && error("Error getting offset")
     return var"#status#"
 end
 
