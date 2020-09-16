@@ -14,7 +14,7 @@ open(joinpath(@__DIR__, "..", "src", "api.jl"), "w") do fid
 # To add new bindings, define the binding in `gen/api_defs.jl`, re-run
 # `gen/gen_wrappers.jl`, and commit the updated `src/api.jl`.
 """)
-    foreach(exprs.args) do func
+    for func in exprs.args
         write(fid, string(func), "\n\n")
     end
 end
