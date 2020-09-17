@@ -154,6 +154,7 @@
 @bind h5p_set_alloc_time(plist_id::Hid, alloc_time::Cint)::Herr "Error setting allocation timing"
 @bind h5p_set_char_encoding(plist_id::Hid, encoding::Cint)::Herr "Error setting char encoding"
 @bind h5p_set_chunk(plist_id::Hid, ndims::Cint, dims::Ptr{Hsize})::Herr "Error setting chunk size"
+@bind h5p_set_chunk_cache(dapl_id::Hid, rdcc_nslots::Csize_t, rdcc_nbytes::Csize_t, rdcc_w0::Cdouble)::Herr "Error setting chunk cache"
 @bind h5p_set_create_intermediate_group(plist_id::Hid, setting::Cuint)::Herr "Error setting create intermediate group"
 @bind h5p_set_deflate(plist_id::Hid, setting::Cuint)::Herr "Error setting compression method and level (deflate)"
 @bind h5p_set_dxpl_mpio(dxpl_id::Hid, xfer_mode::Cint)::Herr "Error setting MPIO transfer mode"

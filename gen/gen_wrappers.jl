@@ -1,7 +1,7 @@
-include("bind_generator.jl")
+include(joinpath(@__DIR__, "bind_generator.jl"))
 
 # Read in the API definition macros from the definitions file
-defs = read("api_defs.jl", String)
+defs = read(joinpath(@__DIR__, "api_defs.jl"), String)
 # Have Julia expand/run the @bind macro to generate expressions for all of the functions
 exprs = Base.include_string(@__MODULE__, "@macroexpand1 begin\n" * defs * "\nend", "api_defs.jl")
 
