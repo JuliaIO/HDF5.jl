@@ -633,6 +633,12 @@ function h5p_set_userblock(plist_id, len)
     return nothing
 end
 
+function h5p_set_virtual(dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
+    var"#status#" = ccall((:H5Pset_virtual, libhdf5), Herr, (Hid, Hid, Ptr{UInt8}, Ptr{UInt8}, Hid), dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
+    var"#status#" < 0 && error("Error setting virtual")
+    return nothing
+end
+
 function h5r_create(ref, loc_id, pathname, ref_type, space_id)
     var"#status#" = ccall((:H5Rcreate, libhdf5), Herr, (Ptr{HDF5ReferenceObj}, Hid, Ptr{UInt8}, Cint, Hid), ref, loc_id, pathname, ref_type, space_id)
     var"#status#" < 0 && error("Error creating reference to object ", hi5_get_name(loc_id), "/", pathname)

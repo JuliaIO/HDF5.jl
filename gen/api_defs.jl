@@ -168,6 +168,7 @@
 @bind h5p_set_obj_track_times(plist_id::Hid, track_times::UInt8)::Herr "Error setting object time tracking"
 @bind h5p_set_shuffle(plist_id::Hid)::Herr "Error enabling shuffle filter"
 @bind h5p_set_userblock(plist_id::Hid, len::Hsize)::Herr "Error setting userblock"
+@bind h5p_set_virtual(dcpl_id::Hid, vspace_id::Hid, src_file_name::Ptr{UInt8}, src_dset_name::Ptr{UInt8}, src_space_id::Hid)::Herr "Error setting virtual"
 
 ###
 ### Reference Interface
