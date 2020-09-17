@@ -17,6 +17,7 @@ push!(bind_exceptions, :h5t_array_create => :H5Tarray_create2)
 push!(bind_exceptions, :h5t_commit => :H5Tcommit2)
 push!(bind_exceptions, :h5t_get_array_dims => :H5Tget_array_dims2)
 push!(bind_exceptions, :h5t_open => :H5Topen2)
+push!(bind_exceptions, :h5p_get_filter_by_id => :H5Pget_filter_by_id2)
 
 # Distinguishes 32-bit vs 64-bit handle arguments
 push!(bind_exceptions, :h5p_get_fapl_mpio32 => :H5Pget_fapl_mpio)

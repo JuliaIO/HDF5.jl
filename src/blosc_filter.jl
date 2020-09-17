@@ -9,7 +9,9 @@ const H5Z_FLAG_REVERSE = 0x0100
 const H5Z_FLAG_OPTIONAL = 0x0001
 const H5Z_CLASS_T_VERS = 1
 const H5Z_filter_t = Cint
-struct H5Z_class2_t
+
+# H5Z_class2_t
+struct H5Z_class_t
     version::Cint # = H5Z_CLASS_T_VERS
     id::H5Z_filter_t # Filter ID number
     encoder_present::Cuint # Does this filter have an encoder?
@@ -24,39 +26,32 @@ const FILTER_BLOSC_VERSION = 2
 const FILTER_BLOSC = 32001 # Filter ID registered with the HDF Group for Blosc
 const blosc_name = "blosc"
 
-const blosc_flags_ = Vector{Cuint}(undef,1)
-const blosc_nelements_ = Vector{Csize_t}(undef,1)
+const blosc_flags = Ref{Cuint}()
 const blosc_values = Vector{Cuint}(undef,8)
+const blosc_nelements = Ref{Csize_t}(length(blosc_values))
 const blosc_chunkdims = Vector{Hsize}(undef,32)
+
 function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
-    blosc_nelements_[1] = 8
-    if ccall((:H5Pget_filter_by_id2,libhdf5), Herr,
-             (Hid, H5Z_filter_t, Ptr{Cuint}, Ptr{Csize_t}, Ptr{Cuint},
-              Csize_t, Ptr{UInt8}, Ptr{Cuint}),
-             dcpl, FILTER_BLOSC, blosc_flags_, blosc_nelements_, blosc_values,
-             0, C_NULL, C_NULL) < 0
-        return Herr(-1)
-    end
-    flags = blosc_flags_[1]
-    nelements = max(blosc_nelements_[1], 4)
+    h5p_get_filter_by_id(dcpl, FILTER_BLOSC, blosc_flags, blosc_nelements, blosc_values, 0, C_NULL, C_NULL)
+    flags = blosc_flags[]
+    nelements = max(blosc_nelements[], 4)
     # Set Blosc info in first two slots
     blosc_values[1] = FILTER_BLOSC_VERSION
     blosc_values[2] = Blosc.VERSION_FORMAT
-    ndims = ccall((:H5Pget_chunk,libhdf5), Cint, (Hid, Cint, Ptr{Hsize}),
-                  dcpl, 32, blosc_chunkdims);
+    ndims = h5p_get_chunk(dcpl, 32, blosc_chunkdims)
     chunksize = prod(resize!(blosc_chunkdims, ndims))
-    if ndims < 0 || ndims > 32 || chunksize > Blosc.MAX_BUFFERSIZE
+    if ndims > 32 || chunksize > Blosc.MAX_BUFFERSIZE
         return Herr(-1)
     end
-    htypesize = ccall((:H5Tget_size,libhdf5), Csize_t, (Hid,), htype)
-    htypesize == 0 && return Herr(-1)
-    if ccall((:H5Tget_class,libhdf5),H5T_class_t,(Hid,),htype) == H5T_ARRAY
-        hsuper = ccall((:H5Tget_super,libhdf5), Hid, (Hid,), htype)
-        basetypesize = ccall((:H5Tget_size,libhdf5),Csize_t,(Hid,), hsuper)
-        ccall((:H5Tclose,libhdf5), Herr, (Hid,), hsuper)
+
+    htypesize = h5t_get_size(htype)
+    if h5t_get_class(htype) == H5T_ARRAY
+        hsuper = h5t_get_super(htype)
+        basetypesize = h5t_get_size(hsuper)
+        h5t_close(hsuper)
     else
         basetypesize = htypesize
-        end
+    end
     # Limit large typesizes (they are pretty inefficient to shuffle
     # and, in addition, Blosc does not handle typesizes larger than
     # blocksizes).
@@ -65,11 +60,8 @@ function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
     end
     blosc_values[3] = basetypesize
     blosc_values[4] = chunksize * htypesize # size of the chunk
-    if ccall((:H5Pmodify_filter,libhdf5), Herr, 
-             (Hid, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}),
-             dcpl, FILTER_BLOSC, flags, nelements, blosc_values) < 0
-        return Herr(-1)
-        end
+    h5p_modify_filter(dcpl, FILTER_BLOSC, flags, nelements, blosc_values)
+
     return Herr(1)
 end
 
@@ -123,25 +115,13 @@ function register_blosc()
     c_blosc_filter = @cfunction(blosc_filter, Csize_t,
                                 (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
                                  Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
-    if ccall((:H5Zregister, libhdf5), Herr, (Ref{H5Z_class2_t},),
-             H5Z_class2_t(H5Z_CLASS_T_VERS,
-                          FILTER_BLOSC,
-                          1, 1,
-                          pointer(blosc_name),
-                          C_NULL,
-                          c_blosc_set_local,
-                          c_blosc_filter)) < 0
-        error("can't register Blosc filter")
-    end
+    h5z_register(H5Z_class_t(H5Z_CLASS_T_VERS, FILTER_BLOSC, 1, 1, pointer(blosc_name), C_NULL, c_blosc_set_local, c_blosc_filter))
 end
 
 const _set_blosc_values = Cuint[0,0,0,0,5,1,0]
 function h5p_set_blosc(p::HDF5Properties, level::Integer=5)
     0 <= level <= 9 || throw(ArgumentError("blosc compression $level not in [0,9]"))
     _set_blosc_values[5] = level
-    status = ccall((:H5Pset_filter,libhdf5), Herr,
-          (Hid, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}),
-          p.id, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, 7, _set_blosc_values)
-    status < 0 && error("Error setting blosc compression level")
+    h5p_set_filter(p.id, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, length(_set_blosc_values), _set_blosc_values)
     nothing
 end
