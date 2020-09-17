@@ -525,3 +525,57 @@ h5open(fn, "w", alignment=(0, 8)) do fid
 end
 
 end # writing abstract arrays
+
+@testset "show" begin
+fn = tempname()
+
+# First create data objects and sure they print useful outputs
+
+hfile = h5open(fn, "w")
+@test sprint(show, hfile) == "HDF5 data file: $fn"
+
+group = g_create(hfile, "group")
+@test sprint(show, group) == "HDF5 group: /group (file: $fn)"
+
+dset = d_create(group, "dset", datatype(Int), dataspace((1,)))
+@test sprint(show, dset) == "HDF5 dataset: /group/dset (file: $fn xfer_mode: 0)"
+
+meta = a_create(dset, "meta", datatype(Bool), dataspace((1,)))
+@test sprint(show, meta) == "HDF5 attribute: meta"
+
+prop = p_create(HDF5.H5P_DATASET_CREATE)
+@test occursin(r"^HDF5Properties\(\d+, \d+\)", sprint(show, prop))
+
+dtype = HDF5Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
+@test sprint(show, dtype) == "HDF5 datatype: H5T_IEEE_F64LE"
+
+dspace = dataspace((1,))
+@test occursin(r"^HDF5Dataspace\(\d+\)", sprint(show, dspace))
+
+# Now test printing after closing each object
+
+close(dspace)
+@test sprint(show, dspace) == "HDF5Dataspace(-1)"
+
+# TODO: Test HDF5Datatypes once printing of built-in datatypes (i.e. H5T_NATIVE_INT8 and
+# the like) is sorted out. See #671. Commented out because libhdf5 prints.
+#close(dtype)
+#@test_broken sprint(show, dtype) == "HDF5 datatype: (invalid)"
+
+close(prop)
+@test occursin(r"^HDF5Properties\(-1, \d+\)", sprint(show, prop))
+
+close(meta)
+@test sprint(show, meta) == "HDF5 attribute (invalid)"
+
+close(dset)
+@test sprint(show, dset) == "HDF5 dataset (invalid)"
+
+close(group)
+@test sprint(show, group) == "HDF5 group (invalid)"
+
+close(hfile)
+@test sprint(show, hfile) == "HDF5 data file (closed): $fn"
+
+rm(fn)
+end # show tests
