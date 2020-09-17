@@ -485,7 +485,6 @@ end
 
 function h5p_get_driver_info(plist_id)
     var"#status#" = ccall((:H5Pget_driver_info, libhdf5), Ptr{Cvoid}, (Hid,), plist_id)
-    var"#status#" < 0 && error("Error getting driver info")
     return var"#status#"
 end
 
@@ -779,7 +778,6 @@ end
 
 function h5t_get_member_offset(dtype_id, index)
     var"#status#" = ccall((:H5Tget_member_offset, libhdf5), Csize_t, (Hid, Cuint), dtype_id, index)
-    var"#status#" < 0 && error("Error getting offset of compound datatype member #", index)
     return var"#status#"
 end
 
