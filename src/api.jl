@@ -549,6 +549,12 @@ function h5p_set_chunk(plist_id, ndims, dims)
     return nothing
 end
 
+function h5p_set_chunk_cache(dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
+    var"#status#" = ccall((:H5Pset_chunk_cache, libhdf5), Herr, (Hid, Csize_t, Csize_t, Cdouble), dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
+    var"#status#" < 0 && error("Error setting chunk cache")
+    return nothing
+end
+
 function h5p_set_create_intermediate_group(plist_id, setting)
     var"#status#" = ccall((:H5Pset_create_intermediate_group, libhdf5), Herr, (Hid, Cuint), plist_id, setting)
     var"#status#" < 0 && error("Error setting create intermediate group")

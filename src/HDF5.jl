@@ -90,6 +90,10 @@ const H5D_ALLOC_TIME_DEFAULT = 0
 const H5D_ALLOC_TIME_EARLY = 1
 const H5D_ALLOC_TIME_LATE = 2
 const H5D_ALLOC_TIME_INCR = 3
+# used to "unset" chunk cache configuration parameters
+const H5D_CHUNK_CACHE_NSLOTS_DEFAULT = -1 % Csize_t
+const H5D_CHUNK_CACHE_NBYTES_DEFAULT = -1 % Csize_t
+const H5D_CHUNK_CACHE_W0_DEFAULT = Cdouble(-1)
 # error-related constants
 const H5E_DEFAULT      = 0
 # file access modes
