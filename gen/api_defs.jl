@@ -151,6 +151,7 @@
 @bind h5p_get_filter_by_id(plist_id::Hid, filter_id::H5Z_filter_t, flags::Ref{Cuint}, cd_nelmts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{UInt8}, filter_config::Ptr{Cuint})::Herr "Error getting filter ID"
 @bind h5p_get_layout(plist_id::Hid)::Cint error("Error getting layout")
 @bind h5p_get_userblock(plist_id::Hid, len::Ptr{Hsize})::Herr "Error getting userblock"
+@bind h5p_modify_filter(plist_id::Hid, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})::Herr "Error modifying filter"
 @bind h5p_set_alignment(plist_id::Hid, threshold::Hsize, alignment::Hsize)::Herr "Error setting alignment"
 @bind h5p_set_alloc_time(plist_id::Hid, alloc_time::Cint)::Herr "Error setting allocation timing"
 @bind h5p_set_char_encoding(plist_id::Hid, encoding::Cint)::Herr "Error setting char encoding"
@@ -171,7 +172,6 @@
 @bind h5p_set_shuffle(plist_id::Hid)::Herr "Error enabling shuffle filter"
 @bind h5p_set_userblock(plist_id::Hid, len::Hsize)::Herr "Error setting userblock"
 @bind h5p_set_virtual(dcpl_id::Hid, vspace_id::Hid, src_file_name::Ptr{UInt8}, src_dset_name::Ptr{UInt8}, src_space_id::Hid)::Herr "Error setting virtual"
-@bind h5p_modify_filter(plist_id::Hid, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmnts::Csize_t, cd_values::Ptr{Cuint})::Herr "Error modifying filter"
 
 ###
 ### Reference Interface

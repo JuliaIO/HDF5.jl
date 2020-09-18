@@ -12,12 +12,12 @@ push!(bind_exceptions, :h5e_set_auto => :H5Eset_auto2)
 push!(bind_exceptions, :h5g_create => :H5Gcreate2)
 push!(bind_exceptions, :h5g_open => :H5Gopen2)
 push!(bind_exceptions, :h5o_get_info => :H5Oget_info1)
+push!(bind_exceptions, :h5p_get_filter_by_id => :H5Pget_filter_by_id2)
 push!(bind_exceptions, :h5r_get_obj_type => :H5Rget_obj_type2)
 push!(bind_exceptions, :h5t_array_create => :H5Tarray_create2)
 push!(bind_exceptions, :h5t_commit => :H5Tcommit2)
 push!(bind_exceptions, :h5t_get_array_dims => :H5Tget_array_dims2)
 push!(bind_exceptions, :h5t_open => :H5Topen2)
-push!(bind_exceptions, :h5p_get_filter_by_id => :H5Pget_filter_by_id2)
 
 # Distinguishes 32-bit vs 64-bit handle arguments
 push!(bind_exceptions, :h5p_get_fapl_mpio32 => :H5Pget_fapl_mpio)
