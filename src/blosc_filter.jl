@@ -34,13 +34,16 @@ const blosc_chunkdims = Vector{Hsize}(undef,32)
 function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
     h5p_get_filter_by_id(dcpl, FILTER_BLOSC, blosc_flags, blosc_nelements, blosc_values, 0, C_NULL, C_NULL)
     flags = blosc_flags[]
-    nelements = max(blosc_nelements[], 4)
+
+    nelements = max(blosc_nelements[], 4) # First 4 slots reserved
+
     # Set Blosc info in first two slots
     blosc_values[1] = FILTER_BLOSC_VERSION
     blosc_values[2] = Blosc.VERSION_FORMAT
+
     ndims = h5p_get_chunk(dcpl, 32, blosc_chunkdims)
     chunksize = prod(resize!(blosc_chunkdims, ndims))
-    if ndims > 32 || chunksize > Blosc.MAX_BUFFERSIZE
+    if ndims < 0 || ndims > 32 || chunksize > Blosc.MAX_BUFFERSIZE
         return Herr(-1)
     end
 
@@ -52,6 +55,7 @@ function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
     else
         basetypesize = htypesize
     end
+
     # Limit large typesizes (they are pretty inefficient to shuffle
     # and, in addition, Blosc does not handle typesizes larger than
     # blocksizes).
@@ -60,6 +64,7 @@ function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
     end
     blosc_values[3] = basetypesize
     blosc_values[4] = chunksize * htypesize # size of the chunk
+
     h5p_modify_filter(dcpl, FILTER_BLOSC, flags, nelements, blosc_values)
 
     return Herr(1)
@@ -116,12 +121,15 @@ function register_blosc()
                                 (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
                                  Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
     h5z_register(H5Z_class_t(H5Z_CLASS_T_VERS, FILTER_BLOSC, 1, 1, pointer(blosc_name), C_NULL, c_blosc_set_local, c_blosc_filter))
+
+    return nothing
 end
 
-const _set_blosc_values = Cuint[0,0,0,0,5,1,0]
+const set_blosc_values = Cuint[0,0,0,0,5,1,0]
 function h5p_set_blosc(p::HDF5Properties, level::Integer=5)
     0 <= level <= 9 || throw(ArgumentError("blosc compression $level not in [0,9]"))
-    _set_blosc_values[5] = level
-    h5p_set_filter(p.id, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, length(_set_blosc_values), _set_blosc_values)
-    nothing
+    set_blosc_values[5] = level
+    h5p_set_filter(p.id, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, length(set_blosc_values), set_blosc_values)
+
+    return nothing
 end
