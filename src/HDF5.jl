@@ -351,7 +351,7 @@ function show(io::IO, fid::HDF5File)
     if isvalid(fid)
         print(io, "HDF5 data file: ", fid.filename)
     else
-        print(io, "HFD5 data file (closed): ", fid.filename)
+        print(io, "HDF5 data file (closed): ", fid.filename)
     end
 end
 
@@ -371,7 +371,7 @@ function show(io::IO, g::HDF5Group)
     if isvalid(g)
         print(io, "HDF5 group: ", name(g), " (file: ", g.file.filename, ")")
     else
-        print(io, "HFD5 group (invalid)")
+        print(io, "HDF5 group (invalid)")
     end
 end
 
@@ -403,7 +403,7 @@ function show(io::IO, dset::HDF5Dataset)
     if isvalid(dset)
         print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, " xfer_mode: ", dset.xfer.id, ")")
     else
-        print(io, "HFD5 dataset (invalid)")
+        print(io, "HDF5 dataset (invalid)")
     end
 end
 
