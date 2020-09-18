@@ -531,6 +531,12 @@ function h5p_get_userblock(plist_id, len)
     return nothing
 end
 
+function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
+    var"#status#" = ccall((:H5Pmodify_filter, libhdf5), Herr, (Hid, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
+    var"#status#" < 0 && error("Error modifying filter")
+    return nothing
+end
+
 function h5p_set_alignment(plist_id, threshold, alignment)
     var"#status#" = ccall((:H5Pset_alignment, libhdf5), Herr, (Hid, Hsize, Hsize), plist_id, threshold, alignment)
     var"#status#" < 0 && error("Error setting alignment")
@@ -648,12 +654,6 @@ end
 function h5p_set_virtual(dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
     var"#status#" = ccall((:H5Pset_virtual, libhdf5), Herr, (Hid, Hid, Ptr{UInt8}, Ptr{UInt8}, Hid), dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
     var"#status#" < 0 && error("Error setting virtual")
-    return nothing
-end
-
-function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmnts, cd_values)
-    var"#status#" = ccall((:H5Pmodify_filter, libhdf5), Herr, (Hid, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmnts, cd_values)
-    var"#status#" < 0 && error("Error modifying filter")
     return nothing
 end
 
