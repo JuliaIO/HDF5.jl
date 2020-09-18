@@ -399,14 +399,15 @@ if !isempty(HDF5.libhdf5_hl)
 end
 
 # Test that switching time tracking off results in identical files
-h5open("tt1.h5", "w") do f
+fn1 = tempname(); fn2 = tempname()
+h5open(fn1, "w") do f
     f["x", track_times=false] = [1, 2, 3]
 end
-h5open("tt2.h5", "w") do f
+h5open(fn2, "w") do f
     f["x", track_times=false] = [1, 2, 3]
 end
-
-@test open(crc32c, "tt1.h5") == open(crc32c, "tt2.h5")
+@test open(crc32c, fn1) == open(crc32c, fn2)
+rm(fn1); rm(fn2)
 
 end # testset plain
 

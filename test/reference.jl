@@ -3,7 +3,8 @@ using Random, Test, HDF5
 @testset "reference" begin
   data = rand(100)
 
-  fn = "output.h5"
+  fn = tempname()
+
   f = h5open(fn, "w")
   f["data"] = data
   f["data_ref"] = HDF5.HDF5ReferenceObj(f, "data")
@@ -14,4 +15,7 @@ using Random, Test, HDF5
   dset = f[ref]
   data_read = read(dset)
   @test data == data_read
+  close(f)
+
+  rm(fn)
 end

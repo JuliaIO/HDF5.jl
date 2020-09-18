@@ -5,7 +5,20 @@ using LinearAlgebra: norm
 @testset "readremote" begin
 
 # check that we can read the official HDF5 example files
-urlbase = "https://support.hdfgroup.org/ftp/HDF5/examples/files/exbyapi/"
+
+# download and save test file via:
+# urlbase = "https://support.hdfgroup.org/ftp/HDF5/examples/files/exbyapi/"
+test_files = joinpath(@__DIR__, "test_files")
+# if !isdir(test_files)
+#     mkdir(test_files)
+# end
+# function joinpath(test_files, name)
+#     file = joinpath(test_files, name)
+#     if !isfile(file)
+#         file = download(urlbase*name, file)
+#     end
+#     file
+# end
 
 fcmp = [0 1 2 3 4 5 6;
     2 1.66667 2.4 3.28571 4.22222 5.18182 6.15385;
@@ -50,60 +63,48 @@ AA = Array{Int,2}[
      12  11  10]]
 
 
-savedir = "test_files"
-if !isdir(savedir)
-    mkdir(savedir)
-end
-function getfile(name)
-    file = joinpath(savedir, name)
-    if !isfile(file)
-        file = download(urlbase*name, file)
-    end
-    file
-end
-
-file = getfile("h5ex_t_floatatt.h5")
+file = joinpath(test_files, "h5ex_t_floatatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
 a = a_read(dset, "A1")
 @test norm(a - fcmp) < 1.5e-5
 close(fid)
 
-file = getfile("h5ex_t_float.h5")
+file = joinpath(test_files, "h5ex_t_float.h5")
 fid = h5open(file, "r")
 d = read(fid, "DS1")
 @test norm(d - fcmp) < 1.5e-5
 close(fid)
 
-file = getfile("h5ex_t_intatt.h5")
+file = joinpath(test_files, "h5ex_t_intatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
 a = a_read(dset, "A1")
 @test a == icmp
 close(fid)
 
-file = getfile("h5ex_t_int.h5")
+file = joinpath(test_files, "h5ex_t_int.h5")
 fid = h5open(file, "r")
 d = read(fid, "DS1")
 @test d == icmp
 close(fid)
 
 if HDF5.h5_get_libversion() >= v"1.8.11"
-  file = getfile("h5ex_t_enumatt.h5")
+  file = joinpath(test_files, "h5ex_t_enumatt.h5")
   fid = h5open(file, "r")
   dset = fid["DS1"]
   a = a_read(dset, "A1")
   @test a == ecmp
   close(fid)
 
-  file = getfile("h5ex_t_enum.h5")
+  file = joinpath(test_files, "h5ex_t_enum.h5")
   fid = h5open(file, "r")
   d = read(fid, "DS1")
   @test d == ecmp
   close(fid)
 end
 
-file = getfile("h5ex_t_objrefatt.h5")
+file = joinpath(test_files, "h5ex_t_objrefatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
 a = a_read(dset, "A1")
@@ -115,7 +116,7 @@ ds2v = read(ds2)
 @test isempty(ds2v)
 close(fid)
 
-file = getfile("h5ex_t_objref.h5")
+file = joinpath(test_files, "h5ex_t_objref.h5")
 fid = h5open(file, "r")
 d = read(fid, "DS1")
 g = fid[d[1]]
@@ -126,46 +127,46 @@ ds2v = read(ds2)
 @test isempty(ds2v)
 close(fid)
 
-file = getfile("h5ex_t_stringatt.h5")
+file = joinpath(test_files, "h5ex_t_stringatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
 a = a_read(dset, "A1")
 @test a == scmp
 close(fid)
 
-file = getfile("h5ex_t_string.h5")
+file = joinpath(test_files, "h5ex_t_string.h5")
 fid = h5open(file, "r")
 d = read(fid, "DS1")
 @test d == scmp
 close(fid)
 
-file = getfile("h5ex_t_vlenatt.h5")
+file = joinpath(test_files, "h5ex_t_vlenatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
 a = a_read(dset, "A1")
 @test a == vicmp
 close(fid)
 
-file = getfile("h5ex_t_vlen.h5")
+file = joinpath(test_files, "h5ex_t_vlen.h5")
 fid = h5open(file, "r")
 d = read(fid, "DS1")
 @test d == vicmp
 close(fid)
 
-file = getfile("h5ex_t_vlstringatt.h5")
+file = joinpath(test_files, "h5ex_t_vlstringatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
 a = a_read(dset, "A1")
 @test a == scmp
 close(fid)
 
-file = getfile("h5ex_t_vlstring.h5")
+file = joinpath(test_files, "h5ex_t_vlstring.h5")
 fid = h5open(file, "r")
 d = read(fid, "DS1")
 @test d == scmp
 close(fid)
 
-file = getfile("h5ex_t_opaqueatt.h5")
+file = joinpath(test_files, "h5ex_t_opaqueatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
 a = a_read(dset, "A1")
@@ -173,14 +174,14 @@ a = a_read(dset, "A1")
 @test a.data == opq
 close(fid)
 
-file = getfile("h5ex_t_opaque.h5")
+file = joinpath(test_files, "h5ex_t_opaque.h5")
 fid = h5open(file, "r")
 d = read(fid, "DS1")
 @test d.tag == "Character array"
 @test d.data == opq
 close(fid)
 
-file = getfile("h5ex_t_array.h5")
+file = joinpath(test_files, "h5ex_t_array.h5")
 fid = h5open(file, "r")
 A = read(fid, "DS1")
 @test A == AA
