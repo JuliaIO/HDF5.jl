@@ -512,6 +512,12 @@ function h5p_get_fclose_degree(plist_id, fc_degree)
     return nothing
 end
 
+function h5p_get_filter_by_id(plist_id, filter_id, flags, cd_nelmts, cd_values, namelen, name, filter_config)
+    var"#status#" = ccall((:H5Pget_filter_by_id2, libhdf5), Herr, (Hid, H5Z_filter_t, Ref{Cuint}, Ref{Csize_t}, Ptr{Cuint}, Csize_t, Ptr{UInt8}, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values, namelen, name, filter_config)
+    var"#status#" < 0 && error("Error getting filter ID")
+    return nothing
+end
+
 function h5p_get_layout(plist_id)
     var"#status#" = ccall((:H5Pget_layout, libhdf5), Cint, (Hid,), plist_id)
     var"#status#" < 0 && error("Error getting layout")
@@ -521,6 +527,12 @@ end
 function h5p_get_userblock(plist_id, len)
     var"#status#" = ccall((:H5Pget_userblock, libhdf5), Herr, (Hid, Ptr{Hsize}), plist_id, len)
     var"#status#" < 0 && error("Error getting userblock")
+    return nothing
+end
+
+function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
+    var"#status#" = ccall((:H5Pmodify_filter, libhdf5), Herr, (Hid, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
+    var"#status#" < 0 && error("Error modifying filter")
     return nothing
 end
 
@@ -593,6 +605,12 @@ end
 function h5p_set_fclose_degree(plist_id, fc_degree)
     var"#status#" = ccall((:H5Pset_fclose_degree, libhdf5), Herr, (Hid, Cint), plist_id, fc_degree)
     var"#status#" < 0 && error("Error setting close degree")
+    return nothing
+end
+
+function h5p_set_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
+    var"#status#" = ccall((:H5Pset_filter, libhdf5), Herr, (Hid, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
+    var"#status#" < 0 && error("Error setting filter")
     return nothing
 end
 
@@ -898,6 +916,12 @@ end
 function h5tb_get_field_info(loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
     var"#status#" = ccall((:H5TBget_field_info, libhdf5_hl), Herr, (Hid, Ptr{UInt8}, Ptr{Ptr{UInt8}}, Ptr{UInt8}, Ptr{UInt8}, Ptr{UInt8}), loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
     var"#status#" < 0 && error("Error getting field information")
+    return nothing
+end
+
+function h5z_register(filter_class)
+    var"#status#" = ccall((:H5Zregister, libhdf5), Herr, (Ref{H5Z_class_t},), filter_class)
+    var"#status#" < 0 && error("Unable to register new filter")
     return nothing
 end
 

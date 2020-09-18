@@ -148,8 +148,10 @@
 @bind h5p_get_fapl_mpio32(fapl_id::Hid, comm::Ptr{Hmpih32}, info::Ptr{Hmpih32})::Herr "Error getting MPIO properties"
 @bind h5p_get_fapl_mpio64(fapl_id::Hid, comm::Ptr{Hmpih64}, info::Ptr{Hmpih64})::Herr "Error getting MPIO properties"
 @bind h5p_get_fclose_degree(plist_id::Hid, fc_degree::Ptr{Cint})::Herr "Error getting close degree"
+@bind h5p_get_filter_by_id(plist_id::Hid, filter_id::H5Z_filter_t, flags::Ref{Cuint}, cd_nelmts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{UInt8}, filter_config::Ptr{Cuint})::Herr "Error getting filter ID"
 @bind h5p_get_layout(plist_id::Hid)::Cint error("Error getting layout")
 @bind h5p_get_userblock(plist_id::Hid, len::Ptr{Hsize})::Herr "Error getting userblock"
+@bind h5p_modify_filter(plist_id::Hid, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})::Herr "Error modifying filter"
 @bind h5p_set_alignment(plist_id::Hid, threshold::Hsize, alignment::Hsize)::Herr "Error setting alignment"
 @bind h5p_set_alloc_time(plist_id::Hid, alloc_time::Cint)::Herr "Error setting allocation timing"
 @bind h5p_set_char_encoding(plist_id::Hid, encoding::Cint)::Herr "Error setting char encoding"
@@ -162,6 +164,7 @@
 @bind h5p_set_fapl_mpio32(fapl_id::Hid, comm::Hmpih32, info::Hmpih32)::Herr "Error setting MPIO properties"
 @bind h5p_set_fapl_mpio64(fapl_id::Hid, comm::Hmpih64, info::Hmpih64)::Herr "Error setting MPIO properties"
 @bind h5p_set_fclose_degree(plist_id::Hid, fc_degree::Cint)::Herr "Error setting close degree"
+@bind h5p_set_filter(plist_id::Hid, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})::Herr "Error setting filter"
 @bind h5p_set_layout(plist_id::Hid, setting::Cint)::Herr "Error setting layout"
 @bind h5p_set_libver_bounds(fapl_id::Hid, libver_low::Cint, libver_high::Cint)::Herr "Error setting library version bounds"
 @bind h5p_set_local_heap_size_hint(fapl_id::Hid, size_hint::Cuint)::Herr "Error setting local heap size hint"
@@ -238,3 +241,9 @@
 ###
 
 @bind h5tb_get_field_info(loc_id::Hid, table_name::Ptr{UInt8}, field_names::Ptr{Ptr{UInt8}}, field_sizes::Ptr{UInt8}, field_offsets::Ptr{UInt8}, type_size::Ptr{UInt8})::Herr "Error getting field information"
+
+###
+### Filter Interface
+###
+
+@bind h5z_register(filter_class::Ref{H5Z_class_t})::Herr "Unable to register new filter"
