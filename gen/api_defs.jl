@@ -143,7 +143,7 @@
 @bind h5p_get_alloc_time(plist_id::Hid, alloc_time::Ptr{Cint})::Herr "Error getting allocation timing"
 @bind h5p_get_chunk(plist_id::Hid, n_dims::Cint, dims::Ptr{Hsize})::Cint error("Error getting chunk size")
 @bind h5p_get_driver(plist_id::Hid)::Hid "Error getting driver identifier"
-@bind h5p_get_driver_info(plist_id::Hid)::Ptr{Cvoid} "Error getting driver info"
+@bind h5p_get_driver_info(plist_id::Hid)::Ptr{Cvoid} # does not error
 @bind h5p_get_dxpl_mpio(dxpl_id::Hid, xfer_mode::Ptr{Cint})::Herr "Error getting MPIO transfer mode"
 @bind h5p_get_fapl_mpio32(fapl_id::Hid, comm::Ptr{Hmpih32}, info::Ptr{Hmpih32})::Herr "Error getting MPIO properties"
 @bind h5p_get_fapl_mpio64(fapl_id::Hid, comm::Ptr{Hmpih64}, info::Ptr{Hmpih64})::Herr "Error getting MPIO properties"
@@ -209,7 +209,7 @@
 @bind h5t_get_cset(dtype_id::Hid)::Cint "Error getting character set encoding"
 @bind h5t_get_member_class(dtype_id::Hid, index::Cuint)::Cint error("Error getting class of compound datatype member #", index)
 @bind h5t_get_member_index(dtype_id::Hid, membername::Ptr{UInt8})::Cint error("Error getting index of compound datatype member \"", membername, "\"")
-@bind h5t_get_member_offset(dtype_id::Hid, index::Cuint)::Csize_t error("Error getting offset of compound datatype member #", index)
+@bind h5t_get_member_offset(dtype_id::Hid, index::Cuint)::Csize_t # does not error
 @bind h5t_get_member_type(dtype_id::Hid, index::Cuint)::Hid error("Error getting type of compound datatype member #", index)
 @bind h5t_get_native_type(dtype_id::Hid, direction::Cint)::Hid "Error getting native type"
 @bind h5t_get_nmembers(dtype_id::Hid)::Cint "Error getting the number of members"
