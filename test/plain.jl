@@ -559,10 +559,8 @@ dspace = dataspace((1,))
 close(dspace)
 @test sprint(show, dspace) == "HDF5Dataspace(-1)"
 
-# TODO: Test HDF5Datatypes once printing of built-in datatypes (i.e. H5T_NATIVE_INT8 and
-# the like) is sorted out. See #671. Commented out because libhdf5 prints.
-#close(dtype)
-#@test_broken sprint(show, dtype) == "HDF5 datatype: (invalid)"
+close(dtype)
+@test sprint(show, dtype) == "HDF5 datatype: (invalid)"
 
 close(prop)
 @test occursin(r"^HDF5Properties\(-1, \d+\)", sprint(show, prop))

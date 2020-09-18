@@ -2057,11 +2057,24 @@ function h5l_get_info(link_loc_id::Hid, link_name::String, lapl_id::Hid)
 end
 
 function h5lt_dtype_to_text(dtype_id)
-    len = Ref{Csize_t}()
-    h5lt_dtype_to_text(dtype_id, C_NULL, 0, len)
-    buf = Base.StringVector(len[] - 1)
-    h5lt_dtype_to_text(dtype_id, buf, 0, len)
-    return String(buf)
+    # Note we can't use h5i_is_valid to check if dtype is valid because
+    # ref counts aren't incremented for basic atomic types (e.g. H5T_NATIVE_INT).
+    # Instead just temporarily turn off error printing and try call to probe if dtype is valid.
+    old_func = Ref{Ptr{Cvoid}}()
+    old_client_data = Ref{Ptr{Cvoid}}()
+    h5e_get_auto(H5E_DEFAULT, old_func, old_client_data)
+    h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
+    try
+        len = Ref{Csize_t}()
+        h5lt_dtype_to_text(dtype_id, C_NULL, 0, len)
+        buf = Base.StringVector(len[] - 1)
+        h5lt_dtype_to_text(dtype_id, buf, 0, len)
+        return String(buf)
+    catch
+        return "(invalid)"
+    finally
+        h5e_set_auto(H5E_DEFAULT, old_func[], old_client_data[])
+    end
 end
 
 function h5s_get_simple_extent_dims(space_id::Hid)
