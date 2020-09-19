@@ -15,9 +15,21 @@ function h5_dont_atexit()
     return nothing
 end
 
+function h5_free_memory(buf)
+    var"#status#" = ccall((:H5free_memory, libhdf5), Herr, (Ptr{Cvoid},), buf)
+    var"#status#" < 0 && error("Error freeing memory")
+    return nothing
+end
+
 function h5_garbage_collect()
     var"#status#" = ccall((:H5garbage_collect, libhdf5), Herr, ())
     var"#status#" < 0 && error("Error on garbage collect")
+    return nothing
+end
+
+function h5_get_libversion(majnum, minnum, relnum)
+    var"#status#" = ccall((:H5get_libversion, libhdf5), Herr, (Ref{Cuint}, Ref{Cuint}, Ref{Cuint}), majnum, minnum, relnum)
+    var"#status#" < 0 && error("Error getting HDF5 library version")
     return nothing
 end
 
@@ -219,6 +231,12 @@ function h5d_write(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_pl
     return nothing
 end
 
+function h5e_get_auto(estack_id, func, client_data)
+    var"#status#" = ccall((:H5Eget_auto2, libhdf5), Herr, (Hid, Ref{Ptr{Cvoid}}, Ref{Ptr{Cvoid}}), estack_id, func, client_data)
+    var"#status#" < 0 && error("Error getting error reporting behavior")
+    return nothing
+end
+
 function h5e_set_auto(estack_id, func, client_data)
     var"#status#" = ccall((:H5Eset_auto2, libhdf5), Herr, (Hid, Ptr{Cvoid}, Ptr{Cvoid}), estack_id, func, client_data)
     var"#status#" < 0 && error("Error setting error reporting behavior")
@@ -264,6 +282,18 @@ end
 function h5f_get_name(obj_id, buf, buf_size)
     var"#status#" = ccall((:H5Fget_name, libhdf5), Cssize_t, (Hid, Ptr{UInt8}, Csize_t), obj_id, buf, buf_size)
     var"#status#" < 0 && error("Error getting file name")
+    return var"#status#"
+end
+
+function h5f_get_obj_count(file_id, types)
+    var"#status#" = ccall((:H5Fget_obj_count, libhdf5), Cssize_t, (Hid, Cuint), file_id, types)
+    var"#status#" < 0 && error("Error getting object count")
+    return var"#status#"
+end
+
+function h5f_get_obj_ids(file_id, types, max_objs, obj_id_list)
+    var"#status#" = ccall((:H5Fget_obj_ids, libhdf5), Cssize_t, (Hid, Cuint, Csize_t, Ptr{Hid}), file_id, types, max_objs, obj_id_list)
+    var"#status#" < 0 && error("Error getting objects")
     return var"#status#"
 end
 
@@ -662,6 +692,12 @@ function h5r_create(ref, loc_id, pathname, ref_type, space_id)
     return nothing
 end
 
+function h5r_dereference(obj_id, ref_type, ref)
+    var"#status#" = ccall((:H5Rdereference1, libhdf5), Hid, (Hid, Cint, Ref{HDF5ReferenceObj}), obj_id, ref_type, ref)
+    var"#status#" < 0 && error("Error dereferencing object")
+    return var"#status#"
+end
+
 function h5r_get_obj_type(loc_id, ref_type, ref, obj_type)
     var"#status#" = ccall((:H5Rget_obj_type2, libhdf5), Herr, (Hid, Cint, Ptr{Cvoid}, Ptr{Cint}), loc_id, ref_type, ref, obj_type)
     var"#status#" < 0 && error("Error getting object type")
@@ -910,6 +946,12 @@ end
 function h5do_write_chunk(dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
     var"#status#" = ccall((:H5DOwrite_chunk, libhdf5_hl), Herr, (Hid, Hid, Int32, Ptr{Hsize}, Csize_t, Ptr{Cvoid}), dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
     var"#status#" < 0 && error("Error writing chunk")
+    return nothing
+end
+
+function h5lt_dtype_to_text(datatype, str, lang_type, len)
+    var"#status#" = ccall((:H5LTdtype_to_text, libhdf5_hl), Herr, (Hid, Ptr{UInt8}, Cint, Ref{Csize_t}), datatype, str, lang_type, len)
+    var"#status#" < 0 && error("Error getting datatype text representation")
     return nothing
 end
 

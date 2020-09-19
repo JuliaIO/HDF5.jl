@@ -41,6 +41,7 @@ include("datafile.jl")
 
 function h5_get_libversion()
     majnum, minnum, relnum = Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}()
+    # Note: direct ccall because api.jl hasn't been sourced yet.
     status = ccall((:H5get_libversion, libhdf5), Cint, (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}), majnum, minnum, relnum)
     status < 0 && error("Error getting HDF5 library version")
     VersionNumber(majnum[], minnum[], relnum[])
@@ -1965,14 +1966,6 @@ h5l_exists(loc_id::Hid, name::String) = h5l_exists(loc_id, name, H5P_DEFAULT)
 h5o_open(obj_id::Hid, name::String) = h5o_open(obj_id, name, H5P_DEFAULT)
 #h5s_get_simple_extent_ndims(space_id::Hid) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 h5t_get_native_type(type_id::Hid) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
-function h5r_dereference(obj_id::Hid, ref_type::Integer, pointee::HDF5ReferenceObj)
-    ret = ccall((:H5Rdereference1, libhdf5), Hid, (Hid, Cint, Ref{HDF5ReferenceObj}),
-                obj_id, ref_type, pointee)
-    if ret < 0
-        error("Error dereferencing object")
-    end
-    ret
-end
 
 # Core API ccall wrappers
 include("api.jl")
@@ -2005,15 +1998,10 @@ end
 
 function h5lt_dtype_to_text(dtype_id)
     len = Ref{Csize_t}()
-    status = ccall((:H5LTdtype_to_text, libhdf5_hl), Herr, (Hid, Ptr{UInt8}, Int, Ref{Csize_t}), dtype_id, C_NULL, 0, len)
-    status < 0 && error("Error getting dtype text representation")
-
-    buf = Base.StringVector(len[]-1)
-    status = ccall((:H5LTdtype_to_text, libhdf5_hl), Herr, (Hid, Ptr{UInt8}, Int, Ref{Csize_t}), dtype_id, buf, 0, len)
-    status < 0 && error("Error getting dtype text representation")
-
-    dtype_text = String(buf)
-    return dtype_text
+    h5lt_dtype_to_text(dtype_id, C_NULL, 0, len)
+    buf = Base.StringVector(len[] - 1)
+    h5lt_dtype_to_text(dtype_id, buf, 0, len)
+    return String(buf)
 end
 
 function h5s_get_simple_extent_dims(space_id::Hid)
@@ -2023,36 +2011,31 @@ function h5s_get_simple_extent_dims(space_id::Hid)
     h5s_get_simple_extent_dims(space_id, dims, maxdims)
     return tuple(reverse!(dims)...), tuple(reverse!(maxdims)...)
 end
+# Note: The following two functions implement direct ccalls because the binding generator
+# cannot (yet) do the string wrapping and memory freeing.
 function h5t_get_member_name(type_id::Hid, index::Integer)
     pn = ccall((:H5Tget_member_name, libhdf5), Ptr{UInt8}, (Hid, Cuint), type_id, index)
     if pn == C_NULL
         error("Error getting name of compound datatype member #", index)
     end
     s = unsafe_string(pn)
-    Libc.free(pn)
-    s
+    h5_free_memory(pn)
+    return s
 end
 function h5t_get_tag(type_id::Hid)
-    pc = ccall((:H5Tget_tag, libhdf5),
-                   Ptr{UInt8},
-                   (Hid,),
-                   type_id)
+    pc = ccall((:H5Tget_tag, libhdf5), Ptr{UInt8}, (Hid,), type_id)
     if pc == C_NULL
         error("Error getting opaque tag")
     end
     s = unsafe_string(pc)
-    Libc.free(pc)
-    s
+    h5_free_memory(pc)
+    return s
 end
 
 function h5f_get_obj_ids(file_id::Hid, types::Integer)
-    sz = ccall((:H5Fget_obj_count, libhdf5), Int, (Hid, UInt32),
-               file_id, types)
-    sz >= 0 || error("error getting object count")
-    hids = Vector{Hid}(undef,sz)
-    sz2 = ccall((:H5Fget_obj_ids, libhdf5), Int, (Hid, UInt32, UInt, Ptr{Hid}),
-          file_id, types, sz, hids)
-    sz2 >= 0 || error("error getting objects")
+    sz = h5f_get_obj_count(file_id, types)
+    hids = Vector{Hid}(undef, sz)
+    sz2 = h5f_get_obj_ids(file_id, types, sz, hids)
     sz2 != sz && resize!(hids, sz2)
     hids
 end
@@ -2182,14 +2165,11 @@ function hiding_errors(f)
     # error_stack = ccall((:H5Eget_current_stack, libhdf5), Hid, ())
     old_func = Ref{Ptr{Cvoid}}()
     old_client_data = Ref{Ptr{Cvoid}}()
-    ccall((:H5Eget_auto2, libhdf5), Herr, (Hid, Ptr{Ptr{Cvoid}}, Ptr{Ptr{Cvoid}}),
-        error_stack, old_func, old_client_data)
-    ccall((:H5Eset_auto2, libhdf5), Herr, (Hid, Ptr{Cvoid}, Ptr{Cvoid}),
-        error_stack, C_NULL, C_NULL)
+    h5e_get_auto(error_stack, old_func, old_client_data)
+    h5e_set_auto(error_stack, C_NULL, C_NULL)
     res = f()
-    ccall((:H5Eset_auto2, libhdf5), Herr, (Hid, Ptr{Cvoid}, Ptr{Cvoid}),
-        error_stack, old_func[], old_client_data[])
-    res
+    h5e_set_auto(error_stack, old_func[], old_client_data[])
+    return res
 end
 
 # Define globally because JLD uses this, too

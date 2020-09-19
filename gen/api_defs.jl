@@ -20,7 +20,9 @@
 
 @bind h5_close()::Herr "Error closing the HDF5 resources"
 @bind h5_dont_atexit()::Herr "Error calling dont_atexit"
+@bind h5_free_memory(buf::Ptr{Cvoid})::Herr "Error freeing memory"
 @bind h5_garbage_collect()::Herr "Error on garbage collect"
+@bind h5_get_libversion(majnum::Ref{Cuint}, minnum::Ref{Cuint}, relnum::Ref{Cuint})::Herr "Error getting HDF5 library version"
 @bind h5_open()::Herr "Error initializing the HDF5 library"
 @bind h5_set_free_list_limits(reg_global_lim::Cint, reg_list_lim::Cint, arr_global_lim::Cint, arr_list_lim::Cint, blk_global_lim::Cint, blk_list_lim::Cint)::Herr "Error setting limits on free lists"
 
@@ -69,6 +71,7 @@
 ### Error Interface
 ###
 
+@bind h5e_get_auto(estack_id::Hid, func::Ref{Ptr{Cvoid}}, client_data::Ref{Ptr{Cvoid}})::Herr "Error getting error reporting behavior"
 @bind h5e_set_auto(estack_id::Hid, func::Ptr{Cvoid}, client_data::Ptr{Cvoid})::Herr "Error setting error reporting behavior"
 
 ###
@@ -82,6 +85,8 @@
 @bind h5f_get_create_plist(file_id::Hid)::Hid "Error getting file create property list"
 @bind h5f_get_intent(file_id::Hid, intent::Ptr{Cuint})::Herr "Error getting file intent"
 @bind h5f_get_name(obj_id::Hid, buf::Ptr{UInt8}, buf_size::Csize_t)::Cssize_t "Error getting file name"
+@bind h5f_get_obj_count(file_id::Hid, types::Cuint)::Cssize_t "Error getting object count"
+@bind h5f_get_obj_ids(file_id::Hid, types::Cuint, max_objs::Csize_t, obj_id_list::Ptr{Hid})::Cssize_t "Error getting objects"
 @bind h5f_get_vfd_handle(file_id::Hid, fapl_id::Hid, file_handle::Ptr{Ptr{Cint}})::Herr "Error getting VFD handle"
 @bind h5f_is_hdf5(pathname::Cstring)::Htri error("Cannot access file ", pathname)
 @bind h5f_open(pathname::Cstring, flags::Cuint, fapl_id::Hid)::Hid error("Error opening file ", pathname)
@@ -178,6 +183,7 @@
 ###
 
 @bind h5r_create(ref::Ptr{HDF5ReferenceObj}, loc_id::Hid, pathname::Ptr{UInt8}, ref_type::Cint, space_id::Hid)::Herr error("Error creating reference to object ", hi5_get_name(loc_id), "/", pathname)
+@bind h5r_dereference(obj_id::Hid, ref_type::Cint, ref::Ref{HDF5ReferenceObj})::Hid "Error dereferencing object"
 @bind h5r_get_obj_type(loc_id::Hid, ref_type::Cint, ref::Ptr{Cvoid}, obj_type::Ptr{Cint})::Herr "Error getting object type"
 @bind h5r_get_region(loc_id::Hid, ref_type::Cint, ref::Ptr{Cvoid})::Hid "Error getting region from reference"
 
@@ -228,6 +234,10 @@
 @bind h5t_set_size(dtype_id::Hid, sz::Csize_t)::Herr "Error setting size of datatype"
 @bind h5t_set_strpad(dtype_id::Hid, sz::Cint)::Herr "Error setting size of datatype"
 @bind h5t_vlen_create(base_type_id::Hid)::Hid "Error creating vlen type"
+# The following are not autoatically wrapped since they have requirements about freeing
+# the memory that is returned from the calls.
+#@bind h5t_get_member_name(dtype_id::Hid, index::Cuint)::Cstring error("Error getting name of compound datatype member #", index)
+#@bind h5t_get_tag(type_id::Hid)::Cstring "Error getting datatype opaque tag"
 
 ###
 ### Optimized Functions Interface
@@ -235,6 +245,12 @@
 
 @bind h5do_append(dset_id::Hid, dxpl_id::Hid, index::Cuint, num_elem::Hsize, memtype::Hid, buffer::Ptr{Cvoid})::Herr "error appending"
 @bind h5do_write_chunk(dset_id::Hid, dxpl_id::Hid, filter_mask::Int32, offset::Ptr{Hsize}, bufsize::Csize_t, buf::Ptr{Cvoid})::Herr "Error writing chunk"
+
+###
+### HDF5 Lite Interface
+###
+
+@bind h5lt_dtype_to_text(datatype::Hid, str::Ptr{UInt8}, lang_type::Cint, len::Ref{Csize_t})::Herr "Error getting datatype text representation"
 
 ###
 ### Table Interface

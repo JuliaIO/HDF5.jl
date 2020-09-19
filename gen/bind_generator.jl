@@ -8,11 +8,13 @@ const bind_exceptions = Dict{Symbol,Symbol}()
 push!(bind_exceptions, :h5a_create => :H5Acreate2)
 push!(bind_exceptions, :h5d_create => :H5Dcreate2)
 push!(bind_exceptions, :h5d_open => :H5Dopen2)
+push!(bind_exceptions, :h5e_get_auto => :H5Eget_auto2)
 push!(bind_exceptions, :h5e_set_auto => :H5Eset_auto2)
 push!(bind_exceptions, :h5g_create => :H5Gcreate2)
 push!(bind_exceptions, :h5g_open => :H5Gopen2)
 push!(bind_exceptions, :h5o_get_info => :H5Oget_info1)
 push!(bind_exceptions, :h5p_get_filter_by_id => :H5Pget_filter_by_id2)
+push!(bind_exceptions, :h5r_dereference => :H5Rdereference1)
 push!(bind_exceptions, :h5r_get_obj_type => :H5Rget_obj_type2)
 push!(bind_exceptions, :h5t_array_create => :H5Tarray_create2)
 push!(bind_exceptions, :h5t_commit => :H5Tcommit2)
@@ -105,7 +107,7 @@ macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing)
     end
 
     # Determine the underlying C library to call
-    lib = startswith(string(cfuncname), r"H5(DO|TB)") ? :libhdf5_hl : :libhdf5
+    lib = startswith(string(cfuncname), r"H5(DO|LT|TB)") ? :libhdf5_hl : :libhdf5
 
     # Now start building up the full expression:
     statsym = Symbol("#status#") # not using gensym() to have stable naming
