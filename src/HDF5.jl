@@ -980,9 +980,14 @@ a_create(parent::Union{HDF5File, HDF5Object}, name::String, dtype::HDF5Datatype,
 function p_create(class; pv...)
   p = HDF5Properties(h5p_create(class), class)
   for (k,v) in pairs(pv)
-    if hdf5_prop_get_set[k][3] == class
-      p[k] = v
+    funcget, funcset, classprop = hdf5_prop_get_set[k]
+    if classprop == H5P_OBJECT_CREATE && (class == H5P_DATASET_CREATE ||
+                                          class == H5P_GROUP_CREATE ||
+                                          class == H5P_FILE_CREATE)
+        classprop = class
     end
+    class != classprop && continue
+    funcset(p, v...)
   end
   return p
 end
@@ -1003,7 +1008,7 @@ setindex!(dset::HDF5Dataset, val, name::String) = a_write(dset, name, val)
 setindex!(x::HDF5Attributes, val, name::String) = a_write(x.parent, name, val)
 # Getting and setting properties: p[:chunk] = dims, p[:compress] = 6
 function setindex!(p::HDF5Properties, val, name::Symbol)
-    funcget, funcset = hdf5_prop_get_set[name]
+    funcget, funcset, _ = hdf5_prop_get_set[name]
     funcset(p, val...)
     return p
 end

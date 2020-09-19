@@ -403,6 +403,7 @@ fn1 = tempname(); fn2 = tempname()
 h5open(fn1, "w") do f
     f["x", track_times=false] = [1, 2, 3]
 end
+sleep(1)
 h5open(fn2, "w") do f
     f["x", track_times=false] = [1, 2, 3]
 end
