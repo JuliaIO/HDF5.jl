@@ -39,16 +39,6 @@ end
 
 include("datafile.jl")
 
-function h5_get_libversion()
-    majnum, minnum, relnum = Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}()
-    # Note: direct ccall because api.jl hasn't been sourced yet.
-    status = ccall((:H5get_libversion, libhdf5), Cint, (Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}), majnum, minnum, relnum)
-    status < 0 && error("Error getting HDF5 library version")
-    VersionNumber(majnum[], minnum[], relnum[])
-end
-
-const libversion = h5_get_libversion()
-
 ## C types
 const C_time_t = Int
 
@@ -65,10 +55,13 @@ abstract  type Hmpih end
 primitive type Hmpih32 <: Hmpih 32 end # MPICH C/Fortran, OpenMPI Fortran: 32 bit handles
 primitive type Hmpih64 <: Hmpih 64 end # OpenMPI C: pointers (mostly 64 bit)
 
-# Function to extract exported library constants
-# Kudos to the library developers for making these available this way!
-const libhdf5handle = Libdl.dlopen(libhdf5)
-read_const(sym::Symbol) = unsafe_load(convert(Ptr{Hid}, Libdl.dlsym(libhdf5handle, sym)))
+# Private function to extract exported global library constants.
+# Need to call H5open to ensure library is initalized before reading these constants.
+# Altough these are runtime initalized constants, in practice their values are constant so we can precompile for improved latency.
+let libhdf5handle = Ref(Libdl.dlopen(libhdf5))
+    ccall(Libdl.dlsym(libhdf5handle[], :H5open), Herr, ())
+    global _read_const(sym::Symbol) = unsafe_load(cglobal(Libdl.dlsym(libhdf5handle[], sym), Hid))
+end
 
 # iteration order constants
 const H5_ITER_UNKNOWN = -1
@@ -147,22 +140,22 @@ const H5O_TYPE_DATASET = 1
 const H5O_TYPE_NAMED_DATATYPE = 2
 # Property constants
 const H5P_DEFAULT          = Hid(0)
-const H5P_OBJECT_CREATE    = read_const(:H5P_CLS_OBJECT_CREATE_ID_g)
-const H5P_FILE_CREATE      = read_const(:H5P_CLS_FILE_CREATE_ID_g)
-const H5P_FILE_ACCESS      = read_const(:H5P_CLS_FILE_ACCESS_ID_g)
-const H5P_DATASET_CREATE   = read_const(:H5P_CLS_DATASET_CREATE_ID_g)
-const H5P_DATASET_ACCESS   = read_const(:H5P_CLS_DATASET_ACCESS_ID_g)
-const H5P_DATASET_XFER     = read_const(:H5P_CLS_DATASET_XFER_ID_g)
-const H5P_FILE_MOUNT       = read_const(:H5P_CLS_FILE_MOUNT_ID_g)
-const H5P_GROUP_CREATE     = read_const(:H5P_CLS_GROUP_CREATE_ID_g)
-const H5P_GROUP_ACCESS     = read_const(:H5P_CLS_GROUP_ACCESS_ID_g)
-const H5P_DATATYPE_CREATE  = read_const(:H5P_CLS_DATATYPE_CREATE_ID_g)
-const H5P_DATATYPE_ACCESS  = read_const(:H5P_CLS_DATATYPE_ACCESS_ID_g)
-const H5P_STRING_CREATE    = read_const(:H5P_CLS_STRING_CREATE_ID_g)
-const H5P_ATTRIBUTE_CREATE = read_const(:H5P_CLS_ATTRIBUTE_CREATE_ID_g)
-const H5P_OBJECT_COPY      = read_const(:H5P_CLS_OBJECT_COPY_ID_g)
-const H5P_LINK_CREATE      = read_const(:H5P_CLS_LINK_CREATE_ID_g)
-const H5P_LINK_ACCESS      = read_const(:H5P_CLS_LINK_ACCESS_ID_g)
+const H5P_OBJECT_CREATE    = _read_const(:H5P_CLS_OBJECT_CREATE_ID_g)
+const H5P_FILE_CREATE      = _read_const(:H5P_CLS_FILE_CREATE_ID_g)
+const H5P_FILE_ACCESS      = _read_const(:H5P_CLS_FILE_ACCESS_ID_g)
+const H5P_DATASET_CREATE   = _read_const(:H5P_CLS_DATASET_CREATE_ID_g)
+const H5P_DATASET_ACCESS   = _read_const(:H5P_CLS_DATASET_ACCESS_ID_g)
+const H5P_DATASET_XFER     = _read_const(:H5P_CLS_DATASET_XFER_ID_g)
+const H5P_FILE_MOUNT       = _read_const(:H5P_CLS_FILE_MOUNT_ID_g)
+const H5P_GROUP_CREATE     = _read_const(:H5P_CLS_GROUP_CREATE_ID_g)
+const H5P_GROUP_ACCESS     = _read_const(:H5P_CLS_GROUP_ACCESS_ID_g)
+const H5P_DATATYPE_CREATE  = _read_const(:H5P_CLS_DATATYPE_CREATE_ID_g)
+const H5P_DATATYPE_ACCESS  = _read_const(:H5P_CLS_DATATYPE_ACCESS_ID_g)
+const H5P_STRING_CREATE    = _read_const(:H5P_CLS_STRING_CREATE_ID_g)
+const H5P_ATTRIBUTE_CREATE = _read_const(:H5P_CLS_ATTRIBUTE_CREATE_ID_g)
+const H5P_OBJECT_COPY      = _read_const(:H5P_CLS_OBJECT_COPY_ID_g)
+const H5P_LINK_CREATE      = _read_const(:H5P_CLS_LINK_CREATE_ID_g)
+const H5P_LINK_ACCESS      = _read_const(:H5P_CLS_LINK_ACCESS_ID_g)
 # Reference constants
 const H5R_OBJECT         = 0
 const H5R_DATASET_REGION = 1
@@ -211,41 +204,41 @@ const H5T_STR_SPACEPAD = 2
 # Other type constants
 const H5T_VARIABLE     = reinterpret(UInt, -1)
 # Type_id constants (LE = little endian, I16 = Int16, etc)
-const H5T_STD_I8LE        = read_const(:H5T_STD_I8LE_g)
-const H5T_STD_I8BE        = read_const(:H5T_STD_I8BE_g)
-const H5T_STD_U8LE        = read_const(:H5T_STD_U8LE_g)
-const H5T_STD_U8BE        = read_const(:H5T_STD_U8BE_g)
-const H5T_STD_I16LE       = read_const(:H5T_STD_I16LE_g)
-const H5T_STD_I16BE       = read_const(:H5T_STD_I16BE_g)
-const H5T_STD_U16LE       = read_const(:H5T_STD_U16LE_g)
-const H5T_STD_U16BE       = read_const(:H5T_STD_U16BE_g)
-const H5T_STD_I32LE       = read_const(:H5T_STD_I32LE_g)
-const H5T_STD_I32BE       = read_const(:H5T_STD_I32BE_g)
-const H5T_STD_U32LE       = read_const(:H5T_STD_U32LE_g)
-const H5T_STD_U32BE       = read_const(:H5T_STD_U32BE_g)
-const H5T_STD_I64LE       = read_const(:H5T_STD_I64LE_g)
-const H5T_STD_I64BE       = read_const(:H5T_STD_I64BE_g)
-const H5T_STD_U64LE       = read_const(:H5T_STD_U64LE_g)
-const H5T_STD_U64BE       = read_const(:H5T_STD_U64BE_g)
-const H5T_IEEE_F32LE      = read_const(:H5T_IEEE_F32LE_g)
-const H5T_IEEE_F32BE      = read_const(:H5T_IEEE_F32BE_g)
-const H5T_IEEE_F64LE      = read_const(:H5T_IEEE_F64LE_g)
-const H5T_IEEE_F64BE      = read_const(:H5T_IEEE_F64BE_g)
-const H5T_C_S1            = read_const(:H5T_C_S1_g)
-const H5T_STD_REF_OBJ     = read_const(:H5T_STD_REF_OBJ_g)
-const H5T_STD_REF_DSETREG = read_const(:H5T_STD_REF_DSETREG_g)
+const H5T_STD_I8LE        = _read_const(:H5T_STD_I8LE_g)
+const H5T_STD_I8BE        = _read_const(:H5T_STD_I8BE_g)
+const H5T_STD_U8LE        = _read_const(:H5T_STD_U8LE_g)
+const H5T_STD_U8BE        = _read_const(:H5T_STD_U8BE_g)
+const H5T_STD_I16LE       = _read_const(:H5T_STD_I16LE_g)
+const H5T_STD_I16BE       = _read_const(:H5T_STD_I16BE_g)
+const H5T_STD_U16LE       = _read_const(:H5T_STD_U16LE_g)
+const H5T_STD_U16BE       = _read_const(:H5T_STD_U16BE_g)
+const H5T_STD_I32LE       = _read_const(:H5T_STD_I32LE_g)
+const H5T_STD_I32BE       = _read_const(:H5T_STD_I32BE_g)
+const H5T_STD_U32LE       = _read_const(:H5T_STD_U32LE_g)
+const H5T_STD_U32BE       = _read_const(:H5T_STD_U32BE_g)
+const H5T_STD_I64LE       = _read_const(:H5T_STD_I64LE_g)
+const H5T_STD_I64BE       = _read_const(:H5T_STD_I64BE_g)
+const H5T_STD_U64LE       = _read_const(:H5T_STD_U64LE_g)
+const H5T_STD_U64BE       = _read_const(:H5T_STD_U64BE_g)
+const H5T_IEEE_F32LE      = _read_const(:H5T_IEEE_F32LE_g)
+const H5T_IEEE_F32BE      = _read_const(:H5T_IEEE_F32BE_g)
+const H5T_IEEE_F64LE      = _read_const(:H5T_IEEE_F64LE_g)
+const H5T_IEEE_F64BE      = _read_const(:H5T_IEEE_F64BE_g)
+const H5T_C_S1            = _read_const(:H5T_C_S1_g)
+const H5T_STD_REF_OBJ     = _read_const(:H5T_STD_REF_OBJ_g)
+const H5T_STD_REF_DSETREG = _read_const(:H5T_STD_REF_DSETREG_g)
 # Native types
-const H5T_NATIVE_B8       = read_const(:H5T_NATIVE_B8_g)
-const H5T_NATIVE_INT8     = read_const(:H5T_NATIVE_INT8_g)
-const H5T_NATIVE_UINT8    = read_const(:H5T_NATIVE_UINT8_g)
-const H5T_NATIVE_INT16    = read_const(:H5T_NATIVE_INT16_g)
-const H5T_NATIVE_UINT16   = read_const(:H5T_NATIVE_UINT16_g)
-const H5T_NATIVE_INT32    = read_const(:H5T_NATIVE_INT32_g)
-const H5T_NATIVE_UINT32   = read_const(:H5T_NATIVE_UINT32_g)
-const H5T_NATIVE_INT64    = read_const(:H5T_NATIVE_INT64_g)
-const H5T_NATIVE_UINT64   = read_const(:H5T_NATIVE_UINT64_g)
-const H5T_NATIVE_FLOAT    = read_const(:H5T_NATIVE_FLOAT_g)
-const H5T_NATIVE_DOUBLE   = read_const(:H5T_NATIVE_DOUBLE_g)
+const H5T_NATIVE_B8       = _read_const(:H5T_NATIVE_B8_g)
+const H5T_NATIVE_INT8     = _read_const(:H5T_NATIVE_INT8_g)
+const H5T_NATIVE_UINT8    = _read_const(:H5T_NATIVE_UINT8_g)
+const H5T_NATIVE_INT16    = _read_const(:H5T_NATIVE_INT16_g)
+const H5T_NATIVE_UINT16   = _read_const(:H5T_NATIVE_UINT16_g)
+const H5T_NATIVE_INT32    = _read_const(:H5T_NATIVE_INT32_g)
+const H5T_NATIVE_UINT32   = _read_const(:H5T_NATIVE_UINT32_g)
+const H5T_NATIVE_INT64    = _read_const(:H5T_NATIVE_INT64_g)
+const H5T_NATIVE_UINT64   = _read_const(:H5T_NATIVE_UINT64_g)
+const H5T_NATIVE_FLOAT    = _read_const(:H5T_NATIVE_FLOAT_g)
+const H5T_NATIVE_DOUBLE   = _read_const(:H5T_NATIVE_DOUBLE_g)
 # Library versions
 const H5F_LIBVER_EARLIEST = 0
 const H5F_LIBVER_V18      = 1
@@ -1972,10 +1965,18 @@ h5o_open(obj_id::Hid, name::String) = h5o_open(obj_id, name, H5P_DEFAULT)
 #h5s_get_simple_extent_ndims(space_id::Hid) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 h5t_get_native_type(type_id::Hid) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
 
+
 # Core API ccall wrappers
 include("api.jl")
 
 # Functions that require special handling
+
+function h5_get_libversion()
+    majnum, minnum, relnum = Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}()
+    status = h5_get_libversion(majnum, minnum, relnum)
+    VersionNumber(majnum[], minnum[], relnum[])
+end
+const libversion = h5_get_libversion()
 
 function h5a_get_name(attr_id::Hid)
     len = h5a_get_name(attr_id, 0, C_NULL) # order of args differs from {f,i}_get_name
