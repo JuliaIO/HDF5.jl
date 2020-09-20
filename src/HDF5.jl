@@ -55,12 +55,12 @@ abstract  type Hmpih end
 primitive type Hmpih32 <: Hmpih 32 end # MPICH C/Fortran, OpenMPI Fortran: 32 bit handles
 primitive type Hmpih64 <: Hmpih 64 end # OpenMPI C: pointers (mostly 64 bit)
 
-# Private function to extract exported library constants
-# Need to call h5open to ensure library is initalized before reading these constants
-# Altough these are runtime initalized constants, in practice their values are constant so we can precompile for improved latency
+# Private function to extract exported global library constants.
+# Need to call H5open to ensure library is initalized before reading these constants.
+# Altough these are runtime initalized constants, in practice their values are constant so we can precompile for improved latency.
 let libhdf5handle = Ref(Libdl.dlopen(libhdf5))
     ccall(Libdl.dlsym(libhdf5handle[], :H5open), Herr, ())
-    global read_const(sym::Symbol) = unsafe_load(cglobal(Libdl.dlsym(libhdf5handle[], sym), Hid))
+    global _read_const(sym::Symbol) = unsafe_load(cglobal(Libdl.dlsym(libhdf5handle[], sym), Hid))
 end
 
 # iteration order constants
