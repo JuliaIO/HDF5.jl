@@ -270,18 +270,27 @@ const HDF5Scalar = Union{HDF5BitsKind, HDF5ReferenceObj}
 const ScalarOrString = Union{HDF5Scalar, String}
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
-const hdf5_type_map = Dict(
-    (H5T_INTEGER, H5T_SGN_2, Csize_t(1)) => Int8,
-    (H5T_INTEGER, H5T_SGN_2, Csize_t(2)) => Int16,
-    (H5T_INTEGER, H5T_SGN_2, Csize_t(4)) => Int32,
-    (H5T_INTEGER, H5T_SGN_2, Csize_t(8)) => Int64,
-    (H5T_INTEGER, H5T_SGN_NONE, Csize_t(1)) => UInt8,
-    (H5T_INTEGER, H5T_SGN_NONE, Csize_t(2)) => UInt16,
-    (H5T_INTEGER, H5T_SGN_NONE, Csize_t(4)) => UInt32,
-    (H5T_INTEGER, H5T_SGN_NONE, Csize_t(8)) => UInt64,
-    (H5T_FLOAT, nothing, Csize_t(4)) => Float32,
-    (H5T_FLOAT, nothing, Csize_t(8)) => Float64,
-)
+function _hdf5_type_map(class_id, is_signed, native_size)
+    if class_id == H5T_INTEGER
+        if is_signed == H5T_SGN_2
+            return native_size === Csize_t(1) ? Int8 :
+                   native_size === Csize_t(2) ? Int16 :
+                   native_size === Csize_t(4) ? Int32 :
+                   native_size === Csize_t(8) ? Int64 :
+                   throw(KeyError(class_id, is_signed, native_size))
+        else
+            return native_size === Csize_t(1) ? UInt8 :
+                   native_size === Csize_t(2) ? UInt16 :
+                   native_size === Csize_t(4) ? UInt32 :
+                   native_size === Csize_t(8) ? UInt64 :
+                   throw(KeyError(class_id, is_signed, native_size))
+        end
+    else
+        return native_size === Csize_t(4) ? Float32 :
+               native_size === Csize_t(8) ? Float64 :
+               throw(KeyError(class_id, is_signed, native_size))
+    end
+end
 
 hdf5_type_id(::Type{S}) where {S<:AbstractString}  = H5T_C_S1
 
@@ -889,16 +898,19 @@ root(obj::Union{HDF5Group, HDF5Dataset}) = g_open(file(obj), "/")
 getindex(dset::HDF5Dataset, name::String) = a_open(dset, name)
 getindex(x::HDF5Attributes, name::String) = a_open(x.parent, name)
 
-const hdf5_obj_open = Dict(
-    H5I_DATASET   => (d_open, H5P_DATASET_ACCESS, H5P_DATASET_XFER),
-    H5I_DATATYPE  => (t_open, H5P_DATATYPE_ACCESS),
-    H5I_GROUP     => (g_open, H5P_GROUP_ACCESS),
-)
 function getindex(parent::Union{HDF5File, HDF5Group}, path::String; pv...)
     objtype = gettype(parent, path)
-    fun, propids = hdf5_obj_open[objtype]
-    props = [p_create(prop; pv...) for prop in propids]
-    obj = fun(parent, path, props...)
+    if objtype == H5I_DATASET
+        dapl = p_create(H5P_DATASET_ACCESS; pv...)
+        dxpl = p_create(H5P_DATASET_XFER; pv...)
+        return d_open(parent, path, dapl, dxpl)
+    elseif objtype == H5I_GROUP
+        gapl = p_create(H5P_GROUP_ACCESS; pv...)
+        return g_open(parent, path, gapl)
+    else#if objtype == H5I_DATATYPE # only remaining choice
+        tapl = p_create(H5P_DATATYPE_ACCESS; pv...)
+        return t_open(parent, path, tapl)
+    end
 end
 
 # Path manipulation
@@ -971,19 +983,62 @@ end
 t_commit(parent::Union{HDF5File, HDF5Group}, path::String, dtype::HDF5Datatype) = t_commit(parent, path, dtype, p_create(H5P_LINK_CREATE))
 
 a_create(parent::Union{HDF5File, HDF5Object}, name::String, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(checkvalid(parent).id, name, dtype.id, dspace.id), file(parent))
-function p_create(class; pv...)
-  p = HDF5Properties(h5p_create(class), class)
-  for (k,v) in pairs(pv)
-    funcget, funcset, classprop = hdf5_prop_get_set[k]
-    if classprop == H5P_OBJECT_CREATE && (class == H5P_DATASET_CREATE ||
-                                          class == H5P_GROUP_CREATE ||
-                                          class == H5P_FILE_CREATE)
-        classprop = class
+
+function _prop_set!(p::HDF5Properties, name::Symbol, val, check::Bool = true)
+    class = p.class
+
+    if class == H5P_FILE_CREATE
+        return name === :userblock   ? h5p_set_userblock(p, val...) :
+               name === :track_times ? h5p_set_obj_track_times(p, val...) : # H5P_OBJECT_CREATE
+               check ? error("unknown file create property ", name) : nothing
     end
-    class != classprop && continue
-    funcset(p, v...)
-  end
-  return p
+
+    if class == H5P_FILE_ACCESS
+        return name === :alignment     ? h5p_set_alignment(p, val...) :
+               name === :fclose_degree ? h5p_set_fclose_degree(p, val...) :
+               name === :libver_bounds ? h5p_set_libver_bounds(p, val...) :
+               check ? error("unknown file access property ", name) : nothing
+    end
+
+    if class == H5P_GROUP_CREATE
+        return name === :local_heap_size_hint ? h5p_set_local_heap_size_hint(p, val...) :
+               name === :track_times          ? h5p_set_obj_track_times(p, val...) : # H5P_OBJECT_CREATE
+               check ? error("unknown group create property ", name) : nothing
+    end
+
+    if class == H5P_LINK_CREATE
+        return name === :char_encoding ? h5p_set_char_encoding(p, val...) :
+               name === :create_intermediate_group ? h5p_set_create_intermediate_group(p, val...) :
+               check ? error("unknown link create property ", name) : nothing
+    end
+
+    if class == H5P_DATASET_CREATE
+        return name === :alloc_time  ? h5p_set_alloc_time(p, val...) :
+               name === :blosc       ? h5p_set_blosc(p, val...) :
+               name === :chunk       ? set_chunk(p, val...) :
+               name === :compress    ? h5p_set_deflate(p, val...) :
+               name === :deflate     ? h5p_set_deflate(p, val...) :
+               name === :external    ? h5p_set_external(p, val...) :
+               name === :layout      ? h5p_set_layout(p, val...) :
+               name === :shuffle     ? h5p_set_shuffle(p, val...) :
+               name === :track_times ? h5p_set_obj_track_times(p, val...) : # H5P_OBJECT_CREATE
+               check ? error("unknown dataset create property ", name) : nothing
+    end
+
+    if class == H5P_ATTRIBUTE_CREATE
+        return name === :char_encoding ? h5p_set_char_encoding(p, val...) :
+               check ? error("unknown attribute create property ", name) : nothing
+    end
+
+    return check ? error("unknown property class ", class) : nothing
+end
+
+function p_create(class; pv...)
+    p = HDF5Properties(h5p_create(class), class)
+    for (k, v) in pairs(pv)
+        _prop_set!(p, k, v, false)
+    end
+    return p
 end
 
 # Delete objects
@@ -1002,8 +1057,7 @@ setindex!(dset::HDF5Dataset, val, name::String) = a_write(dset, name, val)
 setindex!(x::HDF5Attributes, val, name::String) = a_write(x.parent, name, val)
 # Getting and setting properties: p[:chunk] = dims, p[:compress] = 6
 function setindex!(p::HDF5Properties, val, name::Symbol)
-    funcget, funcset, _ = hdf5_prop_get_set[name]
-    funcset(p, val...)
+    _prop_set!(p, name, val, true)
     return p
 end
 # Create a dataset with properties: obj[path, prop = val, ...] = val
@@ -1850,7 +1904,7 @@ function get_mem_compatible_jl_type(objtype::HDF5Datatype)
             else
                 is_signed = nothing
             end
-            return hdf5_type_map[(class_id, is_signed, native_size)]
+            return _hdf5_type_map(class_id, is_signed, native_size)
         finally
             h5t_close(native_type)
         end
@@ -1863,7 +1917,7 @@ function get_mem_compatible_jl_type(objtype::HDF5Datatype)
             try
                 native_size = h5t_get_size(native_type)
                 is_signed = h5t_get_sign(native_type)
-                return hdf5_type_map[(H5T_INTEGER, is_signed, native_size)]
+                return _hdf5_type_map(H5T_INTEGER, is_signed, native_size)
             finally
                 h5t_close(native_type)
             end
@@ -2125,30 +2179,6 @@ function get_alignment(p::HDF5Properties)
     return threshold[], alignment[]
 end
 
-# Map property names to function and attribute symbol
-# Property names should follow the naming introduced by HDF5, i.e.
-# keyname => (h5p_get_keyname, h5p_set_keyname, id )
-const hdf5_prop_get_set = Dict(
-    :alignment     => (get_alignment, h5p_set_alignment,             H5P_FILE_ACCESS),
-    :alloc_time    => (get_alloc_time, h5p_set_alloc_time,           H5P_DATASET_CREATE),
-    :blosc         => (nothing, h5p_set_blosc,                       H5P_DATASET_CREATE),
-    :char_encoding => (nothing, h5p_set_char_encoding,               H5P_LINK_CREATE),
-    :chunk         => (get_chunk, set_chunk,                         H5P_DATASET_CREATE),
-    :compress      => (nothing, h5p_set_deflate,                     H5P_DATASET_CREATE),
-    :create_intermediate_group => (nothing, h5p_set_create_intermediate_group, H5P_LINK_CREATE),
-    :deflate       => (nothing, h5p_set_deflate,                     H5P_DATASET_CREATE),
-    :driver        => (h5p_get_driver, nothing,                      H5P_FILE_ACCESS),
-    :driver_info   => (h5p_get_driver_info, nothing,                 H5P_FILE_ACCESS),
-    :external      => (nothing, h5p_set_external,                    H5P_DATASET_CREATE),
-    :fclose_degree => (get_fclose_degree, h5p_set_fclose_degree,     H5P_FILE_ACCESS),
-    :layout        => (h5p_get_layout, h5p_set_layout,               H5P_DATASET_CREATE),
-    :libver_bounds => (get_libver_bounds, h5p_set_libver_bounds,     H5P_FILE_ACCESS),
-    :local_heap_size_hint => (nothing, h5p_set_local_heap_size_hint, H5P_GROUP_CREATE),
-    :shuffle       => (nothing, h5p_set_shuffle,                     H5P_DATASET_CREATE),
-    :userblock     => (get_userblock, h5p_set_userblock,             H5P_FILE_CREATE),
-    :track_times   => (nothing, h5p_set_obj_track_times,             H5P_OBJECT_CREATE),
-)
-
 # properties that require chunks in order to work (e.g. any filter)
 # values do not matter -- just needed to form a NamedTuple with the desired keys
 const chunked_props = (; compress=nothing, deflate=nothing, blosc=nothing, shuffle=nothing)
@@ -2217,20 +2247,12 @@ function __init__()
     # Turn off automatic error printing
     # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
-    ASCII_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
-    h5p_set_char_encoding(ASCII_LINK_PROPERTIES[].id, H5T_CSET_ASCII)
-    h5p_set_create_intermediate_group(ASCII_LINK_PROPERTIES[].id, 1)
-    UTF8_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE)
-    h5p_set_char_encoding(UTF8_LINK_PROPERTIES[].id, H5T_CSET_UTF8)
-    h5p_set_create_intermediate_group(UTF8_LINK_PROPERTIES[].id, 1)
-    ASCII_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE)
-    h5p_set_char_encoding(ASCII_ATTRIBUTE_PROPERTIES[].id, H5T_CSET_ASCII)
-    UTF8_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE)
-    h5p_set_char_encoding(UTF8_ATTRIBUTE_PROPERTIES[].id, H5T_CSET_UTF8)
-
-    rehash!(hdf5_type_map, length(hdf5_type_map.keys))
-    rehash!(hdf5_prop_get_set, length(hdf5_prop_get_set.keys))
-    rehash!(hdf5_obj_open, length(hdf5_obj_open.keys))
+    ASCII_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE; char_encoding = H5T_CSET_ASCII,
+                                       create_intermediate_group = 1)
+    UTF8_LINK_PROPERTIES[]  = p_create(H5P_LINK_CREATE; char_encoding = H5T_CSET_UTF8,
+                                       create_intermediate_group = 1)
+    ASCII_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE; char_encoding = H5T_CSET_ASCII)
+    UTF8_ATTRIBUTE_PROPERTIES[]  = p_create(H5P_ATTRIBUTE_CREATE; char_encoding = H5T_CSET_UTF8)
 
     @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" @eval include("mpio.jl")
 
