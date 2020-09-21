@@ -1030,7 +1030,7 @@ function _prop_set!(p::HDF5Properties, name::Symbol, val, check::Bool = true)
                check ? error("unknown attribute create property ", name) : nothing
     end
 
-    check ? error("unknown property class ", class) : return nothing
+    return check ? error("unknown property class ", class) : nothing
 end
 
 function p_create(class; pv...)
