@@ -995,6 +995,7 @@ function _prop_set!(p::HDF5Properties, name::Symbol, val, check::Bool = true)
 
     if class == H5P_FILE_ACCESS
         return name === :alignment     ? h5p_set_alignment(p, val...) :
+               name === :fapl_mpio     ? h5p_set_fapl_mpio(p, val...) :
                name === :fclose_degree ? h5p_set_fclose_degree(p, val...) :
                name === :libver_bounds ? h5p_set_libver_bounds(p, val...) :
                check ? error("unknown file access property ", name) : nothing
@@ -1023,6 +1024,11 @@ function _prop_set!(p::HDF5Properties, name::Symbol, val, check::Bool = true)
                name === :shuffle     ? h5p_set_shuffle(p, val...) :
                name === :track_times ? h5p_set_obj_track_times(p, val...) : # H5P_OBJECT_CREATE
                check ? error("unknown dataset create property ", name) : nothing
+    end
+
+    if class == H5P_DATASET_XFER
+        return name === :dxpl_mpio  ? h5p_set_dxpl_mpio(p, val...) :
+               check ? error("unknown dataset transfer property ", name) : nothing
     end
 
     if class == H5P_ATTRIBUTE_CREATE
