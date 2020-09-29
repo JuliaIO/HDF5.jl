@@ -38,9 +38,9 @@
 @bind h5a_delete_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, lapl_id::hid_t)::herr_t error("Error removing attribute ", attr_name, " from object ", obj_name)
 @bind h5a_exists(obj_id::hid_t, attr_name::Ptr{UInt8})::htri_t error("Error checking whether attribute ", attr_name, " exists")
 @bind h5a_exists_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, lapl_id::hid_t)::htri_t error("Error checking whether object ", obj_name, " has attribute ", attr_name)
-@bind h5a_get_create_plist(attr_id::hid_t)::hid_t error("Cannot get creation property list")
+@bind h5a_get_create_plist(attr_id::hid_t)::hid_t "Cannot get creation property list"
 @bind h5a_get_name(attr_id::hid_t, buf_size::Csize_t, buf::Ptr{UInt8})::Cssize_t "Error getting attribute name"
-@bind h5a_get_name_by_idx(loc_id::hid_t, obj_name::Ptr{UInt8}, index_type::Cint, order::Cint, idx::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t error("Error getting attribute name")
+@bind h5a_get_name_by_idx(loc_id::hid_t, obj_name::Cstring, index_type::Cint, order::Cint, idx::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting attribute name"
 @bind h5a_get_space(attr_id::hid_t)::hid_t "Error getting attribute dataspace"
 @bind h5a_get_type(attr_id::hid_t)::hid_t "Error getting attribute type"
 @bind h5a_open(obj_id::hid_t, pathname::Ptr{UInt8}, aapl_id::hid_t)::hid_t error("Error opening attribute ", h5i_get_name(obj_id), "/", pathname)
@@ -87,7 +87,7 @@
 @bind h5f_get_name(obj_id::hid_t, buf::Ptr{UInt8}, buf_size::Csize_t)::Cssize_t "Error getting file name"
 @bind h5f_get_obj_count(file_id::hid_t, types::Cuint)::Cssize_t "Error getting object count"
 @bind h5f_get_obj_ids(file_id::hid_t, types::Cuint, max_objs::Csize_t, obj_id_list::Ptr{hid_t})::Cssize_t "Error getting objects"
-@bind h5f_get_vfd_handle(file_id::hid_t, fapl_id::hid_t, file_handle::Ptr{Ptr{Cint}})::herr_t "Error getting VFD handle"
+@bind h5f_get_vfd_handle(file_id::hid_t, fapl_id::hid_t, file_handle::Ref{Ptr{Cvoid}})::herr_t "Error getting VFD handle"
 @bind h5f_is_hdf5(pathname::Cstring)::htri_t error("Cannot access file ", pathname)
 @bind h5f_open(pathname::Cstring, flags::Cuint, fapl_id::hid_t)::hid_t error("Error opening file ", pathname)
 @bind h5f_start_swmr_write(id::hid_t)::herr_t "Error starting SWMR write"

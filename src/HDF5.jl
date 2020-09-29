@@ -1161,27 +1161,11 @@ exists(parent::Union{HDF5File, HDF5Group}, path::String) = exists(parent, path, 
 has(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, path::String) = exists(parent, path)
 
 # Querying items in the file
-const H5GINFO_TEMP_ARRAY = Ref{H5Ginfo}()
-function info(obj::Union{HDF5Group,HDF5File})
-    h5g_get_info(obj, H5GINFO_TEMP_ARRAY)
-    H5GINFO_TEMP_ARRAY[]
-end
+info(obj::Union{HDF5Group, HDF5File}) = h5g_get_info(checkvalid(obj).id)
+objinfo(obj::Union{HDF5File, HDF5Object}) = h5o_get_info(checkvalid(obj).id)
 
-const H5OINFO_TEMP_ARRAY = Ref{H5Oinfo}()
-function objinfo(obj::Union{HDF5File, HDF5Object})
-    h5o_get_info(obj.id, H5OINFO_TEMP_ARRAY)
-    H5OINFO_TEMP_ARRAY[]
-end
-
-const LENGTH_TEMP_ARRAY = Ref{UInt64}()
-function length(x::Union{HDF5Group,HDF5File})
-    h5g_get_num_objs(x.id, LENGTH_TEMP_ARRAY)
-    LENGTH_TEMP_ARRAY[]
-end
-
-function length(x::HDF5Attributes)
-    objinfo(x.parent).num_attrs
-end
+length(obj::Union{HDF5Group, HDF5File}) = h5g_get_num_objs(checkvalid(obj).id)
+length(x::HDF5Attributes) = objinfo(x.parent).num_attrs
 
 isempty(x::Union{HDF5Dataset,HDF5Group,HDF5File}) = length(x) == 0
 function size(obj::Union{HDF5Dataset, HDF5Attribute})
@@ -1217,27 +1201,13 @@ name(attr::HDF5Attribute) = h5a_get_name(attr.id)
 function names(x::Union{HDF5Group,HDF5File})
     checkvalid(x)
     n = length(x)
-    [h5l_get_name_by_idx(x,i) for i = 1:n]
-end
-
-function h5l_get_name_by_idx(x::Union{HDF5Group,HDF5File}, i)
-    len = h5l_get_name_by_idx(x.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, C_NULL, 0, H5P_DEFAULT)
-    buf = Base.StringVector(len)
-    h5l_get_name_by_idx(x.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, buf, len+1, H5P_DEFAULT)
-    return String(buf)
+    return [h5l_get_name_by_idx(x, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, H5P_DEFAULT) for i = 1:n]
 end
 
 function names(x::HDF5Attributes)
     checkvalid(x.parent)
     n = length(x)
-    [h5a_get_name_by_idx(x,i) for i = 1:n]
-end
-
-function h5a_get_name_by_idx(x::HDF5Attributes, i)
-    len = h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, C_NULL, 0, H5P_DEFAULT)
-    buf = Base.StringVector(len)
-    h5a_get_name_by_idx(x.parent.id, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, buf, len+1, H5P_DEFAULT)
-    return String(buf)
+    return [h5a_get_name_by_idx(x.parent, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, H5P_DEFAULT) for i = 1:n]
 end
 
 # iteration by objects
@@ -1347,7 +1317,10 @@ dataspace(sz::Dims; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(sz, max_dims
 dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
 
 
-get_dims(dspace::HDF5Dataspace) = h5s_get_simple_extent_dims(dspace.id)
+function get_dims(dspace::HDF5Dataspace)
+    dims = h5s_get_simple_extent_dims(dspace.id)
+    return tuple(reverse!(dims[1])...), tuple(reverse!(dims[2])...)
+end
 
 """
     get_dims(dset::HDF5Dataset)
@@ -1589,11 +1562,11 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
     end
     if !Sys.iswindows()
         local fdint
-        prop = h5d_get_access_plist(checkvalid(obj).id)
+        prop = h5d_get_access_plist(obj.id)
         try
-            ret = Ref{Ptr{Cint}}()
-            h5f_get_vfd_handle(obj.file.id, prop, ret)
-            fdint = unsafe_load(ret[])
+            # TODO: Should check return value of h5f_get_driver()
+            fdptr = h5f_get_vfd_handle(obj.file.id, prop)
+            fdint = unsafe_load(convert(Ptr{Cint}, fdptr))
         finally
             h5p_close(prop)
         end
@@ -1613,13 +1586,8 @@ function readmmap(obj::HDF5Dataset, ::Type{Array{T}}) where {T}
         # function
 
         # Check permissions
-        intent = Ref{Cuint}()
-        h5f_get_intent(obj.file, intent)
-        if intent[] == H5F_ACC_RDONLY
-            flag = "r"
-        else
-            flag = "r+"
-        end
+        intent = h5f_get_intent(obj.file.id)
+        flag = intent == H5F_ACC_RDONLY ? "r" : "r+"
         fd = open(obj.file.filename, flag)
     end
 
@@ -2027,9 +1995,8 @@ function get_mem_compatible_jl_type(objtype::HDF5Datatype)
             return NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
         end
     elseif class_id == H5T_ARRAY
-        nd = h5t_get_array_ndims(objtype.id)
-        dims = Vector{hsize_t}(undef,nd)
-        h5t_get_array_dims(objtype.id, dims)
+        dims = h5t_get_array_dims(objtype.id)
+        nd = length(dims)
         eltyp = HDF5Datatype(h5t_get_super(objtype.id))
         elT = get_mem_compatible_jl_type(eltyp)
         dimsizes = ntuple(i -> Int(dims[nd-i+1]), nd)  # reverse order
@@ -2098,99 +2065,10 @@ include("api_helpers.jl")
 
 # Functions that require special handling
 
-function h5_get_libversion()
-    majnum, minnum, relnum = Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}()
-    status = h5_get_libversion(majnum, minnum, relnum)
-    VersionNumber(majnum[], minnum[], relnum[])
-end
 const libversion = h5_get_libversion()
 
-function h5a_get_name(attr_id::hid_t)
-    len = h5a_get_name(attr_id, 0, C_NULL) # order of args differs from {f,i}_get_name
-    buf = Vector{UInt8}(undef,len+1)
-    h5a_get_name(attr_id, len+1, buf)
-    String(buf[1:len])
-end
-function h5f_get_name(loc_id::hid_t)
-    len = h5f_get_name(loc_id, C_NULL, 0)
-    buf = Vector{UInt8}(undef,len+1)
-    h5f_get_name(loc_id, buf, len+1)
-    String(buf[1:len])
-end
-function h5i_get_name(loc_id::hid_t)
-    len = h5i_get_name(loc_id, C_NULL, 0)
-    buf = Vector{UInt8}(undef,len+1)
-    h5i_get_name(loc_id, buf, len+1)
-    String(buf[1:len])
-end
-function h5l_get_info(link_loc_id::hid_t, link_name::String, lapl_id::hid_t)
-    info = Ref{H5LInfo}()
-    h5l_get_info(link_loc_id, link_name, info, lapl_id)
-    info[]
-end
-
-function h5lt_dtype_to_text(dtype_id)
-    # Note we can't use h5i_is_valid to check if dtype is valid because
-    # ref counts aren't incremented for basic atomic types (e.g. H5T_NATIVE_INT).
-    # Instead just temporarily turn off error printing and try call to probe if dtype is valid.
-    old_func = Ref{Ptr{Cvoid}}()
-    old_client_data = Ref{Ptr{Cvoid}}()
-    h5e_get_auto(H5E_DEFAULT, old_func, old_client_data)
-    h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
-    try
-        len = Ref{Csize_t}()
-        h5lt_dtype_to_text(dtype_id, C_NULL, 0, len)
-        buf = Base.StringVector(len[] - 1)
-        h5lt_dtype_to_text(dtype_id, buf, 0, len)
-        return String(buf)
-    catch
-        return "(invalid)"
-    finally
-        h5e_set_auto(H5E_DEFAULT, old_func[], old_client_data[])
-    end
-end
-
-function h5s_get_simple_extent_dims(space_id::hid_t)
-    n = h5s_get_simple_extent_ndims(space_id)
-    dims = Vector{hsize_t}(undef,n)
-    maxdims = Vector{hsize_t}(undef,n)
-    h5s_get_simple_extent_dims(space_id, dims, maxdims)
-    return tuple(reverse!(dims)...), tuple(reverse!(maxdims)...)
-end
-# Note: The following two functions implement direct ccalls because the binding generator
-# cannot (yet) do the string wrapping and memory freeing.
-function h5t_get_member_name(type_id::hid_t, index::Integer)
-    pn = ccall((:H5Tget_member_name, libhdf5), Ptr{UInt8}, (hid_t, Cuint), type_id, index)
-    if pn == C_NULL
-        error("Error getting name of compound datatype member #", index)
-    end
-    s = unsafe_string(pn)
-    h5_free_memory(pn)
-    return s
-end
-function h5t_get_tag(type_id::hid_t)
-    pc = ccall((:H5Tget_tag, libhdf5), Ptr{UInt8}, (hid_t,), type_id)
-    if pc == C_NULL
-        error("Error getting opaque tag")
-    end
-    s = unsafe_string(pc)
-    h5_free_memory(pc)
-    return s
-end
-
-function h5f_get_obj_ids(file_id::hid_t, types::Integer)
-    sz = h5f_get_obj_count(file_id, types)
-    hids = Vector{hid_t}(undef, sz)
-    sz2 = h5f_get_obj_ids(file_id, types, sz, hids)
-    sz2 != sz && resize!(hids, sz2)
-    hids
-end
-
-function vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5Dataspace)
-    sz = Ref{hsize_t}()
-    h5d_vlen_get_buf_size(dset.id, dtype.id, dspace.id, sz)
-    sz[]
-end
+vlen_get_buf_size(dset::HDF5Dataset, dtype::HDF5Datatype, dspace::HDF5Dataspace) =
+    h5d_vlen_get_buf_size(dset.id, dtype.id, dspace.id)
 
 ### Property manipulation ###
 get_access_properties(d::HDF5Dataset)   = HDF5Properties(h5d_get_access_plist(d.id), H5P_DATASET_ACCESS)
@@ -2259,12 +2137,10 @@ end
 function hiding_errors(f)
     error_stack = H5E_DEFAULT
     # error_stack = ccall((:H5Eget_current_stack, libhdf5), hid_t, ())
-    old_func = Ref{Ptr{Cvoid}}()
-    old_client_data = Ref{Ptr{Cvoid}}()
-    h5e_get_auto(error_stack, old_func, old_client_data)
+    old_func, old_client_data = h5e_get_auto(error_stack)
     h5e_set_auto(error_stack, C_NULL, C_NULL)
     res = f()
-    h5e_set_auto(error_stack, old_func[], old_client_data[])
+    h5e_set_auto(error_stack, old_func, old_client_data)
     return res
 end
 

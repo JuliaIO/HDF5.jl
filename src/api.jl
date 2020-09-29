@@ -106,7 +106,7 @@ function h5a_get_name(attr_id, buf_size, buf)
 end
 
 function h5a_get_name_by_idx(loc_id, obj_name, index_type, order, idx, name, size, lapl_id)
-    var"#status#" = ccall((:H5Aget_name_by_idx, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, Ptr{UInt8}, Csize_t, hid_t), loc_id, obj_name, index_type, order, idx, name, size, lapl_id)
+    var"#status#" = ccall((:H5Aget_name_by_idx, libhdf5), Cssize_t, (hid_t, Cstring, Cint, Cint, hsize_t, Ptr{UInt8}, Csize_t, hid_t), loc_id, obj_name, index_type, order, idx, name, size, lapl_id)
     var"#status#" < 0 && error("Error getting attribute name")
     return var"#status#"
 end
@@ -298,7 +298,7 @@ function h5f_get_obj_ids(file_id, types, max_objs, obj_id_list)
 end
 
 function h5f_get_vfd_handle(file_id, fapl_id, file_handle)
-    var"#status#" = ccall((:H5Fget_vfd_handle, libhdf5), herr_t, (hid_t, hid_t, Ptr{Ptr{Cint}}), file_id, fapl_id, file_handle)
+    var"#status#" = ccall((:H5Fget_vfd_handle, libhdf5), herr_t, (hid_t, hid_t, Ref{Ptr{Cvoid}}), file_id, fapl_id, file_handle)
     var"#status#" < 0 && error("Error getting VFD handle")
     return nothing
 end
