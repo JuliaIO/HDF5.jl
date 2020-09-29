@@ -173,7 +173,7 @@ end
 
 function h5d_get_offset(dataset_id)
     var"#status#" = ccall((:H5Dget_offset, libhdf5), haddr_t, (hid_t,), dataset_id)
-    var"#status#" == -1 % haddr_t&& error("Error getting offset")
+    var"#status#" == -1 % haddr_t && error("Error getting offset")
     return var"#status#"
 end
 
@@ -489,8 +489,8 @@ function h5p_create(cls_id)
     return var"#status#"
 end
 
-function h5p_get_alignment(plist_id, threshold, alignment)
-    var"#status#" = ccall((:H5Pget_alignment, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}), plist_id, threshold, alignment)
+function h5p_get_alignment(fapl_id, threshold, alignment)
+    var"#status#" = ccall((:H5Pget_alignment, libhdf5), herr_t, (hid_t, Ref{hsize_t}, Ref{hsize_t}), fapl_id, threshold, alignment)
     var"#status#" < 0 && error("Error getting alignment")
     return nothing
 end
@@ -501,10 +501,22 @@ function h5p_get_alloc_time(plist_id, alloc_time)
     return nothing
 end
 
+function h5p_get_char_encoding(plist_id, encoding)
+    var"#status#" = ccall((:H5Pget_char_encoding, libhdf5), herr_t, (hid_t, Ref{Cint}), plist_id, encoding)
+    var"#status#" < 0 && error("Error getting char encoding")
+    return nothing
+end
+
 function h5p_get_chunk(plist_id, n_dims, dims)
     var"#status#" = ccall((:H5Pget_chunk, libhdf5), Cint, (hid_t, Cint, Ptr{hsize_t}), plist_id, n_dims, dims)
     var"#status#" < 0 && error("Error getting chunk size")
     return var"#status#"
+end
+
+function h5p_get_create_intermediate_group(lcpl_id, crt_intermed_group)
+    var"#status#" = ccall((:H5Pget_create_intermediate_group, libhdf5), herr_t, (hid_t, Ref{Cuint}), lcpl_id, crt_intermed_group)
+    var"#status#" < 0 && error("Error getting create intermediate group property")
+    return nothing
 end
 
 function h5p_get_driver(plist_id)
@@ -536,8 +548,8 @@ function h5p_get_fapl_mpio64(fapl_id, comm, info)
     return nothing
 end
 
-function h5p_get_fclose_degree(plist_id, fc_degree)
-    var"#status#" = ccall((:H5Pget_fclose_degree, libhdf5), herr_t, (hid_t, Ptr{Cint}), plist_id, fc_degree)
+function h5p_get_fclose_degree(fapl_id, fc_degree)
+    var"#status#" = ccall((:H5Pget_fclose_degree, libhdf5), herr_t, (hid_t, Ref{Cint}), fapl_id, fc_degree)
     var"#status#" < 0 && error("Error getting close degree")
     return nothing
 end
@@ -552,6 +564,24 @@ function h5p_get_layout(plist_id)
     var"#status#" = ccall((:H5Pget_layout, libhdf5), Cint, (hid_t,), plist_id)
     var"#status#" < 0 && error("Error getting layout")
     return var"#status#"
+end
+
+function h5p_get_libver_bounds(fapl_id, low, high)
+    var"#status#" = ccall((:H5Pget_libver_bounds, libhdf5), herr_t, (hid_t, Ref{Cint}, Ref{Cint}), fapl_id, low, high)
+    var"#status#" < 0 && error("Error getting library version bounds")
+    return nothing
+end
+
+function h5p_get_local_heap_size_hint(plist_id, size_hint)
+    var"#status#" = ccall((:H5Pget_local_heap_size_hint, libhdf5), herr_t, (hid_t, Ref{Csize_t}), plist_id, size_hint)
+    var"#status#" < 0 && error("Error getting local heap size hint")
+    return nothing
+end
+
+function h5p_get_obj_track_times(plist_id, track_times)
+    var"#status#" = ccall((:H5Pget_obj_track_times, libhdf5), herr_t, (hid_t, Ref{UInt8}), plist_id, track_times)
+    var"#status#" < 0 && error("Error setting object time tracking")
+    return nothing
 end
 
 function h5p_get_userblock(plist_id, len)
@@ -650,14 +680,14 @@ function h5p_set_layout(plist_id, setting)
     return nothing
 end
 
-function h5p_set_libver_bounds(fapl_id, libver_low, libver_high)
-    var"#status#" = ccall((:H5Pset_libver_bounds, libhdf5), herr_t, (hid_t, Cint, Cint), fapl_id, libver_low, libver_high)
+function h5p_set_libver_bounds(fapl_id, low, high)
+    var"#status#" = ccall((:H5Pset_libver_bounds, libhdf5), herr_t, (hid_t, Cint, Cint), fapl_id, low, high)
     var"#status#" < 0 && error("Error setting library version bounds")
     return nothing
 end
 
-function h5p_set_local_heap_size_hint(fapl_id, size_hint)
-    var"#status#" = ccall((:H5Pset_local_heap_size_hint, libhdf5), herr_t, (hid_t, Cuint), fapl_id, size_hint)
+function h5p_set_local_heap_size_hint(plist_id, size_hint)
+    var"#status#" = ccall((:H5Pset_local_heap_size_hint, libhdf5), herr_t, (hid_t, Csize_t), plist_id, size_hint)
     var"#status#" < 0 && error("Error setting local heap size hint")
     return nothing
 end
@@ -966,3 +996,4 @@ function h5z_register(filter_class)
     var"#status#" < 0 && error("Unable to register new filter")
     return nothing
 end
+

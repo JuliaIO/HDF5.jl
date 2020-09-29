@@ -984,6 +984,59 @@ t_commit(parent::Union{HDF5File, HDF5Group}, path::String, dtype::HDF5Datatype) 
 
 a_create(parent::Union{HDF5File, HDF5Object}, name::String, dtype::HDF5Datatype, dspace::HDF5Dataspace) = HDF5Attribute(h5a_create(checkvalid(parent).id, name, dtype.id, dspace.id), file(parent))
 
+function _prop_get(p::HDF5Properties, name::Symbol)
+    class = p.class
+
+    if class == H5P_FILE_CREATE
+        return name === :userblock   ? h5p_get_userblock(p) :
+               name === :track_times ? h5p_get_obj_track_times(p) : # H5P_OBJECT_CREATE
+               error("unknown file create property ", name)
+    end
+
+    if class == H5P_FILE_ACCESS
+        return name === :alignment     ? h5p_get_alignment(p) :
+               name === :driver        ? h5p_get_driver(p) :
+               name === :driver_info   ? h5p_get_driver_info(p) :
+               name === :fapl_mpio     ? h5p_get_fapl_mpio(p) :
+               name === :fclose_degree ? h5p_get_fclose_degree(p) :
+               name === :libver_bounds ? h5p_get_libver_bounds(p) :
+               error("unknown file access property ", name)
+    end
+
+    if class == H5P_GROUP_CREATE
+        return name === :local_heap_size_hint ? h5p_get_local_heap_size_hint(p) :
+               name === :track_times ? h5p_get_obj_track_times(p) : # H5P_OBJECT_CREATE
+               error("unknown group create property ", name)
+    end
+
+    if class == H5P_LINK_CREATE
+        return name === :char_encoding ? h5p_get_char_encoding(p) :
+               name === :create_intermediate_group ? h5p_get_create_intermediate_group(p) :
+               error("unknown link create property ", name)
+    end
+
+    if class == H5P_DATASET_CREATE
+        return name === :alloc_time  ? h5p_get_alloc_time(p) :
+               name === :chunk       ? get_chunk(p) :
+               #name === :external    ? h5p_get_external(p) :
+               name === :layout      ? h5p_get_layout(p) :
+               name === :track_times ? h5p_get_obj_track_times(p) : # H5P_OBJECT_CREATE
+               error("unknown dataset create property ", name)
+    end
+
+    if class == H5P_DATASET_XFER
+        return name === :dxpl_mpio  ? h5p_get_dxpl_mpio(p) :
+               error("unknown dataset transfer property ", name)
+    end
+
+    if class == H5P_ATTRIBUTE_CREATE
+        return name === :char_encoding ? h5p_get_char_encoding(p) :
+               error("unknown attribute create property ", name)
+    end
+
+    error("unknown property class ", class)
+end
+
 function _prop_set!(p::HDF5Properties, name::Symbol, val, check::Bool = true)
     class = p.class
 
@@ -1062,8 +1115,9 @@ o_copy(src_obj::HDF5Object, dst_parent::Union{HDF5File, HDF5Group}, dst_path::St
 setindex!(dset::HDF5Dataset, val, name::String) = a_write(dset, name, val)
 setindex!(x::HDF5Attributes, val, name::String) = a_write(x.parent, name, val)
 # Getting and setting properties: p[:chunk] = dims, p[:compress] = 6
+getindex(p::HDF5Properties, name::Symbol) = _prop_get(checkvalid(p), name)
 function setindex!(p::HDF5Properties, val, name::Symbol)
-    _prop_set!(p, name, val, true)
+    _prop_set!(checkvalid(p), name, val, true)
     return p
 end
 # Create a dataset with properties: obj[path, prop = val, ...] = val
@@ -2040,6 +2094,7 @@ h5t_get_native_type(type_id::hid_t) = h5t_get_native_type(type_id, H5T_DIR_ASCEN
 
 # Core API ccall wrappers
 include("api.jl")
+include("api_helpers.jl")
 
 # Functions that require special handling
 
@@ -2144,17 +2199,9 @@ get_create_properties(d::HDF5Dataset)   = HDF5Properties(h5d_get_create_plist(d.
 get_create_properties(g::HDF5Group)     = HDF5Properties(h5g_get_create_plist(g.id), H5P_GROUP_CREATE)
 get_create_properties(f::HDF5File)      = HDF5Properties(h5f_get_create_plist(f.id), H5P_FILE_CREATE)
 get_create_properties(a::HDF5Attribute) = HDF5Properties(h5a_get_create_plist(a.id), H5P_ATTRIBUTE_CREATE)
-function get_alloc_time(p::HDF5Properties)
-    alloc_time = Ref{Cint}()
-    h5p_get_alloc_time(p.id, alloc_time)
-    return alloc_time[]
-end
-function get_chunk(p::HDF5Properties)
-    n = h5p_get_chunk(p, 0, C_NULL)
-    cdims = Vector{hsize_t}(undef,n)
-    h5p_get_chunk(p, n, cdims)
-    tuple(convert(Array{Int}, reverse(cdims))...)
-end
+
+get_chunk(p::HDF5Properties) = tuple(convert(Vector{Int}, reverse(h5p_get_chunk(p)))...)
+set_chunk(p::HDF5Properties, dims...) = h5p_set_chunk(p.id, length(dims), hsize_t[reverse(dims)...])
 function get_chunk(dset::HDF5Dataset)
     p = get_create_properties(dset)
     local ret
@@ -2165,23 +2212,12 @@ function get_chunk(dset::HDF5Dataset)
     end
     ret
 end
-set_chunk(p::HDF5Properties, dims...) = h5p_set_chunk(p.id, length(dims), hsize_t[reverse(dims)...])
-function get_userblock(p::HDF5Properties)
-    alen = Ref{hsize_t}()
-    h5p_get_userblock(p.id, alen)
-    alen[]
-end
-function get_fclose_degree(p::HDF5Properties)
-    out = Ref{Cint}()
-    h5p_get_fclose_degee(p.id, out)
-    out[]
-end
-function get_libver_bounds(p::HDF5Properties)
-    out1 = Ref{Cint}()
-    out2 = Ref{Cint}()
-    h5p_get_libver_bounds(p.id, out1, out2)
-    out1[], out2[]
-end
+
+get_alignment(p::HDF5Properties) = h5p_get_alignment(checkvalid(p).id)
+get_alloc_time(p::HDF5Properties) = h5p_get_alloc_time(checkvalid(p).id)
+get_userblock(p::HDF5Properties) = h5p_get_userblock(checkvalid(p).id)
+get_fclose_degree(p::HDF5Properties) = h5p_get_fclose_degree(checkvalid(p).id)
+get_libver_bounds(p::HDF5Properties) = h5p_get_libver_bounds(checkvalid(p).id)
 
 """
     get_datasets(file::HDF5File) -> datasets::Vector{HDF5Dataset}
@@ -2201,13 +2237,6 @@ end
             get_datasets!(list, node[c])
         end
     end
-end
-
-function get_alignment(p::HDF5Properties)
-    threshold = Ref{hsize_t}()
-    alignment = Ref{hsize_t}()
-    h5p_get_alignment(p, threshold, alignment)
-    return threshold[], alignment[]
 end
 
 # properties that require chunks in order to work (e.g. any filter)
