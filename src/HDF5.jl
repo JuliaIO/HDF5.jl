@@ -1435,6 +1435,18 @@ function read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
         return out
     end
 end
+# `Type{String}` does not have a definite size, so the previous method does not accept
+# it even though it will return a `String`. This explicit overload allows that usage.
+function read(obj::DatasetOrAttribute, ::Type{String}, I...)
+    dtype = datatype(obj)
+    try
+        T = get_jl_type(dtype)
+        T <: Union{Cstring, FixedString} || error(name(obj), " cannot be read as type `String`")
+        return read(obj, T, I...)
+    finally
+        close(dtype)
+    end
+end
 
 # Read OPAQUE datasets and attributes
 function read(obj::DatasetOrAttribute, ::Type{HDF5Opaque})
