@@ -350,18 +350,6 @@ end
 h5open(fn, "r", libver_bounds=(HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)) do fid
     intarray = read(fid, "intarray")
     @test intarray == [1, 2, 3]
-    fcpl = get_create_properties(fid)
-    @test isvalid(fcpl)
-    fapl = get_access_properties(fid)
-    @test isvalid(fapl)
-end
-# Retrieving dataset creation and access property lists
-h5open(fn, "r") do fid
-    dset = fid["intarray"]
-    dcpl = get_create_properties(dset)
-    @test isvalid(dcpl)
-    dapl = get_access_properties(dset)
-    @test isvalid(dapl)
 end
 
 # Test null terminated ASCII string (e.g. exported by h5py) #332

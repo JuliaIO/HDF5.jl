@@ -130,6 +130,7 @@ const H5I_DATASPACE    = 4
 const H5I_DATASET      = 5
 const H5I_ATTR         = 6
 const H5I_REFERENCE    = 7
+const H5I_VFL          = 8
 # Link constants
 const H5L_TYPE_HARD    = 0
 const H5L_TYPE_SOFT    = 1
