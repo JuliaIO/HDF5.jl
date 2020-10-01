@@ -46,10 +46,10 @@ expression may refer to any arguments by name.
 The declared return type in the function-like signature must be the return type of the C
 function, and the Julia return type is inferred as one of the following possibilities:
 
-1. If `ReturnType === :Herr`, the Julia function returns `nothing` and the C return is
+1. If `ReturnType === :herr_t`, the Julia function returns `nothing` and the C return is
    used only in error checking.
 
-2. If `ReturnType === :Htri`, the Julia function returns a boolean indicating whether
+2. If `ReturnType === :htri_t`, the Julia function returns a boolean indicating whether
    the return value of the C function was zero (`false`) or positive (`true`).
 
 3. Otherwise, the C function return value is returned from the Julia function.
@@ -57,11 +57,11 @@ function, and the Julia return type is inferred as one of the following possibil
 Furthermore, the C return value is interpreted to automatically generate error checks
 (only when `ErrorStringOrExpression` is provided):
 
-1. If `ReturnType === :Herr` or `ReturnType === :Htri`, an error is raised when the return
+1. If `ReturnType === :herr_t` or `ReturnType === :htri_t`, an error is raised when the return
    value is negative.
 
-2. If `ReturnType === :Haddr` or `ReturnType === :Hsize`, an error is raised when the
-   return value is equivalent to `-1 % Haddr` and `-1 % Hsize`, respectively.
+2. If `ReturnType === :haddr_t` or `ReturnType === :hsize_t `, an error is raised when the
+   return value is equivalent to `-1 % haddr_t` and `-1 % hsize_t `, respectively.
 
 3. If `ReturnType` is a `Ptr` expression, an error is raised when the return value is
    equal to `C_NULL`.
@@ -120,7 +120,7 @@ macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing)
     errexpr = err isa String ? :(error($err)) : err
     if errexpr === nothing
         # pass through
-    elseif rettype === :Haddr || rettype === :Hsize
+    elseif rettype === :haddr_t|| rettype === :hsize_t
         # Error typically indicated by negative values, but some return types are unsigned
         # integers. From `H5public.h`:
         #   ADDR_UNDEF => (haddr_t)(-1)
@@ -134,10 +134,10 @@ macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing)
     end
 
     # Three cases for handling the return type
-    if rettype === :Htri
+    if rettype === :htri_t
         # Returns a Boolean on non-error
         returnexpr = :(return $statsym > 0)
-    elseif rettype === :Herr
+    elseif rettype === :herr_t
         # Only used to indicate error status
         returnexpr = :(return nothing)
     else

@@ -1,13 +1,13 @@
 import Base: @deprecate, @deprecate_binding, depwarn
 
 ### Changed in PR#629
-# - HDF5Dataset.xfer from ::Hid to ::HDF5Properties
-@deprecate h5d_read(dataset_id::Hid, memtype_id::Hid, buf::AbstractArray, xfer::HDF5Properties) h5d_read(dataset_id, memtype_id, buf, xfer.id)
-@deprecate h5d_write(dataset_id::Hid, memtype_id::Hid, buf::AbstractArray, xfer::HDF5Properties) h5d_write(dataset_id, memtype_id, buf, xfer.id)
-@deprecate h5d_write(dataset_id::Hid, memtype_id::Hid, str::String, xfer::HDF5Properties) h5d_write(dataset_id, memtype_id, str, xfer.id)
-@deprecate h5d_write(dataset_id::Hid, memtype_id::Hid, x::T, xfer::HDF5Properties) where {T<:Union{HDF5Scalar, Complex{<:HDF5Scalar}}} h5d_write(dataset_id, memtype_id, x, xfer.id)
-@deprecate h5d_write(dataset_id::Hid, memtype_id::Hid, strs::Array{S}, xfer::HDF5Properties) where {S<:String} h5d_write(dataset_id, memtype_id, strs, xfer.id)
-@deprecate h5d_write(dataset_id::Hid, memtype_id::Hid, v::HDF5Vlen{T}, xfer::HDF5Properties) where {T<:Union{HDF5Scalar,CharType}} h5d_write(dataset_id, memtype_id, v, xfer.id)
+# - HDF5Dataset.xfer from ::hid_t to ::HDF5Properties
+@deprecate h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::HDF5Properties) h5d_read(dataset_id, memtype_id, buf, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::HDF5Properties) h5d_write(dataset_id, memtype_id, buf, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::String, xfer::HDF5Properties) h5d_write(dataset_id, memtype_id, str, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::HDF5Properties) where {T<:Union{HDF5Scalar, Complex{<:HDF5Scalar}}} h5d_write(dataset_id, memtype_id, x, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{S}, xfer::HDF5Properties) where {S<:String} h5d_write(dataset_id, memtype_id, strs, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::HDF5Vlen{T}, xfer::HDF5Properties) where {T<:Union{HDF5Scalar,CharType}} h5d_write(dataset_id, memtype_id, v, xfer.id)
 # - p_create lost toclose argument
 @deprecate p_create(class, toclose::Bool, pv...) p_create(class, pv...)
 
@@ -172,3 +172,13 @@ end
 @deprecate_binding h5f_get_intend h5f_get_intent
 @deprecate_binding hf5start_swmr_write h5f_start_swmr_write
 @deprecate_binding h5d_oappend h5do_append
+
+### Changed in PR#678
+# - normalized constants names to C definitions
+@deprecate_binding Haddr haddr_t
+@deprecate_binding Herr herr_t
+@deprecate_binding Hid hid_t
+@deprecate_binding Hsize hsize_t
+@deprecate_binding Hssize hssize_t
+@deprecate_binding Htri htri_t
+@deprecate_binding Hvl_t hvl_t

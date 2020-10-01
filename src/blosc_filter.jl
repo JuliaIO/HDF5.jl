@@ -29,9 +29,9 @@ const blosc_name = "blosc"
 const blosc_flags = Ref{Cuint}()
 const blosc_values = Vector{Cuint}(undef,8)
 const blosc_nelements = Ref{Csize_t}(length(blosc_values))
-const blosc_chunkdims = Vector{Hsize}(undef,32)
+const blosc_chunkdims = Vector{hsize_t }(undef,32)
 
-function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
+function blosc_set_local(dcpl::hid_t, htype::hid_t, space::hid_t)
     h5p_get_filter_by_id(dcpl, FILTER_BLOSC, blosc_flags, blosc_nelements, blosc_values, 0, C_NULL, C_NULL)
     flags = blosc_flags[]
 
@@ -44,7 +44,7 @@ function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
     ndims = h5p_get_chunk(dcpl, 32, blosc_chunkdims)
     chunksize = prod(resize!(blosc_chunkdims, ndims))
     if ndims < 0 || ndims > 32 || chunksize > Blosc.MAX_BUFFERSIZE
-        return Herr(-1)
+        return herr_t(-1)
     end
 
     htypesize = h5t_get_size(htype)
@@ -67,7 +67,7 @@ function blosc_set_local(dcpl::Hid, htype::Hid, space::Hid)
 
     h5p_modify_filter(dcpl, FILTER_BLOSC, flags, nelements, blosc_values)
 
-    return Herr(1)
+    return herr_t(1)
 end
 
 function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
@@ -116,7 +116,7 @@ end
 
 # register the Blosc filter function with HDF5
 function register_blosc()
-    c_blosc_set_local = @cfunction(blosc_set_local, Herr, (Hid,Hid,Hid))
+    c_blosc_set_local = @cfunction(blosc_set_local, herr_t, (hid_t,hid_t,hid_t))
     c_blosc_filter = @cfunction(blosc_filter, Csize_t,
                                 (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
                                  Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
