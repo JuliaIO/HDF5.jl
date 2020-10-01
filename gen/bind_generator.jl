@@ -60,8 +60,8 @@ Furthermore, the C return value is interpreted to automatically generate error c
 1. If `ReturnType === :herr_t` or `ReturnType === :htri_t`, an error is raised when the return
    value is negative.
 
-2. If `ReturnType === :haddr_t` or `ReturnType === :hsize_t `, an error is raised when the
-   return value is equivalent to `-1 % haddr_t` and `-1 % hsize_t `, respectively.
+2. If `ReturnType === :haddr_t` or `ReturnType === :hsize_t`, an error is raised when the
+   return value is equivalent to `-1 % haddr_t` and `-1 % hsize_t`, respectively.
 
 3. If `ReturnType` is a `Ptr` expression, an error is raised when the return value is
    equal to `C_NULL`.

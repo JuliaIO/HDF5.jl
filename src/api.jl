@@ -70,7 +70,7 @@ function h5a_delete(loc_id, attr_name)
 end
 
 function h5a_delete_by_idx(loc_id, obj_name, idx_type, order, n, lapl_id)
-    var"#status#" = ccall((:H5Adelete_by_idx, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t , hid_t), loc_id, obj_name, idx_type, order, n, lapl_id)
+    var"#status#" = ccall((:H5Adelete_by_idx, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, hid_t), loc_id, obj_name, idx_type, order, n, lapl_id)
     var"#status#" < 0 && error("Error deleting attribute ", n, " from object ", obj_name)
     return nothing
 end
@@ -106,7 +106,7 @@ function h5a_get_name(attr_id, buf_size, buf)
 end
 
 function h5a_get_name_by_idx(loc_id, obj_name, index_type, order, idx, name, size, lapl_id)
-    var"#status#" = ccall((:H5Aget_name_by_idx, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t , Ptr{UInt8}, Csize_t, hid_t), loc_id, obj_name, index_type, order, idx, name, size, lapl_id)
+    var"#status#" = ccall((:H5Aget_name_by_idx, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, Ptr{UInt8}, Csize_t, hid_t), loc_id, obj_name, index_type, order, idx, name, size, lapl_id)
     var"#status#" < 0 && error("Error getting attribute name")
     return var"#status#"
 end
@@ -208,13 +208,13 @@ function h5d_refresh(dataset_id)
 end
 
 function h5d_set_extent(dataset_id, new_dims)
-    var"#status#" = ccall((:H5Dset_extent, libhdf5), herr_t, (hid_t, Ptr{hsize_t }), dataset_id, new_dims)
+    var"#status#" = ccall((:H5Dset_extent, libhdf5), herr_t, (hid_t, Ptr{hsize_t}), dataset_id, new_dims)
     var"#status#" < 0 && error("Error extending dataset dimensions")
     return nothing
 end
 
 function h5d_vlen_get_buf_size(dset_id, type_id, space_id, buf)
-    var"#status#" = ccall((:H5Dvlen_get_buf_size, libhdf5), herr_t, (hid_t, hid_t, hid_t, Ptr{hsize_t }), dset_id, type_id, space_id, buf)
+    var"#status#" = ccall((:H5Dvlen_get_buf_size, libhdf5), herr_t, (hid_t, hid_t, hid_t, Ptr{hsize_t}), dset_id, type_id, space_id, buf)
     var"#status#" < 0 && error("Error getting vlen buffer size")
     return nothing
 end
@@ -346,13 +346,13 @@ function h5g_get_info(group_id, buf)
 end
 
 function h5g_get_num_objs(loc_id, num_obj)
-    var"#status#" = ccall((:H5Gget_num_objs, libhdf5), hid_t, (hid_t, Ptr{hsize_t }), loc_id, num_obj)
+    var"#status#" = ccall((:H5Gget_num_objs, libhdf5), hid_t, (hid_t, Ptr{hsize_t}), loc_id, num_obj)
     var"#status#" < 0 && error("Error getting group length")
     return var"#status#"
 end
 
 function h5g_get_objname_by_idx(loc_id, idx, pathname, size)
-    var"#status#" = ccall((:H5Gget_objname_by_idx, libhdf5), Cssize_t, (hid_t, hsize_t , Ptr{UInt8}, Csize_t), loc_id, idx, pathname, size)
+    var"#status#" = ccall((:H5Gget_objname_by_idx, libhdf5), Cssize_t, (hid_t, hsize_t, Ptr{UInt8}, Csize_t), loc_id, idx, pathname, size)
     var"#status#" < 0 && error("Error getting group object name ", h5i_get_name(loc_id), "/", pathname)
     return var"#status#"
 end
@@ -436,7 +436,7 @@ function h5l_get_info(link_loc_id, link_name, link_buf, lapl_id)
 end
 
 function h5l_get_name_by_idx(loc_id, group_name, index_field, order, n, name, size, lapl_id)
-    var"#status#" = ccall((:H5Lget_name_by_idx, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t , Ptr{UInt8}, Csize_t, hid_t), loc_id, group_name, index_field, order, n, name, size, lapl_id)
+    var"#status#" = ccall((:H5Lget_name_by_idx, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, Ptr{UInt8}, Csize_t, hid_t), loc_id, group_name, index_field, order, n, name, size, lapl_id)
     var"#status#" < 0 && error("Error getting object name")
     return var"#status#"
 end
@@ -472,7 +472,7 @@ function h5o_open_by_addr(loc_id, addr)
 end
 
 function h5o_open_by_idx(loc_id, group_name, index_type, order, n, lapl_id)
-    var"#status#" = ccall((:H5Oopen_by_idx, libhdf5), hid_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t , hid_t), loc_id, group_name, index_type, order, n, lapl_id)
+    var"#status#" = ccall((:H5Oopen_by_idx, libhdf5), hid_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, hid_t), loc_id, group_name, index_type, order, n, lapl_id)
     var"#status#" < 0 && error("Error opening object of index ", n)
     return var"#status#"
 end
@@ -490,7 +490,7 @@ function h5p_create(cls_id)
 end
 
 function h5p_get_alignment(plist_id, threshold, alignment)
-    var"#status#" = ccall((:H5Pget_alignment, libhdf5), herr_t, (hid_t, Ptr{hsize_t }, Ptr{hsize_t }), plist_id, threshold, alignment)
+    var"#status#" = ccall((:H5Pget_alignment, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}), plist_id, threshold, alignment)
     var"#status#" < 0 && error("Error getting alignment")
     return nothing
 end
@@ -502,7 +502,7 @@ function h5p_get_alloc_time(plist_id, alloc_time)
 end
 
 function h5p_get_chunk(plist_id, n_dims, dims)
-    var"#status#" = ccall((:H5Pget_chunk, libhdf5), Cint, (hid_t, Cint, Ptr{hsize_t }), plist_id, n_dims, dims)
+    var"#status#" = ccall((:H5Pget_chunk, libhdf5), Cint, (hid_t, Cint, Ptr{hsize_t}), plist_id, n_dims, dims)
     var"#status#" < 0 && error("Error getting chunk size")
     return var"#status#"
 end
@@ -555,7 +555,7 @@ function h5p_get_layout(plist_id)
 end
 
 function h5p_get_userblock(plist_id, len)
-    var"#status#" = ccall((:H5Pget_userblock, libhdf5), herr_t, (hid_t, Ptr{hsize_t }), plist_id, len)
+    var"#status#" = ccall((:H5Pget_userblock, libhdf5), herr_t, (hid_t, Ptr{hsize_t}), plist_id, len)
     var"#status#" < 0 && error("Error getting userblock")
     return nothing
 end
@@ -567,7 +567,7 @@ function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
 end
 
 function h5p_set_alignment(plist_id, threshold, alignment)
-    var"#status#" = ccall((:H5Pset_alignment, libhdf5), herr_t, (hid_t, hsize_t , hsize_t ), plist_id, threshold, alignment)
+    var"#status#" = ccall((:H5Pset_alignment, libhdf5), herr_t, (hid_t, hsize_t, hsize_t), plist_id, threshold, alignment)
     var"#status#" < 0 && error("Error setting alignment")
     return nothing
 end
@@ -585,7 +585,7 @@ function h5p_set_char_encoding(plist_id, encoding)
 end
 
 function h5p_set_chunk(plist_id, ndims, dims)
-    var"#status#" = ccall((:H5Pset_chunk, libhdf5), herr_t, (hid_t, Cint, Ptr{hsize_t }), plist_id, ndims, dims)
+    var"#status#" = ccall((:H5Pset_chunk, libhdf5), herr_t, (hid_t, Cint, Ptr{hsize_t}), plist_id, ndims, dims)
     var"#status#" < 0 && error("Error setting chunk size")
     return nothing
 end
@@ -675,7 +675,7 @@ function h5p_set_shuffle(plist_id)
 end
 
 function h5p_set_userblock(plist_id, len)
-    var"#status#" = ccall((:H5Pset_userblock, libhdf5), herr_t, (hid_t, hsize_t ), plist_id, len)
+    var"#status#" = ccall((:H5Pset_userblock, libhdf5), herr_t, (hid_t, hsize_t), plist_id, len)
     var"#status#" < 0 && error("Error setting userblock")
     return nothing
 end
@@ -729,13 +729,13 @@ function h5s_create(class)
 end
 
 function h5s_create_simple(rank, current_dims, maximum_dims)
-    var"#status#" = ccall((:H5Screate_simple, libhdf5), hid_t, (Cint, Ptr{hsize_t }, Ptr{hsize_t }), rank, current_dims, maximum_dims)
+    var"#status#" = ccall((:H5Screate_simple, libhdf5), hid_t, (Cint, Ptr{hsize_t}, Ptr{hsize_t}), rank, current_dims, maximum_dims)
     var"#status#" < 0 && error("Error creating simple dataspace")
     return var"#status#"
 end
 
 function h5s_get_simple_extent_dims(space_id, dims, maxdims)
-    var"#status#" = ccall((:H5Sget_simple_extent_dims, libhdf5), Cint, (hid_t, Ptr{hsize_t }, Ptr{hsize_t }), space_id, dims, maxdims)
+    var"#status#" = ccall((:H5Sget_simple_extent_dims, libhdf5), Cint, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}), space_id, dims, maxdims)
     var"#status#" < 0 && error("Error getting the dimensions for a dataspace")
     return var"#status#"
 end
@@ -759,13 +759,13 @@ function h5s_is_simple(space_id)
 end
 
 function h5s_select_hyperslab(dspace_id, seloper, start, stride, count, block)
-    var"#status#" = ccall((:H5Sselect_hyperslab, libhdf5), herr_t, (hid_t, Cint, Ptr{hsize_t }, Ptr{hsize_t }, Ptr{hsize_t }, Ptr{hsize_t }), dspace_id, seloper, start, stride, count, block)
+    var"#status#" = ccall((:H5Sselect_hyperslab, libhdf5), herr_t, (hid_t, Cint, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}), dspace_id, seloper, start, stride, count, block)
     var"#status#" < 0 && error("Error selecting hyperslab")
     return nothing
 end
 
 function h5t_array_create(basetype_id, ndims, sz)
-    var"#status#" = ccall((:H5Tarray_create2, libhdf5), hid_t, (hid_t, Cuint, Ptr{hsize_t }), basetype_id, ndims, sz)
+    var"#status#" = ccall((:H5Tarray_create2, libhdf5), hid_t, (hid_t, Cuint, Ptr{hsize_t}), basetype_id, ndims, sz)
     var"#status#" < 0 && error("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz)
     return var"#status#"
 end
@@ -807,7 +807,7 @@ function h5t_equal(dtype_id1, dtype_id2)
 end
 
 function h5t_get_array_dims(dtype_id, dims)
-    var"#status#" = ccall((:H5Tget_array_dims2, libhdf5), Cint, (hid_t, Ptr{hsize_t }), dtype_id, dims)
+    var"#status#" = ccall((:H5Tget_array_dims2, libhdf5), Cint, (hid_t, Ptr{hsize_t}), dtype_id, dims)
     var"#status#" < 0 && error("Error getting dimensions of array")
     return var"#status#"
 end
@@ -938,13 +938,13 @@ function h5t_vlen_create(base_type_id)
 end
 
 function h5do_append(dset_id, dxpl_id, index, num_elem, memtype, buffer)
-    var"#status#" = ccall((:H5DOappend, libhdf5_hl), herr_t, (hid_t, hid_t, Cuint, hsize_t , hid_t, Ptr{Cvoid}), dset_id, dxpl_id, index, num_elem, memtype, buffer)
+    var"#status#" = ccall((:H5DOappend, libhdf5_hl), herr_t, (hid_t, hid_t, Cuint, hsize_t, hid_t, Ptr{Cvoid}), dset_id, dxpl_id, index, num_elem, memtype, buffer)
     var"#status#" < 0 && error("error appending")
     return nothing
 end
 
 function h5do_write_chunk(dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
-    var"#status#" = ccall((:H5DOwrite_chunk, libhdf5_hl), herr_t, (hid_t, hid_t, Int32, Ptr{hsize_t }, Csize_t, Ptr{Cvoid}), dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
+    var"#status#" = ccall((:H5DOwrite_chunk, libhdf5_hl), herr_t, (hid_t, hid_t, Int32, Ptr{hsize_t}, Csize_t, Ptr{Cvoid}), dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
     var"#status#" < 0 && error("Error writing chunk")
     return nothing
 end

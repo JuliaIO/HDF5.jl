@@ -34,13 +34,13 @@
 @bind h5a_create(loc_id::hid_t, pathname::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t)::hid_t error("Error creating attribute ", h5a_get_name(loc_id), "/", pathname)
 @bind h5a_create_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t, lapl_id::hid_t)::hid_t error("Error creating attribute ", attr_name, " for object ", obj_name)
 @bind h5a_delete(loc_id::hid_t, attr_name::Ptr{UInt8})::herr_t error("Error deleting attribute ", attr_name)
-@bind h5a_delete_by_idx(loc_id::hid_t, obj_name::Ptr{UInt8}, idx_type::Cint, order::Cint, n::hsize_t , lapl_id::hid_t)::herr_t error("Error deleting attribute ", n, " from object ", obj_name)
+@bind h5a_delete_by_idx(loc_id::hid_t, obj_name::Ptr{UInt8}, idx_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::herr_t error("Error deleting attribute ", n, " from object ", obj_name)
 @bind h5a_delete_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, lapl_id::hid_t)::herr_t error("Error removing attribute ", attr_name, " from object ", obj_name)
 @bind h5a_exists(obj_id::hid_t, attr_name::Ptr{UInt8})::htri_t error("Error checking whether attribute ", attr_name, " exists")
 @bind h5a_exists_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, lapl_id::hid_t)::htri_t error("Error checking whether object ", obj_name, " has attribute ", attr_name)
 @bind h5a_get_create_plist(attr_id::hid_t)::hid_t error("Cannot get creation property list")
 @bind h5a_get_name(attr_id::hid_t, buf_size::Csize_t, buf::Ptr{UInt8})::Cssize_t "Error getting attribute name"
-@bind h5a_get_name_by_idx(loc_id::hid_t, obj_name::Ptr{UInt8}, index_type::Cint, order::Cint, idx::hsize_t , name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t error("Error getting attribute name")
+@bind h5a_get_name_by_idx(loc_id::hid_t, obj_name::Ptr{UInt8}, index_type::Cint, order::Cint, idx::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t error("Error getting attribute name")
 @bind h5a_get_space(attr_id::hid_t)::hid_t "Error getting attribute dataspace"
 @bind h5a_get_type(attr_id::hid_t)::hid_t "Error getting attribute type"
 @bind h5a_open(obj_id::hid_t, pathname::Ptr{UInt8}, aapl_id::hid_t)::hid_t error("Error opening attribute ", h5i_get_name(obj_id), "/", pathname)
@@ -62,8 +62,8 @@
 @bind h5d_open(loc_id::hid_t, pathname::Ptr{UInt8}, dapl_id::hid_t)::hid_t error("Error opening dataset ", h5i_get_name(loc_id), "/", pathname)
 @bind h5d_read(dataset_id::hid_t, mem_type_id::hid_t, mem_space_id::hid_t, file_space_id::hid_t, xfer_plist_id::hid_t, buf::Ptr{Cvoid})::herr_t error("Error reading dataset ", h5i_get_name(dataset_id))
 @bind h5d_refresh(dataset_id::hid_t)::herr_t "Error refreshing dataset"
-@bind h5d_set_extent(dataset_id::hid_t, new_dims::Ptr{hsize_t })::herr_t "Error extending dataset dimensions"
-@bind h5d_vlen_get_buf_size(dset_id::hid_t, type_id::hid_t, space_id::hid_t, buf::Ptr{hsize_t })::herr_t "Error getting vlen buffer size"
+@bind h5d_set_extent(dataset_id::hid_t, new_dims::Ptr{hsize_t})::herr_t "Error extending dataset dimensions"
+@bind h5d_vlen_get_buf_size(dset_id::hid_t, type_id::hid_t, space_id::hid_t, buf::Ptr{hsize_t})::herr_t "Error getting vlen buffer size"
 @bind h5d_vlen_reclaim(type_id::hid_t, space_id::hid_t, plist_id::hid_t, buf::Ptr{Cvoid})::herr_t "Error reclaiming vlen buffer"
 @bind h5d_write(dataset_id::hid_t, mem_type_id::hid_t, mem_space_id::hid_t, file_space_id::hid_t, xfer_plist_id::hid_t, buf::Ptr{Cvoid})::herr_t "Error writing dataset"
 
@@ -100,8 +100,8 @@
 @bind h5g_create(loc_id::hid_t, pathname::Ptr{UInt8}, lcpl_id::hid_t, gcpl_id::hid_t, gapl_id::hid_t)::hid_t error("Error creating group ", h5i_get_name(loc_id), "/", pathname)
 @bind h5g_get_create_plist(group_id::hid_t)::hid_t "Error getting group create property list"
 @bind h5g_get_info(group_id::hid_t, buf::Ptr{H5Ginfo})::herr_t "Error getting group info"
-@bind h5g_get_num_objs(loc_id::hid_t, num_obj::Ptr{hsize_t })::hid_t "Error getting group length"
-@bind h5g_get_objname_by_idx(loc_id::hid_t, idx::hsize_t , pathname::Ptr{UInt8}, size::Csize_t)::Cssize_t error("Error getting group object name ", h5i_get_name(loc_id), "/", pathname)
+@bind h5g_get_num_objs(loc_id::hid_t, num_obj::Ptr{hsize_t})::hid_t "Error getting group length"
+@bind h5g_get_objname_by_idx(loc_id::hid_t, idx::hsize_t, pathname::Ptr{UInt8}, size::Csize_t)::Cssize_t error("Error getting group object name ", h5i_get_name(loc_id), "/", pathname)
 @bind h5g_open(loc_id::hid_t, pathname::Ptr{UInt8}, gapl_id::hid_t)::hid_t error("Error opening group ", h5i_get_name(loc_id), "/", pathname)
 
 ###
@@ -125,7 +125,7 @@
 @bind h5l_delete(obj_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::herr_t error("Error deleting ", h5i_get_name(obj_id), "/", pathname)
 @bind h5l_exists(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::htri_t error("Cannot determine whether ", pathname, " exists")
 @bind h5l_get_info(link_loc_id::hid_t, link_name::Ptr{UInt8}, link_buf::Ptr{H5LInfo}, lapl_id::hid_t)::herr_t error("Error getting info for link ", link_name)
-@bind h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, order::Cint, n::hsize_t , name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting object name"
+@bind h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting object name"
 
 ###
 ### Object Interface
@@ -136,7 +136,7 @@
 @bind h5o_get_info(object_id::hid_t, buf::Ptr{H5Oinfo})::herr_t "Error getting object info"
 @bind h5o_open(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::hid_t error("Error opening object ", h5i_get_name(loc_id), "/", pathname)
 @bind h5o_open_by_addr(loc_id::hid_t, addr::haddr_t)::hid_t error("Error opening object by address")
-@bind h5o_open_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_type::Cint, order::Cint, n::hsize_t , lapl_id::hid_t)::hid_t error("Error opening object of index ", n)
+@bind h5o_open_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::hid_t error("Error opening object of index ", n)
 
 ###
 ### Property Interface
@@ -144,9 +144,9 @@
 
 @bind h5p_close(id::hid_t)::herr_t "Error closing property list"
 @bind h5p_create(cls_id::hid_t)::hid_t "Error creating property list"
-@bind h5p_get_alignment(plist_id::hid_t, threshold::Ptr{hsize_t }, alignment::Ptr{hsize_t })::herr_t "Error getting alignment"
+@bind h5p_get_alignment(plist_id::hid_t, threshold::Ptr{hsize_t}, alignment::Ptr{hsize_t})::herr_t "Error getting alignment"
 @bind h5p_get_alloc_time(plist_id::hid_t, alloc_time::Ptr{Cint})::herr_t "Error getting allocation timing"
-@bind h5p_get_chunk(plist_id::hid_t, n_dims::Cint, dims::Ptr{hsize_t })::Cint error("Error getting chunk size")
+@bind h5p_get_chunk(plist_id::hid_t, n_dims::Cint, dims::Ptr{hsize_t})::Cint error("Error getting chunk size")
 @bind h5p_get_driver(plist_id::hid_t)::hid_t "Error getting driver identifier"
 @bind h5p_get_driver_info(plist_id::hid_t)::Ptr{Cvoid} # does not error
 @bind h5p_get_dxpl_mpio(dxpl_id::hid_t, xfer_mode::Ptr{Cint})::herr_t "Error getting MPIO transfer mode"
@@ -155,12 +155,12 @@
 @bind h5p_get_fclose_degree(plist_id::hid_t, fc_degree::Ptr{Cint})::herr_t "Error getting close degree"
 @bind h5p_get_filter_by_id(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Ref{Cuint}, cd_nelmts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{UInt8}, filter_config::Ptr{Cuint})::herr_t "Error getting filter ID"
 @bind h5p_get_layout(plist_id::hid_t)::Cint error("Error getting layout")
-@bind h5p_get_userblock(plist_id::hid_t, len::Ptr{hsize_t })::herr_t "Error getting userblock"
+@bind h5p_get_userblock(plist_id::hid_t, len::Ptr{hsize_t})::herr_t "Error getting userblock"
 @bind h5p_modify_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})::herr_t "Error modifying filter"
-@bind h5p_set_alignment(plist_id::hid_t, threshold::hsize_t , alignment::hsize_t )::herr_t "Error setting alignment"
+@bind h5p_set_alignment(plist_id::hid_t, threshold::hsize_t, alignment::hsize_t)::herr_t "Error setting alignment"
 @bind h5p_set_alloc_time(plist_id::hid_t, alloc_time::Cint)::herr_t "Error setting allocation timing"
 @bind h5p_set_char_encoding(plist_id::hid_t, encoding::Cint)::herr_t "Error setting char encoding"
-@bind h5p_set_chunk(plist_id::hid_t, ndims::Cint, dims::Ptr{hsize_t })::herr_t "Error setting chunk size"
+@bind h5p_set_chunk(plist_id::hid_t, ndims::Cint, dims::Ptr{hsize_t})::herr_t "Error setting chunk size"
 @bind h5p_set_chunk_cache(dapl_id::hid_t, rdcc_nslots::Csize_t, rdcc_nbytes::Csize_t, rdcc_w0::Cdouble)::herr_t "Error setting chunk cache"
 @bind h5p_set_create_intermediate_group(plist_id::hid_t, setting::Cuint)::herr_t "Error setting create intermediate group"
 @bind h5p_set_deflate(plist_id::hid_t, setting::Cuint)::herr_t "Error setting compression method and level (deflate)"
@@ -175,7 +175,7 @@
 @bind h5p_set_local_heap_size_hint(fapl_id::hid_t, size_hint::Cuint)::herr_t "Error setting local heap size hint"
 @bind h5p_set_obj_track_times(plist_id::hid_t, track_times::UInt8)::herr_t "Error setting object time tracking"
 @bind h5p_set_shuffle(plist_id::hid_t)::herr_t "Error enabling shuffle filter"
-@bind h5p_set_userblock(plist_id::hid_t, len::hsize_t )::herr_t "Error setting userblock"
+@bind h5p_set_userblock(plist_id::hid_t, len::hsize_t)::herr_t "Error setting userblock"
 @bind h5p_set_virtual(dcpl_id::hid_t, vspace_id::hid_t, src_file_name::Ptr{UInt8}, src_dset_name::Ptr{UInt8}, src_space_id::hid_t)::herr_t "Error setting virtual"
 
 ###
@@ -194,25 +194,25 @@
 @bind h5s_close(space_id::hid_t)::herr_t "Error closing dataspace"
 @bind h5s_copy(space_id::hid_t)::hid_t "Error copying dataspace"
 @bind h5s_create(class::Cint)::hid_t "Error creating dataspace"
-@bind h5s_create_simple(rank::Cint, current_dims::Ptr{hsize_t }, maximum_dims::Ptr{hsize_t })::hid_t "Error creating simple dataspace"
-@bind h5s_get_simple_extent_dims(space_id::hid_t, dims::Ptr{hsize_t }, maxdims::Ptr{hsize_t })::Cint "Error getting the dimensions for a dataspace"
+@bind h5s_create_simple(rank::Cint, current_dims::Ptr{hsize_t}, maximum_dims::Ptr{hsize_t})::hid_t "Error creating simple dataspace"
+@bind h5s_get_simple_extent_dims(space_id::hid_t, dims::Ptr{hsize_t}, maxdims::Ptr{hsize_t})::Cint "Error getting the dimensions for a dataspace"
 @bind h5s_get_simple_extent_ndims(space_id::hid_t)::Cint "Error getting the number of dimensions for a dataspace"
 @bind h5s_get_simple_extent_type(space_id::hid_t)::Cint "Error getting the dataspace type"
 @bind h5s_is_simple(space_id::hid_t)::htri_t "Error determining whether dataspace is simple"
-@bind h5s_select_hyperslab(dspace_id::hid_t, seloper::Cint, start::Ptr{hsize_t }, stride::Ptr{hsize_t }, count::Ptr{hsize_t }, block::Ptr{hsize_t })::herr_t "Error selecting hyperslab"
+@bind h5s_select_hyperslab(dspace_id::hid_t, seloper::Cint, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})::herr_t "Error selecting hyperslab"
 
 ###
 ### Datatype Interface
 ###
 
-@bind h5t_array_create(basetype_id::hid_t, ndims::Cuint, sz::Ptr{hsize_t })::hid_t error("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz)
+@bind h5t_array_create(basetype_id::hid_t, ndims::Cuint, sz::Ptr{hsize_t})::hid_t error("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz)
 @bind h5t_close(dtype_id::hid_t)::herr_t "Error closing datatype"
 @bind h5t_committed(dtype_id::hid_t)::htri_t error("Error determining whether datatype is committed")
 @bind h5t_commit(loc_id::hid_t, name::Ptr{UInt8}, dtype_id::hid_t, lcpl_id::hid_t, tcpl_id::hid_t, tapl_id::hid_t)::herr_t "Error committing type"
 @bind h5t_copy(dtype_id::hid_t)::hid_t "Error copying datatype"
 @bind h5t_create(class_id::Cint, sz::Csize_t)::hid_t error("Error creating datatype of id ", class_id)
 @bind h5t_equal(dtype_id1::hid_t, dtype_id2::hid_t)::hid_t "Error checking datatype equality"
-@bind h5t_get_array_dims(dtype_id::hid_t, dims::Ptr{hsize_t })::Cint "Error getting dimensions of array"
+@bind h5t_get_array_dims(dtype_id::hid_t, dims::Ptr{hsize_t})::Cint "Error getting dimensions of array"
 @bind h5t_get_array_ndims(dtype_id::hid_t)::Cint "Error getting ndims of array"
 @bind h5t_get_class(dtype_id::hid_t)::Cint "Error getting class"
 @bind h5t_get_cset(dtype_id::hid_t)::Cint "Error getting character set encoding"
@@ -243,8 +243,8 @@
 ### Optimized Functions Interface
 ###
 
-@bind h5do_append(dset_id::hid_t, dxpl_id::hid_t, index::Cuint, num_elem::hsize_t , memtype::hid_t, buffer::Ptr{Cvoid})::herr_t "error appending"
-@bind h5do_write_chunk(dset_id::hid_t, dxpl_id::hid_t, filter_mask::Int32, offset::Ptr{hsize_t }, bufsize::Csize_t, buf::Ptr{Cvoid})::herr_t "Error writing chunk"
+@bind h5do_append(dset_id::hid_t, dxpl_id::hid_t, index::Cuint, num_elem::hsize_t, memtype::hid_t, buffer::Ptr{Cvoid})::herr_t "error appending"
+@bind h5do_write_chunk(dset_id::hid_t, dxpl_id::hid_t, filter_mask::Int32, offset::Ptr{hsize_t}, bufsize::Csize_t, buf::Ptr{Cvoid})::herr_t "Error writing chunk"
 
 ###
 ### HDF5 Lite Interface

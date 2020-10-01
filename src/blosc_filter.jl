@@ -29,7 +29,7 @@ const blosc_name = "blosc"
 const blosc_flags = Ref{Cuint}()
 const blosc_values = Vector{Cuint}(undef,8)
 const blosc_nelements = Ref{Csize_t}(length(blosc_values))
-const blosc_chunkdims = Vector{hsize_t }(undef,32)
+const blosc_chunkdims = Vector{hsize_t}(undef,32)
 
 function blosc_set_local(dcpl::hid_t, htype::hid_t, space::hid_t)
     h5p_get_filter_by_id(dcpl, FILTER_BLOSC, blosc_flags, blosc_nelements, blosc_values, 0, C_NULL, C_NULL)
