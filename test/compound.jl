@@ -17,7 +17,7 @@ struct foo_hdf5
   b::Cstring
   c::NTuple{20, UInt8}
   d::NTuple{9, ComplexF64}
-  e::HDF5.Hvl_t
+  e::HDF5.hvl_t
 end
 
 function unsafe_convert(::Type{foo_hdf5}, x::foo)
@@ -25,7 +25,7 @@ function unsafe_convert(::Type{foo_hdf5}, x::foo)
            Base.unsafe_convert(Cstring, x.b),
            ntuple(i -> i <= ncodeunits(x.c) ? codeunit(x.c, i) : '\0', 20),
            ntuple(i -> x.d[i], length(x.d)),
-           HDF5.Hvl_t(length(x.e), pointer(x.e))
+           HDF5.hvl_t(length(x.e), pointer(x.e))
           )
 end
 
@@ -44,7 +44,7 @@ function datatype(::Type{foo_hdf5})
   HDF5.h5t_set_strpad(fixedstr_dtype, HDF5.H5T_STR_NULLPAD)
   HDF5.h5t_insert(dtype, "c", fieldoffset(foo_hdf5, 3), fixedstr_dtype)
 
-  hsz = HDF5.Hsize[3,3]
+  hsz = HDF5.hsize_t[3,3]
   array_dtype = HDF5.h5t_array_create(datatype(ComplexF64).id, 2, hsz)
   HDF5.h5t_insert(dtype, "d", fieldoffset(foo_hdf5, 4), array_dtype)
 
@@ -69,7 +69,7 @@ function datatype(::Type{bar_hdf5})
   HDF5.h5t_set_size(fixedstr_dtype, 20 * sizeof(UInt8))
   HDF5.h5t_set_cset(fixedstr_dtype, HDF5.H5T_CSET_UTF8)
 
-  hsz = HDF5.Hsize[2]
+  hsz = HDF5.hsize_t[2]
   array_dtype = HDF5.h5t_array_create(fixedstr_dtype, 1, hsz)
 
   HDF5.h5t_insert(dtype, "a", fieldoffset(bar_hdf5, 1), array_dtype)
