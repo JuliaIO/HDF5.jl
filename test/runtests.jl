@@ -18,8 +18,8 @@ include("mmap.jl")
 include("properties.jl")
 
 try
-  using MPI
-  # basic MPI tests, for actual parallel tests we need to run in MPI mode
-  include("mpio.jl")
+    using MPI
+    # basic MPI tests, for actual parallel tests we need to run in MPI mode
+    include("mpio.jl")
 catch
 end
