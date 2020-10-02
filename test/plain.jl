@@ -46,7 +46,9 @@ let
     HDF5.h5t_set_cset(dtype.id, HDF5.cset(typeof(salut)))
     dspace = HDF5.dataspace(salut)
     dset = HDF5.d_create(f, "salut-vlen", dtype, dspace)
-    HDF5.h5d_write(dset, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(salut)])
+    GC.@preserve salut begin
+        HDF5.h5d_write(dset, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(salut)])
+    end
 end
 # Arrays of strings
 salut_split = ["Hi", "there"]
@@ -527,6 +529,66 @@ h5open(fn, "w", alignment=(0, 8)) do fid
 end
 
 end # writing abstract arrays
+
+@testset "generic read of native types" begin
+fn = tempname()
+hfile = h5open(fn, "w")
+
+dtype_varstring = HDF5Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
+HDF5.h5t_set_size(dtype_varstring, HDF5.H5T_VARIABLE)
+
+write(hfile, "uint8_array", UInt8[(1:8)...])
+write(hfile, "bool_scalar", true)
+
+fixstring = "fix"
+varstring = "var"
+write(hfile, "fixed_string", fixstring)
+vardset = d_create(hfile, "variable_string", dtype_varstring, dataspace(varstring))
+GC.@preserve varstring begin
+    HDF5.h5d_write(vardset, dtype_varstring, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(varstring)])
+end
+flush(hfile)
+close(dtype_varstring)
+
+# generic read() handles concrete types with definite sizes transparently
+d = read(hfile["uint8_array"], UInt8)
+@test d isa Vector{UInt8}
+@test d == 1:8
+d = read(hfile["bool_scalar"], Bool)
+@test d isa Bool
+@test d == true
+d = read(hfile["fixed_string"], HDF5.FixedString{length(fixstring),0})
+@test d isa String
+@test d == fixstring
+d = read(hfile["variable_string"], Cstring)
+@test d isa String
+@test d == varstring
+# will also accept memory-compatible reinterpretations
+d = read(hfile["uint8_array"], Int8)
+@test d isa Vector{Int8}
+@test d == 1:8
+d = read(hfile["bool_scalar"], UInt8)
+@test d isa UInt8
+@test d == 0x1
+# but should throw on non-compatible types
+@test_throws ErrorException("""
+                            Type size mismatch
+                            sizeof(UInt16) = 2
+                            sizeof($(sprint(show, datatype(UInt8)))) = 1
+                            """) read(hfile["uint8_array"], UInt16)
+
+# Strings are not fixed size, but generic read still handles them if given the correct
+# underlying FixedString or Cstring type; a method overload makes String work, too.
+d = read(hfile["fixed_string"], String)
+@test d isa String
+@test d == fixstring
+d = read(hfile["variable_string"], String)
+@test d isa String
+@test d == varstring
+
+close(hfile)
+rm(fn)
+end # generic read of native types
 
 @testset "show" begin
 fn = tempname()
