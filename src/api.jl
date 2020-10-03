@@ -454,7 +454,7 @@ function h5o_copy(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id
 end
 
 function h5o_get_info(object_id, buf)
-    var"#status#" = ccall((:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5Oinfo}), object_id, buf)
+    var"#status#" = ccall((:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info_t}), object_id, buf)
     var"#status#" < 0 && error("Error getting object info")
     return nothing
 end

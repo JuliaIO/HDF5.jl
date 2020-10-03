@@ -132,7 +132,7 @@ end
 ###
 
 function h5o_get_info(loc_id)
-    oinfo = Ref{H5Oinfo}()
+    oinfo = Ref{H5O_info_t}()
     h5o_get_info(loc_id, oinfo)
     return oinfo[]
 end

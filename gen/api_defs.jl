@@ -133,7 +133,7 @@
 
 @bind h5o_close(object_id::hid_t)::herr_t "Error closing object"
 @bind h5o_copy(src_loc_id::hid_t, src_name::Ptr{UInt8}, dst_loc_id::hid_t, dst_name::Ptr{UInt8}, ocpypl_id::hid_t, lcpl_id::hid_t)::herr_t error("Error copying object ", h5i_get_name(src_loc_id), "/", src_name, " to ", h5i_get_name(dst_loc_id), "/", dst_name)
-@bind h5o_get_info(object_id::hid_t, buf::Ptr{H5Oinfo})::herr_t "Error getting object info"
+@bind h5o_get_info(object_id::hid_t, buf::Ptr{H5O_info_t})::herr_t "Error getting object info"
 @bind h5o_open(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::hid_t error("Error opening object ", h5i_get_name(loc_id), "/", pathname)
 @bind h5o_open_by_addr(loc_id::hid_t, addr::haddr_t)::hid_t error("Error opening object by address")
 @bind h5o_open_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::hid_t error("Error opening object of index ", n)

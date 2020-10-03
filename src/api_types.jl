@@ -31,21 +31,21 @@ struct H5Ginfo
 end
 
 # For objects
-struct Hmetainfo
+struct H5_ih_info_t
     index_size::hsize_t
     heap_size::hsize_t
 end
-
-struct H5Oinfo
+struct H5O_info_t # version 1 type H5O_info1_t
     fileno::Cuint
-    addr::hsize_t
-    otype::Cint
+    addr::haddr_t
+    otype::Cint # enum H5O_type_t
     rc::Cuint
     atime::C_time_t
     mtime::C_time_t
     ctime::C_time_t
     btime::C_time_t
     num_attrs::hsize_t
+    #{ inlined struct H5O_hdr_info_t named type
     version::Cuint
     nmesgs::Cuint
     nchunks::Cuint
@@ -56,8 +56,11 @@ struct H5Oinfo
     free::hsize_t
     present::UInt64
     shared::UInt64
-    meta_obj::Hmetainfo
-    meta_attr::Hmetainfo
+    #}
+    #{ inlined anonymous struct named meta_size
+    meta_obj::H5_ih_info_t
+    meta_attr::H5_ih_info_t
+    #}
 end
 
 # For links

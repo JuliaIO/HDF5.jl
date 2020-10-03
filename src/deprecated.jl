@@ -182,3 +182,7 @@ end
 @deprecate_binding Hssize hssize_t
 @deprecate_binding Htri htri_t
 @deprecate_binding Hvl_t hvl_t
+
+### Changed in PR#688
+# - normalized more C type names
+@deprecate_binding H5Oinfo H5O_info_t
