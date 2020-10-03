@@ -555,7 +555,7 @@ function h5p_get_fclose_degree(fapl_id, fc_degree)
 end
 
 function h5p_get_filter_by_id(plist_id, filter_id, flags, cd_nelmts, cd_values, namelen, name, filter_config)
-    var"#status#" = ccall((:H5Pget_filter_by_id2, libhdf5), herr_t, (hid_t, H5Z_filter_t, Ref{Cuint}, Ref{Csize_t}, Ptr{Cuint}, Csize_t, Ptr{UInt8}, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values, namelen, name, filter_config)
+    var"#status#" = ccall((:H5Pget_filter_by_id2, libhdf5), herr_t, (hid_t, Cint, Ref{Cuint}, Ref{Csize_t}, Ptr{Cuint}, Csize_t, Ptr{UInt8}, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values, namelen, name, filter_config)
     var"#status#" < 0 && error("Error getting filter ID")
     return nothing
 end
@@ -591,7 +591,7 @@ function h5p_get_userblock(plist_id, len)
 end
 
 function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
-    var"#status#" = ccall((:H5Pmodify_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
+    var"#status#" = ccall((:H5Pmodify_filter, libhdf5), herr_t, (hid_t, Cint, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
     var"#status#" < 0 && error("Error modifying filter")
     return nothing
 end
@@ -669,7 +669,7 @@ function h5p_set_fclose_degree(plist_id, fc_degree)
 end
 
 function h5p_set_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
-    var"#status#" = ccall((:H5Pset_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
+    var"#status#" = ccall((:H5Pset_filter, libhdf5), herr_t, (hid_t, Cint, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
     var"#status#" < 0 && error("Error setting filter")
     return nothing
 end

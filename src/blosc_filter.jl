@@ -2,26 +2,6 @@ import Blosc
 
 # port of https://github.com/Blosc/c-blosc/blob/3a668dcc9f61ad22b5c0a0ab45fe8dad387277fd/hdf5/blosc_filter.c (copyright 2010 Francesc Alted, license: MIT/expat)
 
-const H5T_class_t = Cint # C enum
-
-# The following definitions mirror those in H5Zpublic.h for HDF5 1.8.x:
-const H5Z_FLAG_REVERSE = 0x0100
-const H5Z_FLAG_OPTIONAL = 0x0001
-const H5Z_CLASS_T_VERS = 1
-const H5Z_filter_t = Cint
-
-# H5Z_class2_t
-struct H5Z_class_t
-    version::Cint # = H5Z_CLASS_T_VERS
-    id::H5Z_filter_t # Filter ID number
-    encoder_present::Cuint # Does this filter have an encoder?
-    decoder_present::Cuint # Does this filter have a decoder?
-    name::Ptr{UInt8} # Comment for debugging
-    can_apply::Ptr{Cvoid} # The "can apply" callback
-    set_local::Ptr{Cvoid} # The "set local" callback
-    filter::Ptr{Cvoid} # The filter callback
-end
-
 const FILTER_BLOSC_VERSION = 2
 const FILTER_BLOSC = 32001 # Filter ID registered with the HDF Group for Blosc
 const blosc_name = "blosc"
