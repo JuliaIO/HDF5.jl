@@ -88,7 +88,7 @@ end
 ###
 
 function h5g_get_info(loc_id)
-    ginfo = Ref{H5Ginfo}()
+    ginfo = Ref{H5G_info_t}()
     h5g_get_info(loc_id, ginfo)
     return ginfo[]
 end

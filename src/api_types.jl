@@ -23,11 +23,11 @@ end
 const HDF5ReferenceObj_NULL = HDF5ReferenceObj(UInt64(0))
 
 # For group information
-struct H5Ginfo
-    storage_type::Cint
+struct H5G_info_t
+    storage_type::Cint # enum H5G_storage_type_t
     nlinks::hsize_t
     max_corder::Int64
-    mounted::Cint
+    mounted::Cuint
 end
 
 # For objects

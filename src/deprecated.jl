@@ -185,4 +185,5 @@ end
 
 ### Changed in PR#688
 # - normalized more C type names
+@deprecate_binding H5Ginfo H5G_info_t
 @deprecate_binding H5Oinfo H5O_info_t

@@ -99,7 +99,7 @@
 @bind h5g_close(group_id::hid_t)::herr_t "Error closing group"
 @bind h5g_create(loc_id::hid_t, pathname::Ptr{UInt8}, lcpl_id::hid_t, gcpl_id::hid_t, gapl_id::hid_t)::hid_t error("Error creating group ", h5i_get_name(loc_id), "/", pathname)
 @bind h5g_get_create_plist(group_id::hid_t)::hid_t "Error getting group create property list"
-@bind h5g_get_info(group_id::hid_t, buf::Ptr{H5Ginfo})::herr_t "Error getting group info"
+@bind h5g_get_info(group_id::hid_t, buf::Ptr{H5G_info_t})::herr_t "Error getting group info"
 @bind h5g_get_num_objs(loc_id::hid_t, num_obj::Ptr{hsize_t})::hid_t "Error getting group length"
 @bind h5g_get_objname_by_idx(loc_id::hid_t, idx::hsize_t, pathname::Ptr{UInt8}, size::Csize_t)::Cssize_t error("Error getting group object name ", h5i_get_name(loc_id), "/", pathname)
 @bind h5g_open(loc_id::hid_t, pathname::Ptr{UInt8}, gapl_id::hid_t)::hid_t error("Error opening group ", h5i_get_name(loc_id), "/", pathname)

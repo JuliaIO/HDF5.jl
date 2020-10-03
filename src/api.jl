@@ -340,7 +340,7 @@ function h5g_get_create_plist(group_id)
 end
 
 function h5g_get_info(group_id, buf)
-    var"#status#" = ccall((:H5Gget_info, libhdf5), herr_t, (hid_t, Ptr{H5Ginfo}), group_id, buf)
+    var"#status#" = ccall((:H5Gget_info, libhdf5), herr_t, (hid_t, Ptr{H5G_info_t}), group_id, buf)
     var"#status#" < 0 && error("Error getting group info")
     return nothing
 end
