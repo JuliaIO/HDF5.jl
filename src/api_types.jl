@@ -64,12 +64,12 @@ struct H5O_info_t # version 1 type H5O_info1_t
 end
 
 # For links
-struct H5LInfo
+struct H5L_info_t
     linktype::Cint
     corder_valid::Cuint
     corder::Int64
-    cset::Cint
-    u::UInt64
+    cset::Cint # enum H5T_cset_t
+    u::haddr_t # union { haddr_t address, size_t val_size }
 end
 
 # For registering filters

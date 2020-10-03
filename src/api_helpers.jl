@@ -115,7 +115,7 @@ end
 ###
 
 function h5l_get_info(link_loc_id, link_name, lapl_id)
-    info = Ref{H5LInfo}()
+    info = Ref{H5L_info_t}()
     h5l_get_info(link_loc_id, link_name, info, lapl_id)
     return info[]
 end

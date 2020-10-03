@@ -124,7 +124,7 @@
 @bind h5l_create_soft(target_path::Ptr{UInt8}, link_loc_id::hid_t, link_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)::herr_t error("Error creating soft link ", link_name, " pointing to ", target_path)
 @bind h5l_delete(obj_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::herr_t error("Error deleting ", h5i_get_name(obj_id), "/", pathname)
 @bind h5l_exists(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::htri_t error("Cannot determine whether ", pathname, " exists")
-@bind h5l_get_info(link_loc_id::hid_t, link_name::Ptr{UInt8}, link_buf::Ptr{H5LInfo}, lapl_id::hid_t)::herr_t error("Error getting info for link ", link_name)
+@bind h5l_get_info(link_loc_id::hid_t, link_name::Ptr{UInt8}, link_buf::Ptr{H5L_info_t}, lapl_id::hid_t)::herr_t error("Error getting info for link ", link_name)
 @bind h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting object name"
 
 ###

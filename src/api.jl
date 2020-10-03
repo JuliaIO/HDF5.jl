@@ -430,7 +430,7 @@ function h5l_exists(loc_id, pathname, lapl_id)
 end
 
 function h5l_get_info(link_loc_id, link_name, link_buf, lapl_id)
-    var"#status#" = ccall((:H5Lget_info, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Ptr{H5LInfo}, hid_t), link_loc_id, link_name, link_buf, lapl_id)
+    var"#status#" = ccall((:H5Lget_info, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Ptr{H5L_info_t}, hid_t), link_loc_id, link_name, link_buf, lapl_id)
     var"#status#" < 0 && error("Error getting info for link ", link_name)
     return nothing
 end
