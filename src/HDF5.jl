@@ -1052,7 +1052,7 @@ dataspace(attr::Attribute) = Dataspace(h5a_get_space(checkvalid(attr).id))
 # Create a dataspace from in-memory types
 dataspace(x::Union{T, Complex{T}}) where {T<:HDF5Scalar} = Dataspace(h5s_create(H5S_SCALAR))
 
-function _dataspace(sz::Tuple{Vararg{Int}}, max_dims::Union{Dims, Tuple{}}=())
+function _dataspace(sz::Dims{N}, max_dims::Union{Dims{N}, Tuple{}}=()) where N
     dims = Vector{hsize_t}(undef,length(sz))
     any_zero = false
     for i = 1:length(sz)
