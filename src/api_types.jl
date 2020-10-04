@@ -37,7 +37,8 @@ const HDSET_REG_REF_T_NULL = hdset_reg_ref_t(ntuple(_ -> 0x0, Val(12)))
 # TODO: when upgraded to using newer HDF5 v1.12 reference API, can replace both with just
 #=
 struct H5R_ref_t
-    buf::NTuple{64,UInt8} # H5R_REF_BUF_SIZE bytes
+    # UInt64 and not UInt8 to get 8-byte alignment
+    buf::NTuple{8,UInt64} # H5R_REF_BUF_SIZE bytes
 end
 const H5R_REF_T_NULL = H5R_ref_t(ntuple(_ -> 0x0, Val(64)))
 #primitive type H5R_ref_t 512 end # size is H5R_REF_BUF_SIZE bytes
