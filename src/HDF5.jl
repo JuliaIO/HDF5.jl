@@ -230,10 +230,32 @@ mutable struct Datatype
     end
 end
 convert(::Type{hid_t}, dtype::Datatype) = dtype.id
-show(io::IO, dtype::Datatype) = print(io, "HDF5 datatype: ", h5lt_dtype_to_text(dtype.id))
 hash(dtype::Datatype, h::UInt) =
     (dtype.id % UInt + h) ^ (0xadaf9b66bc962084 % UInt)
 ==(dt1::Datatype, dt2::Datatype) = h5t_equal(dt1, dt2) > 0
+function show(io::IO, dtype::Datatype)
+    print(io, "HDF5 datatype: ")
+    if isvalid(dtype)
+        print(io, h5lt_dtype_to_text(dtype.id))
+    else
+        # Note that h5i_is_valid returns `false` on the built-in datatypes (e.g.
+        # H5T_NATIVE_INT), apparently because they have refcounts of 0 yet are always
+        # valid. Just temporarily turn off error printing and try the call to probe if
+        # dtype is valid since H5LTdtype_to_text special-cases all of the built-in types
+        # internally.
+        old_func, old_client_data = h5e_get_auto(H5E_DEFAULT)
+        h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
+        local text
+        try
+            text = h5lt_dtype_to_text(dtype.id)
+        catch
+            text = "(invalid)"
+        finally
+            h5e_set_auto(H5E_DEFAULT, old_func, old_client_data)
+        end
+        print(io, text)
+    end
+end
 
 # Define an H5O Object type
 const Object = Union{Group, Dataset, Datatype}
