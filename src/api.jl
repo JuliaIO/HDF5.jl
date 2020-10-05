@@ -33,6 +33,12 @@ function h5_get_libversion(majnum, minnum, relnum)
     return nothing
 end
 
+function h5_is_library_threadsafe(is_ts)
+    var"#status#" = ccall((:H5is_library_threadsafe, libhdf5), herr_t, (Ref{Cuint},), is_ts)
+    var"#status#" < 0 && error("Error determining thread safety")
+    return nothing
+end
+
 function h5_open()
     var"#status#" = ccall((:H5open, libhdf5), herr_t, ())
     var"#status#" < 0 && error("Error initializing the HDF5 library")
