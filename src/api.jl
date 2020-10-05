@@ -399,6 +399,12 @@ function h5i_get_type(obj_id)
     return var"#status#"
 end
 
+function h5i_inc_ref(obj_id)
+    var"#status#" = ccall((:H5Iinc_ref, libhdf5), Cint, (hid_t,), obj_id)
+    var"#status#" < 0 && error("Error incrementing identifier refcount")
+    return var"#status#"
+end
+
 function h5i_is_valid(obj_id)
     var"#status#" = ccall((:H5Iis_valid, libhdf5), htri_t, (hid_t,), obj_id)
     var"#status#" < 0 && error("Cannot determine whether object is valid")
