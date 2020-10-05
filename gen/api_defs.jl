@@ -223,6 +223,8 @@
 @bind h5t_get_array_ndims(dtype_id::hid_t)::Cint "Error getting ndims of array"
 @bind h5t_get_class(dtype_id::hid_t)::Cint "Error getting class"
 @bind h5t_get_cset(dtype_id::hid_t)::Cint "Error getting character set encoding"
+@bind h5t_get_ebias(dtype_id::hid_t)::Csize_t "Error getting datatype floating point exponent bias"
+@bind h5t_get_fields(dtype_id::hid_t, spos::Ref{Csize_t}, epos::Ref{Csize_t}, esize::Ref{Csize_t}, mpos::Ref{Csize_t}, msize::Ref{Csize_t})::herr_t "Error getting datatype floating point bit positions"
 @bind h5t_get_member_class(dtype_id::hid_t, index::Cuint)::Cint error("Error getting class of compound datatype member #", index)
 @bind h5t_get_member_index(dtype_id::hid_t, membername::Ptr{UInt8})::Cint error("Error getting index of compound datatype member \"", membername, "\"")
 @bind h5t_get_member_offset(dtype_id::hid_t, index::Cuint)::Csize_t # does not error
@@ -235,8 +237,11 @@
 @bind h5t_get_super(dtype_id::hid_t)::hid_t "Error getting super type"
 @bind h5t_insert(dtype_id::hid_t, fieldname::Ptr{UInt8}, offset::Csize_t, field_id::hid_t)::herr_t error("Error adding field ", fieldname, " to compound datatype")
 @bind h5t_is_variable_str(type_id::hid_t)::htri_t "Error determining whether string is of variable length"
+@bind h5t_lock(type_id::hid_t)::herr_t "Error locking type"
 @bind h5t_open(loc_id::hid_t, name::Ptr{UInt8}, tapl_id::hid_t)::hid_t error("Error opening type ", h5i_get_name(loc_id), "/", name)
 @bind h5t_set_cset(dtype_id::hid_t, cset::Cint)::herr_t "Error setting character set in datatype"
+@bind h5t_set_ebias(dtype_id::hid_t, ebias::Csize_t)::herr_t "Error setting datatype floating point exponent bias"
+@bind h5t_set_fields(dtype_id::hid_t, spos::Csize_t, epos::Csize_t, esize::Csize_t, mpos::Csize_t, msize::Csize_t)::herr_t "Error setting datatype floating point bit positions"
 @bind h5t_set_precision(dtype_id::hid_t, sz::Csize_t)::herr_t "Error setting precision of datatype"
 @bind h5t_set_size(dtype_id::hid_t, sz::Csize_t)::herr_t "Error setting size of datatype"
 @bind h5t_set_strpad(dtype_id::hid_t, sz::Cint)::herr_t "Error setting size of datatype"
