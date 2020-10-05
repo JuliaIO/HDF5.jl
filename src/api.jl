@@ -717,13 +717,13 @@ function h5p_set_virtual(dcpl_id, vspace_id, src_file_name, src_dset_name, src_s
 end
 
 function h5r_create(ref, loc_id, pathname, ref_type, space_id)
-    var"#status#" = ccall((:H5Rcreate, libhdf5), herr_t, (Ptr{HDF5ReferenceObj}, hid_t, Ptr{UInt8}, Cint, hid_t), ref, loc_id, pathname, ref_type, space_id)
-    var"#status#" < 0 && error("Error creating reference to object ", hi5_get_name(loc_id), "/", pathname)
+    var"#status#" = ccall((:H5Rcreate, libhdf5), herr_t, (Ptr{Cvoid}, hid_t, Ptr{UInt8}, Cint, hid_t), ref, loc_id, pathname, ref_type, space_id)
+    var"#status#" < 0 && error("Error creating reference to object ", h5i_get_name(loc_id), "/", pathname)
     return nothing
 end
 
-function h5r_dereference(obj_id, ref_type, ref)
-    var"#status#" = ccall((:H5Rdereference1, libhdf5), hid_t, (hid_t, Cint, Ref{HDF5ReferenceObj}), obj_id, ref_type, ref)
+function h5r_dereference(obj_id, oapl_id, ref_type, ref)
+    var"#status#" = ccall((:H5Rdereference2, libhdf5), hid_t, (hid_t, hid_t, Cint, Ptr{Cvoid}), obj_id, oapl_id, ref_type, ref)
     var"#status#" < 0 && error("Error dereferencing object")
     return var"#status#"
 end

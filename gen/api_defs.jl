@@ -187,8 +187,8 @@
 ### Reference Interface
 ###
 
-@bind h5r_create(ref::Ptr{HDF5ReferenceObj}, loc_id::hid_t, pathname::Ptr{UInt8}, ref_type::Cint, space_id::hid_t)::herr_t error("Error creating reference to object ", hi5_get_name(loc_id), "/", pathname)
-@bind h5r_dereference(obj_id::hid_t, ref_type::Cint, ref::Ref{HDF5ReferenceObj})::hid_t "Error dereferencing object"
+@bind h5r_create(ref::Ptr{Cvoid}, loc_id::hid_t, pathname::Ptr{UInt8}, ref_type::Cint, space_id::hid_t)::herr_t error("Error creating reference to object ", h5i_get_name(loc_id), "/", pathname)
+@bind h5r_dereference(obj_id::hid_t, oapl_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid})::hid_t "Error dereferencing object"
 @bind h5r_get_obj_type(loc_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid}, obj_type::Ptr{Cint})::herr_t "Error getting object type"
 @bind h5r_get_region(loc_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid})::hid_t "Error getting region from reference"
 

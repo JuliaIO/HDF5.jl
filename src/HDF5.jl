@@ -44,6 +44,35 @@ include("api_types.jl")
 include("api.jl")
 include("api_helpers.jl")
 
+# High-level reference handler
+struct HDF5ReferenceObj
+    r::hobj_ref_t
+end
+Base.cconvert(::Type{Ptr{T}}, ref::HDF5ReferenceObj
+             ) where {T<:Union{HDF5ReferenceObj,hobj_ref_t,Cvoid}} = Ref(ref)
+
+# Single character types
+# These are needed to safely handle VLEN objects
+abstract type CharType <: AbstractString end
+
+struct ASCIIChar <: CharType
+    c::UInt8
+end
+length(c::ASCIIChar) = 1
+
+struct UTF8Char <: CharType
+    c::UInt8
+end
+length(c::UTF8Char) = 1
+
+chartype(::Type{String}) = ASCIIChar
+stringtype(::Type{ASCIIChar}) = String
+stringtype(::Type{UTF8Char}) = String
+
+cset(::Type{String}) = H5T_CSET_UTF8
+cset(::Type{UTF8Char}) = H5T_CSET_UTF8
+cset(::Type{ASCIIChar}) = H5T_CSET_ASCII
+
 ## Conversion between Julia types and HDF5 atomic types
 hdf5_type_id(::Type{Bool})       = H5T_NATIVE_B8
 hdf5_type_id(::Type{Int8})       = H5T_NATIVE_INT8
@@ -57,6 +86,9 @@ hdf5_type_id(::Type{UInt64})     = H5T_NATIVE_UINT64
 hdf5_type_id(::Type{Float32})    = H5T_NATIVE_FLOAT
 hdf5_type_id(::Type{Float64})    = H5T_NATIVE_DOUBLE
 hdf5_type_id(::Type{HDF5ReferenceObj}) = H5T_STD_REF_OBJ
+
+hdf5_type_id(::Type{S}) where {S<:AbstractString}  = H5T_C_S1
+hdf5_type_id(::Type{C}) where {C<:CharType}        = H5T_C_S1
 
 const HDF5BitsKind = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
 const HDF5Scalar = Union{HDF5BitsKind, HDF5ReferenceObj}
@@ -84,32 +116,6 @@ function _hdf5_type_map(class_id, is_signed, native_size)
                throw(KeyError(class_id, is_signed, native_size))
     end
 end
-
-hdf5_type_id(::Type{S}) where {S<:AbstractString}  = H5T_C_S1
-
-# Single character types
-# These are needed to safely handle VLEN objects
-abstract type CharType <: AbstractString end
-
-struct ASCIIChar <: CharType
-    c::UInt8
-end
-length(c::ASCIIChar) = 1
-
-struct UTF8Char <: CharType
-    c::UInt8
-end
-length(c::UTF8Char) = 1
-
-chartype(::Type{String}) = ASCIIChar
-stringtype(::Type{ASCIIChar}) = String
-stringtype(::Type{UTF8Char}) = String
-
-cset(::Type{String}) = H5T_CSET_UTF8
-cset(::Type{UTF8Char}) = H5T_CSET_UTF8
-cset(::Type{ASCIIChar}) = H5T_CSET_ASCII
-
-hdf5_type_id(::Type{C}) where {C<:CharType} = H5T_C_S1
 
 # global configuration for complex support
 const COMPLEX_SUPPORT = Ref(true)
@@ -262,10 +268,10 @@ end
 attrs(p::Union{HDF5File, HDF5Group, HDF5Dataset}) = HDF5Attributes(p)
 
 # Methods for reference types
-const REF_TEMP_ARRAY = Ref{HDF5ReferenceObj}()
 function HDF5ReferenceObj(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, name::String)
-    h5r_create(REF_TEMP_ARRAY, checkvalid(parent).id, name, H5R_OBJECT, -1)
-    REF_TEMP_ARRAY[]
+    ref = Ref{hobj_ref_t}()
+    h5r_create(ref, checkvalid(parent).id, name, H5R_OBJECT, -1)
+    return HDF5ReferenceObj(ref[])
 end
 ==(a::HDF5ReferenceObj, b::HDF5ReferenceObj) = a.r == b.r
 hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
@@ -1257,8 +1263,8 @@ unpad(s, pad::Integer) = unpad(String(s), pad)
 
 # Dereference
 function getindex(parent::Union{HDF5File, HDF5Group, HDF5Dataset}, r::HDF5ReferenceObj)
-    r == HDF5ReferenceObj_NULL && error("Reference is null")
-    obj_id = h5r_dereference(checkvalid(parent).id, H5R_OBJECT, r)
+    r.r == HOBJ_REF_T_NULL && error("Reference is null")
+    obj_id = h5r_dereference(checkvalid(parent).id, H5P_DEFAULT, H5R_OBJECT, r)
     h5object(obj_id, parent)
 end
 
