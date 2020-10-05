@@ -1,8 +1,9 @@
 ## C types
-const C_time_t = Int
+const Ctime_t = Int
 
 ## HDF5 types and constants
 const haddr_t  = UInt64
+const hbool_t  = Cuint
 const herr_t   = Cint
 const hid_t    = Int64
 const hsize_t  = UInt64
@@ -27,7 +28,7 @@ struct H5G_info_t
     storage_type::Cint # enum H5G_storage_type_t
     nlinks::hsize_t
     max_corder::Int64
-    mounted::Cuint
+    mounted::hbool_t
 end
 
 # For objects
@@ -40,10 +41,10 @@ struct H5O_info_t # version 1 type H5O_info1_t
     addr::haddr_t
     otype::Cint # enum H5O_type_t
     rc::Cuint
-    atime::C_time_t
-    mtime::C_time_t
-    ctime::C_time_t
-    btime::C_time_t
+    atime::Ctime_t
+    mtime::Ctime_t
+    ctime::Ctime_t
+    btime::Ctime_t
     num_attrs::hsize_t
     #{ inlined struct H5O_hdr_info_t named type
     version::Cuint
@@ -66,7 +67,7 @@ end
 # For links
 struct H5L_info_t
     linktype::Cint
-    corder_valid::Cuint
+    corder_valid::hbool_t
     corder::Int64
     cset::Cint # enum H5T_cset_t
     u::haddr_t # union { haddr_t address, size_t val_size }
