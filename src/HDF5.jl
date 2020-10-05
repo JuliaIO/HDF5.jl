@@ -1065,15 +1065,13 @@ function _dataspace(sz::Dims{N}, max_dims::Union{Dims{N}, Tuple{}}=()) where N
         space_id = h5s_create(H5S_NULL)
     else
         if isempty(max_dims)
-            space_id = h5s_create_simple(length(dims), dims, dims)
+            maxd = dims
         else
-            # This allows max_dims to be specified as -1 without
-            # triggering an overflow exception due to the signed->
-            # unsigned conversion.
-            space_id = h5s_create_simple(length(dims), dims,
-                                         reinterpret(hsize_t, convert(Vector{hssize_t},
-                                                                    [reverse(max_dims)...])))
+            # This allows max_dims to be specified as -1 without triggering an overflow
+            # exception due to the signed -> unsigned conversion.
+            maxd = [(hssize_t.(reverse(max_dims)) .% hsize_t)...]
         end
+        space_id = h5s_create_simple(length(dims), dims, maxd)
     end
     Dataspace(space_id)
 end
