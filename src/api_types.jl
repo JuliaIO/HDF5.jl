@@ -21,28 +21,20 @@ const HVL_SIZE = sizeof(hvl_t)
 
 # Reference types
 struct hobj_ref_t
-    buf::NTuple{8,UInt8} # H5R_OBJ_REF_BUF_SIZE bytes
+    buf::UInt64 # H5R_OBJ_REF_BUF_SIZE bytes
 end
 struct hdset_reg_ref_t
     buf::NTuple{12,UInt8} # H5R_DSET_REG_REF_BUF_SIZE bytes
 end
-const HOBJ_REF_T_NULL = hobj_ref_t(ntuple(_ -> 0x0, Val(8)))
+const HOBJ_REF_T_NULL = hobj_ref_t(0x0)
 const HDSET_REG_REF_T_NULL = hdset_reg_ref_t(ntuple(_ -> 0x0, Val(12)))
 
-#primitive type hobj_ref_t 64 end # size is H5R_OBJ_REF_BUF_SIZE bytes
-#primitive type hdset_reg_ref_t 96 end # size is H5R_DSET_REG_REF_BUF_SIZE bytes
-#const HOBJ_REF_T_NULL = reinterpret(type64_t, UInt64(0))
-#const HDSET_REG_REF_T_NULL = Core.Intrinsics.zext_int(hdset_reg_ref_t, UInt(0))
-
-# TODO: when upgraded to using newer HDF5 v1.12 reference API, can replace both with just
-#=
+#= TODO: when upgraded to using newer HDF5 v1.12 reference API, can replace both with:
 struct H5R_ref_t
-    # UInt64 and not UInt8 to get 8-byte alignment
+    # Element type of UInt64 and not UInt8 to get 8-byte alignment
     buf::NTuple{8,UInt64} # H5R_REF_BUF_SIZE bytes
 end
 const H5R_REF_T_NULL = H5R_ref_t(ntuple(_ -> 0x0, Val(64)))
-#primitive type H5R_ref_t 512 end # size is H5R_REF_BUF_SIZE bytes
-#const H5R_REF_T_NULL = Core.Intrinsics.zext_int(H5R_ref_t, UInt(0))
 =#
 
 # For group information
