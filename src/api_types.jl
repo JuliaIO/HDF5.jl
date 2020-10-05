@@ -10,6 +10,8 @@ const hsize_t  = UInt64
 const hssize_t = Int64
 const htri_t   = Cint   # pseudo-boolean (negative if error)
 
+const H5Z_filter_t = Cint
+
 # For VLEN
 struct hvl_t
     len::Csize_t
@@ -76,7 +78,7 @@ end
 # For registering filters
 struct H5Z_class_t # version 2 type H5Z_class2_t
     version::Cint # = H5Z_CLASS_T_VERS
-    id::Cint # Filter ID number
+    id::H5Z_filter_t # Filter ID number
     encoder_present::Cuint # Does this filter have an encoder?
     decoder_present::Cuint # Does this filter have a decoder?
     name::Ptr{UInt8} # Comment for debugging
