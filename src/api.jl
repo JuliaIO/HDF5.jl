@@ -872,6 +872,18 @@ function h5t_get_cset(dtype_id)
     return var"#status#"
 end
 
+function h5t_get_ebias(dtype_id)
+    var"#status#" = ccall((:H5Tget_ebias, libhdf5), Csize_t, (hid_t,), dtype_id)
+    var"#status#" < 0 && error("Error getting datatype floating point exponent bias")
+    return var"#status#"
+end
+
+function h5t_get_fields(dtype_id, spos, epos, esize, mpos, msize)
+    var"#status#" = ccall((:H5Tget_fields, libhdf5), herr_t, (hid_t, Ref{Csize_t}, Ref{Csize_t}, Ref{Csize_t}, Ref{Csize_t}, Ref{Csize_t}), dtype_id, spos, epos, esize, mpos, msize)
+    var"#status#" < 0 && error("Error getting datatype floating point bit positions")
+    return nothing
+end
+
 function h5t_get_member_class(dtype_id, index)
     var"#status#" = ccall((:H5Tget_member_class, libhdf5), Cint, (hid_t, Cuint), dtype_id, index)
     var"#status#" < 0 && error("Error getting class of compound datatype member #", index)
@@ -943,6 +955,12 @@ function h5t_is_variable_str(type_id)
     return var"#status#" > 0
 end
 
+function h5t_lock(type_id)
+    var"#status#" = ccall((:H5Tlock, libhdf5), herr_t, (hid_t,), type_id)
+    var"#status#" < 0 && error("Error locking type")
+    return nothing
+end
+
 function h5t_open(loc_id, name, tapl_id)
     var"#status#" = ccall((:H5Topen2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, name, tapl_id)
     var"#status#" < 0 && error("Error opening type ", h5i_get_name(loc_id), "/", name)
@@ -952,6 +970,18 @@ end
 function h5t_set_cset(dtype_id, cset)
     var"#status#" = ccall((:H5Tset_cset, libhdf5), herr_t, (hid_t, Cint), dtype_id, cset)
     var"#status#" < 0 && error("Error setting character set in datatype")
+    return nothing
+end
+
+function h5t_set_ebias(dtype_id, ebias)
+    var"#status#" = ccall((:H5Tset_ebias, libhdf5), herr_t, (hid_t, Csize_t), dtype_id, ebias)
+    var"#status#" < 0 && error("Error setting datatype floating point exponent bias")
+    return nothing
+end
+
+function h5t_set_fields(dtype_id, spos, epos, esize, mpos, msize)
+    var"#status#" = ccall((:H5Tset_fields, libhdf5), herr_t, (hid_t, Csize_t, Csize_t, Csize_t, Csize_t, Csize_t), dtype_id, spos, epos, esize, mpos, msize)
+    var"#status#" < 0 && error("Error setting datatype floating point bit positions")
     return nothing
 end
 

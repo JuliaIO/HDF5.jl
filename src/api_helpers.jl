@@ -244,6 +244,16 @@ function h5t_get_array_dims(type_id)
     return dims
 end
 
+function h5t_get_fields(type_id)
+    spos = Ref{Csize_t}()
+    epos = Ref{Csize_t}()
+    esize = Ref{Csize_t}()
+    mpos = Ref{Csize_t}()
+    msize = Ref{Csize_t}()
+    h5t_get_fields(type_id, spos, epos, esize, mpos, msize)
+    return (spos[], epos[], esize[], mpos[], msize[])
+end
+
 # Note: The following two functions implement direct ccalls because the binding generator
 # cannot (yet) do the string wrapping and memory freeing.
 function h5t_get_member_name(type_id, index)
