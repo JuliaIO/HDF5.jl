@@ -23,6 +23,7 @@
 @bind h5_free_memory(buf::Ptr{Cvoid})::herr_t "Error freeing memory"
 @bind h5_garbage_collect()::herr_t "Error on garbage collect"
 @bind h5_get_libversion(majnum::Ref{Cuint}, minnum::Ref{Cuint}, relnum::Ref{Cuint})::herr_t "Error getting HDF5 library version"
+@bind h5_is_library_threadsafe(is_ts::Ref{Cuint})::herr_t "Error determining thread safety"
 @bind h5_open()::herr_t "Error initializing the HDF5 library"
 @bind h5_set_free_list_limits(reg_global_lim::Cint, reg_list_lim::Cint, arr_global_lim::Cint, arr_list_lim::Cint, blk_global_lim::Cint, blk_list_lim::Cint)::herr_t "Error setting limits on free lists"
 

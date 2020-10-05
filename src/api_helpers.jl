@@ -13,6 +13,12 @@ function h5_get_libversion()
     VersionNumber(majnum[], minnum[], relnum[])
 end
 
+function h5_is_library_threadsafe()
+    is_ts = Ref{Cuint}()
+    h5_is_library_threadsafe(is_ts)
+    return is_ts[] > 0
+end
+
 ###
 ### Attribute Interface
 ###
