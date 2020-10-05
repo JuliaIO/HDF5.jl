@@ -41,13 +41,13 @@ write(f, "salut", salut)
 write(f, "ucode", ucode)
 # Manually write a variable-length string (issue #187)
 let
-    dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
-    HDF5.h5t_set_size(dtype.id, HDF5.H5T_VARIABLE)
+    dtype = HDF5.Datatype(HDF5.h5t_copy(H5T.C_S1))
+    HDF5.h5t_set_size(dtype.id, H5T.VARIABLE)
     HDF5.h5t_set_cset(dtype.id, HDF5.cset(typeof(salut)))
     dspace = HDF5.dataspace(salut)
     dset = HDF5.d_create(f, "salut-vlen", dtype, dspace)
     GC.@preserve salut begin
-        HDF5.h5d_write(dset, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(salut)])
+        HDF5.h5d_write(dset, dtype, H5S.ALL, H5S.ALL, H5P.DEFAULT, [pointer(salut)])
     end
 end
 # Arrays of strings
@@ -355,14 +355,14 @@ close(fd)
 rm(fn)
 
 # File creation and access property lists
-cpl = p_create(HDF5.H5P_FILE_CREATE)
+cpl = p_create(H5P.FILE_CREATE)
 cpl[:userblock] = 1024
-apl = p_create(HDF5.H5P_FILE_ACCESS)
-apl[:libver_bounds] = (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)
+apl = p_create(H5P.FILE_ACCESS)
+apl[:libver_bounds] = (H5F.LIBVER_EARLIEST, H5F.LIBVER_LATEST)
 h5open(fn, false, true, true, true, false, cpl, apl) do fid
     write(fid, "intarray", [1, 2, 3])
 end
-h5open(fn, "r", libver_bounds=(HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)) do fid
+h5open(fn, "r", libver_bounds=(H5F.LIBVER_EARLIEST, H5F.LIBVER_LATEST)) do fid
     intarray = read(fid, "intarray")
     @test intarray == [1, 2, 3]
 end
@@ -626,8 +626,8 @@ end # empty and 0-size arrays
 fn = tempname()
 hfile = h5open(fn, "w")
 
-dtype_varstring = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
-HDF5.h5t_set_size(dtype_varstring, HDF5.H5T_VARIABLE)
+dtype_varstring = HDF5.Datatype(HDF5.h5t_copy(H5T.C_S1))
+HDF5.h5t_set_size(dtype_varstring, H5T.VARIABLE)
 
 write(hfile, "uint8_array", UInt8[(1:8)...])
 write(hfile, "bool_scalar", true)
@@ -637,7 +637,7 @@ varstring = "var"
 write(hfile, "fixed_string", fixstring)
 vardset = d_create(hfile, "variable_string", dtype_varstring, dataspace(varstring))
 GC.@preserve varstring begin
-    HDF5.h5d_write(vardset, dtype_varstring, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(varstring)])
+    HDF5.h5d_write(vardset, dtype_varstring, H5S.ALL, H5S.ALL, H5P.DEFAULT, [pointer(varstring)])
 end
 flush(hfile)
 close(dtype_varstring)
@@ -699,10 +699,10 @@ dset = d_create(group, "dset", datatype(Int), dataspace((1,)))
 meta = a_create(dset, "meta", datatype(Bool), dataspace((1,)))
 @test sprint(show, meta) == "HDF5 attribute: meta"
 
-prop = p_create(HDF5.H5P_DATASET_CREATE)
+prop = p_create(H5P.DATASET_CREATE)
 @test sprint(show, prop) == "HDF5 property: dataset create class"
 
-dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
+dtype = HDF5.Datatype(HDF5.h5t_copy(H5T.IEEE_F64LE))
 @test sprint(show, dtype) == "HDF5 datatype: H5T_IEEE_F64LE"
 
 dspace = dataspace((1,))
@@ -839,7 +839,7 @@ hfile[GenericString("test")] = 17.2
 @test_nowarn a_delete(dset1, GenericString("meta1"))
 
 # transient types
-memtype_id = HDF5.h5t_copy(HDF5.H5T_NATIVE_DOUBLE)
+memtype_id = HDF5.h5t_copy(H5T.NATIVE_DOUBLE)
 dt = HDF5.Datatype(memtype_id)
 @test !HDF5.h5t_committed(dt)
 t_commit(hfile, GenericString("dt"), dt)

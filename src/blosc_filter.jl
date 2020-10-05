@@ -28,7 +28,7 @@ function blosc_set_local(dcpl::hid_t, htype::hid_t, space::hid_t)
     end
 
     htypesize = h5t_get_size(htype)
-    if h5t_get_class(htype) == H5T_ARRAY
+    if h5t_get_class(htype) == H5T.ARRAY
         hsuper = h5t_get_super(htype)
         basetypesize = h5t_get_size(hsuper)
         h5t_close(hsuper)
@@ -61,7 +61,7 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
     doshuffle = cd_nelmts >= 6 ? unsafe_load(cd_values, 6) != 0 : true
     # to do: set compressor based on compcode in unsafe_load(cd_values, 7)?
 
-    if (flags & H5Z_FLAG_REVERSE) == 0 # compressing
+    if (flags & H5Z.FLAG_REVERSE) == 0 # compressing
         # Allocate an output buffer exactly as long as the input data; if
         # the result is larger, we simply return 0. The filter is flagged
         # as optional, so HDF5 marks the chunk as uncompressed and proceeds.
@@ -100,7 +100,7 @@ function register_blosc()
     c_blosc_filter = @cfunction(blosc_filter, Csize_t,
                                 (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
                                  Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
-    h5z_register(H5Z_class_t(H5Z_CLASS_T_VERS, FILTER_BLOSC, 1, 1, pointer(blosc_name), C_NULL, c_blosc_set_local, c_blosc_filter))
+    h5z_register(H5Z_class_t(H5Z.CLASS_T_VERS, FILTER_BLOSC, 1, 1, pointer(blosc_name), C_NULL, c_blosc_set_local, c_blosc_filter))
 
     return nothing
 end
@@ -109,7 +109,7 @@ const set_blosc_values = Cuint[0,0,0,0,5,1,0]
 function h5p_set_blosc(p::Properties, level::Integer=5)
     0 <= level <= 9 || throw(ArgumentError("blosc compression $level not in [0,9]"))
     set_blosc_values[5] = level
-    h5p_set_filter(p.id, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, length(set_blosc_values), set_blosc_values)
+    h5p_set_filter(p.id, FILTER_BLOSC, H5Z.FLAG_OPTIONAL, length(set_blosc_values), set_blosc_values)
 
     return nothing
 end

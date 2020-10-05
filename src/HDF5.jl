@@ -10,6 +10,7 @@ import Mmap
 using Compat
 
 export
+H5, H5D, H5E, H5F, H5FD, H5I, H5L, H5O, H5P, H5R, H5S, H5T, H5Z,
 a_create, a_delete, a_open, a_read, a_write, attrs,
 d_create, d_create_external, d_open, d_read, d_write,
 dataspace, datatype, file, filename,
@@ -33,6 +34,7 @@ end
 
 include("datafile.jl")
 
+include("macros.jl")
 # Core API ccall wrappers
 include("api_types.jl")
 include("api.jl")
@@ -63,33 +65,33 @@ chartype(::Type{String}) = ASCIIChar
 stringtype(::Type{ASCIIChar}) = String
 stringtype(::Type{UTF8Char}) = String
 
-cset(::Type{<:AbstractString}) = H5T_CSET_UTF8
-cset(::Type{UTF8Char}) = H5T_CSET_UTF8
-cset(::Type{ASCIIChar}) = H5T_CSET_ASCII
+cset(::Type{<:AbstractString}) = H5T.CSET_UTF8
+cset(::Type{UTF8Char})         = H5T.CSET_UTF8
+cset(::Type{ASCIIChar})        = H5T.CSET_ASCII
 
 ## Conversion between Julia types and HDF5 atomic types
-hdf5_type_id(::Type{Bool})      = H5T_NATIVE_B8
-hdf5_type_id(::Type{Int8})      = H5T_NATIVE_INT8
-hdf5_type_id(::Type{UInt8})     = H5T_NATIVE_UINT8
-hdf5_type_id(::Type{Int16})     = H5T_NATIVE_INT16
-hdf5_type_id(::Type{UInt16})    = H5T_NATIVE_UINT16
-hdf5_type_id(::Type{Int32})     = H5T_NATIVE_INT32
-hdf5_type_id(::Type{UInt32})    = H5T_NATIVE_UINT32
-hdf5_type_id(::Type{Int64})     = H5T_NATIVE_INT64
-hdf5_type_id(::Type{UInt64})    = H5T_NATIVE_UINT64
-hdf5_type_id(::Type{Float32})   = H5T_NATIVE_FLOAT
-hdf5_type_id(::Type{Float64})   = H5T_NATIVE_DOUBLE
-hdf5_type_id(::Type{Reference}) = H5T_STD_REF_OBJ
+hdf5_type_id(::Type{Bool})      = H5T.NATIVE_B8
+hdf5_type_id(::Type{Int8})      = H5T.NATIVE_INT8
+hdf5_type_id(::Type{UInt8})     = H5T.NATIVE_UINT8
+hdf5_type_id(::Type{Int16})     = H5T.NATIVE_INT16
+hdf5_type_id(::Type{UInt16})    = H5T.NATIVE_UINT16
+hdf5_type_id(::Type{Int32})     = H5T.NATIVE_INT32
+hdf5_type_id(::Type{UInt32})    = H5T.NATIVE_UINT32
+hdf5_type_id(::Type{Int64})     = H5T.NATIVE_INT64
+hdf5_type_id(::Type{UInt64})    = H5T.NATIVE_UINT64
+hdf5_type_id(::Type{Float32})   = H5T.NATIVE_FLOAT
+hdf5_type_id(::Type{Float64})   = H5T.NATIVE_DOUBLE
+hdf5_type_id(::Type{Reference}) = H5T.STD_REF_OBJ
 
-hdf5_type_id(::Type{<:AbstractString}) = H5T_C_S1
+hdf5_type_id(::Type{<:AbstractString}) = H5T.C_S1
 
 const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
 const ScalarType = Union{BitsType,Reference}
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
 function _hdf5_type_map(class_id, is_signed, native_size)
-    if class_id == H5T_INTEGER
-        if is_signed == H5T_SGN_2
+    if class_id == H5T.INTEGER
+        if is_signed == H5T.SGN_2
             return native_size === Csize_t(1) ? Int8 :
                    native_size === Csize_t(2) ? Int16 :
                    native_size === Csize_t(4) ? Int32 :
@@ -172,16 +174,16 @@ end
 mutable struct Properties
     id::hid_t
     class::hid_t
-    function Properties(id, class::hid_t = H5P_DEFAULT)
+    function Properties(id, class::hid_t = H5P.DEFAULT)
         p = new(id, class)
         finalizer(close, p) #Essential, otherwise we get a memory leak, since closing file with CLOSE_STRONG is not doing it for us
         p
     end
 end
-Properties() = Properties(H5P_DEFAULT)
+Properties() = Properties(H5P.DEFAULT)
 Base.convert(::Type{hid_t}, p::Properties) = p.id
 function Base.show(io::IO, prop::Properties)
-    if prop.class == H5P_DEFAULT
+    if prop.class == H5P.DEFAULT
         print(io, "HDF5 property: default class")
     elseif isvalid(prop)
         print(io, "HDF5 property: ", h5p_get_class_name(prop.class), " class")
@@ -239,19 +241,19 @@ function Base.show(io::IO, dtype::Datatype)
         print(io, h5lt_dtype_to_text(dtype))
     else
         # Note that h5i_is_valid returns `false` on the built-in datatypes (e.g.
-        # H5T_NATIVE_INT), apparently because they have refcounts of 0 yet are always
+        # H5T.NATIVE_INT), apparently because they have refcounts of 0 yet are always
         # valid. Just temporarily turn off error printing and try the call to probe if
         # dtype is valid since H5LTdtype_to_text special-cases all of the built-in types
         # internally.
-        old_func, old_client_data = h5e_get_auto(H5E_DEFAULT)
-        h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
+        old_func, old_client_data = h5e_get_auto(H5E.DEFAULT)
+        h5e_set_auto(H5E.DEFAULT, C_NULL, C_NULL)
         local text
         try
             text = h5lt_dtype_to_text(dtype)
         catch
             text = "(invalid)"
         finally
-            h5e_set_auto(H5E_DEFAULT, old_func, old_client_data)
+            h5e_set_auto(H5E.DEFAULT, old_func, old_client_data)
         end
         print(io, text)
     end
@@ -292,7 +294,7 @@ attrs(p::Union{File,Group,Dataset}) = Attributes(p)
 # Methods for reference types
 function Reference(parent::Union{File,Group,Dataset}, name::AbstractString)
     ref = Ref{hobj_ref_t}()
-    h5r_create(ref, checkvalid(parent), name, H5R_OBJECT, -1)
+    h5r_create(ref, checkvalid(parent), name, H5R.OBJECT, -1)
     return Reference(ref[])
 end
 Base.:(==)(a::Reference, b::Reference) = a.r == b.r
@@ -325,7 +327,7 @@ Base.show(io::IO, ::MIME"text/plain", E::EmptyArray) = show(io, E)
 Base.cat_size(::EmptyArray) = error("concatenation of HDF5.EmptyArray is unsupported")
 Base.cat_size(::EmptyArray, d) = error("concatenation of HDF5.EmptyArray is unsupported")
 
-# Stub types to encode fixed-size arrays for H5T_ARRAY
+# Stub types to encode fixed-size arrays for H5T.ARRAY
 struct FixedArray{T,D,L}
     data::NTuple{L,T}
 end
@@ -405,23 +407,23 @@ function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool
         error("HDF5 does not support appending without writing")
     end
     close_apl = false
-    if apl.id == H5P_DEFAULT
-        apl = p_create(H5P_FILE_ACCESS)
+    if apl.id == H5P.DEFAULT
+        apl = p_create(H5P.FILE_ACCESS)
         close_apl = true
         # With garbage collection, the other modes don't make sense
-        apl[:fclose_degree] = H5F_CLOSE_STRONG
+        apl[:fclose_degree] = H5F.CLOSE_STRONG
     end
     if cr && (tr || !isfile(filename))
-        flag = swmr ? H5F_ACC_TRUNC|H5F_ACC_SWMR_WRITE : H5F_ACC_TRUNC
+        flag = swmr ? H5F.ACC_TRUNC|H5F.ACC_SWMR_WRITE : H5F.ACC_TRUNC
         fid = h5f_create(filename, flag, cpl, apl)
     else
         if !h5f_is_hdf5(filename)
             error("This does not appear to be an HDF5 file")
         end
         if wr
-            flag = swmr ? H5F_ACC_RDWR|H5F_ACC_SWMR_WRITE : H5F_ACC_RDWR
+            flag = swmr ? H5F.ACC_RDWR|H5F.ACC_SWMR_WRITE : H5F.ACC_RDWR
         else
-            flag = swmr ? H5F_ACC_RDONLY|H5F_ACC_SWMR_READ : H5F_ACC_RDONLY
+            flag = swmr ? H5F.ACC_RDONLY|H5F.ACC_SWMR_READ : H5F.ACC_RDONLY
         end
         fid = h5f_open(filename, flag, apl)
     end
@@ -446,11 +448,11 @@ Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for
 "r+", or SWMR read access for "r".
 """
 function h5open(filename::AbstractString, mode::AbstractString="r"; swmr=false, pv...)
-    fapl = p_create(H5P_FILE_ACCESS; pv...) # file access property list
+    fapl = p_create(H5P.FILE_ACCESS; pv...) # file access property list
     # With garbage collection, the other modes don't make sense
     # (Set this first, so that the user-passed properties can overwrite this.)
-    fapl[:fclose_degree] = H5F_CLOSE_STRONG
-    fcpl = p_create(H5P_FILE_CREATE; pv...) # file create property list
+    fapl[:fclose_degree] = H5F.CLOSE_STRONG
+    fcpl = p_create(H5P.FILE_CREATE; pv...) # file create property list
     modes =
         mode == "r"  ? (true,  false, false, false, false) :
         mode == "r+" ? (true,  true,  false, false, true ) :
@@ -656,7 +658,7 @@ file(o::Union{Object,Attribute}) = o.file
 fd(obj::Object) = h5i_get_file_id(checkvalid(obj).id)
 
 # Flush buffers
-Base.flush(f::Union{Object,Attribute,Datatype,File}, scope = H5F_SCOPE_GLOBAL) = h5f_flush(checkvalid(f).id, scope)
+Base.flush(f::Union{Object,Attribute,Datatype,File}, scope = H5F.SCOPE_GLOBAL) = h5f_flush(checkvalid(f).id, scope)
 
 # Open objects
 g_open(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Group(h5g_open(checkvalid(parent), name, apl), file(parent))
@@ -666,9 +668,9 @@ a_open(parent::Union{File,Object}, name::AbstractString, apl::Properties=DEFAULT
 # Object (group, named datatype, or dataset) open
 function h5object(obj_id::hid_t, parent)
     obj_type = h5i_get_type(obj_id)
-    obj_type == H5I_GROUP ? Group(obj_id, file(parent)) :
-    obj_type == H5I_DATATYPE ? Datatype(obj_id, file(parent)) :
-    obj_type == H5I_DATASET ? Dataset(obj_id, file(parent)) :
+    obj_type == H5I.GROUP ? Group(obj_id, file(parent)) :
+    obj_type == H5I.DATATYPE ? Datatype(obj_id, file(parent)) :
+    obj_type == H5I.DATASET ? Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
 end
 o_open(parent, path::AbstractString) = h5object(h5o_open(checkvalid(parent), path), parent)
@@ -687,15 +689,15 @@ Base.getindex(x::Attributes, name::AbstractString) = a_open(x.parent, name)
 
 function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     objtype = gettype(parent, path)
-    if objtype == H5I_DATASET
-        dapl = p_create(H5P_DATASET_ACCESS; pv...)
-        dxpl = p_create(H5P_DATASET_XFER; pv...)
+    if objtype == H5I.DATASET
+        dapl = p_create(H5P.DATASET_ACCESS; pv...)
+        dxpl = p_create(H5P.DATASET_XFER; pv...)
         return d_open(parent, path, dapl, dxpl)
-    elseif objtype == H5I_GROUP
-        gapl = p_create(H5P_GROUP_ACCESS; pv...)
+    elseif objtype == H5I.GROUP
+        gapl = p_create(H5P.GROUP_ACCESS; pv...)
         return g_open(parent, path, gapl)
-    else#if objtype == H5I_DATATYPE # only remaining choice
-        tapl = p_create(H5P_DATATYPE_ACCESS; pv...)
+    else#if objtype == H5I.DATATYPE # only remaining choice
+        tapl = p_create(H5P.DATATYPE_ACCESS; pv...)
         return t_open(parent, path, tapl)
     end
 end
@@ -734,9 +736,9 @@ end
 
 # Setting dset creation properties with name/value pairs
 function d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace; pv...)
-    dcpl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P_DATASET_CREATE; pv...)
-    dxpl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P_DATASET_XFER; pv...)
-    dapl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P_DATASET_ACCESS; pv...)
+    dcpl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P.DATASET_CREATE; pv...)
+    dxpl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P.DATASET_XFER; pv...)
+    dapl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P.DATASET_ACCESS; pv...)
     Dataset(h5d_create(checkvalid(parent), path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
 end
 d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Dims; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
@@ -746,7 +748,7 @@ d_create(parent::Union{File,Group}, path::AbstractString, dtype::Type, dspace_di
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 t_create(class_id, sz) = Datatype(h5t_create(class_id, sz))
 function t_commit(parent::Union{File,Group}, path::AbstractString, dtype::Datatype,
-                  lcpl::Properties=p_create(H5P_LINK_CREATE), tcpl::Properties=DEFAULT_PROPERTIES, tapl::Properties=DEFAULT_PROPERTIES)
+                  lcpl::Properties=p_create(H5P.LINK_CREATE), tcpl::Properties=DEFAULT_PROPERTIES, tapl::Properties=DEFAULT_PROPERTIES)
     h5p_set_char_encoding(lcpl, cset(typeof(path)))
     h5t_commit(checkvalid(parent), path, dtype, lcpl, tcpl, tapl)
     dtype.file = file(parent)
@@ -758,13 +760,13 @@ a_create(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspa
 function _prop_get(p::Properties, name::Symbol)
     class = p.class
 
-    if class == H5P_FILE_CREATE
+    if class == H5P.FILE_CREATE
         return name === :userblock   ? h5p_get_userblock(p) :
-               name === :track_times ? h5p_get_obj_track_times(p) : # H5P_OBJECT_CREATE
+               name === :track_times ? h5p_get_obj_track_times(p) : # H5P.OBJECT_CREATE
                error("unknown file create property ", name)
     end
 
-    if class == H5P_FILE_ACCESS
+    if class == H5P.FILE_ACCESS
         return name === :alignment     ? h5p_get_alignment(p) :
                name === :driver        ? h5p_get_driver(p) :
                name === :driver_info   ? h5p_get_driver_info(p) :
@@ -774,33 +776,33 @@ function _prop_get(p::Properties, name::Symbol)
                error("unknown file access property ", name)
     end
 
-    if class == H5P_GROUP_CREATE
+    if class == H5P.GROUP_CREATE
         return name === :local_heap_size_hint ? h5p_get_local_heap_size_hint(p) :
-               name === :track_times ? h5p_get_obj_track_times(p) : # H5P_OBJECT_CREATE
+               name === :track_times ? h5p_get_obj_track_times(p) : # H5P.OBJECT_CREATE
                error("unknown group create property ", name)
     end
 
-    if class == H5P_LINK_CREATE
+    if class == H5P.LINK_CREATE
         return name === :char_encoding ? h5p_get_char_encoding(p) :
                name === :create_intermediate_group ? h5p_get_create_intermediate_group(p) :
                error("unknown link create property ", name)
     end
 
-    if class == H5P_DATASET_CREATE
+    if class == H5P.DATASET_CREATE
         return name === :alloc_time  ? h5p_get_alloc_time(p) :
                name === :chunk       ? get_chunk(p) :
                #name === :external    ? h5p_get_external(p) :
                name === :layout      ? h5p_get_layout(p) :
-               name === :track_times ? h5p_get_obj_track_times(p) : # H5P_OBJECT_CREATE
+               name === :track_times ? h5p_get_obj_track_times(p) : # H5P.OBJECT_CREATE
                error("unknown dataset create property ", name)
     end
 
-    if class == H5P_DATASET_XFER
+    if class == H5P.DATASET_XFER
         return name === :dxpl_mpio  ? h5p_get_dxpl_mpio(p) :
                error("unknown dataset transfer property ", name)
     end
 
-    if class == H5P_ATTRIBUTE_CREATE
+    if class == H5P.ATTRIBUTE_CREATE
         return name === :char_encoding ? h5p_get_char_encoding(p) :
                error("unknown attribute create property ", name)
     end
@@ -811,13 +813,13 @@ end
 function _prop_set!(p::Properties, name::Symbol, val, check::Bool = true)
     class = p.class
 
-    if class == H5P_FILE_CREATE
+    if class == H5P.FILE_CREATE
         return name === :userblock   ? h5p_set_userblock(p, val...) :
-               name === :track_times ? h5p_set_obj_track_times(p, val...) : # H5P_OBJECT_CREATE
+               name === :track_times ? h5p_set_obj_track_times(p, val...) : # H5P.OBJECT_CREATE
                check ? error("unknown file create property ", name) : nothing
     end
 
-    if class == H5P_FILE_ACCESS
+    if class == H5P.FILE_ACCESS
         return name === :alignment     ? h5p_set_alignment(p, val...) :
                name === :fapl_mpio     ? h5p_set_fapl_mpio(p, val...) :
                name === :fclose_degree ? h5p_set_fclose_degree(p, val...) :
@@ -825,19 +827,19 @@ function _prop_set!(p::Properties, name::Symbol, val, check::Bool = true)
                check ? error("unknown file access property ", name) : nothing
     end
 
-    if class == H5P_GROUP_CREATE
+    if class == H5P.GROUP_CREATE
         return name === :local_heap_size_hint ? h5p_set_local_heap_size_hint(p, val...) :
-               name === :track_times          ? h5p_set_obj_track_times(p, val...) : # H5P_OBJECT_CREATE
+               name === :track_times          ? h5p_set_obj_track_times(p, val...) : # H5P.OBJECT_CREATE
                check ? error("unknown group create property ", name) : nothing
     end
 
-    if class == H5P_LINK_CREATE
+    if class == H5P.LINK_CREATE
         return name === :char_encoding ? h5p_set_char_encoding(p, val...) :
                name === :create_intermediate_group ? h5p_set_create_intermediate_group(p, val...) :
                check ? error("unknown link create property ", name) : nothing
     end
 
-    if class == H5P_DATASET_CREATE
+    if class == H5P.DATASET_CREATE
         return name === :alloc_time  ? h5p_set_alloc_time(p, val...) :
                name === :blosc       ? h5p_set_blosc(p, val...) :
                name === :chunk       ? set_chunk(p, val...) :
@@ -846,16 +848,16 @@ function _prop_set!(p::Properties, name::Symbol, val, check::Bool = true)
                name === :external    ? h5p_set_external(p, val...) :
                name === :layout      ? h5p_set_layout(p, val...) :
                name === :shuffle     ? h5p_set_shuffle(p, val...) :
-               name === :track_times ? h5p_set_obj_track_times(p, val...) : # H5P_OBJECT_CREATE
+               name === :track_times ? h5p_set_obj_track_times(p, val...) : # H5P.OBJECT_CREATE
                check ? error("unknown dataset create property ", name) : nothing
     end
 
-    if class == H5P_DATASET_XFER
+    if class == H5P.DATASET_XFER
         return name === :dxpl_mpio  ? h5p_set_dxpl_mpio(p, val...) :
                check ? error("unknown dataset transfer property ", name) : nothing
     end
 
-    if class == H5P_ATTRIBUTE_CREATE
+    if class == H5P.ATTRIBUTE_CREATE
         return name === :char_encoding ? h5p_set_char_encoding(p, val...) :
                check ? error("unknown attribute create property ", name) : nothing
     end
@@ -877,8 +879,8 @@ o_delete(parent::Union{File,Group}, path::AbstractString, lapl::Properties=DEFAU
 o_delete(obj::Object) = o_delete(parent(obj), ascii(split(name(obj),"/")[end])) # FIXME: remove ascii?
 
 # Copy objects
-o_copy(src_parent::Union{File,Group}, src_path::AbstractString, dst_parent::Union{File,Group}, dst_path::AbstractString) = h5o_copy(checkvalid(src_parent), src_path, checkvalid(dst_parent), dst_path, H5P_DEFAULT, _link_properties(dst_path))
-o_copy(src_obj::Object, dst_parent::Union{File,Group}, dst_path::AbstractString) = h5o_copy(checkvalid(src_obj), ".", checkvalid(dst_parent), dst_path, H5P_DEFAULT, _link_properties(dst_path))
+o_copy(src_parent::Union{File,Group}, src_path::AbstractString, dst_parent::Union{File,Group}, dst_path::AbstractString) = h5o_copy(checkvalid(src_parent), src_path, checkvalid(dst_parent), dst_path, H5P.DEFAULT, _link_properties(dst_path))
+o_copy(src_obj::Object, dst_parent::Union{File,Group}, dst_path::AbstractString) = h5o_copy(checkvalid(src_obj), ".", checkvalid(dst_parent), dst_path, H5P.DEFAULT, _link_properties(dst_path))
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
@@ -957,7 +959,7 @@ function Base.eltype(dset::Union{Dataset,Attribute})
 end
 function isnull(obj::Union{Dataset,Attribute})
     dspace = dataspace(obj)
-    ret = h5s_get_simple_extent_type(dspace) == H5S_NULL
+    ret = h5s_get_simple_extent_type(dspace) == H5S.NULL
     close(dspace)
     ret
 end
@@ -969,13 +971,13 @@ name(attr::Attribute) = h5a_get_name(attr)
 function Base.keys(x::Union{Group,File})
     checkvalid(x)
     n = length(x)
-    return [h5l_get_name_by_idx(x, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, H5P_DEFAULT) for i = 1:n]
+    return [h5l_get_name_by_idx(x, ".", H5.INDEX_NAME, H5.ITER_INC, i-1, H5P.DEFAULT) for i = 1:n]
 end
 
 function Base.keys(x::Attributes)
     checkvalid(x.parent)
     n = length(x)
-    return [h5a_get_name_by_idx(x.parent, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, H5P_DEFAULT) for i = 1:n]
+    return [h5a_get_name_by_idx(x.parent, ".", H5.INDEX_NAME, H5.ITER_INC, i-1, H5P.DEFAULT) for i = 1:n]
 end
 
 # iteration by objects
@@ -983,7 +985,7 @@ function Base.iterate(parent::Union{File,Group}, iter = (1,nothing))
     n, prev_obj = iter
     prev_obj ≢ nothing && close(prev_obj)
     n > length(parent) && return nothing
-    obj = h5object(h5o_open_by_idx(checkvalid(parent), ".", H5_INDEX_NAME, H5_ITER_INC, n-1, H5P_DEFAULT), parent)
+    obj = h5object(h5o_open_by_idx(checkvalid(parent), ".", H5.INDEX_NAME, H5.ITER_INC, n-1, H5P.DEFAULT), parent)
     return (obj, (n+1,obj))
 end
 
@@ -1015,7 +1017,7 @@ datatype(::Type{T}) where {T<:ScalarType} = Datatype(hdf5_type_id(T), false)
 datatype(A::AbstractArray{T}) where {T<:ScalarType} = Datatype(hdf5_type_id(T), false)
 function datatype(::Type{Complex{T}}) where {T<:ScalarType}
   COMPLEX_SUPPORT[] || error("complex support disabled. call HDF5.enable_complex_support() to enable")
-  dtype = h5t_create(H5T_COMPOUND, 2*sizeof(T))
+  dtype = h5t_create(H5T.COMPOUND, 2*sizeof(T))
   h5t_insert(dtype, COMPLEX_FIELD_NAMES[][1], 0, hdf5_type_id(T))
   h5t_insert(dtype, COMPLEX_FIELD_NAMES[][2], sizeof(T), hdf5_type_id(T))
   return Datatype(dtype)
@@ -1031,7 +1033,7 @@ function datatype(str::AbstractString)
 end
 function datatype(::Array{S}) where {S<:AbstractString}
     type_id = h5t_copy(hdf5_type_id(S))
-    h5t_set_size(type_id, H5T_VARIABLE)
+    h5t_set_size(type_id, H5T.VARIABLE)
     h5t_set_cset(type_id, cset(S))
     Datatype(type_id)
 end
@@ -1051,8 +1053,8 @@ dataspace(dset::Dataset) = Dataspace(h5d_get_space(checkvalid(dset)))
 dataspace(attr::Attribute) = Dataspace(h5a_get_space(checkvalid(attr)))
 
 # Create a dataspace from in-memory types
-dataspace(x::Union{T, Complex{T}}) where {T<:ScalarType} = Dataspace(h5s_create(H5S_SCALAR))
-dataspace(::AbstractString) = Dataspace(h5s_create(H5S_SCALAR))
+dataspace(x::Union{T, Complex{T}}) where {T<:ScalarType} = Dataspace(h5s_create(H5S.SCALAR))
+dataspace(::AbstractString) = Dataspace(h5s_create(H5S.SCALAR))
 
 function _dataspace(sz::Dims{N}, max_dims::Union{Dims{N}, Tuple{}}=()) where N
     dims = hsize_t[sz[i] for i in N:-1:1]
@@ -1068,8 +1070,8 @@ end
 dataspace(A::AbstractArray{T,N}; max_dims::Union{Dims{N},Tuple{}} = ()) where {T,N} = _dataspace(size(A), max_dims)
 # special array types
 dataspace(v::VLen; max_dims::Union{Dims,Tuple{}}=()) = _dataspace(size(v.data), max_dims)
-dataspace(A::EmptyArray) = Dataspace(h5s_create(H5S_NULL))
-dataspace(n::Nothing) = Dataspace(h5s_create(H5S_NULL))
+dataspace(A::EmptyArray) = Dataspace(h5s_create(H5S.NULL))
+dataspace(n::Nothing) = Dataspace(h5s_create(H5S.NULL))
 # for giving sizes explicitly
 dataspace(sz::Dims{N}; max_dims::Union{Dims{N},Tuple{}}=()) where {N} = _dataspace(sz, max_dims)
 dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
@@ -1175,7 +1177,7 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
 
     dspace = dataspace(obj)
     stype = h5s_get_simple_extent_type(dspace)
-    stype == H5S_NULL && return EmptyArray{T}()
+    stype == H5S.NULL && return EmptyArray{T}()
 
     if !isempty(I)
         indices = Base.to_indices(obj, I)
@@ -1183,7 +1185,7 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
     end
 
     scalar = false
-    if stype == H5S_SCALAR
+    if stype == H5S.SCALAR
         sz = (1,)
         scalar = true
     elseif isempty(I)
@@ -1207,7 +1209,7 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
 
     out = do_normalize(T) ? normalize_types.(buf) : buf
 
-    xfer_id = obj isa Dataset ? obj.xfer.id : H5P_DEFAULT
+    xfer_id = obj isa Dataset ? obj.xfer.id : H5P.DEFAULT
     do_reclaim(T) && h5d_vlen_reclaim(memtype.id, memspace.id, xfer_id, buf)
 
     close(memtype)
@@ -1260,12 +1262,12 @@ Array(x::Dataset) = read(x)
 
 # Clean up string buffer according to padding mode
 function unpad(s::String, pad::Integer)
-    if pad == H5T_STR_NULLTERM
+    if pad == H5T.STR_NULLTERM
         v = findfirst(isequal('\0'), s)
         v === nothing ? s : s[1:v-1]
-    elseif pad == H5T_STR_NULLPAD
+    elseif pad == H5T.STR_NULLPAD
         rstrip(s, '\0')
-    elseif pad == H5T_STR_SPACEPAD
+    elseif pad == H5T.STR_SPACEPAD
         rstrip(s, ' ')
     else
         error("Unrecognized string padding mode $pad")
@@ -1276,7 +1278,7 @@ unpad(s, pad::Integer) = unpad(String(s), pad)
 # Dereference
 function _deref(parent, r::Reference)
     r == Reference() && error("Reference is null")
-    obj_id = h5r_dereference(checkvalid(parent), H5P_DEFAULT, H5R_OBJECT, r)
+    obj_id = h5r_dereference(checkvalid(parent), H5P.DEFAULT, H5R.OBJECT, r)
     h5object(obj_id, parent)
 end
 Base.getindex(parent::Union{File,Group}, r::Reference) = _deref(parent, r)
@@ -1304,7 +1306,7 @@ Base.read(attr::Attributes, name::AbstractString) = a_read(attr.parent, name)
 function iscontiguous(obj::Dataset)
     prop = h5d_get_create_plist(checkvalid(obj))
     try
-        h5p_get_layout(prop) == H5D_CONTIGUOUS
+        h5p_get_layout(prop) == H5D.CONTIGUOUS
     finally
         h5p_close(prop)
     end
@@ -1347,7 +1349,7 @@ function readmmap(obj::Dataset, ::Type{Array{T}}) where {T}
 
         # Check permissions
         intent = h5f_get_intent(obj.file.id)
-        flag = intent == H5F_ACC_RDONLY ? "r" : "r+"
+        flag = intent == H5F.ACC_RDONLY ? "r" : "r+"
         fd = open(obj.file.filename, flag)
     end
 
@@ -1560,7 +1562,7 @@ function hyperslab(dspace::Dataspace, I::Union{AbstractRange{Int},Int}...)
                 error("index out of range")
             end
         end
-        h5s_select_hyperslab(dsel_id, H5S_SELECT_SET, dsel_start, dsel_stride, dsel_count, C_NULL)
+        h5s_select_hyperslab(dsel_id, H5S.SELECT_SET, dsel_start, dsel_stride, dsel_count, C_NULL)
     finally
         close(dspace)
     end
@@ -1576,15 +1578,15 @@ end
 # If you need to link to multiple segments, use low-level interface
 function d_create_external(parent::Union{File,Group}, name::AbstractString, filepath::AbstractString, t, sz::Dims, offset::Integer=0)
     checkvalid(parent)
-    dcpl  = p_create(H5P_DATASET_CREATE)
-    h5p_set_external(dcpl , filepath, Int(offset), prod(sz)*sizeof(t)) # TODO: allow H5F_UNLIMITED
+    dcpl  = p_create(H5P.DATASET_CREATE)
+    h5p_set_external(dcpl , filepath, Int(offset), prod(sz)*sizeof(t)) # TODO: allow H5F.UNLIMITED
     d_create(parent, name, datatype(t), dataspace(sz); dcpl=dcpl)
 end
 
 function do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
     checkvalid(dataset)
     offs = collect(hsize_t, reverse(offset)) .- 1
-    h5do_write_chunk(dataset, H5P_DEFAULT, UInt32(filter_mask), offs, length(chunk_bytes), chunk_bytes)
+    h5do_write_chunk(dataset, H5P.DEFAULT, UInt32(filter_mask), offs, length(chunk_bytes), chunk_bytes)
 end
 
 struct ChunkStorage
@@ -1623,9 +1625,9 @@ function hdf5_to_julia(obj::Union{Dataset, Attribute})
     objspace = dataspace(obj)
     try
         stype = h5s_get_simple_extent_type(objspace)
-        if stype == H5S_SIMPLE
+        if stype == H5S.SIMPLE
             return Array{T}
-        elseif stype == H5S_NULL
+        elseif stype == H5S.NULL
             return EmptyArray{T}
         else
             return T
@@ -1638,32 +1640,32 @@ end
 function hdf5_to_julia_eltype(objtype)
     local T
     class_id = h5t_get_class(objtype)
-    if class_id == H5T_STRING
+    if class_id == H5T.STRING
         cset = h5t_get_cset(objtype)
         n = h5t_get_size(objtype)
-        if cset == H5T_CSET_ASCII
+        if cset == H5T.CSET_ASCII
             T = (n == 1) ? ASCIIChar : String
-        elseif cset == H5T_CSET_UTF8
+        elseif cset == H5T.CSET_UTF8
             T = (n == 1) ? UTF8Char : String
         else
             error("character set ", cset, " not recognized")
         end
-    elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
+    elseif class_id == H5T.INTEGER || class_id == H5T.FLOAT
         T = get_mem_compatible_jl_type(objtype)
-    elseif class_id == H5T_BITFIELD
+    elseif class_id == H5T.BITFIELD
         T = get_mem_compatible_jl_type(objtype)
-    elseif class_id == H5T_ENUM
+    elseif class_id == H5T.ENUM
         T = get_mem_compatible_jl_type(objtype)
-    elseif class_id == H5T_REFERENCE
+    elseif class_id == H5T.REFERENCE
         T = get_mem_compatible_jl_type(objtype)
-    elseif class_id == H5T_OPAQUE
+    elseif class_id == H5T.OPAQUE
         T = Opaque
-    elseif class_id == H5T_VLEN
+    elseif class_id == H5T.VLEN
         super_id = h5t_get_super(objtype)
         T = VLen{hdf5_to_julia_eltype(Datatype(super_id))}
-    elseif class_id == H5T_COMPOUND
+    elseif class_id == H5T.COMPOUND
         T = get_mem_compatible_jl_type(objtype)
-    elseif class_id == H5T_ARRAY
+    elseif class_id == H5T.ARRAY
         T = get_mem_compatible_jl_type(objtype)
     else
         error("Class id ", class_id, " is not yet supported")
@@ -1673,7 +1675,7 @@ end
 
 function get_jl_type(objtype::Datatype)
     class_id = h5t_get_class(objtype)
-    if class_id == H5T_OPAQUE
+    if class_id == H5T.OPAQUE
         return Opaque
     else
         return get_mem_compatible_jl_type(objtype)
@@ -1691,7 +1693,7 @@ end
 
 function get_mem_compatible_jl_type(objtype::Datatype)
     class_id = h5t_get_class(objtype)
-    if class_id == H5T_STRING
+    if class_id == H5T.STRING
         if h5t_is_variable_str(objtype)
             return Cstring
         else
@@ -1699,11 +1701,11 @@ function get_mem_compatible_jl_type(objtype::Datatype)
             pad = h5t_get_strpad(objtype)
             return FixedString{Int(n), pad}
         end
-    elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
+    elseif class_id == H5T.INTEGER || class_id == H5T.FLOAT
         native_type = h5t_get_native_type(objtype)
         try
             native_size = h5t_get_size(native_type)
-            if class_id == H5T_INTEGER
+            if class_id == H5T.INTEGER
                 is_signed = h5t_get_sign(native_type)
             else
                 is_signed = nothing
@@ -1712,29 +1714,29 @@ function get_mem_compatible_jl_type(objtype::Datatype)
         finally
             h5t_close(native_type)
         end
-    elseif class_id == H5T_BITFIELD
+    elseif class_id == H5T.BITFIELD
         return Bool
-    elseif class_id == H5T_ENUM
+    elseif class_id == H5T.ENUM
         super_type = h5t_get_super(objtype)
         try
             native_type = h5t_get_native_type(super_type)
             try
                 native_size = h5t_get_size(native_type)
                 is_signed = h5t_get_sign(native_type)
-                return _hdf5_type_map(H5T_INTEGER, is_signed, native_size)
+                return _hdf5_type_map(H5T.INTEGER, is_signed, native_size)
             finally
                 h5t_close(native_type)
             end
         finally
             h5t_close(super_type)
         end
-    elseif class_id == H5T_REFERENCE
+    elseif class_id == H5T.REFERENCE
         # TODO update to use version 1.12 reference functions/types
         return Reference
-    elseif class_id == H5T_VLEN
+    elseif class_id == H5T.VLEN
         superid = h5t_get_super(objtype)
         return VariableArray{get_mem_compatible_jl_type(Datatype(superid))}
-    elseif class_id == H5T_COMPOUND
+    elseif class_id == H5T.COMPOUND
         N = h5t_get_nmembers(objtype)
 
         membernames = ntuple(N) do i
@@ -1758,7 +1760,7 @@ function get_mem_compatible_jl_type(objtype::Datatype)
         else
             return NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
         end
-    elseif class_id == H5T_ARRAY
+    elseif class_id == H5T.ARRAY
         dims = h5t_get_array_dims(objtype)
         nd = length(dims)
         eltyp = Datatype(h5t_get_super(objtype))
@@ -1791,42 +1793,42 @@ function h5a_write(attr_id::hid_t, memtype_id::hid_t, v::VLen{T}) where {T<:Unio
     vp = vlenpack(v)
     h5a_write(attr_id, memtype_id, vp)
 end
-h5a_create(loc_id, name, type_id, space_id) = h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P_DEFAULT)
-h5a_open(obj_id, name) = h5a_open(obj_id, name, H5P_DEFAULT)
-h5d_create(loc_id, name, type_id, space_id) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
-h5d_open(obj_id, name) = h5d_open(obj_id, name, H5P_DEFAULT)
-function h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::hid_t=H5P_DEFAULT)
+h5a_create(loc_id, name, type_id, space_id) = h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P.DEFAULT)
+h5a_open(obj_id, name) = h5a_open(obj_id, name, H5P.DEFAULT)
+h5d_create(loc_id, name, type_id, space_id) = h5d_create(loc_id, name, type_id, space_id, H5P.DEFAULT, H5P.DEFAULT, H5P.DEFAULT)
+h5d_open(obj_id, name) = h5d_open(obj_id, name, H5P.DEFAULT)
+function h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::hid_t=H5P.DEFAULT)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
-    h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
+    h5d_read(dataset_id, memtype_id, H5S.ALL, H5S.ALL, xfer, buf)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::hid_t=H5P_DEFAULT)
+function h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::hid_t=H5P.DEFAULT)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
-    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
+    h5d_write(dataset_id, memtype_id, H5S.ALL, H5S.ALL, xfer, buf)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::AbstractString, xfer::hid_t=H5P_DEFAULT)
-    ccall((:H5Dwrite, libhdf5), herr_t, (hid_t, hid_t, hid_t, hid_t, hid_t, Cstring), dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, str)
+function h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::AbstractString, xfer::hid_t=H5P.DEFAULT)
+    ccall((:H5Dwrite, libhdf5), herr_t, (hid_t, hid_t, hid_t, hid_t, hid_t, Cstring), dataset_id, memtype_id, H5S.ALL, H5S.ALL, xfer, str)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::hid_t=H5P_DEFAULT) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
+function h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::hid_t=H5P.DEFAULT) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
-    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, tmp)
+    h5d_write(dataset_id, memtype_id, H5S.ALL, H5S.ALL, xfer, tmp)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{<:AbstractString}, xfer::hid_t=H5P_DEFAULT)
+function h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{<:AbstractString}, xfer::hid_t=H5P.DEFAULT)
     p = Ref{Cstring}(strs)
-    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, p)
+    h5d_write(dataset_id, memtype_id, H5S.ALL, H5S.ALL, xfer, p)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::hid_t=H5P_DEFAULT) where {T<:Union{ScalarType,CharType}}
+function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::hid_t=H5P.DEFAULT) where {T<:Union{ScalarType,CharType}}
     vp = vlenpack(v)
-    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, vp)
+    h5d_write(dataset_id, memtype_id, H5S.ALL, H5S.ALL, xfer, vp)
 end
-h5f_create(filename) = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)
-h5f_open(filename, mode) = h5f_open(filename, mode, H5P_DEFAULT)
-h5g_create(obj_id, name) = h5g_create(obj_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
-h5g_create(obj_id, name, lcpl_id, gcpl_id) = h5g_create(obj_id, name, lcpl_id, gcpl_id, H5P_DEFAULT)
-h5g_open(file_id, name) = h5g_open(file_id, name, H5P_DEFAULT)
-h5l_exists(loc_id, name) = h5l_exists(loc_id, name, H5P_DEFAULT)
-h5o_open(obj_id, name) = h5o_open(obj_id, name, H5P_DEFAULT)
+h5f_create(filename) = h5f_create(filename, H5F.ACC_TRUNC, H5P.DEFAULT, H5P.DEFAULT)
+h5f_open(filename, mode) = h5f_open(filename, mode, H5P.DEFAULT)
+h5g_create(obj_id, name) = h5g_create(obj_id, name, H5P.DEFAULT, H5P.DEFAULT, H5P.DEFAULT)
+h5g_create(obj_id, name, lcpl_id, gcpl_id) = h5g_create(obj_id, name, lcpl_id, gcpl_id, H5P.DEFAULT)
+h5g_open(file_id, name) = h5g_open(file_id, name, H5P.DEFAULT)
+h5l_exists(loc_id, name) = h5l_exists(loc_id, name, H5P.DEFAULT)
+h5o_open(obj_id, name) = h5o_open(obj_id, name, H5P.DEFAULT)
 #h5s_get_simple_extent_ndims(space_id::hid_t) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
-h5t_get_native_type(type_id) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
+h5t_get_native_type(type_id) = h5t_get_native_type(type_id, H5T.DIR_ASCEND)
 
 
 # Functions that require special handling
@@ -1836,12 +1838,12 @@ const libversion = h5_get_libversion()
 vlen_get_buf_size(dset::Dataset, dtype::Datatype, dspace::Dataspace) = h5d_vlen_get_buf_size(dset, dtype, dspace)
 
 ### Property manipulation ###
-get_access_properties(d::Dataset)   = Properties(h5d_get_access_plist(d), H5P_DATASET_ACCESS)
-get_access_properties(f::File)      = Properties(h5f_get_access_plist(f), H5P_FILE_ACCESS)
-get_create_properties(d::Dataset)   = Properties(h5d_get_create_plist(d), H5P_DATASET_CREATE)
-get_create_properties(g::Group)     = Properties(h5g_get_create_plist(g), H5P_GROUP_CREATE)
-get_create_properties(f::File)      = Properties(h5f_get_create_plist(f), H5P_FILE_CREATE)
-get_create_properties(a::Attribute) = Properties(h5a_get_create_plist(a), H5P_ATTRIBUTE_CREATE)
+get_access_properties(d::Dataset)   = Properties(h5d_get_access_plist(d), H5P.DATASET_ACCESS)
+get_access_properties(f::File)      = Properties(h5f_get_access_plist(f), H5P.FILE_ACCESS)
+get_create_properties(d::Dataset)   = Properties(h5d_get_create_plist(d), H5P.DATASET_CREATE)
+get_create_properties(g::Group)     = Properties(h5g_get_create_plist(g), H5P.GROUP_CREATE)
+get_create_properties(f::File)      = Properties(h5f_get_create_plist(f), H5P.FILE_CREATE)
+get_create_properties(a::Attribute) = Properties(h5a_get_create_plist(a), H5P.ATTRIBUTE_CREATE)
 
 get_chunk(p::Properties) = tuple(convert(Vector{Int}, reverse(h5p_get_chunk(p)))...)
 set_chunk(p::Properties, dims...) = h5p_set_chunk(p, length(dims), hsize_t[reverse(dims)...])
@@ -1888,19 +1890,19 @@ const chunked_props = (; compress=nothing, deflate=nothing, blosc=nothing, shuff
 
 """
     create_external(source::Union{HDF5.File, HDF5.Group}, source_relpath, target_filename, target_path;
-                    lcpl_id=HDF5.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
+                    lcpl_id=HDF5.H5P.DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
 
 Create an external link such that `source[source_relpath]` points to `target_path` within the file
 with path `target_filename`; Calls `[H5Lcreate_external](https://www.hdfgroup.org/HDF5/doc/RM/RM_H5L.html#Link-CreateExternal)`.
 """
-function create_external(source::Union{File,Group}, source_relpath, target_filename, target_path; lcpl_id=H5P_DEFAULT, lapl_id=H5P_DEFAULT)
+function create_external(source::Union{File,Group}, source_relpath, target_filename, target_path; lcpl_id=H5P.DEFAULT, lapl_id=H5P.DEFAULT)
     h5l_create_external(target_filename, target_path, source, source_relpath, lcpl_id, lapl_id)
     nothing
 end
 
 # error handling
 function hiding_errors(f)
-    error_stack = H5E_DEFAULT
+    error_stack = H5E.DEFAULT
     # error_stack = ccall((:H5Eget_current_stack, libhdf5), hid_t, ())
     old_func, old_client_data = h5e_get_auto(error_stack)
     h5e_set_auto(error_stack, C_NULL, C_NULL)
@@ -1921,7 +1923,7 @@ _attr_properties(::AbstractString) = UTF8_ATTRIBUTE_PROPERTIES[]
 const ASCII_LINK_PROPERTIES = Ref{Properties}()
 const ASCII_ATTRIBUTE_PROPERTIES = Ref{Properties}()
 
-const DEFAULT_PROPERTIES = Properties(H5P_DEFAULT, H5P_DEFAULT)
+const DEFAULT_PROPERTIES = Properties(H5P.DEFAULT, H5P.DEFAULT)
 
 const HAS_PARALLEL = Ref(false)
 
@@ -1943,17 +1945,18 @@ function __init__()
         ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
     end
 
+    __init_globals__()
     register_blosc()
 
     # Turn off automatic error printing
-    # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
+    # h5e_set_auto(H5E.DEFAULT, C_NULL, C_NULL)
 
-    ASCII_LINK_PROPERTIES[] = p_create(H5P_LINK_CREATE; char_encoding = H5T_CSET_ASCII,
+    ASCII_LINK_PROPERTIES[] = p_create(H5P.LINK_CREATE; char_encoding = H5T.CSET_ASCII,
                                        create_intermediate_group = 1)
-    UTF8_LINK_PROPERTIES[]  = p_create(H5P_LINK_CREATE; char_encoding = H5T_CSET_UTF8,
+    UTF8_LINK_PROPERTIES[]  = p_create(H5P.LINK_CREATE; char_encoding = H5T.CSET_UTF8,
                                        create_intermediate_group = 1)
-    ASCII_ATTRIBUTE_PROPERTIES[] = p_create(H5P_ATTRIBUTE_CREATE; char_encoding = H5T_CSET_ASCII)
-    UTF8_ATTRIBUTE_PROPERTIES[]  = p_create(H5P_ATTRIBUTE_CREATE; char_encoding = H5T_CSET_UTF8)
+    ASCII_ATTRIBUTE_PROPERTIES[] = p_create(H5P.ATTRIBUTE_CREATE; char_encoding = H5T.CSET_ASCII)
+    UTF8_ATTRIBUTE_PROPERTIES[]  = p_create(H5P.ATTRIBUTE_CREATE; char_encoding = H5T.CSET_UTF8)
 
     @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" @eval include("mpio.jl")
 
