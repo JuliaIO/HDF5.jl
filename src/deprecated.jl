@@ -191,4 +191,5 @@ end
 
 ### Changed in PR#689
 # - switch from H5Rdereference1 to H5Rdereference2
+@deprecate_binding HDF5ReferenceObj_NULL HDF5ReferenceObj(HOBJ_REF_T_NULL)
 @deprecate h5r_dereference(obj_id, ref_type, ref) h5r_dereference(obj_id, H5P_DEFAULT, ref_type, ref)
