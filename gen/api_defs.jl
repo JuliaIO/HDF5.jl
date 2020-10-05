@@ -114,6 +114,7 @@
 @bind h5i_get_name(obj_id::hid_t, buf::Ptr{UInt8}, buf_size::Csize_t)::Cssize_t "Error getting object name"
 @bind h5i_get_ref(obj_id::hid_t)::Cint "Error getting reference count"
 @bind h5i_get_type(obj_id::hid_t)::Cint "Error getting type"
+@bind h5i_inc_ref(obj_id::hid_t)::Cint "Error incrementing identifier refcount"
 @bind h5i_is_valid(obj_id::hid_t)::htri_t "Cannot determine whether object is valid"
 
 ###
