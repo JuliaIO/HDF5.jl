@@ -99,7 +99,7 @@
 @bind h5g_close(group_id::hid_t)::herr_t "Error closing group"
 @bind h5g_create(loc_id::hid_t, pathname::Ptr{UInt8}, lcpl_id::hid_t, gcpl_id::hid_t, gapl_id::hid_t)::hid_t error("Error creating group ", h5i_get_name(loc_id), "/", pathname)
 @bind h5g_get_create_plist(group_id::hid_t)::hid_t "Error getting group create property list"
-@bind h5g_get_info(group_id::hid_t, buf::Ptr{H5Ginfo})::herr_t "Error getting group info"
+@bind h5g_get_info(group_id::hid_t, buf::Ptr{H5G_info_t})::herr_t "Error getting group info"
 @bind h5g_get_num_objs(loc_id::hid_t, num_obj::Ptr{hsize_t})::hid_t "Error getting group length"
 @bind h5g_get_objname_by_idx(loc_id::hid_t, idx::hsize_t, pathname::Ptr{UInt8}, size::Csize_t)::Cssize_t error("Error getting group object name ", h5i_get_name(loc_id), "/", pathname)
 @bind h5g_open(loc_id::hid_t, pathname::Ptr{UInt8}, gapl_id::hid_t)::hid_t error("Error opening group ", h5i_get_name(loc_id), "/", pathname)
@@ -124,7 +124,7 @@
 @bind h5l_create_soft(target_path::Ptr{UInt8}, link_loc_id::hid_t, link_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)::herr_t error("Error creating soft link ", link_name, " pointing to ", target_path)
 @bind h5l_delete(obj_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::herr_t error("Error deleting ", h5i_get_name(obj_id), "/", pathname)
 @bind h5l_exists(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::htri_t error("Cannot determine whether ", pathname, " exists")
-@bind h5l_get_info(link_loc_id::hid_t, link_name::Ptr{UInt8}, link_buf::Ptr{H5LInfo}, lapl_id::hid_t)::herr_t error("Error getting info for link ", link_name)
+@bind h5l_get_info(link_loc_id::hid_t, link_name::Ptr{UInt8}, link_buf::Ptr{H5L_info_t}, lapl_id::hid_t)::herr_t error("Error getting info for link ", link_name)
 @bind h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting object name"
 
 ###
@@ -133,7 +133,7 @@
 
 @bind h5o_close(object_id::hid_t)::herr_t "Error closing object"
 @bind h5o_copy(src_loc_id::hid_t, src_name::Ptr{UInt8}, dst_loc_id::hid_t, dst_name::Ptr{UInt8}, ocpypl_id::hid_t, lcpl_id::hid_t)::herr_t error("Error copying object ", h5i_get_name(src_loc_id), "/", src_name, " to ", h5i_get_name(dst_loc_id), "/", dst_name)
-@bind h5o_get_info(object_id::hid_t, buf::Ptr{H5Oinfo})::herr_t "Error getting object info"
+@bind h5o_get_info(object_id::hid_t, buf::Ptr{H5O_info_t})::herr_t "Error getting object info"
 @bind h5o_open(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::hid_t error("Error opening object ", h5i_get_name(loc_id), "/", pathname)
 @bind h5o_open_by_addr(loc_id::hid_t, addr::haddr_t)::hid_t error("Error opening object by address")
 @bind h5o_open_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::hid_t error("Error opening object of index ", n)

@@ -88,7 +88,7 @@ end
 ###
 
 function h5g_get_info(loc_id)
-    ginfo = Ref{H5Ginfo}()
+    ginfo = Ref{H5G_info_t}()
     h5g_get_info(loc_id, ginfo)
     return ginfo[]
 end
@@ -115,7 +115,7 @@ end
 ###
 
 function h5l_get_info(link_loc_id, link_name, lapl_id)
-    info = Ref{H5LInfo}()
+    info = Ref{H5L_info_t}()
     h5l_get_info(link_loc_id, link_name, info, lapl_id)
     return info[]
 end
@@ -132,7 +132,7 @@ end
 ###
 
 function h5o_get_info(loc_id)
-    oinfo = Ref{H5Oinfo}()
+    oinfo = Ref{H5O_info_t}()
     h5o_get_info(loc_id, oinfo)
     return oinfo[]
 end
