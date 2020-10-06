@@ -15,12 +15,12 @@ import Base: @deprecate, @deprecate_binding, depwarn
 # - using symbols instead of strings for property keys
 @deprecate setindex!(p::Properties, val, name::String) setindex!(p, val, Symbol(name))
 
-function getindex(parent::Union{File, Group}, path::String, prop1::String, val1, pv...)
+function getindex(parent::Union{File,Group}, path::String, prop1::String, val1, pv...)
     depwarn("getindex(::Union{HDF5File, HDF5Group}, path, props...) with string key and value argument pairs is deprecated. Use keywords instead.", :getindex)
     props = (prop1, val1, pv...)
     return getindex(parent, path; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
 end
-function setindex!(parent::Union{File, Group}, val, path::String, prop1::String, val1, pv...)
+function setindex!(parent::Union{File,Group}, val, path::String, prop1::String, val1, pv...)
     depwarn("setindex!(::Union{HDF5File, HDF5Group}, val, path, props...) with string key and value argument pairs is deprecated. Use keywords instead.", :setindex!)
     props = (prop1, val1, pv...)
     return setindex!(parent, val, path; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
@@ -42,12 +42,12 @@ function h5read(filename, name::String, indices::Tuple{Vararg{Union{AbstractRang
     depwarn("h5read with string key and value argument pairs is deprecated. Use keywords instead.", :h5read)
     return h5read(filename, name, indices; [Symbol(pv[i]) => pv[i+1] for i in 1:2:length(pv)]...)
 end
-function d_create(parent::Union{File, Group}, path::String, dtype::Datatype, dspace::D, prop1::String, val1, pv...) where D <: Union{Dataspace, Dims, Tuple{Dims,Dims}}
+function d_create(parent::Union{File,Group}, path::String, dtype::Datatype, dspace::D, prop1::String, val1, pv...) where D <: Union{Dataspace, Dims, Tuple{Dims,Dims}}
     depwarn("d_create with string key and value argument pairs is deprecated. Use keywords instead.", :d_create)
     props = (prop1, val1, pv...)
     return d_create(parent, path, dtype, dspace; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
 end
-function d_create(parent::Union{File, Group}, path::String, dtype::Type, dspace, prop1::String, val1, pv...)
+function d_create(parent::Union{File,Group}, path::String, dtype::Type, dspace, prop1::String, val1, pv...)
     depwarn("d_create with string key and value argument pairs is deprecated. Use keywords instead.", :d_create)
     props = (prop1, val1, pv...)
     return d_create(parent, path, dtype, dspace; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
@@ -98,16 +98,16 @@ for (fsym, ptype) in ((:d_create, Union{File, Group}),
             end
             return obj, dtype
         end
-        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}},
-                plists::Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
+        ($fsym)(parent::$ptype, name::String, data::Union{T,AbstractArray{T}},
+                plists::Properties...) where {T<:Union{ScalarOrString,Complex{<:HDF5Scalar}}} =
             ($privsym)(parent, name, data, plists...)
         ($fsym)(parent::$ptype, name::String, data::VLen{T},
                 plists::Properties...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privsym)(parent, name, data, plists...)
     end
 end
-for (fsym, ptype) in ((:d_write, Union{File, Group}),
-                      (:a_write, Union{File, Object}),
+for (fsym, ptype) in ((:d_write, Union{File,Group}),
+                      (:a_write, Union{File,Object}),
                      )
     privsym = Symbol(:_, fsym)
     crsym = Symbol(:__, replace(string(fsym), "write" => "create"))
@@ -126,16 +126,16 @@ for (fsym, ptype) in ((:d_write, Union{File, Group}),
                 close(dtype)
             end
         end
-        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}},
-                plists::Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
+        ($fsym)(parent::$ptype, name::String, data::Union{T,AbstractArray{T}},
+                plists::Properties...) where {T<:Union{ScalarOrString,Complex{<:HDF5Scalar}}} =
             ($privsym)(parent, name, data, plists...)
         ($fsym)(parent::$ptype, name::String, data::VLen{T},
                 plists::Properties...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privsym)(parent, name, data, plists...)
     end
 end
-function write(parent::Union{File, Group}, name::String, data::Union{T, AbstractArray{T}},
-               plists::Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}}
+function write(parent::Union{File,Group}, name::String, data::Union{T,AbstractArray{T}},
+               plists::Properties...) where {T<:Union{ScalarOrString,Complex{<:HDF5Scalar}}}
     depwarn("`write(parent::Union{HDF5File, HDF5Group}, name::String, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
             "`write(parent::Union{HDF5File, HDF5Group}, name::String, data; properties...)` " *
@@ -150,7 +150,7 @@ function write(parent::Union{File, Group}, name::String, data::Union{T, Abstract
         close(dtype)
     end
 end
-function write(parent::Dataset, name::String, data::Union{T, AbstractArray{T}},
+function write(parent::Dataset, name::String, data::Union{T,AbstractArray{T}},
                plists::Properties...) where {T<:ScalarOrString}
     depwarn("`write(parent::HDF5Dataset, name::String, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
