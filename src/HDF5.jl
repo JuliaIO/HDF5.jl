@@ -541,7 +541,7 @@ function close(obj::File)
 end
 
 """
-    isopen(obj::HDF5File)
+    isopen(obj::HDF5.File)
 
 Returns `true` if `obj` has not been closed, `false` if it has been closed.
 """
@@ -1863,7 +1863,7 @@ end
 const chunked_props = (; compress=nothing, deflate=nothing, blosc=nothing, shuffle=nothing)
 
 """
-    create_external(source::Union{HDF5File, HDF5Group}, source_relpath, target_filename, target_path;
+    create_external(source::Union{HDF5.File, HDF5.Group}, source_relpath, target_filename, target_path;
                     lcpl_id=HDF5.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
 
 Create an external link such that `source[source_relpath]` points to `target_path` within the file
