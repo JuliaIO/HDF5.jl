@@ -425,7 +425,7 @@ end
     function h5open(f::Function, args...; swmr=false, pv...)
 
 Apply the function f to the result of `h5open(args...;kwargs...)` and close the resulting
-`HDF5File` upon completion. For example with a `do` block:
+`HDF5.File` upon completion. For example with a `do` block:
 
 
     h5open("foo.h5","w") do h5
@@ -1068,14 +1068,14 @@ function get_dims(dspace::Dataspace)
 end
 
 """
-    get_dims(dset::HDF5Dataset)
+    get_dims(dset::HDF5.Dataset)
 
 Get the array dimensions from a dataset and return a tuple of dims and maxdims.
 """
 get_dims(dset::Dataset) = get_dims(dataspace(checkvalid(dset)))
 
 """
-    set_dims!(dset::HDF5Dataset, new_dims::Dims)
+    set_dims!(dset::HDF5.Dataset, new_dims::Dims)
 
 Change the current dimensions of a dataset to `new_dims`, limited by
 `max_dims = get_dims(dset)[2]`. Reduction is possible and leads to loss of truncated data.
@@ -1083,7 +1083,7 @@ Change the current dimensions of a dataset to `new_dims`, limited by
 set_dims!(dset::Dataset, new_dims::Dims) = h5d_set_extent(checkvalid(dset), hsize_t[reverse(new_dims)...])
 
 """
-    start_swmr_write(h5::HDF5File)
+    start_swmr_write(h5::HDF5.File)
 
 Start Single Reader Multiple Writer (SWMR) writing mode.
 See [SWMR documentation](https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-StartSwmrWrite).
@@ -1128,7 +1128,7 @@ end
 
 # "Plain" (unformatted) reads. These work only for simple types: scalars, arrays, and strings
 # See also "Reading arrays using getindex" below
-# This infers the Julia type from the HDF5Datatype. Specific file formats should provide their own read(dset).
+# This infers the Julia type from the HDF5.Datatype. Specific file formats should provide their own read(dset).
 const DatasetOrAttribute = Union{Dataset, Attribute}
 
 function read(obj::DatasetOrAttribute)
@@ -1839,7 +1839,7 @@ get_fclose_degree(p::Properties) = h5p_get_fclose_degree(checkvalid(p).id)
 get_libver_bounds(p::Properties) = h5p_get_libver_bounds(checkvalid(p).id)
 
 """
-    get_datasets(file::HDF5File) -> datasets::Vector{HDF5Dataset}
+    get_datasets(file::HDF5.File) -> datasets::Vector{HDF5.Dataset}
 
 Get all the datasets in an hdf5 file without loading the data.
 """

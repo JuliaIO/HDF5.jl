@@ -3,7 +3,7 @@
 ################################
 # This provides common methods that could be applicable to any
 # interface for reading variables out of a file, e.g. HDF5,
-# JLD, or MAT files. This is the super class of HDF5File, HDF5Group,
+# JLD, or MAT files. This is the super class of HDF5.File, HDF5.Group,
 # JldFile, JldGroup, Matlabv5File, and MatlabHDF5File.
 #
 # Types inheriting from DataFile should have names, read, and write

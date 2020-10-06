@@ -1,7 +1,7 @@
 import Base: @deprecate, @deprecate_binding, depwarn
 
 ### Changed in PR#629
-# - HDF5Dataset.xfer from ::hid_t to ::HDF5Properties
+# - HDF5.Dataset.xfer from ::hid_t to ::HDF5.Properties
 @deprecate h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::Properties) h5d_read(dataset_id, memtype_id, buf, xfer.id)
 @deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::Properties) h5d_write(dataset_id, memtype_id, buf, xfer.id)
 @deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::String, xfer::Properties) h5d_write(dataset_id, memtype_id, str, xfer.id)
