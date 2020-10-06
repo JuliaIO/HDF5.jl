@@ -2,25 +2,25 @@ import Base: @deprecate, @deprecate_binding, depwarn
 
 ### Changed in PR#629
 # - HDF5Dataset.xfer from ::hid_t to ::HDF5Properties
-@deprecate h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::HDF5Properties) h5d_read(dataset_id, memtype_id, buf, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::HDF5Properties) h5d_write(dataset_id, memtype_id, buf, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::String, xfer::HDF5Properties) h5d_write(dataset_id, memtype_id, str, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::HDF5Properties) where {T<:Union{HDF5Scalar, Complex{<:HDF5Scalar}}} h5d_write(dataset_id, memtype_id, x, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{S}, xfer::HDF5Properties) where {S<:String} h5d_write(dataset_id, memtype_id, strs, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::HDF5Vlen{T}, xfer::HDF5Properties) where {T<:Union{HDF5Scalar,CharType}} h5d_write(dataset_id, memtype_id, v, xfer.id)
+@deprecate h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::Properties) h5d_read(dataset_id, memtype_id, buf, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::Properties) h5d_write(dataset_id, memtype_id, buf, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::String, xfer::Properties) h5d_write(dataset_id, memtype_id, str, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::Properties) where {T<:Union{HDF5Scalar, Complex{<:HDF5Scalar}}} h5d_write(dataset_id, memtype_id, x, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{S}, xfer::Properties) where {S<:String} h5d_write(dataset_id, memtype_id, strs, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::Vlen{T}, xfer::Properties) where {T<:Union{HDF5Scalar,CharType}} h5d_write(dataset_id, memtype_id, v, xfer.id)
 # - p_create lost toclose argument
 @deprecate p_create(class, toclose::Bool, pv...) p_create(class, pv...)
 
 ### Changed in PR#632
 # - using symbols instead of strings for property keys
-@deprecate setindex!(p::HDF5Properties, val, name::String) setindex!(p, val, Symbol(name))
+@deprecate setindex!(p::Properties, val, name::String) setindex!(p, val, Symbol(name))
 
-function getindex(parent::Union{HDF5File, HDF5Group}, path::String, prop1::String, val1, pv...)
+function getindex(parent::Union{File, Group}, path::String, prop1::String, val1, pv...)
     depwarn("getindex(::Union{HDF5File, HDF5Group}, path, props...) with string key and value argument pairs is deprecated. Use keywords instead.", :getindex)
     props = (prop1, val1, pv...)
     return getindex(parent, path; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
 end
-function setindex!(parent::Union{HDF5File, HDF5Group}, val, path::String, prop1::String, val1, pv...)
+function setindex!(parent::Union{File, Group}, val, path::String, prop1::String, val1, pv...)
     depwarn("setindex!(::Union{HDF5File, HDF5Group}, val, path, props...) with string key and value argument pairs is deprecated. Use keywords instead.", :setindex!)
     props = (prop1, val1, pv...)
     return setindex!(parent, val, path; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
@@ -42,12 +42,12 @@ function h5read(filename, name::String, indices::Tuple{Vararg{Union{AbstractRang
     depwarn("h5read with string key and value argument pairs is deprecated. Use keywords instead.", :h5read)
     return h5read(filename, name, indices; [Symbol(pv[i]) => pv[i+1] for i in 1:2:length(pv)]...)
 end
-function d_create(parent::Union{HDF5File, HDF5Group}, path::String, dtype::HDF5Datatype, dspace::D, prop1::String, val1, pv...) where D <: Union{HDF5Dataspace, Dims, Tuple{Dims,Dims}}
+function d_create(parent::Union{File, Group}, path::String, dtype::Datatype, dspace::D, prop1::String, val1, pv...) where D <: Union{Dataspace, Dims, Tuple{Dims,Dims}}
     depwarn("d_create with string key and value argument pairs is deprecated. Use keywords instead.", :d_create)
     props = (prop1, val1, pv...)
     return d_create(parent, path, dtype, dspace; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
 end
-function d_create(parent::Union{HDF5File, HDF5Group}, path::String, dtype::Type, dspace, prop1::String, val1, pv...)
+function d_create(parent::Union{File, Group}, path::String, dtype::Type, dspace, prop1::String, val1, pv...)
     depwarn("d_create with string key and value argument pairs is deprecated. Use keywords instead.", :d_create)
     props = (prop1, val1, pv...)
     return d_create(parent, path, dtype, dspace; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
@@ -67,18 +67,18 @@ end
 
 # deprecation helpers to avoid having default values on the equivalent low-level
 # constructors in HDF5.jl
-function __d_create(parent::Union{HDF5File, HDF5Group}, path::String, dtype::HDF5Datatype,
-                   dspace::HDF5Dataspace, lcpl::HDF5Properties,
-                   dcpl::HDF5Properties = DEFAULT_PROPERTIES,
-                   dapl::HDF5Properties = DEFAULT_PROPERTIES,
-                   dxpl::HDF5Properties = DEFAULT_PROPERTIES)
+function __d_create(parent::Union{File, Group}, path::String, dtype::Datatype,
+                   dspace::Dataspace, lcpl::Properties,
+                   dcpl::Properties = DEFAULT_PROPERTIES,
+                   dapl::Properties = DEFAULT_PROPERTIES,
+                   dxpl::Properties = DEFAULT_PROPERTIES)
     d_create(parent, path, dtype, dspace, lcpl, dcpl, dapl, dxpl)
 end
 # a_create doesn't take property lists, so just bind the helper name directly
 const __a_create = a_create
 
-for (fsym, ptype) in ((:d_create, Union{HDF5File, HDF5Group}),
-                      (:a_create, Union{HDF5File, HDF5Object}),
+for (fsym, ptype) in ((:d_create, Union{File, Group}),
+                      (:a_create, Union{File, Object}),
                      )
     privsym = Symbol(:_, fsym)
     chainsym = Symbol(:__, fsym)
@@ -86,7 +86,7 @@ for (fsym, ptype) in ((:d_create, Union{HDF5File, HDF5Group}),
     usesig = "$fsym(parent::$ptype, name::String, data; properties...)"
     warnstr = "`$depsig` with property lists is deprecated, use `$usesig` with keywords instead"
     @eval begin
-        function ($privsym)(parent::$ptype, name::String, data, plists::HDF5Properties...)
+        function ($privsym)(parent::$ptype, name::String, data, plists::Properties...)
             depwarn($warnstr, $(QuoteNode(fsym)))
             local obj
             dtype = datatype(data)
@@ -99,15 +99,15 @@ for (fsym, ptype) in ((:d_create, Union{HDF5File, HDF5Group}),
             return obj, dtype
         end
         ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}},
-                plists::HDF5Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
+                plists::Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
             ($privsym)(parent, name, data, plists...)
-        ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T},
-                plists::HDF5Properties...) where {T<:Union{HDF5Scalar,CharType}} =
+        ($fsym)(parent::$ptype, name::String, data::Vlen{T},
+                plists::Properties...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privsym)(parent, name, data, plists...)
     end
 end
-for (fsym, ptype) in ((:d_write, Union{HDF5File, HDF5Group}),
-                      (:a_write, Union{HDF5File, HDF5Object}),
+for (fsym, ptype) in ((:d_write, Union{File, Group}),
+                      (:a_write, Union{File, Object}),
                      )
     privsym = Symbol(:_, fsym)
     crsym = Symbol(:__, replace(string(fsym), "write" => "create"))
@@ -115,7 +115,7 @@ for (fsym, ptype) in ((:d_write, Union{HDF5File, HDF5Group}),
     usesig = "$fsym(parent::$ptype, name::String, data; properties...)"
     warnstr = "`$depsig` with property lists is deprecated, use `$usesig` with keywords instead"
     @eval begin
-        function ($privsym)(parent::$ptype, name::String, data, plists::HDF5Properties...)
+        function ($privsym)(parent::$ptype, name::String, data, plists::Properties...)
             depwarn($warnstr, $(QuoteNode(fsym)))
             dtype = datatype(data)
             obj = ($crsym)(parent, name, dtype, dataspace(data), plists...)
@@ -127,15 +127,15 @@ for (fsym, ptype) in ((:d_write, Union{HDF5File, HDF5Group}),
             end
         end
         ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}},
-                plists::HDF5Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
+                plists::Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
             ($privsym)(parent, name, data, plists...)
-        ($fsym)(parent::$ptype, name::String, data::HDF5Vlen{T},
-                plists::HDF5Properties...) where {T<:Union{HDF5Scalar,CharType}} =
+        ($fsym)(parent::$ptype, name::String, data::Vlen{T},
+                plists::Properties...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privsym)(parent, name, data, plists...)
     end
 end
-function write(parent::Union{HDF5File, HDF5Group}, name::String, data::Union{T, AbstractArray{T}},
-               plists::HDF5Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}}
+function write(parent::Union{File, Group}, name::String, data::Union{T, AbstractArray{T}},
+               plists::Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}}
     depwarn("`write(parent::Union{HDF5File, HDF5Group}, name::String, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
             "`write(parent::Union{HDF5File, HDF5Group}, name::String, data; properties...)` " *
@@ -150,8 +150,8 @@ function write(parent::Union{HDF5File, HDF5Group}, name::String, data::Union{T, 
         close(dtype)
     end
 end
-function write(parent::HDF5Dataset, name::String, data::Union{T, AbstractArray{T}},
-               plists::HDF5Properties...) where {T<:ScalarOrString}
+function write(parent::Dataset, name::String, data::Union{T, AbstractArray{T}},
+               plists::Properties...) where {T<:ScalarOrString}
     depwarn("`write(parent::HDF5Dataset, name::String, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
             "`write(parent::HDF5Dataset, name::String, data; properties...)` " *
@@ -193,3 +193,16 @@ end
 # - switch from H5Rdereference1 to H5Rdereference2
 @deprecate_binding HDF5ReferenceObj_NULL HDF5ReferenceObj(HOBJ_REF_T_NULL)
 @deprecate h5r_dereference(obj_id, ref_type, ref) h5r_dereference(obj_id, H5P_DEFAULT, ref_type, ref)
+
+### Changed in PR#689
+# - rename exported bindings
+@deprecate_binding HDF5Attribute HDF5.Attribute
+@deprecate_binding HDF5File HDF5.File
+@deprecate_binding HDF5Group HDF5.Group
+@deprecate_binding HDF5Dataset HDF5.Dataset
+@deprecate_binding HDF5Datatype HDF5.Datatype
+@deprecate_binding HDF5Dataspace HDF5.Dataspace
+@deprecate_binding HDF5Object HDF5.Object
+@deprecate_binding HDF5Properties HDF5.Properties
+@deprecate_binding HDF5Vlen HDF5.Vlen
+@deprecate_binding HDF5ChunkStorage HDF5.ChunkStorage

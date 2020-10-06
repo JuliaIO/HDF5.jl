@@ -109,7 +109,7 @@ fid = h5open(file, "r")
 dset = fid["DS1"]
 a = a_read(dset, "A1")
 g = fid[a[1]]
-@test isa(g, HDF5Group)
+@test isa(g, HDF5.Group)
 ds2 = fid[a[2]]
 ds2v = read(ds2)
 @test isa(ds2v, Array{Int32})
@@ -120,7 +120,7 @@ file = joinpath(test_files, "h5ex_t_objref.h5")
 fid = h5open(file, "r")
 d = read(fid, "DS1")
 g = fid[d[1]]
-@test isa(g, HDF5Group)
+@test isa(g, HDF5.Group)
 ds2 = fid[d[2]]
 ds2v = read(ds2)
 @test isa(ds2v, Array{Int32})

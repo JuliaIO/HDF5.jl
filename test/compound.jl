@@ -51,7 +51,7 @@ function datatype(::Type{foo_hdf5})
     vlen_dtype = HDF5.h5t_vlen_create(datatype(Int64))
     HDF5.h5t_insert(dtype, "e", fieldoffset(foo_hdf5, 5), vlen_dtype)
 
-    HDF5Datatype(dtype)
+    HDF5.Datatype(dtype)
 end
 
 struct bar
@@ -74,7 +74,7 @@ function datatype(::Type{bar_hdf5})
 
     HDF5.h5t_insert(dtype, "a", fieldoffset(bar_hdf5, 1), array_dtype)
 
-    HDF5Datatype(dtype)
+    HDF5.Datatype(dtype)
 end
 
 function convert(::Type{bar_hdf5}, x::bar)

@@ -30,7 +30,7 @@ for i = 1:10
     memtype_id = HDF5.h5t_create(HDF5.H5T_COMPOUND, 2*sizeof(Float64))
     HDF5.h5t_insert(memtype_id, "real", 0, HDF5.hdf5_type_id(Float64))
     HDF5.h5t_insert(memtype_id, "imag", sizeof(Float64), HDF5.hdf5_type_id(Float64))
-    dt = HDF5Datatype(memtype_id)
+    dt = HDF5.Datatype(memtype_id)
     t_commit(file, "dt", dt)
     ds = dataspace((2,))
     d = d_create(file, "d", dt, ds)

@@ -41,7 +41,7 @@ write(f, "salut", salut)
 write(f, "ucode", ucode)
 # Manually write a variable-length string (issue #187)
 let
-    dtype = HDF5Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
+    dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
     HDF5.h5t_set_size(dtype.id, HDF5.H5T_VARIABLE)
     HDF5.h5t_set_cset(dtype.id, HDF5.cset(typeof(salut)))
     dspace = HDF5.dataspace(salut)
@@ -56,7 +56,7 @@ write(f, "salut_split", salut_split)
 salut_2d = ["Hi" "there"; "Salut" "friend"]
 write(f, "salut_2d", salut_2d)
 # Arrays of strings as vlen
-vlen = HDF5Vlen(salut_split)
+vlen = HDF5.Vlen(salut_split)
 d_write(f, "salut_vlen", vlen)
 # Empty arrays
 empty = UInt32[]
@@ -373,7 +373,7 @@ if !isempty(HDF5.libhdf5_hl)
     # Test direct chunk writing
     h5open(fn, "w") do f
       d = d_create(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
-      raw = HDF5ChunkStorage(d)
+      raw = HDF5.ChunkStorage(d)
       raw[1,1] = 0, collect(reinterpret(UInt8, [1,2,5,6]))
       raw[3,1] = 0, collect(reinterpret(UInt8, [3,4,7,8]))
       raw[1,3] = 0, collect(reinterpret(UInt8, [9,10,13,14]))
@@ -522,7 +522,7 @@ end # writing abstract arrays
 fn = tempname()
 hfile = h5open(fn, "w")
 
-dtype_varstring = HDF5Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
+dtype_varstring = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
 HDF5.h5t_set_size(dtype_varstring, HDF5.H5T_VARIABLE)
 
 write(hfile, "uint8_array", UInt8[(1:8)...])
@@ -596,24 +596,24 @@ meta = a_create(dset, "meta", datatype(Bool), dataspace((1,)))
 @test sprint(show, meta) == "HDF5 attribute: meta"
 
 prop = p_create(HDF5.H5P_DATASET_CREATE)
-@test occursin(r"^HDF5Properties\(\d+, \d+\)", sprint(show, prop))
+@test occursin(r"^HDF5.Properties\(\d+, \d+\)", sprint(show, prop))
 
-dtype = HDF5Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
+dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
 @test sprint(show, dtype) == "HDF5 datatype: H5T_IEEE_F64LE"
 
 dspace = dataspace((1,))
-@test occursin(r"^HDF5Dataspace\(\d+\)", sprint(show, dspace))
+@test occursin(r"^HDF5.Dataspace\(\d+\)", sprint(show, dspace))
 
 # Now test printing after closing each object
 
 close(dspace)
-@test sprint(show, dspace) == "HDF5Dataspace(-1)"
+@test sprint(show, dspace) == "HDF5.Dataspace(-1)"
 
 close(dtype)
 @test sprint(show, dtype) == "HDF5 datatype: (invalid)"
 
 close(prop)
-@test occursin(r"^HDF5Properties\(-1, \d+\)", sprint(show, prop))
+@test occursin(r"^HDF5.Properties\(-1, \d+\)", sprint(show, prop))
 
 close(meta)
 @test sprint(show, meta) == "HDF5 attribute (invalid)"
