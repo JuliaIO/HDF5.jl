@@ -16,12 +16,12 @@ import Base: @deprecate, @deprecate_binding, depwarn
 @deprecate setindex!(p::Properties, val, name::String) setindex!(p, val, Symbol(name))
 
 function getindex(parent::Union{File,Group}, path::String, prop1::String, val1, pv...)
-    depwarn("getindex(::Union{HDF5File, HDF5Group}, path, props...) with string key and value argument pairs is deprecated. Use keywords instead.", :getindex)
+    depwarn("getindex(::Union{HDF5.File, HDF5.Group}, path, props...) with string key and value argument pairs is deprecated. Use keywords instead.", :getindex)
     props = (prop1, val1, pv...)
     return getindex(parent, path; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
 end
 function setindex!(parent::Union{File,Group}, val, path::String, prop1::String, val1, pv...)
-    depwarn("setindex!(::Union{HDF5File, HDF5Group}, val, path, props...) with string key and value argument pairs is deprecated. Use keywords instead.", :setindex!)
+    depwarn("setindex!(::Union{HDF5.File, HDF5.Group}, val, path, props...) with string key and value argument pairs is deprecated. Use keywords instead.", :setindex!)
     props = (prop1, val1, pv...)
     return setindex!(parent, val, path; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
 end
@@ -136,9 +136,9 @@ for (fsym, ptype) in ((:d_write, Union{File,Group}),
 end
 function write(parent::Union{File,Group}, name::String, data::Union{T,AbstractArray{T}},
                plists::Properties...) where {T<:Union{ScalarOrString,Complex{<:HDF5Scalar}}}
-    depwarn("`write(parent::Union{HDF5File, HDF5Group}, name::String, data, plists::HDF5Properties...)` " *
+    depwarn("`write(parent::Union{HDF5.File, HDF5.Group}, name::String, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
-            "`write(parent::Union{HDF5File, HDF5Group}, name::String, data; properties...)` " *
+            "`write(parent::Union{HDF5.File, HDF5.Group}, name::String, data; properties...)` " *
             "with keywords instead.", :write)
     # We avoid using the d_write method to prevent double deprecation warnings.
     dtype = datatype(data)
