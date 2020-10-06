@@ -7,7 +7,7 @@ import Base: @deprecate, @deprecate_binding, depwarn
 @deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::String, xfer::Properties) h5d_write(dataset_id, memtype_id, str, xfer.id)
 @deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::Properties) where {T<:Union{HDF5Scalar, Complex{<:HDF5Scalar}}} h5d_write(dataset_id, memtype_id, x, xfer.id)
 @deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{S}, xfer::Properties) where {S<:String} h5d_write(dataset_id, memtype_id, strs, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::Vlen{T}, xfer::Properties) where {T<:Union{HDF5Scalar,CharType}} h5d_write(dataset_id, memtype_id, v, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::Properties) where {T<:Union{HDF5Scalar,CharType}} h5d_write(dataset_id, memtype_id, v, xfer.id)
 # - p_create lost toclose argument
 @deprecate p_create(class, toclose::Bool, pv...) p_create(class, pv...)
 
@@ -101,7 +101,7 @@ for (fsym, ptype) in ((:d_create, Union{File, Group}),
         ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}},
                 plists::Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
             ($privsym)(parent, name, data, plists...)
-        ($fsym)(parent::$ptype, name::String, data::Vlen{T},
+        ($fsym)(parent::$ptype, name::String, data::VLen{T},
                 plists::Properties...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privsym)(parent, name, data, plists...)
     end
@@ -129,7 +129,7 @@ for (fsym, ptype) in ((:d_write, Union{File, Group}),
         ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}},
                 plists::Properties...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
             ($privsym)(parent, name, data, plists...)
-        ($fsym)(parent::$ptype, name::String, data::Vlen{T},
+        ($fsym)(parent::$ptype, name::String, data::VLen{T},
                 plists::Properties...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privsym)(parent, name, data, plists...)
     end
@@ -191,11 +191,14 @@ end
 
 ### Changed in PR#689
 # - switch from H5Rdereference1 to H5Rdereference2
-@deprecate_binding HDF5ReferenceObj_NULL HDF5ReferenceObj(HOBJ_REF_T_NULL)
+@deprecate_binding HDF5ReferenceObj_NULL Reference(HOBJ_REF_T_NULL)
 @deprecate h5r_dereference(obj_id, ref_type, ref) h5r_dereference(obj_id, H5P_DEFAULT, ref_type, ref)
 
 ### Changed in PR#689
 # - rename exported bindings
+# - remove exports in > v0.14
+export HDF5Attribute, HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype,
+    HDF5Dataspace, HDF5Object, HDF5Properties, HDF5Vlen, HDF5ChunkStorage
 @deprecate_binding HDF5Attribute HDF5.Attribute
 @deprecate_binding HDF5File HDF5.File
 @deprecate_binding HDF5Group HDF5.Group
@@ -204,5 +207,6 @@ end
 @deprecate_binding HDF5Dataspace HDF5.Dataspace
 @deprecate_binding HDF5Object HDF5.Object
 @deprecate_binding HDF5Properties HDF5.Properties
-@deprecate_binding HDF5Vlen HDF5.Vlen
+@deprecate_binding HDF5Vlen HDF5.VLen
 @deprecate_binding HDF5ChunkStorage HDF5.ChunkStorage
+@deprecate_binding HDF5ReferenceObj HDF5.Reference

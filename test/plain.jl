@@ -56,7 +56,7 @@ write(f, "salut_split", salut_split)
 salut_2d = ["Hi" "there"; "Salut" "friend"]
 write(f, "salut_2d", salut_2d)
 # Arrays of strings as vlen
-vlen = HDF5.Vlen(salut_split)
+vlen = HDF5.VLen(salut_split)
 d_write(f, "salut_vlen", vlen)
 # Empty arrays
 empty = UInt32[]
@@ -81,8 +81,8 @@ label = "This is a string"
 attrs(dset)["typeinfo"] = label
 close(dset)
 # Scalar reference values in attributes
-attrs(f)["ref_test"] = HDF5.HDF5ReferenceObj(f, "empty_array_of_strings")
-@test read(attrs(f)["ref_test"]) === HDF5.HDF5ReferenceObj(f, "empty_array_of_strings")
+attrs(f)["ref_test"] = HDF5.Reference(f, "empty_array_of_strings")
+@test read(attrs(f)["ref_test"]) === HDF5.Reference(f, "empty_array_of_strings")
 # Group
 g = g_create(f, "mygroup")
 # Test dataset with compression

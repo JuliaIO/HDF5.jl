@@ -17,7 +17,7 @@ using Compat
 export
     ## types
     # Attribute, File, Group, Dataset, Datatype,
-    # Dataspace, Object, Properties, Vlen, ChunkStorage,
+    # Dataspace, Object, Properties, VLen, ChunkStorage, Reference
     # functions
     a_create, a_delete, a_open, a_read, a_write, attrs,
     d_create, d_create_external, d_open, d_read, d_write,
@@ -45,11 +45,10 @@ include("api.jl")
 include("api_helpers.jl")
 
 # High-level reference handler
-struct HDF5ReferenceObj
+struct Reference
     r::hobj_ref_t
 end
-Base.cconvert(::Type{Ptr{T}}, ref::HDF5ReferenceObj
-             ) where {T<:Union{HDF5ReferenceObj,hobj_ref_t,Cvoid}} = Ref(ref)
+Base.cconvert(::Type{Ptr{T}}, ref::Reference) where {T<:Union{Reference,hobj_ref_t,Cvoid}} = Ref(ref)
 
 # Single character types
 # These are needed to safely handle VLEN objects
@@ -85,13 +84,13 @@ hdf5_type_id(::Type{Int64})      = H5T_NATIVE_INT64
 hdf5_type_id(::Type{UInt64})     = H5T_NATIVE_UINT64
 hdf5_type_id(::Type{Float32})    = H5T_NATIVE_FLOAT
 hdf5_type_id(::Type{Float64})    = H5T_NATIVE_DOUBLE
-hdf5_type_id(::Type{HDF5ReferenceObj}) = H5T_STD_REF_OBJ
+hdf5_type_id(::Type{Reference})  = H5T_STD_REF_OBJ
 
 hdf5_type_id(::Type{S}) where {S<:AbstractString}  = H5T_C_S1
 hdf5_type_id(::Type{C}) where {C<:CharType}        = H5T_C_S1
 
 const HDF5BitsKind = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
-const HDF5Scalar = Union{HDF5BitsKind, HDF5ReferenceObj}
+const HDF5Scalar = Union{HDF5BitsKind, Reference}
 const ScalarOrString = Union{HDF5Scalar, String}
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
@@ -268,13 +267,13 @@ end
 attrs(p::Union{File, Group, Dataset}) = Attributes(p)
 
 # Methods for reference types
-function HDF5ReferenceObj(parent::Union{File, Group, Dataset}, name::String)
+function Reference(parent::Union{File, Group, Dataset}, name::String)
     ref = Ref{hobj_ref_t}()
     h5r_create(ref, checkvalid(parent).id, name, H5R_OBJECT, -1)
-    return HDF5ReferenceObj(ref[])
+    return Reference(ref[])
 end
-==(a::HDF5ReferenceObj, b::HDF5ReferenceObj) = a.r == b.r
-hash(x::HDF5ReferenceObj, h::UInt) = hash(x.r, h)
+==(a::Reference, b::Reference) = a.r == b.r
+hash(x::Reference, h::UInt) = hash(x.r, h)
 
 # Opaque types
 struct HDF5Opaque
@@ -309,16 +308,16 @@ end
 eltype(::Type{VariableArray{T}}) where T = T
 
 # VLEN objects
-struct Vlen{T}
+struct VLen{T}
     data
 end
-Vlen(strs::Array{S}) where {S<:String} = Vlen{chartype(S)}(strs)
-Vlen(A::Array{Array{T}}) where {T<:HDF5Scalar} = Vlen{T}(A)
-Vlen(A::Array{Array{T,N}}) where {T<:HDF5Scalar,N} = Vlen{T}(A)
+VLen(strs::Array{S}) where {S<:String} = VLen{chartype(S)}(strs)
+VLen(A::Array{Array{T}}) where {T<:HDF5Scalar} = VLen{T}(A)
+VLen(A::Array{Array{T,N}}) where {T<:HDF5Scalar,N} = VLen{T}(A)
 
 t2p(::Type{T}) where {T<:HDF5Scalar} = Ptr{T}
 t2p(::Type{C}) where {C<:CharType} = Ptr{UInt8}
-function vlenpack(v::Vlen{T}) where {T<:Union{HDF5Scalar,CharType}}
+function vlenpack(v::VLen{T}) where {T<:Union{HDF5Scalar,CharType}}
     len = length(v.data)
     Tp = t2p(T)  # Ptr{UInt8} or Ptr{T}
     h = Vector{hvl_t}(undef,len)
@@ -1013,8 +1012,8 @@ function datatype(str::Array{S}) where {S<:String}
     h5t_set_cset(type_id, cset(S))
     Datatype(type_id)
 end
-datatype(A::Vlen{T}) where {T<:HDF5Scalar} = Datatype(h5t_vlen_create(hdf5_type_id(T)))
-function datatype(str::Vlen{C}) where {C<:CharType}
+datatype(A::VLen{T}) where {T<:HDF5Scalar} = Datatype(h5t_vlen_create(hdf5_type_id(T)))
+function datatype(str::VLen{C}) where {C<:CharType}
     type_id = h5t_copy(hdf5_type_id(C))
     h5t_set_size(type_id, 1)
     h5t_set_cset(type_id, cset(C))
@@ -1057,7 +1056,7 @@ function _dataspace(sz::Tuple{Vararg{Int}}, max_dims::Union{Dims, Tuple{}}=())
 end
 dataspace(A::AbstractArray; max_dims::Union{Dims, Tuple{}} = ()) = _dataspace(size(A), max_dims)
 dataspace(str::String) = Dataspace(h5s_create(H5S_SCALAR))
-dataspace(v::Vlen; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(size(v.data), max_dims)
+dataspace(v::VLen; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(size(v.data), max_dims)
 dataspace(n::Nothing) = Dataspace(h5s_create(H5S_NULL))
 dataspace(sz::Dims; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(sz, max_dims)
 dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims, Tuple{}}=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
@@ -1262,7 +1261,7 @@ end
 unpad(s, pad::Integer) = unpad(String(s), pad)
 
 # Dereference
-function getindex(parent::Union{File, Group, Dataset}, r::HDF5ReferenceObj)
+function getindex(parent::Union{File, Group, Dataset}, r::Reference)
     r.r == HOBJ_REF_T_NULL && error("Reference is null")
     obj_id = h5r_dereference(checkvalid(parent).id, H5P_DEFAULT, H5R_OBJECT, r)
     h5object(obj_id, parent)
@@ -1400,7 +1399,7 @@ for (privatesym, fsym, ptype) in
         ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
             ($privatesym)(parent, name, data; pv...)
         # VLEN types
-        ($fsym)(parent::$ptype, name::String, data::Vlen{T}; pv...) where {T<:Union{HDF5Scalar,CharType}} =
+        ($fsym)(parent::$ptype, name::String, data::VLen{T}; pv...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privatesym)(parent, name, data; pv...)
     end
 end
@@ -1423,7 +1422,7 @@ for (privatesym, fsym, ptype, crsym) in
         ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarOrString, Complex{<:HDF5Scalar}}} =
             ($privatesym)(parent, name, data; pv...)
         # VLEN types
-        ($fsym)(parent::$ptype, name::String, data::Vlen{T}; pv...) where {T<:Union{HDF5Scalar,CharType}} =
+        ($fsym)(parent::$ptype, name::String, data::VLen{T}; pv...) where {T<:Union{HDF5Scalar,CharType}} =
             ($privatesym)(parent, name, data; pv...)
     end
 end
@@ -1438,7 +1437,7 @@ function write(obj::DatasetOrAttribute, x::Union{T, Array{T}}) where {T<:Union{S
     end
 end
 # VLEN types
-function write(obj::DatasetOrAttribute, data::Vlen{T}) where {T<:Union{HDF5Scalar,CharType}}
+function write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{HDF5Scalar,CharType}}
     dtype = datatype(data)
     try
         writearray(obj, dtype.id, data)
@@ -1598,7 +1597,7 @@ function hdf5_to_julia(obj::Union{Dataset, Attribute})
     finally
         close(objtype)
     end
-    if T <: Vlen
+    if T <: VLen
         return T
     end
     # Determine whether it's an array
@@ -1642,7 +1641,7 @@ function hdf5_to_julia_eltype(objtype)
         T = HDF5Opaque
     elseif class_id == H5T_VLEN
         super_id = h5t_get_super(objtype.id)
-        T = Vlen{hdf5_to_julia_eltype(Datatype(super_id))}
+        T = VLen{hdf5_to_julia_eltype(Datatype(super_id))}
     elseif class_id == H5T_COMPOUND
         T = get_mem_compatible_jl_type(objtype)
     elseif class_id == H5T_ARRAY
@@ -1712,7 +1711,7 @@ function get_mem_compatible_jl_type(objtype::Datatype)
         end
     elseif class_id == H5T_REFERENCE
         # TODO update to use version 1.12 reference functions/types
-        return HDF5ReferenceObj
+        return Reference
     elseif class_id == H5T_VLEN
         superid = h5t_get_super(objtype.id)
         return VariableArray{get_mem_compatible_jl_type(Datatype(superid))}
@@ -1763,7 +1762,7 @@ function h5a_write(attr_id::hid_t, memtype_id::hid_t, strs::Array{S}) where {S<:
     p = Ref{Cstring}(strs)
     h5a_write(attr_id, memtype_id, p)
 end
-function h5a_write(attr_id::hid_t, memtype_id::hid_t, v::Vlen{T}) where {T<:Union{HDF5Scalar,CharType}}
+function h5a_write(attr_id::hid_t, memtype_id::hid_t, v::VLen{T}) where {T<:Union{HDF5Scalar,CharType}}
     vp = vlenpack(v)
     h5a_write(attr_id, memtype_id, vp)
 end
@@ -1790,7 +1789,7 @@ function h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{S}, xfer::h
     p = Ref{Cstring}(strs)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, p)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::Vlen{T}, xfer::hid_t=H5P_DEFAULT) where {T<:Union{HDF5Scalar,CharType}}
+function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::hid_t=H5P_DEFAULT) where {T<:Union{HDF5Scalar,CharType}}
     vp = vlenpack(v)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, vp)
 end
