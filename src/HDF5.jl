@@ -48,6 +48,7 @@ include("api_helpers.jl")
 struct Reference
     r::hobj_ref_t
 end
+Reference() = Reference(HOBJ_REF_T_NULL) # NULL reference to compare to
 Base.cconvert(::Type{Ptr{T}}, ref::Reference) where {T<:Union{Reference,hobj_ref_t,Cvoid}} = Ref(ref)
 
 # Single character types
@@ -1262,7 +1263,7 @@ unpad(s, pad::Integer) = unpad(String(s), pad)
 
 # Dereference
 function getindex(parent::Union{File, Group, Dataset}, r::Reference)
-    r.r == HOBJ_REF_T_NULL && error("Reference is null")
+    r == Reference() && error("Reference is null")
     obj_id = h5r_dereference(checkvalid(parent).id, H5P_DEFAULT, H5R_OBJECT, r)
     h5object(obj_id, parent)
 end

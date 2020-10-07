@@ -191,10 +191,9 @@ end
 
 ### Changed in PR#689
 # - switch from H5Rdereference1 to H5Rdereference2
-@deprecate_binding HDF5ReferenceObj_NULL Reference(HOBJ_REF_T_NULL)
 @deprecate h5r_dereference(obj_id, ref_type, ref) h5r_dereference(obj_id, H5P_DEFAULT, ref_type, ref)
 
-### Changed in PR#689
+### Changed in PR#690
 # - rename exported bindings
 # - remove exports in > v0.14
 export HDF5Attribute, HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype,
@@ -210,3 +209,7 @@ export HDF5Attribute, HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype,
 @deprecate_binding HDF5Vlen HDF5.VLen
 @deprecate_binding HDF5ChunkStorage HDF5.ChunkStorage
 @deprecate_binding HDF5ReferenceObj HDF5.Reference
+
+### Changed in PR#691
+# - Make Reference() construct a null reference
+@deprecate_binding HDF5ReferenceObj_NULL HDF5.Reference()
