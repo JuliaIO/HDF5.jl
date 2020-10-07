@@ -283,7 +283,7 @@ end
 convert(::Type{hid_t}, attr::Attribute) = attr.id
 show(io::IO, attr::Attribute) = isvalid(attr) ? print(io, "HDF5 attribute: ", name(attr)) : print(io, "HDF5 attribute (invalid)")
 
-mutable struct Attributes
+struct Attributes
     parent::Union{File,Group,Dataset}
 end
 attrs(p::Union{File,Group,Dataset}) = Attributes(p)
