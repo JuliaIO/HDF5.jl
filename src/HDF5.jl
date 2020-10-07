@@ -628,15 +628,11 @@ ishdf5(name::AbstractString) = h5f_is_hdf5(name)
 
 # Extract the file
 file(f::File) = f
-file(g::Group) = g.file
-file(dset::Dataset) = dset.file
-file(dtype::Datatype) = dtype.file
-file(a::Attribute) = a.file
+file(o::Union{Object,Attribute}) = o.file
 fd(obj::Object) = h5i_get_file_id(checkvalid(obj).id)
 
 # Flush buffers
-flush(f::Union{Object,Attribute,Datatype,File}, scope) = h5f_flush(checkvalid(f).id, scope)
-flush(f::Union{Object,Attribute,Datatype,File}) = flush(f, H5F_SCOPE_GLOBAL)
+flush(f::Union{Object,Attribute,Datatype,File}, scope = H5F_SCOPE_GLOBAL) = h5f_flush(checkvalid(f).id, scope)
 
 # Open objects
 g_open(parent::Union{File,Group}, name::String, apl::Properties=DEFAULT_PROPERTIES) = Group(h5g_open(checkvalid(parent).id, name, apl.id), file(parent))
