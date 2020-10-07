@@ -215,7 +215,6 @@ export HDF5Attribute, HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype,
 @deprecate_binding HDF5ReferenceObj_NULL HDF5.Reference()
 
 ### Changed in PR#693
-const ScalarOrString = Union{ScalarType,String}
 @deprecate_binding ScalarOrString Union{ScalarType,String}
 @deprecate_binding HDF5Scalar ScalarType
 @deprecate_binding HDF5BitsKind BitsType
