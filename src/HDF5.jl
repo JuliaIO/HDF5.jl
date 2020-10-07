@@ -88,7 +88,6 @@ hdf5_type_id(::Type{Float64})   = H5T_NATIVE_DOUBLE
 hdf5_type_id(::Type{Reference}) = H5T_STD_REF_OBJ
 
 hdf5_type_id(::Type{S}) where {S<:AbstractString} = H5T_C_S1
-hdf5_type_id(::Type{C}) where {C<:CharType} = H5T_C_S1
 
 const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
 const ScalarType = Union{BitsType,Reference}
