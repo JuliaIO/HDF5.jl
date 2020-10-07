@@ -220,3 +220,7 @@ end
 
 ### Changed in PR#695
 @deprecate names(x::Union{Group,File,Attributes}) keys(x)
+
+### Changed in PR#694
+@deprecate has(parent::Union{File,Group,Dataset}, path::String) Base.haskey(parent, path)
+@deprecate exists(parent::Union{File,Group,Dataset,Datatype,Attributes}, path::String) Base.haskey(parent, path) false
