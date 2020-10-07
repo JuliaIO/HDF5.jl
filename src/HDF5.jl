@@ -1652,7 +1652,7 @@ function hdf5_to_julia_eltype(objtype)
     elseif class_id == H5T_REFERENCE
         T = get_mem_compatible_jl_type(objtype)
     elseif class_id == H5T_OPAQUE
-        T = HDF5Opaque
+        T = Opaque
     elseif class_id == H5T_VLEN
         super_id = h5t_get_super(objtype.id)
         T = VLen{hdf5_to_julia_eltype(Datatype(super_id))}
@@ -1669,7 +1669,7 @@ end
 function get_jl_type(objtype::Datatype)
     class_id = h5t_get_class(objtype.id)
     if class_id == H5T_OPAQUE
-        return HDF5Opaque
+        return Opaque
     else
         return get_mem_compatible_jl_type(objtype)
     end
