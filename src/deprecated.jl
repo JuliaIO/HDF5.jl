@@ -5,9 +5,9 @@ import Base: @deprecate, @deprecate_binding, depwarn
 @deprecate h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::Properties) h5d_read(dataset_id, memtype_id, buf, xfer.id)
 @deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::Properties) h5d_write(dataset_id, memtype_id, buf, xfer.id)
 @deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::String, xfer::Properties) h5d_write(dataset_id, memtype_id, str, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::Properties) where {T<:Union{HDF5Scalar, Complex{<:HDF5Scalar}}} h5d_write(dataset_id, memtype_id, x, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::Properties) where {T<:Union{ScalarType, Complex{<:ScalarType}}} h5d_write(dataset_id, memtype_id, x, xfer.id)
 @deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{S}, xfer::Properties) where {S<:String} h5d_write(dataset_id, memtype_id, strs, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::Properties) where {T<:Union{HDF5Scalar,CharType}} h5d_write(dataset_id, memtype_id, v, xfer.id)
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::Properties) where {T<:Union{ScalarType,CharType}} h5d_write(dataset_id, memtype_id, v, xfer.id)
 # - p_create lost toclose argument
 @deprecate p_create(class, toclose::Bool, pv...) p_create(class, pv...)
 
@@ -99,10 +99,10 @@ for (fsym, ptype) in ((:d_create, Union{File, Group}),
             return obj, dtype
         end
         ($fsym)(parent::$ptype, name::String, data::Union{T,AbstractArray{T}},
-                plists::Properties...) where {T<:Union{ScalarOrString,Complex{<:HDF5Scalar}}} =
+                plists::Properties...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
             ($privsym)(parent, name, data, plists...)
         ($fsym)(parent::$ptype, name::String, data::VLen{T},
-                plists::Properties...) where {T<:Union{HDF5Scalar,CharType}} =
+                plists::Properties...) where {T<:Union{ScalarType,CharType}} =
             ($privsym)(parent, name, data, plists...)
     end
 end
@@ -127,15 +127,15 @@ for (fsym, ptype) in ((:d_write, Union{File,Group}),
             end
         end
         ($fsym)(parent::$ptype, name::String, data::Union{T,AbstractArray{T}},
-                plists::Properties...) where {T<:Union{ScalarOrString,Complex{<:HDF5Scalar}}} =
+                plists::Properties...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
             ($privsym)(parent, name, data, plists...)
         ($fsym)(parent::$ptype, name::String, data::VLen{T},
-                plists::Properties...) where {T<:Union{HDF5Scalar,CharType}} =
+                plists::Properties...) where {T<:Union{ScalarType,CharType}} =
             ($privsym)(parent, name, data, plists...)
     end
 end
 function write(parent::Union{File,Group}, name::String, data::Union{T,AbstractArray{T}},
-               plists::Properties...) where {T<:Union{ScalarOrString,Complex{<:HDF5Scalar}}}
+               plists::Properties...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}}
     depwarn("`write(parent::Union{HDF5.File, HDF5.Group}, name::String, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
             "`write(parent::Union{HDF5.File, HDF5.Group}, name::String, data; properties...)` " *
@@ -151,7 +151,7 @@ function write(parent::Union{File,Group}, name::String, data::Union{T,AbstractAr
     end
 end
 function write(parent::Dataset, name::String, data::Union{T,AbstractArray{T}},
-               plists::Properties...) where {T<:ScalarOrString}
+               plists::Properties...) where {T<:ScalarType,String}
     depwarn("`write(parent::HDF5Dataset, name::String, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
             "`write(parent::HDF5Dataset, name::String, data; properties...)` " *
@@ -213,3 +213,7 @@ export HDF5Attribute, HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype,
 ### Changed in PR#691
 # - Make Reference() construct a null reference
 @deprecate_binding HDF5ReferenceObj_NULL HDF5.Reference()
+
+### Changed in PR#693
+const ScalarOrString = Union{ScalarType,String}
+@deprecate_binding ScalarOrString Union{ScalarType,String}

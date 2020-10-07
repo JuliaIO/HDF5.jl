@@ -90,9 +90,8 @@ hdf5_type_id(::Type{Reference})  = H5T_STD_REF_OBJ
 hdf5_type_id(::Type{S}) where {S<:AbstractString}  = H5T_C_S1
 hdf5_type_id(::Type{C}) where {C<:CharType}        = H5T_C_S1
 
-const HDF5BitsKind = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
-const HDF5Scalar = Union{HDF5BitsKind, Reference}
-const ScalarOrString = Union{HDF5Scalar, String}
+const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
+const ScalarType = Union{BitsType,Reference}
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
 function _hdf5_type_map(class_id, is_signed, native_size)
@@ -335,12 +334,12 @@ struct VLen{T}
     data
 end
 VLen(strs::Array{S}) where {S<:String} = VLen{chartype(S)}(strs)
-VLen(A::Array{Array{T}}) where {T<:HDF5Scalar} = VLen{T}(A)
-VLen(A::Array{Array{T,N}}) where {T<:HDF5Scalar,N} = VLen{T}(A)
+VLen(A::Array{Array{T}}) where {T<:ScalarType} = VLen{T}(A)
+VLen(A::Array{Array{T,N}}) where {T<:ScalarType,N} = VLen{T}(A)
 
-t2p(::Type{T}) where {T<:HDF5Scalar} = Ptr{T}
+t2p(::Type{T}) where {T<:ScalarType} = Ptr{T}
 t2p(::Type{C}) where {C<:CharType} = Ptr{UInt8}
-function vlenpack(v::VLen{T}) where {T<:Union{HDF5Scalar,CharType}}
+function vlenpack(v::VLen{T}) where {T<:Union{ScalarType,CharType}}
     len = length(v.data)
     Tp = t2p(T)  # Ptr{UInt8} or Ptr{T}
     h = Vector{hvl_t}(undef,len)
@@ -1006,18 +1005,18 @@ datatype(dset::Dataset) = Datatype(h5d_get_type(checkvalid(dset).id), file(dset)
 datatype(dset::Attribute) = Datatype(h5a_get_type(checkvalid(dset).id), file(dset))
 
 # Create a datatype from in-memory types
-datatype(x::HDF5Scalar) = Datatype(hdf5_type_id(typeof(x)), false)
-datatype(::Type{T}) where {T<:HDF5Scalar} = Datatype(hdf5_type_id(T), false)
-datatype(A::AbstractArray{T}) where {T<:HDF5Scalar} = Datatype(hdf5_type_id(T), false)
-function datatype(::Type{Complex{T}}) where {T<:HDF5Scalar}
+datatype(x::ScalarType) = Datatype(hdf5_type_id(typeof(x)), false)
+datatype(::Type{T}) where {T<:ScalarType} = Datatype(hdf5_type_id(T), false)
+datatype(A::AbstractArray{T}) where {T<:ScalarType} = Datatype(hdf5_type_id(T), false)
+function datatype(::Type{Complex{T}}) where {T<:ScalarType}
   COMPLEX_SUPPORT[] || error("complex support disabled. call HDF5.enable_complex_support() to enable")
   dtype = h5t_create(H5T_COMPOUND, 2*sizeof(T))
   h5t_insert(dtype, COMPLEX_FIELD_NAMES[][1], 0, hdf5_type_id(T))
   h5t_insert(dtype, COMPLEX_FIELD_NAMES[][2], sizeof(T), hdf5_type_id(T))
   return Datatype(dtype)
 end
-datatype(x::Complex{T}) where {T<:HDF5Scalar} = datatype(typeof(x))
-datatype(A::AbstractArray{Complex{T}}) where {T<:HDF5Scalar} = datatype(eltype(A))
+datatype(x::Complex{T}) where {T<:ScalarType} = datatype(typeof(x))
+datatype(A::AbstractArray{Complex{T}}) where {T<:ScalarType} = datatype(eltype(A))
 
 function datatype(str::String)
     type_id = h5t_copy(hdf5_type_id(typeof(str)))
@@ -1031,7 +1030,7 @@ function datatype(str::Array{S}) where {S<:String}
     h5t_set_cset(type_id, cset(S))
     Datatype(type_id)
 end
-datatype(A::VLen{T}) where {T<:HDF5Scalar} = Datatype(h5t_vlen_create(hdf5_type_id(T)))
+datatype(A::VLen{T}) where {T<:ScalarType} = Datatype(h5t_vlen_create(hdf5_type_id(T)))
 function datatype(str::VLen{C}) where {C<:CharType}
     type_id = h5t_copy(hdf5_type_id(C))
     h5t_set_size(type_id, 1)
@@ -1047,7 +1046,7 @@ dataspace(dset::Dataset) = Dataspace(h5d_get_space(checkvalid(dset).id))
 dataspace(attr::Attribute) = Dataspace(h5a_get_space(checkvalid(attr).id))
 
 # Create a dataspace from in-memory types
-dataspace(x::Union{T, Complex{T}}) where {T<:HDF5Scalar} = Dataspace(h5s_create(H5S_SCALAR))
+dataspace(x::Union{T, Complex{T}}) where {T<:ScalarType} = Dataspace(h5s_create(H5S_SCALAR))
 
 function _dataspace(sz::Dims{N}, max_dims::Union{Dims{N}, Tuple{}}=()) where N
     dims = Vector{hsize_t}(undef,length(sz))
@@ -1312,7 +1311,7 @@ function iscontiguous(obj::Dataset)
     end
 end
 
-ismmappable(::Type{Array{T}}) where {T<:HDF5Scalar} = true
+ismmappable(::Type{Array{T}}) where {T<:ScalarType} = true
 ismmappable(::Type) = false
 ismmappable(obj::Dataset, ::Type{T}) where {T} = ismmappable(T) && iscontiguous(obj)
 ismmappable(obj::Dataset) = ismmappable(obj, hdf5_to_julia(obj))
@@ -1413,10 +1412,10 @@ for (privatesym, fsym, ptype) in
             obj, dtype
         end
         # Scalar types
-        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarOrString,Complex{<:HDF5Scalar}}} =
+        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
             ($privatesym)(parent, name, data; pv...)
         # VLEN types
-        ($fsym)(parent::$ptype, name::String, data::VLen{T}; pv...) where {T<:Union{HDF5Scalar,CharType}} =
+        ($fsym)(parent::$ptype, name::String, data::VLen{T}; pv...) where {T<:Union{ScalarType,CharType}} =
             ($privatesym)(parent, name, data; pv...)
     end
 end
@@ -1436,16 +1435,16 @@ for (privatesym, fsym, ptype, crsym) in
             end
         end
         # Scalar types
-        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarOrString,Complex{<:HDF5Scalar}}} =
+        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
             ($privatesym)(parent, name, data; pv...)
         # VLEN types
-        ($fsym)(parent::$ptype, name::String, data::VLen{T}; pv...) where {T<:Union{HDF5Scalar,CharType}} =
+        ($fsym)(parent::$ptype, name::String, data::VLen{T}; pv...) where {T<:Union{ScalarType,CharType}} =
             ($privatesym)(parent, name, data; pv...)
     end
 end
 # Write to already-created objects
 # Scalars
-function write(obj::DatasetOrAttribute, x::Union{T, Array{T}}) where {T<:Union{ScalarOrString,Complex{<:HDF5Scalar}}}
+function write(obj::DatasetOrAttribute, x::Union{T, Array{T}}) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}}
     dtype = datatype(x)
     try
         writearray(obj, dtype.id, x)
@@ -1454,7 +1453,7 @@ function write(obj::DatasetOrAttribute, x::Union{T, Array{T}}) where {T<:Union{S
     end
 end
 # VLEN types
-function write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{HDF5Scalar,CharType}}
+function write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{ScalarType,CharType}}
     dtype = datatype(data)
     try
         writearray(obj, dtype.id, data)
@@ -1463,10 +1462,10 @@ function write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{HDF5Scala
     end
 end
 # For plain files and groups, let "write(obj, name, val; properties...)" mean "d_write"
-write(parent::Union{File,Group}, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarOrString,Complex{<:HDF5Scalar}}} =
+write(parent::Union{File,Group}, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
     d_write(parent, name, data; pv...)
 # For datasets, "write(dset, name, val; properties...)" means "a_write"
-write(parent::Dataset, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:ScalarOrString} =
+write(parent::Dataset, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:ScalarType,String} =
     a_write(parent, name, data; pv...)
 
 
@@ -1488,7 +1487,7 @@ function _setindex!(dset::Dataset, T::Type, X::Array, I::Union{AbstractRange{Int
         error("Dataset indexing (hyperslab) is available only for arrays")
     end
     ET = eltype(T)
-    if !(ET <: Union{HDF5Scalar, Complex{<:HDF5Scalar}})
+    if !(ET <: Union{ScalarType, Complex{<:ScalarType}})
         error("Dataset indexing (hyperslab) is available only for bits types")
     end
     if length(X) != prod(map(length, I))
@@ -1749,7 +1748,7 @@ function get_mem_compatible_jl_type(objtype::Datatype)
                     N == 2 &&
                     (membernames == COMPLEX_FIELD_NAMES[]) &&
                     (membertypes[1] == membertypes[2]) &&
-                    (membertypes[1] <: HDF5Scalar)
+                    (membertypes[1] <: ScalarType)
 
         if iscomplex
             return Complex{membertypes[1]}
@@ -1771,7 +1770,7 @@ end
 # These supply default values where possible
 # See also the "special handling" section below
 h5a_write(attr_id::hid_t, mem_type_id::hid_t, buf::String) = h5a_write(attr_id, mem_type_id, unsafe_wrap(Vector{UInt8}, pointer(buf), ncodeunits(buf)))
-function h5a_write(attr_id::hid_t, mem_type_id::hid_t, x::T) where {T<:Union{HDF5Scalar, Complex{<:HDF5Scalar}}}
+function h5a_write(attr_id::hid_t, mem_type_id::hid_t, x::T) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
     h5a_write(attr_id, mem_type_id, tmp)
 end
@@ -1779,7 +1778,7 @@ function h5a_write(attr_id::hid_t, memtype_id::hid_t, strs::Array{S}) where {S<:
     p = Ref{Cstring}(strs)
     h5a_write(attr_id, memtype_id, p)
 end
-function h5a_write(attr_id::hid_t, memtype_id::hid_t, v::VLen{T}) where {T<:Union{HDF5Scalar,CharType}}
+function h5a_write(attr_id::hid_t, memtype_id::hid_t, v::VLen{T}) where {T<:Union{ScalarType,CharType}}
     vp = vlenpack(v)
     h5a_write(attr_id, memtype_id, vp)
 end
@@ -1798,7 +1797,7 @@ end
 function h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::String, xfer::hid_t=H5P_DEFAULT)
     ccall((:H5Dwrite, libhdf5), herr_t, (hid_t, hid_t, hid_t, hid_t, hid_t, Cstring), dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, str)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::hid_t=H5P_DEFAULT) where {T<:Union{HDF5Scalar, Complex{<:HDF5Scalar}}}
+function h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::hid_t=H5P_DEFAULT) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, tmp)
 end
@@ -1806,7 +1805,7 @@ function h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{S}, xfer::h
     p = Ref{Cstring}(strs)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, p)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::hid_t=H5P_DEFAULT) where {T<:Union{HDF5Scalar,CharType}}
+function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::hid_t=H5P_DEFAULT) where {T<:Union{ScalarType,CharType}}
     vp = vlenpack(v)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, vp)
 end
