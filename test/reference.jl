@@ -7,7 +7,7 @@ using Random, Test, HDF5
 
     f = h5open(fn, "w")
     f["data"] = data
-    f["data_ref"] = HDF5.HDF5ReferenceObj(f, "data")
+    f["data_ref"] = HDF5.Reference(f, "data")
     close(f)
 
     f = h5open(fn, "r")

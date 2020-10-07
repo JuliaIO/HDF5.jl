@@ -106,7 +106,7 @@ function register_blosc()
 end
 
 const set_blosc_values = Cuint[0,0,0,0,5,1,0]
-function h5p_set_blosc(p::HDF5Properties, level::Integer=5)
+function h5p_set_blosc(p::Properties, level::Integer=5)
     0 <= level <= 9 || throw(ArgumentError("blosc compression $level not in [0,9]"))
     set_blosc_values[5] = level
     h5p_set_filter(p.id, FILTER_BLOSC, H5Z_FLAG_OPTIONAL, length(set_blosc_values), set_blosc_values)
