@@ -74,21 +74,21 @@ cset(::Type{UTF8Char}) = H5T_CSET_UTF8
 cset(::Type{ASCIIChar}) = H5T_CSET_ASCII
 
 ## Conversion between Julia types and HDF5 atomic types
-hdf5_type_id(::Type{Bool})       = H5T_NATIVE_B8
-hdf5_type_id(::Type{Int8})       = H5T_NATIVE_INT8
-hdf5_type_id(::Type{UInt8})      = H5T_NATIVE_UINT8
-hdf5_type_id(::Type{Int16})      = H5T_NATIVE_INT16
-hdf5_type_id(::Type{UInt16})     = H5T_NATIVE_UINT16
-hdf5_type_id(::Type{Int32})      = H5T_NATIVE_INT32
-hdf5_type_id(::Type{UInt32})     = H5T_NATIVE_UINT32
-hdf5_type_id(::Type{Int64})      = H5T_NATIVE_INT64
-hdf5_type_id(::Type{UInt64})     = H5T_NATIVE_UINT64
-hdf5_type_id(::Type{Float32})    = H5T_NATIVE_FLOAT
-hdf5_type_id(::Type{Float64})    = H5T_NATIVE_DOUBLE
-hdf5_type_id(::Type{Reference})  = H5T_STD_REF_OBJ
+hdf5_type_id(::Type{Bool})      = H5T_NATIVE_B8
+hdf5_type_id(::Type{Int8})      = H5T_NATIVE_INT8
+hdf5_type_id(::Type{UInt8})     = H5T_NATIVE_UINT8
+hdf5_type_id(::Type{Int16})     = H5T_NATIVE_INT16
+hdf5_type_id(::Type{UInt16})    = H5T_NATIVE_UINT16
+hdf5_type_id(::Type{Int32})     = H5T_NATIVE_INT32
+hdf5_type_id(::Type{UInt32})    = H5T_NATIVE_UINT32
+hdf5_type_id(::Type{Int64})     = H5T_NATIVE_INT64
+hdf5_type_id(::Type{UInt64})    = H5T_NATIVE_UINT64
+hdf5_type_id(::Type{Float32})   = H5T_NATIVE_FLOAT
+hdf5_type_id(::Type{Float64})   = H5T_NATIVE_DOUBLE
+hdf5_type_id(::Type{Reference}) = H5T_STD_REF_OBJ
 
-hdf5_type_id(::Type{S}) where {S<:AbstractString}  = H5T_C_S1
-hdf5_type_id(::Type{C}) where {C<:CharType}        = H5T_C_S1
+hdf5_type_id(::Type{S}) where {S<:AbstractString} = H5T_C_S1
+hdf5_type_id(::Type{C}) where {C<:CharType} = H5T_C_S1
 
 const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
 const ScalarType = Union{BitsType,Reference}
@@ -229,8 +229,7 @@ mutable struct Datatype
     end
 end
 convert(::Type{hid_t}, dtype::Datatype) = dtype.id
-hash(dtype::Datatype, h::UInt) =
-    (dtype.id % UInt + h) ^ (0xadaf9b66bc962084 % UInt)
+hash(dtype::Datatype, h::UInt) = (dtype.id % UInt + h) ^ (0xadaf9b66bc962084 % UInt)
 ==(dt1::Datatype, dt2::Datatype) = h5t_equal(dt1, dt2) > 0
 function show(io::IO, dtype::Datatype)
     print(io, "HDF5 datatype: ")
@@ -257,7 +256,7 @@ function show(io::IO, dtype::Datatype)
 end
 
 # Define an H5O Object type
-const Object = Union{Group, Dataset, Datatype}
+const Object = Union{Group,Dataset,Datatype}
 
 mutable struct Dataspace
     id::hid_t
@@ -308,24 +307,24 @@ struct EmptyArray{T} end
 
 # Stub types to encode fixed-size arrays for H5T_ARRAY
 struct FixedArray{T,D,L}
-  data::NTuple{L, T}
+    data::NTuple{L,T}
 end
 size(::Type{FixedArray{T,D,L}}) where {T,D,L} = D
-size(x::T) where T <: FixedArray = size(T)
+size(x::T) where {T<:FixedArray} = size(T)
 eltype(::Type{FixedArray{T,D,L}}) where {T,D,L} = T
-eltype(x::T) where T <: FixedArray = eltype(T)
+eltype(x::T) where {T<:FixedArray} = eltype(T)
 
-struct FixedString{N, PAD}
-  data::NTuple{N, UInt8}
+struct FixedString{N,PAD}
+    data::NTuple{N,UInt8}
 end
-length(::Type{FixedString{N, PAD}}) where {N, PAD} = N
-length(x::T) where T <: FixedString = length(T)
-pad(::Type{FixedString{N, PAD}}) where {N, PAD} = PAD
-pad(x::T) where T <: FixedString = pad(T)
+length(::Type{FixedString{N,PAD}}) where {N,PAD} = N
+length(x::T) where {T<:FixedString} = length(T)
+pad(::Type{FixedString{N,PAD}}) where {N, PAD} = PAD
+pad(x::T) where {T<:FixedString} = pad(T)
 
 struct VariableArray{T}
-  len::Csize_t
-  p::Ptr{Cvoid}
+    len::Csize_t
+    p::Ptr{Cvoid}
 end
 eltype(::Type{VariableArray{T}}) where T = T
 
@@ -1277,7 +1276,7 @@ end
 unpad(s, pad::Integer) = unpad(String(s), pad)
 
 # Dereference
-function getindex(parent::Union{File, Group, Dataset}, r::Reference)
+function getindex(parent::Union{File,Group,Dataset}, r::Reference)
     r == Reference() && error("Reference is null")
     obj_id = h5r_dereference(checkvalid(parent).id, H5P_DEFAULT, H5R_OBJECT, r)
     h5object(obj_id, parent)
@@ -1285,19 +1284,19 @@ end
 
 # convert special types to native julia types
 normalize_types(x) = x
-normalize_types(x::NamedTuple{T}) where T = NamedTuple{T}(map(normalize_types, values(x)))
+normalize_types(x::NamedTuple{T}) where {T} = NamedTuple{T}(map(normalize_types, values(x)))
 normalize_types(x::Cstring) = unsafe_string(x)
 normalize_types(x::FixedString) = unpad(String(collect(x.data)), pad(x))
 normalize_types(x::FixedArray) = normalize_types.(reshape(collect(x.data), size(x)...))
 normalize_types(x::VariableArray) = normalize_types.(copy(unsafe_wrap(Array, convert(Ptr{eltype(x)}, x.p), x.len, own=false)))
 
-do_normalize(::Type{T}) where T = false
-do_normalize(::Type{NamedTuple{T, U}}) where T where U = any(i -> do_normalize(fieldtype(U,i)), 1:fieldcount(U))
-do_normalize(::Type{T}) where T <: Union{Cstring, FixedString, FixedArray, VariableArray} = true
+do_normalize(::Type{T}) where {T} = false
+do_normalize(::Type{NamedTuple{T,U}}) where {U,T} = any(i -> do_normalize(fieldtype(U,i)), 1:fieldcount(U))
+do_normalize(::Type{T}) where T <: Union{Cstring,FixedString,FixedArray,VariableArray} = true
 
-do_reclaim(::Type{T}) where T = false
-do_reclaim(::Type{NamedTuple{T, U}}) where T where U =  any(i -> do_reclaim(fieldtype(U,i)), 1:fieldcount(U))
-do_reclaim(::Type{T}) where T <: Union{Cstring, VariableArray} = true
+do_reclaim(::Type{T}) where {T} = false
+do_reclaim(::Type{NamedTuple{T,U}}) where {U,T} = any(i -> do_reclaim(fieldtype(U,i)), 1:fieldcount(U))
+do_reclaim(::Type{T}) where T <: Union{Cstring,VariableArray} = true
 
 read(attr::Attributes, name::String) = a_read(attr.parent, name)
 
@@ -1412,7 +1411,7 @@ for (privatesym, fsym, ptype) in
             obj, dtype
         end
         # Scalar types
-        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
+        ($fsym)(parent::$ptype, name::String, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
             ($privatesym)(parent, name, data; pv...)
         # VLEN types
         ($fsym)(parent::$ptype, name::String, data::VLen{T}; pv...) where {T<:Union{ScalarType,CharType}} =
@@ -1462,7 +1461,7 @@ function write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{ScalarTyp
     end
 end
 # For plain files and groups, let "write(obj, name, val; properties...)" mean "d_write"
-write(parent::Union{File,Group}, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
+write(parent::Union{File,Group}, name::String, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
     d_write(parent, name, data; pv...)
 # For datasets, "write(dset, name, val; properties...)" means "a_write"
 write(parent::Dataset, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:ScalarType,String} =
@@ -1770,7 +1769,7 @@ end
 # These supply default values where possible
 # See also the "special handling" section below
 h5a_write(attr_id::hid_t, mem_type_id::hid_t, buf::String) = h5a_write(attr_id, mem_type_id, unsafe_wrap(Vector{UInt8}, pointer(buf), ncodeunits(buf)))
-function h5a_write(attr_id::hid_t, mem_type_id::hid_t, x::T) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
+function h5a_write(attr_id::hid_t, mem_type_id::hid_t, x::T) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
     h5a_write(attr_id, mem_type_id, tmp)
 end
