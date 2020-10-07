@@ -16,7 +16,7 @@ using Compat
 
 export
     ## types
-    # Attribute, File, Group, Dataset, Datatype,
+    # Attribute, File, Group, Dataset, Datatype, Opaque
     # Dataspace, Object, Properties, VLen, ChunkStorage, Reference
     # functions
     a_create, a_delete, a_open, a_read, a_write, attrs,
@@ -299,7 +299,7 @@ end
 hash(x::Reference, h::UInt) = hash(x.r, h)
 
 # Opaque types
-struct HDF5Opaque
+struct Opaque
     data
     tag::String
 end
@@ -1238,7 +1238,7 @@ function read(obj::DatasetOrAttribute, ::Type{String}, I...)
 end
 
 # Read OPAQUE datasets and attributes
-function read(obj::DatasetOrAttribute, ::Type{HDF5Opaque})
+function read(obj::DatasetOrAttribute, ::Type{Opaque})
     local buf
     local len
     local tag
@@ -1256,7 +1256,7 @@ function read(obj::DatasetOrAttribute, ::Type{HDF5Opaque})
     for i = 1:prod(sz)
         data[i] = buf[(i-1)*len+1:i*len]
     end
-    HDF5Opaque(data, tag)
+    Opaque(data, tag)
 end
 
 # Array constructor for datasets
