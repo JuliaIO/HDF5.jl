@@ -46,6 +46,7 @@ macro defconstants(prefix::Symbol, expr::Expr)
     imports = Vector{Union{Symbol,Expr}}(undef, 0)
     defbody = Vector{Expr}(undef, 0)
     getbody = Vector{Expr}(undef, 0)
+    setbody = Vector{Expr}(undef, 0)
 
     innermod = Symbol(:_, prefix)
     for line in stmts
@@ -71,6 +72,15 @@ macro defconstants(prefix::Symbol, expr::Expr)
         push!(symbols, name)
         push!(defbody, :(const $(esc(name)) = $value))
         push!(getbody, :(sym === $(QuoteNode(name)) && return $getexpr))
+        if isruntime
+            setexpr = quote
+                sym === $(QuoteNode(name)) && begin
+                    $fullname[] = value
+                    return value
+                end
+            end
+            append!(setbody, Base.remove_linenums!(setexpr).args)
+        end
     end
 
     # Build expressions to import all necessary types from the parent module.
@@ -94,6 +104,16 @@ macro defconstants(prefix::Symbol, expr::Expr)
             return getfield($prefix, sym)
         end
     end
+    if !isempty(setbody)
+        setfn = quote
+            function Base.setproperty!(::Type{$prefix}, sym::Symbol, value)
+                $(setbody...)
+                return setfield!($prefix, sym, value)
+            end
+        end
+        append!(block.args, Base.remove_linenums!(setfn).args)
+    end
+
     Base.remove_linenums!(block)
     block.head = :toplevel
     return block
