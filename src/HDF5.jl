@@ -1465,53 +1465,60 @@ Base.axes(dset::Dataset) = map(Base.OneTo, size(dset))
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
 
-Base.setindex!(dset::Dataset, x, I::Union{AbstractRange,Integer,Colon}...) =
-    _setindex!(dset, x, Base.to_indices(dset, I)...)
-function _setindex!(dset::Dataset, X::Array, I::Union{AbstractRange{Int},Int}...)
-    T = hdf5_to_julia(dset)
-    _setindex!(dset, T, X, I...)
-end
-function _setindex!(dset::Dataset, T::Type, X::Array, I::Union{AbstractRange{Int},Int}...)
-    if !(T <: Array)
-        error("Dataset indexing (hyperslab) is available only for arrays")
+IndexType = Union{AbstractRange{Int},Int,Colon}
+function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where T
+    !isconcretetype(T) && error("type $T is not concrete")
+    U = get_jl_type(dset)
+
+    # perform conversions for numeric types
+    if (U <: Number) && (T <: Number) && U !== T
+        X = convert(Array{U}, X)
     end
-    ET = eltype(T)
-    if !(ET <: Union{ScalarType, Complex{<:ScalarType}})
-        error("Dataset indexing (hyperslab) is available only for bits types")
+
+    filetype = datatype(dset)
+    memtype = Datatype(h5t_get_native_type(filetype.id))  # padded layout in memory
+    close(filetype)
+
+    if sizeof(T) != h5t_get_size(memtype.id)
+        error("""
+              Type size mismatch
+              sizeof($T) = $(sizeof(T))
+              sizeof($memtype) = $(h5t_get_size(memtype.id))
+              """)
     end
-    if length(X) != prod(map(length, I))
-        error("number of elements in range and length of array must be equal")
-    end
-    if eltype(X) != ET
-        X = convert(Array{ET}, X)
-    end
-    dsel_id = hyperslab(dset, I...)
-    memtype = datatype(X)
+
+    dspace = dataspace(dset)
+    stype = h5s_get_simple_extent_type(dspace.id)
+    stype == H5S_NULL && error("attempting to write to null dataspace")
+
+    indices = Base.to_indices(dset, I)
+    dspace = hyperslab(dspace, indices...)
+
     memspace = dataspace(X)
+
+    if h5s_get_select_npoints(dspace.id) != h5s_get_select_npoints(memspace.id)
+        error("number of elements in src and dest arrays must be equal")
+    end
+
     try
-        h5d_write(dset, memtype, memspace, dsel_id, dset.xfer, X)
+        h5d_write(dset.id, memtype.id, memspace.id, dspace.id, dset.xfer.id, X)
     finally
         close(memtype)
         close(memspace)
-        h5s_close(dsel_id)
+        close(dspace)
     end
-    X
+
+    return X
 end
-function _setindex!(dset::Dataset, X::AbstractArray, I::Union{AbstractRange{Int},Int}...)
-    T = hdf5_to_julia(dset)
-    if !(T <: Array)
-        error("Hyperslab interface is available only for arrays")
-    end
-    Y = convert(Array{eltype(T), ndims(X)}, X)
-    _setindex!(dset, Y, I...)
+
+function Base.setindex!(dset::Dataset, x::T, I::IndexType...) where T <: Number
+    indices = Base.to_indices(dset, I)
+    X = fill(x, map(length, indices))
+    Base.setindex!(dset, X, indices...)
 end
-function _setindex!(dset::Dataset, x::Number, I::Union{AbstractRange{Int},Int}...)
-    T = hdf5_to_julia(dset)
-    if !(T <: Array)
-        error("Hyperslab interface is available only for arrays")
-    end
-    X = fill(convert(eltype(T), x), map(length, I))
-    _setindex!(dset, X, I...)
+
+function Base.setindex!(dset::Dataset, X::AbstractArray, I::IndexType...)
+    Base.setindex!(dset, Array(X), I...)
 end
 
 function hyperslab(dspace::Dataspace, I::Union{AbstractRange{Int},Int}...)
