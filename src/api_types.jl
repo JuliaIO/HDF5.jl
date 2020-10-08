@@ -341,6 +341,7 @@ end
     NATIVE_UINT64::hid_t
     NATIVE_FLOAT::hid_t
     NATIVE_DOUBLE::hid_t
+    NATIVE_FLOAT16::hid_t
 end
 
 # Filter constants

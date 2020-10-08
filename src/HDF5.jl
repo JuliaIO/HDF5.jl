@@ -79,13 +79,14 @@ hdf5_type_id(::Type{Int32})     = H5T.NATIVE_INT32
 hdf5_type_id(::Type{UInt32})    = H5T.NATIVE_UINT32
 hdf5_type_id(::Type{Int64})     = H5T.NATIVE_INT64
 hdf5_type_id(::Type{UInt64})    = H5T.NATIVE_UINT64
+hdf5_type_id(::Type{Float16})   = H5T.NATIVE_FLOAT16
 hdf5_type_id(::Type{Float32})   = H5T.NATIVE_FLOAT
 hdf5_type_id(::Type{Float64})   = H5T.NATIVE_DOUBLE
 hdf5_type_id(::Type{Reference}) = H5T.STD_REF_OBJ
 
 hdf5_type_id(::Type{<:AbstractString}) = H5T.C_S1
 
-const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
+const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float16,Float32,Float64}
 const ScalarType = Union{BitsType,Reference}
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
@@ -105,7 +106,8 @@ function _hdf5_type_map(class_id, is_signed, native_size)
                    throw(KeyError(class_id, is_signed, native_size))
         end
     else
-        return native_size === Csize_t(4) ? Float32 :
+        return native_size === Csize_t(2) ? Float16 :
+               native_size === Csize_t(4) ? Float32 :
                native_size === Csize_t(8) ? Float64 :
                throw(KeyError(class_id, is_signed, native_size))
     end
@@ -1947,6 +1949,14 @@ function __init__()
 
     __init_globals__()
     register_blosc()
+
+    # Generate the Float16 datatype:
+    float16 = h5t_copy(H5T.NATIVE_FLOAT)
+    h5t_set_fields(float16, 15, 10, 5, 0, 10)
+    h5t_set_size(float16, 2)
+    h5t_set_ebias(float16, 15)
+    h5t_lock(float16)
+    H5T.NATIVE_FLOAT16 = float16
 
     # Turn off automatic error printing
     # h5e_set_auto(H5E.DEFAULT, C_NULL, C_NULL)
