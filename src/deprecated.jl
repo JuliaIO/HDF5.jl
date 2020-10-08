@@ -2,12 +2,12 @@ import Base: @deprecate, @deprecate_binding, depwarn
 
 ### Changed in PR#629
 # - HDF5.Dataset.xfer from ::hid_t to ::HDF5.Properties
-@deprecate h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::Properties) h5d_read(dataset_id, memtype_id, buf, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::Properties) h5d_write(dataset_id, memtype_id, buf, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::String, xfer::Properties) h5d_write(dataset_id, memtype_id, str, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::Properties) where {T<:Union{ScalarType, Complex{<:ScalarType}}} h5d_write(dataset_id, memtype_id, x, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{S}, xfer::Properties) where {S<:String} h5d_write(dataset_id, memtype_id, strs, xfer.id)
-@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::Properties) where {T<:Union{ScalarType,CharType}} h5d_write(dataset_id, memtype_id, v, xfer.id)
+@deprecate h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::Properties) h5d_read(dataset_id, memtype_id, buf, xfer.id) false
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::Properties) h5d_write(dataset_id, memtype_id, buf, xfer.id) false
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::String, xfer::Properties) h5d_write(dataset_id, memtype_id, str, xfer.id) false
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::Properties) where {T<:Union{ScalarType, Complex{<:ScalarType}}} h5d_write(dataset_id, memtype_id, x, xfer.id) false
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{S}, xfer::Properties) where {S<:String} h5d_write(dataset_id, memtype_id, strs, xfer.id) false
+@deprecate h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::Properties) where {T<:Union{ScalarType,CharType}} h5d_write(dataset_id, memtype_id, v, xfer.id) false
 # - p_create lost toclose argument
 @deprecate p_create(class, toclose::Bool, pv...) p_create(class, pv...)
 
@@ -169,35 +169,33 @@ end
 
 ### Changed in PR#664
 # - normalized naming of C function wrappers
-@deprecate_binding h5f_get_intend h5f_get_intent
-@deprecate_binding hf5start_swmr_write h5f_start_swmr_write
-@deprecate_binding h5d_oappend h5do_append
+@deprecate_binding h5f_get_intend h5f_get_intent false
+@deprecate_binding hf5start_swmr_write h5f_start_swmr_write false
+@deprecate_binding h5d_oappend h5do_append false
 
 ### Changed in PR#678
 # - normalized constants names to C definitions
-@deprecate_binding Haddr haddr_t
-@deprecate_binding Herr herr_t
-@deprecate_binding Hid hid_t
-@deprecate_binding Hsize hsize_t
-@deprecate_binding Hssize hssize_t
-@deprecate_binding Htri htri_t
-@deprecate_binding Hvl_t hvl_t
+@deprecate_binding Haddr haddr_t false
+@deprecate_binding Herr herr_t false
+@deprecate_binding Hid hid_t false
+@deprecate_binding Hsize hsize_t false
+@deprecate_binding Hssize hssize_t false
+@deprecate_binding Htri htri_t false
+@deprecate_binding Hvl_t hvl_t false
 
 ### Changed in PR#688
 # - normalized more C type names
-@deprecate_binding H5Ginfo H5G_info_t
-@deprecate_binding H5LInfo H5L_info_t
-@deprecate_binding H5Oinfo H5O_info_t
+@deprecate_binding H5Ginfo H5G_info_t false
+@deprecate_binding H5LInfo H5L_info_t false
+@deprecate_binding H5Oinfo H5O_info_t false
 
 ### Changed in PR#689
 # - switch from H5Rdereference1 to H5Rdereference2
-@deprecate h5r_dereference(obj_id, ref_type, ref) h5r_dereference(obj_id, H5P_DEFAULT, ref_type, ref)
+@deprecate h5r_dereference(obj_id, ref_type, ref) h5r_dereference(obj_id, H5P_DEFAULT, ref_type, ref) false
 
 ### Changed in PR#690, PR#695
 # - rename exported bindings
 # - remove exports in > v0.14
-export HDF5Attribute, HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype,
-    HDF5Dataspace, HDF5Object, HDF5Properties, HDF5Vlen, HDF5ChunkStorage
 @deprecate_binding HDF5Attribute HDF5.Attribute
 @deprecate_binding HDF5File HDF5.File
 @deprecate_binding HDF5Group HDF5.Group
@@ -208,14 +206,14 @@ export HDF5Attribute, HDF5File, HDF5Group, HDF5Dataset, HDF5Datatype,
 @deprecate_binding HDF5Properties HDF5.Properties
 @deprecate_binding HDF5Vlen HDF5.VLen
 @deprecate_binding HDF5ChunkStorage HDF5.ChunkStorage
-@deprecate_binding HDF5ReferenceObj HDF5.Reference
-@deprecate_binding HDF5Opaque HDF5.Opaque
+@deprecate_binding HDF5ReferenceObj HDF5.Reference false
+@deprecate_binding HDF5Opaque HDF5.Opaque false
 
 ### Changed in PR#691
 # - Make Reference() construct a null reference
-@deprecate_binding HDF5ReferenceObj_NULL HDF5.Reference()
+@deprecate_binding HDF5ReferenceObj_NULL HDF5.Reference() false
 
 ### Changed in PR#693
-@deprecate_binding ScalarOrString Union{ScalarType,String}
-@deprecate_binding HDF5Scalar ScalarType
-@deprecate_binding HDF5BitsKind BitsType
+@deprecate_binding ScalarOrString Union{ScalarType,String} false
+@deprecate_binding HDF5Scalar ScalarType false
+@deprecate_binding HDF5BitsKind BitsType false
