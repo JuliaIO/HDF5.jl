@@ -681,7 +681,7 @@ function split1(path::AbstractString)
     if ind == 1 # matches root group
         return "/", path[2:end]
     else
-        return path[begin:ind-1], path[ind+1:end]
+        return path[1:ind-1], path[ind+1:end] # better to use begin:ind-1, but only avaialble on v1.5
     end
 end
 
