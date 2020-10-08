@@ -217,3 +217,6 @@ end
 @deprecate_binding ScalarOrString Union{ScalarType,String} false
 @deprecate_binding HDF5Scalar ScalarType false
 @deprecate_binding HDF5BitsKind BitsType false
+
+### Changed in PR#695
+@deprecate names(x::Union{Group,File,Attributes}) keys(x)

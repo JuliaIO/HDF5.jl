@@ -272,9 +272,9 @@ h5open(fn, "w") do fid
     end
 end
 fid = h5open(fn, "r")
-@test names(fid) == ["mygroup"]
+@test keys(fid) == ["mygroup"]
 g = fid["mygroup"]
-@test names(g) == ["x"]
+@test keys(g) == ["x"]
 close(g)
 close(fid)
 rm(fn)
@@ -291,8 +291,8 @@ h5rewrite(outfile) do fid
 end
 @test length(readdir(tmpdir)) == 1
 h5open(outfile, "r") do fid
-    @test names(fid) == ["mygroup"]
-    @test names(fid["mygroup"]) == ["x"]
+    @test keys(fid) == ["mygroup"]
+    @test keys(fid["mygroup"]) == ["x"]
 end
 
 # fail to overwrite
@@ -304,8 +304,8 @@ end
 end
 @test length(readdir(tmpdir)) == 1
 h5open(outfile, "r") do fid
-    @test names(fid) == ["mygroup"]
-    @test names(fid["mygroup"]) == ["x"]
+    @test keys(fid) == ["mygroup"]
+    @test keys(fid["mygroup"]) == ["x"]
 end
 
 # overwrite
@@ -316,8 +316,8 @@ h5rewrite(outfile) do fid
 end
 @test length(readdir(tmpdir)) == 1
 h5open(outfile, "r") do fid
-    @test names(fid) == ["mygroup"]
-    @test names(fid["mygroup"]) == ["y"]
+    @test keys(fid) == ["mygroup"]
+    @test keys(fid["mygroup"]) == ["y"]
 end
 rm(tmpdir, recursive=true)
 
