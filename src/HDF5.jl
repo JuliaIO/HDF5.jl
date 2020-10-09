@@ -5,7 +5,7 @@ using Requires: @require
 
 import Base:
     close, convert, eltype, lastindex, flush, getindex, ==,
-    isempty, isvalid, length, names, ndims, parent, read,
+    isempty, isvalid, length, ndims, parent, read,
     setindex!, show, size, sizeof, write, isopen, iterate, eachindex, axes
 
 import Libdl
@@ -537,7 +537,7 @@ function h5readattr(filename, name::String)
     fid = h5open(filename,"r")
     try
         a = attrs(fid[name])
-        dat = Dict(x => read(a[x]) for x in names(a))
+        dat = Dict(x => read(a[x]) for x in keys(a))
     finally
         close(fid)
     end
@@ -959,13 +959,13 @@ end
 filename(obj::Union{File,Group,Dataset,Attribute,Datatype}) = h5f_get_name(checkvalid(obj).id)
 name(obj::Union{File,Group,Dataset,Datatype}) = h5i_get_name(checkvalid(obj).id)
 name(attr::Attribute) = h5a_get_name(attr.id)
-function names(x::Union{Group,File})
+function Base.keys(x::Union{Group,File})
     checkvalid(x)
     n = length(x)
     return [h5l_get_name_by_idx(x, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, H5P_DEFAULT) for i = 1:n]
 end
 
-function names(x::Attributes)
+function Base.keys(x::Attributes)
     checkvalid(x.parent)
     n = length(x)
     return [h5a_get_name_by_idx(x.parent, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, H5P_DEFAULT) for i = 1:n]
@@ -1866,7 +1866,7 @@ end
     if isa(node, Dataset)
         push!(list, node)
     else
-        for c in names(node)
+        for c in keys(node)
             get_datasets!(list, node[c])
         end
     end

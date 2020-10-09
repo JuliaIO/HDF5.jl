@@ -37,7 +37,7 @@ end
 MPI.Barrier(comm)
 h5open(fn, comm) do f  # default: opened in read mode, with default MPI.Info()
     @test isopen(f)
-    @test names(f) == ["mygroup"]
+    @test keys(f) == ["mygroup"]
 
     B = read(f, "mygroup/B", dxpl_mpio=HDF5.H5FD_MPIO_COLLECTIVE)
     @test !isempty(B)
