@@ -631,13 +631,15 @@ rm(fn)
 end # show tests
 
 @testset "split1" begin
-    @test HDF5.split1("a") == ("a", nothing)
-    @test HDF5.split1("/a/b/c") == ("/", "a/b/c")
-    @test HDF5.split1("a/b/c") == ("a", "b/c")
-    @test HDF5.split1(GenericString("a")) == ("a", nothing)
-    @test HDF5.split1(GenericString("/a/b/c")) == ("/", "a/b/c")
-    @test HDF5.split1(GenericString("a/b/c")) == ("a", "b/c")
-end
+
+@test HDF5.split1("a") == ("a", nothing)
+@test HDF5.split1("/a/b/c") == ("/", "a/b/c")
+@test HDF5.split1("a/b/c") == ("a", "b/c")
+@test HDF5.split1(GenericString("a")) == ("a", nothing)
+@test HDF5.split1(GenericString("/a/b/c")) == ("/", "a/b/c")
+@test HDF5.split1(GenericString("a/b/c")) == ("a", "b/c")
+
+end # split1 tests
 
 
 @testset "haskey" begin
@@ -679,4 +681,4 @@ haskey(attribs, GenericString("attr"))
 
 close(hfile)
 rm(fn)
-end # show tests
+end # haskey tests
