@@ -249,7 +249,7 @@ name(obj)
 will return the full HDF5 pathname of object `obj`.
 
 ```julia
-names(g)
+keys(g)
 ```
 
 returns a string array containing all objects inside group `g`. These relative pathnames, not absolute pathnames.
@@ -268,11 +268,11 @@ If you need to know whether group `g` has a dataset named `mydata`, you can test
 if exists(g, "mydata")
    ...
 end
-tf = has(g, "mydata")  # synonym for "exists"
+tf = haskey(g, "mydata")
 ```
 If instead you want to know whether `g` has an attribute named `myattribute`, do it this way:
 ```julia
-tf = exists(attrs(g), "myattribute")
+tf = haskey(attrs(g), "myattribute")
 ```
 
 If you have an HDF5 object, and you want to know where it fits in the hierarchy of the file, the following can be useful:
