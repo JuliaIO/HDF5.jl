@@ -251,9 +251,9 @@ close(fr)
 
 # Test object deletion
 fr = h5open(fn, "r+")
-@test exists(fr, "deleteme")
+@test haskey(fr, "deleteme")
 o_delete(fr, "deleteme")
-@test !exists(fr, "deleteme")
+@test !haskey(fr, "deleteme")
 close(fr)
 
 # Test the h5read interface
@@ -629,3 +629,74 @@ close(hfile)
 
 rm(fn)
 end # show tests
+
+@testset "split1" begin
+
+@test HDF5.split1("a") == ("a", nothing)
+@test HDF5.split1("/a/b/c") == ("/", "a/b/c")
+@test HDF5.split1("a/b/c") == ("a", "b/c")
+@test HDF5.split1(GenericString("a")) == ("a", nothing)
+@test HDF5.split1(GenericString("/a/b/c")) == ("/", "a/b/c")
+@test HDF5.split1(GenericString("a/b/c")) == ("a", "b/c")
+
+# The following two paths have the same graphemes but different code unit structures:
+# the first one is
+#     <latin small letter a with circumflex> "/" <greek small leter alpha>
+# while the second one is
+#     "a" <combining circumflex accent> "/" <greek small letter alpha>
+circa = "â" # <latin small leter a with circumflex>
+acomb = "â" # "a" + <combining circumflex accent>
+path1 = circa * "/α"
+path2 = acomb * "/α"
+# Sanity checks that the two strings are different but equivalent under normalization
+@test path1 != path2
+@test Base.Unicode.normalize(path1, :NFC) == Base.Unicode.normalize(path2, :NFC)
+# Check split1 operates correctly
+@test HDF5.split1(path1) == (circa, "α")
+@test HDF5.split1(path2) == (acomb, "α")
+@test HDF5.split1("/" * path1) == ("/", path1)
+@test HDF5.split1("/" * path2) == ("/", path2)
+
+end # split1 tests
+
+
+@testset "haskey" begin
+fn = tempname()
+hfile = h5open(fn, "w")
+
+group1 = g_create(hfile, "group1")
+group2 = g_create(group1, "group2")
+
+@test haskey(hfile, GenericString("group1"))
+@test !haskey(hfile, GenericString("groupna"))
+@test haskey(hfile, "group1/group2")
+@test !haskey(hfile, "group1/groupna")
+
+dset1 = d_create(hfile, "dset1", datatype(Int), dataspace((1,)))
+dset2 = d_create(group1, "dset2", datatype(Int), dataspace((1,)))
+
+@test haskey(hfile, "dset1")
+@test !haskey(hfile, "dsetna")
+@test haskey(hfile, "group1/dset2")
+@test !haskey(hfile, "group1/dsetna")
+
+meta1 = a_create(dset1, "meta1", datatype(Bool), dataspace((1,)))
+@test haskey(dset1, "meta1")
+@test !haskey(dset1, "metana")
+
+
+attribs = attrs(hfile)
+attribs["test1"] = true
+attribs["test2"] = "foo"
+
+haskey(attribs, "test1")
+haskey(attribs, "test2")
+!haskey(attribs, "testna")
+
+attribs = attrs(dset2)
+attribs["attr"] = "foo"
+haskey(attribs, GenericString("attr"))
+
+close(hfile)
+rm(fn)
+end # haskey tests

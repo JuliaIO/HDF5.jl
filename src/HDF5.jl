@@ -25,7 +25,7 @@ export
     g_create, g_open, get_access_properties, get_create_properties,
     get_chunk, get_datasets,
     h5open, h5read, h5rewrite, h5writeattr, h5readattr, h5write,
-    has, iscontiguous, ishdf5, ismmappable, name,
+    iscontiguous, ishdf5, ismmappable, name,
     o_copy, o_delete, o_open, p_create,
     readmmap, @read, @write, root, set_dims!, t_create, t_commit
 
@@ -653,7 +653,7 @@ function gettype(parent, path::String)
 end
 # Get the root group
 root(h5file::File) = g_open(h5file, "/")
-root(obj::Union{Group, Dataset}) = g_open(file(obj), "/")
+root(obj::Union{Group,Dataset}) = g_open(file(obj), "/")
 # getindex syntax: obj2 = obj1[path]
 #getindex(parent::Union{HDF5File, HDF5Group}, path::String) = o_open(parent, path)
 getindex(dset::Dataset, name::String) = a_open(dset, name)
@@ -675,17 +675,14 @@ function getindex(parent::Union{File,Group}, path::String; pv...)
 end
 
 # Path manipulation
-function split1(path::String)
-    off = findfirst(isequal('/'),path)
-    if off === nothing
-        return path, nothing
+function split1(path::AbstractString)
+    ind = findfirst('/', path)
+    isnothing(ind) && return path, nothing
+    if ind == 1 # matches root group
+        return "/", path[2:end]
     else
-        if off == 1
-            # Matches the root group
-            return "/", path[2:end]
-        else
-            return path[1:prevind(path, off)], path[nextind(path, off):end]
-        end
+        indm1, indp1 = prevind(path, ind), nextind(path, ind)
+        return path[1:indm1], path[indp1:end] # better to use begin:indm1, but only available on v1.5
     end
 end
 
@@ -901,25 +898,23 @@ function setindex!(parent::Union{File,Group}, val, path::String; pv...)
 end
 
 # Check existence
-function exists(parent::Union{File,Group}, path::String, lapl::Properties)
+function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::Properties=Properties())
     first, rest = split1(path)
     if first == "/"
         parent = root(parent)
     elseif !h5l_exists(parent.id, first, lapl.id)
         return false
     end
-    ret = true
-    if rest !== nothing && !isempty(rest)
+    exists = true
+    if !isnothing(rest) && !isempty(rest)
         obj = parent[first]
-        ret = exists(obj, rest, lapl)
+        exists = haskey(obj, rest, lapl)
         close(obj)
     end
-    ret
+    return exists
 end
-exists(attr::Attributes, path::String) = h5a_exists(checkvalid(attr.parent).id, path)
-exists(dset::Union{Dataset,Datatype}, path::String) = h5a_exists(checkvalid(dset).id, path)
-exists(parent::Union{File,Group}, path::String) = exists(parent, path, Properties())
-has(parent::Union{File,Group,Dataset}, path::String) = exists(parent, path)
+Base.haskey(attr::Attributes, path::AbstractString) = h5a_exists(checkvalid(attr.parent).id, path)
+Base.haskey(dset::Union{Dataset,Datatype}, path::AbstractString) = h5a_exists(checkvalid(dset).id, path)
 
 # Querying items in the file
 info(obj::Union{Group,File}) = h5g_get_info(checkvalid(obj).id)
@@ -1143,7 +1138,7 @@ end
 # "Plain" (unformatted) reads. These work only for simple types: scalars, arrays, and strings
 # See also "Reading arrays using getindex" below
 # This infers the Julia type from the HDF5.Datatype. Specific file formats should provide their own read(dset).
-const DatasetOrAttribute = Union{Dataset, Attribute}
+const DatasetOrAttribute = Union{Dataset,Attribute}
 
 function read(obj::DatasetOrAttribute)
     dtype = datatype(obj)
@@ -1442,7 +1437,7 @@ for (privatesym, fsym, ptype, crsym) in
 end
 # Write to already-created objects
 # Scalars
-function write(obj::DatasetOrAttribute, x::Union{T, Array{T}}) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}}
+function write(obj::DatasetOrAttribute, x::Union{T,Array{T}}) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}}
     dtype = datatype(x)
     try
         writearray(obj, dtype.id, x)
