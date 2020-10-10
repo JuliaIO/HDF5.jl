@@ -639,6 +639,24 @@ end # show tests
 @test HDF5.split1(GenericString("/a/b/c")) == ("/", "a/b/c")
 @test HDF5.split1(GenericString("a/b/c")) == ("a", "b/c")
 
+# The following two paths have the same graphemes but different code unit structures:
+# the first one is
+#     <latin small letter a with circumflex> "/" <greek small leter alpha>
+# while the second one is
+#     "a" <combining circumflex accent> "/" <greek small letter alpha>
+circa = "â" # <latin small leter a with circumflex>
+acomb = "â" # "a" + <combining circumflex accent>
+path1 = circa * "/α"
+path2 = acomb * "/α"
+# Sanity checks that the two strings are different but equivalent under normalization
+@test path1 != path2
+@test Base.Unicode.normalize(path1, :NFC) == Base.Unicode.normalize(path2, :NFC)
+# Check split1 operates correctly
+@test HDF5.split1(path1) == (circa, "α")
+@test HDF5.split1(path2) == (acomb, "α")
+@test HDF5.split1("/" * path1) == ("/", path1)
+@test HDF5.split1("/" * path2) == ("/", path2)
+
 end # split1 tests
 
 
