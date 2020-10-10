@@ -21,7 +21,7 @@ export
     # functions
     a_create, a_delete, a_open, a_read, a_write, attrs,
     d_create, d_create_external, d_open, d_read, d_write,
-    dataspace, datatype, exists, file, filename,
+    dataspace, datatype, file, filename,
     g_create, g_open, get_access_properties, get_create_properties,
     get_chunk, get_datasets,
     h5open, h5read, h5rewrite, h5writeattr, h5readattr, h5write,
