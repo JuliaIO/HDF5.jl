@@ -265,7 +265,7 @@ This gives you a straightforward way of recursively exploring an entire HDF5 fil
 
 If you need to know whether group `g` has a dataset named `mydata`, you can test that with
 ```julia
-if exists(g, "mydata")
+if haskey(g, "mydata")
    ...
 end
 tf = haskey(g, "mydata")
