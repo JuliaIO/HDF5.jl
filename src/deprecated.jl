@@ -219,7 +219,8 @@ end
 @deprecate_binding HDF5BitsKind BitsType false
 
 ### Changed in PR#695
-@deprecate names(x::Union{Group,File,Attributes}) keys(x)
+import Base: names
+@deprecate names(x::Union{Group,File,Attributes}) keys(x) false
 
 ### Changed in PR#694
 @deprecate has(parent::Union{File,Group,Dataset}, path::String) Base.haskey(parent, path)
