@@ -89,26 +89,25 @@ macro defconstants(prefix::Symbol, expr::Expr)
     # Push the imports into the definition body
     pushfirst!(defbody, Expr(:import, imports...))
 
-    prefix   = esc(prefix)
-    innermod = esc(innermod)
+    eprefix = esc(prefix)
+    einnermod = esc(innermod)
     block = quote
-        Base.@__doc__(struct $prefix end)
-        baremodule $innermod
+        baremodule $einnermod
+            struct $eprefix end
             $(defbody...)
         end
-        function Base.propertynames(::Type{$prefix})
+        const $eprefix = $einnermod.$prefix()
+        function Base.propertynames(::$einnermod.$prefix)
             return $((symbols...,))
         end
-        function Base.getproperty(::Type{$prefix}, sym::Symbol)
+        function Base.getproperty(::$einnermod.$prefix, sym::Symbol)
             $(getbody...)
-            return getfield($prefix, sym)
         end
     end
     if !isempty(setbody)
         setfn = quote
-            function Base.setproperty!(::Type{$prefix}, sym::Symbol, value)
+            function Base.setproperty!(::$einnermod.$prefix, sym::Symbol, value)
                 $(setbody...)
-                return setfield!($prefix, sym, value)
             end
         end
         append!(block.args, Base.remove_linenums!(setfn).args)

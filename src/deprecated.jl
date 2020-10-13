@@ -224,7 +224,7 @@ import Base: names
 @deprecate exists(parent::Union{File,Group,Dataset,Datatype,Attributes}, path::AbstractString) Base.haskey(parent, path) false
 
 for pseudomod in (H5, H5D, H5E, H5F, H5FD, H5I, H5L, H5O, H5P, H5R, H5S, H5T, H5Z)
-    modsym = nameof(pseudomod)
+    modsym = nameof(typeof(pseudomod))
     for C in propertynames(pseudomod)
         constname = Symbol(modsym, :_, C)
         @eval @deprecate_binding($constname, $modsym.$C, false)
