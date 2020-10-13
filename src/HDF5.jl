@@ -302,7 +302,21 @@ struct Opaque
 end
 
 # An empty array type
-struct EmptyArray{T} end
+struct EmptyArray{T} <: AbstractArray{T,0} end
+# Required AbstractArray interface
+Base.size(::EmptyArray) = ()
+Base.IndexStyle(::Type{<:EmptyArray}) = IndexLinear()
+Base.getindex(::EmptyArray, ::Int) = error("cannot index an `EmptyArray`")
+Base.setindex!(::EmptyArray, v, ::Int) = error("cannot assign to an `EmptyArray`")
+# Optional interface
+Base.similar(::EmptyArray{T}) where {T} = EmptyArray{T}()
+Base.similar(::EmptyArray, ::Type{S}) where {S} = EmptyArray{S}()
+Base.similar(::EmptyArray, ::Type{S}, dims::Dims) where {S} = Array{S}(undef, dims)
+# Override behavior for 0-dimensional Array
+Base.length(::EmptyArray) = 0
+# Required to avoid indexing during printing
+Base.show(io::IO, E::EmptyArray) = print(io, typeof(E), "()")
+Base.show(io::IO, ::MIME"text/plain", E::EmptyArray) = show(io, E)
 
 # Stub types to encode fixed-size arrays for H5T_ARRAY
 struct FixedArray{T,D,L}
@@ -1040,34 +1054,26 @@ dataspace(attr::Attribute) = Dataspace(h5a_get_space(checkvalid(attr).id))
 
 # Create a dataspace from in-memory types
 dataspace(x::Union{T, Complex{T}}) where {T<:ScalarType} = Dataspace(h5s_create(H5S_SCALAR))
+dataspace(str::String) = Dataspace(h5s_create(H5S_SCALAR))
 
 function _dataspace(sz::Dims{N}, max_dims::Union{Dims{N}, Tuple{}}=()) where N
-    dims = Vector{hsize_t}(undef,length(sz))
-    any_zero = false
-    for i = 1:length(sz)
-        dims[end-i+1] = sz[i]
-        any_zero |= sz[i] == 0
-    end
-
-    if any_zero
-        space_id = h5s_create(H5S_NULL)
+    dims = hsize_t[sz[i] for i in N:-1:1]
+    if isempty(max_dims)
+        maxd = dims
     else
-        if isempty(max_dims)
-            maxd = dims
-        else
-            # This allows max_dims to be specified as -1 without triggering an overflow
-            # exception due to the signed -> unsigned conversion.
-            maxd = [(hssize_t.(reverse(max_dims)) .% hsize_t)...]
-        end
-        space_id = h5s_create_simple(length(dims), dims, maxd)
+        # This allows max_dims to be specified as -1 without triggering an overflow
+        # exception due to the signed -> unsigned conversion.
+        maxd = hsize_t[hssize_t(max_dims[i]) % hsize_t for i in N:-1:1]
     end
-    Dataspace(space_id)
+    return Dataspace(h5s_create_simple(length(dims), dims, maxd))
 end
-dataspace(A::AbstractArray; max_dims::Union{Dims,Tuple{}} = ()) = _dataspace(size(A), max_dims)
-dataspace(str::String) = Dataspace(h5s_create(H5S_SCALAR))
+dataspace(A::AbstractArray{T,N}; max_dims::Union{Dims{N},Tuple{}} = ()) where {T,N} = _dataspace(size(A), max_dims)
+# special array types
 dataspace(v::VLen; max_dims::Union{Dims,Tuple{}}=()) = _dataspace(size(v.data), max_dims)
+dataspace(A::EmptyArray) = Dataspace(h5s_create(H5S_NULL))
 dataspace(n::Nothing) = Dataspace(h5s_create(H5S_NULL))
-dataspace(sz::Dims; max_dims::Union{Dims,Tuple{}}=()) = _dataspace(sz, max_dims)
+# for giving sizes explicitly
+dataspace(sz::Dims{N}; max_dims::Union{Dims{N},Tuple{}}=()) where {N} = _dataspace(sz, max_dims)
 dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
 
 
@@ -1171,7 +1177,7 @@ function read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
 
     dspace = dataspace(obj)
     stype = h5s_get_simple_extent_type(dspace.id)
-    stype == H5S_NULL && return T[]
+    stype == H5S_NULL && return EmptyArray{T}()
 
     if !isempty(I)
         indices = Base.to_indices(obj, I)
@@ -1592,6 +1598,8 @@ readarray(dset::Dataset, type_id, buf) = h5d_read(dset.id, type_id, buf, dset.xf
 readarray(attr::Attribute, type_id, buf) = h5a_read(attr.id, type_id, buf)
 writearray(dset::Dataset, type_id, buf) = h5d_write(dset.id, type_id, buf, dset.xfer.id)
 writearray(attr::Attribute, type_id, buf) = h5a_write(attr.id, type_id, buf)
+writearray(dset::Dataset, type_id, ::EmptyArray) = nothing
+writearray(attr::Attribute, type_id, ::EmptyArray) = nothing
 
 # Determine Julia "native" type from the class, datatype, and dataspace
 # For datasets, defined file formats should use attributes instead

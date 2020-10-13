@@ -518,6 +518,89 @@ end
 
 end # writing abstract arrays
 
+# issue #705
+@testset "empty and 0-size arrays" begin
+fn = tempname()
+hfile = h5open(fn, "w")
+
+# Write datasets with various 0-sizes
+write(hfile, "empty", HDF5.EmptyArray{Int64}()) # HDF5 empty
+write(hfile, "zerodim", fill(1.0π))   # 0-dimensional
+write(hfile, "zerovec", zeros(0))     # 1-dimensional, size 0
+write(hfile, "zeromat", zeros(0, 0))  # 2-dimensional, size 0
+write(hfile, "zeromat2", zeros(0, 1)) # 2-dimensional, size 0 with non-zero axis
+dempty = hfile["empty"]
+dzerodim = hfile["zerodim"]
+dzerovec = hfile["zerovec"]
+dzeromat = hfile["zeromat"]
+dzeromat2 = hfile["zeromat2"]
+
+# Test that eltype is preserved (especially for EmptyArray)
+@test eltype(dempty) == Int64
+@test eltype(dzerodim) == Float64
+@test eltype(dzerovec) == Float64
+@test eltype(dzeromat) == Float64
+@test eltype(dzeromat2) == Float64
+# Test sizes are as expected
+@test size(dempty) == ()
+@test size(dzerovec) == (0,)
+@test size(dzeromat) == (0, 0)
+@test size(dzeromat2) == (0, 1)
+@test HDF5.isnull(dempty)
+@test !HDF5.isnull(dzerovec)
+@test !HDF5.isnull(dzeromat)
+@test !HDF5.isnull(dzeromat2)
+# Reading back must preserve emptiness
+@test read(dempty) isa HDF5.EmptyArray
+# but 0-dimensional Array{T,0} are stored as HDF5 scalar
+@test size(dzerodim) == ()
+@test !HDF5.isnull(dzerodim)
+@test read(dzerodim) == 1.0π
+
+# Similar tests for writing to attributes
+write(dempty, "attr", HDF5.EmptyArray{Float64}())
+write(dzerodim, "attr", fill(1.0ℯ))
+write(dzerovec, "attr", zeros(Int64, 0))
+write(dzeromat, "attr", zeros(Int64, 0, 0))
+write(dzeromat2, "attr", zeros(Int64, 0, 1))
+aempty = dempty["attr"]
+azerodim = dzerodim["attr"]
+azerovec = dzerovec["attr"]
+azeromat = dzeromat["attr"]
+azeromat2 = dzeromat2["attr"]
+# Test that eltype is preserved (especially for EmptyArray)
+@test eltype(aempty) == Float64
+@test eltype(azerodim) == Float64
+@test eltype(azerovec) == Int64
+@test eltype(azeromat) == Int64
+@test eltype(azeromat2) == Int64
+# Test sizes are as expected
+@test size(aempty) == ()
+@test size(azerovec) == (0,)
+@test size(azeromat) == (0, 0)
+@test size(azeromat2) == (0, 1)
+@test HDF5.isnull(aempty)
+@test !HDF5.isnull(azerovec)
+@test !HDF5.isnull(azeromat)
+@test !HDF5.isnull(azeromat2)
+# Reading back must preserve emptiness
+@test read(aempty) isa HDF5.EmptyArray
+# but 0-dimensional Array{T,0} are stored as HDF5 scalar
+@test size(azerodim) == ()
+@test !HDF5.isnull(azerodim)
+@test read(azerodim) == 1.0ℯ
+
+close(hfile)
+rm(fn)
+
+# check that printing EmptyArray doesn't error
+buf = IOBuffer()
+show(buf, HDF5.EmptyArray{Int64}())
+@test String(take!(buf)) == "HDF5.EmptyArray{Int64}()"
+show(buf, MIME"text/plain"(), HDF5.EmptyArray{Int64}())
+@test String(take!(buf)) == "HDF5.EmptyArray{Int64}()"
+end # empty and 0-size arrays
+
 @testset "generic read of native types" begin
 fn = tempname()
 hfile = h5open(fn, "w")

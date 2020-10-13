@@ -112,7 +112,7 @@ g = fid[a[1]]
 @test isa(g, HDF5.Group)
 ds2 = fid[a[2]]
 ds2v = read(ds2)
-@test isa(ds2v, Array{Int32})
+@test isa(ds2v, HDF5.EmptyArray{Int32})
 @test isempty(ds2v)
 close(fid)
 
@@ -123,7 +123,7 @@ g = fid[d[1]]
 @test isa(g, HDF5.Group)
 ds2 = fid[d[2]]
 ds2v = read(ds2)
-@test isa(ds2v, Array{Int32})
+@test isa(ds2v, HDF5.EmptyArray{Int32})
 @test isempty(ds2v)
 close(fid)
 
