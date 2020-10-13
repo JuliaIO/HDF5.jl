@@ -54,13 +54,13 @@ macro defconstants(prefix::Symbol, expr::Expr)
 
         isruntime = isexpr(line, :(=)) ? false :
                     isexpr(line, :(::)) ? true :
-                    error("Unexpected statement: ", repr(line))
+                    error("Unexpected statement: ", line)
 
         # Get the name and type pair
         nametype = isruntime ? line : line.args[1]
-        isexpr(nametype, :(::)) || error("Expected `name::type`, got ", repr(nametype))
+        isexpr(nametype, :(::)) || error("Expected `name::type`, got: ", nametype)
         name = nametype.args[1]::Symbol
-        type = nametype.args[2]
+        type = nametype.args[2]::Union{Symbol,Expr}
         # Save type for later use
         push!(imports, type)
 
@@ -106,12 +106,14 @@ macro defconstants(prefix::Symbol, expr::Expr)
         end
         function Base.getproperty(::$einnermod.$prefix, sym::Symbol)
             $(getbody...)
+            error($(string(prefix) * " has no constant "), sym)
         end
     end
     if !isempty(setbody)
         setfn = quote
             function Base.setproperty!(::$einnermod.$prefix, sym::Symbol, value)
                 $(setbody...)
+                error($(string(prefix) * "."), sym, " cannot be set")
             end
         end
         append!(block.args, Base.remove_linenums!(setfn).args)

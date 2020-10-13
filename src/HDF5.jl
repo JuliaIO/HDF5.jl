@@ -1950,14 +1950,6 @@ function __init__()
     __init_globals__()
     register_blosc()
 
-    # Generate the Float16 datatype:
-    float16 = h5t_copy(H5T.NATIVE_FLOAT)
-    h5t_set_fields(float16, 15, 10, 5, 0, 10)
-    h5t_set_size(float16, 2)
-    h5t_set_ebias(float16, 15)
-    h5t_lock(float16)
-    H5T.NATIVE_FLOAT16 = float16
-
     # Turn off automatic error printing
     # h5e_set_auto(H5E.DEFAULT, C_NULL, C_NULL)
 

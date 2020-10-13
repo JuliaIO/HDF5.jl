@@ -253,7 +253,7 @@ end
 # Dataspace constants
 @defconstants H5S begin
     # atomic data types
-    ALL::hsize_t       = 0
+    ALL::hid_t         = 0
     UNLIMITED::hsize_t = typemax(hsize_t)
 
     # Types of dataspaces (C enum H5S_class_t)
@@ -413,6 +413,14 @@ function __init_globals__()
     H5T.NATIVE_UINT64   = read_const(:H5T_NATIVE_UINT64_g)
     H5T.NATIVE_FLOAT    = read_const(:H5T_NATIVE_FLOAT_g)
     H5T.NATIVE_DOUBLE   = read_const(:H5T_NATIVE_DOUBLE_g)
+
+    # Defines a type corresponding to Julia's IEEE Float16 type.
+    float16 = h5t_copy(H5T.NATIVE_FLOAT)
+    h5t_set_fields(float16, 15, 10, 5, 0, 10)
+    h5t_set_size(float16, 2)
+    h5t_set_ebias(float16, 15)
+    h5t_lock(float16)
+    H5T.NATIVE_FLOAT16 = float16
 
     nothing
 end
