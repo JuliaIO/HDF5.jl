@@ -416,4 +416,3 @@ function __init_globals__()
 
     nothing
 end
-__init_globals__()
