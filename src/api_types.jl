@@ -253,8 +253,8 @@ end
 # Dataspace constants
 @defconstants H5S begin
     # atomic data types
-    ALL::hid_t       = 0
-    UNLIMITED::hid_t = typemax(hsize_t)
+    ALL::hsize_t       = 0
+    UNLIMITED::hsize_t = typemax(hsize_t)
 
     # Types of dataspaces (C enum H5S_class_t)
     SCALAR::hid_t    = hid_t(0)

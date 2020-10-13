@@ -64,8 +64,12 @@ macro defconstants(prefix::Symbol, expr::Expr)
         # Save type for later use
         push!(imports, type)
 
-        value = isruntime ? esc(:(Ref{$type}())) :
-                            QuoteNode(Core.eval(__module__, line.args[2]))
+        if isruntime
+            value = esc(:(Ref{$type}()))
+        else
+            valexpr = :(convert($type, $(line.args[2])))
+            value = QuoteNode(Core.eval(__module__, valexpr))
+        end
         fullname = esc(:($innermod.$name))
         getexpr = isruntime ? :($(fullname)[]) : fullname
 
