@@ -1388,53 +1388,50 @@ end
 
 # Create datasets and attributes with "native" types, but don't write the data.
 # The return syntax is: dset, dtype = d_create(parent, name, data; properties...)
-for (privatesym, fsym, ptype) in
-    ((:_d_create, :d_create, Union{File,Group}),
-     (:_a_create, :a_create, Union{File, Group, Dataset, Datatype}))
-    @eval begin
-        # Generic create (hidden)
-        function ($privatesym)(parent::$ptype, name::String, data; pv...)
-            local obj
-            dtype = datatype(data)
-            dspace = dataspace(data)
-            try
-                obj = ($fsym)(parent, name, dtype, dspace; pv...)
-            finally
-                close(dspace)
-            end
-            obj, dtype
-        end
-        # Scalar types
-        ($fsym)(parent::$ptype, name::String, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
-            ($privatesym)(parent, name, data; pv...)
-        # VLEN types
-        ($fsym)(parent::$ptype, name::String, data::VLen{T}; pv...) where {T<:Union{ScalarType,CharType}} =
-            ($privatesym)(parent, name, data; pv...)
+
+function d_create(parent::Union{File,Group}, name::String, data; pv...)
+    dtype = datatype(data)
+    dspace = dataspace(data)
+    obj = try
+        d_create(parent, name, dtype, dspace; pv...)
+    finally
+        close(dspace)
     end
+    return obj, dtype
 end
+function a_create(parent::Union{File,Object}, name::String, data; pv...)
+    dtype = datatype(data)
+    dspace = dataspace(data)
+    obj = try
+        a_create(parent, name, dtype, dspace; pv...)
+    finally
+        close(dspace)
+    end
+    return obj, dtype
+end
+
 # Create and write, closing the objects upon exit
-for (privatesym, fsym, ptype, crsym) in
-    ((:_d_write, :d_write, Union{File,Group}, :d_create),
-     (:_a_write, :a_write, Union{File,Object,Datatype}, :a_create))
-    @eval begin
-        # Generic write (hidden)
-        function ($privatesym)(parent::$ptype, name::String, data; pv...)
-            obj, dtype = ($crsym)(parent, name, data; pv...)
-            try
-                writearray(obj, dtype.id, data)
-            finally
-                close(obj)
-                close(dtype)
-            end
-        end
-        # Scalar types
-        ($fsym)(parent::$ptype, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
-            ($privatesym)(parent, name, data; pv...)
-        # VLEN types
-        ($fsym)(parent::$ptype, name::String, data::VLen{T}; pv...) where {T<:Union{ScalarType,CharType}} =
-            ($privatesym)(parent, name, data; pv...)
+function d_write(parent::Union{File,Group}, name::String, data; pv...)
+    obj, dtype = d_create(parent, name, data; pv...)
+    try
+        writearray(obj, dtype.id, data)
+    finally
+        close(obj)
+        close(dtype)
     end
+    nothing
 end
+function a_write(parent::Union{File,Object}, name::String, data; pv...)
+    obj, dtype = a_create(parent, name, data; pv...)
+    try
+        writearray(obj, dtype.id, data)
+    finally
+        close(obj)
+        close(dtype)
+    end
+    nothing
+end
+
 # Write to already-created objects
 # Scalars
 function write(obj::DatasetOrAttribute, x::Union{T,Array{T}}) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}}
