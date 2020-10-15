@@ -1425,6 +1425,9 @@ function d_write(parent::Union{File,Group}, name::String, data; pv...)
     obj, dtype = d_create(parent, name, data; pv...)
     try
         writearray(obj, dtype.id, data)
+    catch exc
+        o_delete(obj)
+        rethrow(exc)
     finally
         close(obj)
         close(dtype)
@@ -1435,6 +1438,9 @@ function a_write(parent::Union{File,Object}, name::String, data; pv...)
     obj, dtype = a_create(parent, name, data; pv...)
     try
         writearray(obj, dtype.id, data)
+    catch exc
+        o_delete(obj)
+        rethrow(exc)
     finally
         close(obj)
         close(dtype)

@@ -265,6 +265,21 @@ Wr = h5read(fn, "newgroup/W", rng)
 War = h5readattr(fn, "newgroup/W")
 @test War == Wa
 
+# issue #618
+# Test that invalid writes treat implicit creation as a transaction, cleaning up the partial
+# operation
+hid = h5open(fn, "w")
+A = rand(3, 3)'
+@test !haskey(hid, "A")
+@test_throws ArgumentError write(hid, "A", A)
+@test !haskey(hid, "A")
+dset = d_create(hid, "attr", datatype(Int), dataspace(0))
+@test !haskey(attrs(dset), "attr")
+# broken test - writing attributes does not check that the stride is correct
+@test_skip @test_throws ArgumentError write(dset, "attr", A)
+@test !haskey(attrs(dset), "attr")
+close(hid)
+
 # more do syntax
 h5open(fn, "w") do fid
     g_create(fid, "mygroup") do g
