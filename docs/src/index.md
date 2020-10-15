@@ -218,6 +218,29 @@ By default `Complex` numbers are stored as compound types with `r` and `i` field
 When reading data, compound types with matching field names will be loaded as the corresponding `Complex` julia type.
 These field names are configurable with the `HDF5.set_complex_field_names(real::AbstractString, imag::AbstractString)` function and complex support can be completely enabled/disabled with `HDF5.enable/disable_complex_support()`.
 
+For `Array`s, note that the array dimensionality is preserved, including 0-length
+dimensions:
+```julia
+fid["zero_vector"] = zeros(0)
+fid["zero_matrix"] = zeros(0, 0)
+size(fid["zero_vector"]) # == (0,)
+size(fid["zero_matrix"]) # == (0, 0)
+```
+An _exception_ to this rule is Julia's 0-dimensional `Array`, which is stored as an HDF5
+scalar because there is a value to be preserved:
+```julia
+fid["zero_dim_value"] = fill(1.0π)
+read(fid["zero_dim_value"]) # == 3.141592653589793, != [3.141592653589793]
+```
+HDF5 also has the concept of a null array which contains a type but has neither size nor
+contents, which is represented by the type `HDF5.EmptyArray`:
+```julia
+fid["empty_array"] = HDF5.EmptyArray{Float32}()
+HDF5.isnull(fid["empty_array"]) # == true
+size(fid["empty_array"]) # == ()
+eltype(fid["empty_array"]) # == Float32
+```
+
 This module also supports HDF5's VLEN, OPAQUE, and REFERENCE types, which can be used to encode more complex types. In general, you need to specify how you want to combine these more advanced facilities to represent more complex data types. For many of the data types in Julia, the JLD module implements support. You can likewise define your own file format if, for example, you need to interact with some external program that has explicit formatting requirements.
 
 
