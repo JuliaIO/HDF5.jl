@@ -91,7 +91,6 @@ hdf5_type_id(::Type{S}) where {S<:AbstractString} = H5T_C_S1
 
 const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
 const ScalarType = Union{BitsType,Reference}
-const ScalarOrComplex = Union{ScalarType}
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
 function _hdf5_type_map(class_id, is_signed, native_size)
@@ -1390,34 +1389,29 @@ end
 # Create datasets and attributes with "native" types, but don't write the data.
 # The return syntax is: dset, dtype = d_create(parent, name, data; properties...)
 
-# Scalar types
-function d_create(parent::Union{File,Group}, name::String, data::Union{T,AbstractArray{T},VLen{S}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}, S<:Union{ScalarType,CharType}}
-    local obj
+function d_create(parent::Union{File,Group}, name::String, data; pv...)
     dtype = datatype(data)
     dspace = dataspace(data)
-    try
-        obj = d_create(parent, name, dtype, dspace; pv...)
+    obj = try
+        d_create(parent, name, dtype, dspace; pv...)
     finally
         close(dspace)
     end
     return obj, dtype
 end
-# VLEN types
-function a_create(parent::Union{File,Group,Dataset,Datatype}, name::String, data::Union{T,AbstractArray{T},VLen{S}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}, S<:Union{ScalarType,CharType}}
-    local obj
+function a_create(parent::Union{File,Object}, name::String, data; pv...)
     dtype = datatype(data)
     dspace = dataspace(data)
-    try
-        obj = a_create(parent, name, dtype, dspace; pv...)
+    obj = try
+        a_create(parent, name, dtype, dspace; pv...)
     finally
         close(dspace)
     end
     return obj, dtype
 end
-
 
 # Create and write, closing the objects upon exit
-function d_write(parent::Union{File,Group}, name::String, data::Union{T,AbstractArray{T},VLen{S}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}},S<:Union{ScalarType,CharType}}
+function d_write(parent::Union{File,Group}, name::String, data; pv...)
     obj, dtype = d_create(parent, name, data; pv...)
     try
         writearray(obj, dtype.id, data)
@@ -1427,7 +1421,7 @@ function d_write(parent::Union{File,Group}, name::String, data::Union{T,Abstract
     end
     nothing
 end
-function a_write(parent::Union{File,Object,Datatype}, name::String, data::Union{T,AbstractArray{T},VLen{S}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}},S<:Union{ScalarType,CharType}}
+function a_write(parent::Union{File,Object}, name::String, data; pv...)
     obj, dtype = a_create(parent, name, data; pv...)
     try
         writearray(obj, dtype.id, data)
@@ -1948,6 +1942,6 @@ function __init__()
     return nothing
 end
 
-# include("deprecated.jl")
+include("deprecated.jl")
 
 end  # module

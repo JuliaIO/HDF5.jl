@@ -80,42 +80,33 @@ const __a_create = a_create
 for (fsym, ptype) in ((:d_create, Union{File, Group}),
                       (:a_create, Union{File, Object}),
                      )
-    privsym = Symbol(:_, fsym)
     chainsym = Symbol(:__, fsym)
     depsig = "$fsym(parent::$ptype, name::String, data, plists::HDF5Properties...)"
     usesig = "$fsym(parent::$ptype, name::String, data; properties...)"
     warnstr = "`$depsig` with property lists is deprecated, use `$usesig` with keywords instead"
     @eval begin
-        function ($privsym)(parent::$ptype, name::String, data, plists::Properties...)
+        function ($fsym)(parent::$ptype, name::String, data, plists::Properties...)
             depwarn($warnstr, $(QuoteNode(fsym)))
-            local obj
             dtype = datatype(data)
             dspace = dataspace(data)
-            try
-                obj = ($chainsym)(parent, name, dtype, dspace, plists...)
+            obj = try
+                ($chainsym)(parent, name, dtype, dspace, plists...)
             finally
                 close(dspace)
             end
             return obj, dtype
         end
-        ($fsym)(parent::$ptype, name::String, data::Union{T,AbstractArray{T}},
-                plists::Properties...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
-            ($privsym)(parent, name, data, plists...)
-        ($fsym)(parent::$ptype, name::String, data::VLen{T},
-                plists::Properties...) where {T<:Union{ScalarType,CharType}} =
-            ($privsym)(parent, name, data, plists...)
     end
 end
 for (fsym, ptype) in ((:d_write, Union{File,Group}),
                       (:a_write, Union{File,Object}),
                      )
-    privsym = Symbol(:_, fsym)
     crsym = Symbol(:__, replace(string(fsym), "write" => "create"))
     depsig = "$fsym(parent::$ptype, name::String, data, plists::HDF5Properties...)"
     usesig = "$fsym(parent::$ptype, name::String, data; properties...)"
     warnstr = "`$depsig` with property lists is deprecated, use `$usesig` with keywords instead"
     @eval begin
-        function ($privsym)(parent::$ptype, name::String, data, plists::Properties...)
+        function ($fsym)(parent::$ptype, name::String, data, plists::Properties...)
             depwarn($warnstr, $(QuoteNode(fsym)))
             dtype = datatype(data)
             obj = ($crsym)(parent, name, dtype, dataspace(data), plists...)
@@ -126,12 +117,6 @@ for (fsym, ptype) in ((:d_write, Union{File,Group}),
                 close(dtype)
             end
         end
-        ($fsym)(parent::$ptype, name::String, data::Union{T,AbstractArray{T}},
-                plists::Properties...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
-            ($privsym)(parent, name, data, plists...)
-        ($fsym)(parent::$ptype, name::String, data::VLen{T},
-                plists::Properties...) where {T<:Union{ScalarType,CharType}} =
-            ($privsym)(parent, name, data, plists...)
     end
 end
 function write(parent::Union{File,Group}, name::String, data::Union{T,AbstractArray{T}},
