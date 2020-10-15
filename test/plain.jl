@@ -590,6 +590,12 @@ azeromat2 = dzeromat2["attr"]
 @test !HDF5.isnull(azerodim)
 @test read(azerodim) == 1.0ℯ
 
+# Concatenation of EmptyArrays is not supported
+x = HDF5.EmptyArray{Float64}()
+@test_throws ErrorException [x x]
+@test_throws ErrorException [x; x]
+@test_throws ErrorException [x x; x x]
+
 close(hfile)
 rm(fn)
 

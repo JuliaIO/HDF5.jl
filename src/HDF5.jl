@@ -317,6 +317,10 @@ Base.length(::EmptyArray) = 0
 # Required to avoid indexing during printing
 Base.show(io::IO, E::EmptyArray) = print(io, typeof(E), "()")
 Base.show(io::IO, ::MIME"text/plain", E::EmptyArray) = show(io, E)
+# FIXME: Concatenation doesn't work for this type (it's treated as a length-1 array like
+# Base's 0-dimensional arrays), so just forceably abort.
+Base.cat_size(::EmptyArray) = error("concatenation of HDF5.EmptyArray is unsupported")
+Base.cat_size(::EmptyArray, d) = error("concatenation of HDF5.EmptyArray is unsupported")
 
 # Stub types to encode fixed-size arrays for H5T_ARRAY
 struct FixedArray{T,D,L}
