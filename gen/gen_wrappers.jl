@@ -4,6 +4,11 @@ include(joinpath(@__DIR__, "bind_generator.jl"))
 defs = read(joinpath(@__DIR__, "api_defs.jl"), String)
 # Have Julia expand/run the @bind macro to generate expressions for all of the functions
 exprs = Base.include_string(@__MODULE__, "@macroexpand1 begin\n" * defs * "\nend", "api_defs.jl")
+# Definitions which are not automatically generated, but should still be documented as
+# part of the raw low-level API:
+append!(bound_api["H5T"],
+        ["h5t_get_member_name(type_id::hid_t, index::Cuint)", # defined in src/api_helpers.jl
+         "h5t_get_tag(type_id::hid_t)"])                      # defined in src/api_helpers.jl
 
 # Now dump the text representation to disk
 exprs = Base.remove_linenums!(exprs)
@@ -17,4 +22,62 @@ open(joinpath(@__DIR__, "..", "src", "api.jl"), "w") do fid
     for func in exprs.args
         write(fid, string(func), "\n\n")
     end
+end
+
+# Also generate auto-docs that simply list all of the bound API functions
+apidocs = ""
+for (mod, desc, urltail) in (
+    ("H5", "General Library Functions", "Library"),
+    ("H5A", "Attribute Interface", "Attributes"),
+    ("H5D", "Dataset Interface", "Datasets"),
+    ("H5E", "Error Interface", "Error+Handling"),
+    ("H5F", "File Interface", "Files"),
+    ("H5G", "Group Interface", "Groups"),
+    ("H5I", "Identifier Interface", "Identifiers"),
+    ("H5L", "Link Interface", "Links"),
+    ("H5O", "Object Interface", "Objects"),
+    ("H5P", "Property Interface", "Property+Lists"),
+    ("H5R", "Reference Interface", "References"),
+    ("H5S", "Dataspace Interface", "Dataspaces"),
+    ("H5T", "Datatype Interface", "Datatypes"),
+    ("H5Z", "Filter Interface", "Filters"),
+    ("H5DO", "Optimized Functions Interface", "Optimizations"),
+    ("H5LT", "Lite Interface", "Lite"),
+    ("H5TB", "Table Interface", "Tables"),
+    )
+    global apidocs
+    funcs = join(sort!(bound_api[mod]), "\n")
+    apidocs *= """
+        ## [`$mod`](https://portal.hdfgroup.org/display/HDF5/$urltail) — $desc
+        ```julia
+        $funcs
+        ```
+
+        """
+end
+
+open(joinpath(@__DIR__, "..", "docs", "src", "api_bindings.md"), "w") do fid
+    write(fid,
+"""
+```@raw html
+<!-- This file is auto-generated and should not be manually editted. To update, run the
+gen/gen_wrappers.jl script -->
+```
+# Low-level library bindings
+
+At the lowest level, `HDF5.jl` operates by calling the public API of the HDF5 shared
+library through a set of `ccall` wrapper functions.
+This page documents the function names and nominal C argument types of the API which
+have bindings in this package.
+Note that in many cases, high-level data types are valid arguments through automatic
+`ccall` conversions.
+For instance, `HDF5Datatype` objects will be automatically converted to their `hid_t` ID
+by Julia's `cconvert`+`unsafe_convert` `ccall` rules.
+
+There are additional helper wrappers (often for out-argument functions) which are not
+documented here.
+
+$apidocs
+"""
+    )
 end
