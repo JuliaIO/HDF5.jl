@@ -1105,7 +1105,7 @@ set_dims!(dset::Dataset, new_dims::Dims) = h5d_set_extent(checkvalid(dset), hsiz
     start_swmr_write(h5::HDF5.File)
 
 Start Single Reader Multiple Writer (SWMR) writing mode.
-See [SWMR documentation](https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-StartSwmrWrite).
+See [SWMR documentation](https://portal.hdfgroup.org/display/HDF5/Single+Writer+Multiple+Reader++-+SWMR).
 """
 start_swmr_write(h5::File) = h5f_start_swmr_write(h5.id)
 
