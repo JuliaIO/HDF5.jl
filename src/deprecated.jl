@@ -112,6 +112,9 @@ for (fsym, ptype) in ((:d_write, Union{File,Group}),
             obj = ($crsym)(parent, name, dtype, dataspace(data), plists...)
             try
                 writearray(obj, dtype.id, data)
+            catch exc
+                o_delete(obj)
+                rethrow(exc)
             finally
                 close(obj)
                 close(dtype)
@@ -130,6 +133,9 @@ function write(parent::Union{File,Group}, name::String, data::Union{T,AbstractAr
     obj = __d_create(parent, name, dtype, dataspace(data), plists...)
     try
         writearray(obj, dtype.id, data)
+    catch exc
+        o_delete(obj)
+        rethrow(exc)
     finally
         close(obj)
         close(dtype)
@@ -146,6 +152,9 @@ function write(parent::Dataset, name::String, data::Union{T,AbstractArray{T}},
     obj = __a_create(parent, name, dtype, dataspace(data), plists...)
     try
         writearray(obj, dtype.id, data)
+    catch exc
+        o_delete(obj)
+        rethrow(exc)
     finally
         close(obj)
         close(dtype)
