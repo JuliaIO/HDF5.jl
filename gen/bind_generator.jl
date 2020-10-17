@@ -27,6 +27,10 @@ push!(bind_exceptions, :h5p_get_fapl_mpio64 => :H5Pget_fapl_mpio)
 push!(bind_exceptions, :h5p_set_fapl_mpio32 => :H5Pset_fapl_mpio)
 push!(bind_exceptions, :h5p_set_fapl_mpio64 => :H5Pset_fapl_mpio)
 
+# We'll also use this processing pass to automatically generate documentation that simply
+# lists all of the bound API functions.
+const bound_api = Dict{String,Vector{String}}()
+
 """
     @bind h5_function(arg1::Arg1Type, ...)::ReturnType [ErrorStringOrExpression]
 
@@ -97,14 +101,18 @@ macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing)
         push!(argt, argex.args[2])
     end
 
+    prefix, rest = split(string(jlfuncname), "_", limit = 2)
     # Translate the C function name to a local equivalent
     if haskey(bind_exceptions, jlfuncname)
         cfuncname = bind_exceptions[jlfuncname]
     else
         # turn e.g. h5f_close into H5Fclose
-        prefix, rest = split(string(jlfuncname), "_", limit = 2)
         cfuncname = Symbol(uppercase(prefix), rest)
     end
+
+    # Store the function prototype in HDF5-module specific lists:
+    funclist = get!(bound_api, uppercase(prefix), Vector{String}(undef, 0))
+    push!(funclist, string(funcsig))
 
     # Determine the underlying C library to call
     lib = startswith(string(cfuncname), r"H5(DO|LT|TB)") ? :libhdf5_hl : :libhdf5
