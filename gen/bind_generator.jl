@@ -27,7 +27,7 @@ push!(bind_exceptions, :h5p_get_fapl_mpio64 => :H5Pget_fapl_mpio)
 push!(bind_exceptions, :h5p_set_fapl_mpio32 => :H5Pset_fapl_mpio)
 push!(bind_exceptions, :h5p_set_fapl_mpio64 => :H5Pset_fapl_mpio)
 
-# We'll so use this processing pass to automatically generate documentation that simply
+# We'll also use this processing pass to automatically generate documentation that simply
 # lists all of the bound API functions.
 const bound_api = Dict{String,Vector{String}}()
 
