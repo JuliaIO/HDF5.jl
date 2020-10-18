@@ -704,7 +704,7 @@ function split1(path::AbstractString)
     end
 end
 
-function g_create(parent::Union{File,Group}, path::String,
+function g_create(parent::Union{File,Group}, path::AbstractString,
                   lcpl::Properties=_link_properties(path),
                   dcpl::Properties=DEFAULT_PROPERTIES)
     Group(h5g_create(checkvalid(parent).id, path, lcpl.id, dcpl.id), file(parent))
@@ -718,23 +718,22 @@ function g_create(f::Function, parent::Union{File,Group}, args...)
     end
 end
 
-function d_create(parent::Union{File,Group}, path::String, dtype::Datatype,
-                  dspace::Dataspace, lcpl::Properties, dcpl::Properties,
+function d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace,
+                  lcpl::Properties, dcpl::Properties,
                   dapl::Properties, dxpl::Properties)
-    Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, lcpl.id,
-                dcpl.id, dapl.id), file(parent), dxpl)
+    Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, lcpl.id, dcpl.id, dapl.id), file(parent), dxpl)
 end
 
 # Setting dset creation properties with name/value pairs
-function d_create(parent::Union{File,Group}, path::String, dtype::Datatype, dspace::Dataspace; pv...)
+function d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace; pv...)
     dcpl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P_DATASET_CREATE; pv...)
     dxpl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P_DATASET_XFER; pv...)
     dapl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P_DATASET_ACCESS; pv...)
     Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, _link_properties(path), dcpl.id, dapl.id), file(parent), dxpl)
 end
-d_create(parent::Union{File,Group}, path::String, dtype::Datatype, dspace_dims::Dims; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
-d_create(parent::Union{File,Group}, path::String, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
-d_create(parent::Union{File,Group}, path::String, dtype::Type, dspace_dims; pv...) = d_create(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
+d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Dims; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
+d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
+d_create(parent::Union{File,Group}, path::AbstractString, dtype::Type, dspace_dims; pv...) = d_create(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
 
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 t_create(class_id, sz) = Datatype(h5t_create(class_id, sz))
@@ -758,7 +757,7 @@ function t_commit(parent::Union{File,Group}, path::String, dtype::Datatype, lcpl
 end
 t_commit(parent::Union{File,Group}, path::String, dtype::Datatype) = t_commit(parent, path, dtype, p_create(H5P_LINK_CREATE))
 
-a_create(parent::Union{File,Object}, name::String, dtype::Datatype, dspace::Dataspace) = Attribute(h5a_create(checkvalid(parent).id, name, dtype.id, dspace.id), file(parent))
+a_create(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace) = Attribute(h5a_create(checkvalid(parent).id, name, dtype.id, dspace.id), file(parent))
 
 function _prop_get(p::Properties, name::Symbol)
     class = p.class
@@ -1790,9 +1789,9 @@ function h5a_write(attr_id::hid_t, memtype_id::hid_t, v::VLen{T}) where {T<:Unio
     vp = vlenpack(v)
     h5a_write(attr_id, memtype_id, vp)
 end
-h5a_create(loc_id::hid_t, name::String, type_id::hid_t, space_id::hid_t) = h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P_DEFAULT)
+h5a_create(loc_id, name, type_id, space_id) = h5a_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT) # last two arguments not used in HDF5 lib
 h5a_open(obj_id::hid_t, name::String) = h5a_open(obj_id, name, H5P_DEFAULT)
-h5d_create(loc_id::hid_t, name::String, type_id::hid_t, space_id::hid_t) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
+h5d_create(loc_id, name, type_id, space_id) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
 h5d_open(obj_id::hid_t, name::String) = h5d_open(obj_id, name, H5P_DEFAULT)
 function h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::hid_t=H5P_DEFAULT)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
@@ -1819,8 +1818,8 @@ function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::hid_t
 end
 h5f_create(filename::String) = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)
 h5f_open(filename::String, mode) = h5f_open(filename, mode, H5P_DEFAULT)
-h5g_create(obj_id::hid_t, name::String) = h5g_create(obj_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
-h5g_create(obj_id::hid_t, name::String, lcpl_id, gcpl_id) = h5g_create(obj_id, name, lcpl_id, gcpl_id, H5P_DEFAULT)
+h5g_create(obj_id, name) = h5g_create(obj_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
+h5g_create(obj_id, name, lcpl_id, gcpl_id) = h5g_create(obj_id, name, lcpl_id, gcpl_id, H5P_DEFAULT)
 h5g_open(file_id::hid_t, name::String) = h5g_open(file_id, name, H5P_DEFAULT)
 h5l_exists(loc_id::hid_t, name::String) = h5l_exists(loc_id, name, H5P_DEFAULT)
 h5o_open(obj_id::hid_t, name::String) = h5o_open(obj_id, name, H5P_DEFAULT)
@@ -1915,9 +1914,9 @@ const rehash! = Base.rehash!
 # Across initializations of the library, the id of various properties
 # will change. So don't hard-code the id (important for precompilation)
 const UTF8_LINK_PROPERTIES = Ref{Properties}()
-_link_properties(path::String) = UTF8_LINK_PROPERTIES[]
+_link_properties(::AbstractString) = UTF8_LINK_PROPERTIES[]
 const UTF8_ATTRIBUTE_PROPERTIES = Ref{Properties}()
-_attr_properties(path::String) = UTF8_ATTRIBUTE_PROPERTIES[]
+_attr_properties(::AbstractString) = UTF8_ATTRIBUTE_PROPERTIES[]
 const ASCII_LINK_PROPERTIES = Ref{Properties}()
 const ASCII_ATTRIBUTE_PROPERTIES = Ref{Properties}()
 

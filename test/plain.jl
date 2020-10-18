@@ -764,11 +764,12 @@ path2 = acomb * "/α"
 end # split1 tests
 
 
+# Also tests AbstractString interface
 @testset "haskey" begin
 fn = tempname()
 hfile = h5open(fn, "w")
 
-group1 = g_create(hfile, "group1")
+group1 = g_create(hfile, GenericString("group1"))
 group2 = g_create(group1, "group2")
 
 @test haskey(hfile, GenericString("group1"))
@@ -776,7 +777,7 @@ group2 = g_create(group1, "group2")
 @test haskey(hfile, "group1/group2")
 @test !haskey(hfile, "group1/groupna")
 
-dset1 = d_create(hfile, "dset1", datatype(Int), dataspace((1,)))
+dset1 = d_create(hfile, GenericString("dset1"), datatype(Int), dataspace((1,)))
 dset2 = d_create(group1, "dset2", datatype(Int), dataspace((1,)))
 
 @test haskey(hfile, "dset1")
@@ -784,8 +785,10 @@ dset2 = d_create(group1, "dset2", datatype(Int), dataspace((1,)))
 @test haskey(hfile, "group1/dset2")
 @test !haskey(hfile, "group1/dsetna")
 
-meta1 = a_create(dset1, "meta1", datatype(Bool), dataspace((1,)))
+meta1 = a_create(dset1, GenericString("meta1"), datatype(Bool), dataspace((1,)))
+meta2 = a_create(dset1, "meta2", datatype(Bool), dataspace((1,)))
 @test haskey(dset1, "meta1")
+@test haskey(dset1, "meta2")
 @test !haskey(dset1, "metana")
 
 
