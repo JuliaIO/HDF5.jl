@@ -1789,7 +1789,7 @@ function h5a_write(attr_id::hid_t, memtype_id::hid_t, v::VLen{T}) where {T<:Unio
     vp = vlenpack(v)
     h5a_write(attr_id, memtype_id, vp)
 end
-h5a_create(loc_id, name, type_id, space_id) = h5a_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT) # last two arguments not used in HDF5 lib
+h5a_create(loc_id, name, type_id, space_id) = h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P_DEFAULT)
 h5a_open(obj_id::hid_t, name::String) = h5a_open(obj_id, name, H5P_DEFAULT)
 h5d_create(loc_id, name, type_id, space_id) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
 h5d_open(obj_id::hid_t, name::String) = h5d_open(obj_id, name, H5P_DEFAULT)
