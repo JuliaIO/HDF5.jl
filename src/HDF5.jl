@@ -651,9 +651,9 @@ flush(f::Union{Object,Attribute,Datatype,File}, scope = H5F_SCOPE_GLOBAL) = h5f_
 
 # Open objects
 g_open(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Group(h5g_open(checkvalid(parent).id, name, apl.id), file(parent))
-d_open(parent::Union{File,Group}, name::String, apl::Properties=DEFAULT_PROPERTIES, xpl::Properties=DEFAULT_PROPERTIES) = Dataset(h5d_open(checkvalid(parent).id, name, apl.id), file(parent), xpl)
-t_open(parent::Union{File,Group}, name::String, apl::Properties=DEFAULT_PROPERTIES) = Datatype(h5t_open(checkvalid(parent).id, name, apl.id), file(parent))
-a_open(parent::Union{File,Object}, name::String) = Attribute(h5a_open(checkvalid(parent).id, name, H5P_DEFAULT), file(parent))
+d_open(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES, xpl::Properties=DEFAULT_PROPERTIES) = Dataset(h5d_open(checkvalid(parent), name, apl), file(parent), xpl)
+t_open(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Datatype(h5t_open(checkvalid(parent), name, apl), file(parent))
+a_open(parent::Union{File,Object}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Attribute(h5a_open(checkvalid(parent), name, apl), file(parent))
 # Object (group, named datatype, or dataset) open
 function h5object(obj_id::hid_t, parent)
     obj_type = h5i_get_type(obj_id)
@@ -674,7 +674,7 @@ root(h5file::File) = g_open(h5file, "/")
 root(obj::Union{Group,Dataset}) = g_open(file(obj), "/")
 # getindex syntax: obj2 = obj1[path]
 #getindex(parent::Union{HDF5File, HDF5Group}, path::String) = o_open(parent, path)
-getindex(dset::Dataset, name::String) = a_open(dset, name)
+getindex(dset::Dataset, name::AbstractString) = a_open(dset, name)
 getindex(x::Attributes, name::String) = a_open(x.parent, name)
 
 function getindex(parent::Union{File,Group}, path::AbstractString; pv...)
@@ -1777,7 +1777,7 @@ function h5a_write(attr_id::hid_t, memtype_id::hid_t, v::VLen{T}) where {T<:Unio
     h5a_write(attr_id, memtype_id, vp)
 end
 h5a_create(loc_id, name, type_id, space_id) = h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P_DEFAULT)
-h5a_open(obj_id::hid_t, name::String) = h5a_open(obj_id, name, H5P_DEFAULT)
+h5a_open(obj_id, name) = h5a_open(obj_id, name, H5P_DEFAULT)
 h5d_create(loc_id, name, type_id, space_id) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
 h5d_open(obj_id::hid_t, name::String) = h5d_open(obj_id, name, H5P_DEFAULT)
 function h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::hid_t=H5P_DEFAULT)

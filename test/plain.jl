@@ -813,17 +813,24 @@ fn = tempname()
 hfile = h5open(fn, "w")
 
 # test that these work with GenericString
+# creation
 @test_nowarn g_create(hfile, GenericString("group1"))
 @test_nowarn d_create(hfile, GenericString("dset1"), datatype(Int), dataspace((1,)))
-@test_nowarn a_create(hfile["dset1"], GenericString("meta1"), datatype(Bool), dataspace((1,)))
+# reading
+@test_nowarn hfile[GenericString("group1")]
+@test_nowarn hfile[GenericString("dset1")]
 
-hfile[GenericString("group1")]
+dset1 = hfile["dset1"]
+@test_nowarn a_create(dset1, GenericString("meta1"), datatype(Bool), dataspace((1,)))
+@test_nowarn  dset1[GenericString("meta1")]
 
 
+# transient types
 memtype_id = HDF5.h5t_copy(HDF5.H5T_NATIVE_DOUBLE)
 dt = HDF5.Datatype(memtype_id)
 @test !HDF5.h5t_committed(dt)
 t_commit(hfile, GenericString("dt"), dt)
 @test HDF5.h5t_committed(dt)
+
 
 end
