@@ -769,7 +769,7 @@ end # split1 tests
 fn = tempname()
 hfile = h5open(fn, "w")
 
-group1 = g_create(hfile, GenericString("group1"))
+group1 = g_create(hfile, "group1")
 group2 = g_create(group1, "group2")
 
 @test haskey(hfile, GenericString("group1"))
@@ -777,7 +777,7 @@ group2 = g_create(group1, "group2")
 @test haskey(hfile, "group1/group2")
 @test !haskey(hfile, "group1/groupna")
 
-dset1 = d_create(hfile, GenericString("dset1"), datatype(Int), dataspace((1,)))
+dset1 = d_create(hfile, "dset1", datatype(Int), dataspace((1,)))
 dset2 = d_create(group1, "dset2", datatype(Int), dataspace((1,)))
 
 @test haskey(hfile, "dset1")
@@ -785,10 +785,8 @@ dset2 = d_create(group1, "dset2", datatype(Int), dataspace((1,)))
 @test haskey(hfile, "group1/dset2")
 @test !haskey(hfile, "group1/dsetna")
 
-meta1 = a_create(dset1, GenericString("meta1"), datatype(Bool), dataspace((1,)))
-meta2 = a_create(dset1, "meta2", datatype(Bool), dataspace((1,)))
+meta1 = a_create(dset1, "meta1", datatype(Bool), dataspace((1,)))
 @test haskey(dset1, "meta1")
-@test haskey(dset1, "meta2")
 @test !haskey(dset1, "metana")
 
 
@@ -807,3 +805,22 @@ haskey(attribs, GenericString("attr"))
 close(hfile)
 rm(fn)
 end # haskey tests
+
+
+@testset "AbstractString" begin
+
+fn = tempname()
+hfile = h5open(fn, "w")
+
+# test that these work with GenericString
+@test_nowarn g_create(hfile, GenericString("group1"))
+@test_nowarn d_create(hfile, GenericString("dset1"), datatype(Int), dataspace((1,)))
+@test_nowarn a_create(hfile["dset1"], GenericString("meta1"), datatype(Bool), dataspace((1,)))
+
+memtype_id = HDF5.h5t_copy(HDF5.H5T_NATIVE_DOUBLE)
+dt = HDF5.Datatype(memtype_id)
+@test !HDF5.h5t_committed(dt)
+t_commit(hfile, GenericString("dt"), dt)
+@test HDF5.h5t_committed(dt)
+
+end

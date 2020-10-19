@@ -69,7 +69,7 @@ chartype(::Type{String}) = ASCIIChar
 stringtype(::Type{ASCIIChar}) = String
 stringtype(::Type{UTF8Char}) = String
 
-cset(::Type{String}) = H5T_CSET_UTF8
+cset(::Type{<:AbstractString}) = H5T_CSET_UTF8
 cset(::Type{UTF8Char}) = H5T_CSET_UTF8
 cset(::Type{ASCIIChar}) = H5T_CSET_ASCII
 
@@ -87,7 +87,7 @@ hdf5_type_id(::Type{Float32})   = H5T_NATIVE_FLOAT
 hdf5_type_id(::Type{Float64})   = H5T_NATIVE_DOUBLE
 hdf5_type_id(::Type{Reference}) = H5T_STD_REF_OBJ
 
-hdf5_type_id(::Type{S}) where {S<:AbstractString} = H5T_C_S1
+hdf5_type_id(::Type{<:AbstractString}) = H5T_C_S1
 
 const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
 const ScalarType = Union{BitsType,Reference}
@@ -737,25 +737,12 @@ d_create(parent::Union{File,Group}, path::AbstractString, dtype::Type, dspace_di
 
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 t_create(class_id, sz) = Datatype(h5t_create(class_id, sz))
-function t_commit(parent::Union{File,Group}, path::String, dtype::Datatype, lcpl::Properties, tcpl::Properties, tapl::Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    h5t_commit(checkvalid(parent).id, path, dtype.id, lcpl.id, tcpl.id, tapl.id)
+function t_commit(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, lcpl::Properties=p_create(H5P_LINK_CREATE), tcpl::Properties=DEFAULT_PROPERTIES, tapl::Properties=DEFAULT_PROPERTIES)
+    h5p_set_char_encoding(lcpl, cset(typeof(path)))
+    h5t_commit(checkvalid(parent), path, dtype, lcpl, tcpl, tapl)
     dtype.file = file(parent)
-    dtype
+    return dtype
 end
-function t_commit(parent::Union{File,Group}, path::String, dtype::Datatype, lcpl::Properties, tcpl::Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    h5t_commit(checkvalid(parent).id, path, dtype.id, lcpl.id, tcpl.id, H5P_DEFAULT)
-    dtype.file = file(parent)
-    dtype
-end
-function t_commit(parent::Union{File,Group}, path::String, dtype::Datatype, lcpl::Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    h5t_commit(checkvalid(parent).id, path, dtype.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT)
-    dtype.file = file(parent)
-    dtype
-end
-t_commit(parent::Union{File,Group}, path::String, dtype::Datatype) = t_commit(parent, path, dtype, p_create(H5P_LINK_CREATE))
 
 a_create(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace) = Attribute(h5a_create(checkvalid(parent), name, dtype, dspace), file(parent))
 
