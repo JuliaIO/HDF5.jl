@@ -15,12 +15,12 @@ import Base: @deprecate, @deprecate_binding, depwarn
 # - using symbols instead of strings for property keys
 @deprecate setindex!(p::Properties, val, name::AbstractString) setindex!(p, val, Symbol(name))
 
-function getindex(parent::Union{File,Group}, path::AbstractString, prop1::AbstractString, val1, pv...)
+function Base.getindex(parent::Union{File,Group}, path::AbstractString, prop1::AbstractString, val1, pv...)
     depwarn("getindex(::Union{HDF5.File, HDF5.Group}, path, props...) with string key and value argument pairs is deprecated. Use keywords instead.", :getindex)
     props = (prop1, val1, pv...)
     return getindex(parent, path; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
 end
-function setindex!(parent::Union{File,Group}, val, path::AbstractString, prop1::AbstractString, val1, pv...)
+function Base.setindex!(parent::Union{File,Group}, val, path::AbstractString, prop1::AbstractString, val1, pv...)
     depwarn("setindex!(::Union{HDF5.File, HDF5.Group}, val, path, props...) with string key and value argument pairs is deprecated. Use keywords instead.", :setindex!)
     props = (prop1, val1, pv...)
     return setindex!(parent, val, path; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
@@ -60,6 +60,7 @@ end
 
 ### Changed in PR#652
 # - read takes array element type, not Array with eltype
+import Base: read
 @deprecate read(obj::DatasetOrAttribute, ::Type{A}, I...) where {A<:Array} read(obj, eltype(A), I...)
 
 ### Changed in PR#657
@@ -122,7 +123,7 @@ for (fsym, ptype) in ((:d_write, Union{File,Group}),
         end
     end
 end
-function write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}},
+function Base.write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}},
                plists::Properties...) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}}
     depwarn("`write(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
@@ -141,7 +142,7 @@ function write(parent::Union{File,Group}, name::AbstractString, data::Union{T,Ab
         close(dtype)
     end
 end
-function write(parent::Dataset, name::AbstractString, data::Union{T,AbstractArray{T}},
+function Base.write(parent::Dataset, name::AbstractString, data::Union{T,AbstractArray{T}},
                plists::Properties...) where {T<:Union{ScalarType,<:AbstractString}}
     depwarn("`write(parent::HDF5Dataset, name::AbstractString, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *

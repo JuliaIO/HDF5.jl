@@ -3,11 +3,6 @@ module HDF5
 using Base: unsafe_convert, StringVector
 using Requires: @require
 
-import Base:
-    close, convert, eltype, lastindex, flush, getindex, ==,
-    isempty, isvalid, length, ndims, parent, read,
-    setindex!, show, size, sizeof, write, isopen, iterate, eachindex, axes
-
 import Libdl
 import Mmap
 
@@ -58,12 +53,12 @@ abstract type CharType <: AbstractString end
 struct ASCIIChar <: CharType
     c::UInt8
 end
-length(c::ASCIIChar) = 1
+Base.length(c::ASCIIChar) = 1
 
 struct UTF8Char <: CharType
     c::UInt8
 end
-length(c::UTF8Char) = 1
+Base.length(c::UTF8Char) = 1
 
 chartype(::Type{String}) = ASCIIChar
 stringtype(::Type{ASCIIChar}) = String
@@ -146,8 +141,8 @@ mutable struct File <: DataFile
         f
     end
 end
-convert(::Type{hid_t}, f::File) = f.id
-function show(io::IO, fid::File)
+Base.convert(::Type{hid_t}, f::File) = f.id
+function Base.show(io::IO, fid::File)
     if isvalid(fid)
         print(io, "HDF5 data file: ", fid.filename)
     else
@@ -166,8 +161,8 @@ mutable struct Group <: DataFile
         g
     end
 end
-convert(::Type{hid_t}, g::Group) = g.id
-function show(io::IO, g::Group)
+Base.convert(::Type{hid_t}, g::Group) = g.id
+function Base.show(io::IO, g::Group)
     if isvalid(g)
         print(io, "HDF5 group: ", name(g), " (file: ", g.file.filename, ")")
     else
@@ -185,7 +180,7 @@ mutable struct Properties
     end
 end
 Properties() = Properties(H5P_DEFAULT)
-convert(::Type{hid_t}, p::Properties) = p.id
+Base.convert(::Type{hid_t}, p::Properties) = p.id
 
 mutable struct Dataset
     id::hid_t
@@ -198,8 +193,8 @@ mutable struct Dataset
         dset
     end
 end
-convert(::Type{hid_t}, dset::Dataset) = dset.id
-function show(io::IO, dset::Dataset)
+Base.convert(::Type{hid_t}, dset::Dataset) = dset.id
+function Base.show(io::IO, dset::Dataset)
     if isvalid(dset)
         print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, " xfer_mode: ", dset.xfer.id, ")")
     else
@@ -227,10 +222,10 @@ mutable struct Datatype
         nt
     end
 end
-convert(::Type{hid_t}, dtype::Datatype) = dtype.id
+Base.convert(::Type{hid_t}, dtype::Datatype) = dtype.id
 hash(dtype::Datatype, h::UInt) = (dtype.id % UInt + h) ^ (0xadaf9b66bc962084 % UInt)
-==(dt1::Datatype, dt2::Datatype) = h5t_equal(dt1, dt2) > 0
-function show(io::IO, dtype::Datatype)
+Base.:(==)(dt1::Datatype, dt2::Datatype) = h5t_equal(dt1, dt2) > 0
+function Base.show(io::IO, dtype::Datatype)
     print(io, "HDF5 datatype: ")
     if isvalid(dtype)
         print(io, h5lt_dtype_to_text(dtype.id))
@@ -266,7 +261,7 @@ mutable struct Dataspace
         dspace
     end
 end
-convert(::Type{hid_t}, dspace::Dataspace) = dspace.id
+Base.convert(::Type{hid_t}, dspace::Dataspace) = dspace.id
 
 mutable struct Attribute
     id::hid_t
@@ -278,8 +273,8 @@ mutable struct Attribute
         dset
     end
 end
-convert(::Type{hid_t}, attr::Attribute) = attr.id
-show(io::IO, attr::Attribute) = isvalid(attr) ? print(io, "HDF5 attribute: ", name(attr)) : print(io, "HDF5 attribute (invalid)")
+Base.convert(::Type{hid_t}, attr::Attribute) = attr.id
+Base.show(io::IO, attr::Attribute) = isvalid(attr) ? print(io, "HDF5 attribute: ", name(attr)) : print(io, "HDF5 attribute (invalid)")
 
 struct Attributes
     parent::Union{File,Group,Dataset}
@@ -292,7 +287,7 @@ function Reference(parent::Union{File,Group,Dataset}, name::AbstractString)
     h5r_create(ref, checkvalid(parent), name, H5R_OBJECT, -1)
     return Reference(ref[])
 end
-==(a::Reference, b::Reference) = a.r == b.r
+Base.:(==)(a::Reference, b::Reference) = a.r == b.r
 hash(x::Reference, h::UInt) = hash(x.r, h)
 
 # Opaque types
@@ -326,16 +321,16 @@ Base.cat_size(::EmptyArray, d) = error("concatenation of HDF5.EmptyArray is unsu
 struct FixedArray{T,D,L}
     data::NTuple{L,T}
 end
-size(::Type{FixedArray{T,D,L}}) where {T,D,L} = D
-size(x::T) where {T<:FixedArray} = size(T)
-eltype(::Type{FixedArray{T,D,L}}) where {T,D,L} = T
-eltype(x::T) where {T<:FixedArray} = eltype(T)
+Base.size(::Type{FixedArray{T,D,L}}) where {T,D,L} = D
+Base.size(x::FixedArray) = size(typeof(x))
+Base.eltype(::Type{FixedArray{T,D,L}}) where {T,D,L} = T
+Base.eltype(x::FixedArray) = eltype(typeof(x))
 
 struct FixedString{N,PAD}
     data::NTuple{N,UInt8}
 end
-length(::Type{FixedString{N,PAD}}) where {N,PAD} = N
-length(x::T) where {T<:FixedString} = length(T)
+Base.length(::Type{FixedString{N,PAD}}) where {N,PAD} = N
+Base.length(::FixedString) where {T<:FixedString} = length(T)
 pad(::Type{FixedString{N,PAD}}) where {N, PAD} = PAD
 pad(x::T) where {T<:FixedString} = pad(T)
 
@@ -343,7 +338,7 @@ struct VariableArray{T}
     len::Csize_t
     p::Ptr{Cvoid}
 end
-eltype(::Type{VariableArray{T}}) where T = T
+Base.eltype(::Type{VariableArray{T}}) where T = T
 
 # VLEN objects
 struct VLen{T}
@@ -563,14 +558,14 @@ function h5readattr(filename, name::AbstractString)
 end
 
 # Ensure that objects haven't been closed
-isvalid(obj::Union{File,Properties,Datatype,Dataspace}) = obj.id != -1 && h5i_is_valid(obj.id)
-isvalid(obj::Union{Group,Dataset,Attribute}) = obj.id != -1 && obj.file.id != -1 && h5i_is_valid(obj.id)
+Base.isvalid(obj::Union{File,Properties,Datatype,Dataspace}) = obj.id != -1 && h5i_is_valid(obj.id)
+Base.isvalid(obj::Union{Group,Dataset,Attribute}) = obj.id != -1 && obj.file.id != -1 && h5i_is_valid(obj.id)
 checkvalid(obj) = isvalid(obj) ? obj : error("File or object has been closed")
 
 # Close functions
 
 # Close functions that should try calling close regardless
-function close(obj::File)
+function Base.close(obj::File)
     if obj.id != -1
         h5f_close(obj.id)
         obj.id = -1
@@ -583,7 +578,7 @@ end
 
 Returns `true` if `obj` has not been closed, `false` if it has been closed.
 """
-isopen(obj::File) = obj.id != -1
+Base.isopen(obj::File) = obj.id != -1
 
 for (h5type, h5func) in
     ((:(Union{Group, Dataset}), :h5o_close),
@@ -592,7 +587,7 @@ for (h5type, h5func) in
     # file that has been closed with CLOSE_STRONG but there are still finalizers that have not run
     # for the datasets, etc, in the file.
     @eval begin
-        function close(obj::$h5type)
+        function Base.close(obj::$h5type)
             if obj.id != -1
                 if obj.file.id != -1 && isvalid(obj)
                     $h5func(obj.id)
@@ -604,7 +599,7 @@ for (h5type, h5func) in
     end
 end
 
-function close(obj::Datatype)
+function Base.close(obj::Datatype)
     if obj.toclose && obj.id != -1
         if (!isdefined(obj, :file) || obj.file.id != -1) && isvalid(obj)
             h5o_close(obj.id)
@@ -614,7 +609,7 @@ function close(obj::Datatype)
     nothing
 end
 
-function close(obj::Dataspace)
+function Base.close(obj::Dataspace)
     if obj.id != -1
         if isvalid(obj)
             h5s_close(obj.id)
@@ -624,7 +619,7 @@ function close(obj::Dataspace)
     nothing
 end
 
-function close(obj::Properties)
+function Base.close(obj::Properties)
     if obj.id != -1
         if isvalid(obj)
             h5p_close(obj.id)
@@ -647,7 +642,7 @@ file(o::Union{Object,Attribute}) = o.file
 fd(obj::Object) = h5i_get_file_id(checkvalid(obj).id)
 
 # Flush buffers
-flush(f::Union{Object,Attribute,Datatype,File}, scope = H5F_SCOPE_GLOBAL) = h5f_flush(checkvalid(f).id, scope)
+Base.flush(f::Union{Object,Attribute,Datatype,File}, scope = H5F_SCOPE_GLOBAL) = h5f_flush(checkvalid(f).id, scope)
 
 # Open objects
 g_open(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Group(h5g_open(checkvalid(parent), name, apl), file(parent))
@@ -673,10 +668,10 @@ end
 root(h5file::File) = g_open(h5file, "/")
 root(obj::Union{Group,Dataset}) = g_open(file(obj), "/")
 # getindex syntax: obj2 = obj1[path]
-getindex(dset::Dataset, name::AbstractString) = a_open(dset, name)
-getindex(x::Attributes, name::AbstractString) = a_open(x.parent, name)
+Base.getindex(dset::Dataset, name::AbstractString) = a_open(dset, name)
+Base.getindex(x::Attributes, name::AbstractString) = a_open(x.parent, name)
 
-function getindex(parent::Union{File,Group}, path::AbstractString; pv...)
+function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     objtype = gettype(parent, path)
     if objtype == H5I_DATASET
         dapl = p_create(H5P_DATASET_ACCESS; pv...)
@@ -873,16 +868,16 @@ o_copy(src_obj::Object, dst_parent::Union{File,Group}, dst_path::AbstractString)
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
-setindex!(dset::Dataset, val, name::AbstractString) = a_write(dset, name, val)
-setindex!(x::Attributes, val, name::AbstractString) = a_write(x.parent, name, val)
+Base.setindex!(dset::Dataset, val, name::AbstractString) = a_write(dset, name, val)
+Base.setindex!(x::Attributes, val, name::AbstractString) = a_write(x.parent, name, val)
 # Getting and setting properties: p[:chunk] = dims, p[:compress] = 6
-getindex(p::Properties, name::Symbol) = _prop_get(checkvalid(p), name)
-function setindex!(p::Properties, val, name::Symbol)
+Base.getindex(p::Properties, name::Symbol) = _prop_get(checkvalid(p), name)
+function Base.setindex!(p::Properties, val, name::Symbol)
     _prop_set!(checkvalid(p), name, val, true)
     return p
 end
 # Create a dataset with properties: obj[path, prop = val, ...] = val
-function setindex!(parent::Union{File,Group}, val, path::AbstractString; pv...)
+function Base.setindex!(parent::Union{File,Group}, val, path::AbstractString; pv...)
     need_chunks = any(k in keys(chunked_props) for k in keys(pv))
     have_chunks = any(k == :chunk for k in keys(pv))
 
@@ -923,20 +918,20 @@ Base.haskey(dset::Union{Dataset,Datatype}, path::AbstractString) = h5a_exists(ch
 info(obj::Union{Group,File}) = h5g_get_info(checkvalid(obj).id)
 objinfo(obj::Union{File,Object}) = h5o_get_info(checkvalid(obj).id)
 
-length(obj::Union{Group,File}) = h5g_get_num_objs(checkvalid(obj).id)
-length(x::Attributes) = objinfo(x.parent).num_attrs
+Base.length(obj::Union{Group,File}) = h5g_get_num_objs(checkvalid(obj).id)
+Base.length(x::Attributes) = objinfo(x.parent).num_attrs
 
-isempty(x::Union{Dataset,Group,File}) = length(x) == 0
-function size(obj::Union{Dataset,Attribute})
+Base.isempty(x::Union{Dataset,Group,File}) = length(x) == 0
+function Base.size(obj::Union{Dataset,Attribute})
     dspace = dataspace(obj)
     dims, maxdims = get_dims(dspace)
     close(dspace)
     convert(Tuple{Vararg{Int}}, dims)
 end
-size(dset::Union{Dataset,Attribute}, d) = d > ndims(dset) ? 1 : size(dset)[d]
-length(dset::Union{Dataset,Attribute}) = prod(size(dset))
-ndims(dset::Union{Dataset,Attribute}) = length(size(dset))
-function eltype(dset::Union{Dataset,Attribute})
+Base.size(dset::Union{Dataset,Attribute}, d) = d > ndims(dset) ? 1 : size(dset)[d]
+Base.length(dset::Union{Dataset,Attribute}) = prod(size(dset))
+Base.ndims(dset::Union{Dataset,Attribute}) = length(size(dset))
+function Base.eltype(dset::Union{Dataset,Attribute})
     T = Any
     dtype = datatype(dset)
     try
@@ -970,7 +965,7 @@ function Base.keys(x::Attributes)
 end
 
 # iteration by objects
-function iterate(parent::Union{File,Group}, iter = (1,nothing))
+function Base.iterate(parent::Union{File,Group}, iter = (1,nothing))
     n, prev_obj = iter
     prev_obj ≢ nothing && close(prev_obj)
     n > length(parent) && return nothing
@@ -978,10 +973,10 @@ function iterate(parent::Union{File,Group}, iter = (1,nothing))
     return (obj, (n+1,obj))
 end
 
-lastindex(dset::Dataset) = length(dset)
-lastindex(dset::Dataset, d::Int) = size(dset, d)
+Base.lastindex(dset::Dataset) = length(dset)
+Base.lastindex(dset::Dataset, d::Int) = size(dset, d)
 
-function parent(obj::Union{File, Group, Dataset})
+function Base.parent(obj::Union{File,Group,Dataset})
     f = file(obj)
     path = name(obj)
     if length(path) == 1
@@ -1034,7 +1029,7 @@ function datatype(str::VLen{C}) where {C<:CharType}
     Datatype(h5t_vlen_create(type_id))
 end
 
-sizeof(dtype::Datatype) = h5t_get_size(dtype)
+Base.sizeof(dtype::Datatype) = h5t_get_size(dtype)
 
 # Get the dataspace of a dataset
 dataspace(dset::Dataset) = Dataspace(h5d_get_space(checkvalid(dset).id))
@@ -1095,7 +1090,7 @@ See [SWMR documentation](https://portal.hdfgroup.org/display/HDF5/Single+Writer+
 start_swmr_write(h5::File) = h5f_start_swmr_write(h5.id)
 
 refresh(ds::Dataset) = h5d_refresh(checkvalid(ds).id)
-flush(ds::Dataset) = h5d_flush(checkvalid(ds).id)
+Base.flush(ds::Dataset) = h5d_flush(checkvalid(ds).id)
 
 # Generic read functions
 for (fsym, osym, ptype) in
@@ -1116,14 +1111,14 @@ for (fsym, osym, ptype) in
 end
 
 # Datafile.jl defines generic read for multiple datasets, so we cannot simply add properties here.
-function read(parent::Union{File,Group}, name::AbstractString; pv...)
+function Base.read(parent::Union{File,Group}, name::AbstractString; pv...)
     obj = getindex(parent, name; pv...)
     val = read(obj)
     close(obj)
     val
 end
 
-function read(parent::Union{File,Group}, name_type_pair::Pair{<:AbstractString,DataType}; pv...)
+function Base.read(parent::Union{File,Group}, name_type_pair::Pair{<:AbstractString,DataType}; pv...)
     obj = getindex(parent, name_type_pair[1]; pv...)
     val = read(obj, name_type_pair[2])
     close(obj)
@@ -1135,20 +1130,20 @@ end
 # This infers the Julia type from the HDF5.Datatype. Specific file formats should provide their own read(dset).
 const DatasetOrAttribute = Union{Dataset,Attribute}
 
-function read(obj::DatasetOrAttribute)
+function Base.read(obj::DatasetOrAttribute)
     dtype = datatype(obj)
     T = get_jl_type(dtype)
     read(obj, T)
 end
 
-function getindex(dset::Dataset, I...)
+function Base.getindex(dset::Dataset, I...)
     dtype = datatype(dset)
     T = get_jl_type(dtype)
     read(dset, T, I...)
 end
 
 # generic read function
-function read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
+function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
     !isconcretetype(T) && error("type $T is not concrete")
     !isempty(I) && obj isa Attribute && error("HDF5 attributes do not support hyperslab selections")
 
@@ -1213,7 +1208,7 @@ function read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
 end
 # `Type{String}` does not have a definite size, so the previous method does not accept
 # it even though it will return a `String`. This explicit overload allows that usage.
-function read(obj::DatasetOrAttribute, ::Type{String}, I...)
+function Base.read(obj::DatasetOrAttribute, ::Type{String}, I...)
     dtype = datatype(obj)
     try
         T = get_jl_type(dtype)
@@ -1225,7 +1220,7 @@ function read(obj::DatasetOrAttribute, ::Type{String}, I...)
 end
 
 # Read OPAQUE datasets and attributes
-function read(obj::DatasetOrAttribute, ::Type{Opaque})
+function Base.read(obj::DatasetOrAttribute, ::Type{Opaque})
     local buf
     local len
     local tag
@@ -1265,7 +1260,7 @@ end
 unpad(s, pad::Integer) = unpad(String(s), pad)
 
 # Dereference
-function getindex(parent::Union{File,Group,Dataset}, r::Reference)
+function Base.getindex(parent::Union{File,Group,Dataset}, r::Reference)
     r == Reference() && error("Reference is null")
     obj_id = h5r_dereference(checkvalid(parent).id, H5P_DEFAULT, H5R_OBJECT, r)
     h5object(obj_id, parent)
@@ -1287,7 +1282,7 @@ do_reclaim(::Type{T}) where {T} = false
 do_reclaim(::Type{NamedTuple{T,U}}) where {U,T} = any(i -> do_reclaim(fieldtype(U,i)), 1:fieldcount(U))
 do_reclaim(::Type{T}) where T <: Union{Cstring,VariableArray} = true
 
-read(attr::Attributes, name::AbstractString) = a_read(attr.parent, name)
+Base.read(attr::Attributes, name::AbstractString) = a_read(attr.parent, name)
 
 # Reading with mmap
 function iscontiguous(obj::Dataset)
@@ -1363,7 +1358,7 @@ function readmmap(obj::Dataset)
 end
 
 # Generic write
-function write(parent::Union{File,Group}, name1::AbstractString, val1, name2::AbstractString, val2, nameval...) # FIXME: remove?
+function Base.write(parent::Union{File,Group}, name1::AbstractString, val1, name2::AbstractString, val2, nameval...) # FIXME: remove?
     if !iseven(length(nameval))
         error("name, value arguments must come in pairs")
     end
@@ -1435,7 +1430,7 @@ end
 
 # Write to already-created objects
 # Scalars
-function write(obj::DatasetOrAttribute, x::Union{T,Array{T}}) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}}
+function Base.write(obj::DatasetOrAttribute, x::Union{T,Array{T}}) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}}
     dtype = datatype(x)
     try
         writearray(obj, dtype.id, x)
@@ -1444,7 +1439,7 @@ function write(obj::DatasetOrAttribute, x::Union{T,Array{T}}) where {T<:Union{Sc
     end
 end
 # VLEN types
-function write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{ScalarType,CharType}}
+function Base.write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{ScalarType,CharType}}
     dtype = datatype(data)
     try
         writearray(obj, dtype.id, data)
@@ -1453,10 +1448,10 @@ function write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{ScalarTyp
     end
 end
 # For plain files and groups, let "write(obj, name, val; properties...)" mean "d_write"
-write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}} =
+Base.write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}} =
     d_write(parent, name, data; pv...)
 # For datasets, "write(dset, name, val; properties...)" means "a_write"
-write(parent::Dataset, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,<:AbstractString}} =
+Base.write(parent::Dataset, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,<:AbstractString}} =
     a_write(parent, name, data; pv...)
 
 
@@ -1467,7 +1462,7 @@ Base.axes(dset::Dataset) = map(Base.OneTo, size(dset))
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
 
-setindex!(dset::Dataset, x, I::Union{AbstractRange,Integer,Colon}...) =
+Base.setindex!(dset::Dataset, x, I::Union{AbstractRange,Integer,Colon}...) =
     _setindex!(dset, x, Base.to_indices(dset, I)...)
 function _setindex!(dset::Dataset, X::Array, I::Union{AbstractRange{Int},Int}...)
     T = hdf5_to_julia(dset)
@@ -1580,7 +1575,7 @@ struct ChunkStorage
     dataset::Dataset
 end
 
-function setindex!(chunk_storage::ChunkStorage, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer...)
+function Base.setindex!(chunk_storage::ChunkStorage, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer...)
     do_write_chunk(chunk_storage.dataset, hsize_t.(index), v[2], UInt32(v[1]))
 end
 
