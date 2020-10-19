@@ -707,7 +707,7 @@ end
 function g_create(parent::Union{File,Group}, path::AbstractString,
                   lcpl::Properties=_link_properties(path),
                   dcpl::Properties=DEFAULT_PROPERTIES)
-    Group(h5g_create(checkvalid(parent).id, path, lcpl.id, dcpl.id), file(parent))
+    Group(h5g_create(checkvalid(parent), path, lcpl, dcpl), file(parent))
 end
 function g_create(f::Function, parent::Union{File,Group}, args...)
     g = g_create(parent, args...)
@@ -721,7 +721,7 @@ end
 function d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace,
                   lcpl::Properties, dcpl::Properties,
                   dapl::Properties, dxpl::Properties)
-    Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, lcpl.id, dcpl.id, dapl.id), file(parent), dxpl)
+    Dataset(h5d_create(checkvalid(parent), path, dtype, dspace, lcpl, dcpl, dapl), file(parent), dxpl)
 end
 
 # Setting dset creation properties with name/value pairs
@@ -729,7 +729,7 @@ function d_create(parent::Union{File,Group}, path::AbstractString, dtype::Dataty
     dcpl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P_DATASET_CREATE; pv...)
     dxpl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P_DATASET_XFER; pv...)
     dapl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P_DATASET_ACCESS; pv...)
-    Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, _link_properties(path), dcpl.id, dapl.id), file(parent), dxpl)
+    Dataset(h5d_create(checkvalid(parent), path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
 end
 d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Dims; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
 d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
@@ -757,7 +757,7 @@ function t_commit(parent::Union{File,Group}, path::String, dtype::Datatype, lcpl
 end
 t_commit(parent::Union{File,Group}, path::String, dtype::Datatype) = t_commit(parent, path, dtype, p_create(H5P_LINK_CREATE))
 
-a_create(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace) = Attribute(h5a_create(checkvalid(parent).id, name, dtype.id, dspace.id), file(parent))
+a_create(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace) = Attribute(h5a_create(checkvalid(parent), name, dtype, dspace), file(parent))
 
 function _prop_get(p::Properties, name::Symbol)
     class = p.class
