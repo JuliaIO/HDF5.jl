@@ -650,7 +650,7 @@ fd(obj::Object) = h5i_get_file_id(checkvalid(obj).id)
 flush(f::Union{Object,Attribute,Datatype,File}, scope = H5F_SCOPE_GLOBAL) = h5f_flush(checkvalid(f).id, scope)
 
 # Open objects
-g_open(parent::Union{File,Group}, name::String, apl::Properties=DEFAULT_PROPERTIES) = Group(h5g_open(checkvalid(parent).id, name, apl.id), file(parent))
+g_open(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Group(h5g_open(checkvalid(parent).id, name, apl.id), file(parent))
 d_open(parent::Union{File,Group}, name::String, apl::Properties=DEFAULT_PROPERTIES, xpl::Properties=DEFAULT_PROPERTIES) = Dataset(h5d_open(checkvalid(parent).id, name, apl.id), file(parent), xpl)
 t_open(parent::Union{File,Group}, name::String, apl::Properties=DEFAULT_PROPERTIES) = Datatype(h5t_open(checkvalid(parent).id, name, apl.id), file(parent))
 a_open(parent::Union{File,Object}, name::String) = Attribute(h5a_open(checkvalid(parent).id, name, H5P_DEFAULT), file(parent))
@@ -662,12 +662,12 @@ function h5object(obj_id::hid_t, parent)
     obj_type == H5I_DATASET ? Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
 end
-o_open(parent, path::String) = h5object(h5o_open(checkvalid(parent).id, path), parent)
-function gettype(parent, path::String)
-    obj_id = h5o_open(checkvalid(parent).id, path)
-    t = h5i_get_type(obj_id)
+o_open(parent, path::AbstractString) = h5object(h5o_open(checkvalid(parent).id, path), parent)
+function gettype(parent, path::AbstractString)
+    obj_id = h5o_open(checkvalid(parent), path)
+    obj_type = h5i_get_type(obj_id)
     h5o_close(obj_id)
-    t
+    return obj_type
 end
 # Get the root group
 root(h5file::File) = g_open(h5file, "/")
@@ -677,7 +677,7 @@ root(obj::Union{Group,Dataset}) = g_open(file(obj), "/")
 getindex(dset::Dataset, name::String) = a_open(dset, name)
 getindex(x::Attributes, name::String) = a_open(x.parent, name)
 
-function getindex(parent::Union{File,Group}, path::String; pv...)
+function getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     objtype = gettype(parent, path)
     if objtype == H5I_DATASET
         dapl = p_create(H5P_DATASET_ACCESS; pv...)
@@ -1809,7 +1809,7 @@ h5g_create(obj_id, name) = h5g_create(obj_id, name, H5P_DEFAULT, H5P_DEFAULT, H5
 h5g_create(obj_id, name, lcpl_id, gcpl_id) = h5g_create(obj_id, name, lcpl_id, gcpl_id, H5P_DEFAULT)
 h5g_open(file_id::hid_t, name::String) = h5g_open(file_id, name, H5P_DEFAULT)
 h5l_exists(loc_id::hid_t, name::String) = h5l_exists(loc_id, name, H5P_DEFAULT)
-h5o_open(obj_id::hid_t, name::String) = h5o_open(obj_id, name, H5P_DEFAULT)
+h5o_open(obj_id, name) = h5o_open(obj_id, name, H5P_DEFAULT)
 #h5s_get_simple_extent_ndims(space_id::hid_t) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 h5t_get_native_type(type_id::hid_t) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
 

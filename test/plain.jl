@@ -817,6 +817,9 @@ hfile = h5open(fn, "w")
 @test_nowarn d_create(hfile, GenericString("dset1"), datatype(Int), dataspace((1,)))
 @test_nowarn a_create(hfile["dset1"], GenericString("meta1"), datatype(Bool), dataspace((1,)))
 
+hfile[GenericString("group1")]
+
+
 memtype_id = HDF5.h5t_copy(HDF5.H5T_NATIVE_DOUBLE)
 dt = HDF5.Datatype(memtype_id)
 @test !HDF5.h5t_committed(dt)
