@@ -837,6 +837,11 @@ t_commit(hfile, GenericString("dt"), dt)
 array_of_strings = ["test",]
 write(hfile, "array_of_strings", array_of_strings)
 attrs(hfile)["ref_test"] = HDF5.Reference(hfile, GenericString("array_of_strings"))
-@test read(attrs(hfile)["ref_test"]) === HDF5.Reference(f, "array_of_strings")
+@test read(attrs(hfile)["ref_test"]) === HDF5.Reference(hfile, "array_of_strings")
+
+hfile["test"] = 17.2
+@test_nowarn o_delete(hfile, GenericString("test"))
+@test_nowarn a_delete(dset1, GenericString("meta1"))
+
 
 end

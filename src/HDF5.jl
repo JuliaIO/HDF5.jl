@@ -863,10 +863,9 @@ function p_create(class; pv...)
 end
 
 # Delete objects
-a_delete(parent::Union{File,Object}, path::String) = h5a_delete(checkvalid(parent).id, path)
-o_delete(parent::Union{File,Group}, path::String, lapl::Properties) = h5l_delete(checkvalid(parent).id, path, lapl.id)
-o_delete(parent::Union{File,Group}, path::String) = h5l_delete(checkvalid(parent).id, path, H5P_DEFAULT)
-o_delete(obj::Object) = o_delete(parent(obj), ascii(split(name(obj),"/")[end]))
+a_delete(parent::Union{File,Object}, path::AbstractString) = h5a_delete(checkvalid(parent), path)
+o_delete(parent::Union{File,Group}, path::AbstractString, lapl::Properties=DEFAULT_PROPERTIES) = h5l_delete(checkvalid(parent), path, lapl)
+o_delete(obj::Object) = o_delete(parent(obj), ascii(split(name(obj),"/")[end])) # FIXME: remove ascii?
 
 # Copy objects
 o_copy(src_parent::Union{File,Group}, src_path::String, dst_parent::Union{File,Group}, dst_path::String) = h5o_copy(checkvalid(src_parent).id, src_path, checkvalid(dst_parent).id, dst_path, H5P_DEFAULT, _link_properties(dst_path))
