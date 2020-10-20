@@ -868,8 +868,8 @@ o_delete(parent::Union{File,Group}, path::AbstractString, lapl::Properties=DEFAU
 o_delete(obj::Object) = o_delete(parent(obj), ascii(split(name(obj),"/")[end])) # FIXME: remove ascii?
 
 # Copy objects
-o_copy(src_parent::Union{File,Group}, src_path::String, dst_parent::Union{File,Group}, dst_path::String) = h5o_copy(checkvalid(src_parent).id, src_path, checkvalid(dst_parent).id, dst_path, H5P_DEFAULT, _link_properties(dst_path))
-o_copy(src_obj::Object, dst_parent::Union{File,Group}, dst_path::String) = h5o_copy(checkvalid(src_obj).id, ".", checkvalid(dst_parent).id, dst_path, H5P_DEFAULT, _link_properties(dst_path))
+o_copy(src_parent::Union{File,Group}, src_path::AbstractString, dst_parent::Union{File,Group}, dst_path::AbstractString) = h5o_copy(checkvalid(src_parent), src_path, checkvalid(dst_parent), dst_path, H5P_DEFAULT, _link_properties(dst_path))
+o_copy(src_obj::Object, dst_parent::Union{File,Group}, dst_path::AbstractString) = h5o_copy(checkvalid(src_obj), ".", checkvalid(dst_parent), dst_path, H5P_DEFAULT, _link_properties(dst_path))
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute

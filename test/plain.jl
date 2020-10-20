@@ -829,13 +829,6 @@ dset1 = hfile["dset1"]
 @test_nowarn dset1[GenericString("meta1")]
 @test_nowarn dset1[GenericString("x")] = 2
 
-# transient types
-memtype_id = HDF5.h5t_copy(HDF5.H5T_NATIVE_DOUBLE)
-dt = HDF5.Datatype(memtype_id)
-@test !HDF5.h5t_committed(dt)
-t_commit(hfile, GenericString("dt"), dt)
-@test HDF5.h5t_committed(dt)
-
 array_of_strings = ["test",]
 write(hfile, "array_of_strings", array_of_strings)
 @test_nowarn attrs(hfile)[GenericString("ref_test")] = HDF5.Reference(hfile, GenericString("array_of_strings"))
@@ -845,14 +838,18 @@ hfile["test"] = 17.2
 @test_nowarn o_delete(hfile, GenericString("test"))
 @test_nowarn a_delete(dset1, GenericString("meta1"))
 
-
+# transient types
+memtype_id = HDF5.h5t_copy(HDF5.H5T_NATIVE_DOUBLE)
+dt = HDF5.Datatype(memtype_id)
+@test !HDF5.h5t_committed(dt)
+t_commit(hfile, GenericString("dt"), dt)
+@test HDF5.h5t_committed(dt)
 
 dt = datatype(Int)
 ds = dataspace(0)
 d = d_create(hfile, GenericString("d"), dt, ds)
 g = g_create(hfile, GenericString("g"))
 a = a_create(hfile, GenericString("a"), dt, ds)
-
 
 for obj in (d, g)
     a_write(obj, GenericString("a"), 1)
@@ -870,5 +867,12 @@ end
 
 # test writing multiple variable
 write(hfile, GenericString("a1"), rand(2,2), GenericString("a2"), rand(2,2))
+
+# copy methods
+d1 = d_create(hfile, GenericString("d1"), dt, ds)
+d1["x"] = 32
+o_copy(hfile, GenericString("d1"), hfile, GenericString("d1copy1"))
+o_copy(d1, hfile, GenericString("d1copy2"))
+
 
 end
