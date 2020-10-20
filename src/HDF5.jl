@@ -873,7 +873,7 @@ o_copy(src_obj::Object, dst_parent::Union{File,Group}, dst_path::String) = h5o_c
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
-setindex!(dset::Dataset, val, name::AbstractString) = (@show "NO"; a_write(dset, name, val))
+setindex!(dset::Dataset, val, name::AbstractString) = a_write(dset, name, val)
 setindex!(x::Attributes, val, name::AbstractString) = a_write(x.parent, name, val)
 # Getting and setting properties: p[:chunk] = dims, p[:compress] = 6
 getindex(p::Properties, name::Symbol) = _prop_get(checkvalid(p), name)
@@ -1453,10 +1453,10 @@ function write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{ScalarTyp
     end
 end
 # For plain files and groups, let "write(obj, name, val; properties...)" mean "d_write"
-write(parent::Union{File,Group}, name::String, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
+write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
     d_write(parent, name, data; pv...)
 # For datasets, "write(dset, name, val; properties...)" means "a_write"
-write(parent::Dataset, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:ScalarType,String} =
+write(parent::Dataset, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String}} =
     a_write(parent, name, data; pv...)
 
 

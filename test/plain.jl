@@ -857,6 +857,7 @@ a = a_create(hfile, GenericString("a"), dt, ds)
 for obj in (d, g)
     a_write(obj, GenericString("a"), 1)
     a_read(obj, GenericString("a"))
+    write(obj, GenericString("aa"), 1)
 end
 
 for obj in (hfile,)
