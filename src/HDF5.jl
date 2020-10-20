@@ -420,7 +420,7 @@ function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool
         else
             flag = swmr ? H5F_ACC_RDONLY|H5F_ACC_SWMR_READ : H5F_ACC_RDONLY
         end
-        fid = h5f_open(filename, flag, apl.id)
+        fid = h5f_open(filename, flag, apl)
     end
     if close_apl
         # Close properties manually to avoid errors when the file is
@@ -1778,7 +1778,7 @@ end
 h5a_create(loc_id, name, type_id, space_id) = h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P_DEFAULT)
 h5a_open(obj_id, name) = h5a_open(obj_id, name, H5P_DEFAULT)
 h5d_create(loc_id, name, type_id, space_id) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
-h5d_open(obj_id::hid_t, name::String) = h5d_open(obj_id, name, H5P_DEFAULT)
+h5d_open(obj_id, name) = h5d_open(obj_id, name, H5P_DEFAULT)
 function h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::hid_t=H5P_DEFAULT)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
     h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
@@ -1803,7 +1803,7 @@ function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::hid_t
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, vp)
 end
 h5f_create(filename) = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)
-h5f_open(filename::String, mode) = h5f_open(filename, mode, H5P_DEFAULT)
+h5f_open(filename, mode) = h5f_open(filename, mode, H5P_DEFAULT)
 h5g_create(obj_id, name) = h5g_create(obj_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
 h5g_create(obj_id, name, lcpl_id, gcpl_id) = h5g_create(obj_id, name, lcpl_id, gcpl_id, H5P_DEFAULT)
 h5g_open(file_id, name) = h5g_open(file_id, name, H5P_DEFAULT)

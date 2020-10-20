@@ -811,6 +811,9 @@ end # haskey tests
 
 fn = GenericString(tempname())
 hfile = h5open(fn, "w")
+close(hfile)
+hfile = h5open(fn); close(hfile)
+hfile = h5open(fn, "w")
 
 @test_nowarn g_create(hfile, GenericString("group1"))
 @test_nowarn d_create(hfile, GenericString("dset1"), datatype(Int), dataspace((1,)))
