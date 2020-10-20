@@ -1384,7 +1384,7 @@ end
 # Create datasets and attributes with "native" types, but don't write the data.
 # The return syntax is: dset, dtype = d_create(parent, name, data; properties...)
 
-function d_create(parent::Union{File,Group}, name::String, data; pv...)
+function d_create(parent::Union{File,Group}, name::AbstractString, data; pv...)
     dtype = datatype(data)
     dspace = dataspace(data)
     obj = try
@@ -1394,7 +1394,7 @@ function d_create(parent::Union{File,Group}, name::String, data; pv...)
     end
     return obj, dtype
 end
-function a_create(parent::Union{File,Object}, name::String, data; pv...)
+function a_create(parent::Union{File,Object}, name::AbstractString, data; pv...)
     dtype = datatype(data)
     dspace = dataspace(data)
     obj = try

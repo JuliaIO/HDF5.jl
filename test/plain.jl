@@ -812,16 +812,17 @@ end # haskey tests
 fn = GenericString(tempname())
 hfile = h5open(fn, "w")
 
-# test that these work with GenericString
-# creation
 @test_nowarn g_create(hfile, GenericString("group1"))
 @test_nowarn d_create(hfile, GenericString("dset1"), datatype(Int), dataspace((1,)))
-# reading
+@test_nowarn d_create(hfile, GenericString("dset2"), 1)
+
 @test_nowarn hfile[GenericString("group1")]
 @test_nowarn hfile[GenericString("dset1")]
 
+
 dset1 = hfile["dset1"]
 @test_nowarn a_create(dset1, GenericString("meta1"), datatype(Bool), dataspace((1,)))
+@test_nowarn a_create(dset1, GenericString("meta2"), 1)
 @test_nowarn  dset1[GenericString("meta1")]
 
 
