@@ -845,4 +845,26 @@ hfile["test"] = 17.2
 @test_nowarn a_delete(dset1, GenericString("meta1"))
 
 
+
+dt = datatype(Int)
+ds = dataspace(0)
+d = d_create(hfile, GenericString("d"), dt, ds)
+g = g_create(hfile, GenericString("g"))
+a = a_create(hfile, GenericString("a"), dt, ds)
+
+
+for obj in (d, g)
+    a_write(obj, GenericString("a"), 1)
+    a_read(obj, GenericString("a"))
+end
+
+for obj in (hfile,)
+    d_open(obj, GenericString("d"))
+    d_write(obj, GenericString("dd"), 1)
+    d_read(obj, GenericString("dd"))
+    read(obj, GenericString("dd"))
+    read(obj, GenericString("dd")=>Int)
+end
+
+
 end

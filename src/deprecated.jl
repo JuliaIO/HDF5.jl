@@ -81,11 +81,11 @@ for (fsym, ptype) in ((:d_create, Union{File, Group}),
                       (:a_create, Union{File, Object}),
                      )
     chainsym = Symbol(:__, fsym)
-    depsig = "$fsym(parent::$ptype, name::String, data, plists::HDF5Properties...)"
-    usesig = "$fsym(parent::$ptype, name::String, data; properties...)"
+    depsig = "$fsym(parent::$ptype, name::AbstractString, data, plists::HDF5Properties...)"
+    usesig = "$fsym(parent::$ptype, name::AbstractString, data; properties...)"
     warnstr = "`$depsig` with property lists is deprecated, use `$usesig` with keywords instead"
     @eval begin
-        function ($fsym)(parent::$ptype, name::String, data, plists::Properties...)
+        function ($fsym)(parent::$ptype, name::AbstractString, data, plists::Properties...)
             depwarn($warnstr, $(QuoteNode(fsym)))
             dtype = datatype(data)
             dspace = dataspace(data)
@@ -102,11 +102,11 @@ for (fsym, ptype) in ((:d_write, Union{File,Group}),
                       (:a_write, Union{File,Object}),
                      )
     crsym = Symbol(:__, replace(string(fsym), "write" => "create"))
-    depsig = "$fsym(parent::$ptype, name::String, data, plists::HDF5Properties...)"
-    usesig = "$fsym(parent::$ptype, name::String, data; properties...)"
+    depsig = "$fsym(parent::$ptype, name::AbstractString, data, plists::HDF5Properties...)"
+    usesig = "$fsym(parent::$ptype, name::AbstractString, data; properties...)"
     warnstr = "`$depsig` with property lists is deprecated, use `$usesig` with keywords instead"
     @eval begin
-        function ($fsym)(parent::$ptype, name::String, data, plists::Properties...)
+        function ($fsym)(parent::$ptype, name::AbstractString, data, plists::Properties...)
             depwarn($warnstr, $(QuoteNode(fsym)))
             dtype = datatype(data)
             obj = ($crsym)(parent, name, dtype, dataspace(data), plists...)

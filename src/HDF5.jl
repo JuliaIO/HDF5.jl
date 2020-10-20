@@ -1102,7 +1102,7 @@ for (fsym, osym, ptype) in
     ((:d_read, :d_open, Union{File,Group}),
      (:a_read, :a_open, Union{File,Group,Dataset,Datatype}))
     @eval begin
-        function ($fsym)(parent::$ptype, name::String)
+        function ($fsym)(parent::$ptype, name::AbstractString)
             local ret
             obj = ($osym)(parent, name)
             try
@@ -1116,14 +1116,14 @@ for (fsym, osym, ptype) in
 end
 
 # Datafile.jl defines generic read for multiple datasets, so we cannot simply add properties here.
-function read(parent::Union{File,Group}, name::String; pv...)
+function read(parent::Union{File,Group}, name::AbstractString; pv...)
     obj = getindex(parent, name; pv...)
     val = read(obj)
     close(obj)
     val
 end
 
-function read(parent::Union{File,Group}, name_type_pair::Pair{String,DataType}; pv...)
+function read(parent::Union{File,Group}, name_type_pair::Pair{<:AbstractString,DataType}; pv...)
     obj = getindex(parent, name_type_pair[1]; pv...)
     val = read(obj, name_type_pair[2])
     close(obj)
@@ -1406,7 +1406,7 @@ function a_create(parent::Union{File,Object}, name::AbstractString, data; pv...)
 end
 
 # Create and write, closing the objects upon exit
-function d_write(parent::Union{File,Group}, name::String, data; pv...)
+function d_write(parent::Union{File,Group}, name::AbstractString, data; pv...)
     obj, dtype = d_create(parent, name, data; pv...)
     try
         writearray(obj, dtype.id, data)
@@ -1419,7 +1419,7 @@ function d_write(parent::Union{File,Group}, name::String, data; pv...)
     end
     nothing
 end
-function a_write(parent::Union{File,Object}, name::String, data; pv...)
+function a_write(parent::Union{File,Object}, name::AbstractString, data; pv...)
     obj, dtype = a_create(parent, name, data; pv...)
     try
         writearray(obj, dtype.id, data)
