@@ -809,7 +809,7 @@ end # haskey tests
 
 @testset "AbstractString" begin
 
-fn = tempname()
+fn = GenericString(tempname())
 hfile = h5open(fn, "w")
 
 # test that these work with GenericString
@@ -832,5 +832,11 @@ dt = HDF5.Datatype(memtype_id)
 t_commit(hfile, GenericString("dt"), dt)
 @test HDF5.h5t_committed(dt)
 
+
+# Scalar reference values in attributes
+array_of_strings = ["test",]
+write(hfile, "array_of_strings", array_of_strings)
+attrs(hfile)["ref_test"] = HDF5.Reference(hfile, GenericString("array_of_strings"))
+@test read(attrs(hfile)["ref_test"]) === HDF5.Reference(f, "array_of_strings")
 
 end

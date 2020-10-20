@@ -287,9 +287,9 @@ end
 attrs(p::Union{File,Group,Dataset}) = Attributes(p)
 
 # Methods for reference types
-function Reference(parent::Union{File,Group,Dataset}, name::String)
+function Reference(parent::Union{File,Group,Dataset}, name::AbstractString)
     ref = Ref{hobj_ref_t}()
-    h5r_create(ref, checkvalid(parent).id, name, H5R_OBJECT, -1)
+    h5r_create(ref, checkvalid(parent), name, H5R_OBJECT, -1)
     return Reference(ref[])
 end
 ==(a::Reference, b::Reference) = a.r == b.r
@@ -410,7 +410,7 @@ function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool
     end
     if cr && (tr || !isfile(filename))
         flag = swmr ? H5F_ACC_TRUNC|H5F_ACC_SWMR_WRITE : H5F_ACC_TRUNC
-        fid = h5f_create(filename, flag, cpl.id, apl.id)
+        fid = h5f_create(filename, flag, cpl, apl)
     else
         if !h5f_is_hdf5(filename)
             error("This does not appear to be an HDF5 file")
@@ -675,7 +675,7 @@ root(obj::Union{Group,Dataset}) = g_open(file(obj), "/")
 # getindex syntax: obj2 = obj1[path]
 #getindex(parent::Union{HDF5File, HDF5Group}, path::String) = o_open(parent, path)
 getindex(dset::Dataset, name::AbstractString) = a_open(dset, name)
-getindex(x::Attributes, name::String) = a_open(x.parent, name)
+getindex(x::Attributes, name::AbstractString) = a_open(x.parent, name)
 
 function getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     objtype = gettype(parent, path)
@@ -875,7 +875,7 @@ o_copy(src_obj::Object, dst_parent::Union{File,Group}, dst_path::String) = h5o_c
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
 setindex!(dset::Dataset, val, name::String) = a_write(dset, name, val)
-setindex!(x::Attributes, val, name::String) = a_write(x.parent, name, val)
+setindex!(x::Attributes, val, name::AbstractString) = a_write(x.parent, name, val)
 # Getting and setting properties: p[:chunk] = dims, p[:compress] = 6
 getindex(p::Properties, name::Symbol) = _prop_get(checkvalid(p), name)
 function setindex!(p::Properties, val, name::Symbol)
@@ -1803,7 +1803,7 @@ function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::hid_t
     vp = vlenpack(v)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, vp)
 end
-h5f_create(filename::String) = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)
+h5f_create(filename) = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)
 h5f_open(filename::String, mode) = h5f_open(filename, mode, H5P_DEFAULT)
 h5g_create(obj_id, name) = h5g_create(obj_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
 h5g_create(obj_id, name, lcpl_id, gcpl_id) = h5g_create(obj_id, name, lcpl_id, gcpl_id, H5P_DEFAULT)
