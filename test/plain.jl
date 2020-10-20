@@ -823,8 +823,8 @@ hfile = h5open(fn, "w")
 dset1 = hfile["dset1"]
 @test_nowarn a_create(dset1, GenericString("meta1"), datatype(Bool), dataspace((1,)))
 @test_nowarn a_create(dset1, GenericString("meta2"), 1)
-@test_nowarn  dset1[GenericString("meta1")]
-
+@test_nowarn dset1[GenericString("meta1")]
+@test_nowarn dset1[GenericString("x")] = 2
 
 # transient types
 memtype_id = HDF5.h5t_copy(HDF5.H5T_NATIVE_DOUBLE)
@@ -833,12 +833,10 @@ dt = HDF5.Datatype(memtype_id)
 t_commit(hfile, GenericString("dt"), dt)
 @test HDF5.h5t_committed(dt)
 
-
-# Scalar reference values in attributes
 array_of_strings = ["test",]
 write(hfile, "array_of_strings", array_of_strings)
-attrs(hfile)["ref_test"] = HDF5.Reference(hfile, GenericString("array_of_strings"))
-@test read(attrs(hfile)["ref_test"]) === HDF5.Reference(hfile, "array_of_strings")
+@test_nowarn attrs(hfile)[GenericString("ref_test")] = HDF5.Reference(hfile, GenericString("array_of_strings"))
+@test read(attrs(hfile)[GenericString("ref_test")]) === HDF5.Reference(hfile, "array_of_strings")
 
 hfile["test"] = 17.2
 @test_nowarn o_delete(hfile, GenericString("test"))

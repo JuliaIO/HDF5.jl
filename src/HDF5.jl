@@ -873,7 +873,7 @@ o_copy(src_obj::Object, dst_parent::Union{File,Group}, dst_path::String) = h5o_c
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
-setindex!(dset::Dataset, val, name::String) = a_write(dset, name, val)
+setindex!(dset::Dataset, val, name::AbstractString) = (@show "NO"; a_write(dset, name, val))
 setindex!(x::Attributes, val, name::AbstractString) = a_write(x.parent, name, val)
 # Getting and setting properties: p[:chunk] = dims, p[:compress] = 6
 getindex(p::Properties, name::Symbol) = _prop_get(checkvalid(p), name)
