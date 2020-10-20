@@ -1363,7 +1363,7 @@ function readmmap(obj::Dataset)
 end
 
 # Generic write
-function write(parent::Union{File,Group}, name1::String, val1, name2::String, val2, nameval...)
+function write(parent::Union{File,Group}, name1::AbstractString, val1, name2::AbstractString, val2, nameval...) # FIXME: remove?
     if !iseven(length(nameval))
         error("name, value arguments must come in pairs")
     end
@@ -1371,7 +1371,7 @@ function write(parent::Union{File,Group}, name1::String, val1, name2::String, va
     write(parent, name2, val2)
     for i = 1:2:length(nameval)
         thisname = nameval[i]
-        if !isa(thisname, String)
+        if !isa(thisname, AbstractString)
             error("Argument ", i+5, " should be a string, but it's a ", typeof(thisname))
         end
         write(parent, thisname, nameval[i+1])

@@ -868,5 +868,7 @@ for obj in (hfile,)
     read(obj, GenericString("dd")=>Int)
 end
 
+# test writing multiple variable
+write(hfile, GenericString("a1"), rand(2,2), GenericString("a2"), rand(2,2))
 
 end
