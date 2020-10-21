@@ -673,7 +673,7 @@ end
 root(h5file::File) = g_open(h5file, "/")
 root(obj::Union{Group,Dataset}) = g_open(file(obj), "/")
 # getindex syntax: obj2 = obj1[path]
-#getindex(parent::Union{HDF5File, HDF5Group}, path::String) = o_open(parent, path)
+#getindex(parent::Union{HDF5File, HDF5Group}, path::String) = o_open(parent, path) # REM
 getindex(dset::Dataset, name::AbstractString) = a_open(dset, name)
 getindex(x::Attributes, name::AbstractString) = a_open(x.parent, name)
 
@@ -1563,13 +1563,12 @@ end
 
 # Link to bytes in an external file
 # If you need to link to multiple segments, use low-level interface
-function d_create_external(parent::Union{File,Group}, name::String, filepath::String, t, sz::Dims, offset::Integer)
+function d_create_external(parent::Union{File,Group}, name::AbstractString, filepath::AbstractString, t, sz::Dims, offset::Integer=0)
     checkvalid(parent)
-    p = p_create(H5P_DATASET_CREATE)
-    h5p_set_external(p, filepath, Int(offset), prod(sz)*sizeof(t))
-    d_create(parent, name, datatype(t), dataspace(sz), Properties(), p)
+    dcpl  = p_create(H5P_DATASET_CREATE)
+    h5p_set_external(dcpl , filepath, Int(offset), prod(sz)*sizeof(t)) # TODO: allow H5F_UNLIMITED
+    d_create(parent, name, datatype(t), dataspace(sz); dcpl=dcpl)
 end
-d_create_external(parent::Union{File,Group}, name::String, filepath::String, t::Type, sz::Dims) = d_create_external(parent, name, filepath, t, sz, 0)
 
 function do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
     checkvalid(dataset)

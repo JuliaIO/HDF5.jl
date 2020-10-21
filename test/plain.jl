@@ -900,4 +900,7 @@ end
 @test_nowarn h5writeattr(fn, GenericString("W"), Dict("a" => 1, "b" => 2))
 @test_nowarn h5readattr(fn, GenericString("W"))
 
+fn_external = GenericString(tempname())
+dset = d_create_external(hfile, "ext", fn_external, Int, (10,20))
+
 end
