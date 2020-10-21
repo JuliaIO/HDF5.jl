@@ -527,7 +527,7 @@ function h5read(filename, name_type_pair::Pair{<:AbstractString,DataType}; pv...
     dat
 end
 
-function h5read(filename, name::String, indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}}; pv...)
+function h5read(filename, name::AbstractString, indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}}; pv...)
     local dat
     fid = h5open(filename, "r"; pv...)
     try

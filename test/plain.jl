@@ -847,37 +847,38 @@ t_commit(hfile, GenericString("dt"), dt)
 
 dt = datatype(Int)
 ds = dataspace(0)
-d = d_create(hfile, GenericString("d"), dt, ds)
-g = g_create(hfile, GenericString("g"))
-a = a_create(hfile, GenericString("a"), dt, ds)
+@test_nowarn d = d_create(hfile, GenericString("d"), dt, ds)
+@test_nowarn g = g_create(hfile, GenericString("g"))
+@test_nowarn a = a_create(hfile, GenericString("a"), dt, ds)
 
 for obj in (d, g)
-    a_write(obj, GenericString("a"), 1)
-    a_read(obj, GenericString("a"))
-    write(obj, GenericString("aa"), 1)
+   @test_nowarn a_write(obj, GenericString("a"), 1)
+   @test_nowarn a_read(obj, GenericString("a"))
+   @test_nowarn write(obj, GenericString("aa"), 1)
 end
 
 for obj in (hfile,)
-    d_open(obj, GenericString("d"))
-    d_write(obj, GenericString("dd"), 1)
-    d_read(obj, GenericString("dd"))
-    read(obj, GenericString("dd"))
-    read(obj, GenericString("dd")=>Int)
+    @test_nowarn d_open(obj, GenericString("d"))
+    @test_nowarn d_write(obj, GenericString("dd"), 1)
+    @test_nowarn d_read(obj, GenericString("dd"))
+    @test_nowarn read(obj, GenericString("dd"))
+    @test_nowarn read(obj, GenericString("dd")=>Int)
 end
 
 # test writing multiple variable
-write(hfile, GenericString("a1"), rand(2,2), GenericString("a2"), rand(2,2))
+@test_nowarn write(hfile, GenericString("a1"), rand(2,2), GenericString("a2"), rand(2,2))
 
 # copy methods
 d1 = d_create(hfile, GenericString("d1"), dt, ds)
 d1["x"] = 32
-o_copy(hfile, GenericString("d1"), hfile, GenericString("d1copy1"))
-o_copy(d1, hfile, GenericString("d1copy2"))
+@test_nowarn o_copy(hfile, GenericString("d1"), hfile, GenericString("d1copy1"))
+@test_nowarn o_copy(d1, hfile, GenericString("d1copy2"))
 
 fn = GenericString(tempname())
 A = Matrix(reshape(1:120, 15, 8))
-h5write(fn, GenericString("A"), A)
-Ar = h5read(fn, GenericString("A"))
+@test_nowarn h5write(fn, GenericString("A"), A)
+@test_nowarn h5read(fn, GenericString("A"))
+Ar = h5read(fn, GenericString("A"), (2:3:15, 3:5))
 
 h5write(fn, GenericString("x"), 1)
 h5read(fn, GenericString("x") => Int)
