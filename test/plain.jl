@@ -847,9 +847,9 @@ t_commit(hfile, GenericString("dt"), dt)
 
 dt = datatype(Int)
 ds = dataspace(0)
-@test_nowarn d = d_create(hfile, GenericString("d"), dt, ds)
-@test_nowarn g = g_create(hfile, GenericString("g"))
-@test_nowarn a = a_create(hfile, GenericString("a"), dt, ds)
+d = d_create(hfile, GenericString("d"), dt, ds)
+g = g_create(hfile, GenericString("g"))
+a = a_create(hfile, GenericString("a"), dt, ds)
 
 for obj in (d, g)
    @test_nowarn a_write(obj, GenericString("a"), 1)

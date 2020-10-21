@@ -124,9 +124,9 @@ for (fsym, ptype) in ((:d_write, Union{File,Group}),
 end
 function write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}},
                plists::Properties...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}}
-    depwarn("`write(parent::Union{HDF5.File, HDF5.Group}, name::String, data, plists::HDF5Properties...)` " *
+    depwarn("`write(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
-            "`write(parent::Union{HDF5.File, HDF5.Group}, name::String, data; properties...)` " *
+            "`write(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, data; properties...)` " *
             "with keywords instead.", :write)
     # We avoid using the d_write method to prevent double deprecation warnings.
     dtype = datatype(data)
@@ -143,9 +143,9 @@ function write(parent::Union{File,Group}, name::AbstractString, data::Union{T,Ab
 end
 function write(parent::Dataset, name::AbstractString, data::Union{T,AbstractArray{T}},
                plists::Properties...) where {T<:Union{ScalarType,String}}
-    depwarn("`write(parent::HDF5Dataset, name::String, data, plists::HDF5Properties...)` " *
+    depwarn("`write(parent::HDF5Dataset, name::AbstractString, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
-            "`write(parent::HDF5Dataset, name::String, data; properties...)` " *
+            "`write(parent::HDF5Dataset, name::AbstractString, data; properties...)` " *
             "with keywords instead.", :write)
     # We avoid using the a_write method to prevent double deprecation warnings.
     dtype = datatype(data)
