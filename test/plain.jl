@@ -910,3 +910,7 @@ fn_external = GenericString(tempname())
 dset = d_create_external(hfile, "ext", fn_external, Int, (10,20))
 
 end
+
+# length for FixedString
+fix = HDF5.FixedString{4,0}((b"test"...,))
+@test length(fix) == 4
