@@ -330,7 +330,7 @@ struct FixedString{N,PAD}
     data::NTuple{N,UInt8}
 end
 Base.length(::Type{FixedString{N,PAD}}) where {N,PAD} = N
-Base.length(::FixedString) where {T<:FixedString} = length(T)
+Base.length(str::FixedString) = length(typeof(str))
 pad(::Type{FixedString{N,PAD}}) where {N, PAD} = PAD
 pad(x::T) where {T<:FixedString} = pad(T)
 
