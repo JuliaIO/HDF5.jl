@@ -834,7 +834,7 @@ write(hfile, "array_of_strings", array_of_strings)
 @test_nowarn attrs(hfile)[GenericString("ref_test")] = HDF5.Reference(hfile, GenericString("array_of_strings"))
 @test read(attrs(hfile)[GenericString("ref_test")]) === HDF5.Reference(hfile, "array_of_strings")
 
-hfile["test"] = 17.2
+hfile[GenericString("test")] = 17.2
 @test_nowarn o_delete(hfile, GenericString("test"))
 @test_nowarn a_delete(dset1, GenericString("meta1"))
 
@@ -864,6 +864,7 @@ for obj in (hfile,)
     @test_nowarn read(obj, GenericString("dd"))
     @test_nowarn read(obj, GenericString("dd")=>Int)
 end
+read(attrs(hfile), GenericString("a"))
 
 # test writing multiple variable
 @test_nowarn write(hfile, GenericString("a1"), rand(2,2), GenericString("a2"), rand(2,2))

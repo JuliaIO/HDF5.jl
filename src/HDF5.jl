@@ -882,7 +882,7 @@ function setindex!(p::Properties, val, name::Symbol)
     return p
 end
 # Create a dataset with properties: obj[path, prop = val, ...] = val
-function setindex!(parent::Union{File,Group}, val, path::String; pv...)
+function setindex!(parent::Union{File,Group}, val, path::AbstractString; pv...)
     need_chunks = any(k in keys(chunked_props) for k in keys(pv))
     have_chunks = any(k == :chunk for k in keys(pv))
 
@@ -1287,7 +1287,7 @@ do_reclaim(::Type{T}) where {T} = false
 do_reclaim(::Type{NamedTuple{T,U}}) where {U,T} = any(i -> do_reclaim(fieldtype(U,i)), 1:fieldcount(U))
 do_reclaim(::Type{T}) where T <: Union{Cstring,VariableArray} = true
 
-read(attr::Attributes, name::String) = a_read(attr.parent, name)
+read(attr::Attributes, name::AbstractString) = a_read(attr.parent, name)
 
 # Reading with mmap
 function iscontiguous(obj::Dataset)
