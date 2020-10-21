@@ -539,7 +539,7 @@ function h5read(filename, name::AbstractString, indices::Tuple{Vararg{Union{Abst
     dat
 end
 
-function h5writeattr(filename, name::String, data::Dict)
+function h5writeattr(filename, name::AbstractString, data::Dict)
     fid = h5open(filename, "r+")
     try
         for x in keys(data)
@@ -550,7 +550,7 @@ function h5writeattr(filename, name::String, data::Dict)
     end
 end
 
-function h5readattr(filename, name::String)
+function h5readattr(filename, name::AbstractString)
     local dat
     fid = h5open(filename,"r")
     try

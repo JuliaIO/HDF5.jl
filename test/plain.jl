@@ -878,22 +878,25 @@ fn = GenericString(tempname())
 A = Matrix(reshape(1:120, 15, 8))
 @test_nowarn h5write(fn, GenericString("A"), A)
 @test_nowarn h5read(fn, GenericString("A"))
-Ar = h5read(fn, GenericString("A"), (2:3:15, 3:5))
+@test_nowarn h5read(fn, GenericString("A"), (2:3:15, 3:5))
 
-h5write(fn, GenericString("x"), 1)
-h5read(fn, GenericString("x") => Int)
+@test_nowarn h5write(fn, GenericString("x"), 1)
+@test_nowarn h5read(fn, GenericString("x") => Int)
 
 
-h5rewrite(fn) do fid
+@test_nowarn h5rewrite(fn) do fid
     g_create(fid, "mygroup") do g
         write(g, "x", 3.3)
     end
 end
-h5rewrite(fn) do fid
+@test_nowarn h5rewrite(fn) do fid
     g_create(fid, "mygroup") do g
         write(g, "y", 3.3)
     end
 end
 
+@test_nowarn h5write(fn, "W", [1 2; 3 4])
+@test_nowarn h5writeattr(fn, GenericString("W"), Dict("a" => 1, "b" => 2))
+@test_nowarn h5readattr(fn, GenericString("W"))
 
 end
