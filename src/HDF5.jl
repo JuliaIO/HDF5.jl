@@ -494,7 +494,7 @@ function h5rewrite(f::Function, filename::AbstractString, args...)
     end
 end
 
-function h5write(filename, name::String, data; pv...)
+function h5write(filename, name::AbstractString, data; pv...)
     fid = h5open(filename, "cw"; pv...)
     try
         write(fid, name, data)
@@ -503,7 +503,7 @@ function h5write(filename, name::String, data; pv...)
     end
 end
 
-function h5read(filename, name::String; pv...)
+function h5read(filename, name::AbstractString; pv...)
     local dat
     fid = h5open(filename, "r"; pv...)
     try
@@ -515,7 +515,7 @@ function h5read(filename, name::String; pv...)
     dat
 end
 
-function h5read(filename, name_type_pair::Pair{String,DataType}; pv...)
+function h5read(filename, name_type_pair::Pair{<:AbstractString,DataType}; pv...)
     local dat
     fid = h5open(filename, "r"; pv...)
     try

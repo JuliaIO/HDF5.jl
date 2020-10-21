@@ -874,5 +874,25 @@ d1["x"] = 32
 o_copy(hfile, GenericString("d1"), hfile, GenericString("d1copy1"))
 o_copy(d1, hfile, GenericString("d1copy2"))
 
+fn = GenericString(tempname())
+A = Matrix(reshape(1:120, 15, 8))
+h5write(fn, GenericString("A"), A)
+Ar = h5read(fn, GenericString("A"))
+
+h5write(fn, GenericString("x"), 1)
+h5read(fn, GenericString("x") => Int)
+
+
+h5rewrite(fn) do fid
+    g_create(fid, "mygroup") do g
+        write(g, "x", 3.3)
+    end
+end
+h5rewrite(fn) do fid
+    g_create(fid, "mygroup") do g
+        write(g, "y", 3.3)
+    end
+end
+
 
 end
