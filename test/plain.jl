@@ -856,6 +856,8 @@ for obj in (d, g)
    @test_nowarn a_read(obj, GenericString("a"))
    @test_nowarn write(obj, GenericString("aa"), 1)
 end
+@test_nowarn d_write(g, GenericString("ag"), GenericString("gg"))
+@test_nowarn d_write(g, GenericString("ag_array"), [GenericString("a1"), GenericString("a2")])
 
 for obj in (hfile,)
     @test_nowarn d_open(obj, GenericString("d"))

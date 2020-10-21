@@ -1014,13 +1014,13 @@ end
 datatype(x::Complex{T}) where {T<:ScalarType} = datatype(typeof(x))
 datatype(A::AbstractArray{Complex{T}}) where {T<:ScalarType} = datatype(eltype(A))
 
-function datatype(str::String)
+function datatype(str::AbstractString)
     type_id = h5t_copy(hdf5_type_id(typeof(str)))
     h5t_set_size(type_id, max(sizeof(str), 1))
     h5t_set_cset(type_id, cset(typeof(str)))
     Datatype(type_id)
 end
-function datatype(str::Array{S}) where {S<:String}
+function datatype(::Array{S}) where {S<:AbstractString}
     type_id = h5t_copy(hdf5_type_id(S))
     h5t_set_size(type_id, H5T_VARIABLE)
     h5t_set_cset(type_id, cset(S))
@@ -1043,7 +1043,7 @@ dataspace(attr::Attribute) = Dataspace(h5a_get_space(checkvalid(attr).id))
 
 # Create a dataspace from in-memory types
 dataspace(x::Union{T, Complex{T}}) where {T<:ScalarType} = Dataspace(h5s_create(H5S_SCALAR))
-dataspace(str::String) = Dataspace(h5s_create(H5S_SCALAR))
+dataspace(::AbstractString) = Dataspace(h5s_create(H5S_SCALAR))
 
 function _dataspace(sz::Dims{N}, max_dims::Union{Dims{N}, Tuple{}}=()) where N
     dims = hsize_t[sz[i] for i in N:-1:1]
@@ -1786,14 +1786,14 @@ function h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfe
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::String, xfer::hid_t=H5P_DEFAULT)
+function h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::AbstractString, xfer::hid_t=H5P_DEFAULT)
     ccall((:H5Dwrite, libhdf5), herr_t, (hid_t, hid_t, hid_t, hid_t, hid_t, Cstring), dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, str)
 end
 function h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::hid_t=H5P_DEFAULT) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, tmp)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{S}, xfer::hid_t=H5P_DEFAULT) where {S<:String}
+function h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{<:AbstractString}, xfer::hid_t=H5P_DEFAULT)
     p = Ref{Cstring}(strs)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, p)
 end
