@@ -855,7 +855,9 @@ for obj in (d, g)
    @test_nowarn a_write(obj, GenericString("a"), 1)
    @test_nowarn a_read(obj, GenericString("a"))
    @test_nowarn write(obj, GenericString("aa"), 1)
+   @test_nowarn attrs(obj)["attr1"] = GenericString("b")
 end
+@test_nowarn write(d, "attr2", GenericString("c"))
 @test_nowarn d_write(g, GenericString("ag"), GenericString("gg"))
 @test_nowarn d_write(g, GenericString("ag_array"), [GenericString("a1"), GenericString("a2")])
 
