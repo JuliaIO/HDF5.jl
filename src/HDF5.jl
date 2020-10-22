@@ -69,7 +69,7 @@ chartype(::Type{String}) = ASCIIChar
 stringtype(::Type{ASCIIChar}) = String
 stringtype(::Type{UTF8Char}) = String
 
-cset(::Type{String}) = H5T_CSET_UTF8
+cset(::Type{<:AbstractString}) = H5T_CSET_UTF8
 cset(::Type{UTF8Char}) = H5T_CSET_UTF8
 cset(::Type{ASCIIChar}) = H5T_CSET_ASCII
 
@@ -87,7 +87,7 @@ hdf5_type_id(::Type{Float32})   = H5T_NATIVE_FLOAT
 hdf5_type_id(::Type{Float64})   = H5T_NATIVE_DOUBLE
 hdf5_type_id(::Type{Reference}) = H5T_STD_REF_OBJ
 
-hdf5_type_id(::Type{S}) where {S<:AbstractString} = H5T_C_S1
+hdf5_type_id(::Type{<:AbstractString}) = H5T_C_S1
 
 const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
 const ScalarType = Union{BitsType,Reference}
@@ -287,9 +287,9 @@ end
 attrs(p::Union{File,Group,Dataset}) = Attributes(p)
 
 # Methods for reference types
-function Reference(parent::Union{File,Group,Dataset}, name::String)
+function Reference(parent::Union{File,Group,Dataset}, name::AbstractString)
     ref = Ref{hobj_ref_t}()
-    h5r_create(ref, checkvalid(parent).id, name, H5R_OBJECT, -1)
+    h5r_create(ref, checkvalid(parent), name, H5R_OBJECT, -1)
     return Reference(ref[])
 end
 ==(a::Reference, b::Reference) = a.r == b.r
@@ -410,7 +410,7 @@ function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool
     end
     if cr && (tr || !isfile(filename))
         flag = swmr ? H5F_ACC_TRUNC|H5F_ACC_SWMR_WRITE : H5F_ACC_TRUNC
-        fid = h5f_create(filename, flag, cpl.id, apl.id)
+        fid = h5f_create(filename, flag, cpl, apl)
     else
         if !h5f_is_hdf5(filename)
             error("This does not appear to be an HDF5 file")
@@ -420,7 +420,7 @@ function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool
         else
             flag = swmr ? H5F_ACC_RDONLY|H5F_ACC_SWMR_READ : H5F_ACC_RDONLY
         end
-        fid = h5f_open(filename, flag, apl.id)
+        fid = h5f_open(filename, flag, apl)
     end
     if close_apl
         # Close properties manually to avoid errors when the file is
@@ -494,7 +494,7 @@ function h5rewrite(f::Function, filename::AbstractString, args...)
     end
 end
 
-function h5write(filename, name::String, data; pv...)
+function h5write(filename, name::AbstractString, data; pv...)
     fid = h5open(filename, "cw"; pv...)
     try
         write(fid, name, data)
@@ -503,7 +503,7 @@ function h5write(filename, name::String, data; pv...)
     end
 end
 
-function h5read(filename, name::String; pv...)
+function h5read(filename, name::AbstractString; pv...)
     local dat
     fid = h5open(filename, "r"; pv...)
     try
@@ -515,7 +515,7 @@ function h5read(filename, name::String; pv...)
     dat
 end
 
-function h5read(filename, name_type_pair::Pair{String,DataType}; pv...)
+function h5read(filename, name_type_pair::Pair{<:AbstractString,DataType}; pv...)
     local dat
     fid = h5open(filename, "r"; pv...)
     try
@@ -527,7 +527,7 @@ function h5read(filename, name_type_pair::Pair{String,DataType}; pv...)
     dat
 end
 
-function h5read(filename, name::String, indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}}; pv...)
+function h5read(filename, name::AbstractString, indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}}; pv...)
     local dat
     fid = h5open(filename, "r"; pv...)
     try
@@ -539,7 +539,7 @@ function h5read(filename, name::String, indices::Tuple{Vararg{Union{AbstractRang
     dat
 end
 
-function h5writeattr(filename, name::String, data::Dict)
+function h5writeattr(filename, name::AbstractString, data::Dict)
     fid = h5open(filename, "r+")
     try
         for x in keys(data)
@@ -550,7 +550,7 @@ function h5writeattr(filename, name::String, data::Dict)
     end
 end
 
-function h5readattr(filename, name::String)
+function h5readattr(filename, name::AbstractString)
     local dat
     fid = h5open(filename,"r")
     try
@@ -650,10 +650,10 @@ fd(obj::Object) = h5i_get_file_id(checkvalid(obj).id)
 flush(f::Union{Object,Attribute,Datatype,File}, scope = H5F_SCOPE_GLOBAL) = h5f_flush(checkvalid(f).id, scope)
 
 # Open objects
-g_open(parent::Union{File,Group}, name::String, apl::Properties=DEFAULT_PROPERTIES) = Group(h5g_open(checkvalid(parent).id, name, apl.id), file(parent))
-d_open(parent::Union{File,Group}, name::String, apl::Properties=DEFAULT_PROPERTIES, xpl::Properties=DEFAULT_PROPERTIES) = Dataset(h5d_open(checkvalid(parent).id, name, apl.id), file(parent), xpl)
-t_open(parent::Union{File,Group}, name::String, apl::Properties=DEFAULT_PROPERTIES) = Datatype(h5t_open(checkvalid(parent).id, name, apl.id), file(parent))
-a_open(parent::Union{File,Object}, name::String) = Attribute(h5a_open(checkvalid(parent).id, name, H5P_DEFAULT), file(parent))
+g_open(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Group(h5g_open(checkvalid(parent), name, apl), file(parent))
+d_open(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES, xpl::Properties=DEFAULT_PROPERTIES) = Dataset(h5d_open(checkvalid(parent), name, apl), file(parent), xpl)
+t_open(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Datatype(h5t_open(checkvalid(parent), name, apl), file(parent))
+a_open(parent::Union{File,Object}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Attribute(h5a_open(checkvalid(parent), name, apl), file(parent))
 # Object (group, named datatype, or dataset) open
 function h5object(obj_id::hid_t, parent)
     obj_type = h5i_get_type(obj_id)
@@ -662,22 +662,21 @@ function h5object(obj_id::hid_t, parent)
     obj_type == H5I_DATASET ? Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
 end
-o_open(parent, path::String) = h5object(h5o_open(checkvalid(parent).id, path), parent)
-function gettype(parent, path::String)
-    obj_id = h5o_open(checkvalid(parent).id, path)
-    t = h5i_get_type(obj_id)
+o_open(parent, path::AbstractString) = h5object(h5o_open(checkvalid(parent).id, path), parent)
+function gettype(parent, path::AbstractString)
+    obj_id = h5o_open(checkvalid(parent), path)
+    obj_type = h5i_get_type(obj_id)
     h5o_close(obj_id)
-    t
+    return obj_type
 end
 # Get the root group
 root(h5file::File) = g_open(h5file, "/")
 root(obj::Union{Group,Dataset}) = g_open(file(obj), "/")
 # getindex syntax: obj2 = obj1[path]
-#getindex(parent::Union{HDF5File, HDF5Group}, path::String) = o_open(parent, path)
-getindex(dset::Dataset, name::String) = a_open(dset, name)
-getindex(x::Attributes, name::String) = a_open(x.parent, name)
+getindex(dset::Dataset, name::AbstractString) = a_open(dset, name)
+getindex(x::Attributes, name::AbstractString) = a_open(x.parent, name)
 
-function getindex(parent::Union{File,Group}, path::String; pv...)
+function getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     objtype = gettype(parent, path)
     if objtype == H5I_DATASET
         dapl = p_create(H5P_DATASET_ACCESS; pv...)
@@ -704,10 +703,10 @@ function split1(path::AbstractString)
     end
 end
 
-function g_create(parent::Union{File,Group}, path::String,
+function g_create(parent::Union{File,Group}, path::AbstractString,
                   lcpl::Properties=_link_properties(path),
                   dcpl::Properties=DEFAULT_PROPERTIES)
-    Group(h5g_create(checkvalid(parent).id, path, lcpl.id, dcpl.id), file(parent))
+    Group(h5g_create(checkvalid(parent), path, lcpl, dcpl), file(parent))
 end
 function g_create(f::Function, parent::Union{File,Group}, args...)
     g = g_create(parent, args...)
@@ -718,47 +717,34 @@ function g_create(f::Function, parent::Union{File,Group}, args...)
     end
 end
 
-function d_create(parent::Union{File,Group}, path::String, dtype::Datatype,
-                  dspace::Dataspace, lcpl::Properties, dcpl::Properties,
+function d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace,
+                  lcpl::Properties, dcpl::Properties,
                   dapl::Properties, dxpl::Properties)
-    Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, lcpl.id,
-                dcpl.id, dapl.id), file(parent), dxpl)
+    Dataset(h5d_create(checkvalid(parent), path, dtype, dspace, lcpl, dcpl, dapl), file(parent), dxpl)
 end
 
 # Setting dset creation properties with name/value pairs
-function d_create(parent::Union{File,Group}, path::String, dtype::Datatype, dspace::Dataspace; pv...)
+function d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace; pv...)
     dcpl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P_DATASET_CREATE; pv...)
     dxpl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P_DATASET_XFER; pv...)
     dapl = isempty(pv) ? DEFAULT_PROPERTIES : p_create(H5P_DATASET_ACCESS; pv...)
-    Dataset(h5d_create(checkvalid(parent).id, path, dtype.id, dspace.id, _link_properties(path), dcpl.id, dapl.id), file(parent), dxpl)
+    Dataset(h5d_create(checkvalid(parent), path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
 end
-d_create(parent::Union{File,Group}, path::String, dtype::Datatype, dspace_dims::Dims; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
-d_create(parent::Union{File,Group}, path::String, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
-d_create(parent::Union{File,Group}, path::String, dtype::Type, dspace_dims; pv...) = d_create(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
+d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Dims; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
+d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
+d_create(parent::Union{File,Group}, path::AbstractString, dtype::Type, dspace_dims; pv...) = d_create(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
 
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 t_create(class_id, sz) = Datatype(h5t_create(class_id, sz))
-function t_commit(parent::Union{File,Group}, path::String, dtype::Datatype, lcpl::Properties, tcpl::Properties, tapl::Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    h5t_commit(checkvalid(parent).id, path, dtype.id, lcpl.id, tcpl.id, tapl.id)
+function t_commit(parent::Union{File,Group}, path::AbstractString, dtype::Datatype,
+                  lcpl::Properties=p_create(H5P_LINK_CREATE), tcpl::Properties=DEFAULT_PROPERTIES, tapl::Properties=DEFAULT_PROPERTIES)
+    h5p_set_char_encoding(lcpl, cset(typeof(path)))
+    h5t_commit(checkvalid(parent), path, dtype, lcpl, tcpl, tapl)
     dtype.file = file(parent)
-    dtype
+    return dtype
 end
-function t_commit(parent::Union{File,Group}, path::String, dtype::Datatype, lcpl::Properties, tcpl::Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    h5t_commit(checkvalid(parent).id, path, dtype.id, lcpl.id, tcpl.id, H5P_DEFAULT)
-    dtype.file = file(parent)
-    dtype
-end
-function t_commit(parent::Union{File,Group}, path::String, dtype::Datatype, lcpl::Properties)
-    h5p_set_char_encoding(lcpl.id, cset(typeof(path)))
-    h5t_commit(checkvalid(parent).id, path, dtype.id, lcpl.id, H5P_DEFAULT, H5P_DEFAULT)
-    dtype.file = file(parent)
-    dtype
-end
-t_commit(parent::Union{File,Group}, path::String, dtype::Datatype) = t_commit(parent, path, dtype, p_create(H5P_LINK_CREATE))
 
-a_create(parent::Union{File,Object}, name::String, dtype::Datatype, dspace::Dataspace) = Attribute(h5a_create(checkvalid(parent).id, name, dtype.id, dspace.id), file(parent))
+a_create(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace) = Attribute(h5a_create(checkvalid(parent), name, dtype, dspace), file(parent))
 
 function _prop_get(p::Properties, name::Symbol)
     class = p.class
@@ -877,19 +863,18 @@ function p_create(class; pv...)
 end
 
 # Delete objects
-a_delete(parent::Union{File,Object}, path::String) = h5a_delete(checkvalid(parent).id, path)
-o_delete(parent::Union{File,Group}, path::String, lapl::Properties) = h5l_delete(checkvalid(parent).id, path, lapl.id)
-o_delete(parent::Union{File,Group}, path::String) = h5l_delete(checkvalid(parent).id, path, H5P_DEFAULT)
-o_delete(obj::Object) = o_delete(parent(obj), ascii(split(name(obj),"/")[end]))
+a_delete(parent::Union{File,Object}, path::AbstractString) = h5a_delete(checkvalid(parent), path)
+o_delete(parent::Union{File,Group}, path::AbstractString, lapl::Properties=DEFAULT_PROPERTIES) = h5l_delete(checkvalid(parent), path, lapl)
+o_delete(obj::Object) = o_delete(parent(obj), ascii(split(name(obj),"/")[end])) # FIXME: remove ascii?
 
 # Copy objects
-o_copy(src_parent::Union{File,Group}, src_path::String, dst_parent::Union{File,Group}, dst_path::String) = h5o_copy(checkvalid(src_parent).id, src_path, checkvalid(dst_parent).id, dst_path, H5P_DEFAULT, _link_properties(dst_path))
-o_copy(src_obj::Object, dst_parent::Union{File,Group}, dst_path::String) = h5o_copy(checkvalid(src_obj).id, ".", checkvalid(dst_parent).id, dst_path, H5P_DEFAULT, _link_properties(dst_path))
+o_copy(src_parent::Union{File,Group}, src_path::AbstractString, dst_parent::Union{File,Group}, dst_path::AbstractString) = h5o_copy(checkvalid(src_parent), src_path, checkvalid(dst_parent), dst_path, H5P_DEFAULT, _link_properties(dst_path))
+o_copy(src_obj::Object, dst_parent::Union{File,Group}, dst_path::AbstractString) = h5o_copy(checkvalid(src_obj), ".", checkvalid(dst_parent), dst_path, H5P_DEFAULT, _link_properties(dst_path))
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
-setindex!(dset::Dataset, val, name::String) = a_write(dset, name, val)
-setindex!(x::Attributes, val, name::String) = a_write(x.parent, name, val)
+setindex!(dset::Dataset, val, name::AbstractString) = a_write(dset, name, val)
+setindex!(x::Attributes, val, name::AbstractString) = a_write(x.parent, name, val)
 # Getting and setting properties: p[:chunk] = dims, p[:compress] = 6
 getindex(p::Properties, name::Symbol) = _prop_get(checkvalid(p), name)
 function setindex!(p::Properties, val, name::Symbol)
@@ -897,7 +882,7 @@ function setindex!(p::Properties, val, name::Symbol)
     return p
 end
 # Create a dataset with properties: obj[path, prop = val, ...] = val
-function setindex!(parent::Union{File,Group}, val, path::String; pv...)
+function setindex!(parent::Union{File,Group}, val, path::AbstractString; pv...)
     need_chunks = any(k in keys(chunked_props) for k in keys(pv))
     have_chunks = any(k == :chunk for k in keys(pv))
 
@@ -920,7 +905,7 @@ function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::Prop
     first, rest = split1(path)
     if first == "/"
         parent = root(parent)
-    elseif !h5l_exists(parent.id, first, lapl.id)
+    elseif !h5l_exists(parent, first, lapl)
         return false
     end
     exists = true
@@ -1029,13 +1014,13 @@ end
 datatype(x::Complex{T}) where {T<:ScalarType} = datatype(typeof(x))
 datatype(A::AbstractArray{Complex{T}}) where {T<:ScalarType} = datatype(eltype(A))
 
-function datatype(str::String)
+function datatype(str::AbstractString)
     type_id = h5t_copy(hdf5_type_id(typeof(str)))
     h5t_set_size(type_id, max(sizeof(str), 1))
     h5t_set_cset(type_id, cset(typeof(str)))
     Datatype(type_id)
 end
-function datatype(str::Array{S}) where {S<:String}
+function datatype(::Array{S}) where {S<:AbstractString}
     type_id = h5t_copy(hdf5_type_id(S))
     h5t_set_size(type_id, H5T_VARIABLE)
     h5t_set_cset(type_id, cset(S))
@@ -1058,7 +1043,7 @@ dataspace(attr::Attribute) = Dataspace(h5a_get_space(checkvalid(attr).id))
 
 # Create a dataspace from in-memory types
 dataspace(x::Union{T, Complex{T}}) where {T<:ScalarType} = Dataspace(h5s_create(H5S_SCALAR))
-dataspace(str::String) = Dataspace(h5s_create(H5S_SCALAR))
+dataspace(::AbstractString) = Dataspace(h5s_create(H5S_SCALAR))
 
 function _dataspace(sz::Dims{N}, max_dims::Union{Dims{N}, Tuple{}}=()) where N
     dims = hsize_t[sz[i] for i in N:-1:1]
@@ -1117,7 +1102,7 @@ for (fsym, osym, ptype) in
     ((:d_read, :d_open, Union{File,Group}),
      (:a_read, :a_open, Union{File,Group,Dataset,Datatype}))
     @eval begin
-        function ($fsym)(parent::$ptype, name::String)
+        function ($fsym)(parent::$ptype, name::AbstractString)
             local ret
             obj = ($osym)(parent, name)
             try
@@ -1131,14 +1116,14 @@ for (fsym, osym, ptype) in
 end
 
 # Datafile.jl defines generic read for multiple datasets, so we cannot simply add properties here.
-function read(parent::Union{File,Group}, name::String; pv...)
+function read(parent::Union{File,Group}, name::AbstractString; pv...)
     obj = getindex(parent, name; pv...)
     val = read(obj)
     close(obj)
     val
 end
 
-function read(parent::Union{File,Group}, name_type_pair::Pair{String,DataType}; pv...)
+function read(parent::Union{File,Group}, name_type_pair::Pair{<:AbstractString,DataType}; pv...)
     obj = getindex(parent, name_type_pair[1]; pv...)
     val = read(obj, name_type_pair[2])
     close(obj)
@@ -1302,7 +1287,7 @@ do_reclaim(::Type{T}) where {T} = false
 do_reclaim(::Type{NamedTuple{T,U}}) where {U,T} = any(i -> do_reclaim(fieldtype(U,i)), 1:fieldcount(U))
 do_reclaim(::Type{T}) where T <: Union{Cstring,VariableArray} = true
 
-read(attr::Attributes, name::String) = a_read(attr.parent, name)
+read(attr::Attributes, name::AbstractString) = a_read(attr.parent, name)
 
 # Reading with mmap
 function iscontiguous(obj::Dataset)
@@ -1378,7 +1363,7 @@ function readmmap(obj::Dataset)
 end
 
 # Generic write
-function write(parent::Union{File,Group}, name1::String, val1, name2::String, val2, nameval...)
+function write(parent::Union{File,Group}, name1::AbstractString, val1, name2::AbstractString, val2, nameval...) # FIXME: remove?
     if !iseven(length(nameval))
         error("name, value arguments must come in pairs")
     end
@@ -1386,7 +1371,7 @@ function write(parent::Union{File,Group}, name1::String, val1, name2::String, va
     write(parent, name2, val2)
     for i = 1:2:length(nameval)
         thisname = nameval[i]
-        if !isa(thisname, String)
+        if !isa(thisname, AbstractString)
             error("Argument ", i+5, " should be a string, but it's a ", typeof(thisname))
         end
         write(parent, thisname, nameval[i+1])
@@ -1399,7 +1384,7 @@ end
 # Create datasets and attributes with "native" types, but don't write the data.
 # The return syntax is: dset, dtype = d_create(parent, name, data; properties...)
 
-function d_create(parent::Union{File,Group}, name::String, data; pv...)
+function d_create(parent::Union{File,Group}, name::AbstractString, data; pv...)
     dtype = datatype(data)
     dspace = dataspace(data)
     obj = try
@@ -1409,7 +1394,7 @@ function d_create(parent::Union{File,Group}, name::String, data; pv...)
     end
     return obj, dtype
 end
-function a_create(parent::Union{File,Object}, name::String, data; pv...)
+function a_create(parent::Union{File,Object}, name::AbstractString, data; pv...)
     dtype = datatype(data)
     dspace = dataspace(data)
     obj = try
@@ -1421,7 +1406,7 @@ function a_create(parent::Union{File,Object}, name::String, data; pv...)
 end
 
 # Create and write, closing the objects upon exit
-function d_write(parent::Union{File,Group}, name::String, data; pv...)
+function d_write(parent::Union{File,Group}, name::AbstractString, data; pv...)
     obj, dtype = d_create(parent, name, data; pv...)
     try
         writearray(obj, dtype.id, data)
@@ -1434,7 +1419,7 @@ function d_write(parent::Union{File,Group}, name::String, data; pv...)
     end
     nothing
 end
-function a_write(parent::Union{File,Object}, name::String, data; pv...)
+function a_write(parent::Union{File,Object}, name::AbstractString, data; pv...)
     obj, dtype = a_create(parent, name, data; pv...)
     try
         writearray(obj, dtype.id, data)
@@ -1450,7 +1435,7 @@ end
 
 # Write to already-created objects
 # Scalars
-function write(obj::DatasetOrAttribute, x::Union{T,Array{T}}) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}}
+function write(obj::DatasetOrAttribute, x::Union{T,Array{T}}) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}}
     dtype = datatype(x)
     try
         writearray(obj, dtype.id, x)
@@ -1468,10 +1453,10 @@ function write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{ScalarTyp
     end
 end
 # For plain files and groups, let "write(obj, name, val; properties...)" mean "d_write"
-write(parent::Union{File,Group}, name::String, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
+write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}} =
     d_write(parent, name, data; pv...)
 # For datasets, "write(dset, name, val; properties...)" means "a_write"
-write(parent::Dataset, name::String, data::Union{T, AbstractArray{T}}; pv...) where {T<:ScalarType,String} =
+write(parent::Dataset, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,<:AbstractString}} =
     a_write(parent, name, data; pv...)
 
 
@@ -1578,13 +1563,12 @@ end
 
 # Link to bytes in an external file
 # If you need to link to multiple segments, use low-level interface
-function d_create_external(parent::Union{File,Group}, name::String, filepath::String, t, sz::Dims, offset::Integer)
+function d_create_external(parent::Union{File,Group}, name::AbstractString, filepath::AbstractString, t, sz::Dims, offset::Integer=0)
     checkvalid(parent)
-    p = p_create(H5P_DATASET_CREATE)
-    h5p_set_external(p, filepath, Int(offset), prod(sz)*sizeof(t))
-    d_create(parent, name, datatype(t), dataspace(sz), Properties(), p)
+    dcpl  = p_create(H5P_DATASET_CREATE)
+    h5p_set_external(dcpl , filepath, Int(offset), prod(sz)*sizeof(t)) # TODO: allow H5F_UNLIMITED
+    d_create(parent, name, datatype(t), dataspace(sz); dcpl=dcpl)
 end
-d_create_external(parent::Union{File,Group}, name::String, filepath::String, t::Type, sz::Dims) = d_create_external(parent, name, filepath, t, sz, 0)
 
 function do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
     checkvalid(dataset)
@@ -1790,10 +1774,10 @@ function h5a_write(attr_id::hid_t, memtype_id::hid_t, v::VLen{T}) where {T<:Unio
     vp = vlenpack(v)
     h5a_write(attr_id, memtype_id, vp)
 end
-h5a_create(loc_id::hid_t, name::String, type_id::hid_t, space_id::hid_t) = h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P_DEFAULT)
-h5a_open(obj_id::hid_t, name::String) = h5a_open(obj_id, name, H5P_DEFAULT)
-h5d_create(loc_id::hid_t, name::String, type_id::hid_t, space_id::hid_t) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
-h5d_open(obj_id::hid_t, name::String) = h5d_open(obj_id, name, H5P_DEFAULT)
+h5a_create(loc_id, name, type_id, space_id) = h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P_DEFAULT)
+h5a_open(obj_id, name) = h5a_open(obj_id, name, H5P_DEFAULT)
+h5d_create(loc_id, name, type_id, space_id) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
+h5d_open(obj_id, name) = h5d_open(obj_id, name, H5P_DEFAULT)
 function h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::hid_t=H5P_DEFAULT)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
     h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
@@ -1802,14 +1786,14 @@ function h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfe
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::String, xfer::hid_t=H5P_DEFAULT)
+function h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::AbstractString, xfer::hid_t=H5P_DEFAULT)
     ccall((:H5Dwrite, libhdf5), herr_t, (hid_t, hid_t, hid_t, hid_t, hid_t, Cstring), dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, str)
 end
 function h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::hid_t=H5P_DEFAULT) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, tmp)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{S}, xfer::hid_t=H5P_DEFAULT) where {S<:String}
+function h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{<:AbstractString}, xfer::hid_t=H5P_DEFAULT)
     p = Ref{Cstring}(strs)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, p)
 end
@@ -1817,13 +1801,13 @@ function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::hid_t
     vp = vlenpack(v)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, vp)
 end
-h5f_create(filename::String) = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)
-h5f_open(filename::String, mode) = h5f_open(filename, mode, H5P_DEFAULT)
-h5g_create(obj_id::hid_t, name::String) = h5g_create(obj_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
-h5g_create(obj_id::hid_t, name::String, lcpl_id, gcpl_id) = h5g_create(obj_id, name, lcpl_id, gcpl_id, H5P_DEFAULT)
-h5g_open(file_id::hid_t, name::String) = h5g_open(file_id, name, H5P_DEFAULT)
-h5l_exists(loc_id::hid_t, name::String) = h5l_exists(loc_id, name, H5P_DEFAULT)
-h5o_open(obj_id::hid_t, name::String) = h5o_open(obj_id, name, H5P_DEFAULT)
+h5f_create(filename) = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)
+h5f_open(filename, mode) = h5f_open(filename, mode, H5P_DEFAULT)
+h5g_create(obj_id, name) = h5g_create(obj_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
+h5g_create(obj_id, name, lcpl_id, gcpl_id) = h5g_create(obj_id, name, lcpl_id, gcpl_id, H5P_DEFAULT)
+h5g_open(file_id, name) = h5g_open(file_id, name, H5P_DEFAULT)
+h5l_exists(loc_id, name) = h5l_exists(loc_id, name, H5P_DEFAULT)
+h5o_open(obj_id, name) = h5o_open(obj_id, name, H5P_DEFAULT)
 #h5s_get_simple_extent_ndims(space_id::hid_t) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 h5t_get_native_type(type_id::hid_t) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
 
@@ -1915,9 +1899,9 @@ const rehash! = Base.rehash!
 # Across initializations of the library, the id of various properties
 # will change. So don't hard-code the id (important for precompilation)
 const UTF8_LINK_PROPERTIES = Ref{Properties}()
-_link_properties(path::String) = UTF8_LINK_PROPERTIES[]
+_link_properties(::AbstractString) = UTF8_LINK_PROPERTIES[]
 const UTF8_ATTRIBUTE_PROPERTIES = Ref{Properties}()
-_attr_properties(path::String) = UTF8_ATTRIBUTE_PROPERTIES[]
+_attr_properties(::AbstractString) = UTF8_ATTRIBUTE_PROPERTIES[]
 const ASCII_LINK_PROPERTIES = Ref{Properties}()
 const ASCII_ATTRIBUTE_PROPERTIES = Ref{Properties}()
 

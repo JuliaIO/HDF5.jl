@@ -764,6 +764,7 @@ path2 = acomb * "/α"
 end # split1 tests
 
 
+# Also tests AbstractString interface
 @testset "haskey" begin
 fn = tempname()
 hfile = h5open(fn, "w")
@@ -804,3 +805,108 @@ haskey(attribs, GenericString("attr"))
 close(hfile)
 rm(fn)
 end # haskey tests
+
+
+@testset "AbstractString" begin
+
+fn = GenericString(tempname())
+hfile = h5open(fn, "w")
+close(hfile)
+hfile = h5open(fn); close(hfile)
+hfile = h5open(fn, "w")
+
+@test_nowarn g_create(hfile, GenericString("group1"))
+@test_nowarn d_create(hfile, GenericString("dset1"), datatype(Int), dataspace((1,)))
+@test_nowarn d_create(hfile, GenericString("dset2"), 1)
+
+@test_nowarn hfile[GenericString("group1")]
+@test_nowarn hfile[GenericString("dset1")]
+
+
+dset1 = hfile["dset1"]
+@test_nowarn a_create(dset1, GenericString("meta1"), datatype(Bool), dataspace((1,)))
+@test_nowarn a_create(dset1, GenericString("meta2"), 1)
+@test_nowarn dset1[GenericString("meta1")]
+@test_nowarn dset1[GenericString("x")] = 2
+
+array_of_strings = ["test",]
+write(hfile, "array_of_strings", array_of_strings)
+@test_nowarn attrs(hfile)[GenericString("ref_test")] = HDF5.Reference(hfile, GenericString("array_of_strings"))
+@test read(attrs(hfile)[GenericString("ref_test")]) === HDF5.Reference(hfile, "array_of_strings")
+
+hfile[GenericString("test")] = 17.2
+@test_nowarn o_delete(hfile, GenericString("test"))
+@test_nowarn a_delete(dset1, GenericString("meta1"))
+
+# transient types
+memtype_id = HDF5.h5t_copy(HDF5.H5T_NATIVE_DOUBLE)
+dt = HDF5.Datatype(memtype_id)
+@test !HDF5.h5t_committed(dt)
+t_commit(hfile, GenericString("dt"), dt)
+@test HDF5.h5t_committed(dt)
+
+dt = datatype(Int)
+ds = dataspace(0)
+d = d_create(hfile, GenericString("d"), dt, ds)
+g = g_create(hfile, GenericString("g"))
+a = a_create(hfile, GenericString("a"), dt, ds)
+
+for obj in (d, g)
+   @test_nowarn a_write(obj, GenericString("a"), 1)
+   @test_nowarn a_read(obj, GenericString("a"))
+   @test_nowarn write(obj, GenericString("aa"), 1)
+end
+@test_nowarn d_write(g, GenericString("ag"), GenericString("gg"))
+@test_nowarn d_write(g, GenericString("ag_array"), [GenericString("a1"), GenericString("a2")])
+
+for obj in (hfile,)
+    @test_nowarn d_open(obj, GenericString("d"))
+    @test_nowarn d_write(obj, GenericString("dd"), 1)
+    @test_nowarn d_read(obj, GenericString("dd"))
+    @test_nowarn read(obj, GenericString("dd"))
+    @test_nowarn read(obj, GenericString("dd")=>Int)
+end
+read(attrs(hfile), GenericString("a"))
+
+write(hfile, GenericString("ASD"), GenericString("Aa"))
+write(g, GenericString("ASD"), GenericString("Aa"))
+write(g, GenericString("ASD1"), [GenericString("Aa")])
+
+# test writing multiple variable
+@test_nowarn write(hfile, GenericString("a1"), rand(2,2), GenericString("a2"), rand(2,2))
+
+# copy methods
+d1 = d_create(hfile, GenericString("d1"), dt, ds)
+d1["x"] = 32
+@test_nowarn o_copy(hfile, GenericString("d1"), hfile, GenericString("d1copy1"))
+@test_nowarn o_copy(d1, hfile, GenericString("d1copy2"))
+
+fn = GenericString(tempname())
+A = Matrix(reshape(1:120, 15, 8))
+@test_nowarn h5write(fn, GenericString("A"), A)
+@test_nowarn h5read(fn, GenericString("A"))
+@test_nowarn h5read(fn, GenericString("A"), (2:3:15, 3:5))
+
+@test_nowarn h5write(fn, GenericString("x"), 1)
+@test_nowarn h5read(fn, GenericString("x") => Int)
+
+
+@test_nowarn h5rewrite(fn) do fid
+    g_create(fid, "mygroup") do g
+        write(g, "x", 3.3)
+    end
+end
+@test_nowarn h5rewrite(fn) do fid
+    g_create(fid, "mygroup") do g
+        write(g, "y", 3.3)
+    end
+end
+
+@test_nowarn h5write(fn, "W", [1 2; 3 4])
+@test_nowarn h5writeattr(fn, GenericString("W"), Dict("a" => 1, "b" => 2))
+@test_nowarn h5readattr(fn, GenericString("W"))
+
+fn_external = GenericString(tempname())
+dset = d_create_external(hfile, "ext", fn_external, Int, (10,20))
+
+end
