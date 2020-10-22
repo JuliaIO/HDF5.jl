@@ -1419,7 +1419,7 @@ function a_write(parent::Union{File,Object}, name::AbstractString, data; pv...)
     try
         writearray(obj, dtype.id, data)
     catch exc
-        o_delete(obj)
+        a_delete(parent, name)
         rethrow(exc)
     finally
         close(obj)
