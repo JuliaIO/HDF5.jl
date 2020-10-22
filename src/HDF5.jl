@@ -1756,7 +1756,13 @@ end
 ### Convenience wrappers ###
 # These supply default values where possible
 # See also the "special handling" section below
-h5a_write(attr_id::hid_t, mem_type_id::hid_t, buf::String) = h5a_write(attr_id, mem_type_id, unsafe_wrap(Vector{UInt8}, pointer(buf), ncodeunits(buf)))
+function h5a_write(attr_id::hid_t, mem_type_id::hid_t, str::AbstractString)
+    strbuf = Base.cconvert(Cstring, str)
+    GC.@preserve strbuf begin
+        buf = Base.unsafe_convert(Ptr{UInt8}, strbuf)
+        h5a_write(attr_id, mem_type_id, buf)
+    end
+end
 function h5a_write(attr_id::hid_t, mem_type_id::hid_t, x::T) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
     h5a_write(attr_id, mem_type_id, tmp)
