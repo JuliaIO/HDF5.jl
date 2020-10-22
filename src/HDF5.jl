@@ -673,7 +673,6 @@ end
 root(h5file::File) = g_open(h5file, "/")
 root(obj::Union{Group,Dataset}) = g_open(file(obj), "/")
 # getindex syntax: obj2 = obj1[path]
-#getindex(parent::Union{HDF5File, HDF5Group}, path::String) = o_open(parent, path) # REM
 getindex(dset::Dataset, name::AbstractString) = a_open(dset, name)
 getindex(x::Attributes, name::AbstractString) = a_open(x.parent, name)
 
@@ -737,7 +736,8 @@ d_create(parent::Union{File,Group}, path::AbstractString, dtype::Type, dspace_di
 
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 t_create(class_id, sz) = Datatype(h5t_create(class_id, sz))
-function t_commit(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, lcpl::Properties=p_create(H5P_LINK_CREATE), tcpl::Properties=DEFAULT_PROPERTIES, tapl::Properties=DEFAULT_PROPERTIES)
+function t_commit(parent::Union{File,Group}, path::AbstractString, dtype::Datatype,
+                  lcpl::Properties=p_create(H5P_LINK_CREATE), tcpl::Properties=DEFAULT_PROPERTIES, tapl::Properties=DEFAULT_PROPERTIES)
     h5p_set_char_encoding(lcpl, cset(typeof(path)))
     h5t_commit(checkvalid(parent), path, dtype, lcpl, tcpl, tapl)
     dtype.file = file(parent)
@@ -1435,7 +1435,7 @@ end
 
 # Write to already-created objects
 # Scalars
-function write(obj::DatasetOrAttribute, x::Union{T,Array{T}}) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}}
+function write(obj::DatasetOrAttribute, x::Union{T,Array{T}}) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}}
     dtype = datatype(x)
     try
         writearray(obj, dtype.id, x)
@@ -1453,10 +1453,10 @@ function write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{ScalarTyp
     end
 end
 # For plain files and groups, let "write(obj, name, val; properties...)" mean "d_write"
-write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}} =
+write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}} =
     d_write(parent, name, data; pv...)
 # For datasets, "write(dset, name, val; properties...)" means "a_write"
-write(parent::Dataset, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,String}} =
+write(parent::Dataset, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,<:AbstractString}} =
     a_write(parent, name, data; pv...)
 
 

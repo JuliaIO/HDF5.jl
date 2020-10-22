@@ -868,6 +868,10 @@ for obj in (hfile,)
 end
 read(attrs(hfile), GenericString("a"))
 
+write(hfile, GenericString("ASD"), GenericString("Aa"))
+write(g, GenericString("ASD"), GenericString("Aa"))
+write(g, GenericString("ASD1"), [GenericString("Aa")])
+
 # test writing multiple variable
 @test_nowarn write(hfile, GenericString("a1"), rand(2,2), GenericString("a2"), rand(2,2))
 

@@ -123,7 +123,7 @@ for (fsym, ptype) in ((:d_write, Union{File,Group}),
     end
 end
 function write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}},
-               plists::Properties...) where {T<:Union{ScalarType,String,Complex{<:ScalarType}}}
+               plists::Properties...) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}}
     depwarn("`write(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
             "`write(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, data; properties...)` " *
@@ -142,7 +142,7 @@ function write(parent::Union{File,Group}, name::AbstractString, data::Union{T,Ab
     end
 end
 function write(parent::Dataset, name::AbstractString, data::Union{T,AbstractArray{T}},
-               plists::Properties...) where {T<:Union{ScalarType,String}}
+               plists::Properties...) where {T<:Union{ScalarType,<:AbstractString}}
     depwarn("`write(parent::HDF5Dataset, name::AbstractString, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
             "`write(parent::HDF5Dataset, name::AbstractString, data; properties...)` " *
