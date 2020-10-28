@@ -668,9 +668,9 @@ function h5object(obj_id::hid_t, parent)
     obj_type == H5I_DATASET ? Dataset(obj_id, file(parent)) :
     error("Invalid object type for path ", path)
 end
-o_open(parent, path::AbstractString) = h5object(h5o_open(checkvalid(parent), path), parent)
+o_open(parent, path::AbstractString) = h5object(h5o_open(checkvalid(parent), path, H5P_DEFAULT), parent)
 function gettype(parent, path::AbstractString)
-    obj_id = h5o_open(checkvalid(parent), path)
+    obj_id = h5o_open(checkvalid(parent), path, H5P_DEFAULT)
     obj_type = h5i_get_type(obj_id)
     h5o_close(obj_id)
     return obj_type
@@ -712,7 +712,7 @@ end
 function g_create(parent::Union{File,Group}, path::AbstractString,
                   lcpl::Properties=_link_properties(path),
                   dcpl::Properties=DEFAULT_PROPERTIES)
-    Group(h5g_create(checkvalid(parent), path, lcpl, dcpl), file(parent))
+    Group(h5g_create(checkvalid(parent), path, lcpl, dcpl, H5P_DEFAULT), file(parent))
 end
 function g_create(f::Function, parent::Union{File,Group}, args...)
     g = g_create(parent, args...)
@@ -750,7 +750,10 @@ function t_commit(parent::Union{File,Group}, path::AbstractString, dtype::Dataty
     return dtype
 end
 
-a_create(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace) = Attribute(h5a_create(checkvalid(parent), name, dtype, dspace), file(parent))
+function a_create(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace)
+    attrid = h5a_create(checkvalid(parent), name, dtype, dspace, _attr_properties(name), H5P_DEFAULT)
+    return Attribute(attrid, file(parent))
+end
 
 function _prop_get(p::Properties, name::Symbol)
     class = p.class
@@ -1772,9 +1775,6 @@ function get_mem_compatible_jl_type(objtype::Datatype)
     error("Class id ", class_id, " is not yet supported")
 end
 
-### Convenience wrappers ###
-# These supply default values where possible
-# See also the "special handling" section below
 function h5a_write(attr_id, mem_type_id, str::AbstractString)
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
@@ -1790,10 +1790,6 @@ function h5a_write(attr_id, memtype_id, strs::Array{<:AbstractString})
     p = Ref{Cstring}(strs)
     h5a_write(attr_id, memtype_id, p)
 end
-h5a_create(loc_id, name, type_id, space_id) = h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P_DEFAULT)
-h5a_open(obj_id, name) = h5a_open(obj_id, name, H5P_DEFAULT)
-h5d_create(loc_id, name, type_id, space_id) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
-h5d_open(obj_id, name) = h5d_open(obj_id, name, H5P_DEFAULT)
 function h5d_read(dataset_id, memtype_id, buf::AbstractArray, xfer=H5P_DEFAULT)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
     h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
@@ -1816,13 +1812,6 @@ end
 function h5d_write(dataset_id, memtype_id, v::VLen, xfer=H5P_DEFAULT)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, v)
 end
-h5f_create(filename) = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)
-h5f_open(filename, mode) = h5f_open(filename, mode, H5P_DEFAULT)
-h5g_create(obj_id, name) = h5g_create(obj_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
-h5g_create(obj_id, name, lcpl_id, gcpl_id) = h5g_create(obj_id, name, lcpl_id, gcpl_id, H5P_DEFAULT)
-h5g_open(file_id, name) = h5g_open(file_id, name, H5P_DEFAULT)
-h5l_exists(loc_id, name) = h5l_exists(loc_id, name, H5P_DEFAULT)
-h5o_open(obj_id, name) = h5o_open(obj_id, name, H5P_DEFAULT)
 #h5s_get_simple_extent_ndims(space_id::hid_t) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 h5t_get_native_type(type_id) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
 

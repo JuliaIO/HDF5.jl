@@ -222,3 +222,16 @@ import Base: names
 ### Changed in PR#694
 @deprecate has(parent::Union{File,Group,Dataset}, path::AbstractString) Base.haskey(parent, path)
 @deprecate exists(parent::Union{File,Group,Dataset,Datatype,Attributes}, path::AbstractString) Base.haskey(parent, path)
+
+### Changed in PR#
+@deprecate h5a_create(loc_id, name, type_id, space_id) h5a_create(loc_id, name, type_id, space_id, HDF5._attr_properties(name), HDF5.H5P_DEFAULT) false
+@deprecate h5a_open(obj_id, name) h5a_open(obj_id, name, HDF5.H5P_DEFAULT) false
+@deprecate h5d_create(loc_id, name, type_id, space_id) h5d_create(loc_id, name, type_id, space_id, HDF5._link_properties(path), HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT) false
+@deprecate h5d_open(loc_id, name) h5d_open(loc_id, name, HDF5.H5P_DEFAULT) false
+@deprecate h5f_create(pathname) h5f_create(pathname, HDF5.H5F_ACC_TRUNC, HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT) false
+@deprecate h5f_open(pathname, flags) h5f_open(pathname, flags, HDF5.H5P_DEFAULT) false
+@deprecate h5g_create(loc_id, pathname) h5g_create(loc_id, pathname, HDF5._link_properties(pathname), HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT) false
+@deprecate h5g_create(loc_id, pathname, lcpl_id, gcpl_id) h5g_create(loc_id, pathname, lcpl_id, gcpl_id, HDF5.H5P_DEFAULT) false
+@deprecate h5g_open(loc_id, pathname) h5g_open(loc_id, pathname, HDF5.H5P_DEFAULT) false
+@deprecate h5l_exists(loc_id, pathname) h5l_exists(loc_id, pathname, HDF5.H5P_DEFAULT) false
+@deprecate h5o_open(loc_id, name) h5o_open(loc_id, name, HDF5.H5P_DEFAULT) false
