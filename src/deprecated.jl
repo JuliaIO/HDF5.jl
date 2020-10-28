@@ -154,7 +154,7 @@ function Base.write(parent::Dataset, name::AbstractString, data::Union{T,Abstrac
     dtype = datatype(data)
     obj = __a_create(parent, name, dtype, dataspace(data), prop1, plists...)
     try
-        writearray(obj, dtype.id, data)
+        a_create(obj, dtype.id, data)
     catch exc
         o_delete(obj)
         rethrow(exc)
@@ -235,3 +235,5 @@ import Base: names
 @deprecate h5g_open(loc_id, pathname) h5g_open(loc_id, pathname, HDF5.H5P_DEFAULT) false
 @deprecate h5l_exists(loc_id, pathname) h5l_exists(loc_id, pathname, HDF5.H5P_DEFAULT) false
 @deprecate h5o_open(loc_id, name) h5o_open(loc_id, name, HDF5.H5P_DEFAULT) false
+
+@deprecate writearray(obj::Attribute, type_id, x) a_write(obj, type_id, x) false

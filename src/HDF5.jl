@@ -1439,7 +1439,7 @@ end
 function a_write(parent::Union{File,Object}, name::AbstractString, data; pv...)
     obj, dtype = a_create(parent, name, data; pv...)
     try
-        writearray(obj, dtype.id, data)
+        a_write(obj, dtype, data)
     catch exc
         a_delete(parent, name)
         rethrow(exc)
@@ -1451,8 +1451,15 @@ function a_write(parent::Union{File,Object}, name::AbstractString, data; pv...)
 end
 
 # Write to already-created objects
-# Scalars
-function Base.write(obj::DatasetOrAttribute, x::Union{T,Array{T}}) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}}
+function Base.write(obj::Attribute, x)
+    dtype = datatype(x)
+    try
+        a_write(obj, dtype, x)
+    finally
+        close(dtype)
+    end
+end
+function Base.write(obj::Dataset, x::Union{T,Array{T}}) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}}
     dtype = datatype(x)
     try
         writearray(obj, dtype.id, x)
@@ -1461,7 +1468,7 @@ function Base.write(obj::DatasetOrAttribute, x::Union{T,Array{T}}) where {T<:Uni
     end
 end
 # VLEN types
-function Base.write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{ScalarType,CharType}}
+function Base.write(obj::Dataset, data::VLen{T}) where {T<:Union{ScalarType,CharType}}
     dtype = datatype(data)
     try
         writearray(obj, dtype.id, data)
@@ -1469,12 +1476,12 @@ function Base.write(obj::DatasetOrAttribute, data::VLen{T}) where {T<:Union{Scal
         close(dtype)
     end
 end
+
 # For plain files and groups, let "write(obj, name, val; properties...)" mean "d_write"
 Base.write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}} =
     d_write(parent, name, data; pv...)
 # For datasets, "write(dset, name, val; properties...)" means "a_write"
-Base.write(parent::Dataset, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,<:AbstractString}} =
-    a_write(parent, name, data; pv...)
+Base.write(parent::Dataset, name::AbstractString, data; pv...) = a_write(parent, name, data; pv...)
 
 
 # Indexing
@@ -1608,9 +1615,7 @@ end
 readarray(dset::Dataset, type_id, buf) = h5d_read(dset, type_id, buf, dset.xfer)
 readarray(attr::Attribute, type_id, buf) = h5a_read(attr, type_id, buf)
 writearray(dset::Dataset, type_id, buf) = h5d_write(dset, type_id, buf, dset.xfer)
-writearray(attr::Attribute, type_id, buf) = h5a_write(attr, type_id, buf)
 writearray(dset::Dataset, type_id, ::EmptyArray) = nothing
-writearray(attr::Attribute, type_id, ::EmptyArray) = nothing
 
 # Determine Julia "native" type from the class, datatype, and dataspace
 # For datasets, defined file formats should use attributes instead
@@ -1775,21 +1780,26 @@ function get_mem_compatible_jl_type(objtype::Datatype)
     error("Class id ", class_id, " is not yet supported")
 end
 
-function h5a_write(attr_id, mem_type_id, str::AbstractString)
+# default behavior
+a_write(attr::Attribute, memtype::Datatype, x) = h5a_write(attr, memtype, x)
+# type-specific behaviors
+function a_write(attr::Attribute, memtype::Datatype, str::AbstractString)
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
         buf = Base.unsafe_convert(Ptr{UInt8}, strbuf)
-        h5a_write(attr_id, mem_type_id, buf)
+        h5a_write(attr, memtype, buf)
     end
 end
-function h5a_write(attr_id, mem_type_id, x::T) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
+function a_write(attr::Attribute, memtype::Datatype, x::T) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
-    h5a_write(attr_id, mem_type_id, tmp)
+    h5a_write(attr, memtype, tmp)
 end
-function h5a_write(attr_id, memtype_id, strs::Array{<:AbstractString})
+function a_write(attr::Attribute, memtype::Datatype, strs::Array{<:AbstractString})
     p = Ref{Cstring}(strs)
-    h5a_write(attr_id, memtype_id, p)
+    h5a_write(attr, memtype, p)
 end
+a_write(attr::Attribute, memtype::Datatype, ::EmptyArray) = nothing
+
 function h5d_read(dataset_id, memtype_id, buf::AbstractArray, xfer=H5P_DEFAULT)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
     h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
