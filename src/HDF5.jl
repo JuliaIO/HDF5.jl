@@ -180,6 +180,15 @@ mutable struct Properties
 end
 Properties() = Properties(H5P_DEFAULT)
 Base.convert(::Type{hid_t}, p::Properties) = p.id
+function Base.show(io::IO, prop::Properties)
+    if prop.class == H5P_DEFAULT
+        print(io, "HDF5 property: default class")
+    elseif isvalid(prop)
+        print(io, "HDF5 property: ", h5p_get_class_name(prop.class), " class")
+    else
+        print(io, "HDF5 property (invalid)")
+    end
+end
 
 mutable struct Dataset
     id::hid_t

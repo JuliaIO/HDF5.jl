@@ -13,8 +13,8 @@ Note that in many cases, high-level data types are valid arguments through autom
 For instance, `HDF5Datatype` objects will be automatically converted to their `hid_t` ID
 by Julia's `cconvert`+`unsafe_convert` `ccall` rules.
 
-There may be additional helper wrappers (often for out-argument functions) which are
-not documented here.
+There are additional helper wrappers (often for out-argument functions) which are not
+documented here.
 
 ## [`H5`](https://portal.hdfgroup.org/display/HDF5/Library) — General Library Functions
 ```julia
@@ -141,6 +141,7 @@ h5p_get_alignment(fapl_id::hid_t, threshold::Ref{hsize_t}, alignment::Ref{hsize_
 h5p_get_alloc_time(plist_id::hid_t, alloc_time::Ptr{Cint})
 h5p_get_char_encoding(plist_id::hid_t, encoding::Ref{Cint})
 h5p_get_chunk(plist_id::hid_t, n_dims::Cint, dims::Ptr{hsize_t})
+h5p_get_class_name(pcid::hid_t)
 h5p_get_create_intermediate_group(lcpl_id::hid_t, crt_intermed_group::Ref{Cuint})
 h5p_get_driver(plist_id::hid_t)
 h5p_get_driver_info(plist_id::hid_t)
