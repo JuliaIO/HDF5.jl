@@ -86,12 +86,13 @@ for (fsym, ptype) in ((:d_create, Union{File, Group}),
     usesig = "$fsym(parent::$ptype, name::AbstractString, data; properties...)"
     warnstr = "`$depsig` with property lists is deprecated, use `$usesig` with keywords instead"
     @eval begin
-        function ($fsym)(parent::$ptype, name::AbstractString, data, plists::Properties...)
+        function ($fsym)(parent::$ptype, name::AbstractString, data,
+                         prop1::Properties, plists::Properties...)
             depwarn($warnstr, $(QuoteNode(fsym)))
             dtype = datatype(data)
             dspace = dataspace(data)
             obj = try
-                ($chainsym)(parent, name, dtype, dspace, plists...)
+                ($chainsym)(parent, name, dtype, dspace, prop1, plists...)
             finally
                 close(dspace)
             end
@@ -107,10 +108,11 @@ for (fsym, ptype) in ((:d_write, Union{File,Group}),
     usesig = "$fsym(parent::$ptype, name::AbstractString, data; properties...)"
     warnstr = "`$depsig` with property lists is deprecated, use `$usesig` with keywords instead"
     @eval begin
-        function ($fsym)(parent::$ptype, name::AbstractString, data, plists::Properties...)
+        function ($fsym)(parent::$ptype, name::AbstractString, data,
+                         prop1::Properties, plists::Properties...)
             depwarn($warnstr, $(QuoteNode(fsym)))
             dtype = datatype(data)
-            obj = ($crsym)(parent, name, dtype, dataspace(data), plists...)
+            obj = ($crsym)(parent, name, dtype, dataspace(data), prop1, plists...)
             try
                 writearray(obj, dtype.id, data)
             catch exc
@@ -124,14 +126,14 @@ for (fsym, ptype) in ((:d_write, Union{File,Group}),
     end
 end
 function Base.write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}},
-               plists::Properties...) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}}
+                    prop1::Properties, plists::Properties...) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}}
     depwarn("`write(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
             "`write(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, data; properties...)` " *
             "with keywords instead.", :write)
     # We avoid using the d_write method to prevent double deprecation warnings.
     dtype = datatype(data)
-    obj = __d_create(parent, name, dtype, dataspace(data), plists...)
+    obj = __d_create(parent, name, dtype, dataspace(data), prop1, plists...)
     try
         writearray(obj, dtype.id, data)
     catch exc
@@ -143,14 +145,14 @@ function Base.write(parent::Union{File,Group}, name::AbstractString, data::Union
     end
 end
 function Base.write(parent::Dataset, name::AbstractString, data::Union{T,AbstractArray{T}},
-               plists::Properties...) where {T<:Union{ScalarType,<:AbstractString}}
+                    prop1::Properties, plists::Properties...) where {T<:Union{ScalarType,<:AbstractString}}
     depwarn("`write(parent::HDF5Dataset, name::AbstractString, data, plists::HDF5Properties...)` " *
             "with property lists is deprecated, use " *
             "`write(parent::HDF5Dataset, name::AbstractString, data; properties...)` " *
             "with keywords instead.", :write)
     # We avoid using the a_write method to prevent double deprecation warnings.
     dtype = datatype(data)
-    obj = __a_create(parent, name, dtype, dataspace(data), plists...)
+    obj = __a_create(parent, name, dtype, dataspace(data), prop1, plists...)
     try
         writearray(obj, dtype.id, data)
     catch exc
