@@ -1799,7 +1799,14 @@ function h5d_write(dataset_id, memtype_id, buf::AbstractArray, xfer=H5P_DEFAULT)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
 end
 function h5d_write(dataset_id, memtype_id, str::AbstractString, xfer=H5P_DEFAULT)
-    ccall((:H5Dwrite, libhdf5), herr_t, (hid_t, hid_t, hid_t, hid_t, hid_t, Cstring), dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, str)
+    strbuf = Base.cconvert(Cstring, str)
+    GC.@preserve strbuf begin
+        # unsafe_convert(Cstring, strbuf) is responsible for enforcing the no-'\0' policy,
+        # but then need explicit convert to Ptr{UInt8} since Ptr{Cstring} -> Ptr{Cvoid} is
+        # not automatic.
+        buf = convert(Ptr{UInt8}, Base.unsafe_convert(Cstring, strbuf))
+        h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
+    end
 end
 function h5d_write(dataset_id, memtype_id, x::T, xfer=H5P_DEFAULT) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
