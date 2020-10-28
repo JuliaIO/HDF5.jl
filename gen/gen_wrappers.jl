@@ -6,6 +6,8 @@ defs = read(joinpath(@__DIR__, "api_defs.jl"), String)
 exprs = Base.include_string(@__MODULE__, "@macroexpand1 begin\n" * defs * "\nend", "api_defs.jl")
 # Definitions which are not automatically generated, but should still be documented as
 # part of the raw low-level API:
+append!(bound_api["H5P"],
+        ["h5p_get_class_name(pcid::hid_t)"])                  # defined in src/api_helpers.jl
 append!(bound_api["H5T"],
         ["h5t_get_member_name(type_id::hid_t, index::Cuint)", # defined in src/api_helpers.jl
          "h5t_get_tag(type_id::hid_t)"])                      # defined in src/api_helpers.jl

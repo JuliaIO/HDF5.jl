@@ -216,6 +216,19 @@ function h5p_get_userblock(plist_id)
     return len[]
 end
 
+# Note: The following function(s) implement direct ccalls because the binding generator
+# cannot (yet) do the string wrapping and memory freeing.
+
+function h5p_get_class_name(pcid)
+    pc = ccall((:H5Pget_class_name, libhdf5), Ptr{UInt8}, (hid_t,), pcid)
+    if pc == C_NULL
+        error("Error getting class name")
+    end
+    s = unsafe_string(pc)
+    h5_free_memory(pc)
+    return s
+end
+
 ###
 ### Reference Interface
 ###

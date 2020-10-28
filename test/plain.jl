@@ -700,7 +700,7 @@ meta = a_create(dset, "meta", datatype(Bool), dataspace((1,)))
 @test sprint(show, meta) == "HDF5 attribute: meta"
 
 prop = p_create(HDF5.H5P_DATASET_CREATE)
-@test occursin(r"^HDF5.Properties\(\d+, \d+\)", sprint(show, prop))
+@test sprint(show, prop) == "HDF5 property: dataset create class"
 
 dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
 @test sprint(show, dtype) == "HDF5 datatype: H5T_IEEE_F64LE"
@@ -717,7 +717,7 @@ close(dtype)
 @test sprint(show, dtype) == "HDF5 datatype: (invalid)"
 
 close(prop)
-@test occursin(r"^HDF5.Properties\(-1, \d+\)", sprint(show, prop))
+@test sprint(show, prop) == "HDF5 property (invalid)"
 
 close(meta)
 @test sprint(show, meta) == "HDF5 attribute (invalid)"
