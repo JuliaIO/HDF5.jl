@@ -1426,7 +1426,7 @@ end
 function d_write(parent::Union{File,Group}, name::AbstractString, data; pv...)
     obj, dtype = d_create(parent, name, data; pv...)
     try
-        writearray(obj, dtype.id, data)
+        d_write(obj, dtype, data)
     catch exc
         o_delete(obj)
         rethrow(exc)
@@ -1459,27 +1459,17 @@ function Base.write(obj::Attribute, x)
         close(dtype)
     end
 end
-function Base.write(obj::Dataset, x::Union{T,Array{T}}) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}}
+function Base.write(obj::Dataset, x)
     dtype = datatype(x)
     try
-        writearray(obj, dtype.id, x)
-    finally
-       close(dtype)
-    end
-end
-# VLEN types
-function Base.write(obj::Dataset, data::VLen{T}) where {T<:Union{ScalarType,CharType}}
-    dtype = datatype(data)
-    try
-        writearray(obj, dtype.id, data)
+        d_write(obj, dtype.id, x)
     finally
         close(dtype)
     end
 end
 
 # For plain files and groups, let "write(obj, name, val; properties...)" mean "d_write"
-Base.write(parent::Union{File,Group}, name::AbstractString, data::Union{T,AbstractArray{T}}; pv...) where {T<:Union{ScalarType,<:AbstractString,Complex{<:ScalarType}}} =
-    d_write(parent, name, data; pv...)
+Base.write(parent::Union{File,Group}, name::AbstractString, data; pv...) = d_write(parent, name, data; pv...)
 # For datasets, "write(dset, name, val; properties...)" means "a_write"
 Base.write(parent::Dataset, name::AbstractString, data; pv...) = a_write(parent, name, data; pv...)
 
@@ -1614,8 +1604,6 @@ end
 ### HDF5 utilities ###
 readarray(dset::Dataset, type_id, buf) = h5d_read(dset, type_id, buf, dset.xfer)
 readarray(attr::Attribute, type_id, buf) = h5a_read(attr, type_id, buf)
-writearray(dset::Dataset, type_id, buf) = h5d_write(dset, type_id, buf, dset.xfer)
-writearray(dset::Dataset, type_id, ::EmptyArray) = nothing
 
 # Determine Julia "native" type from the class, datatype, and dataspace
 # For datasets, defined file formats should use attributes instead
@@ -1782,6 +1770,9 @@ end
 
 # default behavior
 a_write(attr::Attribute, memtype::Datatype, x) = h5a_write(attr, memtype, x)
+d_write(dset::Dataset, memtype::Datatype, x, xfer::Properties=dset.xfer) =
+    h5d_write(dset, memtype, H5S_ALL, H5S_ALL, xfer, x)
+
 # type-specific behaviors
 function a_write(attr::Attribute, memtype::Datatype, str::AbstractString)
     strbuf = Base.cconvert(Cstring, str)
@@ -1804,31 +1795,31 @@ function h5d_read(dataset_id, memtype_id, buf::AbstractArray, xfer=H5P_DEFAULT)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
     h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
 end
-function h5d_write(dataset_id, memtype_id, buf::AbstractArray, xfer=H5P_DEFAULT)
+
+function d_write(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::Properties=dataset.xfer)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
-    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
+    h5d_write(dataset, memtype, H5S_ALL, H5S_ALL, xfer, buf)
 end
-function h5d_write(dataset_id, memtype_id, str::AbstractString, xfer=H5P_DEFAULT)
+function d_write(dataset::Dataset, memtype::Datatype, str::AbstractString, xfer::Properties=dataset.xfer)
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
         # unsafe_convert(Cstring, strbuf) is responsible for enforcing the no-'\0' policy,
         # but then need explicit convert to Ptr{UInt8} since Ptr{Cstring} -> Ptr{Cvoid} is
         # not automatic.
         buf = convert(Ptr{UInt8}, Base.unsafe_convert(Cstring, strbuf))
-        h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
+        h5d_write(dataset, memtype, H5S_ALL, H5S_ALL, xfer, buf)
     end
 end
-function h5d_write(dataset_id, memtype_id, x::T, xfer=H5P_DEFAULT) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
+function d_write(dataset::Dataset, memtype::Datatype, x::T, xfer::Properties=dataset.xfer) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
-    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, tmp)
+    h5d_write(dataset, memtype, H5S_ALL, H5S_ALL, xfer, tmp)
 end
-function h5d_write(dataset_id, memtype_id, strs::Array{<:AbstractString}, xfer=H5P_DEFAULT)
+function d_write(dataset::Dataset, memtype::Datatype, strs::Array{<:AbstractString}, xfer::Properties=dataset.xfer)
     p = Ref{Cstring}(strs)
-    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, p)
+    h5d_write(dataset, memtype, H5S_ALL, H5S_ALL, xfer, p)
 end
-function h5d_write(dataset_id, memtype_id, v::VLen, xfer=H5P_DEFAULT)
-    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, v)
-end
+d_write(dataset::Dataset, memtype::Datatype, ::EmptyArray, xfer::Properties=dataset.xfer) = nothing
+
 #h5s_get_simple_extent_ndims(space_id::hid_t) = h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 h5t_get_native_type(type_id) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
 

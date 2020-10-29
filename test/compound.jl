@@ -108,12 +108,12 @@ end
         foo_dtype = datatype(foo_hdf5)
         foo_space = dataspace(v_write)
         foo_dset = d_create(h5f, "foo", foo_dtype, foo_space)
-        HDF5.h5d_write(foo_dset, foo_dtype.id, v_write)
+        d_write(foo_dset, foo_dtype, v_write)
 
         bar_dtype = datatype(bar_hdf5)
         bar_space = dataspace(w_write)
         bar_dset = d_create(h5f, "bar", bar_dtype, bar_space)
-        HDF5.h5d_write(bar_dset, bar_dtype.id, w_write)
+        d_write(bar_dset, bar_dtype, w_write)
     end
 
     v_read = h5read(fn, "foo")

@@ -114,7 +114,7 @@ for (fsym, ptype) in ((:d_write, Union{File,Group}),
             dtype = datatype(data)
             obj = ($crsym)(parent, name, dtype, dataspace(data), prop1, plists...)
             try
-                writearray(obj, dtype.id, data)
+                $fsym(obj, dtype, data)
             catch exc
                 o_delete(obj)
                 rethrow(exc)
@@ -135,7 +135,7 @@ function Base.write(parent::Union{File,Group}, name::AbstractString, data::Union
     dtype = datatype(data)
     obj = __d_create(parent, name, dtype, dataspace(data), prop1, plists...)
     try
-        writearray(obj, dtype.id, data)
+        d_write(obj, dtype, data)
     catch exc
         o_delete(obj)
         rethrow(exc)
@@ -223,7 +223,7 @@ import Base: names
 @deprecate has(parent::Union{File,Group,Dataset}, path::AbstractString) Base.haskey(parent, path)
 @deprecate exists(parent::Union{File,Group,Dataset,Datatype,Attributes}, path::AbstractString) Base.haskey(parent, path)
 
-### Changed in PR#
+### Changed in PR#723
 @deprecate h5a_create(loc_id, name, type_id, space_id) h5a_create(loc_id, name, type_id, space_id, HDF5._attr_properties(name), HDF5.H5P_DEFAULT) false
 @deprecate h5a_open(obj_id, name) h5a_open(obj_id, name, HDF5.H5P_DEFAULT) false
 @deprecate h5d_create(loc_id, name, type_id, space_id) h5d_create(loc_id, name, type_id, space_id, HDF5._link_properties(path), HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT) false
@@ -237,3 +237,4 @@ import Base: names
 @deprecate h5o_open(loc_id, name) h5o_open(loc_id, name, HDF5.H5P_DEFAULT) false
 
 @deprecate writearray(obj::Attribute, type_id, x) a_write(obj, type_id, x) false
+@deprecate writearray(obj::Dataset, type_id, x) d_write(obj, type_id, x) false
