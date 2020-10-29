@@ -1021,6 +1021,60 @@ function h5do_write_chunk(dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
     return nothing
 end
 
+function h5ds_attach_scale(did, dsid, idx)
+    var"#status#" = ccall((:H5DSattach_scale, libhdf5_hl), herr_t, (hid_t, hid_t, Cuint), did, dsid, idx)
+    var"#status#" < 0 && error("Unable to attach scale")
+    return nothing
+end
+
+function h5ds_detach_scale(did, dsid, idx)
+    var"#status#" = ccall((:H5DSdetach_scale, libhdf5_hl), herr_t, (hid_t, hid_t, Cuint), did, dsid, idx)
+    var"#status#" < 0 && error("Unable to detach scale")
+    return nothing
+end
+
+function h5ds_get_label(did, idx, label, size)
+    var"#status#" = ccall((:H5DSget_label, libhdf5_hl), herr_t, (hid_t, Cuint, Ptr{UInt8}, hsize_t), did, idx, label, size)
+    var"#status#" < 0 && error("Unable to get label")
+    return nothing
+end
+
+function h5ds_get_num_scales(did, idx)
+    var"#status#" = ccall((:H5DSget_num_scales, libhdf5_hl), Cint, (hid_t, Cuint), did, idx)
+    var"#status#" < 0 && error("Error getting number of scales")
+    return var"#status#"
+end
+
+function h5ds_get_scale_name(did, name, size)
+    var"#status#" = ccall((:H5DSget_scale_name, libhdf5_hl), Cssize_t, (hid_t, Ptr{UInt8}, Csize_t), did, name, size)
+    var"#status#" < 0 && error("Unable to get scale name")
+    return var"#status#"
+end
+
+function h5ds_is_attached(did, dsid, idx)
+    var"#status#" = ccall((:H5DSis_attached, libhdf5_hl), htri_t, (hid_t, hid_t, Cuint), did, dsid, idx)
+    var"#status#" < 0 && error("Unable to check if dimension is attached")
+    return var"#status#" > 0
+end
+
+function h5ds_is_scale(did)
+    var"#status#" = ccall((:H5DSis_scale, libhdf5_hl), htri_t, (hid_t,), did)
+    var"#status#" < 0 && error("Unable to check if dataset is scale")
+    return var"#status#" > 0
+end
+
+function h5ds_set_label(did, idx, label)
+    var"#status#" = ccall((:H5DSset_label, libhdf5_hl), herr_t, (hid_t, Cuint, Ref{UInt8}), did, idx, label)
+    var"#status#" < 0 && error("Unable to set label")
+    return nothing
+end
+
+function h5ds_set_scale(dsid, dimname)
+    var"#status#" = ccall((:H5DSset_scale, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}), dsid, dimname)
+    var"#status#" < 0 && error("Unable to set scale")
+    return nothing
+end
+
 function h5lt_dtype_to_text(datatype, str, lang_type, len)
     var"#status#" = ccall((:H5LTdtype_to_text, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, Cint, Ref{Csize_t}), datatype, str, lang_type, len)
     var"#status#" < 0 && error("Error getting datatype text representation")

@@ -115,7 +115,7 @@ macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing)
     push!(funclist, string(funcsig))
 
     # Determine the underlying C library to call
-    lib = startswith(string(cfuncname), r"H5(DO|LT|TB)") ? :libhdf5_hl : :libhdf5
+    lib = startswith(string(cfuncname), r"H5(DO|DS|LT|TB)") ? :libhdf5_hl : :libhdf5
 
     # Now start building up the full expression:
     statsym = Symbol("#status#") # not using gensym() to have stable naming
