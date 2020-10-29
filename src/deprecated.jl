@@ -188,7 +188,7 @@ end
 
 ### Changed in PR#689
 # - switch from H5Rdereference1 to H5Rdereference2
-@deprecate h5r_dereference(obj_id, ref_type, ref) h5r_dereference(obj_id, H5P_DEFAULT, ref_type, ref) false
+@deprecate h5r_dereference(obj_id, ref_type, ref) h5r_dereference(obj_id, H5P.DEFAULT, ref_type, ref) false
 
 ### Changed in PR#690, PR#695
 # - rename exported bindings
@@ -222,3 +222,11 @@ import Base: names
 ### Changed in PR#694
 @deprecate has(parent::Union{File,Group,Dataset}, path::AbstractString) Base.haskey(parent, path)
 @deprecate exists(parent::Union{File,Group,Dataset,Datatype,Attributes}, path::AbstractString) Base.haskey(parent, path) false
+
+for pseudomod in (H5, H5D, H5E, H5F, H5FD, H5I, H5L, H5O, H5P, H5R, H5S, H5T, H5Z)
+    modsym = nameof(typeof(pseudomod))
+    for C in propertynames(pseudomod)
+        constname = Symbol(modsym, :_, C)
+        @eval @deprecate_binding($constname, $modsym.$C, false)
+    end
+end

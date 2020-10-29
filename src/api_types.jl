@@ -104,222 +104,323 @@ abstract  type Hmpih end
 primitive type Hmpih32 <: Hmpih 32 end # MPICH C/Fortran, OpenMPI Fortran: 32 bit handles
 primitive type Hmpih64 <: Hmpih 64 end # OpenMPI C: pointers (mostly 64 bit)
 
-# Private function to extract exported global library constants.
-# Need to call H5open to ensure library is initalized before reading these constants.
-# Although these are runtime initalized constants, in practice their values are stable, so
-# we can precompile for improved latency.
-let libhdf5handle = Ref(Libdl.dlopen(libhdf5))
-    ccall(Libdl.dlsym(libhdf5handle[], :H5open), herr_t, ())
-    global _read_const(sym::Symbol) = unsafe_load(cglobal(Libdl.dlsym(libhdf5handle[], sym), hid_t))
+@defconstants H5 begin
+    # iteration order constants
+    ITER_UNKNOWN::Cint = -1
+    ITER_INC::Cint     = 0
+    ITER_DEC::Cint     = 1
+    ITER_NATIVE::Cint  = 2
+    ITER_N::Cint       = 3
+
+    # indexing type constants
+    INDEX_UNKNOWN::Cint   = -1
+    INDEX_NAME::Cint      = 0
+    INDEX_CRT_ORDER::Cint = 1
+    INDEX_N::Cint         = 2
 end
 
-# iteration order constants
-const H5_ITER_UNKNOWN = -1
-const H5_ITER_INC     = 0
-const H5_ITER_DEC     = 1
-const H5_ITER_NATIVE  = 2
-const H5_ITER_N       = 3
-
-# indexing type constants
-const H5_INDEX_UNKNOWN   = -1
-const H5_INDEX_NAME      = 0
-const H5_INDEX_CRT_ORDER = 1
-const H5_INDEX_N = 2
-
 # dataset constants
-const H5D_COMPACT      = 0
-const H5D_CONTIGUOUS   = 1
-const H5D_CHUNKED      = 2
+@defconstants H5D begin
+    # layouts (C enum H5D_layout_t
+    COMPACT::Cint    = 0
+    CONTIGUOUS::Cint = 1
+    CHUNKED::Cint    = 2
 
-# allocation times (C enum H5D_alloc_time_t)
-const H5D_ALLOC_TIME_ERROR = -1
-const H5D_ALLOC_TIME_DEFAULT = 0
-const H5D_ALLOC_TIME_EARLY = 1
-const H5D_ALLOC_TIME_LATE = 2
-const H5D_ALLOC_TIME_INCR = 3
+    # allocation times (C enum H5D_alloc_time_t)
+    ALLOC_TIME_ERROR::Cint   = -1
+    ALLOC_TIME_DEFAULT::Cint = 0
+    ALLOC_TIME_EARLY::Cint   = 1
+    ALLOC_TIME_LATE::Cint    = 2
+    ALLOC_TIME_INCR::Cint    = 3
 
-# used to "unset" chunk cache configuration parameters
-const H5D_CHUNK_CACHE_NSLOTS_DEFAULT = -1 % Csize_t
-const H5D_CHUNK_CACHE_NBYTES_DEFAULT = -1 % Csize_t
-const H5D_CHUNK_CACHE_W0_DEFAULT = Cdouble(-1)
+    # used to "unset" chunk cache configuration parameters
+    CHUNK_CACHE_NSLOTS_DEFAULT::Csize_t = -1 % Csize_t
+    CHUNK_CACHE_NBYTES_DEFAULT::Csize_t = -1 % Csize_t
+    CHUNK_CACHE_W0_DEFAULT::Cfloat      = -1.0f0
+end
 
 # error-related constants
-const H5E_DEFAULT      = 0
+@defconstants H5E begin
+    DEFAULT::hid_t = 0
+end
 
-# file access modes
-const H5F_ACC_RDONLY     = 0x0000
-const H5F_ACC_RDWR       = 0x0001
-const H5F_ACC_TRUNC      = 0x0002
-const H5F_ACC_EXCL       = 0x0004
-const H5F_ACC_DEBUG      = 0x0008
-const H5F_ACC_CREAT      = 0x0010
-const H5F_ACC_SWMR_WRITE = 0x0020
-const H5F_ACC_SWMR_READ  = 0x0040
+@defconstants H5F begin
+    # file access modes
+    ACC_RDONLY::Cuint     = 0x0000
+    ACC_RDWR::Cuint       = 0x0001
+    ACC_TRUNC::Cuint      = 0x0002
+    ACC_EXCL::Cuint       = 0x0004
+    ACC_DEBUG::Cuint      = 0x0008
+    ACC_CREAT::Cuint      = 0x0010
+    ACC_SWMR_WRITE::Cuint = 0x0020
+    ACC_SWMR_READ::Cuint  = 0x0040
 
-# Library versions
-const H5F_LIBVER_EARLIEST = 0
-const H5F_LIBVER_V18      = 1
-const H5F_LIBVER_V110     = 2
-const H5F_LIBVER_LATEST   = H5F_LIBVER_V110
+    # Library versions
+    LIBVER_EARLIEST::Cint = 0
+    LIBVER_V18::Cint      = 1
+    LIBVER_V110::Cint     = 2
+    LIBVER_LATEST::Cint   = 2 # H5F_LIBVER_V110
 
-# object types
-const H5F_OBJ_FILE     = 0x0001
-const H5F_OBJ_DATASET  = 0x0002
-const H5F_OBJ_GROUP    = 0x0004
-const H5F_OBJ_DATATYPE = 0x0008
-const H5F_OBJ_ATTR     = 0x0010
-const H5F_OBJ_ALL      = (H5F_OBJ_FILE|H5F_OBJ_DATASET|H5F_OBJ_GROUP|H5F_OBJ_DATATYPE|H5F_OBJ_ATTR)
-const H5F_OBJ_LOCAL    = 0x0020
+    # object types
+    OBJ_FILE::Cuint     = 0x0001
+    OBJ_DATASET::Cuint  = 0x0002
+    OBJ_GROUP::Cuint    = 0x0004
+    OBJ_DATATYPE::Cuint = 0x0008
+    OBJ_ATTR::Cuint     = 0x0010
+    OBJ_ALL::Cuint      = 0x001f # (H5F_OBJ_FILE|H5F_OBJ_DATASET|H5F_OBJ_GROUP|H5F_OBJ_DATATYPE|H5F_OBJ_ATTR)
+    OBJ_LOCAL::Cuint    = 0x0020
 
-# other file constants
-const H5F_SCOPE_LOCAL   = 0
-const H5F_SCOPE_GLOBAL  = 1
-const H5F_CLOSE_DEFAULT = 0
-const H5F_CLOSE_WEAK    = 1
-const H5F_CLOSE_SEMI    = 2
-const H5F_CLOSE_STRONG  = 3
+    # other file constants
+    SCOPE_LOCAL::Cint   = 0
+    SCOPE_GLOBAL::Cint  = 1
+    CLOSE_DEFAULT::Cint = 0
+    CLOSE_WEAK::Cint    = 1
+    CLOSE_SEMI::Cint    = 2
+    CLOSE_STRONG::Cint  = 3
+end
 
 # file driver constants
-const H5FD_MPIO_INDEPENDENT    = 0
-const H5FD_MPIO_COLLECTIVE     = 1
-const H5FD_MPIO_CHUNK_DEFAULT  = 0
-const H5FD_MPIO_CHUNK_ONE_IO   = 1
-const H5FD_MPIO_CHUNK_MULTI_IO = 2
-const H5FD_MPIO_COLLECTIVE_IO  = 0
-const H5FD_MPIO_INDIVIDUAL_IO  = 1
+@defconstants H5FD begin
+    # C enum H5FD_mpio_xfer_t
+    MPIO_INDEPENDENT::Cint    = 0
+    MPIO_COLLECTIVE::Cint     = 1
 
-# object types (C enum H5Itype_t)
-const H5I_FILE         = 1
-const H5I_GROUP        = 2
-const H5I_DATATYPE     = 3
-const H5I_DATASPACE    = 4
-const H5I_DATASET      = 5
-const H5I_ATTR         = 6
-const H5I_REFERENCE    = 7
-const H5I_VFL          = 8
+    # C enum H5FD_mpio_chunk_opt_t
+    MPIO_CHUNK_DEFAULT::Cint  = 0
+    MPIO_CHUNK_ONE_IO::Cint   = 1
+    MPIO_CHUNK_MULTI_IO::Cint = 2
+
+    # C enum H5FD_mpio_collective_opt_t
+    MPIO_COLLECTIVE_IO::Cint  = 0
+    MPIO_INDIVIDUAL_IO::Cint  = 1
+end
+
+@defconstants H5I begin
+    # object types (C enum H5Itype_t)
+    FILE::Cint      = 1
+    GROUP::Cint     = 2
+    DATATYPE::Cint  = 3
+    DATASPACE::Cint = 4
+    DATASET::Cint   = 5
+    ATTR::Cint      = 6
+    REFERENCE::Cint = 7
+    VFL::Cint       = 8
+end
 
 # Link constants
-const H5L_TYPE_HARD    = 0
-const H5L_TYPE_SOFT    = 1
-const H5L_TYPE_EXTERNAL= 2
+@defconstants H5L begin
+    TYPE_HARD::Cint     = 0
+    TYPE_SOFT::Cint     = 1
+    TYPE_EXTERNAL::Cint = 2
+end
 
 # Object constants
-const H5O_TYPE_GROUP   = 0
-const H5O_TYPE_DATASET = 1
-const H5O_TYPE_NAMED_DATATYPE = 2
+@defconstants H5O begin
+    TYPE_GROUP::Cint   = 0
+    TYPE_DATASET::Cint = 1
+    TYPE_NAMED_DATATYPE::Cint = 2
+end
 
 # Property constants
-const H5P_DEFAULT          = hid_t(0)
-const H5P_OBJECT_CREATE    = _read_const(:H5P_CLS_OBJECT_CREATE_ID_g)
-const H5P_FILE_CREATE      = _read_const(:H5P_CLS_FILE_CREATE_ID_g)
-const H5P_FILE_ACCESS      = _read_const(:H5P_CLS_FILE_ACCESS_ID_g)
-const H5P_DATASET_CREATE   = _read_const(:H5P_CLS_DATASET_CREATE_ID_g)
-const H5P_DATASET_ACCESS   = _read_const(:H5P_CLS_DATASET_ACCESS_ID_g)
-const H5P_DATASET_XFER     = _read_const(:H5P_CLS_DATASET_XFER_ID_g)
-const H5P_FILE_MOUNT       = _read_const(:H5P_CLS_FILE_MOUNT_ID_g)
-const H5P_GROUP_CREATE     = _read_const(:H5P_CLS_GROUP_CREATE_ID_g)
-const H5P_GROUP_ACCESS     = _read_const(:H5P_CLS_GROUP_ACCESS_ID_g)
-const H5P_DATATYPE_CREATE  = _read_const(:H5P_CLS_DATATYPE_CREATE_ID_g)
-const H5P_DATATYPE_ACCESS  = _read_const(:H5P_CLS_DATATYPE_ACCESS_ID_g)
-const H5P_STRING_CREATE    = _read_const(:H5P_CLS_STRING_CREATE_ID_g)
-const H5P_ATTRIBUTE_CREATE = _read_const(:H5P_CLS_ATTRIBUTE_CREATE_ID_g)
-const H5P_OBJECT_COPY      = _read_const(:H5P_CLS_OBJECT_COPY_ID_g)
-const H5P_LINK_CREATE      = _read_const(:H5P_CLS_LINK_CREATE_ID_g)
-const H5P_LINK_ACCESS      = _read_const(:H5P_CLS_LINK_ACCESS_ID_g)
+@defconstants H5P begin
+    DEFAULT::hid_t = 0
+    OBJECT_CREATE::hid_t
+    FILE_CREATE::hid_t
+    FILE_ACCESS::hid_t
+    DATASET_CREATE::hid_t
+    DATASET_ACCESS::hid_t
+    DATASET_XFER::hid_t
+    FILE_MOUNT::hid_t
+    GROUP_CREATE::hid_t
+    GROUP_ACCESS::hid_t
+    DATATYPE_CREATE::hid_t
+    DATATYPE_ACCESS::hid_t
+    STRING_CREATE::hid_t
+    ATTRIBUTE_CREATE::hid_t
+    OBJECT_COPY::hid_t
+    LINK_CREATE::hid_t
+    LINK_ACCESS::hid_t
+end
 
 # Reference constants
-const H5R_OBJECT         = 0
-const H5R_DATASET_REGION = 1
-const H5R_OBJ_REF_BUF_SIZE      = 8  # == sizeof(hobj_ref_t)
-const H5R_DSET_REG_REF_BUF_SIZE = 12 # == sizeof(hdset_reg_ref_t)
+@defconstants H5R begin
+    OBJECT::Cint         = 0
+    DATASET_REGION::Cint = 1
+    OBJ_REF_BUF_SIZE::Cint      = 8  # == sizeof(hobj_ref_t)
+    DSET_REG_REF_BUF_SIZE::Cint = 12 # == sizeof(hdset_reg_ref_t)
+end
 
 # Dataspace constants
-const H5S_ALL          = hid_t(0)
-const H5S_SCALAR       = hid_t(0)
-const H5S_SIMPLE       = hid_t(1)
-const H5S_NULL         = hid_t(2)
-const H5S_UNLIMITED    = typemax(hsize_t)
+@defconstants H5S begin
+    # atomic data types
+    ALL::hid_t         = 0
+    UNLIMITED::hsize_t = typemax(hsize_t)
 
-# Dataspace selection constants
-const H5S_SELECT_SET     = 0
-const H5S_SELECT_OR      = 1
-const H5S_SELECT_AND     = 2
-const H5S_SELECT_XOR     = 3
-const H5S_SELECT_NOTB    = 4
-const H5S_SELECT_NOTA    = 5
-const H5S_SELECT_APPEND  = 6
-const H5S_SELECT_PREPEND = 7
+    # Types of dataspaces (C enum H5S_class_t)
+    SCALAR::hid_t    = hid_t(0)
+    SIMPLE::hid_t    = hid_t(1)
+    NULL::hid_t      = hid_t(2)
 
-# type classes (C enum H5T_class_t)
-const H5T_INTEGER      = hid_t(0)
-const H5T_FLOAT        = hid_t(1)
-const H5T_TIME         = hid_t(2)  # not supported by HDF5 library
-const H5T_STRING       = hid_t(3)
-const H5T_BITFIELD     = hid_t(4)
-const H5T_OPAQUE       = hid_t(5)
-const H5T_COMPOUND     = hid_t(6)
-const H5T_REFERENCE    = hid_t(7)
-const H5T_ENUM         = hid_t(8)
-const H5T_VLEN         = hid_t(9)
-const H5T_ARRAY        = hid_t(10)
+    # Dataspace selection constants (C enum H5S_seloper_t)
+    SELECT_SET::Cint     = 0
+    SELECT_OR::Cint      = 1
+    SELECT_AND::Cint     = 2
+    SELECT_XOR::Cint     = 3
+    SELECT_NOTB::Cint    = 4
+    SELECT_NOTA::Cint    = 5
+    SELECT_APPEND::Cint  = 6
+    SELECT_PREPEND::Cint = 7
+end
 
-# Character types
-const H5T_CSET_ASCII   = 0
-const H5T_CSET_UTF8    = 1
+@defconstants H5T begin
+    # type classes (C enum H5T_class_t)
+    INTEGER::hid_t   = 0
+    FLOAT::hid_t     = 1
+    TIME::hid_t      = 2  # not supported by HDF5 library
+    STRING::hid_t    = 3
+    BITFIELD::hid_t  = 4
+    OPAQUE::hid_t    = 5
+    COMPOUND::hid_t  = 6
+    REFERENCE::hid_t = 7
+    ENUM::hid_t      = 8
+    VLEN::hid_t      = 9
+    ARRAY::hid_t     = 10
 
-# Sign types (C enum H5T_sign_t)
-const H5T_SGN_NONE     = Cint(0)  # unsigned
-const H5T_SGN_2        = Cint(1)  # 2's complement
+    # Character types (C enum H5T_cset_t)
+    CSET_ASCII::Cint = 0
+    CSET_UTF8::Cint  = 1
 
-# Search directions
-const H5T_DIR_ASCEND   = 1
-const H5T_DIR_DESCEND  = 2
+    # String padding modes (C enum H5T_str_t)
+    STR_NULLTERM::Cint = 0
+    STR_NULLPAD::Cint  = 1
+    STR_SPACEPAD::Cint = 2
 
-# String padding modes
-const H5T_STR_NULLTERM = 0
-const H5T_STR_NULLPAD  = 1
-const H5T_STR_SPACEPAD = 2
+    # Variable length string
+    VARIABLE::Csize_t = -1 % Csize_t
 
-# Type_id constants (LE = little endian, I16 = Int16, etc)
-const H5T_STD_I8LE        = _read_const(:H5T_STD_I8LE_g)
-const H5T_STD_I8BE        = _read_const(:H5T_STD_I8BE_g)
-const H5T_STD_U8LE        = _read_const(:H5T_STD_U8LE_g)
-const H5T_STD_U8BE        = _read_const(:H5T_STD_U8BE_g)
-const H5T_STD_I16LE       = _read_const(:H5T_STD_I16LE_g)
-const H5T_STD_I16BE       = _read_const(:H5T_STD_I16BE_g)
-const H5T_STD_U16LE       = _read_const(:H5T_STD_U16LE_g)
-const H5T_STD_U16BE       = _read_const(:H5T_STD_U16BE_g)
-const H5T_STD_I32LE       = _read_const(:H5T_STD_I32LE_g)
-const H5T_STD_I32BE       = _read_const(:H5T_STD_I32BE_g)
-const H5T_STD_U32LE       = _read_const(:H5T_STD_U32LE_g)
-const H5T_STD_U32BE       = _read_const(:H5T_STD_U32BE_g)
-const H5T_STD_I64LE       = _read_const(:H5T_STD_I64LE_g)
-const H5T_STD_I64BE       = _read_const(:H5T_STD_I64BE_g)
-const H5T_STD_U64LE       = _read_const(:H5T_STD_U64LE_g)
-const H5T_STD_U64BE       = _read_const(:H5T_STD_U64BE_g)
-const H5T_IEEE_F32LE      = _read_const(:H5T_IEEE_F32LE_g)
-const H5T_IEEE_F32BE      = _read_const(:H5T_IEEE_F32BE_g)
-const H5T_IEEE_F64LE      = _read_const(:H5T_IEEE_F64LE_g)
-const H5T_IEEE_F64BE      = _read_const(:H5T_IEEE_F64BE_g)
-const H5T_C_S1            = _read_const(:H5T_C_S1_g)
-const H5T_STD_REF_OBJ     = _read_const(:H5T_STD_REF_OBJ_g)
-const H5T_STD_REF_DSETREG = _read_const(:H5T_STD_REF_DSETREG_g)
-# Native types
-const H5T_NATIVE_B8       = _read_const(:H5T_NATIVE_B8_g)
-const H5T_NATIVE_INT8     = _read_const(:H5T_NATIVE_INT8_g)
-const H5T_NATIVE_UINT8    = _read_const(:H5T_NATIVE_UINT8_g)
-const H5T_NATIVE_INT16    = _read_const(:H5T_NATIVE_INT16_g)
-const H5T_NATIVE_UINT16   = _read_const(:H5T_NATIVE_UINT16_g)
-const H5T_NATIVE_INT32    = _read_const(:H5T_NATIVE_INT32_g)
-const H5T_NATIVE_UINT32   = _read_const(:H5T_NATIVE_UINT32_g)
-const H5T_NATIVE_INT64    = _read_const(:H5T_NATIVE_INT64_g)
-const H5T_NATIVE_UINT64   = _read_const(:H5T_NATIVE_UINT64_g)
-const H5T_NATIVE_FLOAT    = _read_const(:H5T_NATIVE_FLOAT_g)
-const H5T_NATIVE_DOUBLE   = _read_const(:H5T_NATIVE_DOUBLE_g)
-# Other type constants
-const H5T_VARIABLE = reinterpret(UInt, -1)
+    # Sign types (C enum H5T_sign_t)
+    SGN_NONE::Cint = 0  # unsigned
+    SGN_2::Cint    = 1  # 2's complement
+
+    # Search directions (C enum H5T_direction_t)
+    DIR_ASCEND::Cint  = 1
+    DIR_DESCEND::Cint = 2
+
+    # Type "constants" (LE = little endian, I16 = Int16, etc)
+    STD_I8LE::hid_t
+    STD_I8BE::hid_t
+    STD_U8LE::hid_t
+    STD_U8BE::hid_t
+    STD_I16LE::hid_t
+    STD_I16BE::hid_t
+    STD_U16LE::hid_t
+    STD_U16BE::hid_t
+    STD_I32LE::hid_t
+    STD_I32BE::hid_t
+    STD_U32LE::hid_t
+    STD_U32BE::hid_t
+    STD_I64LE::hid_t
+    STD_I64BE::hid_t
+    STD_U64LE::hid_t
+    STD_U64BE::hid_t
+    IEEE_F32LE::hid_t
+    IEEE_F32BE::hid_t
+    IEEE_F64LE::hid_t
+    IEEE_F64BE::hid_t
+    C_S1::hid_t
+    STD_REF_OBJ::hid_t
+    STD_REF_DSETREG::hid_t
+    NATIVE_B8::hid_t
+    NATIVE_INT8::hid_t
+    NATIVE_UINT8::hid_t
+    NATIVE_INT16::hid_t
+    NATIVE_UINT16::hid_t
+    NATIVE_INT32::hid_t
+    NATIVE_UINT32::hid_t
+    NATIVE_INT64::hid_t
+    NATIVE_UINT64::hid_t
+    NATIVE_FLOAT::hid_t
+    NATIVE_DOUBLE::hid_t
+    NATIVE_FLOAT16::hid_t
+end
 
 # Filter constants
-const H5Z_FLAG_OPTIONAL = 0x0001
-const H5Z_FLAG_REVERSE = 0x0100
-const H5Z_CLASS_T_VERS = 1
+@defconstants H5Z begin
+    FLAG_OPTIONAL::Cuint = 0x0001
+    FLAG_REVERSE::Cuint = 0x0100
+    CLASS_T_VERS::Cint = 1
+end
+
+function __init_globals__()
+    libh = Libdl.dlopen(libhdf5)
+    # Ensure runtime is initialized
+    ccall(Libdl.dlsym(libh, :H5open), herr_t, ())
+    # Note: dlsym must occur outside cglobal statement on Julia 1.5 and earlier or else
+    # segfaults.
+    function read_const(sym::Symbol)
+        symptr = Libdl.dlsym(libh, sym)
+        return unsafe_load(cglobal(symptr, hid_t))
+    end
+
+    H5P.OBJECT_CREATE    = read_const(:H5P_CLS_OBJECT_CREATE_ID_g)
+    H5P.FILE_CREATE      = read_const(:H5P_CLS_FILE_CREATE_ID_g)
+    H5P.FILE_ACCESS      = read_const(:H5P_CLS_FILE_ACCESS_ID_g)
+    H5P.DATASET_CREATE   = read_const(:H5P_CLS_DATASET_CREATE_ID_g)
+    H5P.DATASET_ACCESS   = read_const(:H5P_CLS_DATASET_ACCESS_ID_g)
+    H5P.DATASET_XFER     = read_const(:H5P_CLS_DATASET_XFER_ID_g)
+    H5P.FILE_MOUNT       = read_const(:H5P_CLS_FILE_MOUNT_ID_g)
+    H5P.GROUP_CREATE     = read_const(:H5P_CLS_GROUP_CREATE_ID_g)
+    H5P.GROUP_ACCESS     = read_const(:H5P_CLS_GROUP_ACCESS_ID_g)
+    H5P.DATATYPE_CREATE  = read_const(:H5P_CLS_DATATYPE_CREATE_ID_g)
+    H5P.DATATYPE_ACCESS  = read_const(:H5P_CLS_DATATYPE_ACCESS_ID_g)
+    H5P.STRING_CREATE    = read_const(:H5P_CLS_STRING_CREATE_ID_g)
+    H5P.ATTRIBUTE_CREATE = read_const(:H5P_CLS_ATTRIBUTE_CREATE_ID_g)
+    H5P.OBJECT_COPY      = read_const(:H5P_CLS_OBJECT_COPY_ID_g)
+    H5P.LINK_CREATE      = read_const(:H5P_CLS_LINK_CREATE_ID_g)
+    H5P.LINK_ACCESS      = read_const(:H5P_CLS_LINK_ACCESS_ID_g)
+
+    H5T.STD_I8LE        = read_const(:H5T_STD_I8LE_g)
+    H5T.STD_I8BE        = read_const(:H5T_STD_I8BE_g)
+    H5T.STD_U8LE        = read_const(:H5T_STD_U8LE_g)
+    H5T.STD_U8BE        = read_const(:H5T_STD_U8BE_g)
+    H5T.STD_I16LE       = read_const(:H5T_STD_I16LE_g)
+    H5T.STD_I16BE       = read_const(:H5T_STD_I16BE_g)
+    H5T.STD_U16LE       = read_const(:H5T_STD_U16LE_g)
+    H5T.STD_U16BE       = read_const(:H5T_STD_U16BE_g)
+    H5T.STD_I32LE       = read_const(:H5T_STD_I32LE_g)
+    H5T.STD_I32BE       = read_const(:H5T_STD_I32BE_g)
+    H5T.STD_U32LE       = read_const(:H5T_STD_U32LE_g)
+    H5T.STD_U32BE       = read_const(:H5T_STD_U32BE_g)
+    H5T.STD_I64LE       = read_const(:H5T_STD_I64LE_g)
+    H5T.STD_I64BE       = read_const(:H5T_STD_I64BE_g)
+    H5T.STD_U64LE       = read_const(:H5T_STD_U64LE_g)
+    H5T.STD_U64BE       = read_const(:H5T_STD_U64BE_g)
+    H5T.IEEE_F32LE      = read_const(:H5T_IEEE_F32LE_g)
+    H5T.IEEE_F32BE      = read_const(:H5T_IEEE_F32BE_g)
+    H5T.IEEE_F64LE      = read_const(:H5T_IEEE_F64LE_g)
+    H5T.IEEE_F64BE      = read_const(:H5T_IEEE_F64BE_g)
+    H5T.C_S1            = read_const(:H5T_C_S1_g)
+    H5T.STD_REF_OBJ     = read_const(:H5T_STD_REF_OBJ_g)
+    H5T.STD_REF_DSETREG = read_const(:H5T_STD_REF_DSETREG_g)
+    H5T.NATIVE_B8       = read_const(:H5T_NATIVE_B8_g)
+    H5T.NATIVE_INT8     = read_const(:H5T_NATIVE_INT8_g)
+    H5T.NATIVE_UINT8    = read_const(:H5T_NATIVE_UINT8_g)
+    H5T.NATIVE_INT16    = read_const(:H5T_NATIVE_INT16_g)
+    H5T.NATIVE_UINT16   = read_const(:H5T_NATIVE_UINT16_g)
+    H5T.NATIVE_INT32    = read_const(:H5T_NATIVE_INT32_g)
+    H5T.NATIVE_UINT32   = read_const(:H5T_NATIVE_UINT32_g)
+    H5T.NATIVE_INT64    = read_const(:H5T_NATIVE_INT64_g)
+    H5T.NATIVE_UINT64   = read_const(:H5T_NATIVE_UINT64_g)
+    H5T.NATIVE_FLOAT    = read_const(:H5T_NATIVE_FLOAT_g)
+    H5T.NATIVE_DOUBLE   = read_const(:H5T_NATIVE_DOUBLE_g)
+
+    # Defines a type corresponding to Julia's IEEE Float16 type.
+    float16 = h5t_copy(H5T.NATIVE_FLOAT)
+    h5t_set_fields(float16, 15, 10, 5, 0, 10)
+    h5t_set_size(float16, 2)
+    h5t_set_ebias(float16, 15)
+    h5t_lock(float16)
+    H5T.NATIVE_FLOAT16 = float16
+
+    nothing
+end

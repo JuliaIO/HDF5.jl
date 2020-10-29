@@ -27,7 +27,7 @@ GC.enable(false)
 fn = tempname()
 for i = 1:10
     file = h5open(fn, "w")
-    memtype_id = HDF5.h5t_create(HDF5.H5T_COMPOUND, 2*sizeof(Float64))
+    memtype_id = HDF5.h5t_create(HDF5.H5T.COMPOUND, 2*sizeof(Float64))
     HDF5.h5t_insert(memtype_id, "real", 0, HDF5.hdf5_type_id(Float64))
     HDF5.h5t_insert(memtype_id, "imag", sizeof(Float64), HDF5.hdf5_type_id(Float64))
     dt = HDF5.Datatype(memtype_id)
@@ -64,7 +64,7 @@ for i = 1:10
 end
 GC.enable(true)
 
-let plist = p_create(HDF5.H5P_FILE_ACCESS)  # related to issue #620
+let plist = p_create(HDF5.H5P.FILE_ACCESS)  # related to issue #620
     HDF5.h5p_close(plist)
     @test_nowarn finalize(plist)
 end

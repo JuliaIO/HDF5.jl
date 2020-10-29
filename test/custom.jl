@@ -8,7 +8,7 @@ struct Simple
 end
 
 function datatype(::Type{Simple})
-    dtype = HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(Simple))
+    dtype = HDF5.h5t_create(H5T.COMPOUND, sizeof(Simple))
     HDF5.h5t_insert(dtype, "a", fieldoffset(Simple, 1), datatype(Float64))
     HDF5.h5t_insert(dtype, "b", fieldoffset(Simple, 2), datatype(Int))
     HDF5.Datatype(dtype)

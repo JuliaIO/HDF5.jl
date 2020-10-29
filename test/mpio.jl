@@ -14,7 +14,7 @@ myrank = MPI.Comm_rank(comm)
 
 @test HDF5.has_parallel()
 
-let fileprop = p_create(HDF5.H5P_FILE_ACCESS)
+let fileprop = p_create(HDF5.H5P.FILE_ACCESS)
     HDF5.h5p_set_fapl_mpio(fileprop, comm, info)
     h5comm, h5info = HDF5.h5p_get_fapl_mpio(fileprop)
 
