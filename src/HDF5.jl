@@ -741,7 +741,7 @@ function d_create(parent::Union{File,Group}, path::AbstractString, dtype::Dataty
 end
 d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Dims; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
 d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = d_create(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
-d_create(parent::Union{File,Group}, path::AbstractString, dtype::Type, dspace_dims; pv...) = d_create(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
+d_create(parent::Union{File,Group}, path::AbstractString, dtype::Type, dspace_dims::Tuple{Dims,Dims}; pv...) = d_create(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
 
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 t_create(class_id, sz) = Datatype(h5t_create(class_id, sz))
@@ -1274,11 +1274,13 @@ end
 unpad(s, pad::Integer) = unpad(String(s), pad)
 
 # Dereference
-function Base.getindex(parent::Union{File,Group,Dataset}, r::Reference)
+function _deref(parent, r::Reference)
     r == Reference() && error("Reference is null")
     obj_id = h5r_dereference(checkvalid(parent), H5P_DEFAULT, H5R_OBJECT, r)
     h5object(obj_id, parent)
 end
+Base.getindex(parent::Union{File,Group}, r::Reference) = _deref(parent, r)
+Base.getindex(parent::Dataset, r::Reference) = _deref(parent, r) # defined separately to resolve ambiguity
 
 # convert special types to native julia types
 normalize_types(x) = x
