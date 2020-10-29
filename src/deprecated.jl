@@ -221,4 +221,4 @@ import Base: names
 
 ### Changed in PR#694
 @deprecate has(parent::Union{File,Group,Dataset}, path::AbstractString) Base.haskey(parent, path)
-@deprecate exists(parent::Union{File,Group,Dataset,Datatype,Attributes}, path::AbstractString) Base.haskey(parent, path) false
+@deprecate exists(parent::Union{File,Group,Dataset,Datatype,Attributes}, path::AbstractString) Base.haskey(parent, path)
