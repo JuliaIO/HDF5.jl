@@ -44,9 +44,9 @@ for (mod, desc, urltail) in (
     ("H5T", "Datatype Interface", "Datatypes"),
     ("H5Z", "Filter Interface", "Filters"),
     ("H5DO", "Optimized Functions Interface", "Optimizations"),
+    ("H5DS", "Dimension Scale Interface", "Dimension+Scales"),
     ("H5LT", "Lite Interface", "Lite"),
     ("H5TB", "Table Interface", "Tables"),
-    ("H5DS", "Dimension Scale Interface", "Dimension+Scales"),
     )
     global apidocs
     funcs = join(sort!(bound_api[mod]), "\n")

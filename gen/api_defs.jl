@@ -259,6 +259,21 @@
 @bind h5do_write_chunk(dset_id::hid_t, dxpl_id::hid_t, filter_mask::Int32, offset::Ptr{hsize_t}, bufsize::Csize_t, buf::Ptr{Cvoid})::herr_t "Error writing chunk"
 
 ###
+### High Level Dimension Scale Interface
+###
+
+@bind h5ds_attach_scale(did::hid_t, dsid::hid_t, idx::Cuint)::herr_t "Unable to attach scale"
+@bind h5ds_detach_scale(did::hid_t, dsid::hid_t, idx::Cuint)::herr_t "Unable to detach scale"
+@bind h5ds_get_label(did::hid_t, idx::Cuint, label::Ptr{UInt8}, size::hsize_t)::herr_t "Unable to get label"
+@bind h5ds_get_num_scales(did::hid_t, idx::Cuint)::Cint "Error getting number of scales"
+@bind h5ds_get_scale_name(did::hid_t, name::Ptr{UInt8}, size::Csize_t)::Cssize_t "Unable to get scale name"
+@bind h5ds_is_attached(did::hid_t, dsid::hid_t, idx::Cuint)::htri_t "Unable to check if dimension is attached"
+@bind h5ds_is_scale(did::hid_t)::htri_t "Unable to check if dataset is scale"
+@bind h5ds_set_label(did::hid_t, idx::Cuint, label::Ref{UInt8})::herr_t "Unable to set label"
+@bind h5ds_set_scale(dsid::hid_t, dimname::Ptr{UInt8})::herr_t "Unable to set scale"
+
+
+###
 ### HDF5 Lite Interface
 ###
 
@@ -275,17 +290,3 @@
 ###
 
 @bind h5z_register(filter_class::Ref{H5Z_class_t})::herr_t "Unable to register new filter"
-
-###
-### High Level Dimension Scale Interface
-###
-
-@bind h5ds_attach_scale(did::hid_t, dsid::hid_t, idx::Cuint)::herr_t "Unable to attach scale"
-@bind h5ds_detach_scale(did::hid_t, dsid::hid_t, idx::Cuint)::herr_t "Unable to detach scale"
-@bind h5ds_get_label(did::hid_t, idx::Cuint, label::Ptr{UInt8}, size::hsize_t)::herr_t "Unable to get label"
-@bind h5ds_get_num_scales(did::hid_t, idx::Cuint)::Cint "Error getting number of scales"
-@bind h5ds_get_scale_name(did::hid_t, name::Ptr{UInt8}, size::Csize_t)::Cssize_t "Unable to get scale name"
-@bind h5ds_is_attached(did::hid_t, dsid::hid_t, idx::Cuint)::htri_t "Unable to check if dimension is attached"
-@bind h5ds_is_scale(did::hid_t)::htri_t "Unable to check if dataset is scale"
-@bind h5ds_set_label(did::hid_t, idx::Cuint, label::Ref{UInt8})::herr_t "Unable to set label"
-@bind h5ds_set_scale(dsid::hid_t, dimname::Ptr{UInt8})::herr_t "Unable to set scale"

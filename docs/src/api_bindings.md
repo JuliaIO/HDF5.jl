@@ -250,6 +250,19 @@ h5do_append(dset_id::hid_t, dxpl_id::hid_t, index::Cuint, num_elem::hsize_t, mem
 h5do_write_chunk(dset_id::hid_t, dxpl_id::hid_t, filter_mask::Int32, offset::Ptr{hsize_t}, bufsize::Csize_t, buf::Ptr{Cvoid})
 ```
 
+## [`H5DS`](https://portal.hdfgroup.org/display/HDF5/Dimension+Scales) — Dimension Scale Interface
+```julia
+h5ds_attach_scale(did::hid_t, dsid::hid_t, idx::Cuint)
+h5ds_detach_scale(did::hid_t, dsid::hid_t, idx::Cuint)
+h5ds_get_label(did::hid_t, idx::Cuint, label::Ptr{UInt8}, size::hsize_t)
+h5ds_get_num_scales(did::hid_t, idx::Cuint)
+h5ds_get_scale_name(did::hid_t, name::Ptr{UInt8}, size::Csize_t)
+h5ds_is_attached(did::hid_t, dsid::hid_t, idx::Cuint)
+h5ds_is_scale(did::hid_t)
+h5ds_set_label(did::hid_t, idx::Cuint, label::Ref{UInt8})
+h5ds_set_scale(dsid::hid_t, dimname::Ptr{UInt8})
+```
+
 ## [`H5LT`](https://portal.hdfgroup.org/display/HDF5/Lite) — Lite Interface
 ```julia
 h5lt_dtype_to_text(datatype::hid_t, str::Ptr{UInt8}, lang_type::Cint, len::Ref{Csize_t})
