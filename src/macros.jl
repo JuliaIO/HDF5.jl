@@ -88,7 +88,6 @@ macro defconstants(prefix::Symbol, expr::Expr)
     end
 
     # Build expressions to import all necessary types from the parent module.
-    push!(imports, :Ref) # explicitly add `Ref`
     imports = Expr[Expr(:(.), :(.), :(.), sym) for sym in unique!(imports)]
     # Push the imports into the definition body
     pushfirst!(defbody, Expr(:import, imports...))
