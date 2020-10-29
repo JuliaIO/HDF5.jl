@@ -1274,11 +1274,13 @@ end
 unpad(s, pad::Integer) = unpad(String(s), pad)
 
 # Dereference
-function Base.getindex(parent::Union{File,Group,Dataset}, r::Reference)
+function _deref(parent, r::Reference)
     r == Reference() && error("Reference is null")
     obj_id = h5r_dereference(checkvalid(parent), H5P_DEFAULT, H5R_OBJECT, r)
     h5object(obj_id, parent)
 end
+Base.getindex(parent::Union{File,Group}, r::Reference) = _deref(parent, r)
+Base.getindex(parent::Dataset, r::Reference) = _deref(parent, r) # defined separately to resolve ambiguity
 
 # convert special types to native julia types
 normalize_types(x) = x
