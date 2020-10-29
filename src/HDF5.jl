@@ -365,6 +365,8 @@ function Base.cconvert(::Type{Ptr{Cvoid}}, v::VLen)
     return h
 end
 
+include("show.jl")
+
 # Blosc compression:
 include("blosc_filter.jl")
 
@@ -565,6 +567,7 @@ end
 # Ensure that objects haven't been closed
 Base.isvalid(obj::Union{File,Properties,Datatype,Dataspace}) = obj.id != -1 && h5i_is_valid(obj)
 Base.isvalid(obj::Union{Group,Dataset,Attribute}) = obj.id != -1 && obj.file.id != -1 && h5i_is_valid(obj)
+Base.isvalid(obj::Attributes) = isvalid(obj.parent)
 checkvalid(obj) = isvalid(obj) ? obj : error("File or object has been closed")
 
 # Close functions

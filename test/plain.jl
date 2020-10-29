@@ -741,6 +741,91 @@ close(hfile)
 @test sprint(show, hfile) == "HDF5 data file (closed): $fn"
 
 rm(fn)
+
+# Make an interesting file tree
+hfile = h5open(fn, "w")
+# file level
+hfile["version"] = 1.0
+attrs(hfile)["creator"] = "HDF5.jl"
+# group level
+g_create(hfile, "inner")
+attrs(hfile["inner"])["dirty"] = true
+# dataset level
+hfile["inner/data"] = collect(-5:5)
+attrs(hfile["inner/data"])["mode"] = 1
+# non-trivial committed datatype
+# TODO: print more datatype information
+tmeta = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(Int) + sizeof(Float64)))
+HDF5.h5t_insert(tmeta, "scale", 0, HDF5.hdf5_type_id(Int))
+HDF5.h5t_insert(tmeta, "bias", sizeof(Int), HDF5.hdf5_type_id(Float64))
+tstr = datatype("fixed")
+t = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(tmeta) + sizeof(tstr)))
+HDF5.h5t_insert(t, "meta", 0, tmeta)
+HDF5.h5t_insert(t, "type", sizeof(tmeta), tstr)
+HDF5.t_commit(hfile, "dtype", t)
+
+buf = IOBuffer()
+
+HDF5.show_tree(buf, hfile)
+@test occursin(r"""
+🗃️ HDF5 data file: .*
+├─ 🏷️ creator
+├─ 📑 dtype
+├─ 📂 inner
+│  ├─ 🏷️ dirty
+│  └─ 🔢 data
+│     └─ 🏷️ mode
+└─ 🔢 version
+""", String(take!(buf)))
+
+HDF5.show_tree(buf, hfile, attributes = false)
+@test occursin(r"""
+🗃️ HDF5 data file: .*
+├─ 📑 dtype
+├─ 📂 inner
+│  └─ 🔢 data
+└─ 🔢 version
+""", String(take!(buf)))
+
+HDF5.show_tree(buf, attrs(hfile))
+@test occursin(r"""
+🗃️ Attributes of HDF5 data file: .*
+└─ 🏷️ creator
+""", String(take!(buf)))
+
+HDF5.show_tree(buf, hfile["inner"])
+@test occursin(r"""
+📂 HDF5 group: /inner .*
+├─ 🏷️ dirty
+└─ 🔢 data
+   └─ 🏷️ mode
+""", String(take!(buf)))
+
+HDF5.show_tree(buf, hfile["inner"], attributes = false)
+@test occursin(r"""
+📂 HDF5 group: /inner .*
+└─ 🔢 data
+""", String(take!(buf)))
+
+HDF5.show_tree(buf, hfile["inner/data"])
+@test occursin(r"""
+🔢 HDF5 dataset: /inner/data .*
+└─ 🏷️ mode
+""", String(take!(buf)))
+
+HDF5.show_tree(buf, hfile["inner/data"], attributes = false)
+@test occursin(r"""
+🔢 HDF5 dataset: /inner/data .*
+""", String(take!(buf)))
+
+HDF5.show_tree(buf, hfile["dtype"])
+@test occursin(r"""
+📑 HDF5 Datatype: /dtype
+""", String(take!(buf)))
+
+close(hfile)
+rm(fn)
+
 end # show tests
 
 @testset "split1" begin
