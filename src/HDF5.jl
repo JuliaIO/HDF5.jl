@@ -349,22 +349,20 @@ Base.eltype(::Type{VariableArray{T}}) where T = T
 
 # VLEN objects
 struct VLen{T}
-    data
+    data::Array
 end
 VLen(strs::Array{S}) where {S<:String} = VLen{chartype(S)}(strs)
 VLen(A::Array{Array{T}}) where {T<:ScalarType} = VLen{T}(A)
 VLen(A::Array{Array{T,N}}) where {T<:ScalarType,N} = VLen{T}(A)
-
-t2p(::Type{T}) where {T<:ScalarType} = Ptr{T}
-t2p(::Type{C}) where {C<:CharType} = Ptr{UInt8}
-function vlenpack(v::VLen{T}) where {T<:Union{ScalarType,CharType}}
+function Base.cconvert(::Type{Ptr{Cvoid}}, v::VLen)
     len = length(v.data)
-    Tp = t2p(T)  # Ptr{UInt8} or Ptr{T}
-    h = Vector{hvl_t}(undef,len)
-    for i = 1:len
-        h[i] = hvl_t(convert(Csize_t, length(v.data[i])), convert(Ptr{Cvoid}, unsafe_convert(Tp, v.data[i])))
+    h = Vector{hvl_t}(undef, len)
+    for ii in 1:len
+        d = v.data[ii]
+        p = unsafe_convert(Ptr{UInt8}, d)
+        h[ii] = hvl_t(length(d), p)
     end
-    h
+    return h
 end
 
 # Blosc compression:
@@ -1792,10 +1790,6 @@ function h5a_write(attr_id, memtype_id, strs::Array{<:AbstractString})
     p = Ref{Cstring}(strs)
     h5a_write(attr_id, memtype_id, p)
 end
-function h5a_write(attr_id, memtype_id, v::VLen{T}) where {T<:Union{ScalarType,CharType}}
-    vp = vlenpack(v)
-    h5a_write(attr_id, memtype_id, vp)
-end
 h5a_create(loc_id, name, type_id, space_id) = h5a_create(loc_id, name, type_id, space_id, _attr_properties(name), H5P_DEFAULT)
 h5a_open(obj_id, name) = h5a_open(obj_id, name, H5P_DEFAULT)
 h5d_create(loc_id, name, type_id, space_id) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
@@ -1819,9 +1813,8 @@ function h5d_write(dataset_id, memtype_id, strs::Array{<:AbstractString}, xfer=H
     p = Ref{Cstring}(strs)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, p)
 end
-function h5d_write(dataset_id, memtype_id, v::VLen{T}, xfer=H5P_DEFAULT) where {T<:Union{ScalarType,CharType}}
-    vp = vlenpack(v)
-    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, vp)
+function h5d_write(dataset_id, memtype_id, v::VLen, xfer=H5P_DEFAULT)
+    h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, v)
 end
 h5f_create(filename) = h5f_create(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT)
 h5f_open(filename, mode) = h5f_open(filename, mode, H5P_DEFAULT)

@@ -58,6 +58,11 @@ write(f, "salut_2d", salut_2d)
 # Arrays of strings as vlen
 vlen = HDF5.VLen(salut_split)
 d_write(f, "salut_vlen", vlen)
+# Arrays of scalars as vlen
+vlen_int = [[3], [1], [4]]
+vleni = HDF5.VLen(vlen_int)
+d_write(f, "int_vlen", vleni)
+a_write(f["int_vlen"], "vlen_attr", vleni)
 # Empty arrays
 empty = UInt32[]
 write(f, "empty", empty)
@@ -179,6 +184,10 @@ salut_2dr = read(fr, "salut_2d")
 @test salut_2d == salut_2dr
 salut_vlenr = read(fr, "salut_vlen")
 #@test salut_vlenr == salut_split
+vlen_intr = read(fr, "int_vlen")
+@test vlen_intr == vlen_int
+vlen_attrr = read(fr["int_vlen"]["vlen_attr"])
+@test vlen_attrr == vlen_int
 Rr = read(fr, "mygroup/CompressedA")
 @test Rr == R
 Rr2 = read(fr, "mygroup2/CompressedA")
