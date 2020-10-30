@@ -172,13 +172,12 @@ end
 mutable struct Properties
     id::hid_t
     class::hid_t
-    function Properties(id, class::hid_t = H5P_DEFAULT)
+    function Properties(id = H5P_DEFAULT, class = H5P_DEFAULT)
         p = new(id, class)
-        finalizer(close, p) #Essential, otherwise we get a memory leak, since closing file with CLOSE_STRONG is not doing it for us
+        finalizer(close, p) # Essential, otherwise we get a memory leak, since closing file with CLOSE_STRONG is not doing it for us
         p
     end
 end
-Properties() = Properties(H5P_DEFAULT)
 Base.convert(::Type{hid_t}, p::Properties) = p.id
 function Base.show(io::IO, prop::Properties)
     if prop.class == H5P_DEFAULT
@@ -910,7 +909,7 @@ function Base.setindex!(parent::Union{File,Group}, val, path::AbstractString; pv
 end
 
 # Check existence
-function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::Properties=Properties())
+function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::Properties = DEFAULT_PROPERTIES)
     first, rest = split1(path)
     if first == "/"
         parent = root(parent)
@@ -1107,21 +1106,27 @@ refresh(ds::Dataset) = h5d_refresh(checkvalid(ds))
 Base.flush(ds::Dataset) = h5d_flush(checkvalid(ds))
 
 # Generic read functions
-for (fsym, osym, ptype) in
-    ((:d_read, :d_open, Union{File,Group}),
-     (:a_read, :a_open, Union{File,Group,Dataset,Datatype}))
-    @eval begin
-        function ($fsym)(parent::$ptype, name::AbstractString)
-            local ret
-            obj = ($osym)(parent, name)
-            try
-                ret = read(obj)
-            finally
-                close(obj)
-            end
-            ret
-        end
+# Generic read functions
+function d_read(parent::Union{File,Group}, name::AbstractString)
+    local ret
+    obj = d_open(parent, name)
+    try
+        ret = read(obj)
+    finally
+        close(obj)
     end
+    ret
+end
+
+function a_read(parent::Union{File,Group,Dataset,Datatype}, name::AbstractString)
+    local ret
+    obj = a_open(parent, name)
+    try
+        ret = read(obj)
+    finally
+        close(obj)
+    end
+    ret
 end
 
 # Datafile.jl defines generic read for multiple datasets, so we cannot simply add properties here.
@@ -1200,9 +1205,9 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
     memspace = dataspace(buf)
 
     if obj isa Dataset
-        h5d_read(obj.id, memtype.id, memspace.id, dspace.id, obj.xfer.id, buf)
+        h5d_read(obj, memtype, memspace, dspace, obj.xfer, buf)
     else
-        h5a_read(obj.id, memtype.id, buf)
+        h5a_read(obj, memtype, buf)
     end
 
     out = do_normalize(T) ? normalize_types.(buf) : buf
@@ -1502,7 +1507,7 @@ function _setindex!(dset::Dataset, T::Type, X::Array, I::Union{AbstractRange{Int
     memtype = datatype(X)
     memspace = dataspace(X)
     try
-        h5d_write(dset.id, memtype.id, memspace.id, dsel_id, dset.xfer.id, X)
+        h5d_write(dset, memtype, memspace, dsel_id, dset.xfer, X)
     finally
         close(memtype)
         close(memspace)
@@ -1599,10 +1604,10 @@ end
 
 
 ### HDF5 utilities ###
-readarray(dset::Dataset, type_id, buf) = h5d_read(dset.id, type_id, buf, dset.xfer.id)
-readarray(attr::Attribute, type_id, buf) = h5a_read(attr.id, type_id, buf)
-writearray(dset::Dataset, type_id, buf) = h5d_write(dset.id, type_id, buf, dset.xfer.id)
-writearray(attr::Attribute, type_id, buf) = h5a_write(attr.id, type_id, buf)
+readarray(dset::Dataset, type_id, buf) = h5d_read(dset, type_id, buf, dset.xfer)
+readarray(attr::Attribute, type_id, buf) = h5a_read(attr, type_id, buf)
+writearray(dset::Dataset, type_id, buf) = h5d_write(dset, type_id, buf, dset.xfer)
+writearray(attr::Attribute, type_id, buf) = h5a_write(attr, type_id, buf)
 writearray(dset::Dataset, type_id, ::EmptyArray) = nothing
 writearray(attr::Attribute, type_id, ::EmptyArray) = nothing
 
@@ -1772,22 +1777,22 @@ end
 ### Convenience wrappers ###
 # These supply default values where possible
 # See also the "special handling" section below
-function h5a_write(attr_id::hid_t, mem_type_id::hid_t, str::AbstractString)
+function h5a_write(attr_id, mem_type_id, str::AbstractString)
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
         buf = Base.unsafe_convert(Ptr{UInt8}, strbuf)
         h5a_write(attr_id, mem_type_id, buf)
     end
 end
-function h5a_write(attr_id::hid_t, mem_type_id::hid_t, x::T) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
+function h5a_write(attr_id, mem_type_id, x::T) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
     h5a_write(attr_id, mem_type_id, tmp)
 end
-function h5a_write(attr_id::hid_t, memtype_id::hid_t, strs::Array{S}) where {S<:String}
+function h5a_write(attr_id, memtype_id, strs::Array{<:AbstractString})
     p = Ref{Cstring}(strs)
     h5a_write(attr_id, memtype_id, p)
 end
-function h5a_write(attr_id::hid_t, memtype_id::hid_t, v::VLen{T}) where {T<:Union{ScalarType,CharType}}
+function h5a_write(attr_id, memtype_id, v::VLen{T}) where {T<:Union{ScalarType,CharType}}
     vp = vlenpack(v)
     h5a_write(attr_id, memtype_id, vp)
 end
@@ -1795,26 +1800,26 @@ h5a_create(loc_id, name, type_id, space_id) = h5a_create(loc_id, name, type_id, 
 h5a_open(obj_id, name) = h5a_open(obj_id, name, H5P_DEFAULT)
 h5d_create(loc_id, name, type_id, space_id) = h5d_create(loc_id, name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)
 h5d_open(obj_id, name) = h5d_open(obj_id, name, H5P_DEFAULT)
-function h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::hid_t=H5P_DEFAULT)
+function h5d_read(dataset_id, memtype_id, buf::AbstractArray, xfer=H5P_DEFAULT)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
     h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::hid_t=H5P_DEFAULT)
+function h5d_write(dataset_id, memtype_id, buf::AbstractArray, xfer=H5P_DEFAULT)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::AbstractString, xfer::hid_t=H5P_DEFAULT)
+function h5d_write(dataset_id, memtype_id, str::AbstractString, xfer=H5P_DEFAULT)
     ccall((:H5Dwrite, libhdf5), herr_t, (hid_t, hid_t, hid_t, hid_t, hid_t, Cstring), dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, str)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::hid_t=H5P_DEFAULT) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
+function h5d_write(dataset_id, memtype_id, x::T, xfer=H5P_DEFAULT) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, tmp)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{<:AbstractString}, xfer::hid_t=H5P_DEFAULT)
+function h5d_write(dataset_id, memtype_id, strs::Array{<:AbstractString}, xfer=H5P_DEFAULT)
     p = Ref{Cstring}(strs)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, p)
 end
-function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::hid_t=H5P_DEFAULT) where {T<:Union{ScalarType,CharType}}
+function h5d_write(dataset_id, memtype_id, v::VLen{T}, xfer=H5P_DEFAULT) where {T<:Union{ScalarType,CharType}}
     vp = vlenpack(v)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, vp)
 end
@@ -1921,7 +1926,7 @@ _attr_properties(::AbstractString) = UTF8_ATTRIBUTE_PROPERTIES[]
 const ASCII_LINK_PROPERTIES = Ref{Properties}()
 const ASCII_ATTRIBUTE_PROPERTIES = Ref{Properties}()
 
-const DEFAULT_PROPERTIES = Properties(H5P_DEFAULT, H5P_DEFAULT)
+const DEFAULT_PROPERTIES = Properties()
 
 const HAS_PARALLEL = Ref(false)
 

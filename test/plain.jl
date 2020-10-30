@@ -861,6 +861,10 @@ end
 @test_nowarn d_write(g, GenericString("ag"), GenericString("gg"))
 @test_nowarn d_write(g, GenericString("ag_array"), [GenericString("a1"), GenericString("a2")])
 
+genstrs = GenericString["fee", "fi", "foo"]
+@test_nowarn a_write(d, GenericString("myattr"), genstrs)
+@test genstrs == read(d["myattr"])
+
 for obj in (hfile,)
     @test_nowarn d_open(obj, GenericString("d"))
     @test_nowarn d_write(obj, GenericString("dd"), 1)
