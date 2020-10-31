@@ -24,6 +24,8 @@ get_chunk, get_datasets,
 iscontiguous, ishdf5, ismmappable,
 root, readmmap, set_dims!
 # Note: Public API requires module scoping
+### Public Functions:
+# g_info, o_info
 ### Types:
 # H5DataStore, Attribute, File, Group, Dataset, Datatype, Opaque,
 # Dataspace, Object, Properties, VLen, ChunkStorage, Reference
@@ -968,11 +970,11 @@ Base.haskey(attr::Attributes, path::AbstractString) = h5a_exists(checkvalid(attr
 Base.haskey(dset::Union{Dataset,Datatype}, path::AbstractString) = h5a_exists(checkvalid(dset), path)
 
 # Querying items in the file
-info(obj::Union{Group,File}) = h5g_get_info(checkvalid(obj))
-objinfo(obj::Union{File,Object}) = h5o_get_info(checkvalid(obj))
+g_info(obj::Union{Group,File}) = h5g_get_info(checkvalid(obj))
+o_info(obj::Union{File,Object}) = h5o_get_info(checkvalid(obj))
 
 Base.length(obj::Union{Group,File}) = h5g_get_num_objs(checkvalid(obj))
-Base.length(x::Attributes) = objinfo(x.parent).num_attrs
+Base.length(x::Attributes) = o_info(x.parent).num_attrs
 
 Base.isempty(x::Union{Dataset,Group,File}) = length(x) == 0
 function Base.size(obj::Union{Dataset,Attribute})
