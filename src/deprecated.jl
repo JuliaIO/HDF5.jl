@@ -354,3 +354,9 @@ end
 @deprecate h5f_create(pathname) h5f_create(pathname, HDF5.H5F_ACC_TRUNC, HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT) false
 @deprecate h5f_open(pathname, flags) h5f_open(pathname, flags, HDF5.H5P_DEFAULT) false
 @deprecate h5l_exists(parent_id, name) h5l_exists(parent_id, name, HDF5.H5P_DEFAULT) false
+
+### Changed in PR#724
+function Base.read(f::Base.Callable, parent::DataFile, name::AbstractString...)
+    depwarn("Base.read(f::Base.Callable, parent::H5DataType, name::AbstractString...) is deprecated. Directly call `f` on the output from `read(parent, name...)`", :read)
+    f(read(parent, name...)...)
+end

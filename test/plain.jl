@@ -245,14 +245,6 @@ end
 z = read(fr, "Float64", "Int16")
 @test z == (3.2, 4)
 @test typeof(z) == Tuple{Float64,Int16}
-# Test function syntax
-read(fr, "Float64") do x
-    @test x == 3.2
-end
-read(fr, "Float64", "Int16") do x, y
-    @test x == 3.2
-    @test y == 4
-end
 # Test reading entire file at once
 z = read(fr)
 @test z["Float64"] == 3.2
