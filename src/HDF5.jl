@@ -722,15 +722,15 @@ Base.getindex(dset::Dataset, name::AbstractString) = a_open(dset, name)
 Base.getindex(x::Attributes, name::AbstractString) = a_open(x.parent, name)
 
 function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
-    objtype = gettype(parent, path)
-    if objtype == H5I_DATASET
+    obj_type = gettype(parent, path)
+    if obj_type == H5I_DATASET
         dapl = p_create(H5P_DATASET_ACCESS; pv...)
         dxpl = p_create(H5P_DATASET_XFER; pv...)
         return d_open(parent, path, dapl, dxpl)
-    elseif objtype == H5I_GROUP
+    elseif obj_type == H5I_GROUP
         gapl = p_create(H5P_GROUP_ACCESS; pv...)
         return g_open(parent, path, gapl)
-    else#if objtype == H5I_DATATYPE # only remaining choice
+    else#if obj_type == H5I_DATATYPE # only remaining choice
         tapl = p_create(H5P_DATATYPE_ACCESS; pv...)
         return t_open(parent, path, tapl)
     end
@@ -1283,18 +1283,18 @@ function Base.read(obj::DatasetOrAttribute, ::Type{Opaque})
     local len
     local tag
     sz = size(obj)
-    objtype = datatype(obj)
+    obj_type = datatype(obj)
     try
-        len = h5t_get_size(objtype)
+        len = h5t_get_size(obj_type)
         buf = Vector{UInt8}(undef,prod(sz)*len)
-        tag = h5t_get_tag(objtype)
+        tag = h5t_get_tag(obj_type)
         if obj isa Dataset
-            d_read(obj, objtype, buf)
+            d_read(obj, obj_type, buf)
         else
-            a_read(obj, objtype, buf)
+            a_read(obj, obj_type, buf)
         end
     finally
-        close(objtype)
+        close(obj_type)
     end
     data = Array{Array{UInt8}}(undef,sz)
     for i = 1:prod(sz)
@@ -1649,11 +1649,11 @@ end
 # For datasets, defined file formats should use attributes instead
 function hdf5_to_julia(obj::Union{Dataset, Attribute})
     local T
-    objtype = datatype(obj)
+    obj_type = datatype(obj)
     try
-        T = hdf5_to_julia_eltype(objtype)
+        T = hdf5_to_julia_eltype(obj_type)
     finally
-        close(objtype)
+        close(obj_type)
     end
     if T <: VLen
         return T
@@ -1674,12 +1674,12 @@ function hdf5_to_julia(obj::Union{Dataset, Attribute})
     end
 end
 
-function hdf5_to_julia_eltype(objtype)
+function hdf5_to_julia_eltype(obj_type)
     local T
-    class_id = h5t_get_class(objtype)
+    class_id = h5t_get_class(obj_type)
     if class_id == H5T_STRING
-        cset = h5t_get_cset(objtype)
-        n = h5t_get_size(objtype)
+        cset = h5t_get_cset(obj_type)
+        n = h5t_get_size(obj_type)
         if cset == H5T_CSET_ASCII
             T = (n == 1) ? ASCIIChar : String
         elseif cset == H5T_CSET_UTF8
@@ -1688,34 +1688,34 @@ function hdf5_to_julia_eltype(objtype)
             error("character set ", cset, " not recognized")
         end
     elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
-        T = get_mem_compatible_jl_type(objtype)
+        T = get_mem_compatible_jl_type(obj_type)
     elseif class_id == H5T_BITFIELD
-        T = get_mem_compatible_jl_type(objtype)
+        T = get_mem_compatible_jl_type(obj_type)
     elseif class_id == H5T_ENUM
-        T = get_mem_compatible_jl_type(objtype)
+        T = get_mem_compatible_jl_type(obj_type)
     elseif class_id == H5T_REFERENCE
-        T = get_mem_compatible_jl_type(objtype)
+        T = get_mem_compatible_jl_type(obj_type)
     elseif class_id == H5T_OPAQUE
         T = Opaque
     elseif class_id == H5T_VLEN
-        super_id = h5t_get_super(objtype)
+        super_id = h5t_get_super(obj_type)
         T = VLen{hdf5_to_julia_eltype(Datatype(super_id))}
     elseif class_id == H5T_COMPOUND
-        T = get_mem_compatible_jl_type(objtype)
+        T = get_mem_compatible_jl_type(obj_type)
     elseif class_id == H5T_ARRAY
-        T = get_mem_compatible_jl_type(objtype)
+        T = get_mem_compatible_jl_type(obj_type)
     else
         error("Class id ", class_id, " is not yet supported")
     end
     return T
 end
 
-function get_jl_type(objtype::Datatype)
-    class_id = h5t_get_class(objtype)
+function get_jl_type(obj_type::Datatype)
+    class_id = h5t_get_class(obj_type)
     if class_id == H5T_OPAQUE
         return Opaque
     else
-        return get_mem_compatible_jl_type(objtype)
+        return get_mem_compatible_jl_type(obj_type)
     end
 end
 
@@ -1728,18 +1728,18 @@ function get_jl_type(obj)
     end
 end
 
-function get_mem_compatible_jl_type(objtype::Datatype)
-    class_id = h5t_get_class(objtype)
+function get_mem_compatible_jl_type(obj_type::Datatype)
+    class_id = h5t_get_class(obj_type)
     if class_id == H5T_STRING
-        if h5t_is_variable_str(objtype)
+        if h5t_is_variable_str(obj_type)
             return Cstring
         else
-            n = h5t_get_size(objtype)
-            pad = h5t_get_strpad(objtype)
+            n = h5t_get_size(obj_type)
+            pad = h5t_get_strpad(obj_type)
             return FixedString{Int(n), pad}
         end
     elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
-        native_type = h5t_get_native_type(objtype)
+        native_type = h5t_get_native_type(obj_type)
         try
             native_size = h5t_get_size(native_type)
             if class_id == H5T_INTEGER
@@ -1754,7 +1754,7 @@ function get_mem_compatible_jl_type(objtype::Datatype)
     elseif class_id == H5T_BITFIELD
         return Bool
     elseif class_id == H5T_ENUM
-        super_type = h5t_get_super(objtype)
+        super_type = h5t_get_super(obj_type)
         try
             native_type = h5t_get_native_type(super_type)
             try
@@ -1771,17 +1771,17 @@ function get_mem_compatible_jl_type(objtype::Datatype)
         # TODO update to use version 1.12 reference functions/types
         return Reference
     elseif class_id == H5T_VLEN
-        superid = h5t_get_super(objtype)
+        superid = h5t_get_super(obj_type)
         return VariableArray{get_mem_compatible_jl_type(Datatype(superid))}
     elseif class_id == H5T_COMPOUND
-        N = h5t_get_nmembers(objtype)
+        N = h5t_get_nmembers(obj_type)
 
         membernames = ntuple(N) do i
-            h5t_get_member_name(objtype, i-1)
+            h5t_get_member_name(obj_type, i-1)
         end
 
         membertypes = ntuple(N) do i
-            dtype = Datatype(h5t_get_member_type(objtype, i-1))
+            dtype = Datatype(h5t_get_member_type(obj_type, i-1))
             return get_mem_compatible_jl_type(dtype)
         end
 
@@ -1798,9 +1798,9 @@ function get_mem_compatible_jl_type(objtype::Datatype)
             return NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
         end
     elseif class_id == H5T_ARRAY
-        dims = h5t_get_array_dims(objtype)
+        dims = h5t_get_array_dims(obj_type)
         nd = length(dims)
-        eltyp = Datatype(h5t_get_super(objtype))
+        eltyp = Datatype(h5t_get_super(obj_type))
         elT = get_mem_compatible_jl_type(eltyp)
         dimsizes = ntuple(i -> Int(dims[nd-i+1]), nd)  # reverse order
         return FixedArray{elT, dimsizes, prod(dimsizes)}
