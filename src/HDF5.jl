@@ -53,27 +53,18 @@ abstract type DataFile end
 
 # Convenience macros
 macro read(fid, sym)
-    if !isa(sym, Symbol)
-        error("Second input to @read must be a symbol (i.e., a variable)")
-    end
+    !isa(sym, Symbol) && error("Second input to @read must be a symbol (i.e., a variable)")
     esc(:($sym = read($fid, $(string(sym)))))
 end
 macro write(fid, sym)
-    if !isa(sym, Symbol)
-        error("Second input to @write must be a symbol (i.e., a variable)")
-    end
+    !isa(sym, Symbol) && error("Second input to @write must be a symbol (i.e., a variable)")
     esc(:(write($fid, $(string(sym)), $sym)))
 end
 
 # Read a list of variables, read(parent, "A", "B", "x", ...)
-Base.read(parent::DataFile, name::AbstractString...) =
-	tuple([read(parent, x) for x in name]...)
-
-# Read one or more variables and pass them to a function. This is
-# convenient for avoiding type inference pitfalls with the usual
-# read syntax.
-Base.read(f::Base.Callable, parent::DataFile, name::AbstractString...) =
-	f(read(parent, name...)...)
+function Base.read(parent::DataFile, name::AbstractString...)
+    tuple((read(parent, x) for x in name)...)
+end
 
 # Read every variable in the file
 function Base.read(f::DataFile)
@@ -1178,7 +1169,6 @@ function a_read(parent::Union{File,Group,Dataset,Datatype}, name::AbstractString
     ret
 end
 
-# Datafile.jl defines generic read for multiple datasets, so we cannot simply add properties here.
 function Base.read(parent::Union{File,Group}, name::AbstractString; pv...)
     obj = getindex(parent, name; pv...)
     val = read(obj)
