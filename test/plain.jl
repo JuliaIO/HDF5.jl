@@ -770,7 +770,7 @@ show3(io::IO, x) = show(io, MIME"text/plain"(), x)
 HDF5.show_tree(buf, hfile)
 msg = String(take!(buf))
 @test occursin(r"""
-🗃️ HDF5 data file: .*
+🗃️ HDF5 data file: .*$
 ├─ 🏷️ creator
 ├─ 📑 dtype
 ├─ 📂 inner
@@ -778,63 +778,84 @@ msg = String(take!(buf))
 │  └─ 🔢 data
 │     └─ 🏷️ mode
 └─ 🔢 version
-""", msg)
+"""m, msg)
 @test sprint(show3, hfile) == msg
 
 HDF5.show_tree(buf, hfile, attributes = false)
 @test occursin(r"""
-🗃️ HDF5 data file: .*
+🗃️ HDF5 data file: .*$
 ├─ 📑 dtype
 ├─ 📂 inner
 │  └─ 🔢 data
 └─ 🔢 version
-""", String(take!(buf)))
+"""m, String(take!(buf)))
 
 HDF5.show_tree(buf, attrs(hfile))
 msg = String(take!(buf))
 @test occursin(r"""
-🗃️ Attributes of HDF5 data file: .*
+🗃️ Attributes of HDF5 data file: .*$
 └─ 🏷️ creator
-""", msg)
+"""m, msg)
 @test sprint(show3, attrs(hfile)) == msg
 
 HDF5.show_tree(buf, hfile["inner"])
 msg = String(take!(buf))
 @test occursin(r"""
-📂 HDF5 group: /inner .*
+📂 HDF5 group: /inner .*$
 ├─ 🏷️ dirty
 └─ 🔢 data
    └─ 🏷️ mode
-""", msg)
+"""m, msg)
 @test sprint(show3, hfile["inner"]) == msg
 
 HDF5.show_tree(buf, hfile["inner"], attributes = false)
 @test occursin(r"""
-📂 HDF5 group: /inner .*
+📂 HDF5 group: /inner .*$
 └─ 🔢 data
-""", String(take!(buf)))
+"""m, String(take!(buf)))
 
 HDF5.show_tree(buf, hfile["inner/data"])
 msg = String(take!(buf))
 @test occursin(r"""
-🔢 HDF5 dataset: /inner/data .*
+🔢 HDF5 dataset: /inner/data .*$
 └─ 🏷️ mode
-""", msg)
+"""m, msg)
 # xfer_mode changes between printings, so need regex again
 @test occursin(r"""
-🔢 HDF5 dataset: /inner/data .*
+🔢 HDF5 dataset: /inner/data .*$
 └─ 🏷️ mode
-""", sprint(show3, hfile["inner/data"]))
+"""m, sprint(show3, hfile["inner/data"]))
 
 HDF5.show_tree(buf, hfile["inner/data"], attributes = false)
 @test occursin(r"""
-🔢 HDF5 dataset: /inner/data .*
-""", String(take!(buf)))
+🔢 HDF5 dataset: /inner/data .*$
+"""m, String(take!(buf)))
 
 HDF5.show_tree(buf, hfile["dtype"])
 @test occursin(r"""
 📑 HDF5 Datatype: /dtype
 """, String(take!(buf)))
+
+# configurable options
+
+# no emoji icons
+HDF5.SHOW_TREE_ICONS[] = false
+@test occursin(r"""
+\[F\] HDF5 data file: .*$
+├─ \[A\] creator
+├─ \[T\] dtype
+├─ \[G\]inner
+│  ├─ \[A\] dirty
+│  └─ \[D\] data
+│     └─ \[A\] mode
+└─ \[D\] version
+"""m, sprint(show3, hfile))
+HDF5.SHOW_TREE_ICONS[] = true
+
+# no tree printing
+HDF5.SHOW_TREE[] = false
+@test sprint(show3, hfile) == sprint(show, hfile)
+HDF5.SHOW_TREE[] = true
 
 close(hfile)
 rm(fn)

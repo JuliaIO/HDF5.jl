@@ -64,14 +64,46 @@ function Base.show(io::IO, dtype::Datatype)
     end
 end
 
-Base.show(io::IO, ::MIME"text/plain", obj::Union{File,Group,Dataset,Attributes,Attribute}) = show_tree(io, obj)
+"""
+    SHOW_TREE = Ref{Bool}(true)
 
-_tree_icon(obj) = obj isa Attribute ? "🏷️ " :
-                  obj isa Group ? "📂 " :
-                  obj isa Dataset ? "🔢 " :
-                  obj isa Datatype ? "📑 " :
-                  obj isa File ? "🗃️ " :
-                  "❓ "
+Configurable option to control whether the default `show` for HDF5 objects is printed
+using `show_tree` or not.
+"""
+const SHOW_TREE = Ref{Bool}(true)
+"""
+    SHOW_TREE_ICONS = Ref{Bool}(true)
+
+Configurable option to control whether emoji icons (`true`) or a plain-text annotation
+(`false`) is used to indicate the object type by `show_tree`.
+"""
+const SHOW_TREE_ICONS = Ref{Bool}(true)
+
+function Base.show(io::IO, ::MIME"text/plain", obj::Union{File,Group,Dataset,Attributes,Attribute})
+    if SHOW_TREE[]
+        show_tree(io, obj)
+    else
+        show(io, obj)
+    end
+end
+
+function _tree_icon(obj)
+    if SHOW_TREE_ICONS[]
+        return obj isa Attribute ? "🏷️ " :
+               obj isa Group ? "📂 " :
+               obj isa Dataset ? "🔢 " :
+               obj isa Datatype ? "📑 " :
+               obj isa File ? "🗃️ " :
+               "❓ "
+    else
+        return obj isa Attribute ? "[A] " :
+               obj isa Group ? "[G]" :
+               obj isa Dataset ? "[D] " :
+               obj isa Datatype ? "[T] " :
+               obj isa File ? "[F] " :
+               "[?] "
+    end
+end
 
 _tree_head(io::IO, obj::Union{File, Group, Dataset, Attribute}) = println(io, _tree_icon(obj), obj)
 _tree_head(io::IO, obj::Datatype) = println(io, _tree_icon(obj), "HDF5 Datatype: ", name(obj))
