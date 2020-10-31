@@ -361,3 +361,6 @@ function Base.read(f::Base.Callable, parent::H5DataStore, name::AbstractString..
     depwarn("Base.read(f::Base.Callable, parent::H5DataType, name::AbstractString...) is deprecated. Directly call `f` on the output from `read(parent, name...)`", :read)
     f(read(parent, name...)...)
 end
+
+@deprecate info(obj::Union{Group,File}) g_info(obj) false
+@deprecate objinfo(obj::Union{File,Object}) o_info(obj) false
