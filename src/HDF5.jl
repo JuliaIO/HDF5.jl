@@ -1250,7 +1250,11 @@ function Base.read(obj::DatasetOrAttribute, ::Type{Opaque})
         len = h5t_get_size(objtype)
         buf = Vector{UInt8}(undef,prod(sz)*len)
         tag = h5t_get_tag(objtype)
-        readarray(obj, objtype.id, buf)
+        if obj isa Dataset
+            d_read(obj, objtype, buf)
+        else
+            a_read(obj, objtype, buf)
+        end
     finally
         close(objtype)
     end
@@ -1602,8 +1606,6 @@ end
 
 
 ### HDF5 utilities ###
-readarray(dset::Dataset, type_id, buf) = h5d_read(dset, type_id, buf, dset.xfer)
-readarray(attr::Attribute, type_id, buf) = h5a_read(attr, type_id, buf)
 
 # Determine Julia "native" type from the class, datatype, and dataspace
 # For datasets, defined file formats should use attributes instead
@@ -1769,7 +1771,10 @@ function get_mem_compatible_jl_type(objtype::Datatype)
 end
 
 # default behavior
+a_read(attr::Attribute, memtype::Datatype, buf) = h5a_read(attr, memtype, buf)
 a_write(attr::Attribute, memtype::Datatype, x) = h5a_write(attr, memtype, x)
+d_read(dset::Dataset, memtype::Datatype, buf, xfer::Properties=dset.xfer) =
+    h5d_read(dset, memtype, H5S_ALL, H5S_ALL, xfer, buf)
 d_write(dset::Dataset, memtype::Datatype, x, xfer::Properties=dset.xfer) =
     h5d_write(dset, memtype, H5S_ALL, H5S_ALL, xfer, x)
 
@@ -1791,9 +1796,9 @@ function a_write(attr::Attribute, memtype::Datatype, strs::Array{<:AbstractStrin
 end
 a_write(attr::Attribute, memtype::Datatype, ::EmptyArray) = nothing
 
-function h5d_read(dataset_id, memtype_id, buf::AbstractArray, xfer=H5P_DEFAULT)
+function d_read(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::Properties=dataset.xfer)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
-    h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
+    h5d_read(dataset, memtype, H5S_ALL, H5S_ALL, xfer, buf)
 end
 
 function d_write(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::Properties=dataset.xfer)

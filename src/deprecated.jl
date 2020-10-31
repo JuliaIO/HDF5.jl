@@ -238,3 +238,5 @@ import Base: names
 
 @deprecate writearray(obj::Attribute, type_id, x) a_write(obj, type_id, x) false
 @deprecate writearray(obj::Dataset, type_id, x) d_write(obj, type_id, x) false
+@deprecate readarray(obj::Dataset, type_id, buf) d_read(dset, type_id, buf) false
+@deprecate readarray(obj::Attribute, type_id, buf) a_read(attr, type_id, buf) false
