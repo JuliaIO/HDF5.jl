@@ -141,14 +141,6 @@ mutable struct File <: DataFile
     end
 end
 Base.convert(::Type{hid_t}, f::File) = f.id
-function Base.show(io::IO, fid::File)
-    if isvalid(fid)
-        print(io, "HDF5 data file: ", fid.filename)
-    else
-        print(io, "HDF5 data file (closed): ", fid.filename)
-    end
-end
-
 
 mutable struct Group <: DataFile
     id::hid_t
@@ -161,13 +153,6 @@ mutable struct Group <: DataFile
     end
 end
 Base.convert(::Type{hid_t}, g::Group) = g.id
-function Base.show(io::IO, g::Group)
-    if isvalid(g)
-        print(io, "HDF5 group: ", name(g), " (file: ", g.file.filename, ")")
-    else
-        print(io, "HDF5 group (invalid)")
-    end
-end
 
 mutable struct Properties
     id::hid_t
@@ -179,15 +164,6 @@ mutable struct Properties
     end
 end
 Base.convert(::Type{hid_t}, p::Properties) = p.id
-function Base.show(io::IO, prop::Properties)
-    if prop.class == H5P_DEFAULT
-        print(io, "HDF5 property: default class")
-    elseif isvalid(prop)
-        print(io, "HDF5 property: ", h5p_get_class_name(prop.class), " class")
-    else
-        print(io, "HDF5 property (invalid)")
-    end
-end
 
 mutable struct Dataset
     id::hid_t
@@ -201,13 +177,6 @@ mutable struct Dataset
     end
 end
 Base.convert(::Type{hid_t}, dset::Dataset) = dset.id
-function Base.show(io::IO, dset::Dataset)
-    if isvalid(dset)
-        print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, " xfer_mode: ", dset.xfer.id, ")")
-    else
-        print(io, "HDF5 dataset (invalid)")
-    end
-end
 
 mutable struct Datatype
     id::hid_t
@@ -232,29 +201,6 @@ end
 Base.convert(::Type{hid_t}, dtype::Datatype) = dtype.id
 hash(dtype::Datatype, h::UInt) = (dtype.id % UInt + h) ^ (0xadaf9b66bc962084 % UInt)
 Base.:(==)(dt1::Datatype, dt2::Datatype) = h5t_equal(dt1, dt2) > 0
-function Base.show(io::IO, dtype::Datatype)
-    print(io, "HDF5 datatype: ")
-    if isvalid(dtype)
-        print(io, h5lt_dtype_to_text(dtype))
-    else
-        # Note that h5i_is_valid returns `false` on the built-in datatypes (e.g.
-        # H5T_NATIVE_INT), apparently because they have refcounts of 0 yet are always
-        # valid. Just temporarily turn off error printing and try the call to probe if
-        # dtype is valid since H5LTdtype_to_text special-cases all of the built-in types
-        # internally.
-        old_func, old_client_data = h5e_get_auto(H5E_DEFAULT)
-        h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
-        local text
-        try
-            text = h5lt_dtype_to_text(dtype)
-        catch
-            text = "(invalid)"
-        finally
-            h5e_set_auto(H5E_DEFAULT, old_func, old_client_data)
-        end
-        print(io, text)
-    end
-end
 
 # Define an H5O Object type
 const Object = Union{Group,Dataset,Datatype}
@@ -281,7 +227,6 @@ mutable struct Attribute
     end
 end
 Base.convert(::Type{hid_t}, attr::Attribute) = attr.id
-Base.show(io::IO, attr::Attribute) = isvalid(attr) ? print(io, "HDF5 attribute: ", name(attr)) : print(io, "HDF5 attribute (invalid)")
 
 struct Attributes
     parent::Union{File,Group,Dataset}

@@ -1,3 +1,69 @@
+function Base.show(io::IO, fid::File)
+    if isvalid(fid)
+        print(io, "HDF5 data file: ", fid.filename)
+    else
+        print(io, "HDF5 data file (closed): ", fid.filename)
+    end
+end
+
+function Base.show(io::IO, g::Group)
+    if isvalid(g)
+        print(io, "HDF5 group: ", name(g), " (file: ", g.file.filename, ")")
+    else
+        print(io, "HDF5 group (invalid)")
+    end
+end
+
+function Base.show(io::IO, prop::Properties)
+    if prop.class == H5P_DEFAULT
+        print(io, "HDF5 property: default class")
+    elseif isvalid(prop)
+        print(io, "HDF5 property: ", h5p_get_class_name(prop.class), " class")
+    else
+        print(io, "HDF5 property (invalid)")
+    end
+end
+
+function Base.show(io::IO, dset::Dataset)
+    if isvalid(dset)
+        print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, " xfer_mode: ", dset.xfer.id, ")")
+    else
+        print(io, "HDF5 dataset (invalid)")
+    end
+end
+
+function Base.show(io::IO, attr::Attribute)
+    if isvalid(attr)
+        print(io, "HDF5 attribute: ", name(attr))
+    else
+        print(io, "HDF5 attribute (invalid)")
+    end
+end
+
+function Base.show(io::IO, dtype::Datatype)
+    print(io, "HDF5 datatype: ")
+    if isvalid(dtype)
+        print(io, h5lt_dtype_to_text(dtype))
+    else
+        # Note that h5i_is_valid returns `false` on the built-in datatypes (e.g.
+        # H5T_NATIVE_INT), apparently because they have refcounts of 0 yet are always
+        # valid. Just temporarily turn off error printing and try the call to probe if
+        # dtype is valid since H5LTdtype_to_text special-cases all of the built-in types
+        # internally.
+        old_func, old_client_data = h5e_get_auto(H5E_DEFAULT)
+        h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
+        local text
+        try
+            text = h5lt_dtype_to_text(dtype)
+        catch
+            text = "(invalid)"
+        finally
+            h5e_set_auto(H5E_DEFAULT, old_func, old_client_data)
+        end
+        print(io, text)
+    end
+end
+
 _tree_icon(obj) = obj isa Attribute ? "🏷️ " :
                   obj isa Group ? "📂 " :
                   obj isa Dataset ? "🔢 " :
