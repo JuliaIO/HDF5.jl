@@ -25,7 +25,7 @@ iscontiguous, ishdf5, ismmappable,
 root, readmmap, set_dims!
 # Note: Public API requires module scoping
 ### Types:
-# DataFile, Attribute, File, Group, Dataset, Datatype, Opaque,
+# H5DataStore, Attribute, File, Group, Dataset, Datatype, Opaque,
 # Dataspace, Object, Properties, VLen, ChunkStorage, Reference
 
 const depsfile = joinpath(dirname(@__DIR__), "deps", "deps.jl")
@@ -41,15 +41,13 @@ include("api_types.jl")
 include("api.jl")
 include("api_helpers.jl")
 
-###
-### Generic DataFile interface ##
-###
 
-# This provides common methods that could be applicable to any interface for reading variables out of a file, e.g. HDF5,
-# JLD, or MAT files. This is the supertype of HDF5.File, HDF5.Group, JldFile, JldGroup, Matlabv5File, and MatlabHDF5File.
-# Types inheriting from DataFile should have names, read, and write methods
+### Generic H5DataStore interface ###
 
-abstract type DataFile end
+# Common methods that could be applicable to any interface for reading/writing variables from a file, e.g. HDF5, JLD, or MAT files.
+# Types inheriting from H5DataStore should have names, read, and write methods.
+# Supertype of HDF5.File, HDF5.Group, JldFile, JldGroup, Matlabv5File, and MatlabHDF5File.
+abstract type H5DataStore end
 
 # Convenience macros
 macro read(fid, sym)
@@ -62,12 +60,12 @@ macro write(fid, sym)
 end
 
 # Read a list of variables, read(parent, "A", "B", "x", ...)
-function Base.read(parent::DataFile, name::AbstractString...)
+function Base.read(parent::H5DataStore, name::AbstractString...)
     tuple((read(parent, x) for x in name)...)
 end
 
 # Read every variable in the file
-function Base.read(f::DataFile)
+function Base.read(f::H5DataStore)
     vars = keys(f)
     vals = Vector{Any}(undef,length(vars))
     for i = 1:length(vars)
@@ -76,6 +74,7 @@ function Base.read(f::DataFile)
     Dict(zip(vars, vals))
 end
 
+### Base HDF5 structs ###
 
 # High-level reference handler
 struct Reference
@@ -167,7 +166,7 @@ set_complex_field_names(real::AbstractString, imag::AbstractString) =  COMPLEX_F
 # application).
 
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
-mutable struct File <: DataFile
+mutable struct File <: H5DataStore
     id::hid_t
     filename::String
 
@@ -189,7 +188,7 @@ function Base.show(io::IO, fid::File)
 end
 
 
-mutable struct Group <: DataFile
+mutable struct Group <: H5DataStore
     id::hid_t
     file::File         # the parent file
 
@@ -434,6 +433,7 @@ heuristic_chunk(x) = Int[]
 # (strings are saved as scalars, and hence cannot be chunked)
 
 ### High-level interface ###
+
 # Open or create an HDF5 file
 function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool,
         cpl::Properties=DEFAULT_PROPERTIES, apl::Properties=DEFAULT_PROPERTIES; swmr=false)

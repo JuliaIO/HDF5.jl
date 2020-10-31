@@ -356,7 +356,8 @@ end
 @deprecate h5l_exists(parent_id, name) h5l_exists(parent_id, name, HDF5.H5P_DEFAULT) false
 
 ### Changed in PR#724
-function Base.read(f::Base.Callable, parent::DataFile, name::AbstractString...)
+@deprecate_binding DataFile HDF5.H5DataStore false
+function Base.read(f::Base.Callable, parent::H5DataStore, name::AbstractString...)
     depwarn("Base.read(f::Base.Callable, parent::H5DataType, name::AbstractString...) is deprecated. Directly call `f` on the output from `read(parent, name...)`", :read)
     f(read(parent, name...)...)
 end
