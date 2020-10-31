@@ -64,6 +64,8 @@ function Base.show(io::IO, dtype::Datatype)
     end
 end
 
+Base.show(io::IO, ::MIME"text/plain", obj::Union{File,Group,Dataset,Attributes,Attribute}) = show_tree(io, obj)
+
 _tree_icon(obj) = obj isa Attribute ? "🏷️ " :
                   obj isa Group ? "📂 " :
                   obj isa Dataset ? "🔢 " :

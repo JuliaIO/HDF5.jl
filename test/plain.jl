@@ -765,8 +765,10 @@ HDF5.h5t_insert(t, "type", sizeof(tmeta), tstr)
 HDF5.t_commit(hfile, "dtype", t)
 
 buf = IOBuffer()
+show3(io::IO, x) = show(io, MIME"text/plain"(), x)
 
 HDF5.show_tree(buf, hfile)
+msg = String(take!(buf))
 @test occursin(r"""
 🗃️ HDF5 data file: .*
 ├─ 🏷️ creator
@@ -776,7 +778,8 @@ HDF5.show_tree(buf, hfile)
 │  └─ 🔢 data
 │     └─ 🏷️ mode
 └─ 🔢 version
-""", String(take!(buf)))
+""", msg)
+@test sprint(show3, hfile) == msg
 
 HDF5.show_tree(buf, hfile, attributes = false)
 @test occursin(r"""
@@ -788,18 +791,22 @@ HDF5.show_tree(buf, hfile, attributes = false)
 """, String(take!(buf)))
 
 HDF5.show_tree(buf, attrs(hfile))
+msg = String(take!(buf))
 @test occursin(r"""
 🗃️ Attributes of HDF5 data file: .*
 └─ 🏷️ creator
-""", String(take!(buf)))
+""", msg)
+@test sprint(show3, attrs(hfile)) == msg
 
 HDF5.show_tree(buf, hfile["inner"])
+msg = String(take!(buf))
 @test occursin(r"""
 📂 HDF5 group: /inner .*
 ├─ 🏷️ dirty
 └─ 🔢 data
    └─ 🏷️ mode
-""", String(take!(buf)))
+""", msg)
+@test sprint(show3, hfile["inner"]) == msg
 
 HDF5.show_tree(buf, hfile["inner"], attributes = false)
 @test occursin(r"""
@@ -808,10 +815,16 @@ HDF5.show_tree(buf, hfile["inner"], attributes = false)
 """, String(take!(buf)))
 
 HDF5.show_tree(buf, hfile["inner/data"])
+msg = String(take!(buf))
 @test occursin(r"""
 🔢 HDF5 dataset: /inner/data .*
 └─ 🏷️ mode
-""", String(take!(buf)))
+""", msg)
+# xfer_mode changes between printings, so need regex again
+@test occursin(r"""
+🔢 HDF5 dataset: /inner/data .*
+└─ 🏷️ mode
+""", sprint(show3, hfile["inner/data"]))
 
 HDF5.show_tree(buf, hfile["inner/data"], attributes = false)
 @test occursin(r"""
