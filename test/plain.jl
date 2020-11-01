@@ -770,9 +770,9 @@ show3(io::IO, x) = show(io, MIME"text/plain"(), x)
 HDF5.show_tree(buf, hfile)
 msg = String(take!(buf))
 @test occursin(r"""
-🗃️ HDF5 data file: .*$
+🗂️ HDF5 data file: .*$
 ├─ 🏷️ creator
-├─ 📑 dtype
+├─ 📄 dtype
 ├─ 📂 inner
 │  ├─ 🏷️ dirty
 │  └─ 🔢 data
@@ -783,8 +783,8 @@ msg = String(take!(buf))
 
 HDF5.show_tree(buf, hfile, attributes = false)
 @test occursin(r"""
-🗃️ HDF5 data file: .*$
-├─ 📑 dtype
+🗂️ HDF5 data file: .*$
+├─ 📄 dtype
 ├─ 📂 inner
 │  └─ 🔢 data
 └─ 🔢 version
@@ -793,7 +793,7 @@ HDF5.show_tree(buf, hfile, attributes = false)
 HDF5.show_tree(buf, attrs(hfile))
 msg = String(take!(buf))
 @test occursin(r"""
-🗃️ Attributes of HDF5 data file: .*$
+🗂️ Attributes of HDF5 data file: .*$
 └─ 🏷️ creator
 """m, msg)
 @test sprint(show3, attrs(hfile)) == msg
@@ -833,7 +833,7 @@ HDF5.show_tree(buf, hfile["inner/data"], attributes = false)
 
 HDF5.show_tree(buf, hfile["dtype"])
 @test occursin(r"""
-📑 HDF5 Datatype: /dtype
+📄 HDF5 Datatype: /dtype
 """, String(take!(buf)))
 
 # configurable options

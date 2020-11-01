@@ -92,8 +92,8 @@ function _tree_icon(obj)
         return obj isa Attribute ? "🏷️ " :
                obj isa Group ? "📂 " :
                obj isa Dataset ? "🔢 " :
-               obj isa Datatype ? "📑 " :
-               obj isa File ? "🗃️ " :
+               obj isa Datatype ? "📄 " :
+               obj isa File ? "🗂️ " :
                "❓ "
     else
         return obj isa Attribute ? "[A] " :
