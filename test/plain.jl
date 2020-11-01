@@ -708,6 +708,9 @@ dset = d_create(group, "dset", datatype(Int), dataspace((1,)))
 meta = a_create(dset, "meta", datatype(Bool), dataspace((1,)))
 @test sprint(show, meta) == "HDF5.Attribute: meta"
 
+dsetattrs = attrs(dset)
+@test sprint(show, dsetattrs) == "Attributes of HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
+
 prop = p_create(HDF5.H5P_DATASET_CREATE)
 @test sprint(show, prop) == "HDF5.Properties: dataset create class"
 
@@ -733,6 +736,7 @@ close(meta)
 
 close(dset)
 @test sprint(show, dset) == "HDF5.Dataset: (invalid)"
+@test sprint(show, dsetattrs) == "Attributes of HDF5.Dataset: (invalid)"
 
 close(group)
 @test sprint(show, group) == "HDF5.Group: (invalid)"

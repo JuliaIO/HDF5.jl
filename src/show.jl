@@ -39,6 +39,9 @@ function Base.show(io::IO, attr::Attribute)
         print(io, "HDF5.Attribute: (invalid)")
     end
 end
+function Base.show(io::IO, attr::Attributes)
+    print(io, "Attributes of ", attr.parent)
+end
 
 function Base.show(io::IO, dtype::Datatype)
     print(io, "HDF5.Datatype: ")
@@ -104,10 +107,10 @@ function _tree_icon(obj)
                "[?] "
     end
 end
+_tree_icon(obj::Attributes) = _tree_icon(obj.parent)
 
-_tree_head(io::IO, obj::Union{File, Group, Dataset, Attribute}) = println(io, _tree_icon(obj), obj)
-_tree_head(io::IO, obj::Datatype) = println(io, _tree_icon(obj), "HDF5 Datatype: ", name(obj))
-_tree_head(io::IO, obj::Attributes) = println(io, _tree_icon(obj.parent), "Attributes of ", obj.parent)
+_tree_head(io::IO, obj) = println(io, _tree_icon(obj), obj)
+_tree_head(io::IO, obj::Datatype) = println(io, _tree_icon(obj), "HDF5.Datatype: ", name(obj))
 
 function _tree_children(parent::Union{File, Group}, attributes::Bool)
     names = keys(parent)
