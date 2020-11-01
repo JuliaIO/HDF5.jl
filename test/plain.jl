@@ -697,22 +697,22 @@ fn = tempname()
 # First create data objects and sure they print useful outputs
 
 hfile = h5open(fn, "w")
-@test sprint(show, hfile) == "HDF5 data file: $fn"
+@test sprint(show, hfile) == "HDF5.File: $fn"
 
 group = g_create(hfile, "group")
-@test sprint(show, group) == "HDF5 group: /group (file: $fn)"
+@test sprint(show, group) == "HDF5.Group: /group (file: $fn)"
 
 dset = d_create(group, "dset", datatype(Int), dataspace((1,)))
-@test sprint(show, dset) == "HDF5 dataset: /group/dset (file: $fn xfer_mode: 0)"
+@test sprint(show, dset) == "HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
 
 meta = a_create(dset, "meta", datatype(Bool), dataspace((1,)))
-@test sprint(show, meta) == "HDF5 attribute: meta"
+@test sprint(show, meta) == "HDF5.Attribute: meta"
 
 prop = p_create(HDF5.H5P_DATASET_CREATE)
-@test sprint(show, prop) == "HDF5 property: dataset create class"
+@test sprint(show, prop) == "HDF5.Properties: dataset create class"
 
 dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
-@test sprint(show, dtype) == "HDF5 datatype: H5T_IEEE_F64LE"
+@test sprint(show, dtype) == "HDF5.Datatype: H5T_IEEE_F64LE"
 
 dspace = dataspace((1,))
 @test occursin(r"^HDF5.Dataspace\(\d+\)", sprint(show, dspace))
@@ -723,22 +723,22 @@ close(dspace)
 @test sprint(show, dspace) == "HDF5.Dataspace(-1)"
 
 close(dtype)
-@test sprint(show, dtype) == "HDF5 datatype: (invalid)"
+@test sprint(show, dtype) == "HDF5.Datatype: (invalid)"
 
 close(prop)
-@test sprint(show, prop) == "HDF5 property (invalid)"
+@test sprint(show, prop) == "HDF5.Properties: (invalid)"
 
 close(meta)
-@test sprint(show, meta) == "HDF5 attribute (invalid)"
+@test sprint(show, meta) == "HDF5.Attribute: (invalid)"
 
 close(dset)
-@test sprint(show, dset) == "HDF5 dataset (invalid)"
+@test sprint(show, dset) == "HDF5.Dataset: (invalid)"
 
 close(group)
-@test sprint(show, group) == "HDF5 group (invalid)"
+@test sprint(show, group) == "HDF5.Group: (invalid)"
 
 close(hfile)
-@test sprint(show, hfile) == "HDF5 data file (closed): $fn"
+@test sprint(show, hfile) == "HDF5.File: (closed) $fn"
 
 rm(fn)
 
@@ -770,7 +770,7 @@ show3(io::IO, x) = show(io, MIME"text/plain"(), x)
 HDF5.show_tree(buf, hfile)
 msg = String(take!(buf))
 @test occursin(r"""
-🗂️ HDF5 data file: .*$
+🗂️ HDF5.File: .*$
 ├─ 🏷️ creator
 ├─ 📄 dtype
 ├─ 📂 inner
@@ -783,7 +783,7 @@ msg = String(take!(buf))
 
 HDF5.show_tree(buf, hfile, attributes = false)
 @test occursin(r"""
-🗂️ HDF5 data file: .*$
+🗂️ HDF5.File: .*$
 ├─ 📄 dtype
 ├─ 📂 inner
 │  └─ 🔢 data
@@ -793,7 +793,7 @@ HDF5.show_tree(buf, hfile, attributes = false)
 HDF5.show_tree(buf, attrs(hfile))
 msg = String(take!(buf))
 @test occursin(r"""
-🗂️ Attributes of HDF5 data file: .*$
+🗂️ Attributes of HDF5.File: .*$
 └─ 🏷️ creator
 """m, msg)
 @test sprint(show3, attrs(hfile)) == msg
@@ -801,7 +801,7 @@ msg = String(take!(buf))
 HDF5.show_tree(buf, hfile["inner"])
 msg = String(take!(buf))
 @test occursin(r"""
-📂 HDF5 group: /inner .*$
+📂 HDF5.Group: /inner .*$
 ├─ 🏷️ dirty
 └─ 🔢 data
    └─ 🏷️ mode
@@ -810,30 +810,30 @@ msg = String(take!(buf))
 
 HDF5.show_tree(buf, hfile["inner"], attributes = false)
 @test occursin(r"""
-📂 HDF5 group: /inner .*$
+📂 HDF5.Group: /inner .*$
 └─ 🔢 data
 """m, String(take!(buf)))
 
 HDF5.show_tree(buf, hfile["inner/data"])
 msg = String(take!(buf))
 @test occursin(r"""
-🔢 HDF5 dataset: /inner/data .*$
+🔢 HDF5.Dataset: /inner/data .*$
 └─ 🏷️ mode
 """m, msg)
 # xfer_mode changes between printings, so need regex again
 @test occursin(r"""
-🔢 HDF5 dataset: /inner/data .*$
+🔢 HDF5.Dataset: /inner/data .*$
 └─ 🏷️ mode
 """m, sprint(show3, hfile["inner/data"]))
 
 HDF5.show_tree(buf, hfile["inner/data"], attributes = false)
 @test occursin(r"""
-🔢 HDF5 dataset: /inner/data .*$
+🔢 HDF5.Dataset: /inner/data .*$
 """m, String(take!(buf)))
 
 HDF5.show_tree(buf, hfile["dtype"])
 @test occursin(r"""
-📄 HDF5 Datatype: /dtype
+📄 HDF5.Datatype: /dtype
 """, String(take!(buf)))
 
 # configurable options
@@ -841,7 +841,7 @@ HDF5.show_tree(buf, hfile["dtype"])
 # no emoji icons
 HDF5.SHOW_TREE_ICONS[] = false
 @test occursin(r"""
-\[F\] HDF5 data file: .*$
+\[F\] HDF5.File: .*$
 ├─ \[A\] creator
 ├─ \[T\] dtype
 ├─ \[G\]inner

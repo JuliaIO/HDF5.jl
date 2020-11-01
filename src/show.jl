@@ -1,47 +1,47 @@
 function Base.show(io::IO, fid::File)
     if isvalid(fid)
-        print(io, "HDF5 data file: ", fid.filename)
+        print(io, "HDF5.File: ", fid.filename)
     else
-        print(io, "HDF5 data file (closed): ", fid.filename)
+        print(io, "HDF5.File: (closed) ", fid.filename)
     end
 end
 
 function Base.show(io::IO, g::Group)
     if isvalid(g)
-        print(io, "HDF5 group: ", name(g), " (file: ", g.file.filename, ")")
+        print(io, "HDF5.Group: ", name(g), " (file: ", g.file.filename, ")")
     else
-        print(io, "HDF5 group (invalid)")
+        print(io, "HDF5.Group: (invalid)")
     end
 end
 
 function Base.show(io::IO, prop::Properties)
     if prop.class == H5P_DEFAULT
-        print(io, "HDF5 property: default class")
+        print(io, "HDF5.Properties: default class")
     elseif isvalid(prop)
-        print(io, "HDF5 property: ", h5p_get_class_name(prop.class), " class")
+        print(io, "HDF5.Properties: ", h5p_get_class_name(prop.class), " class")
     else
-        print(io, "HDF5 property (invalid)")
+        print(io, "HDF5.Properties: (invalid)")
     end
 end
 
 function Base.show(io::IO, dset::Dataset)
     if isvalid(dset)
-        print(io, "HDF5 dataset: ", name(dset), " (file: ", dset.file.filename, " xfer_mode: ", dset.xfer.id, ")")
+        print(io, "HDF5.Dataset: ", name(dset), " (file: ", dset.file.filename, " xfer_mode: ", dset.xfer.id, ")")
     else
-        print(io, "HDF5 dataset (invalid)")
+        print(io, "HDF5.Dataset: (invalid)")
     end
 end
 
 function Base.show(io::IO, attr::Attribute)
     if isvalid(attr)
-        print(io, "HDF5 attribute: ", name(attr))
+        print(io, "HDF5.Attribute: ", name(attr))
     else
-        print(io, "HDF5 attribute (invalid)")
+        print(io, "HDF5.Attribute: (invalid)")
     end
 end
 
 function Base.show(io::IO, dtype::Datatype)
-    print(io, "HDF5 datatype: ")
+    print(io, "HDF5.Datatype: ")
     if isvalid(dtype)
         print(io, h5lt_dtype_to_text(dtype))
     else
