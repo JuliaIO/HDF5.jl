@@ -716,6 +716,8 @@ prop = p_create(HDF5.H5P_DATASET_CREATE)
 
 dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
 @test sprint(show, dtype) == "HDF5.Datatype: H5T_IEEE_F64LE"
+t_commit(hfile, "type", dtype)
+@test sprint(show, dtype) == "HDF5.Datatype: /type H5T_IEEE_F64LE"
 
 dspace = dataspace((1,))
 @test occursin(r"^HDF5.Dataspace\(\d+\)", sprint(show, dspace))

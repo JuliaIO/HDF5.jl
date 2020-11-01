@@ -46,6 +46,7 @@ end
 function Base.show(io::IO, dtype::Datatype)
     print(io, "HDF5.Datatype: ")
     if isvalid(dtype)
+        h5t_committed(dtype) && print(io, name(dtype), " ")
         print(io, h5lt_dtype_to_text(dtype))
     else
         # Note that h5i_is_valid returns `false` on the built-in datatypes (e.g.
