@@ -144,7 +144,7 @@ function _tree_children(parent::Union{Attribute, Datatype}, attributes::Bool)
     return (String[], Union{Object, Attribute}[])
 end
 
-function show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,Attribute}, indent::String="";
+function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,Attribute}, indent::String="";
                    attributes::Bool = true)
     isempty(indent) && _tree_head(io, obj)
     !isvalid(obj) && return
@@ -160,8 +160,14 @@ function show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,Att
         println(io, indent, islast ? "└─ " : "├─ ", icon, name)
 
         nextindent = indent * (islast ? "   " : "│  ")
-        show_tree(io, child, nextindent; attributes = attributes)
+        _show_tree(io, child, nextindent; attributes = attributes)
     end
     return nothing
 end
+
 show_tree(obj; kws...) = show_tree(stdout, obj; kws...)
+function show_tree(io::IO, obj; kws...)
+    buf = IOBuffer()
+    _show_tree(IOContext(buf, io), obj; kws...)
+    print(io, String(take!(buf)))
+end
