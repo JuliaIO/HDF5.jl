@@ -93,25 +93,25 @@ end
 
 function _tree_icon(obj)
     if SHOW_TREE_ICONS[]
-        return obj isa Attribute ? "🏷️ " :
-               obj isa Group ? "📂 " :
-               obj isa Dataset ? "🔢 " :
-               obj isa Datatype ? "📄 " :
-               obj isa File ? "🗂️ " :
-               "❓ "
+        return obj isa Attribute ? "🏷️" :
+               obj isa Group ? "📂" :
+               obj isa Dataset ? "🔢" :
+               obj isa Datatype ? "📄" :
+               obj isa File ? "🗂️" :
+               "❓"
     else
-        return obj isa Attribute ? "[A] " :
+        return obj isa Attribute ? "[A]" :
                obj isa Group ? "[G]" :
-               obj isa Dataset ? "[D] " :
-               obj isa Datatype ? "[T] " :
-               obj isa File ? "[F] " :
-               "[?] "
+               obj isa Dataset ? "[D]" :
+               obj isa Datatype ? "[T]" :
+               obj isa File ? "[F]" :
+               "[?]"
     end
 end
 _tree_icon(obj::Attributes) = _tree_icon(obj.parent)
 
-_tree_head(io::IO, obj) = println(io, _tree_icon(obj), obj)
-_tree_head(io::IO, obj::Datatype) = println(io, _tree_icon(obj), "HDF5.Datatype: ", name(obj))
+_tree_head(io::IO, obj) = print(io, _tree_icon(obj), " ", obj)
+_tree_head(io::IO, obj::Datatype) = print(io, _tree_icon(obj), " HDF5.Datatype: ", name(obj))
 
 function _tree_children(parent::Union{File, Group}, attributes::Bool)
     names = keys(parent)
@@ -158,7 +158,7 @@ function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,At
 
         islast = ii == nchildren
         icon = _tree_icon(child)
-        println(io, indent, islast ? "└─ " : "├─ ", icon, name)
+        print(io, "\n", indent, islast ? "└─ " : "├─ ", icon, " ", name)
 
         nextindent = indent * (islast ? "   " : "│  ")
         _show_tree(io, child, nextindent; attributes = attributes)

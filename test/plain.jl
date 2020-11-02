@@ -783,8 +783,7 @@ msg = String(take!(buf))
 │  ├─ 🏷️ dirty
 │  └─ 🔢 data
 │     └─ 🏷️ mode
-└─ 🔢 version
-"""m, msg)
+└─ 🔢 version"""m, msg)
 @test sprint(show3, hfile) == msg
 
 HDF5.show_tree(buf, hfile, attributes = false)
@@ -793,15 +792,13 @@ HDF5.show_tree(buf, hfile, attributes = false)
 ├─ 📄 dtype
 ├─ 📂 inner
 │  └─ 🔢 data
-└─ 🔢 version
-"""m, String(take!(buf)))
+└─ 🔢 version"""m, String(take!(buf)))
 
 HDF5.show_tree(buf, attrs(hfile))
 msg = String(take!(buf))
 @test occursin(r"""
 🗂️ Attributes of HDF5.File: .*$
-└─ 🏷️ creator
-"""m, msg)
+└─ 🏷️ creator"""m, msg)
 @test sprint(show3, attrs(hfile)) == msg
 
 HDF5.show_tree(buf, hfile["inner"])
@@ -810,37 +807,31 @@ msg = String(take!(buf))
 📂 HDF5.Group: /inner .*$
 ├─ 🏷️ dirty
 └─ 🔢 data
-   └─ 🏷️ mode
-"""m, msg)
+   └─ 🏷️ mode"""m, msg)
 @test sprint(show3, hfile["inner"]) == msg
 
 HDF5.show_tree(buf, hfile["inner"], attributes = false)
 @test occursin(r"""
 📂 HDF5.Group: /inner .*$
-└─ 🔢 data
-"""m, String(take!(buf)))
+└─ 🔢 data"""m, String(take!(buf)))
 
 HDF5.show_tree(buf, hfile["inner/data"])
 msg = String(take!(buf))
 @test occursin(r"""
 🔢 HDF5.Dataset: /inner/data .*$
-└─ 🏷️ mode
-"""m, msg)
+└─ 🏷️ mode"""m, msg)
 # xfer_mode changes between printings, so need regex again
 @test occursin(r"""
 🔢 HDF5.Dataset: /inner/data .*$
-└─ 🏷️ mode
-"""m, sprint(show3, hfile["inner/data"]))
+└─ 🏷️ mode"""m, sprint(show3, hfile["inner/data"]))
 
 HDF5.show_tree(buf, hfile["inner/data"], attributes = false)
 @test occursin(r"""
-🔢 HDF5.Dataset: /inner/data .*$
-"""m, String(take!(buf)))
+🔢 HDF5.Dataset: /inner/data .*$"""m, String(take!(buf)))
 
 HDF5.show_tree(buf, hfile["dtype"])
 @test occursin(r"""
-📄 HDF5.Datatype: /dtype
-""", String(take!(buf)))
+📄 HDF5.Datatype: /dtype""", String(take!(buf)))
 
 # configurable options
 
@@ -850,12 +841,11 @@ HDF5.SHOW_TREE_ICONS[] = false
 \[F\] HDF5.File: .*$
 ├─ \[A\] creator
 ├─ \[T\] dtype
-├─ \[G\]inner
+├─ \[G\] inner
 │  ├─ \[A\] dirty
 │  └─ \[D\] data
 │     └─ \[A\] mode
-└─ \[D\] version
-"""m, sprint(show3, hfile))
+└─ \[D\] version"""m, sprint(show3, hfile))
 HDF5.SHOW_TREE_ICONS[] = true
 
 # no tree printing
