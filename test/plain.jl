@@ -696,8 +696,8 @@ fn = tempname()
 
 # First create data objects and sure they print useful outputs
 
-hfile = h5open(fn, "w")
-@test sprint(show, hfile) == "HDF5.File: $fn"
+hfile = h5open(fn, "w", swmr = true)
+@test sprint(show, hfile) == "HDF5.File: (read-write, swmr) $fn"
 
 group = g_create(hfile, "group")
 @test sprint(show, group) == "HDF5.Group: /group (file: $fn)"
@@ -745,6 +745,20 @@ close(group)
 
 close(hfile)
 @test sprint(show, hfile) == "HDF5.File: (closed) $fn"
+
+# Go back and check different access modes for file printing
+hfile = h5open(fn, "r+", swmr = true)
+@test sprint(show, hfile) == "HDF5.File: (read-write, swmr) $fn"
+close(hfile)
+hfile = h5open(fn, "r", swmr = true)
+@test sprint(show, hfile) == "HDF5.File: (read-only, swmr) $fn"
+close(hfile)
+hfile = h5open(fn, "r")
+@test sprint(show, hfile) == "HDF5.File: (read-only) $fn"
+close(hfile)
+hfile = h5open(fn, "cw")
+@test sprint(show, hfile) == "HDF5.File: (read-write) $fn"
+close(hfile)
 
 rm(fn)
 

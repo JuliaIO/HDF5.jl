@@ -1,6 +1,11 @@
 function Base.show(io::IO, fid::File)
     if isvalid(fid)
-        print(io, "HDF5.File: ", fid.filename)
+        intent = h5f_get_intent(fid)
+        RW_MASK   = H5F_ACC_RDONLY | H5F_ACC_RDWR
+        SWMR_MASK = H5F_ACC_SWMR_READ | H5F_ACC_SWMR_WRITE
+        rw = (intent & RW_MASK) == H5F_ACC_RDONLY ? "(read-only" : "(read-write"
+        swmr = (intent & SWMR_MASK) != 0 ? ", swmr) " : ") "
+        print(io, "HDF5.File: ", rw, swmr, fid.filename)
     else
         print(io, "HDF5.File: (closed) ", fid.filename)
     end
