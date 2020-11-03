@@ -10,17 +10,22 @@ import Mmap
 using Compat
 
 export
+@read, @write,
+h5open, h5read, h5rewrite, h5writeattr, h5readattr, h5write,
 a_create, a_delete, a_open, a_read, a_write, attrs,
 d_create, d_create_external, d_open, d_read, d_write,
-dataspace, datatype, file, filename,
-g_create, g_open, get_access_properties, get_create_properties,
+g_create, g_open,
+o_copy, o_delete, o_open,
+t_create, t_commit,
+p_create, get_access_properties, get_create_properties,
+dataspace, datatype,
+file, filename, name,
 get_chunk, get_datasets,
-h5open, h5read, h5rewrite, h5writeattr, h5readattr, h5write,
-iscontiguous, ishdf5, ismmappable, name,
-o_copy, o_delete, o_open, p_create,
-readmmap, @read, @write, root, set_dims!, t_create, t_commit
-## Public Types:
-# Attribute, File, Group, Dataset, Datatype, Opaque
+iscontiguous, ishdf5, ismmappable,
+root, readmmap, set_dims!
+# Note: Public API requires module scoping
+### Types:
+# DataFile, Attribute, File, Group, Dataset, Datatype, Opaque,
 # Dataspace, Object, Properties, VLen, ChunkStorage, Reference
 
 const depsfile = joinpath(dirname(@__DIR__), "deps", "deps.jl")
