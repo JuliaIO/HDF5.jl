@@ -437,13 +437,13 @@ heuristic_chunk(x) = Int[]
 ### High-level interface ###
 
 # Open or create an HDF5 file
-function h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool,
-        cpl::Properties=DEFAULT_PROPERTIES, apl::Properties=DEFAULT_PROPERTIES; swmr=false)
+function _h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool,
+                 cpl::Properties = DEFAULT_PROPERTIES, apl::Properties = DEFAULT_PROPERTIES; swmr::Bool = false)
     if ff && !wr
         error("HDF5 does not support appending without writing")
     end
     close_apl = false
-    if apl.id == H5P_DEFAULT
+    if apl == DEFAULT_PROPERTIES
         apl = p_create(H5P_FILE_ACCESS)
         close_apl = true
         # With garbage collection, the other modes don't make sense
@@ -483,12 +483,12 @@ Open or create an HDF5 file where `mode` is one of:
 Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for "w" and
 "r+", or SWMR read access for "r".
 """
-function h5open(filename::AbstractString, mode::AbstractString="r"; swmr=false, pv...)
-    fapl = p_create(H5P_FILE_ACCESS; pv...) # file access property list
+function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool = false, pv...)
+    apl = p_create(H5P_FILE_ACCESS; pv...) # file access property list
     # With garbage collection, the other modes don't make sense
     # (Set this first, so that the user-passed properties can overwrite this.)
-    fapl[:fclose_degree] = H5F_CLOSE_STRONG
-    fcpl = p_create(H5P_FILE_CREATE; pv...) # file create property list
+    apl[:fclose_degree] = H5F_CLOSE_STRONG
+    cpl = p_create(H5P_FILE_CREATE; pv...) # file create property list
     modes =
         mode == "r"  ? (true,  false, false, false, false) :
         mode == "r+" ? (true,  true,  false, false, true ) :
@@ -497,7 +497,7 @@ function h5open(filename::AbstractString, mode::AbstractString="r"; swmr=false, 
         # mode == "w+" ? (true,  true,  true,  true,  false) :
         # mode == "a"  ? (true,  true,  true,  true,  true ) :
         error("invalid open mode: ", mode)
-    h5open(filename, modes..., fcpl, fapl; swmr=swmr)
+    return _h5open(filename, modes..., cpl, apl; swmr=swmr)
 end
 
 """
