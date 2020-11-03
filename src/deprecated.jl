@@ -224,19 +224,61 @@ import Base: names
 @deprecate exists(parent::Union{File,Group,Dataset,Datatype,Attributes}, path::AbstractString) Base.haskey(parent, path)
 
 ### Changed in PR#723
-@deprecate h5a_create(loc_id, name, type_id, space_id) h5a_create(loc_id, name, type_id, space_id, HDF5._attr_properties(name), HDF5.H5P_DEFAULT) false
-@deprecate h5a_open(obj_id, name) h5a_open(obj_id, name, HDF5.H5P_DEFAULT) false
-@deprecate h5d_create(loc_id, name, type_id, space_id) h5d_create(loc_id, name, type_id, space_id, HDF5._link_properties(path), HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT) false
-@deprecate h5d_open(loc_id, name) h5d_open(loc_id, name, HDF5.H5P_DEFAULT) false
+# PRs #710 & #714 removed the argument type restrictions; deprecate just that form
+# explicitly since they were only forms to exist in last release.
+function h5a_create(parent_id::hid_t, name, dtype_id::hid_t, dspace_id::hid_t)
+    depwarn("`h5a_create(parent.id, name, dtype.id, dspace.id)` is deprecated, use `a_create(parent, name, dtype, dspace)` instead", :h5a_create)
+    h5a_create(parent_id, name, dtype_id, dspace_id, HDF5._attr_properties(name), HDF5.H5P_DEFAULT)
+end
+function h5a_open(parent_id::hid_t, name)
+    depwarn("`h5a_open(parent.id, name)` is deprecated, use `a_open(parent, name)` instead", :h5a_open)
+    h5a_open(parent_id, name, HDF5.H5P_DEFAULT)
+end
+function h5d_create(parent_id::hid_t, name, dtype_id::hid_t, dspace_id::hid_t)
+    depwarn("`h5d_create(parent.id, name, dtype.id, dspace.id)` is deprecated, use `d_create(parent, name, dtype, dspace)` instead", :h5d_create)
+    h5d_create(parent_id, name, dtype_id, dspace_id, HDF5._link_properties(path), HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT)
+end
+function h5d_open(parent_id::hid_t, name)
+    depwarn("`h5d_open(parent.id, name)` is deprecated, use `d_open(parent, name)` instead", :h5d_open)
+    h5d_open(parent_id, name, HDF5.H5P_DEFAULT)
+end
+function h5g_create(parent_id::hid_t, name)
+    depwarn("`h5g_create(parent.id, name)` is deprecated, use `g_create(parent, name)` instead", :h5g_create)
+    h5g_create(parent_id, name, HDF5._link_properties(name), HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT)
+end
+function h5g_create(parent_id::hid_t, name, lcpl_id::hid_t, gcpl_id::hid_t)
+    depwarn("`h5g_create(parent.id, name, lcpl.id, gcpl.id)` is deprecated, use `g_create(parent, name, lcpl, gcpl)` instead", :h5g_create)
+    h5g_create(parent_id, name, lcpl_id, gcpl_id, HDF5.H5P_DEFAULT)
+end
+function h5g_open(parent_id::hid_t, name)
+    depwarn("`h5g_open(parent.id, name)` is deprecated, use `g_open(parent, name)` instead", :h5g_open)
+    h5g_open(parent_id, name, HDF5.H5P_DEFAULT)
+end
+function h5o_open(parent_id::hid_t, name)
+    depwarn("`h5o_open(parent.id, name)` is deprecated, use `o_open(parent, name)` instead", :h5o_open)
+    h5o_open(parent_id, name, HDF5.H5P_DEFAULT)
+end
+
+function writearray(attr::Attribute, dtype_id::hid_t, x)
+    depwarn("`writearray(attr, dtype.id, x)` is deprecated, use `a_write(attr, dtype, x)` instead", :writearray)
+    dtype = Datatype(dtype_id, false)
+    a_write(attr, dtype, x)
+end
+function writearray(dset::Dataset, dtype_id::hid_t, x)
+    depwarn("`writearray(dset, dtype.id, x)` is deprecated, use `d_write(dset, dtype, x)` instead", :writearray)
+    dtype = Datatype(dtype_id, false)
+    d_write(dset, dtype, x)
+end
+function readarray(obj::Attribute, dtype_id::hid_t, buf)
+    depwarn("`readarray(attr, dtype.id, buf)` is deprecated, use `a_read(attr, dtype, buf)` instead", :readarray)
+    dtype = Datatype(dtype_id, false)
+    a_read(attr, dtype, buf)
+end
+function readarray(dset::Dataset, dtype_id::hid_t, buf)
+    depwarn("`readarray(dset, dtype.id, buf)` is deprecated, use `d_read(dset, dtype, buf)` instead", :readarray)
+    dtype = Datatype(dtype_id, false)
+    d_read(dset, dtype, buf)
+end
 @deprecate h5f_create(pathname) h5f_create(pathname, HDF5.H5F_ACC_TRUNC, HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT) false
 @deprecate h5f_open(pathname, flags) h5f_open(pathname, flags, HDF5.H5P_DEFAULT) false
-@deprecate h5g_create(loc_id, pathname) h5g_create(loc_id, pathname, HDF5._link_properties(pathname), HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT) false
-@deprecate h5g_create(loc_id, pathname, lcpl_id, gcpl_id) h5g_create(loc_id, pathname, lcpl_id, gcpl_id, HDF5.H5P_DEFAULT) false
-@deprecate h5g_open(loc_id, pathname) h5g_open(loc_id, pathname, HDF5.H5P_DEFAULT) false
-@deprecate h5l_exists(loc_id, pathname) h5l_exists(loc_id, pathname, HDF5.H5P_DEFAULT) false
-@deprecate h5o_open(loc_id, name) h5o_open(loc_id, name, HDF5.H5P_DEFAULT) false
-
-@deprecate writearray(obj::Attribute, type_id, x) a_write(obj, type_id, x) false
-@deprecate writearray(obj::Dataset, type_id, x) d_write(obj, type_id, x) false
-@deprecate readarray(obj::Dataset, type_id, buf) d_read(dset, type_id, buf) false
-@deprecate readarray(obj::Attribute, type_id, buf) a_read(attr, type_id, buf) false
+@deprecate h5l_exists(parent_id, name) h5l_exists(parent_id, name, HDF5.H5P_DEFAULT) false
