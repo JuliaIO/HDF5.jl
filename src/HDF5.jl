@@ -755,14 +755,6 @@ function g_create(parent::Union{File,Group}, path::AbstractString,
                   gcpl::Properties=DEFAULT_PROPERTIES)
     Group(h5g_create(checkvalid(parent), path, lcpl, gcpl, H5P_DEFAULT), file(parent))
 end
-function g_create(f::Function, parent::Union{File,Group}, args...)
-    g = g_create(parent, args...)
-    try
-        f(g)
-    finally
-        close(g)
-    end
-end
 
 function d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace,
                   lcpl::Properties, dcpl::Properties,

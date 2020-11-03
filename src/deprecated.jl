@@ -362,5 +362,15 @@ function Base.read(f::Base.Callable, parent::H5DataStore, name::AbstractString..
     f(read(parent, name...)...)
 end
 
+function g_create(f::Function, parent::Union{File,Group}, args...)
+    depwarn("g_create(f::Function, parent::Union{File,Group}, args...) is deprecated. Directly call `f` on the output from `g_create(parent, name...)` followed by closing the group", :g_create)
+    g = g_create(parent, args...)
+    try
+        f(g)
+    finally
+        close(g)
+    end
+end
+
 @deprecate info(obj::Union{Group,File}) g_info(obj) false
 @deprecate objinfo(obj::Union{File,Object}) o_info(obj) false

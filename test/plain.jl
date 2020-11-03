@@ -283,10 +283,10 @@ close(hid)
 
 # more do syntax
 h5open(fn, "w") do fid
-    g_create(fid, "mygroup") do g
-        write(g, "x", 3.2)
-    end
+    g = g_create(fid, "mygroup")
+    write(g, "x", 3.2)
 end
+
 fid = h5open(fn, "r")
 @test keys(fid) == ["mygroup"]
 g = fid["mygroup"]
@@ -301,9 +301,8 @@ outfile = joinpath(tmpdir, "test.h5")
 
 # create a new file
 h5rewrite(outfile) do fid
-    g_create(fid, "mygroup") do g
-        write(g, "x", 3.3)
-    end
+    g = g_create(fid, "mygroup")
+    write(g, "x", 3.3)
 end
 @test length(readdir(tmpdir)) == 1
 h5open(outfile, "r") do fid
@@ -313,9 +312,8 @@ end
 
 # fail to overwrite
 @test_throws ErrorException h5rewrite(outfile) do fid
-    g_create(fid, "mygroup") do g
-        write(g, "oops", 3.3)
-    end
+    g = g_create(fid, "mygroup")
+    write(g, "oops", 3.3)
     error("failed")
 end
 @test length(readdir(tmpdir)) == 1
@@ -326,9 +324,8 @@ end
 
 # overwrite
 h5rewrite(outfile) do fid
-    g_create(fid, "mygroup") do g
-        write(g, "y", 3.3)
-    end
+    g = g_create(fid, "mygroup")
+    write(g, "y", 3.3)
 end
 @test length(readdir(tmpdir)) == 1
 h5open(outfile, "r") do fid
@@ -899,14 +896,12 @@ A = Matrix(reshape(1:120, 15, 8))
 
 
 @test_nowarn h5rewrite(fn) do fid
-    g_create(fid, "mygroup") do g
-        write(g, "x", 3.3)
-    end
+    g = g_create(fid, "mygroup")
+    write(g, "x", 3.3)
 end
 @test_nowarn h5rewrite(fn) do fid
-    g_create(fid, "mygroup") do g
-        write(g, "y", 3.3)
-    end
+    g = g_create(fid, "mygroup")
+    write(g, "y", 3.3)
 end
 
 @test_nowarn h5write(fn, "W", [1 2; 3 4])
