@@ -685,23 +685,28 @@ fn = tempname()
 
 # First create data objects and sure they print useful outputs
 
-hfile = h5open(fn, "w")
-@test sprint(show, hfile) == "HDF5 data file: $fn"
+hfile = h5open(fn, "w", swmr = true)
+@test sprint(show, hfile) == "HDF5.File: (read-write, swmr) $fn"
 
 group = g_create(hfile, "group")
-@test sprint(show, group) == "HDF5 group: /group (file: $fn)"
+@test sprint(show, group) == "HDF5.Group: /group (file: $fn)"
 
 dset = d_create(group, "dset", datatype(Int), dataspace((1,)))
-@test sprint(show, dset) == "HDF5 dataset: /group/dset (file: $fn xfer_mode: 0)"
+@test sprint(show, dset) == "HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
 
 meta = a_create(dset, "meta", datatype(Bool), dataspace((1,)))
-@test sprint(show, meta) == "HDF5 attribute: meta"
+@test sprint(show, meta) == "HDF5.Attribute: meta"
+
+dsetattrs = attrs(dset)
+@test sprint(show, dsetattrs) == "Attributes of HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
 
 prop = p_create(HDF5.H5P_DATASET_CREATE)
-@test sprint(show, prop) == "HDF5 property: dataset create class"
+@test sprint(show, prop) == "HDF5.Properties: dataset create class"
 
 dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
-@test sprint(show, dtype) == "HDF5 datatype: H5T_IEEE_F64LE"
+@test sprint(show, dtype) == "HDF5.Datatype: H5T_IEEE_F64LE"
+t_commit(hfile, "type", dtype)
+@test sprint(show, dtype) == "HDF5.Datatype: /type H5T_IEEE_F64LE"
 
 dspace = dataspace((1,))
 @test occursin(r"^HDF5.Dataspace\(\d+\)", sprint(show, dspace))
@@ -712,24 +717,148 @@ close(dspace)
 @test sprint(show, dspace) == "HDF5.Dataspace(-1)"
 
 close(dtype)
-@test sprint(show, dtype) == "HDF5 datatype: (invalid)"
+@test sprint(show, dtype) == "HDF5.Datatype: (invalid)"
 
 close(prop)
-@test sprint(show, prop) == "HDF5 property (invalid)"
+@test sprint(show, prop) == "HDF5.Properties: (invalid)"
 
 close(meta)
-@test sprint(show, meta) == "HDF5 attribute (invalid)"
+@test sprint(show, meta) == "HDF5.Attribute: (invalid)"
 
 close(dset)
-@test sprint(show, dset) == "HDF5 dataset (invalid)"
+@test sprint(show, dset) == "HDF5.Dataset: (invalid)"
+@test sprint(show, dsetattrs) == "Attributes of HDF5.Dataset: (invalid)"
 
 close(group)
-@test sprint(show, group) == "HDF5 group (invalid)"
+@test sprint(show, group) == "HDF5.Group: (invalid)"
 
 close(hfile)
-@test sprint(show, hfile) == "HDF5 data file (closed): $fn"
+@test sprint(show, hfile) == "HDF5.File: (closed) $fn"
+
+# Go back and check different access modes for file printing
+hfile = h5open(fn, "r+", swmr = true)
+@test sprint(show, hfile) == "HDF5.File: (read-write, swmr) $fn"
+close(hfile)
+hfile = h5open(fn, "r", swmr = true)
+@test sprint(show, hfile) == "HDF5.File: (read-only, swmr) $fn"
+close(hfile)
+hfile = h5open(fn, "r")
+@test sprint(show, hfile) == "HDF5.File: (read-only) $fn"
+close(hfile)
+hfile = h5open(fn, "cw")
+@test sprint(show, hfile) == "HDF5.File: (read-write) $fn"
+close(hfile)
 
 rm(fn)
+
+# Make an interesting file tree
+hfile = h5open(fn, "w")
+# file level
+hfile["version"] = 1.0
+attrs(hfile)["creator"] = "HDF5.jl"
+# group level
+g_create(hfile, "inner")
+attrs(hfile["inner"])["dirty"] = true
+# dataset level
+hfile["inner/data"] = collect(-5:5)
+attrs(hfile["inner/data"])["mode"] = 1
+# non-trivial committed datatype
+# TODO: print more datatype information
+tmeta = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(Int) + sizeof(Float64)))
+HDF5.h5t_insert(tmeta, "scale", 0, HDF5.hdf5_type_id(Int))
+HDF5.h5t_insert(tmeta, "bias", sizeof(Int), HDF5.hdf5_type_id(Float64))
+tstr = datatype("fixed")
+t = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(tmeta) + sizeof(tstr)))
+HDF5.h5t_insert(t, "meta", 0, tmeta)
+HDF5.h5t_insert(t, "type", sizeof(tmeta), tstr)
+HDF5.t_commit(hfile, "dtype", t)
+
+buf = IOBuffer()
+show3(io::IO, x) = show(io, MIME"text/plain"(), x)
+
+HDF5.show_tree(buf, hfile)
+msg = String(take!(buf))
+@test occursin(r"""
+🗂️ HDF5.File: .*$
+├─ 🏷️ creator
+├─ 📄 dtype
+├─ 📂 inner
+│  ├─ 🏷️ dirty
+│  └─ 🔢 data
+│     └─ 🏷️ mode
+└─ 🔢 version"""m, msg)
+@test sprint(show3, hfile) == msg
+
+HDF5.show_tree(buf, hfile, attributes = false)
+@test occursin(r"""
+🗂️ HDF5.File: .*$
+├─ 📄 dtype
+├─ 📂 inner
+│  └─ 🔢 data
+└─ 🔢 version"""m, String(take!(buf)))
+
+HDF5.show_tree(buf, attrs(hfile))
+msg = String(take!(buf))
+@test occursin(r"""
+🗂️ Attributes of HDF5.File: .*$
+└─ 🏷️ creator"""m, msg)
+@test sprint(show3, attrs(hfile)) == msg
+
+HDF5.show_tree(buf, hfile["inner"])
+msg = String(take!(buf))
+@test occursin(r"""
+📂 HDF5.Group: /inner .*$
+├─ 🏷️ dirty
+└─ 🔢 data
+   └─ 🏷️ mode"""m, msg)
+@test sprint(show3, hfile["inner"]) == msg
+
+HDF5.show_tree(buf, hfile["inner"], attributes = false)
+@test occursin(r"""
+📂 HDF5.Group: /inner .*$
+└─ 🔢 data"""m, String(take!(buf)))
+
+HDF5.show_tree(buf, hfile["inner/data"])
+msg = String(take!(buf))
+@test occursin(r"""
+🔢 HDF5.Dataset: /inner/data .*$
+└─ 🏷️ mode"""m, msg)
+# xfer_mode changes between printings, so need regex again
+@test occursin(r"""
+🔢 HDF5.Dataset: /inner/data .*$
+└─ 🏷️ mode"""m, sprint(show3, hfile["inner/data"]))
+
+HDF5.show_tree(buf, hfile["inner/data"], attributes = false)
+@test occursin(r"""
+🔢 HDF5.Dataset: /inner/data .*$"""m, String(take!(buf)))
+
+HDF5.show_tree(buf, hfile["dtype"])
+@test occursin(r"""
+📄 HDF5.Datatype: /dtype""", String(take!(buf)))
+
+# configurable options
+
+# no emoji icons
+HDF5.SHOW_TREE_ICONS[] = false
+@test occursin(r"""
+\[F\] HDF5.File: .*$
+├─ \[A\] creator
+├─ \[T\] dtype
+├─ \[G\] inner
+│  ├─ \[A\] dirty
+│  └─ \[D\] data
+│     └─ \[A\] mode
+└─ \[D\] version"""m, sprint(show3, hfile))
+HDF5.SHOW_TREE_ICONS[] = true
+
+# no tree printing
+HDF5.SHOW_TREE[] = false
+@test sprint(show3, hfile) == sprint(show, hfile)
+HDF5.SHOW_TREE[] = true
+
+close(hfile)
+rm(fn)
+
 end # show tests
 
 @testset "split1" begin
