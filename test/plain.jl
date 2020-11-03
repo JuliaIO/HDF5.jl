@@ -357,9 +357,9 @@ cpl = p_create(HDF5.H5P_FILE_CREATE)
 cpl[:userblock] = 1024
 apl = p_create(HDF5.H5P_FILE_ACCESS)
 apl[:libver_bounds] = (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)
-h5open(fn, false, true, true, true, false, cpl, apl) do fid
-    write(fid, "intarray", [1, 2, 3])
-end
+fid = HDF5._h5open(fn, false, true, true, true, false, cpl, apl)
+write(fid, "intarray", [1, 2, 3])
+close(fid)
 h5open(fn, "r", libver_bounds=(HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)) do fid
     intarray = read(fid, "intarray")
     @test intarray == [1, 2, 3]
