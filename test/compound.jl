@@ -107,13 +107,13 @@ end
     h5open(fn, "w") do h5f
         foo_dtype = datatype(foo_hdf5)
         foo_space = dataspace(v_write)
-        foo_dset = HDF5.h5d_create(h5f.id, "foo", foo_dtype.id, foo_space.id)
-        HDF5.h5d_write(foo_dset, foo_dtype.id, v_write)
+        foo_dset = d_create(h5f, "foo", foo_dtype, foo_space)
+        d_write(foo_dset, foo_dtype, v_write)
 
         bar_dtype = datatype(bar_hdf5)
         bar_space = dataspace(w_write)
-        bar_dset = HDF5.h5d_create(h5f.id, "bar", bar_dtype.id, bar_space.id)
-        HDF5.h5d_write(bar_dset, bar_dtype.id, w_write)
+        bar_dset = d_create(h5f, "bar", bar_dtype, bar_space)
+        d_write(bar_dset, bar_dtype, w_write)
     end
 
     v_read = h5read(fn, "foo")
