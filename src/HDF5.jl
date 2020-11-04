@@ -1474,10 +1474,11 @@ function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where T
     memtype = Datatype(h5t_get_native_type(filetype))  # padded layout in memory
     close(filetype)
 
-    if sizeof(T) != h5t_get_size(memtype)
+    elT = eltype(X)
+    if sizeof(elT) != h5t_get_size(memtype)
         error("""
               Type size mismatch
-              sizeof($T) = $(sizeof(T))
+              sizeof($elT) = $(sizeof(elT))
               sizeof($memtype) = $(h5t_get_size(memtype))
               """)
     end
