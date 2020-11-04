@@ -1291,7 +1291,7 @@ function iscontiguous(obj::Dataset)
     end
 end
 
-ismmappable(::Type{T}) where {T<:ScalarType} = true
+ismmappable(::Type{<:ScalarType}) = true
 ismmappable(::Type) = false
 ismmappable(obj::Dataset, ::Type{T}) where {T} = ismmappable(T) && iscontiguous(obj)
 ismmappable(obj::Dataset) = ismmappable(obj, get_jl_type(obj))
@@ -1460,7 +1460,7 @@ Base.axes(dset::Dataset) = map(Base.OneTo, size(dset))
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
 
-IndexType = Union{AbstractRange{Int},Int,Colon}
+const IndexType = Union{AbstractRange{Int},Int,Colon}
 function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where T
     !isconcretetype(T) && error("type $T is not concrete")
     U = get_jl_type(dset)
@@ -1471,19 +1471,19 @@ function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where T
     end
 
     filetype = datatype(dset)
-    memtype = Datatype(h5t_get_native_type(filetype.id))  # padded layout in memory
+    memtype = Datatype(h5t_get_native_type(filetype))  # padded layout in memory
     close(filetype)
 
-    if sizeof(T) != h5t_get_size(memtype.id)
+    if sizeof(T) != h5t_get_size(memtype)
         error("""
               Type size mismatch
               sizeof($T) = $(sizeof(T))
-              sizeof($memtype) = $(h5t_get_size(memtype.id))
+              sizeof($memtype) = $(h5t_get_size(memtype))
               """)
     end
 
     dspace = dataspace(dset)
-    stype = h5s_get_simple_extent_type(dspace.id)
+    stype = h5s_get_simple_extent_type(dspace)
     stype == H5S_NULL && error("attempting to write to null dataspace")
 
     indices = Base.to_indices(dset, I)
@@ -1491,12 +1491,12 @@ function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where T
 
     memspace = dataspace(X)
 
-    if h5s_get_select_npoints(dspace.id) != h5s_get_select_npoints(memspace.id)
+    if h5s_get_select_npoints(dspace) != h5s_get_select_npoints(memspace)
         error("number of elements in src and dest arrays must be equal")
     end
 
     try
-        h5d_write(dset.id, memtype.id, memspace.id, dspace.id, dset.xfer.id, X)
+        h5d_write(dset, memtype, memspace, dspace, dset.xfer, X)
     finally
         close(memtype)
         close(memspace)
