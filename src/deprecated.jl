@@ -372,5 +372,38 @@ function g_create(f::Function, parent::Union{File,Group}, args...)
     end
 end
 
+### Changed in PR#724
 @deprecate info(obj::Union{Group,File}) g_info(obj) false
 @deprecate objinfo(obj::Union{File,Object}) o_info(obj) false
+
+### Changed in PR#732
+# - Removed hdf5_to_julia{,_eltype}(obj); using get_jl_type(obj) instead.
+@deprecate hdf5_to_julia_eltype(obj) get_jl_type(obj) false
+function hdf5_to_julia(obj::Union{Dataset, Attribute})
+    depwarn("`hdf5_to_julia(obj)` is deprecated. Use `get_jl_type(obj)` to get the [element] type instead.", :hdf5_to_julia)
+    local T
+    objtype = datatype(obj)
+    try
+        T = get_jl_type(objtype)
+    finally
+        close(objtype)
+    end
+    T <: VLen && return T
+    objspace = dataspace(obj)
+    try
+        stype = h5s_get_simple_extent_type(objspace)
+        return stype == H5S_SIMPLE ? (return Array{T}) :
+               stype == H5S_NULL ? (return EmptyArray{T}) :
+               return T
+    finally
+        close(objspace)
+    end
+end
+function ismmappable(::Type{Array{T}}) where {T <: ScalarType}
+    depwarn("`ismmappable(obj, ::Type{A} where {A <: Array}` is deprecated. Pass the array element type instead.", :ismmappable)
+    return true
+end
+function readmmap(obj::Dataset, ::Type{Array{T}}) where {T <: ScalarType}
+    depwarn("`readmmap(obj, ::Type{A}) where {A <: Array}` is deprecated. Pass the array element type instead.", :readmmap)
+    return readmmap(obj::Dataset, T)
+end

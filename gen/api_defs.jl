@@ -205,6 +205,7 @@
 @bind h5s_get_simple_extent_dims(space_id::hid_t, dims::Ptr{hsize_t}, maxdims::Ptr{hsize_t})::Cint "Error getting the dimensions for a dataspace"
 @bind h5s_get_simple_extent_ndims(space_id::hid_t)::Cint "Error getting the number of dimensions for a dataspace"
 @bind h5s_get_simple_extent_type(space_id::hid_t)::Cint "Error getting the dataspace type"
+@bind h5s_get_select_npoints(space_id::hid_t)::hsize_t "Error getting the number of selected points"
 @bind h5s_is_simple(space_id::hid_t)::htri_t "Error determining whether dataspace is simple"
 @bind h5s_select_hyperslab(dspace_id::hid_t, seloper::Cint, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})::herr_t "Error selecting hyperslab"
 

@@ -794,6 +794,12 @@ function h5s_get_simple_extent_type(space_id)
     return var"#status#"
 end
 
+function h5s_get_select_npoints(space_id)
+    var"#status#" = ccall((:H5Sget_select_npoints, libhdf5), hsize_t, (hid_t,), space_id)
+    var"#status#" == -1 % hsize_t && error("Error getting the number of selected points")
+    return var"#status#"
+end
+
 function h5s_is_simple(space_id)
     var"#status#" = ccall((:H5Sis_simple, libhdf5), htri_t, (hid_t,), space_id)
     var"#status#" < 0 && error("Error determining whether dataspace is simple")

@@ -926,16 +926,7 @@ end
 Base.size(dset::Union{Dataset,Attribute}, d) = d > ndims(dset) ? 1 : size(dset)[d]
 Base.length(dset::Union{Dataset,Attribute}) = prod(size(dset))
 Base.ndims(dset::Union{Dataset,Attribute}) = length(size(dset))
-function Base.eltype(dset::Union{Dataset,Attribute})
-    T = Any
-    dtype = datatype(dset)
-    try
-        T = hdf5_to_julia_eltype(dtype)
-    finally
-        close(dtype)
-    end
-    T
-end
+Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
 function isnull(obj::Union{Dataset,Attribute})
     dspace = dataspace(obj)
     ret = h5s_get_simple_extent_type(dspace) == H5S_NULL
@@ -1300,13 +1291,17 @@ function iscontiguous(obj::Dataset)
     end
 end
 
-ismmappable(::Type{Array{T}}) where {T<:ScalarType} = true
+ismmappable(::Type{<:ScalarType}) = true
 ismmappable(::Type) = false
 ismmappable(obj::Dataset, ::Type{T}) where {T} = ismmappable(T) && iscontiguous(obj)
-ismmappable(obj::Dataset) = ismmappable(obj, hdf5_to_julia(obj))
+ismmappable(obj::Dataset) = ismmappable(obj, get_jl_type(obj))
 
-function readmmap(obj::Dataset, ::Type{Array{T}}) where {T}
-    dims = size(obj)
+function readmmap(obj::Dataset, ::Type{T}) where {T}
+    dspace = dataspace(obj)
+    stype = h5s_get_simple_extent_type(dspace)
+    (stype != H5S_SIMPLE) && error("can only mmap simple dataspaces")
+    dims, _ = get_dims(dspace)
+
     if isempty(dims)
         return T[]
     end
@@ -1357,7 +1352,7 @@ function readmmap(obj::Dataset, ::Type{Array{T}}) where {T}
 end
 
 function readmmap(obj::Dataset)
-    T = hdf5_to_julia(obj)
+    T = get_jl_type(obj)
     ismmappable(T) || error("Cannot mmap datasets of type $T")
     iscontiguous(obj) || error("Cannot mmap discontiguous dataset")
     readmmap(obj, T)
@@ -1465,53 +1460,61 @@ Base.axes(dset::Dataset) = map(Base.OneTo, size(dset))
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
 
-Base.setindex!(dset::Dataset, x, I::Union{AbstractRange,Integer,Colon}...) =
-    _setindex!(dset, x, Base.to_indices(dset, I)...)
-function _setindex!(dset::Dataset, X::Array, I::Union{AbstractRange{Int},Int}...)
-    T = hdf5_to_julia(dset)
-    _setindex!(dset, T, X, I...)
-end
-function _setindex!(dset::Dataset, T::Type, X::Array, I::Union{AbstractRange{Int},Int}...)
-    if !(T <: Array)
-        error("Dataset indexing (hyperslab) is available only for arrays")
+const IndexType = Union{AbstractRange{Int},Int,Colon}
+function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where T
+    !isconcretetype(T) && error("type $T is not concrete")
+    U = get_jl_type(dset)
+
+    # perform conversions for numeric types
+    if (U <: Number) && (T <: Number) && U !== T
+        X = convert(Array{U}, X)
     end
-    ET = eltype(T)
-    if !(ET <: Union{ScalarType, Complex{<:ScalarType}})
-        error("Dataset indexing (hyperslab) is available only for bits types")
+
+    filetype = datatype(dset)
+    memtype = Datatype(h5t_get_native_type(filetype))  # padded layout in memory
+    close(filetype)
+
+    elT = eltype(X)
+    if sizeof(elT) != h5t_get_size(memtype)
+        error("""
+              Type size mismatch
+              sizeof($elT) = $(sizeof(elT))
+              sizeof($memtype) = $(h5t_get_size(memtype))
+              """)
     end
-    if length(X) != prod(map(length, I))
-        error("number of elements in range and length of array must be equal")
-    end
-    if eltype(X) != ET
-        X = convert(Array{ET}, X)
-    end
-    dsel_id = hyperslab(dset, I...)
-    memtype = datatype(X)
+
+    dspace = dataspace(dset)
+    stype = h5s_get_simple_extent_type(dspace)
+    stype == H5S_NULL && error("attempting to write to null dataspace")
+
+    indices = Base.to_indices(dset, I)
+    dspace = hyperslab(dspace, indices...)
+
     memspace = dataspace(X)
+
+    if h5s_get_select_npoints(dspace) != h5s_get_select_npoints(memspace)
+        error("number of elements in src and dest arrays must be equal")
+    end
+
     try
-        h5d_write(dset, memtype, memspace, dsel_id, dset.xfer, X)
+        h5d_write(dset, memtype, memspace, dspace, dset.xfer, X)
     finally
         close(memtype)
         close(memspace)
-        h5s_close(dsel_id)
+        close(dspace)
     end
-    X
+
+    return X
 end
-function _setindex!(dset::Dataset, X::AbstractArray, I::Union{AbstractRange{Int},Int}...)
-    T = hdf5_to_julia(dset)
-    if !(T <: Array)
-        error("Hyperslab interface is available only for arrays")
-    end
-    Y = convert(Array{eltype(T), ndims(X)}, X)
-    _setindex!(dset, Y, I...)
+
+function Base.setindex!(dset::Dataset, x::T, I::IndexType...) where T <: Number
+    indices = Base.to_indices(dset, I)
+    X = fill(x, map(length, indices))
+    Base.setindex!(dset, X, indices...)
 end
-function _setindex!(dset::Dataset, x::Number, I::Union{AbstractRange{Int},Int}...)
-    T = hdf5_to_julia(dset)
-    if !(T <: Array)
-        error("Hyperslab interface is available only for arrays")
-    end
-    X = fill(convert(eltype(T), x), map(length, I))
-    _setindex!(dset, X, I...)
+
+function Base.setindex!(dset::Dataset, X::AbstractArray, I::IndexType...)
+    Base.setindex!(dset, Array(X), I...)
 end
 
 function hyperslab(dspace::Dataspace, I::Union{AbstractRange{Int},Int}...)
@@ -1586,71 +1589,6 @@ end
 
 
 ### HDF5 utilities ###
-
-# Determine Julia "native" type from the class, datatype, and dataspace
-# For datasets, defined file formats should use attributes instead
-function hdf5_to_julia(obj::Union{Dataset, Attribute})
-    local T
-    obj_type = datatype(obj)
-    try
-        T = hdf5_to_julia_eltype(obj_type)
-    finally
-        close(obj_type)
-    end
-    if T <: VLen
-        return T
-    end
-    # Determine whether it's an array
-    objspace = dataspace(obj)
-    try
-        stype = h5s_get_simple_extent_type(objspace)
-        if stype == H5S_SIMPLE
-            return Array{T}
-        elseif stype == H5S_NULL
-            return EmptyArray{T}
-        else
-            return T
-        end
-    finally
-        close(objspace)
-    end
-end
-
-function hdf5_to_julia_eltype(obj_type)
-    local T
-    class_id = h5t_get_class(obj_type)
-    if class_id == H5T_STRING
-        cset = h5t_get_cset(obj_type)
-        n = h5t_get_size(obj_type)
-        if cset == H5T_CSET_ASCII
-            T = (n == 1) ? ASCIIChar : String
-        elseif cset == H5T_CSET_UTF8
-            T = (n == 1) ? UTF8Char : String
-        else
-            error("character set ", cset, " not recognized")
-        end
-    elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
-        T = get_mem_compatible_jl_type(obj_type)
-    elseif class_id == H5T_BITFIELD
-        T = get_mem_compatible_jl_type(obj_type)
-    elseif class_id == H5T_ENUM
-        T = get_mem_compatible_jl_type(obj_type)
-    elseif class_id == H5T_REFERENCE
-        T = get_mem_compatible_jl_type(obj_type)
-    elseif class_id == H5T_OPAQUE
-        T = Opaque
-    elseif class_id == H5T_VLEN
-        super_id = h5t_get_super(obj_type)
-        T = VLen{hdf5_to_julia_eltype(Datatype(super_id))}
-    elseif class_id == H5T_COMPOUND
-        T = get_mem_compatible_jl_type(obj_type)
-    elseif class_id == H5T_ARRAY
-        T = get_mem_compatible_jl_type(obj_type)
-    else
-        error("Class id ", class_id, " is not yet supported")
-    end
-    return T
-end
 
 function get_jl_type(obj_type::Datatype)
     class_id = h5t_get_class(obj_type)
