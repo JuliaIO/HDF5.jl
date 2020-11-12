@@ -691,10 +691,10 @@ hfile = h5open(fn, "w", swmr = true)
 group = create_group(hfile, "group")
 @test sprint(show, group) == "HDF5.Group: /group (file: $fn)"
 
-dset = create_dataset(group, "dset", HDF5.datatype(Int), HDF5.dataspace((1,)))
+dset = create_dataset(group, "dset", datatype(Int), dataspace((1,)))
 @test sprint(show, dset) == "HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
 
-meta = create_attribute(dset, "meta", HDF5.datatype(Bool), HDF5.dataspace((1,)))
+meta = create_attribute(dset, "meta", datatype(Bool), dataspace((1,)))
 @test sprint(show, meta) == "HDF5.Attribute: meta"
 
 dsetattrs = attributes(dset)
@@ -969,7 +969,7 @@ hfile[GenericString("test")] = 17.2
 memtype_id = HDF5.h5t_copy(HDF5.H5T_NATIVE_DOUBLE)
 dt = HDF5.Datatype(memtype_id)
 @test !HDF5.h5t_committed(dt)
-HDF5.commit_datatype(hfile, GenericString("dt"), dt)
+commit_datatype(hfile, GenericString("dt"), dt)
 @test HDF5.h5t_committed(dt)
 
 dt = datatype(Int)
