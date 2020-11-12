@@ -31,23 +31,23 @@ for i = 1:10
     HDF5.h5t_insert(memtype_id, "real", 0, HDF5.hdf5_type_id(Float64))
     HDF5.h5t_insert(memtype_id, "imag", sizeof(Float64), HDF5.hdf5_type_id(Float64))
     dt = HDF5.Datatype(memtype_id)
-    t_commit(file, "dt", dt)
+    commit_datatype(file, "dt", dt)
     ds = dataspace((2,))
-    d = d_create(file, "d", dt, ds)
-    g = g_create(file, "g")
-    a = a_create(file, "a", dt, ds)
+    d = create_dataset(file, "d", dt, ds)
+    g = create_group(file, "g")
+    a = create_attribute(file, "a", dt, ds)
     @gcvalid dt ds d g a
     close(file)
 
     @closederror read(d)
     for obj in (d, g)
-        @closederror a_read(obj, "a")
-        @closederror a_write(obj, "a", 1)
+        @closederror read_attribute(obj, "a")
+        @closederror write_attribute(obj, "a", 1)
     end
     for obj in (g, file)
-        @closederror d_open(obj, "d")
-        @closederror d_read(obj, "d")
-        @closederror d_write(obj, "d", 1)
+        @closederror open_dataset(obj, "d")
+        @closederror read_dataset(obj, "d")
+        @closederror write_dataset(obj, "d", 1)
         @closederror read(obj, "x")
         @closederror write(obj, "x", "y")
     end
@@ -58,13 +58,13 @@ for i = 1:10
     d = file["d"]
     ds = dataspace(d)
     g = file["g"]
-    a = attrs(file)["a"]
+    a = attributes(file)["a"]
     @gcvalid dt ds d g a
     close(file)
 end
 GC.enable(true)
 
-let plist = p_create(HDF5.H5P_FILE_ACCESS)  # related to issue #620
+let plist = create_property(HDF5.H5P_FILE_ACCESS)  # related to issue #620
     HDF5.h5p_close(plist)
     @test_nowarn finalize(plist)
 end

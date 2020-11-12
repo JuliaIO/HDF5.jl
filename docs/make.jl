@@ -1,6 +1,7 @@
-using MPI  # needed to generate docs for parallel HDF5 API
-using HDF5
 using Documenter
+using HDF5
+using MPI  # needed to generate docs for parallel HDF5 API
+
 
 makedocs(;
     modules=[HDF5],
@@ -19,5 +20,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/JuliaIO/HDF5.jl",
+    repo="github.com/JuliaIO/HDF5.jl.git",
+    push_preview=true,
 )

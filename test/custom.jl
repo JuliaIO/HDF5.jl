@@ -22,8 +22,8 @@ end
     h5open(fn, "w") do h5f
         dtype = datatype(Simple)
         dspace = dataspace(v)
-        dset = d_create(h5f, "data", dtype, dspace)
-        d_write(dset, dtype, v)
+        dset = create_dataset(h5f, "data", dtype, dspace)
+        write_dataset(dset, dtype, v)
     end
 
     h5open(fn, "r") do h5f

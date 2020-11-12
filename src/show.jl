@@ -122,8 +122,8 @@ function _tree_children(parent::Union{File, Group}, attributes::Bool)
     names = keys(parent)
     objs  = Union{Object, Attribute}[parent[n] for n in names]
     if attributes
-        attrn = keys(attrs(parent))
-        attro = Union{Object, Attribute}[attrs(parent)[n] for n in attrn]
+        attrn = keys(HDF5.attributes(parent))
+        attro = Union{Object, Attribute}[HDF5.attributes(parent)[n] for n in attrn]
         names = append!(attrn, names)
         objs  = append!(attro, objs)
     end
@@ -133,8 +133,8 @@ function _tree_children(parent::Dataset, attributes::Bool)
     names = String[]
     objs = Union{Object, Attribute}[parent[n] for n in names]
     if attributes
-        attrn = keys(attrs(parent))
-        attro = Union{Object, Attribute}[attrs(parent)[n] for n in attrn]
+        attrn = keys(HDF5.attributes(parent))
+        attro = Union{Object, Attribute}[HDF5.attributes(parent)[n] for n in attrn]
         names = append!(attrn, names)
         objs  = append!(attro, objs)
     end
@@ -151,7 +151,7 @@ function _tree_children(parent::Union{Attribute, Datatype}, attributes::Bool)
 end
 
 function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,Attribute}, indent::String="";
-                   attributes::Bool = true)
+                    attributes::Bool = true)
     isempty(indent) && _tree_head(io, obj)
     !isvalid(obj) && return
 

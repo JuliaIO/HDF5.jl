@@ -22,8 +22,8 @@ end
 function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen{T}, xfer::Properties) where {T<:Union{ScalarType,CharType}}
     h5d_write(dataset_id, memtype_id, v, xfer.id)
 end
-# - p_create lost toclose argument
-@deprecate p_create(class, toclose::Bool, pv...) p_create(class, pv...)
+# - create_property lost toclose argument
+@deprecate p_create(class, toclose::Bool, pv...) create_property(class, pv...)
 
 ### Changed in PR#632
 # - using symbols instead of strings for property keys
@@ -57,19 +57,19 @@ function h5read(filename, name::AbstractString, indices::Tuple{Vararg{Union{Abst
     return h5read(filename, name, indices; [Symbol(pv[i]) => pv[i+1] for i in 1:2:length(pv)]...)
 end
 function d_create(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::D, prop1::AbstractString, val1, pv...) where D <: Union{Dataspace, Dims, Tuple{Dims,Dims}}
-    depwarn("d_create with string key and value argument pairs is deprecated. Use keywords instead.", :d_create)
+    depwarn("d_create with string key and value argument pairs is deprecated. Use create_dataset with keywords instead.", :d_create)
     props = (prop1, val1, pv...)
-    return d_create(parent, path, dtype, dspace; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
+    return create_dataset(parent, path, dtype, dspace; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
 end
 function d_create(parent::Union{File,Group}, path::AbstractString, dtype::Type, dspace, prop1::AbstractString, val1, pv...)
-    depwarn("d_create with string key and value argument pairs is deprecated. Use keywords instead.", :d_create)
+    depwarn("d_create with string key and value argument pairs is deprecated. Use create_dataset with keywords instead.", :create_dataset)
     props = (prop1, val1, pv...)
-    return d_create(parent, path, dtype, dspace; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
+    return create_dataset(parent, path, dtype, dspace; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
 end
 function p_create(class, prop1::AbstractString, val1, pv...)
-    depwarn("p_create with string key and value argument pairs is deprecated. Use keywords instead.", :p_create)
+    depwarn("p_create with string key and value argument pairs is deprecated. Use create_property keywords instead.", :create_property)
     props = (prop1, val1, pv...)
-    return p_create(class; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
+    return create_property(class; [Symbol(props[i]) => props[i+1] for i in 1:2:length(props)]...)
 end
 
 ### Changed in PR#652
@@ -87,17 +87,17 @@ function __d_create(parent::Union{File, Group}, path::AbstractString, dtype::Dat
                    dcpl::Properties = DEFAULT_PROPERTIES,
                    dapl::Properties = DEFAULT_PROPERTIES,
                    dxpl::Properties = DEFAULT_PROPERTIES)
-    d_create(parent, path, dtype, dspace, lcpl, dcpl, dapl, dxpl)
+    create_dataset(parent, path, dtype, dspace, lcpl, dcpl, dapl, dxpl)
 end
-# a_create doesn't take property lists, so just bind the helper name directly
-const __a_create = a_create
+# create_attribute doesn't take property lists, so just bind the helper name directly
+const __a_create = create_attribute
 
-for (fsym, ptype) in ((:d_create, Union{File, Group}),
-                      (:a_create, Union{File, Object}),
+for (fsym, fnewsym, ptype) in ((:d_create, :create_dataset, Union{File, Group}),
+                      (:a_create, :create_attribute, Union{File, Object}),
                      )
     chainsym = Symbol(:__, fsym)
     depsig = "$fsym(parent::$ptype, name::AbstractString, data, plists::HDF5Properties...)"
-    usesig = "$fsym(parent::$ptype, name::AbstractString, data; properties...)"
+    usesig = "$fnewsym(parent::$ptype, name::AbstractString, data; properties...)"
     warnstr = "`$depsig` with property lists is deprecated, use `$usesig` with keywords instead"
     @eval begin
         function ($fsym)(parent::$ptype, name::AbstractString, data,
@@ -114,12 +114,12 @@ for (fsym, ptype) in ((:d_create, Union{File, Group}),
         end
     end
 end
-for (fsym, ptype) in ((:d_write, Union{File,Group}),
-                      (:a_write, Union{File,Object}),
+for (fsym, fnewsym, ptype) in ((:d_write, :write_dataset, Union{File,Group}),
+                      (:a_write, :write_attribute, Union{File,Object}),
                      )
     crsym = Symbol(:__, replace(string(fsym), "write" => "create"))
     depsig = "$fsym(parent::$ptype, name::AbstractString, data, plists::HDF5Properties...)"
-    usesig = "$fsym(parent::$ptype, name::AbstractString, data; properties...)"
+    usesig = "$fnewsym(parent::$ptype, name::AbstractString, data; properties...)"
     warnstr = "`$depsig` with property lists is deprecated, use `$usesig` with keywords instead"
     @eval begin
         function ($fsym)(parent::$ptype, name::AbstractString, data,
@@ -130,7 +130,7 @@ for (fsym, ptype) in ((:d_write, Union{File,Group}),
             try
                 $fsym(obj, dtype, data)
             catch exc
-                o_delete(obj)
+                delete_object(obj)
                 rethrow(exc)
             finally
                 close(obj)
@@ -145,13 +145,13 @@ function Base.write(parent::Union{File,Group}, name::AbstractString, data::Union
             "with property lists is deprecated, use " *
             "`write(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString, data; properties...)` " *
             "with keywords instead.", :write)
-    # We avoid using the d_write method to prevent double deprecation warnings.
+    # We avoid using the write_dataset method to prevent double deprecation warnings.
     dtype = datatype(data)
     obj = __d_create(parent, name, dtype, dataspace(data), prop1, plists...)
     try
-        d_write(obj, dtype, data)
+        write_dataset(obj, dtype, data)
     catch exc
-        o_delete(obj)
+        delete_object(obj)
         rethrow(exc)
     finally
         close(obj)
@@ -164,13 +164,13 @@ function Base.write(parent::Dataset, name::AbstractString, data::Union{T,Abstrac
             "with property lists is deprecated, use " *
             "`write(parent::HDF5Dataset, name::AbstractString, data; properties...)` " *
             "with keywords instead.", :write)
-    # We avoid using the a_write method to prevent double deprecation warnings.
+    # We avoid using the write_attribute method to prevent double deprecation warnings.
     dtype = datatype(data)
     obj = __a_create(parent, name, dtype, dataspace(data), prop1, plists...)
     try
-        a_create(obj, dtype.id, data)
+        create__attribute(obj, dtype.id, data)
     catch exc
-        o_delete(obj)
+        delete_object(obj)
         rethrow(exc)
     finally
         close(obj)
@@ -244,40 +244,40 @@ import Base: names
 # PRs #710 & #714 removed the argument type restrictions; deprecate just that form
 # explicitly since they were only forms to exist in last release.
 function h5a_create(parent_id::hid_t, name, dtype_id::hid_t, dspace_id::hid_t)
-    depwarn("`h5a_create(parent.id, name, dtype.id, dspace.id)` is deprecated, use `a_create(parent, name, dtype, dspace)` instead", :h5a_create)
+    depwarn("`h5a_create(parent.id, name, dtype.id, dspace.id)` is deprecated, use `create_attribute(parent, name, dtype, dspace)` instead", :h5a_create)
     h5a_create(parent_id, name, dtype_id, dspace_id, HDF5._attr_properties(name), HDF5.H5P_DEFAULT)
 end
 function h5a_open(parent_id::hid_t, name)
-    depwarn("`h5a_open(parent.id, name)` is deprecated, use `a_open(parent, name)` instead", :h5a_open)
+    depwarn("`h5a_open(parent.id, name)` is deprecated, use `open_attribute(parent, name)` instead", :h5a_open)
     h5a_open(parent_id, name, HDF5.H5P_DEFAULT)
 end
 function h5d_create(parent_id::hid_t, name, dtype_id::hid_t, dspace_id::hid_t)
-    depwarn("`h5d_create(parent.id, name, dtype.id, dspace.id)` is deprecated, use `d_create(parent, name, dtype, dspace)` instead", :h5d_create)
+    depwarn("`h5d_create(parent.id, name, dtype.id, dspace.id)` is deprecated, use `create_dataset(parent, name, dtype, dspace)` instead", :h5d_create)
     h5d_create(parent_id, name, dtype_id, dspace_id, HDF5._link_properties(path), HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT)
 end
 function h5d_open(parent_id::hid_t, name)
-    depwarn("`h5d_open(parent.id, name)` is deprecated, use `d_open(parent, name)` instead", :h5d_open)
+    depwarn("`h5d_open(parent.id, name)` is deprecated, use `open_dataset(parent, name)` instead", :h5d_open)
     h5d_open(parent_id, name, HDF5.H5P_DEFAULT)
 end
 function h5g_create(parent_id::hid_t, name)
-    depwarn("`h5g_create(parent.id, name)` is deprecated, use `g_create(parent, name)` instead", :h5g_create)
+    depwarn("`h5g_create(parent.id, name)` is deprecated, use `create_group(parent, name)` instead", :h5g_create)
     h5g_create(parent_id, name, HDF5._link_properties(name), HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT)
 end
 function h5g_create(parent_id::hid_t, name, lcpl_id::hid_t, gcpl_id::hid_t)
-    depwarn("`h5g_create(parent.id, name, lcpl.id, gcpl.id)` is deprecated, use `g_create(parent, name, lcpl, gcpl)` instead", :h5g_create)
+    depwarn("`h5g_create(parent.id, name, lcpl.id, gcpl.id)` is deprecated, use `create_group(parent, name, lcpl, gcpl)` instead", :h5g_create)
     h5g_create(parent_id, name, lcpl_id, gcpl_id, HDF5.H5P_DEFAULT)
 end
 function h5g_open(parent_id::hid_t, name)
-    depwarn("`h5g_open(parent.id, name)` is deprecated, use `g_open(parent, name)` instead", :h5g_open)
+    depwarn("`h5g_open(parent.id, name)` is deprecated, use `open_group(parent, name)` instead", :h5g_open)
     h5g_open(parent_id, name, HDF5.H5P_DEFAULT)
 end
 function h5o_open(parent_id::hid_t, name)
-    depwarn("`h5o_open(parent.id, name)` is deprecated, use `o_open(parent, name)` instead", :h5o_open)
+    depwarn("`h5o_open(parent.id, name)` is deprecated, use `open_object(parent, name)` instead", :h5o_open)
     h5o_open(parent_id, name, HDF5.H5P_DEFAULT)
 end
 
 function h5a_write(attr_id::hid_t, memtype_id::hid_t, str::AbstractString)
-    depwarn("`h5a_write(attr.id, memtype.id, str)` is deprecated, use `a_write(attr, memtype, str)` instead")
+    depwarn("`h5a_write(attr.id, memtype.id, str)` is deprecated, use `write_attribute(attr, memtype, str)` instead")
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
         buf = Base.unsafe_convert(Ptr{UInt8}, strbuf)
@@ -285,28 +285,28 @@ function h5a_write(attr_id::hid_t, memtype_id::hid_t, str::AbstractString)
     end
 end
 function h5a_write(attr_id::hid_t, memtype_id::hid_t, x::T) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
-    depwarn("`h5a_write(attr.id, memtype.id, x)` is deprecated, use `a_write(attr, memtype, x)` instead")
+    depwarn("`h5a_write(attr.id, memtype.id, x)` is deprecated, use `write_attribute(attr, memtype, x)` instead")
     tmp = Ref{T}(x)
     h5a_write(attr_id, memtype_id, tmp)
 end
 function h5a_write(attr_id::hid_t, memtype_id::hid_t, strs::Array{<:AbstractString})
-    depwarn("`h5a_write(attr.id, memtype.id, strs)` is deprecated, use `a_write(attr, memtype, strs)` instead")
+    depwarn("`h5a_write(attr.id, memtype.id, strs)` is deprecated, use `write_attribute(attr, memtype, strs)` instead")
     p = Ref{Cstring}(strs)
     h5a_write(attr_id, memtype_id, p)
 end
 
 function h5d_read(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::hid_t=H5P_DEFAULT)
-    depwarn("`h5d_read(dataset.id, memtype.id, buf[, xfer.id])` is deprecated, use `d_read(dataset, memtype, buf[, xfer])` instead")
+    depwarn("`h5d_read(dataset.id, memtype.id, buf[, xfer.id])` is deprecated, use `read_dataset(dataset, memtype, buf[, xfer])` instead")
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
     h5d_read(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
 end
 function h5d_write(dataset_id::hid_t, memtype_id::hid_t, buf::AbstractArray, xfer::hid_t=H5P_DEFAULT)
-    depwarn("`h5d_write(dataset.id, memtype.id, buf[, xfer.id])` is deprecated, use `d_write(dataset, memtype, buf[, xfer])` instead")
+    depwarn("`h5d_write(dataset.id, memtype.id, buf[, xfer.id])` is deprecated, use `write_dataset(dataset, memtype, buf[, xfer])` instead")
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, buf)
 end
 function h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::AbstractString, xfer::hid_t=H5P_DEFAULT)
-    depwarn("`h5d_write(dataset.id, memtype.id, str[, xfer.id])` is deprecated, use `d_write(dataset, memtype, str[, xfer])` instead")
+    depwarn("`h5d_write(dataset.id, memtype.id, str[, xfer.id])` is deprecated, use `write_dataset(dataset, memtype, str[, xfer])` instead")
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
         # unsafe_convert(Cstring, strbuf) is responsible for enforcing the no-'\0' policy,
@@ -317,39 +317,39 @@ function h5d_write(dataset_id::hid_t, memtype_id::hid_t, str::AbstractString, xf
     end
 end
 function h5d_write(dataset_id::hid_t, memtype_id::hid_t, x::T, xfer::hid_t=H5P_DEFAULT) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
-    depwarn("`h5d_write(dataset.id, memtype.id, x[, xfer.id])` is deprecated, use `d_write(dataset, memtype, x[, xfer])` instead")
+    depwarn("`h5d_write(dataset.id, memtype.id, x[, xfer.id])` is deprecated, use `write_dataset(dataset, memtype, x[, xfer])` instead")
     tmp = Ref{T}(x)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, tmp)
 end
 function h5d_write(dataset_id::hid_t, memtype_id::hid_t, strs::Array{<:AbstractString}, xfer::hid_t=H5P_DEFAULT)
-    depwarn("`h5d_write(dataset.id, memtype.id, strs[, xfer.id])` is deprecated, use `d_write(dataset, memtype, strs[, xfer])` instead")
+    depwarn("`h5d_write(dataset.id, memtype.id, strs[, xfer.id])` is deprecated, use `write_dataset(dataset, memtype, strs[, xfer])` instead")
     p = Ref{Cstring}(strs)
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, p)
 end
 function h5d_write(dataset_id::hid_t, memtype_id::hid_t, v::VLen, xfer::hid_t=H5P_DEFAULT)
-    depwarn("`h5d_write(dataset.id, memtype.id, v[, xfer.id])` is deprecated, use `d_write(dataset, memtype, v[, xfer])` instead")
+    depwarn("`h5d_write(dataset.id, memtype.id, v[, xfer.id])` is deprecated, use `write_dataset(dataset, memtype, v[, xfer])` instead")
     h5d_write(dataset_id, memtype_id, H5S_ALL, H5S_ALL, xfer, v)
 end
 
 function writearray(attr::Attribute, dtype_id::hid_t, x)
-    depwarn("`writearray(attr, dtype.id, x)` is deprecated, use `a_write(attr, dtype, x)` instead", :writearray)
+    depwarn("`writearray(attr, dtype.id, x)` is deprecated, use `write_attribute(attr, dtype, x)` instead", :writearray)
     dtype = Datatype(dtype_id, false)
-    a_write(attr, dtype, x)
+    write_attribute(attr, dtype, x)
 end
 function writearray(dset::Dataset, dtype_id::hid_t, x)
-    depwarn("`writearray(dset, dtype.id, x)` is deprecated, use `d_write(dset, dtype, x)` instead", :writearray)
+    depwarn("`writearray(dset, dtype.id, x)` is deprecated, use `write_dataset(dset, dtype, x)` instead", :writearray)
     dtype = Datatype(dtype_id, false)
-    d_write(dset, dtype, x)
+    write_dataset(dset, dtype, x)
 end
 function readarray(obj::Attribute, dtype_id::hid_t, buf)
-    depwarn("`readarray(attr, dtype.id, buf)` is deprecated, use `a_read(attr, dtype, buf)` instead", :readarray)
+    depwarn("`readarray(attr, dtype.id, buf)` is deprecated, use `read_attribute(attr, dtype, buf)` instead", :readarray)
     dtype = Datatype(dtype_id, false)
-    a_read(attr, dtype, buf)
+    read_attribute(attr, dtype, buf)
 end
 function readarray(dset::Dataset, dtype_id::hid_t, buf)
-    depwarn("`readarray(dset, dtype.id, buf)` is deprecated, use `d_read(dset, dtype, buf)` instead", :readarray)
+    depwarn("`readarray(dset, dtype.id, buf)` is deprecated, use `read_dataset(dset, dtype, buf)` instead", :readarray)
     dtype = Datatype(dtype_id, false)
-    d_read(dset, dtype, buf)
+    read_dataset(dset, dtype, buf)
 end
 @deprecate h5f_create(pathname) h5f_create(pathname, HDF5.H5F_ACC_TRUNC, HDF5.H5P_DEFAULT, HDF5.H5P_DEFAULT) false
 @deprecate h5f_open(pathname, flags) h5f_open(pathname, flags, HDF5.H5P_DEFAULT) false
@@ -363,8 +363,8 @@ function Base.read(f::Base.Callable, parent::H5DataStore, name::AbstractString..
 end
 
 function g_create(f::Function, parent::Union{File,Group}, args...)
-    depwarn("g_create(f::Function, parent::Union{File,Group}, args...) is deprecated. Directly call `f` on the output from `g_create(parent, name...)` followed by closing the group", :g_create)
-    g = g_create(parent, args...)
+    depwarn("g_create(f::Function, parent::Union{File,Group}, args...) is deprecated. Directly call `f` on the output from `create_group(parent, name...)` followed by closing the group", :g_create)
+    g = create_group(parent, args...)
     try
         f(g)
     finally
@@ -372,9 +372,6 @@ function g_create(f::Function, parent::Union{File,Group}, args...)
     end
 end
 
-### Changed in PR#724
-@deprecate info(obj::Union{Group,File}) g_info(obj) false
-@deprecate objinfo(obj::Union{File,Object}) o_info(obj) false
 
 ### Changed in PR#732
 # - Removed hdf5_to_julia{,_eltype}(obj); using get_jl_type(obj) instead.
@@ -407,3 +404,36 @@ function readmmap(obj::Dataset, ::Type{Array{T}}) where {T <: ScalarType}
     depwarn("`readmmap(obj, ::Type{A}) where {A <: Array}` is deprecated. Pass the array element type instead.", :readmmap)
     return readmmap(obj::Dataset, T)
 end
+
+
+### Changed in PR#696
+
+@deprecate info(obj::Union{Group,File}) group_info(obj)
+@deprecate objinfo(obj::Union{File,Object}) object_info(obj)
+
+# - rename bindings
+@deprecate a_open    open_attribute
+@deprecate a_read    read_attribute
+@deprecate a_write   write_attribute
+@deprecate a_create  create_attribute
+@deprecate a_delete  delete_attribute
+@deprecate attrs     attributes
+
+@deprecate d_open            open_dataset
+@deprecate d_read            read_dataset
+@deprecate d_write           write_dataset
+@deprecate d_create          create_dataset
+@deprecate d_create_external HDF5.create_external_dataset
+
+@deprecate g_open   open_group
+@deprecate g_create create_group
+
+@deprecate o_open   open_object
+@deprecate o_copy   copy_object
+@deprecate o_delete delete_object
+
+@deprecate p_create create_property
+
+@deprecate t_create create_datatype
+@deprecate t_open   open_datatype
+@deprecate t_commit commit_datatype

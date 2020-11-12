@@ -8,9 +8,9 @@ fn1 = tempname()
 fn2 = tempname()
 
 source_file = h5open(fn1, "w")
-agroup = g_create(source_file, "agroup")
+agroup = create_group(source_file, "agroup")
 target_file = h5open(fn2, "w")
-target_group = g_create(target_file, "target_group")
+target_group = create_group(target_file, "target_group")
 target_group["abc"] = "abc"
 target_group["1"] = 1
 target_group["1.1"] = 1.1
@@ -21,7 +21,7 @@ close(target_file)
 HDF5.create_external(source_file, "ext_link", target_file.filename, "target_group")
 HDF5.create_external(agroup, "ext_link", target_file.filename, "target_group")
 # write some things via the external link
-new_group = g_create(source_file["ext_link"], "new_group")
+new_group = create_group(source_file["ext_link"], "new_group")
 new_group["abc"] = "abc"
 new_group["1"] = 1
 new_group["1.1"] = 1.1
