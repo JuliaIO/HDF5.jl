@@ -1,6 +1,6 @@
 using Random, Test, HDF5
 
-import HDF5: datatype
+import HDF5.datatype
 
 struct Simple
     a::Float64
