@@ -1,5 +1,6 @@
 using Random, Test, HDF5
 
+import HDF5.datatype
 import Base.convert
 import Base.unsafe_convert
 
@@ -28,7 +29,7 @@ function unsafe_convert(::Type{foo_hdf5}, x::foo)
             )
 end
 
-function HDF5.datatype(::Type{foo_hdf5})
+function datatype(::Type{foo_hdf5})
     dtype = HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(foo_hdf5))
     HDF5.h5t_insert(dtype, "a", fieldoffset(foo_hdf5, 1), datatype(Float64))
 
@@ -61,7 +62,7 @@ struct bar_hdf5
     a::NTuple{2, NTuple{20, UInt8}}
 end
 
-function HDF5.datatype(::Type{bar_hdf5})
+function datatype(::Type{bar_hdf5})
     dtype = HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(bar_hdf5))
 
     fixedstr_dtype = HDF5.h5t_copy(HDF5.H5T_C_S1)
