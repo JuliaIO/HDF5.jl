@@ -12,7 +12,7 @@ using Random, Test, HDF5
     # reference attached to file
     f["file_ref"] = HDF5.Reference(f, "data")
     # reference attached to group
-    g = g_create(f, "sub")
+    g = create_group(f, "sub")
     g["group_ref"] = HDF5.Reference(f, "group_data")
     # reference attached to dataset
     f["data"]["attr_ref"] = HDF5.Reference(f, "attr_data")

@@ -26,8 +26,8 @@ end
 
 @testset "h5d_oappend" begin
     h5open(fname, "w") do h5
-        g = g_create(h5, "shoe")
-        d = d_create(g, "bar", datatype(Float64), ((1,), (-1,)), chunk=(100,))
+        g = create_group(h5, "shoe")
+        d = create_dataset(g, "bar", datatype(Float64), ((1,), (-1,)), chunk=(100,))
         dxpl_id = HDF5.get_create_properties(d)
         v = [1.0, 2.0]
         memtype = datatype(Float64).id
@@ -38,7 +38,7 @@ end
 function dataset_write(d, ch_written, ch_read)
     for i = 1:10
         @assert take!(ch_read) == true
-        set_dims!(d, (i*10,))
+        HDF5.set_dims!(d, (i*10,))
         inds::UnitRange{Int} = (1:10) .+ (i - 1) * 10
         d[inds] = inds
         flush(d) # flush the dataset
@@ -89,9 +89,9 @@ end
 
 # create datasets and attributes before staring swmr writing
 function prep_h5_file(h5)
-    d = d_create(h5, "foo", datatype(Int), ((1,), (100,)), chunk=(1,))
-    attrs(h5)["bar"] = "bar"
-    g = g_create(h5, "group")
+    d = create_dataset(h5, "foo", datatype(Int), ((1,), (100,)), chunk=(1,))
+    attributes(h5)["bar"] = "bar"
+    g = create_group(h5, "group")
 end
 
 @testset "create by libver, then start_swmr_write" begin

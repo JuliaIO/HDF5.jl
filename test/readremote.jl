@@ -66,7 +66,7 @@ AA = Array{Int,2}[
 file = joinpath(test_files, "h5ex_t_floatatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
-a = a_read(dset, "A1")
+a = read_attribute(dset, "A1")
 @test norm(a - fcmp) < 1.5e-5
 close(fid)
 
@@ -79,7 +79,7 @@ close(fid)
 file = joinpath(test_files, "h5ex_t_intatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
-a = a_read(dset, "A1")
+a = read_attribute(dset, "A1")
 @test a == icmp
 close(fid)
 
@@ -93,7 +93,7 @@ if HDF5.h5_get_libversion() >= v"1.8.11"
   file = joinpath(test_files, "h5ex_t_enumatt.h5")
   fid = h5open(file, "r")
   dset = fid["DS1"]
-  a = a_read(dset, "A1")
+  a = read_attribute(dset, "A1")
   @test a == ecmp
   close(fid)
 
@@ -107,7 +107,7 @@ end
 file = joinpath(test_files, "h5ex_t_objrefatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
-a = a_read(dset, "A1")
+a = read_attribute(dset, "A1")
 g = fid[a[1]]
 @test isa(g, HDF5.Group)
 ds2 = fid[a[2]]
@@ -130,7 +130,7 @@ close(fid)
 file = joinpath(test_files, "h5ex_t_stringatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
-a = a_read(dset, "A1")
+a = read_attribute(dset, "A1")
 @test a == scmp
 close(fid)
 
@@ -143,7 +143,7 @@ close(fid)
 file = joinpath(test_files, "h5ex_t_vlenatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
-a = a_read(dset, "A1")
+a = read_attribute(dset, "A1")
 @test a == vicmp
 close(fid)
 
@@ -156,7 +156,7 @@ close(fid)
 file = joinpath(test_files, "h5ex_t_vlstringatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
-a = a_read(dset, "A1")
+a = read_attribute(dset, "A1")
 @test a == scmp
 close(fid)
 
@@ -169,7 +169,7 @@ close(fid)
 file = joinpath(test_files, "h5ex_t_opaqueatt.h5")
 fid = h5open(file, "r")
 dset = fid["DS1"]
-a = a_read(dset, "A1")
+a = read_attribute(dset, "A1")
 @test a.tag == "Character array"
 @test a.data == opq
 close(fid)

@@ -1,6 +1,5 @@
 using Random, Test, HDF5
 
-import HDF5.datatype
 import Base.convert
 import Base.unsafe_convert
 
@@ -29,7 +28,7 @@ function unsafe_convert(::Type{foo_hdf5}, x::foo)
             )
 end
 
-function datatype(::Type{foo_hdf5})
+function HDF5.datatype(::Type{foo_hdf5})
     dtype = HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(foo_hdf5))
     HDF5.h5t_insert(dtype, "a", fieldoffset(foo_hdf5, 1), datatype(Float64))
 
@@ -62,7 +61,7 @@ struct bar_hdf5
     a::NTuple{2, NTuple{20, UInt8}}
 end
 
-function datatype(::Type{bar_hdf5})
+function HDF5.datatype(::Type{bar_hdf5})
     dtype = HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(bar_hdf5))
 
     fixedstr_dtype = HDF5.h5t_copy(HDF5.H5T_C_S1)
@@ -107,13 +106,13 @@ end
     h5open(fn, "w") do h5f
         foo_dtype = datatype(foo_hdf5)
         foo_space = dataspace(v_write)
-        foo_dset = d_create(h5f, "foo", foo_dtype, foo_space)
-        d_write(foo_dset, foo_dtype, v_write)
+        foo_dset = create_dataset(h5f, "foo", foo_dtype, foo_space)
+        write_dataset(foo_dset, foo_dtype, v_write)
 
         bar_dtype = datatype(bar_hdf5)
         bar_space = dataspace(w_write)
-        bar_dset = d_create(h5f, "bar", bar_dtype, bar_space)
-        d_write(bar_dset, bar_dtype, w_write)
+        bar_dset = create_dataset(h5f, "bar", bar_dtype, bar_space)
+        write_dataset(bar_dset, bar_dtype, w_write)
     end
 
     v_read = h5read(fn, "foo")

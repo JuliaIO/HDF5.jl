@@ -14,7 +14,7 @@ myrank = MPI.Comm_rank(comm)
 
 @test HDF5.has_parallel()
 
-let fileprop = p_create(HDF5.H5P_FILE_ACCESS)
+let fileprop = create_property(HDF5.H5P_FILE_ACCESS)
     HDF5.h5p_set_fapl_mpio(fileprop, comm, info)
     h5comm, h5info = HDF5.h5p_get_fapl_mpio(fileprop)
 
@@ -29,8 +29,8 @@ fn = MPI.bcast(tempname(), 0, comm)
 A = [myrank + i for i = 1:10]
 h5open(fn, "w", comm, info) do f
     @test isopen(f)
-    g = g_create(f, "mygroup")
-    dset = d_create(g, "B", datatype(Int64), dataspace(10, nprocs), chunk=(10, 1), dxpl_mpio=HDF5.H5FD_MPIO_COLLECTIVE)
+    g = create_group(f, "mygroup")
+    dset = create_dataset(g, "B", datatype(Int64), dataspace(10, nprocs), chunk=(10, 1), dxpl_mpio=HDF5.H5FD_MPIO_COLLECTIVE)
     dset[:, myrank + 1] = A
 end
 

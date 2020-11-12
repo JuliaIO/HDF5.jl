@@ -14,7 +14,7 @@ macro memtest(ex)
     end
 end
 @memtest h5open("/tmp/memtest.h5", "w") do file
-    dset = d_create(file, "A", datatype(DATA), dataspace(DATA), chunk=(100,))
+    dset = create_dataset(file, "A", datatype(DATA), dataspace(DATA), chunk=(100,))
     dset[:] = DATA[:]
 end
 @memtest h5open("/tmp/memtest.h5", "w") do file

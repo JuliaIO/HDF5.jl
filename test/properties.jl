@@ -10,20 +10,20 @@ h5open(fn, "w";
        libver_bounds = (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST),
       ) do hfile
     # generic
-    g = g_create(hfile, "group")
-    d = d_create(g, "dataset", datatype(Int), dataspace((500,500)),
+    g = create_group(hfile, "group")
+    d = create_dataset(g, "dataset", datatype(Int), dataspace((500,500)),
                  alloc_time = HDF5.H5D_ALLOC_TIME_EARLY,
                  chunk = (5, 10),
                  track_times = false)
-    attrs(d)["metadata"] = "test"
+    attributes(d)["metadata"] = "test"
 
     flush(hfile)
 
-    fcpl = get_create_properties(hfile)
-    fapl = get_access_properties(hfile)
-    gcpl = get_create_properties(hfile["group"])
-    dcpl = get_create_properties(hfile["group/dataset"])
-    acpl = get_create_properties(attrs(hfile["group/dataset"])["metadata"])
+    fcpl = HDF5.get_create_properties(hfile)
+    fapl = HDF5.get_access_properties(hfile)
+    gcpl = HDF5.get_create_properties(hfile["group"])
+    dcpl = HDF5.get_create_properties(hfile["group/dataset"])
+    acpl = HDF5.get_create_properties(attributes(hfile["group/dataset"])["metadata"])
 
     # Retrievability of properties
     @test isvalid(fcpl)

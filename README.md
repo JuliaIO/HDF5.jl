@@ -14,6 +14,10 @@ read by numerous [programming
 languages](https://en.wikipedia.org/wiki/Hierarchical_Data_Format#Interfaces).  This package
 provides an interface to the HDF5 library for the Julia language.
 
+## Changelog
+
+Please see the [HISTORY.jl](HISTORY.md) file for the changelog. Most changes have deprecation warnings and thus may not be listed under the changelog, but for the changes that don't please refer to the [HISTORY.jl](HISTORY.md).
+
 ## Installation
 
 ```julia
@@ -122,4 +126,3 @@ demonstrate usage.
   improving the handling of HDF5's constants
 
 - Thanks also to the users who have reported bugs and tested fixes
-
