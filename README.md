@@ -16,7 +16,7 @@ provides an interface to the HDF5 library for the Julia language.
 
 ## Changelog
 
-Please see the [HISTORY.jl](HISTORY.md) file for the changelog. Most changes have deprecation warnings and thus may not be listed under the changelog, but for the changes that don't please refer to the [HISTORY.jl](HISTORY.md).
+Please see [HISTORY.jl](HISTORY.md) for the changelog. Most changes have deprecation warnings and thus may not be listed under here, but for those that don't please refer to this file.
 
 ## Installation
 
