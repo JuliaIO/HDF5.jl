@@ -27,6 +27,7 @@ end
 
 ### Changed in PR#632
 # - using symbols instead of strings for property keys
+import Base: setindex!
 @deprecate setindex!(p::Properties, val, name::AbstractString) setindex!(p, val, Symbol(name))
 
 function Base.getindex(parent::Union{File,Group}, path::AbstractString, prop1::AbstractString, val1, pv...)
