@@ -35,6 +35,9 @@ else
                     if libhdf5_size != filesize(Libdl.dlpath(libhdf5))
                         error("HDF5 library has changed, re-run Pkg.build(\\\"HDF5\\\")")
                     end
+                    if libversion < v"1.12"
+                        error("HDF5.jl requires ≥ v1.12 of the HDF5 library.")
+                    end
                 end
                 """
                )
