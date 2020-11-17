@@ -1,3 +1,7 @@
+## v0.14.2
+
+* We no longer ship binaries for Linux on i686 and armv7.
+
 ## v0.14
 
 ### Breaking Changes
