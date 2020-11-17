@@ -599,7 +599,7 @@ checkvalid(obj) = isvalid(obj) ? obj : error("File or object has been closed")
 # Close functions that should try calling close regardless
 function Base.close(obj::File)
     if obj.id != -1
-        h5f_close(obj.id)
+        h5f_close(obj)
         obj.id = -1
     end
     nothing
@@ -620,7 +620,7 @@ Base.isopen(obj::File) = obj.id != -1
 function Base.close(obj::Union{Group,Dataset})
     if obj.id != -1
         if obj.file.id != -1 && isvalid(obj)
-            h5o_close(obj.id)
+            h5o_close(obj)
         end
         obj.id = -1
     end
@@ -630,7 +630,7 @@ end
 function Base.close(obj::Attribute)
     if obj.id != -1
         if obj.file.id != -1 && isvalid(obj)
-            h5a_close(obj.id)
+            h5a_close(obj)
         end
         obj.id = -1
     end
@@ -640,7 +640,7 @@ end
 function Base.close(obj::Datatype)
     if obj.toclose && obj.id != -1
         if (!isdefined(obj, :file) || obj.file.id != -1) && isvalid(obj)
-            h5o_close(obj.id)
+            h5o_close(obj)
         end
         obj.id = -1
     end
@@ -650,7 +650,7 @@ end
 function Base.close(obj::Dataspace)
     if obj.id != -1
         if isvalid(obj)
-            h5s_close(obj.id)
+            h5s_close(obj)
         end
         obj.id = -1
     end
@@ -660,7 +660,7 @@ end
 function Base.close(obj::Properties)
     if obj.id != -1
         if isvalid(obj)
-            h5p_close(obj.id)
+            h5p_close(obj)
         end
         obj.id = -1
     end
