@@ -46,10 +46,10 @@ struct H5G_info_t
 end
 
 # For objects
-const H5O_INFO_BASIC = 0x0001 # Fill in the fileno, addr, type, and rc fields
-const H5O_INFO_TIME = 0x0002 # Fill in the atime, mtime, ctime, and btime fields
+const H5O_INFO_BASIC     = 0x0001 # Fill in the fileno, addr, type, and rc fields
+const H5O_INFO_TIME      = 0x0002 # Fill in the atime, mtime, ctime, and btime fields
 const H5O_INFO_NUM_ATTRS = 0x0004 # Fill in the num_attrs field
-const H5O_INFO_ALL = (H5O_INFO_BASIC | H5O_INFO_TIME | H5O_INFO_NUM_ATTRS)
+const H5O_INFO_ALL       = (H5O_INFO_BASIC | H5O_INFO_TIME | H5O_INFO_NUM_ATTRS)
 
 struct H5_ih_info_t
     index_size::hsize_t
