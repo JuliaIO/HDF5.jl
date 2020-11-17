@@ -28,7 +28,8 @@ dataspace, datatype
 # get_chunk, get_datasets,
 # get_access_properties, get_create_properties,
 # root, readmmap, set_dims!,
-# iscontiguous, ishdf5, ismmappable,
+# iscontiguous, iscompact, ischunked,
+# ishdf5, ismmappable,
 # refresh
 # start_swmr_write
 # create_external, create_external_dataset
@@ -1318,6 +1319,24 @@ do_reclaim(::Type{NamedTuple{T,U}}) where {U,T} = any(i -> do_reclaim(fieldtype(
 do_reclaim(::Type{T}) where T <: Union{Cstring,VariableArray} = true
 
 Base.read(attr::Attributes, name::AbstractString) = read_attribute(attr.parent, name)
+
+function iscompact(obj::Dataset)
+    prop = h5d_get_create_plist(checkvalid(obj))
+    try
+        h5p_get_layout(prop) == H5D_COMPACT
+    finally
+        h5p_close(prop)
+    end
+end
+
+function ischunked(obj::Dataset)
+    prop = h5d_get_create_plist(checkvalid(obj))
+    try
+        h5p_get_layout(prop) == H5D_CHUNKED
+    finally
+        h5p_close(prop)
+    end
+end
 
 function iscontiguous(obj::Dataset)
     prop = h5d_get_create_plist(checkvalid(obj))
