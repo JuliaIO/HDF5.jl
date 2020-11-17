@@ -25,6 +25,9 @@ jobs:
             arch: x86
           - version: '1.3'
             arch: x86
+          - version: '1.5'
+            arch: x86
+            os: ubuntu-latest
           - version: 'nightly'
             arch: x86
     steps:
