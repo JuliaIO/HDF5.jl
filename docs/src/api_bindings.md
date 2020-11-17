@@ -127,7 +127,7 @@ h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, or
 ```julia
 h5o_close(object_id::hid_t)
 h5o_copy(src_loc_id::hid_t, src_name::Ptr{UInt8}, dst_loc_id::hid_t, dst_name::Ptr{UInt8}, ocpypl_id::hid_t, lcpl_id::hid_t)
-h5o_get_info(object_id::hid_t, buf::Ptr{H5O_info_t})
+h5o_get_info(object_id::hid_t, buf::Ptr{H5O_info_t}, fields::Cuint)
 h5o_open(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)
 h5o_open_by_addr(loc_id::hid_t, addr::haddr_t)
 h5o_open_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)

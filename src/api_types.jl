@@ -46,36 +46,31 @@ struct H5G_info_t
 end
 
 # For objects
+const H5O_INFO_BASIC = 0x0001 # Fill in the fileno, addr, type, and rc fields
+const H5O_INFO_TIME = 0x0002 # Fill in the atime, mtime, ctime, and btime fields
+const H5O_INFO_NUM_ATTRS = 0x0004 # Fill in the num_attrs field
+const H5O_INFO_ALL = (H5O_INFO_BASIC | H5O_INFO_TIME | H5O_INFO_NUM_ATTRS)
+
 struct H5_ih_info_t
     index_size::hsize_t
     heap_size::hsize_t
 end
+
+const H5O_MAX_TOKEN_SIZE = 16 # Allows for 128-bit tokens
+struct H5O_token_t
+    data::NTuple{H5O_MAX_TOKEN_SIZE,UInt8}
+end
+
 struct H5O_info_t # version 1 type H5O_info1_t
     fileno::Cuint
-    addr::haddr_t
-    otype::Cint # enum H5O_type_t
+    token::H5O_token_t
+    type::Cint # enum H5O_type_t
     rc::Cuint
     atime::Ctime_t
     mtime::Ctime_t
     ctime::Ctime_t
     btime::Ctime_t
     num_attrs::hsize_t
-    #{ inlined struct H5O_hdr_info_t named type
-    version::Cuint
-    nmesgs::Cuint
-    nchunks::Cuint
-    flags::Cuint
-    total::hsize_t
-    meta::hsize_t
-    mesg::hsize_t
-    free::hsize_t
-    present::UInt64
-    shared::UInt64
-    #}
-    #{ inlined anonymous struct named meta_size
-    meta_obj::H5_ih_info_t
-    meta_attr::H5_ih_info_t
-    #}
 end
 
 # For links

@@ -442,7 +442,7 @@ function h5l_exists(loc_id, pathname, lapl_id)
 end
 
 function h5l_get_info(link_loc_id, link_name, link_buf, lapl_id)
-    var"#status#" = ccall((:H5Lget_info, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Ptr{H5L_info_t}, hid_t), link_loc_id, link_name, link_buf, lapl_id)
+    var"#status#" = ccall((:H5Lget_info2, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Ptr{H5L_info_t}, hid_t), link_loc_id, link_name, link_buf, lapl_id)
     var"#status#" < 0 && error("Error getting info for link ", link_name)
     return nothing
 end
@@ -465,8 +465,8 @@ function h5o_copy(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id
     return nothing
 end
 
-function h5o_get_info(object_id, buf)
-    var"#status#" = ccall((:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info_t}), object_id, buf)
+function h5o_get_info(object_id, buf, fields)
+    var"#status#" = ccall((:H5Oget_info3, libhdf5), herr_t, (hid_t, Ptr{H5O_info_t}, Cuint), object_id, buf, fields)
     var"#status#" < 0 && error("Error getting object info")
     return nothing
 end
