@@ -45,7 +45,7 @@ function datatype(::Type{foo_hdf5})
     HDF5.h5t_insert(dtype, "c", fieldoffset(foo_hdf5, 3), fixedstr_dtype)
 
     hsz = HDF5.hsize_t[3,3]
-    array_dtype = HDF5.h5t_array_create(datatype(ComplexF64).id, 2, hsz)
+    array_dtype = HDF5.h5t_array_create(datatype(ComplexF64), 2, hsz)
     HDF5.h5t_insert(dtype, "d", fieldoffset(foo_hdf5, 4), array_dtype)
 
     vlen_dtype = HDF5.h5t_vlen_create(datatype(Int64))

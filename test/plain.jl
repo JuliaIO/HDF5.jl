@@ -42,8 +42,8 @@ write(f, "ucode", ucode)
 # Manually write a variable-length string (issue #187)
 let
     dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
-    HDF5.h5t_set_size(dtype.id, HDF5.H5T_VARIABLE)
-    HDF5.h5t_set_cset(dtype.id, HDF5.cset(typeof(salut)))
+    HDF5.h5t_set_size(dtype, HDF5.H5T_VARIABLE)
+    HDF5.h5t_set_cset(dtype, HDF5.cset(typeof(salut)))
     dspace = dataspace(salut)
     dset = create_dataset(f, "salut-vlen", dtype, dspace)
     GC.@preserve salut begin
