@@ -30,8 +30,8 @@ end
         d = create_dataset(g, "bar", datatype(Float64), ((1,), (-1,)), chunk=(100,))
         dxpl_id = HDF5.get_create_properties(d)
         v = [1.0, 2.0]
-        memtype = datatype(Float64).id
-        # @test HDF5.h5d_oappend(d.id, dxpl_id, 0, length(v), memtype, v)
+        memtype = datatype(Float64)
+        # @test HDF5.h5d_oappend(d, dxpl_id, 0, length(v), memtype, v)
     end
 end
 

@@ -678,10 +678,10 @@ ishdf5(name::AbstractString) = h5f_is_hdf5(name)
 # Extract the file
 file(f::File) = f
 file(o::Union{Object,Attribute}) = o.file
-fd(obj::Object) = h5i_get_file_id(checkvalid(obj).id)
+fd(obj::Object) = h5i_get_file_id(checkvalid(obj))
 
 # Flush buffers
-Base.flush(f::Union{Object,Attribute,Datatype,File}, scope = H5F_SCOPE_GLOBAL) = h5f_flush(checkvalid(f).id, scope)
+Base.flush(f::Union{Object,Attribute,Datatype,File}, scope = H5F_SCOPE_GLOBAL) = h5f_flush(checkvalid(f), scope)
 
 # Open objects
 open_group(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Group(h5g_open(checkvalid(parent), name, apl), file(parent))
@@ -1224,7 +1224,7 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
     out = do_normalize(T) ? normalize_types.(buf) : buf
 
     xfer_id = obj isa Dataset ? obj.xfer.id : H5P_DEFAULT
-    do_reclaim(T) && h5d_vlen_reclaim(memtype.id, memspace.id, xfer_id, buf)
+    do_reclaim(T) && h5d_vlen_reclaim(memtype, memspace, xfer_id, buf)
 
     close(memtype)
     close(memspace)
@@ -1367,7 +1367,7 @@ function readmmap(obj::Dataset, ::Type{T}) where {T}
         prop = h5d_get_access_plist(obj)
         try
             # TODO: Should check return value of h5f_get_driver()
-            fdptr = h5f_get_vfd_handle(obj.file.id, prop)
+            fdptr = h5f_get_vfd_handle(obj.file, prop)
             fdint = unsafe_load(convert(Ptr{Cint}, fdptr))
         finally
             h5p_close(prop)
@@ -1388,16 +1388,16 @@ function readmmap(obj::Dataset, ::Type{T}) where {T}
         # function
 
         # Check permissions
-        intent = h5f_get_intent(obj.file.id)
+        intent = h5f_get_intent(obj.file)
         flag = intent == H5F_ACC_RDONLY ? "r" : "r+"
         fd = open(obj.file.filename, flag)
     end
 
-    offset = h5d_get_offset(obj.id)
+    offset = h5d_get_offset(obj)
     if offset % Base.datatype_alignment(T) == 0
         A = Mmap.mmap(fd, Array{T,length(dims)}, dims, offset)
     else
-        Aflat = Mmap.mmap(fd, Array{UInt8,1}, prod(dims)*sizeof(T), offset)
+        Aflat = Mmap.mmap(fd, Vector{UInt8}, prod(dims)*sizeof(T), offset)
         A = reshape(reinterpret(T, Aflat), dims)
     end
 
