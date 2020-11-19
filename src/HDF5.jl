@@ -1279,8 +1279,12 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
         end
     end
 
-    buf = Array{T}(undef, sz...)
-    memspace = dataspace(buf)
+    if do_normalize(T)
+        buf = Matrix{UInt8}(undef, sizeof(T), prod(sz))
+    else
+        buf = Array{T}(undef, sz...)
+    end
+    memspace = dataspace(sz)
 
     if obj isa Dataset
         h5d_read(obj, memtype, memspace, dspace, obj.xfer, buf)
@@ -1288,7 +1292,11 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
         h5a_read(obj, memtype, buf)
     end
 
-    out = do_normalize(T) ? normalize_types.(buf) : buf
+    if do_normalize(T)
+        out = reshape(normalize_types(T, buf), sz...)
+    else
+        out = buf
+    end
 
     xfer_id = obj isa Dataset ? obj.xfer.id : H5P_DEFAULT
     do_reclaim(T) && h5d_vlen_reclaim(memtype, memspace, xfer_id, buf)
@@ -1370,12 +1378,50 @@ Base.getindex(parent::Union{File,Group}, r::Reference) = _deref(parent, r)
 Base.getindex(parent::Dataset, r::Reference) = _deref(parent, r) # defined separately to resolve ambiguity
 
 # convert special types to native julia types
-normalize_types(x) = x
-normalize_types(x::NamedTuple{T}) where {T} = NamedTuple{T}(map(normalize_types, values(x)))
-normalize_types(x::Cstring) = unsafe_string(x)
-normalize_types(x::FixedString) = unpad(String(collect(x.data)), pad(x))
-normalize_types(x::FixedArray) = normalize_types.(reshape(collect(x.data), size(x)...))
-normalize_types(x::VariableArray) = normalize_types.(copy(unsafe_wrap(Array, convert(Ptr{eltype(x)}, x.p), x.len, own=false)))
+function normalize_types(::Type{T}, buf::AbstractMatrix{UInt8}) where {T}
+    return [_normalize_types(T, view(buf, :, ind)) for ind in axes(buf, 2)]
+end
+
+# high-level description which should always work
+function _typed_load(::Type{T}, buf::AbstractVector{UInt8}) where {T}
+    return @inbounds reinterpret(T, buf)[1]
+end
+# fast-path for common concrete types with simple layout (which should be nearly all
+# cases)
+function _typed_load(::Type{T}, buf::V) where {T, V <: Union{Vector{UInt8}, Base.FastContiguousSubArray{UInt8,1}}}
+    dest = Ref{T}()
+    GC.@preserve dest buf Base._memcpy!(unsafe_convert(Ptr{Cvoid}, dest), pointer(buf), sizeof(T))
+    return dest[]
+end
+
+_normalize_types(::Type{T}, buf::AbstractVector{UInt8}) where {T} = _typed_load(T, buf)
+function _normalize_types(::Type{T}, buf::AbstractVector{UInt8}) where {K, T <: NamedTuple{K}}
+    nv = ntuple(length(K)) do ii
+        elT = fieldtype(T, ii)
+        off = fieldoffset(T, ii) % Int
+        sub = view(buf, off .+ (1:sizeof(elT)))
+        return _normalize_types(elT, sub)
+    end
+    return NamedTuple{K}(nv)
+end
+function _normalize_types(::Type{V}, buf::AbstractVector{UInt8}) where {T, V <: VariableArray{T}}
+    va = _typed_load(V, buf)
+    pbuf = unsafe_wrap(Array, convert(Ptr{UInt8}, va.p), (sizeof(T), Int(va.len)), own = false)
+    if do_normalize(T)
+        return normalize_types(T, pbuf)
+    else
+        return copy(vec(reinterpret(T, pbuf)))
+    end
+end
+function _normalize_types(::Type{F}, buf::AbstractVector{UInt8}) where {T, F <: FixedArray{T}}
+    if do_normalize(T)
+        return reshape(normalize_types(T, reshape(buf, sizeof(T), :)), size(F)...)
+    else
+        return copy(reshape(reinterpret(T, buf), size(F)...))
+    end
+end
+_normalize_types(::Type{Cstring}, buf::AbstractVector{UInt8}) = unsafe_string(_typed_load(Ptr{UInt8}, buf))
+_normalize_types(::Type{T}, buf::AbstractVector{UInt8}) where {T <: FixedString} = unpad(String(buf), pad(T))
 
 do_normalize(::Type{T}) where {T} = false
 do_normalize(::Type{NamedTuple{T,U}}) where {U,T} = any(i -> do_normalize(fieldtype(U,i)), 1:fieldcount(U))
