@@ -1055,6 +1055,55 @@ dset = HDF5.create_external_dataset(hfile, "ext", fn_external, Int, (10,20))
 
 end
 
+@testset "opaque data" begin
+    mktemp() do path, io
+        close(io)
+        fid = h5open(path, "w")
+
+        num   = 1
+        olen  = 4
+        otype = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_OPAQUE, olen))
+        HDF5.h5t_set_tag(otype, "opaque test")
+
+        # scalar
+        dat0 = rand(UInt8, olen)
+        create_dataset(fid, "scalar", otype, dataspace(()))
+        write_dataset(fid["scalar"], otype, dat0)
+        # vector
+        dat1 = [rand(UInt8, olen) for _ in 1:4]
+        buf1 = reduce(vcat, dat1)
+        create_dataset(fid, "vector", otype, dataspace(dat1))
+        write_dataset(fid["vector"], otype, buf1)
+        # matrix
+        dat2 = [rand(UInt8, olen) for _ in 1:4, _ in 1:2]
+        buf2 = reduce(vcat, dat2)
+        create_dataset(fid, "matrix", otype, dataspace(dat2))
+        write_dataset(fid["matrix"], otype, buf2)
+
+        # opaque data within a compound data type
+        ctype = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(num) + sizeof(otype)))
+        HDF5.h5t_insert(ctype, "v", 0, datatype(num))
+        HDF5.h5t_insert(ctype, "d", sizeof(num), otype)
+        cdat = vcat(reinterpret(UInt8, [num]), dat0)
+        create_dataset(fid, "compound", ctype, dataspace(()))
+        write_dataset(fid["compound"], ctype, cdat)
+
+        opaque0 = read(fid["scalar"])
+        @test opaque0.tag == "opaque test"
+        @test opaque0.data == dat0
+        opaque1 = read(fid["vector"])
+        @test opaque1.tag == "opaque test"
+        @test opaque1.data == dat1
+        opaque2 = read(fid["matrix"])
+        @test opaque2.tag == "opaque test"
+        @test opaque2.data == dat2
+
+        # Note: opaque tag is lost
+        compound = read(fid["compound"])
+        @test compound == (v = num, d = dat0)
+    end
+end
+
 @testset "FixedStrings and FixedArrays" begin
     # properties for FixedString
     fix = HDF5.FixedString{4,0}((b"test"...,))
