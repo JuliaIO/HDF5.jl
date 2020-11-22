@@ -1671,9 +1671,9 @@ function get_mem_compatible_jl_type(obj_type::Datatype)
         if h5t_is_variable_str(obj_type)
             return Cstring
         else
-            n = h5t_get_size(obj_type)
-            pad = h5t_get_strpad(obj_type)
-            return FixedString{Int(n), pad}
+            n = Int(h5t_get_size(obj_type))
+            pad = Int(h5t_get_strpad(obj_type))
+            return FixedString{n, pad}
         end
     elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
         native_type = h5t_get_native_type(obj_type)
