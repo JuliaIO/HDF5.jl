@@ -1096,8 +1096,13 @@ function get_dims(dspace::Dataspace)
 end
 
 function get_regular_hyperslab(dspace::Dataspace)
-    start, stride, count, _ = h5s_get_regular_hyperslab(dspace)
-
+    h5_start, h5_stride, h5_count, h5_block = h5s_get_regular_hyperslab(dspace)
+    N = length(h5_start)
+    start = ntuple(i -> Int(h5_start[N-i+1]), N)
+    stride = ntuple(i -> Int(h5_stride[N-i+1]), N)
+    count = ntuple(i -> Int(h5_count[N-i+1]), N)
+    block = ntuple(i -> Int(h5_block[N-i+1]), N)
+    return start, stride, count, block
 end
 
 """
