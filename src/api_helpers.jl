@@ -242,7 +242,7 @@ function h5s_get_simple_extent_dims(space_id)
     dims = Vector{hsize_t}(undef, n)
     maxdims = Vector{hsize_t}(undef, n)
     h5s_get_simple_extent_dims(space_id, dims, maxdims)
-    return n, dims, maxdims
+    return dims, maxdims
 end
 
 
