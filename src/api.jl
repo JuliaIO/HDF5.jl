@@ -776,6 +776,12 @@ function h5s_create_simple(rank, current_dims, maximum_dims)
     return var"#status#"
 end
 
+function h5s_get_regular_hyperslab(space_id, start, stride, count, block)
+    var"#status#" = ccall((:H5Sget_regular_hyperslab, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}), space_id, start, stride, count, block)
+    var"#status#" < 0 && error("Error getting regular hyperslab selection")
+    return nothing
+end
+
 function h5s_get_simple_extent_dims(space_id, dims, maxdims)
     var"#status#" = ccall((:H5Sget_simple_extent_dims, libhdf5), Cint, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}), space_id, dims, maxdims)
     var"#status#" < 0 && error("Error getting the dimensions for a dataspace")

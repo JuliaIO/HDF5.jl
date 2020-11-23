@@ -1095,6 +1095,11 @@ function get_dims(dspace::Dataspace)
     return dims, maxdims
 end
 
+function get_regular_hyperslab(dspace::Dataspace)
+    start, stride, count, _ = h5s_get_regular_hyperslab(dspace)
+
+end
+
 """
     get_dims(dset::HDF5.Dataset)
 
