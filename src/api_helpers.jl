@@ -237,6 +237,16 @@ end
 ### Dataspace Interface
 ###
 
+function h5s_get_regular_hyperslab(space_id)
+    n = h5s_get_simple_extent_ndims(space_id)
+    start  = Vector{hsize_t}(undef, n)
+    stride = Vector{hsize_t}(undef, n)
+    count  = Vector{hsize_t}(undef, n)
+    block  = Vector{hsize_t}(undef, n)
+    h5s_get_regular_hyperslab(space_id, start, stride, count, block)
+    return start, stride, count, block
+end
+
 function h5s_get_simple_extent_dims(space_id)
     n = h5s_get_simple_extent_ndims(space_id)
     dims = Vector{hsize_t}(undef, n)
@@ -312,4 +322,3 @@ end
 ###
 ### Filter Interface
 ###
-

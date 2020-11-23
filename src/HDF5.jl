@@ -960,7 +960,7 @@ function Base.size(obj::Union{Dataset,Attribute})
     dspace = dataspace(obj)
     dims, maxdims = get_dims(dspace)
     close(dspace)
-    convert(Tuple{Vararg{Int}}, dims)
+    return dims
 end
 Base.size(dset::Union{Dataset,Attribute}, d) = d > ndims(dset) ? 1 : size(dset)[d]
 Base.length(dset::Union{Dataset,Attribute}) = prod(size(dset))
@@ -1087,8 +1087,19 @@ dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()) = _
 
 
 function get_dims(dspace::Dataspace)
-    dims = h5s_get_simple_extent_dims(dspace)
-    return tuple(reverse!(dims[1])...), tuple(reverse!(dims[2])...)
+    h5_dims, h5_maxdims = h5s_get_simple_extent_dims(dspace)
+    # reverse dimensions since hdf5 uses C-style order
+    N = length(h5_dims)
+    dims = ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
+    maxdims = ntuple(i -> @inbounds(h5_maxdims[N-i+1]) % Int, N) # allows max_dims to be specified as -1 without triggering an overflow
+    return dims, maxdims
+end
+
+function get_regular_hyperslab(dspace::Dataspace)
+    start, stride, count, block = h5s_get_regular_hyperslab(dspace)
+    N = length(start)
+    @inline rev(v) = ntuple(i -> @inbounds(Int(v[N-i+1])), N)
+    return rev(start), rev(stride), rev(count), rev(block)
 end
 
 """
