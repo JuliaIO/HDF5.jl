@@ -1090,19 +1090,16 @@ function get_dims(dspace::Dataspace)
     h5_dims, h5_maxdims = h5s_get_simple_extent_dims(dspace)
     # reverse dimensions since hdf5 uses C-style order
     N = length(h5_dims)
-    dims = ntuple(i -> Int(h5_dims[N-i+1]), N)
-    maxdims = ntuple(i -> h5_maxdims[N-i+1] % Int, N) # allows max_dims to be specified as -1 without triggering an overflow
+    dims = ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
+    maxdims = ntuple(i -> @inbounds(h5_maxdims[N-i+1]) % Int, N) # allows max_dims to be specified as -1 without triggering an overflow
     return dims, maxdims
 end
 
 function get_regular_hyperslab(dspace::Dataspace)
-    h5_start, h5_stride, h5_count, h5_block = h5s_get_regular_hyperslab(dspace)
-    N = length(h5_start)
-    start = ntuple(i -> Int(h5_start[N-i+1]), N)
-    stride = ntuple(i -> Int(h5_stride[N-i+1]), N)
-    count = ntuple(i -> Int(h5_count[N-i+1]), N)
-    block = ntuple(i -> Int(h5_block[N-i+1]), N)
-    return start, stride, count, block
+    start, stride, count, block = h5s_get_regular_hyperslab(dspace)
+    N = length(start)
+    @inline rev(v) = ntuple(i -> @inbounds(Int(v[N-i+1])), N)
+    return rev(start), rev(stride), rev(count), rev(block)
 end
 
 """
