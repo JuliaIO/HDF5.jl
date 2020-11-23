@@ -1087,8 +1087,11 @@ dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()) = _
 
 
 function get_dims(dspace::Dataspace)
-    dims = h5s_get_simple_extent_dims(dspace)
-    return tuple(reverse!(dims[1])...), tuple(reverse!(dims[2])...)
+    N, h5_dims, h5_maxdims = h5s_get_simple_extent_dims(dspace)
+    # reverse dimensions since hdf5 uses C-style order
+    dims = ntuple(i -> h5_dims[N-i+1] .% Int, N)
+    maxdims = ntuple(i -> h5_maxdims[N-i+1] .% Int, N)
+    return dims, maxdims
 end
 
 """
