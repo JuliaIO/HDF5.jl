@@ -73,6 +73,49 @@ function Base.show(io::IO, dtype::Datatype)
     end
 end
 
+function Base.show(io::IO, dspace::Dataspace)
+    if !isvalid(dspace)
+        print(io, "HDF5.Dataspace: (invalid)")
+        return
+    end
+    print(io, "HDF5.Dataspace: ")
+    type = h5s_get_simple_extent_type(dspace)
+    if type == H5S_NULL
+        print(io, "H5S_NULL")
+        return
+    elseif type == H5S_SCALAR
+        print(io, "H5S_SCALAR")
+        return
+    end
+    # otherwise type == H5S_SIMPLE
+    sz, maxsz = get_dims(dspace)
+    sel = h5s_get_select_type(dspace)
+    if sel == H5S_SEL_HYPERSLABS && h5s_is_regular_hyperslab(dspace)
+        start, stride, count, _ = get_regular_hyperslab(dspace)
+        ndims = length(start)
+        print(io, "(")
+        for ii in 1:ndims
+            s, d, l = start[ii], stride[ii], count[ii]
+            print(io, range(s + 1, length = l, step = d == 1 ? nothing : d))
+            ii != ndims && print(io, ", ")
+        end
+        print(io, ") / (")
+        for ii in 1:ndims
+            print(io, 1:maxsz[ii])
+            ii != ndims && print(io, ", ")
+        end
+        print(io, ")")
+    else
+        print(io, sz)
+        if maxsz != sz
+            print(io, " / ", maxsz)
+        end
+        if sel != H5S_SEL_ALL
+            print(io, " [irregular selection]")
+        end
+    end
+end
+
 """
     SHOW_TREE = Ref{Bool}(true)
 

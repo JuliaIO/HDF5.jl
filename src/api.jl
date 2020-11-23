@@ -758,6 +758,12 @@ function h5s_close(space_id)
     return nothing
 end
 
+function h5s_combine_select(space1_id, op, space2_id)
+    var"#status#" = ccall((:H5Scombine_select, libhdf5), hid_t, (hid_t, Cint, hid_t), space1_id, op, space2_id)
+    var"#status#" < 0 && error("Error combining dataspaces")
+    return var"#status#"
+end
+
 function h5s_copy(space_id)
     var"#status#" = ccall((:H5Scopy, libhdf5), hid_t, (hid_t,), space_id)
     var"#status#" < 0 && error("Error copying dataspace")
@@ -800,10 +806,28 @@ function h5s_get_simple_extent_type(space_id)
     return var"#status#"
 end
 
+function h5s_get_select_hyper_nblocks(space_id)
+    var"#status#" = ccall((:H5Sget_select_hyper_nblocks, libhdf5), hssize_t, (hid_t,), space_id)
+    var"#status#" < 0 && error("Error getting number of selected blocks")
+    return var"#status#"
+end
+
 function h5s_get_select_npoints(space_id)
     var"#status#" = ccall((:H5Sget_select_npoints, libhdf5), hsize_t, (hid_t,), space_id)
     var"#status#" == -1 % hsize_t && error("Error getting the number of selected points")
     return var"#status#"
+end
+
+function h5s_get_select_type(space_id)
+    var"#status#" = ccall((:H5Sget_select_type, libhdf5), Cint, (hid_t,), space_id)
+    var"#status#" < 0 && error("Error getting the selection type")
+    return var"#status#"
+end
+
+function h5s_is_regular_hyperslab(space_id)
+    var"#status#" = ccall((:H5Sis_regular_hyperslab, libhdf5), htri_t, (hid_t,), space_id)
+    var"#status#" < 0 && error("Error determining whether datapace is regular hyperslab")
+    return var"#status#" > 0
 end
 
 function h5s_is_simple(space_id)

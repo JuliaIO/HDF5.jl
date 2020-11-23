@@ -199,6 +199,7 @@
 ###
 
 @bind h5s_close(space_id::hid_t)::herr_t "Error closing dataspace"
+@bind h5s_combine_select(space1_id::hid_t, op::Cint, space2_id::hid_t)::hid_t "Error combining dataspaces"
 @bind h5s_copy(space_id::hid_t)::hid_t "Error copying dataspace"
 @bind h5s_create(class::Cint)::hid_t "Error creating dataspace"
 @bind h5s_create_simple(rank::Cint, current_dims::Ptr{hsize_t}, maximum_dims::Ptr{hsize_t})::hid_t "Error creating simple dataspace"
@@ -206,7 +207,10 @@
 @bind h5s_get_simple_extent_dims(space_id::hid_t, dims::Ptr{hsize_t}, maxdims::Ptr{hsize_t})::Cint "Error getting the dimensions for a dataspace"
 @bind h5s_get_simple_extent_ndims(space_id::hid_t)::Cint "Error getting the number of dimensions for a dataspace"
 @bind h5s_get_simple_extent_type(space_id::hid_t)::Cint "Error getting the dataspace type"
+@bind h5s_get_select_hyper_nblocks(space_id::hid_t)::hssize_t "Error getting number of selected blocks"
 @bind h5s_get_select_npoints(space_id::hid_t)::hsize_t "Error getting the number of selected points"
+@bind h5s_get_select_type(space_id::hid_t)::Cint "Error getting the selection type"
+@bind h5s_is_regular_hyperslab(space_id::hid_t)::htri_t "Error determining whether datapace is regular hyperslab"
 @bind h5s_is_simple(space_id::hid_t)::htri_t "Error determining whether dataspace is simple"
 @bind h5s_select_hyperslab(dspace_id::hid_t, seloper::Cint, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})::herr_t "Error selecting hyperslab"
 
