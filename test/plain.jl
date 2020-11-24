@@ -708,13 +708,26 @@ dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
 commit_datatype(hfile, "type", dtype)
 @test sprint(show, dtype) == "HDF5.Datatype: /type H5T_IEEE_F64LE"
 
-dspace = dataspace((1,))
-@test occursin(r"^HDF5.Dataspace\(\d+\)", sprint(show, dspace))
+dspace_null = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_NULL))
+dspace_scal = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_SCALAR))
+dspace_norm = dataspace((100, 4))
+dspace_maxd = dataspace((100, 4), max_dims = (256, 4))
+dspace_slab = HDF5.hyperslab(dataspace((100, 4)), 1:20:100, 1:4)
+dspace_irrg = HDF5.Dataspace(HDF5.h5s_combine_select(
+        HDF5.h5s_copy(dspace_slab), HDF5.H5S_SELECT_OR,
+        HDF5.hyperslab(dataspace((100, 4)), 2, 2)))
+
+@test sprint(show, dspace_null) == "HDF5.Dataspace: H5S_NULL"
+@test sprint(show, dspace_scal) == "HDF5.Dataspace: H5S_SCALAR"
+@test sprint(show, dspace_norm) == "HDF5.Dataspace: (100, 4)"
+@test sprint(show, dspace_maxd) == "HDF5.Dataspace: (100, 4) / (256, 4)"
+@test sprint(show, dspace_slab) == "HDF5.Dataspace: (1:20:81, 1:4) / (1:100, 1:4)"
+@test sprint(show, dspace_irrg) == "HDF5.Dataspace: (100, 4) [irregular selection]"
 
 # Now test printing after closing each object
 
-close(dspace)
-@test sprint(show, dspace) == "HDF5.Dataspace(-1)"
+close(dspace_null)
+@test sprint(show, dspace_null) == "HDF5.Dataspace: (invalid)"
 
 close(dtype)
 @test sprint(show, dtype) == "HDF5.Datatype: (invalid)"

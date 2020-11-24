@@ -234,13 +234,15 @@ const H5R_OBJ_REF_BUF_SIZE      = 8  # == sizeof(hobj_ref_t)
 const H5R_DSET_REG_REF_BUF_SIZE = 12 # == sizeof(hdset_reg_ref_t)
 
 # Dataspace constants
-const H5S_ALL          = hid_t(0)
-const H5S_SCALAR       = hid_t(0)
-const H5S_SIMPLE       = hid_t(1)
-const H5S_NULL         = hid_t(2)
-const H5S_UNLIMITED    = typemax(hsize_t)
+const H5S_ALL       = hid_t(0)
+const H5S_UNLIMITED = typemax(hsize_t)
 
-# Dataspace selection constants
+# Dataspace classes (C enum H5S_class_t)
+const H5S_SCALAR = 0
+const H5S_SIMPLE = 1
+const H5S_NULL   = 2
+
+# Dataspace selection constants (C enum H5S_seloper_t)
 const H5S_SELECT_SET     = 0
 const H5S_SELECT_OR      = 1
 const H5S_SELECT_AND     = 2
@@ -249,6 +251,12 @@ const H5S_SELECT_NOTB    = 4
 const H5S_SELECT_NOTA    = 5
 const H5S_SELECT_APPEND  = 6
 const H5S_SELECT_PREPEND = 7
+
+# Dataspace selection types (C enum H5S_sel_type)
+const H5S_SEL_NONE       = 0
+const H5S_SEL_POINTS     = 1
+const H5S_SEL_HYPERSLABS = 2
+const H5S_SEL_ALL        = 3
 
 # type classes (C enum H5T_class_t)
 const H5T_INTEGER      = hid_t(0)

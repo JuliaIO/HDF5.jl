@@ -189,14 +189,18 @@ h5r_get_region(loc_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid})
 ## [`H5S`](https://portal.hdfgroup.org/display/HDF5/Dataspaces) — Dataspace Interface
 ```julia
 h5s_close(space_id::hid_t)
+h5s_combine_select(space1_id::hid_t, op::Cint, space2_id::hid_t)
 h5s_copy(space_id::hid_t)
 h5s_create(class::Cint)
 h5s_create_simple(rank::Cint, current_dims::Ptr{hsize_t}, maximum_dims::Ptr{hsize_t})
 h5s_get_regular_hyperslab(space_id::hid_t, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})
+h5s_get_select_hyper_nblocks(space_id::hid_t)
 h5s_get_select_npoints(space_id::hid_t)
+h5s_get_select_type(space_id::hid_t)
 h5s_get_simple_extent_dims(space_id::hid_t, dims::Ptr{hsize_t}, maxdims::Ptr{hsize_t})
 h5s_get_simple_extent_ndims(space_id::hid_t)
 h5s_get_simple_extent_type(space_id::hid_t)
+h5s_is_regular_hyperslab(space_id::hid_t)
 h5s_is_simple(space_id::hid_t)
 h5s_select_hyperslab(dspace_id::hid_t, seloper::Cint, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})
 ```
