@@ -189,7 +189,7 @@ mutable struct File <: H5DataStore
         f
     end
 end
-Base.convert(::Type{hid_t}, f::File) = f.id
+Base.cconvert(::Type{hid_t}, f::File) = f.id
 
 mutable struct Group <: H5DataStore
     id::hid_t
@@ -201,7 +201,7 @@ mutable struct Group <: H5DataStore
         g
     end
 end
-Base.convert(::Type{hid_t}, g::Group) = g.id
+Base.cconvert(::Type{hid_t}, g::Group) = g.id
 
 mutable struct Properties
     id::hid_t
@@ -212,7 +212,7 @@ mutable struct Properties
         p
     end
 end
-Base.convert(::Type{hid_t}, p::Properties) = p.id
+Base.cconvert(::Type{hid_t}, p::Properties) = p.id
 
 mutable struct Dataset
     id::hid_t
@@ -225,7 +225,7 @@ mutable struct Dataset
         dset
     end
 end
-Base.convert(::Type{hid_t}, dset::Dataset) = dset.id
+Base.cconvert(::Type{hid_t}, dset::Dataset) = dset.id
 
 mutable struct Datatype
     id::hid_t
@@ -247,7 +247,7 @@ mutable struct Datatype
         nt
     end
 end
-Base.convert(::Type{hid_t}, dtype::Datatype) = dtype.id
+Base.cconvert(::Type{hid_t}, dtype::Datatype) = dtype.id
 hash(dtype::Datatype, h::UInt) = (dtype.id % UInt + h) ^ (0xadaf9b66bc962084 % UInt)
 Base.:(==)(dt1::Datatype, dt2::Datatype) = h5t_equal(dt1, dt2) > 0
 
@@ -263,7 +263,7 @@ mutable struct Dataspace
         dspace
     end
 end
-Base.convert(::Type{hid_t}, dspace::Dataspace) = dspace.id
+Base.cconvert(::Type{hid_t}, dspace::Dataspace) = dspace.id
 
 mutable struct Attribute
     id::hid_t
@@ -275,7 +275,7 @@ mutable struct Attribute
         dset
     end
 end
-Base.convert(::Type{hid_t}, attr::Attribute) = attr.id
+Base.cconvert(::Type{hid_t}, attr::Attribute) = attr.id
 
 struct Attributes
     parent::Union{File,Group,Dataset}
