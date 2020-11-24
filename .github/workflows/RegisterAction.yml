@@ -1,4 +1,4 @@
-name: Register Package
+name: Register Action
 on:
   workflow_dispatch:
     inputs:
