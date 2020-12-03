@@ -536,6 +536,7 @@ function h5read(filename, name::AbstractString; pv...)
     try
         obj = getindex(fid, name; pv...)
         dat = read(obj)
+        close(obj)
     finally
         close(fid)
     end
@@ -548,6 +549,7 @@ function h5read(filename, name_type_pair::Pair{<:AbstractString,DataType}; pv...
     try
         obj = getindex(fid, name_type_pair[1]; pv...)
         dat = read(obj, name_type_pair[2])
+        close(obj)
     finally
         close(fid)
     end
@@ -560,6 +562,7 @@ function h5read(filename, name::AbstractString, indices::Tuple{Vararg{Union{Abst
     try
         dset = getindex(fid, name; pv...)
         dat = dset[indices...]
+        close(dset)
     finally
         close(fid)
     end
@@ -569,9 +572,12 @@ end
 function h5writeattr(filename, name::AbstractString, data::Dict)
     fid = h5open(filename, "r+")
     try
+        obj = fid[name]
+        attrs = attributes(obj)
         for x in keys(data)
-            attributes(fid[name])[x] = data[x]
+            attrs[x] = data[x]
         end
+        close(obj)
     finally
         close(fid)
     end
@@ -581,8 +587,10 @@ function h5readattr(filename, name::AbstractString)
     local dat
     fid = h5open(filename,"r")
     try
-        a = attributes(fid[name])
+        obj = fid[name]
+        a = attributes(obj)
         dat = Dict(x => read(a[x]) for x in keys(a))
+        close(obj)
     finally
         close(fid)
     end
