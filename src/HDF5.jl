@@ -1292,7 +1292,7 @@ function generic_read(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T}, I.
     else
         buf = Array{T}(undef, sz...)
     end
-    memspace = dataspace(sz)
+    memspace = isempty(I) ? dspace : dataspace(sz)
 
     if obj isa Dataset
         h5d_read(obj, memtype, memspace, dspace, obj.xfer, buf)
