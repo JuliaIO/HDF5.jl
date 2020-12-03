@@ -1195,23 +1195,63 @@ const DatasetOrAttribute = Union{Dataset,Attribute}
 function Base.read(obj::DatasetOrAttribute)
     dtype = datatype(obj)
     T = get_jl_type(dtype)
-    read(obj, T)
+    val = generic_read(obj, dtype, T)
+    close(dtype)
+    return val
 end
 
 function Base.getindex(dset::Dataset, I...)
     dtype = datatype(dset)
     T = get_jl_type(dtype)
-    read(dset, T, I...)
+    val = generic_read(dset, dtype, T, I...)
+    close(dtype)
+    return val
+end
+
+function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
+    dtype = datatype(obj)
+    val = generic_read(obj, dtype, T, I...)
+    close(dtype)
+    return val
+end
+
+# `Type{String}` does not have a definite size, so the generic_read does not accept
+# it even though it will return a `String`. This explicit overload allows that usage.
+function Base.read(obj::DatasetOrAttribute, ::Type{String}, I...)
+    dtype = datatype(obj)
+    T = get_jl_type(dtype)
+    T <: Union{Cstring, FixedString} || error(name(obj), " cannot be read as type `String`")
+    val = generic_read(obj, dtype, T, I...)
+    close(dtype)
+    return val
+end
+
+# Special handling for reading OPAQUE datasets and attributes
+function generic_read(obj::DatasetOrAttribute, filetype::Datatype, ::Type{Opaque})
+    sz  = size(obj)
+    buf = Matrix{UInt8}(undef, sizeof(filetype), prod(sz))
+    if obj isa Dataset
+        read_dataset(obj, filetype, buf, obj.xfer)
+    else
+        read_attribute(obj, filetype, buf)
+    end
+    tag = h5t_get_tag(filetype)
+    if isempty(sz)
+        # scalar (only) result
+        data = vec(buf)
+    else
+        # array of opaque objects
+        data = reshape([buf[:,i] for i in 1:prod(sz)], sz...)
+    end
+    return Opaque(data, tag)
 end
 
 # generic read function
-function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
+function generic_read(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T}, I...) where T
     !isconcretetype(T) && error("type $T is not concrete")
     !isempty(I) && obj isa Attribute && error("HDF5 attributes do not support hyperslab selections")
 
-    filetype = datatype(obj)
     memtype = Datatype(h5t_get_native_type(filetype))  # padded layout in memory
-    close(filetype)
 
     if sizeof(T) != sizeof(memtype)
         error("""
@@ -1278,40 +1318,6 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
     else
         return out
     end
-end
-# `Type{String}` does not have a definite size, so the previous method does not accept
-# it even though it will return a `String`. This explicit overload allows that usage.
-function Base.read(obj::DatasetOrAttribute, ::Type{String}, I...)
-    dtype = datatype(obj)
-    try
-        T = get_jl_type(dtype)
-        T <: Union{Cstring, FixedString} || error(name(obj), " cannot be read as type `String`")
-        return read(obj, T, I...)
-    finally
-        close(dtype)
-    end
-end
-
-# Read OPAQUE datasets and attributes
-function Base.read(obj::DatasetOrAttribute, ::Type{Opaque})
-    obj_type = datatype(obj)
-    sz  = size(obj)
-    buf = Matrix{UInt8}(undef, sizeof(obj_type), prod(sz))
-    if obj isa Dataset
-        read_dataset(obj, obj_type, buf, obj.xfer)
-    else
-        read_attribute(obj, obj_type, buf)
-    end
-    tag = h5t_get_tag(obj_type)
-    close(obj_type)
-    if isempty(sz)
-        # scalar (only) result
-        data = vec(buf)
-    else
-        # array of opaque objects
-        data = reshape([buf[:,i] for i in 1:prod(sz)], sz...)
-    end
-    return Opaque(data, tag)
 end
 
 # Array constructor for datasets
