@@ -254,6 +254,12 @@ function h5s_get_simple_extent_dims(space_id)
     h5s_get_simple_extent_dims(space_id, dims, maxdims)
     return dims, maxdims
 end
+function h5s_get_simple_extent_dims(space_id, ::Nothing)
+    n = h5s_get_simple_extent_ndims(space_id)
+    dims = Vector{hsize_t}(undef, n)
+    h5s_get_simple_extent_dims(space_id, dims, C_NULL)
+    return dims
+end
 
 
 ###

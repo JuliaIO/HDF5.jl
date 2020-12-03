@@ -264,6 +264,9 @@ mutable struct Dataspace
     end
 end
 Base.cconvert(::Type{hid_t}, dspace::Dataspace) = dspace.id
+Base.:(==)(dspace1::Dataspace, dspace2::Dataspace) = h5s_extent_equal(checkvalid(dspace1), checkvalid(dspace2))
+Base.hash(dspace::Dataspace, h::UInt) = hash(dspace.id, hash(Dataspace, h))
+Base.copy(dspace::Dataspace) = Dataspace(h5s_copy(checkvalid(dspace)))
 
 mutable struct Attribute
     id::hid_t
@@ -964,15 +967,30 @@ Base.length(obj::Union{Group,File}) = h5g_get_num_objs(checkvalid(obj))
 Base.length(x::Attributes) = object_info(x.parent).num_attrs
 
 Base.isempty(x::Union{Dataset,Group,File}) = length(x) == 0
+function Base.ndims(dset::Union{Dataset,Attribute})
+    dspace = dataspace(obj)
+    nd = ndims(dspace)
+    close(dspace)
+    return nd
+end
 function Base.size(obj::Union{Dataset,Attribute})
     dspace = dataspace(obj)
-    dims, maxdims = get_dims(dspace)
+    dims = size(dspace)
     close(dspace)
     return dims
 end
-Base.size(dset::Union{Dataset,Attribute}, d) = d > ndims(dset) ? 1 : size(dset)[d]
-Base.length(dset::Union{Dataset,Attribute}) = prod(size(dset))
-Base.ndims(dset::Union{Dataset,Attribute}) = length(size(dset))
+function Base.size(obj::Union{Dataset,Attribute}, d)
+    dspace = dataspace(obj)
+    sz = size(dspace, d)
+    close(dspace)
+    return sz
+end
+function Base.length(obj::Union{Dataset,Attribute})
+    dspace = dataspace(obj)
+    ln = length(dspace)
+    close(dspace)
+    return ln
+end
 Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
 function isnull(obj::Union{Dataset,Attribute})
     dspace = dataspace(obj)
@@ -1093,6 +1111,28 @@ dataspace(n::Nothing) = Dataspace(h5s_create(H5S_NULL))
 dataspace(sz::Dims{N}; max_dims::Union{Dims{N},Tuple{}}=()) where {N} = _dataspace(sz, max_dims)
 dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
 
+
+function Base.ndims(dspace::Dataspace)
+    checkvalid(dspace)
+    return Int(h5s_get_simple_extent_ndims(dspace))
+end
+function Base.size(dspace::Dataspace)
+    checkvalid(dspace)
+    h5_dims = h5s_get_simple_extent_dims(dspace, nothing)
+    N = length(h5_dims)
+    return ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
+end
+function Base.size(dspace::Dataspace, d)
+    N = ndims(dspace)
+    d > N && return 1
+    h5_dims = h5s_get_simple_extent_dims(dspace, nothing)
+    return @inbounds Int(h5_dims[N - d + 1])
+end
+function Base.length(dspace::Dataspace)
+    checkvalid(dspace)
+    h5_dims = h5s_get_simple_extent_dims(dspace, nothing)
+    return Int(prod(h5_dims))
+end
 
 function get_dims(dspace::Dataspace)
     h5_dims, h5_maxdims = h5s_get_simple_extent_dims(dspace)
@@ -1222,7 +1262,7 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
         sz = (1,)
         scalar = true
     elseif isempty(I)
-        sz, _ = get_dims(dspace)
+        sz = size(dspace)
     else
         sz = map(length, filter(i -> !isa(i, Int), indices))
         if isempty(sz)
@@ -1376,7 +1416,7 @@ function readmmap(obj::Dataset, ::Type{T}) where {T}
     dspace = dataspace(obj)
     stype = h5s_get_simple_extent_type(dspace)
     (stype != H5S_SIMPLE) && error("can only mmap simple dataspaces")
-    dims, _ = get_dims(dspace)
+    dims = size(dspace)
 
     if isempty(dims)
         return T[]
@@ -1596,7 +1636,7 @@ end
 function hyperslab(dspace::Dataspace, I::Union{AbstractRange{Int},Int}...)
     local dsel_id
     try
-        dims, maxdims = get_dims(dspace)
+        dims = size(dspace)
         n_dims = length(dims)
         if length(I) != n_dims
             error("Wrong number of indices supplied, supplied length $(length(I)) but expected $(n_dims).")
