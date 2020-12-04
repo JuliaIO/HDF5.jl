@@ -1,17 +1,18 @@
 @testset "Dataspaces" begin
     # Reference objects without using high-level API
+    ds_null   = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_NULL))
     ds_scalar = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_SCALAR))
     ds_zerosz = HDF5.Dataspace(HDF5.h5s_create_simple(1, [0], [0]))
     ds_vector = HDF5.Dataspace(HDF5.h5s_create_simple(1, [5], [5]))
     ds_matrix = HDF5.Dataspace(HDF5.h5s_create_simple(2, [7, 5], [7, 5]))
     ds_maxdim = HDF5.Dataspace(HDF5.h5s_create_simple(2, [7, 5], [20, 20]))
     ds_unlim  = HDF5.Dataspace(HDF5.h5s_create_simple(1, [1], [-1 % UInt]))
-    ds_null   = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_NULL))
 
     # Testing basic property accessors of dataspaces
 
     @test isvalid(ds_scalar)
 
+    @test ndims(ds_null)   === 0
     @test ndims(ds_scalar) === 0
     @test ndims(ds_zerosz) === 1
     @test ndims(ds_vector) === 1
@@ -20,24 +21,38 @@
     # Test that properties of existing datasets can be extracted.
     # Note: Julia reverses the order of dimensions when using the high-level API versus
     #       the dimensions used above to create the reference objects.
+    @test size(ds_null)   === ()
     @test size(ds_scalar) === ()
     @test size(ds_zerosz) === (0,)
     @test size(ds_vector) === (5,)
     @test size(ds_matrix) === (5, 7)
     @test size(ds_maxdim) === (5, 7)
 
+    @test size(ds_null, 5)   === 1
     @test size(ds_scalar, 5) === 1
     @test size(ds_zerosz, 5) === 1
     @test size(ds_vector, 5) === 1
     @test size(ds_matrix, 5) === 1
     @test size(ds_maxdim, 5) === 1
 
+    @test length(ds_null)   === 0
     @test length(ds_scalar) === 1
     @test length(ds_zerosz) === 0
     @test length(ds_vector) === 5
     @test length(ds_matrix) === 35
     @test length(ds_maxdim) === 35
 
+    @test isempty(ds_null)
+    @test !isempty(ds_scalar)
+    @test isempty(ds_zerosz)
+    @test !isempty(ds_vector)
+
+    @test HDF5.isnull(ds_null)
+    @test !HDF5.isnull(ds_scalar)
+    @test !HDF5.isnull(ds_zerosz)
+    @test !HDF5.isnull(ds_vector)
+
+    @test HDF5.get_dims(ds_null)   === ((), ())
     @test HDF5.get_dims(ds_scalar) === ((), ())
     @test HDF5.get_dims(ds_zerosz) === ((0,), (0,))
     @test HDF5.get_dims(ds_vector) === ((5,), (5,))

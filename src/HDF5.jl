@@ -1129,9 +1129,14 @@ function Base.size(dspace::Dataspace, d)
     return @inbounds Int(h5_dims[N - d + 1])
 end
 function Base.length(dspace::Dataspace)
-    checkvalid(dspace)
+    isnull(dspace) && return 0
     h5_dims = h5s_get_simple_extent_dims(dspace, nothing)
     return Int(prod(h5_dims))
+end
+Base.isempty(dspace::Dataspace) = length(dspace) == 0
+
+function isnull(dspace::Dataspace)
+    return h5s_get_simple_extent_type(checkvalid(dspace)) == H5S_NULL
 end
 
 function get_dims(dspace::Dataspace)
