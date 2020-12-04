@@ -720,7 +720,7 @@ dspace_slab = HDF5.hyperslab(dataspace((100, 4)), 1:20:100, 1:4)
 @test sprint(show, dspace_maxd) == "HDF5.Dataspace: (100, 4) / (256, 4)"
 @test sprint(show, dspace_slab) == "HDF5.Dataspace: (1:20:81, 1:4) / (1:100, 1:4)"
 
-if HDF5.libversion ≥ v"1.12"
+if HDF5.libversion ≥ v"1.10.7"
     dspace_irrg = HDF5.Dataspace(HDF5.h5s_combine_select(
             HDF5.h5s_copy(dspace_slab), HDF5.H5S_SELECT_OR,
             HDF5.hyperslab(dataspace((100, 4)), 2, 2)))
