@@ -248,8 +248,8 @@ mutable struct Datatype
     end
 end
 Base.cconvert(::Type{hid_t}, dtype::Datatype) = dtype.id
-hash(dtype::Datatype, h::UInt) = (dtype.id % UInt + h) ^ (0xadaf9b66bc962084 % UInt)
-Base.:(==)(dt1::Datatype, dt2::Datatype) = h5t_equal(dt1, dt2) > 0
+Base.hash(dtype::Datatype, h::UInt) = hash(dtype.id, hash(Datatype, h))
+Base.:(==)(dt1::Datatype, dt2::Datatype) = h5t_equal(dt1, dt2)
 
 # Define an H5O Object type
 const Object = Union{Group,Dataset,Datatype}
@@ -289,7 +289,7 @@ function Reference(parent::Union{File,Group,Dataset}, name::AbstractString)
     return Reference(ref[])
 end
 Base.:(==)(a::Reference, b::Reference) = a.r == b.r
-hash(x::Reference, h::UInt) = hash(x.r, h)
+Base.hash(x::Reference, h::UInt) = hash(x.r, h)
 
 # Opaque types
 struct Opaque
