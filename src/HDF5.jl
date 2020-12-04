@@ -1122,7 +1122,8 @@ function Base.size(dspace::Dataspace)
     N = length(h5_dims)
     return ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
 end
-function Base.size(dspace::Dataspace, d)
+function Base.size(dspace::Dataspace, d::Integer)
+    d > 0 || throw(ArgumentError("invalid dimension d; must be positive integer"))
     N = ndims(dspace)
     d > N && return 1
     h5_dims = h5s_get_simple_extent_dims(dspace, nothing)

@@ -34,6 +34,8 @@
     @test size(ds_vector, 5) === 1
     @test size(ds_matrix, 5) === 1
     @test size(ds_maxdim, 5) === 1
+    @test_throws ArgumentError("invalid dimension d; must be positive integer") size(ds_null, 0)
+    @test_throws ArgumentError("invalid dimension d; must be positive integer") size(ds_scalar, -1)
 
     @test length(ds_null)   === 0
     @test length(ds_scalar) === 1
