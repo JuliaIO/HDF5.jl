@@ -966,38 +966,8 @@ object_info(obj::Union{File,Object}) = h5o_get_info(checkvalid(obj))
 Base.length(obj::Union{Group,File}) = h5g_get_num_objs(checkvalid(obj))
 Base.length(x::Attributes) = object_info(x.parent).num_attrs
 
-Base.isempty(x::Union{Dataset,Group,File}) = length(x) == 0
-function Base.ndims(dset::Union{Dataset,Attribute})
-    dspace = dataspace(obj)
-    nd = ndims(dspace)
-    close(dspace)
-    return nd
-end
-function Base.size(obj::Union{Dataset,Attribute})
-    dspace = dataspace(obj)
-    dims = size(dspace)
-    close(dspace)
-    return dims
-end
-function Base.size(obj::Union{Dataset,Attribute}, d)
-    dspace = dataspace(obj)
-    sz = size(dspace, d)
-    close(dspace)
-    return sz
-end
-function Base.length(obj::Union{Dataset,Attribute})
-    dspace = dataspace(obj)
-    ln = length(dspace)
-    close(dspace)
-    return ln
-end
+Base.isempty(x::Union{Group,File}) = length(x) == 0
 Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
-function isnull(obj::Union{Dataset,Attribute})
-    dspace = dataspace(obj)
-    ret = h5s_get_simple_extent_type(dspace) == H5S_NULL
-    close(dspace)
-    ret
-end
 
 # filename and name
 filename(obj::Union{File,Group,Dataset,Attribute,Datatype}) = h5f_get_name(checkvalid(obj))
@@ -1112,32 +1082,59 @@ dataspace(sz::Dims{N}; max_dims::Union{Dims{N},Tuple{}}=()) where {N} = _dataspa
 dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
 
 
-function Base.ndims(dspace::Dataspace)
-    checkvalid(dspace)
-    return Int(h5s_get_simple_extent_ndims(dspace))
+function Base.ndims(obj::Union{Dataspace,Dataset,Attribute})
+    dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
+    ret = Int(h5s_get_simple_extent_ndims(dspace))
+    obj isa Dataspace || close(dspace)
+    return ret
 end
-function Base.size(dspace::Dataspace)
-    checkvalid(dspace)
+function Base.size(obj::Union{Dataspace,Dataset,Attribute})
+    dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
     h5_dims = h5s_get_simple_extent_dims(dspace, nothing)
     N = length(h5_dims)
-    return ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
+    ret = ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
+    obj isa Dataspace || close(dspace)
+    return ret
 end
-function Base.size(dspace::Dataspace, d::Integer)
+function Base.size(obj::Union{Dataspace,Dataset,Attribute}, d::Integer)
     d > 0 || throw(ArgumentError("invalid dimension d; must be positive integer"))
-    N = ndims(dspace)
+    N = ndims(obj)
     d > N && return 1
+    dspace = obj isa Dataspace ? obj : dataspace(obj)
     h5_dims = h5s_get_simple_extent_dims(dspace, nothing)
-    return @inbounds Int(h5_dims[N - d + 1])
+    ret = @inbounds Int(h5_dims[N - d + 1])
+    obj isa Dataspace || close(dspace)
+    return ret
 end
-function Base.length(dspace::Dataspace)
-    isnull(dspace) && return 0
+function Base.length(obj::Union{Dataspace,Dataset,Attribute})
+    isnull(obj) && return 0
+    dspace = obj isa Dataspace ? obj : dataspace(obj)
     h5_dims = h5s_get_simple_extent_dims(dspace, nothing)
-    return Int(prod(h5_dims))
+    ret = Int(prod(h5_dims))
+    obj isa Dataspace || close(dspace)
+    return ret
 end
-Base.isempty(dspace::Dataspace) = length(dspace) == 0
+Base.isempty(dspace::Union{Dataspace,Dataset,Attribute}) = length(dspace) == 0
 
-function isnull(dspace::Dataspace)
-    return h5s_get_simple_extent_type(checkvalid(dspace)) == H5S_NULL
+"""
+    isnull(dspace::Union{Dataspace, Dataset, Attribute})
+
+Determines whether the given object has no size (consistent with the `H5S_NULL` dataspace).
+
+# Examples
+```julia-repl
+julia> HDF5.isnull(dataspace(HDF5.EmptyArray{Float64}()))
+true
+
+julia> HDF5.isnull(dataspace((0,)))
+false
+```
+"""
+function isnull(obj::Union{Dataspace,Dataset,Attribute})
+    dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
+    ret = h5s_get_simple_extent_type(dspace) == H5S_NULL
+    obj isa Dataspace || close(dspace)
+    return ret
 end
 
 function get_dims(dspace::Dataspace)
