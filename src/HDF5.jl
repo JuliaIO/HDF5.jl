@@ -264,6 +264,9 @@ mutable struct Dataspace
     end
 end
 Base.cconvert(::Type{hid_t}, dspace::Dataspace) = dspace.id
+Base.:(==)(dspace1::Dataspace, dspace2::Dataspace) = h5s_extent_equal(checkvalid(dspace1), checkvalid(dspace2))
+Base.hash(dspace::Dataspace, h::UInt) = hash(dspace.id, hash(Dataspace, h))
+Base.copy(dspace::Dataspace) = Dataspace(h5s_copy(checkvalid(dspace)))
 
 mutable struct Attribute
     id::hid_t
@@ -963,23 +966,8 @@ object_info(obj::Union{File,Object}) = h5o_get_info(checkvalid(obj))
 Base.length(obj::Union{Group,File}) = h5g_get_num_objs(checkvalid(obj))
 Base.length(x::Attributes) = object_info(x.parent).num_attrs
 
-Base.isempty(x::Union{Dataset,Group,File}) = length(x) == 0
-function Base.size(obj::Union{Dataset,Attribute})
-    dspace = dataspace(obj)
-    dims, maxdims = get_dims(dspace)
-    close(dspace)
-    return dims
-end
-Base.size(dset::Union{Dataset,Attribute}, d) = d > ndims(dset) ? 1 : size(dset)[d]
-Base.length(dset::Union{Dataset,Attribute}) = prod(size(dset))
-Base.ndims(dset::Union{Dataset,Attribute}) = length(size(dset))
+Base.isempty(x::Union{Group,File}) = length(x) == 0
 Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
-function isnull(obj::Union{Dataset,Attribute})
-    dspace = dataspace(obj)
-    ret = h5s_get_simple_extent_type(dspace) == H5S_NULL
-    close(dspace)
-    ret
-end
 
 # filename and name
 filename(obj::Union{File,Group,Dataset,Attribute,Datatype}) = h5f_get_name(checkvalid(obj))
@@ -1094,6 +1082,61 @@ dataspace(sz::Dims{N}; max_dims::Union{Dims{N},Tuple{}}=()) where {N} = _dataspa
 dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
 
 
+function Base.ndims(obj::Union{Dataspace,Dataset,Attribute})
+    dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
+    ret = Int(h5s_get_simple_extent_ndims(dspace))
+    obj isa Dataspace || close(dspace)
+    return ret
+end
+function Base.size(obj::Union{Dataspace,Dataset,Attribute})
+    dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
+    h5_dims = h5s_get_simple_extent_dims(dspace, nothing)
+    N = length(h5_dims)
+    ret = ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
+    obj isa Dataspace || close(dspace)
+    return ret
+end
+function Base.size(obj::Union{Dataspace,Dataset,Attribute}, d::Integer)
+    d > 0 || throw(ArgumentError("invalid dimension d; must be positive integer"))
+    N = ndims(obj)
+    d > N && return 1
+    dspace = obj isa Dataspace ? obj : dataspace(obj)
+    h5_dims = h5s_get_simple_extent_dims(dspace, nothing)
+    ret = @inbounds Int(h5_dims[N - d + 1])
+    obj isa Dataspace || close(dspace)
+    return ret
+end
+function Base.length(obj::Union{Dataspace,Dataset,Attribute})
+    isnull(obj) && return 0
+    dspace = obj isa Dataspace ? obj : dataspace(obj)
+    h5_dims = h5s_get_simple_extent_dims(dspace, nothing)
+    ret = Int(prod(h5_dims))
+    obj isa Dataspace || close(dspace)
+    return ret
+end
+Base.isempty(dspace::Union{Dataspace,Dataset,Attribute}) = length(dspace) == 0
+
+"""
+    isnull(dspace::Union{Dataspace, Dataset, Attribute})
+
+Determines whether the given object has no size (consistent with the `H5S_NULL` dataspace).
+
+# Examples
+```julia-repl
+julia> HDF5.isnull(dataspace(HDF5.EmptyArray{Float64}()))
+true
+
+julia> HDF5.isnull(dataspace((0,)))
+false
+```
+"""
+function isnull(obj::Union{Dataspace,Dataset,Attribute})
+    dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
+    ret = h5s_get_simple_extent_type(dspace) == H5S_NULL
+    obj isa Dataspace || close(dspace)
+    return ret
+end
+
 function get_dims(dspace::Dataspace)
     h5_dims, h5_maxdims = h5s_get_simple_extent_dims(dspace)
     # reverse dimensions since hdf5 uses C-style order
@@ -1111,11 +1154,16 @@ function get_regular_hyperslab(dspace::Dataspace)
 end
 
 """
-    get_dims(dset::HDF5.Dataset)
+    HDF5.get_dims(obj::Union{HDF5.Dataset, HDF5.Attribute})
 
-Get the array dimensions from a dataset and return a tuple of dims and maxdims.
+Get the array dimensions from a dataset or attribute and return a tuple of dims and maxdims.
 """
-get_dims(dset::Dataset) = get_dims(dataspace(checkvalid(dset)))
+function get_dims(dset::Union{Dataset,Attribute})
+    dspace = dataspace(dset)
+    ret = get_dims(dspace)
+    close(dspace)
+    return ret
+end
 
 """
     set_dims!(dset::HDF5.Dataset, new_dims::Dims)
@@ -1222,7 +1270,7 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
         sz = (1,)
         scalar = true
     elseif isempty(I)
-        sz, _ = get_dims(dspace)
+        sz = size(dspace)
     else
         sz = map(length, filter(i -> !isa(i, Int), indices))
         if isempty(sz)
@@ -1376,7 +1424,7 @@ function readmmap(obj::Dataset, ::Type{T}) where {T}
     dspace = dataspace(obj)
     stype = h5s_get_simple_extent_type(dspace)
     (stype != H5S_SIMPLE) && error("can only mmap simple dataspaces")
-    dims, _ = get_dims(dspace)
+    dims = size(dspace)
 
     if isempty(dims)
         return T[]
@@ -1596,7 +1644,7 @@ end
 function hyperslab(dspace::Dataspace, I::Union{AbstractRange{Int},Int}...)
     local dsel_id
     try
-        dims, maxdims = get_dims(dspace)
+        dims = size(dspace)
         n_dims = length(dims)
         if length(I) != n_dims
             error("Wrong number of indices supplied, supplied length $(length(I)) but expected $(n_dims).")

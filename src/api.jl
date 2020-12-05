@@ -782,6 +782,12 @@ function h5s_create_simple(rank, current_dims, maximum_dims)
     return var"#status#"
 end
 
+function h5s_extent_equal(space1_id, space2_id)
+    var"#status#" = ccall((:H5Sextent_equal, libhdf5), htri_t, (hid_t, hid_t), space1_id, space2_id)
+    var"#status#" < 0 && error("Error comparing dataspaces")
+    return var"#status#" > 0
+end
+
 function h5s_get_regular_hyperslab(space_id, start, stride, count, block)
     var"#status#" = ccall((:H5Sget_regular_hyperslab, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}), space_id, start, stride, count, block)
     var"#status#" < 0 && error("Error getting regular hyperslab selection")
