@@ -1,12 +1,13 @@
 @testset "Dataspaces" begin
+    hsize_t = HDF5.hsize_t
     # Reference objects without using high-level API
     ds_null   = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_NULL))
     ds_scalar = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_SCALAR))
-    ds_zerosz = HDF5.Dataspace(HDF5.h5s_create_simple(1, [0], [0]))
-    ds_vector = HDF5.Dataspace(HDF5.h5s_create_simple(1, [5], [5]))
-    ds_matrix = HDF5.Dataspace(HDF5.h5s_create_simple(2, [7, 5], [7, 5]))
-    ds_maxdim = HDF5.Dataspace(HDF5.h5s_create_simple(2, [7, 5], [20, 20]))
-    ds_unlim  = HDF5.Dataspace(HDF5.h5s_create_simple(1, [1], [-1 % UInt]))
+    ds_zerosz = HDF5.Dataspace(HDF5.h5s_create_simple(1, hsize_t[0], hsize_t[0]))
+    ds_vector = HDF5.Dataspace(HDF5.h5s_create_simple(1, hsize_t[5], hsize_t[5]))
+    ds_matrix = HDF5.Dataspace(HDF5.h5s_create_simple(2, hsize_t[7, 5], hsize_t[7, 5]))
+    ds_maxdim = HDF5.Dataspace(HDF5.h5s_create_simple(2, hsize_t[7, 5], hsize_t[20, 20]))
+    ds_unlim  = HDF5.Dataspace(HDF5.h5s_create_simple(1, hsize_t[1], [HDF5.H5S_UNLIMITED]))
 
     # Testing basic property accessors of dataspaces
 
