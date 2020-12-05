@@ -1154,11 +1154,16 @@ function get_regular_hyperslab(dspace::Dataspace)
 end
 
 """
-    get_dims(dset::HDF5.Dataset)
+    HDF5.get_dims(obj::Union{HDF5.Dataset, HDF5.Attribute})
 
-Get the array dimensions from a dataset and return a tuple of dims and maxdims.
+Get the array dimensions from a dataset or attribute and return a tuple of dims and maxdims.
 """
-get_dims(dset::Dataset) = get_dims(dataspace(checkvalid(dset)))
+function get_dims(dset::Union{Dataset,Attribute})
+    dspace = dataspace(dset)
+    ret = get_dims(dspace)
+    close(dspace)
+    return ret
+end
 
 """
     set_dims!(dset::HDF5.Dataset, new_dims::Dims)
