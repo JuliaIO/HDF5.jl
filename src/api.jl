@@ -891,9 +891,9 @@ function h5t_enum_insert(dtype_id, name, value)
 end
 
 function h5t_equal(dtype_id1, dtype_id2)
-    var"#status#" = ccall((:H5Tequal, libhdf5), hid_t, (hid_t, hid_t), dtype_id1, dtype_id2)
+    var"#status#" = ccall((:H5Tequal, libhdf5), htri_t, (hid_t, hid_t), dtype_id1, dtype_id2)
     var"#status#" < 0 && error("Error checking datatype equality")
-    return var"#status#"
+    return var"#status#" > 0
 end
 
 function h5t_get_array_dims(dtype_id, dims)
