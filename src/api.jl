@@ -884,6 +884,12 @@ function h5t_create(class_id, sz)
     return var"#status#"
 end
 
+function h5t_enum_insert(dtype_id, name, value)
+    var"#status#" = ccall((:H5Tenum_insert, libhdf5), herr_t, (hid_t, Cstring, Ptr{Cvoid}), dtype_id, name, value)
+    var"#status#" < 0 && error("Error adding ", name, " to enum datatype")
+    return nothing
+end
+
 function h5t_equal(dtype_id1, dtype_id2)
     var"#status#" = ccall((:H5Tequal, libhdf5), hid_t, (hid_t, hid_t), dtype_id1, dtype_id2)
     var"#status#" < 0 && error("Error checking datatype equality")
