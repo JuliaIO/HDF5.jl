@@ -1280,6 +1280,9 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
     end
 
     if do_normalize(T)
+        # The entire dataset is read into in a buffer matrix where the first dimension at
+        # any stage of normalization is the bytes for a single element of type `T`, and
+        # the second dimension of the matrix runs through all elements.
         buf = Matrix{UInt8}(undef, sizeof(T), prod(sz))
     else
         buf = Array{T}(undef, sz...)
@@ -1382,12 +1385,13 @@ function normalize_types(::Type{T}, buf::AbstractMatrix{UInt8}) where {T}
     return [_normalize_types(T, view(buf, :, ind)) for ind in axes(buf, 2)]
 end
 
-# high-level description which should always work
+# high-level description which should always work --- here, the buffer contains the bytes
+# for exactly 1 element of an object of type T, so reinterpret the `UInt8` vector as a
+# length-1 array of type `T` and extract the (only) element.
 function _typed_load(::Type{T}, buf::AbstractVector{UInt8}) where {T}
     return @inbounds reinterpret(T, buf)[1]
 end
-# fast-path for common concrete types with simple layout (which should be nearly all
-# cases)
+# fast-path for common concrete types with simple layout (which should be nearly all cases)
 function _typed_load(::Type{T}, buf::V) where {T, V <: Union{Vector{UInt8}, Base.FastContiguousSubArray{UInt8,1}}}
     dest = Ref{T}()
     GC.@preserve dest buf Base._memcpy!(unsafe_convert(Ptr{Cvoid}, dest), pointer(buf), sizeof(T))
@@ -1406,7 +1410,7 @@ function _normalize_types(::Type{T}, buf::AbstractVector{UInt8}) where {K, T <: 
 end
 function _normalize_types(::Type{V}, buf::AbstractVector{UInt8}) where {T, V <: VariableArray{T}}
     va = _typed_load(V, buf)
-    pbuf = unsafe_wrap(Array, convert(Ptr{UInt8}, va.p), (sizeof(T), Int(va.len)), own = false)
+    pbuf = unsafe_wrap(Array, convert(Ptr{UInt8}, va.p), (sizeof(T), Int(va.len)))
     if do_normalize(T)
         return normalize_types(T, pbuf)
     else

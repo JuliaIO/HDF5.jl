@@ -1065,20 +1065,21 @@ end
     # issue #742, large fixed strings are readable
     mktemp() do path, io
         close(io)
+        num = Int64(9)
         ref = join('a':'z') ^ 1000
         fid = h5open(path, "w")
         # long string serialized as FixedString
         fid["longstring"] = ref
 
         # compound datatype containing a FixedString
-        compound_dtype = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(Int64) + sizeof(ref)))
-        HDF5.h5t_insert(compound_dtype, "n", 0, datatype(Int64))
-        HDF5.h5t_insert(compound_dtype, "a", sizeof(Int64), datatype(ref))
+        compound_dtype = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(num) + sizeof(ref)))
+        HDF5.h5t_insert(compound_dtype, "n", 0, datatype(num))
+        HDF5.h5t_insert(compound_dtype, "a", sizeof(num), datatype(ref))
         c = create_dataset(fid, "compoundlongstring", compound_dtype, dataspace(()))
-        # normally this is done with a `struct name; n::Int64; a::NTuple{N,Char}; end`, but
-        # we need to not actually instantiate the NTuple.
+        # normally this is done with a `struct name{N}; n::Int64; a::NTuple{N,Char}; end`,
+        # but we need to not actually instantiate the `NTuple`.
         buf = IOBuffer()
-        write(buf, Int64(9), ref)
+        write(buf, num, ref)
         @assert position(buf) == sizeof(compound_dtype)
         write_dataset(c, compound_dtype, take!(buf))
 
@@ -1093,7 +1094,7 @@ end
         T = HDF5.get_jl_type(c)
         @test T <: NamedTuple
         @test fieldnames(T) == (:n, :a)
-        @test read(c) == (n = 9, a = ref)
+        @test read(c) == (n = num, a = ref)
     end
 
     fix = HDF5.FixedArray{Float64,(2,2),4}((1, 2, 3, 4))
