@@ -214,7 +214,7 @@ h5t_commit(loc_id::hid_t, name::Ptr{UInt8}, dtype_id::hid_t, lcpl_id::hid_t, tcp
 h5t_committed(dtype_id::hid_t)
 h5t_copy(dtype_id::hid_t)
 h5t_create(class_id::Cint, sz::Csize_t)
-h5t_enum_insert(dtype_id::hid_t, name::Cstring, value::Ref{Bool})
+h5t_enum_insert(dtype_id::hid_t, name::Cstring, value::Ptr{Cvoid})
 h5t_equal(dtype_id1::hid_t, dtype_id2::hid_t)
 h5t_get_array_dims(dtype_id::hid_t, dims::Ptr{hsize_t})
 h5t_get_array_ndims(dtype_id::hid_t)
