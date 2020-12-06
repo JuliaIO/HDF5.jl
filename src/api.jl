@@ -885,7 +885,12 @@ function h5t_create(class_id, sz)
 end
 
 function h5t_enum_insert(dtype_id, name, value)
-    var"#status#" = ccall((:H5Tenum_insert, libhdf5), herr_t, (hid_t, Cstring, Ptr{Cvoid}), dtype_id, name, value)
+    var"#value#" = if value isa Ref{<:Any}
+            value
+        else
+            Base.cconvert(Ref{eltype(value)}, value)
+        end
+    var"#status#" = ccall((:H5Tenum_insert, libhdf5), herr_t, (hid_t, Cstring, Ptr{Cvoid}), dtype_id, name, var"#value#")
     var"#status#" < 0 && error("Error adding ", name, " to enum datatype")
     return nothing
 end
