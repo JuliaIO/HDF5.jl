@@ -1055,6 +1055,68 @@ dset = HDF5.create_external_dataset(hfile, "ext", fn_external, Int, (10,20))
 
 end
 
-# length for FixedString
-fix = HDF5.FixedString{4,0}((b"test"...,))
-@test length(fix) == 4
+@testset "FixedStrings and FixedArrays" begin
+    # properties for FixedString
+    fix = HDF5.FixedString{4,0}((b"test"...,))
+    @test length(typeof(fix)) == 4
+    @test length(fix) == 4
+    @test HDF5.pad(typeof(fix)) == 0
+    @test HDF5.pad(fix) == 0
+    # issue #742, large fixed strings are readable
+    mktemp() do path, io
+        close(io)
+        num = Int64(9)
+        ref = join('a':'z') ^ 1000
+        fid = h5open(path, "w")
+        # long string serialized as FixedString
+        fid["longstring"] = ref
+
+        # compound datatype containing a FixedString
+        compound_dtype = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(num) + sizeof(ref)))
+        HDF5.h5t_insert(compound_dtype, "n", 0, datatype(num))
+        HDF5.h5t_insert(compound_dtype, "a", sizeof(num), datatype(ref))
+        c = create_dataset(fid, "compoundlongstring", compound_dtype, dataspace(()))
+        # normally this is done with a `struct name{N}; n::Int64; a::NTuple{N,Char}; end`,
+        # but we need to not actually instantiate the `NTuple`.
+        buf = IOBuffer()
+        write(buf, num, ref)
+        @assert position(buf) == sizeof(compound_dtype)
+        write_dataset(c, compound_dtype, take!(buf))
+
+
+        # Test reading without stalling
+        d = fid["longstring"]
+        T = HDF5.get_jl_type(d)
+        @test T <: HDF5.FixedString
+        @test length(T) == length(ref)
+        @test read(d) == ref
+
+        T = HDF5.get_jl_type(c)
+        @test T <: NamedTuple
+        @test fieldnames(T) == (:n, :a)
+        @test read(c) == (n = num, a = ref)
+    end
+
+    fix = HDF5.FixedArray{Float64,(2,2),4}((1, 2, 3, 4))
+    @test size(typeof(fix)) == (2, 2)
+    @test size(fix) == (2, 2)
+    @test eltype(typeof(fix)) == Float64
+    @test eltype(fix) == Float64
+    # large fixed arrays are readable
+    mktemp() do path, io
+        close(io)
+        ref = rand(Float64, 3000)
+        t = HDF5.Datatype(HDF5.h5t_array_create(datatype(Float64), ndims(ref), collect(size(ref))))
+        scalarspace = dataspace(())
+
+        fid = h5open(path, "w")
+        d = create_dataset(fid, "longnums", t, scalarspace)
+        write_dataset(d, t, ref)
+
+        T = HDF5.get_jl_type(d)
+        @test T <: HDF5.FixedArray
+        @test size(T) == size(ref)
+        @test eltype(T) == eltype(ref)
+        @test read(d) == ref
+    end
+end
