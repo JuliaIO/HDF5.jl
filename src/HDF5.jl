@@ -1398,6 +1398,10 @@ function _typed_load(::Type{T}, buf::V) where {T, V <: Union{Vector{UInt8}, Base
     dest = Ref{T}()
     GC.@preserve dest buf Base._memcpy!(unsafe_convert(Ptr{Cvoid}, dest), pointer(buf), sizeof(T))
     return dest[]
+    # TODO: The above can maybe be replaced with
+    #   return GC.@preserve buf unsafe_load(convert(Ptr{t}, pointer(buf)))
+    # dependent on data elements being properly aligned for all datatypes, on all
+    # platforms.
 end
 
 _normalize_types(::Type{T}, buf::AbstractVector{UInt8}) where {T} = _typed_load(T, buf)
