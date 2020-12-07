@@ -1382,6 +1382,8 @@ Base.getindex(parent::Dataset, r::Reference) = _deref(parent, r) # defined separ
 
 # convert special types to native julia types
 function normalize_types(::Type{T}, buf::AbstractMatrix{UInt8}) where {T}
+    # First dimension spans bytes of a single element of type T --- (recursively) normalize
+    # each range of bytes to final type, returning vector of normalized data.
     return [_normalize_types(T, view(buf, :, ind)) for ind in axes(buf, 2)]
 end
 
@@ -1400,6 +1402,9 @@ end
 
 _normalize_types(::Type{T}, buf::AbstractVector{UInt8}) where {T} = _typed_load(T, buf)
 function _normalize_types(::Type{T}, buf::AbstractVector{UInt8}) where {K, T <: NamedTuple{K}}
+    # Compound data types do not necessarily have members of uniform size, so instead of
+    # dim-1 => bytes of single element and dim-2 => over elements, just loop over exact
+    # byte ranges within the provided buffer vector.
     nv = ntuple(length(K)) do ii
         elT = fieldtype(T, ii)
         off = fieldoffset(T, ii) % Int
@@ -1412,15 +1417,24 @@ function _normalize_types(::Type{V}, buf::AbstractVector{UInt8}) where {T, V <: 
     va = _typed_load(V, buf)
     pbuf = unsafe_wrap(Array, convert(Ptr{UInt8}, va.p), (sizeof(T), Int(va.len)))
     if do_normalize(T)
+        # If `T` a non-trivial type, recursively normalize the vlen buffer.
         return normalize_types(T, pbuf)
     else
+        # Otherwise if `T` is simple type, directly reinterpret the vlen buffer.
+        # (copy since libhdf5 will reclaim `pbuf = va.p` in `h5d_vlen_reclaim`)
         return copy(vec(reinterpret(T, pbuf)))
     end
 end
 function _normalize_types(::Type{F}, buf::AbstractVector{UInt8}) where {T, F <: FixedArray{T}}
     if do_normalize(T)
+        # If `T` a non-trivial type, recursively normalize the buffer after reshaping to
+        # matrix with dim-1 => bytes of single element and dim-2 => over elements.
         return reshape(normalize_types(T, reshape(buf, sizeof(T), :)), size(F)...)
     else
+        # Otherwise, if `T` is simple type, directly reinterpret the array and reshape to
+        # final dimensions. The copy ensures (a) the returned array is independent of
+        # [potentially much larger] read() buffer, and (b) that the returned data is an
+        # Array and not ReshapedArray of ReinterpretArray of SubArray of ...
         return copy(reshape(reinterpret(T, buf), size(F)...))
     end
 end
