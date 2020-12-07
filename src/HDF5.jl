@@ -408,11 +408,9 @@ Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for
 "r+", or SWMR read access for "r".
 """
 function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool = false, pv...)
-    apl = create_property(H5P_FILE_ACCESS; pv...) # file access property list
     # With garbage collection, the other modes don't make sense
-    # (Set this first, so that the user-passed properties can overwrite this.)
-    apl[:fclose_degree] = H5F_CLOSE_STRONG
-    cpl = create_property(H5P_FILE_CREATE; pv...) # file create property list
+    apl = create_property(H5P_FILE_ACCESS; pv..., fclose_degree = H5F_CLOSE_STRONG) # file access property list
+    cpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_FILE_CREATE; pv...) # file create property list
     rd, wr, cr, tr, ff =
         mode == "r"  ? (true,  false, false, false, false) :
         mode == "r+" ? (true,  true,  false, false, true ) :
@@ -425,13 +423,6 @@ function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool
         error("HDF5 does not support appending without writing")
     end
 
-    close_apl = false
-    if apl == DEFAULT_PROPERTIES
-        apl = create_property(H5P_FILE_ACCESS)
-        close_apl = true
-        # With garbage collection, the other modes don't make sense
-        apl[:fclose_degree] = H5F_CLOSE_STRONG
-    end
     if cr && (tr || !isfile(filename))
         flag = swmr ? H5F_ACC_TRUNC|H5F_ACC_SWMR_WRITE : H5F_ACC_TRUNC
         fid = h5f_create(filename, flag, cpl, apl)
@@ -446,12 +437,9 @@ function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool
         end
         fid = h5f_open(filename, flag, apl)
     end
-    if close_apl
-        # Close properties manually to avoid errors when the file is
-        # closed before the properties are gc'ed
-        close(apl)
-    end
-    File(fid, filename)
+    close(apl)
+    cpl != DEFAULT_PROPERTIES && close(cpl)
+    return File(fid, filename)
 end
 
 """
