@@ -1633,7 +1633,7 @@ end
 function Base.write(obj::Dataset, x)
     dtype = datatype(x)
     try
-        write_dataset(obj, dtype.id, x)
+        write_dataset(obj, dtype, x)
     finally
         close(dtype)
     end
