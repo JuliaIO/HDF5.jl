@@ -395,41 +395,6 @@ heuristic_chunk(x) = Int[]
 
 ### High-level interface ###
 
-# Open or create an HDF5 file
-function _h5open(filename::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool,
-                 cpl::Properties = DEFAULT_PROPERTIES, apl::Properties = DEFAULT_PROPERTIES; swmr::Bool = false)
-    if ff && !wr
-        error("HDF5 does not support appending without writing")
-    end
-    close_apl = false
-    if apl == DEFAULT_PROPERTIES
-        apl = create_property(H5P_FILE_ACCESS)
-        close_apl = true
-        # With garbage collection, the other modes don't make sense
-        apl[:fclose_degree] = H5F_CLOSE_STRONG
-    end
-    if cr && (tr || !isfile(filename))
-        flag = swmr ? H5F_ACC_TRUNC|H5F_ACC_SWMR_WRITE : H5F_ACC_TRUNC
-        fid = h5f_create(filename, flag, cpl, apl)
-    else
-        if !h5f_is_hdf5(filename)
-            error("This does not appear to be an HDF5 file")
-        end
-        if wr
-            flag = swmr ? H5F_ACC_RDWR|H5F_ACC_SWMR_WRITE : H5F_ACC_RDWR
-        else
-            flag = swmr ? H5F_ACC_RDONLY|H5F_ACC_SWMR_READ : H5F_ACC_RDONLY
-        end
-        fid = h5f_open(filename, flag, apl)
-    end
-    if close_apl
-        # Close properties manually to avoid errors when the file is
-        # closed before the properties are gc'ed
-        close(apl)
-    end
-    File(fid, filename)
-end
-
 """
     h5open(filename::AbstractString, mode::AbstractString="r"; swmr=false, pv...)
 
