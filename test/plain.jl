@@ -353,11 +353,7 @@ close(fd)
 rm(fn)
 
 # File creation and access property lists
-cpl = create_property(HDF5.H5P_FILE_CREATE)
-cpl[:userblock] = 1024
-apl = create_property(HDF5.H5P_FILE_ACCESS)
-apl[:libver_bounds] = (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)
-fid = HDF5._h5open(fn, false, true, true, true, false, cpl, apl)
+fid = h5open(fn, "w", userblock=1024, libver_bounds=(HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST))
 write(fid, "intarray", [1, 2, 3])
 close(fid)
 h5open(fn, "r", libver_bounds=(HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)) do fid
