@@ -372,7 +372,7 @@ end
 function h5i_dec_ref(obj_id)
     var"#status#" = ccall((:H5Idec_ref, libhdf5), Cint, (hid_t,), obj_id)
     var"#status#" < 0 && error("Error decementing reference")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5i_get_file_id(obj_id)
@@ -390,19 +390,19 @@ end
 function h5i_get_ref(obj_id)
     var"#status#" = ccall((:H5Iget_ref, libhdf5), Cint, (hid_t,), obj_id)
     var"#status#" < 0 && error("Error getting reference count")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5i_get_type(obj_id)
     var"#status#" = ccall((:H5Iget_type, libhdf5), Cint, (hid_t,), obj_id)
     var"#status#" < 0 && error("Error getting type")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5i_inc_ref(obj_id)
     var"#status#" = ccall((:H5Iinc_ref, libhdf5), Cint, (hid_t,), obj_id)
     var"#status#" < 0 && error("Error incrementing identifier refcount")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5i_is_valid(obj_id)
@@ -522,7 +522,7 @@ end
 function h5p_get_chunk(plist_id, n_dims, dims)
     var"#status#" = ccall((:H5Pget_chunk, libhdf5), Cint, (hid_t, Cint, Ptr{hsize_t}), plist_id, n_dims, dims)
     var"#status#" < 0 && error("Error getting chunk size")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5p_get_create_intermediate_group(lcpl_id, crt_intermed_group)
@@ -575,7 +575,7 @@ end
 function h5p_get_layout(plist_id)
     var"#status#" = ccall((:H5Pget_layout, libhdf5), Cint, (hid_t,), plist_id)
     var"#status#" < 0 && error("Error getting layout")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5p_get_libver_bounds(fapl_id, low, high)
@@ -797,19 +797,19 @@ end
 function h5s_get_simple_extent_dims(space_id, dims, maxdims)
     var"#status#" = ccall((:H5Sget_simple_extent_dims, libhdf5), Cint, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}), space_id, dims, maxdims)
     var"#status#" < 0 && error("Error getting the dimensions for a dataspace")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5s_get_simple_extent_ndims(space_id)
     var"#status#" = ccall((:H5Sget_simple_extent_ndims, libhdf5), Cint, (hid_t,), space_id)
     var"#status#" < 0 && error("Error getting the number of dimensions for a dataspace")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5s_get_simple_extent_type(space_id)
     var"#status#" = ccall((:H5Sget_simple_extent_type, libhdf5), Cint, (hid_t,), space_id)
     var"#status#" < 0 && error("Error getting the dataspace type")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5s_get_select_hyper_nblocks(space_id)
@@ -827,7 +827,7 @@ end
 function h5s_get_select_type(space_id)
     var"#status#" = ccall((:H5Sget_select_type, libhdf5), Cint, (hid_t,), space_id)
     var"#status#" < 0 && error("Error getting the selection type")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5s_is_regular_hyperslab(space_id)
@@ -899,31 +899,31 @@ end
 function h5t_get_array_dims(dtype_id, dims)
     var"#status#" = ccall((:H5Tget_array_dims2, libhdf5), Cint, (hid_t, Ptr{hsize_t}), dtype_id, dims)
     var"#status#" < 0 && error("Error getting dimensions of array")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5t_get_array_ndims(dtype_id)
     var"#status#" = ccall((:H5Tget_array_ndims, libhdf5), Cint, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting ndims of array")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5t_get_class(dtype_id)
     var"#status#" = ccall((:H5Tget_class, libhdf5), Cint, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting class")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5t_get_cset(dtype_id)
     var"#status#" = ccall((:H5Tget_cset, libhdf5), Cint, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting character set encoding")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5t_get_ebias(dtype_id)
     var"#status#" = ccall((:H5Tget_ebias, libhdf5), Csize_t, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting datatype floating point exponent bias")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5t_get_fields(dtype_id, spos, epos, esize, mpos, msize)
@@ -935,18 +935,18 @@ end
 function h5t_get_member_class(dtype_id, index)
     var"#status#" = ccall((:H5Tget_member_class, libhdf5), Cint, (hid_t, Cuint), dtype_id, index)
     var"#status#" < 0 && error("Error getting class of compound datatype member #", index)
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5t_get_member_index(dtype_id, membername)
     var"#status#" = ccall((:H5Tget_member_index, libhdf5), Cint, (hid_t, Ptr{UInt8}), dtype_id, membername)
     var"#status#" < 0 && error("Error getting index of compound datatype member \"", membername, "\"")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5t_get_member_offset(dtype_id, index)
     var"#status#" = ccall((:H5Tget_member_offset, libhdf5), Csize_t, (hid_t, Cuint), dtype_id, index)
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5t_get_member_type(dtype_id, index)
@@ -964,25 +964,25 @@ end
 function h5t_get_nmembers(dtype_id)
     var"#status#" = ccall((:H5Tget_nmembers, libhdf5), Cint, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting the number of members")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5t_get_sign(dtype_id)
     var"#status#" = ccall((:H5Tget_sign, libhdf5), Cint, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting sign")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5t_get_size(dtype_id)
     var"#status#" = ccall((:H5Tget_size, libhdf5), Csize_t, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting size")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5t_get_strpad(dtype_id)
     var"#status#" = ccall((:H5Tget_strpad, libhdf5), Cint, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting string padding")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5t_get_super(dtype_id)
@@ -1090,7 +1090,7 @@ end
 function h5ds_get_num_scales(did, idx)
     var"#status#" = ccall((:H5DSget_num_scales, libhdf5_hl), Cint, (hid_t, Cuint), did, idx)
     var"#status#" < 0 && error("Error getting number of scales")
-    return var"#status#"
+    return Int(var"#status#")
 end
 
 function h5ds_get_scale_name(did, name, size)

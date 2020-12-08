@@ -56,7 +56,11 @@ function, and the Julia return type is inferred as one of the following possibil
 2. If `ReturnType === :htri_t`, the Julia function returns a boolean indicating whether
    the return value of the C function was zero (`false`) or positive (`true`).
 
-3. Otherwise, the C function return value is returned from the Julia function.
+3. Otherwise, the C function return value is returned from the Julia function, with the
+   following exceptions:
+
+   - If the return type is an C integer type compatible with Int, the return type is
+     converted to an Int.
 
 Furthermore, the C return value is interpreted to automatically generate error checks
 (only when `ErrorStringOrExpression` is provided):
@@ -148,6 +152,9 @@ macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing)
     elseif rettype === :herr_t
         # Only used to indicate error status
         returnexpr = :(return nothing)
+    elseif rettype in (:Cint, :Csize_t)
+        # Convert to Int type
+        returnexpr = :(return Int($statsym))
     else
         # Returns a value
         returnexpr = :(return $statsym)
