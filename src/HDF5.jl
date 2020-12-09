@@ -139,21 +139,21 @@ const ScalarType = Union{BitsType,Reference}
 function _hdf5_type_map(class_id, is_signed, native_size)
     if class_id == H5T_INTEGER
         if is_signed == H5T_SGN_2
-            return native_size === Csize_t(1) ? Int8 :
-                   native_size === Csize_t(2) ? Int16 :
-                   native_size === Csize_t(4) ? Int32 :
-                   native_size === Csize_t(8) ? Int64 :
+            return native_size == 1 ? Int8 :
+                   native_size == 2 ? Int16 :
+                   native_size == 4 ? Int32 :
+                   native_size == 8 ? Int64 :
                    throw(KeyError(class_id, is_signed, native_size))
         else
-            return native_size === Csize_t(1) ? UInt8 :
-                   native_size === Csize_t(2) ? UInt16 :
-                   native_size === Csize_t(4) ? UInt32 :
-                   native_size === Csize_t(8) ? UInt64 :
+            return native_size == 1 ? UInt8 :
+                   native_size == 2 ? UInt16 :
+                   native_size == 4 ? UInt32 :
+                   native_size == 8 ? UInt64 :
                    throw(KeyError(class_id, is_signed, native_size))
         end
     else
-        return native_size === Csize_t(4) ? Float32 :
-               native_size === Csize_t(8) ? Float64 :
+        return native_size == 4 ? Float32 :
+               native_size == 8 ? Float64 :
                throw(KeyError(class_id, is_signed, native_size))
     end
 end
@@ -1037,7 +1037,7 @@ dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()) = _
 
 function Base.ndims(obj::Union{Dataspace,Dataset,Attribute})
     dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
-    ret = Int(h5s_get_simple_extent_ndims(dspace))
+    ret = h5s_get_simple_extent_ndims(dspace)
     obj isa Dataspace || close(dspace)
     return ret
 end
@@ -1714,7 +1714,7 @@ end
 function create_external_dataset(parent::Union{File,Group}, name::AbstractString, filepath::AbstractString, t, sz::Dims, offset::Integer=0)
     checkvalid(parent)
     dcpl  = create_property(H5P_DATASET_CREATE)
-    h5p_set_external(dcpl , filepath, Int(offset), prod(sz)*sizeof(t)) # TODO: allow H5F_UNLIMITED
+    h5p_set_external(dcpl , filepath, offset, prod(sz)*sizeof(t)) # TODO: allow H5F_UNLIMITED
     create_dataset(parent, name, datatype(t), dataspace(sz); dcpl=dcpl)
 end
 
@@ -1761,9 +1761,9 @@ function get_mem_compatible_jl_type(obj_type::Datatype)
         if h5t_is_variable_str(obj_type)
             return Cstring
         else
-            n = sizeof(obj_type)
-            pad = Int(h5t_get_strpad(obj_type))
-            return FixedString{n, pad}
+            N = sizeof(obj_type)
+            PAD = h5t_get_strpad(obj_type)
+            return FixedString{N,PAD}
         end
     elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
         native_type = h5t_get_native_type(obj_type)
