@@ -1,4 +1,4 @@
-name: Documenter
+name: CI
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 
 jobs:
   docs:
+    name: Documentation	
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
