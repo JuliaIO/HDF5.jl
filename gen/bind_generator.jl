@@ -128,7 +128,7 @@ macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing)
     errexpr = err isa String ? :(error($err)) : err
     if errexpr === nothing
         # pass through
-    elseif rettype === :haddr_t|| rettype === :hsize_t
+    elseif rettype === :haddr_t || rettype === :hsize_t
         # Error typically indicated by negative values, but some return types are unsigned
         # integers. From `H5public.h`:
         #   ADDR_UNDEF => (haddr_t)(-1)

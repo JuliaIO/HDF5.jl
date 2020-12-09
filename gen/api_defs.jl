@@ -231,7 +231,7 @@
 @bind h5t_get_array_ndims(dtype_id::hid_t)::Cint "Error getting ndims of array"
 @bind h5t_get_class(dtype_id::hid_t)::Cint "Error getting class"
 @bind h5t_get_cset(dtype_id::hid_t)::Cint "Error getting character set encoding"
-@bind h5t_get_ebias(dtype_id::hid_t)::Csize_t "Error getting datatype floating point exponent bias"
+@bind h5t_get_ebias(dtype_id::hid_t)::Csize_t # does not error
 @bind h5t_get_fields(dtype_id::hid_t, spos::Ref{Csize_t}, epos::Ref{Csize_t}, esize::Ref{Csize_t}, mpos::Ref{Csize_t}, msize::Ref{Csize_t})::herr_t "Error getting datatype floating point bit positions"
 @bind h5t_get_member_class(dtype_id::hid_t, index::Cuint)::Cint error("Error getting class of compound datatype member #", index)
 @bind h5t_get_member_index(dtype_id::hid_t, membername::Ptr{UInt8})::Cint error("Error getting index of compound datatype member \"", membername, "\"")
@@ -240,7 +240,7 @@
 @bind h5t_get_native_type(dtype_id::hid_t, direction::Cint)::hid_t "Error getting native type"
 @bind h5t_get_nmembers(dtype_id::hid_t)::Cint "Error getting the number of members"
 @bind h5t_get_sign(dtype_id::hid_t)::Cint "Error getting sign"
-@bind h5t_get_size(dtype_id::hid_t)::Csize_t "Error getting size"
+@bind h5t_get_size(dtype_id::hid_t)::Csize_t # does not error
 @bind h5t_get_strpad(dtype_id::hid_t)::Cint "Error getting string padding"
 @bind h5t_get_super(dtype_id::hid_t)::hid_t "Error getting super type"
 @bind h5t_insert(dtype_id::hid_t, fieldname::Ptr{UInt8}, offset::Csize_t, field_id::hid_t)::herr_t error("Error adding field ", fieldname, " to compound datatype")
