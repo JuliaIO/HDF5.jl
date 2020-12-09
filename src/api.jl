@@ -922,7 +922,6 @@ end
 
 function h5t_get_ebias(dtype_id)
     var"#status#" = ccall((:H5Tget_ebias, libhdf5), Csize_t, (hid_t,), dtype_id)
-    var"#status#" < 0 && error("Error getting datatype floating point exponent bias")
     return var"#status#"
 end
 
@@ -975,7 +974,6 @@ end
 
 function h5t_get_size(dtype_id)
     var"#status#" = ccall((:H5Tget_size, libhdf5), Csize_t, (hid_t,), dtype_id)
-    var"#status#" < 0 && error("Error getting size")
     return var"#status#"
 end
 
