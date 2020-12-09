@@ -704,7 +704,7 @@ end
 # Path manipulation
 function split1(path::AbstractString)
     ind = findfirst('/', path)
-    isnothing(ind) && return path, nothing
+    isnothing(ind) && return path, ""
     if ind == 1 # matches root group
         return "/", path[2:end]
     else
@@ -914,7 +914,7 @@ function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::Prop
         return false
     end
     exists = true
-    if !isnothing(rest) && !isempty(rest)
+    if !isempty(rest)
         obj = parent[first]
         exists = haskey(obj, rest, lapl)
         close(obj)
