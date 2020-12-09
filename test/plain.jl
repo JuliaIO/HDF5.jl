@@ -872,10 +872,10 @@ end # show tests
 
 @testset "split1" begin
 
-@test HDF5.split1("a") == ("a", nothing)
+@test HDF5.split1("a") == ("a", "")
 @test HDF5.split1("/a/b/c") == ("/", "a/b/c")
 @test HDF5.split1("a/b/c") == ("a", "b/c")
-@test HDF5.split1(GenericString("a")) == ("a", nothing)
+@test HDF5.split1(GenericString("a")) == ("a", "")
 @test HDF5.split1(GenericString("/a/b/c")) == ("/", "a/b/c")
 @test HDF5.split1(GenericString("a/b/c")) == ("a", "b/c")
 
