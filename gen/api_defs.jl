@@ -253,6 +253,7 @@
 @bind h5t_set_precision(dtype_id::hid_t, sz::Csize_t)::herr_t "Error setting precision of datatype"
 @bind h5t_set_size(dtype_id::hid_t, sz::Csize_t)::herr_t "Error setting size of datatype"
 @bind h5t_set_strpad(dtype_id::hid_t, sz::Cint)::herr_t "Error setting size of datatype"
+@bind h5t_set_tag(dtype_id::hid_t, tag::Cstring)::herr_t "Error setting opaque tag"
 @bind h5t_vlen_create(base_type_id::hid_t)::hid_t "Error creating vlen type"
 # The following are not autoatically wrapped since they have requirements about freeing
 # the memory that is returned from the calls.
