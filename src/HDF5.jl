@@ -1015,7 +1015,7 @@ function datatype(str::VLen{C}) where {C<:CharType}
     Datatype(h5t_vlen_create(type_id))
 end
 
-Base.sizeof(dtype::Datatype) = h5t_get_size(dtype)
+Base.sizeof(dtype::Datatype) = Int(h5t_get_size(dtype))
 
 # Get the dataspace of a dataset
 dataspace(dset::Dataset) = Dataspace(h5d_get_space(checkvalid(dset)))

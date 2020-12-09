@@ -152,7 +152,7 @@ macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing)
     elseif rettype === :herr_t
         # Only used to indicate error status
         returnexpr = :(return nothing)
-    elseif rettype in (:Cint, :Csize_t)
+    elseif rettype === :Cint
         # Convert to Int type
         returnexpr = :(return Int($statsym))
     else

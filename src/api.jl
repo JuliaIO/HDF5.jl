@@ -922,7 +922,7 @@ end
 
 function h5t_get_ebias(dtype_id)
     var"#status#" = ccall((:H5Tget_ebias, libhdf5), Csize_t, (hid_t,), dtype_id)
-    return Int(var"#status#")
+    return var"#status#"
 end
 
 function h5t_get_fields(dtype_id, spos, epos, esize, mpos, msize)
@@ -945,7 +945,7 @@ end
 
 function h5t_get_member_offset(dtype_id, index)
     var"#status#" = ccall((:H5Tget_member_offset, libhdf5), Csize_t, (hid_t, Cuint), dtype_id, index)
-    return Int(var"#status#")
+    return var"#status#"
 end
 
 function h5t_get_member_type(dtype_id, index)
@@ -974,7 +974,7 @@ end
 
 function h5t_get_size(dtype_id)
     var"#status#" = ccall((:H5Tget_size, libhdf5), Csize_t, (hid_t,), dtype_id)
-    return Int(var"#status#")
+    return var"#status#"
 end
 
 function h5t_get_strpad(dtype_id)
