@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.5'
+          - '1'
         os:
           - ubuntu-latest
         arch:
@@ -38,7 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.5'
+          - '1'
         os:
           - ubuntu-latest
         arch:
