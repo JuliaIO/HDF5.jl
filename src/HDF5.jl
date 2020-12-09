@@ -1015,7 +1015,7 @@ function datatype(str::VLen{C}) where {C<:CharType}
     Datatype(h5t_vlen_create(type_id))
 end
 
-Base.sizeof(dtype::Datatype) = h5t_get_size(dtype)
+Base.sizeof(dtype::Datatype) = Int(h5t_get_size(dtype))
 
 # Get the dataspace of a dataset
 dataspace(dset::Dataset) = Dataspace(h5d_get_space(checkvalid(dset)))
@@ -1213,11 +1213,11 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
     memtype = Datatype(h5t_get_native_type(filetype))  # padded layout in memory
     close(filetype)
 
-    if sizeof(T) != h5t_get_size(memtype)
+    if sizeof(T) != sizeof(memtype)
         error("""
               Type size mismatch
               sizeof($T) = $(sizeof(T))
-              sizeof($memtype) = $(h5t_get_size(memtype))
+              sizeof($memtype) = $(sizeof(memtype))
               """)
     end
 
@@ -1628,11 +1628,11 @@ function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where T
     close(filetype)
 
     elT = eltype(X)
-    if sizeof(elT) != h5t_get_size(memtype)
+    if sizeof(elT) != sizeof(memtype)
         error("""
               Type size mismatch
               sizeof($elT) = $(sizeof(elT))
-              sizeof($memtype) = $(h5t_get_size(memtype))
+              sizeof($memtype) = $(sizeof(memtype))
               """)
     end
 
@@ -1767,7 +1767,7 @@ function get_mem_compatible_jl_type(obj_type::Datatype)
         if h5t_is_variable_str(obj_type)
             return Cstring
         else
-            n = Int(h5t_get_size(obj_type))
+            n = sizeof(obj_type)
             pad = Int(h5t_get_strpad(obj_type))
             return FixedString{n, pad}
         end
