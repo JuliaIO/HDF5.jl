@@ -872,10 +872,11 @@ end # show tests
 
 @testset "split1" begin
 
-@test HDF5.split1("a") == ("a", nothing)
+@test HDF5.split1("/") == ("/", "")
+@test HDF5.split1("a") == ("a", "")
 @test HDF5.split1("/a/b/c") == ("/", "a/b/c")
 @test HDF5.split1("a/b/c") == ("a", "b/c")
-@test HDF5.split1(GenericString("a")) == ("a", nothing)
+@test HDF5.split1(GenericString("a")) == ("a", "")
 @test HDF5.split1(GenericString("/a/b/c")) == ("/", "a/b/c")
 @test HDF5.split1(GenericString("a/b/c")) == ("a", "b/c")
 
@@ -908,6 +909,7 @@ hfile = h5open(fn, "w")
 group1 = create_group(hfile, "group1")
 group2 = create_group(group1, "group2")
 
+@test haskey(hfile, "/")
 @test haskey(hfile, GenericString("group1"))
 @test !haskey(hfile, GenericString("groupna"))
 @test haskey(hfile, "group1/group2")
