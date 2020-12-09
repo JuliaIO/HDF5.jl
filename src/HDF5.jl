@@ -1294,28 +1294,24 @@ end
 
 # Read OPAQUE datasets and attributes
 function Base.read(obj::DatasetOrAttribute, ::Type{Opaque})
-    local buf
-    local len
-    local tag
-    sz = size(obj)
     obj_type = datatype(obj)
-    try
-        len = h5t_get_size(obj_type)
-        buf = Vector{UInt8}(undef,prod(sz)*len)
-        tag = h5t_get_tag(obj_type)
-        if obj isa Dataset
-            read_dataset(obj, obj_type, buf)
-        else
-            read_attribute(obj, obj_type, buf)
-        end
-    finally
-        close(obj_type)
+    sz  = size(obj)
+    buf = Matrix{UInt8}(undef, sizeof(obj_type), prod(sz))
+    if obj isa Dataset
+        read_dataset(obj, obj_type, buf, obj.xfer)
+    else
+        read_attribute(obj, obj_type, buf)
     end
-    data = Array{Array{UInt8}}(undef,sz)
-    for i = 1:prod(sz)
-        data[i] = buf[(i-1)*len+1:i*len]
+    tag = h5t_get_tag(obj_type)
+    close(obj_type)
+    if isempty(sz)
+        # scalar (only) result
+        data = vec(buf)
+    else
+        # array of opaque objects
+        data = reshape([buf[:,i] for i in 1:prod(sz)], sz...)
     end
-    Opaque(data, tag)
+    return Opaque(data, tag)
 end
 
 # Array constructor for datasets
@@ -1807,6 +1803,12 @@ function get_mem_compatible_jl_type(obj_type::Datatype)
     elseif class_id == H5T_REFERENCE
         # TODO update to use version 1.12 reference functions/types
         return Reference
+    elseif class_id == H5T_OPAQUE
+        # TODO: opaque objects should get their own fixed-size data type; punning like
+        #       this permits recursively reading (i.e. compound data type containing an
+        #       opaque field). Requires figuring out what to do about the tag...
+        len = Int(h5t_get_size(obj_type))
+        return FixedArray{UInt8, (len,), len}
     elseif class_id == H5T_VLEN
         superid = h5t_get_super(obj_type)
         return VariableArray{get_mem_compatible_jl_type(Datatype(superid))}
