@@ -1,4 +1,4 @@
-name: Register Action
+name: RegisterAction
 on:
   workflow_dispatch:
     inputs:
