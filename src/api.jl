@@ -1051,6 +1051,12 @@ function h5t_set_strpad(dtype_id, sz)
     return nothing
 end
 
+function h5t_set_tag(dtype_id, tag)
+    var"#status#" = ccall((:H5Tset_tag, libhdf5), herr_t, (hid_t, Cstring), dtype_id, tag)
+    var"#status#" < 0 && error("Error setting opaque tag")
+    return nothing
+end
+
 function h5t_vlen_create(base_type_id)
     var"#status#" = ccall((:H5Tvlen_create, libhdf5), hid_t, (hid_t,), base_type_id)
     var"#status#" < 0 && error("Error creating vlen type")

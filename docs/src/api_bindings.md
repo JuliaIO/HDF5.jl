@@ -244,6 +244,7 @@ h5t_set_fields(dtype_id::hid_t, spos::Csize_t, epos::Csize_t, esize::Csize_t, mp
 h5t_set_precision(dtype_id::hid_t, sz::Csize_t)
 h5t_set_size(dtype_id::hid_t, sz::Csize_t)
 h5t_set_strpad(dtype_id::hid_t, sz::Cint)
+h5t_set_tag(dtype_id::hid_t, tag::Cstring)
 h5t_vlen_create(base_type_id::hid_t)
 ```
 
