@@ -344,7 +344,7 @@ function h5tb_get_field_info(loc_id, table_name)
         if any(!in(0x00, buf) for buf in field_names)
             strlen *= 2 # double the buffer for every column untill string fits
         else
-            return [unpad(buf, H5T_STR_NULLTERM) for buf in field_names], field_sizes, field_offsets, type_size
+            return [unpad(buf, H5T_STR_NULLTERM) for buf in field_names], field_sizes, field_offsets, type_size[]
         end
     end
 end

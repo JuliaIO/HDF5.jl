@@ -32,6 +32,13 @@ buf .= 0.0
 HDF5.h5tb_read_records(hf, name, 2, 3, recsize, offset, fieldsize, buf)
 @test buf[1:6] == collect(23:28)
 
-h5nfields, h5nrec = HDF5.h5tb_get_table_info(hf, name)
-@test h5nfields == nfield
-@test h5nrec == 6
+h5_nfields, h5_nrec = HDF5.h5tb_get_table_info(hf, name)
+@test h5_nfields == nfield
+@test h5_nrec == 6
+
+h5_colname, h5_fieldsize, h5_offset, h5_recsize = HDF5.h5tb_get_field_info(hf, name)
+
+@test h5_colname == colname
+@test h5_fieldsize == fieldsize
+@test h5_offset == offset
+@test h5_recsize == recsize
