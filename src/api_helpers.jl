@@ -325,6 +325,23 @@ end
 ### Table Interface
 ###
 
+function h5tb_get_table_info(loc_id, table_name)
+    nfields = Ref{hsize_t}()
+    nrecords = Ref{hsize_t}()
+    h5tb_get_table_info(loc_id, table_name, nfields, nrecords)
+    return nfields[], nrecords[]
+end
+
+function h5tb_get_field_info(loc_id, table_name)
+    nfields, = h5tb_get_table_info(loc_id, table_name)
+    field_names = Vector{UInt8}[fill(0x00,255) for i in 1:2]
+    field_sizes = Vector{Csize_t}(undef,nfields)
+    field_offsets = Vector{Csize_t}(undef,nfields)
+    type_size = Ref{Csize_t}()
+    h5tb_get_field_info(loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
+    return field_names, field_sizes, field_offsets, type_size
+end
+
 ###
 ### Filter Interface
 ###

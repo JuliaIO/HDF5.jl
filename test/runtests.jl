@@ -19,6 +19,7 @@ include("external.jl")
 include("swmr.jl")
 include("mmap.jl")
 include("properties.jl")
+include("table.jl")
 
 try
     using MPI
