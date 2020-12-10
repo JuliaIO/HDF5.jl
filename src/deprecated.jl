@@ -438,3 +438,13 @@ end
 @deprecate t_create create_datatype
 @deprecate t_open   open_datatype
 @deprecate t_commit commit_datatype
+
+
+###
+### v0.15 deprecations
+###
+
+### Changed in PR#776
+@deprecate create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace,
+lcpl::Properties, dcpl::Properties,
+dapl::Properties, dxpl::Properties) create_dataset(parent, path, dtype, dspace; lcpl=lcpl, dcpl=dcpl, dapl=dapl, dxpl=dxpl) false

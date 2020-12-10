@@ -707,12 +707,6 @@ function create_group(parent::Union{File,Group}, path::AbstractString,
     Group(h5g_create(checkvalid(parent), path, lcpl, gcpl, H5P_DEFAULT), file(parent))
 end
 
-function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace,
-                  lcpl::Properties, dcpl::Properties,
-                  dapl::Properties, dxpl::Properties)
-    Dataset(h5d_create(checkvalid(parent), path, dtype, dspace, lcpl, dcpl, dapl), file(parent), dxpl)
-end
-
 # Setting dset creation properties with name/value pairs
 function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace; pv...)
     dcpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_CREATE; pv...)
