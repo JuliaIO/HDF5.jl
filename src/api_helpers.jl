@@ -334,12 +334,19 @@ end
 
 function h5tb_get_field_info(loc_id, table_name)
     nfields, = h5tb_get_table_info(loc_id, table_name)
-    field_names = Vector{UInt8}[fill(0x00,255) for i in 1:2]
+    strlen = 64 # string buffer size
     field_sizes = Vector{Csize_t}(undef,nfields)
     field_offsets = Vector{Csize_t}(undef,nfields)
     type_size = Ref{Csize_t}()
-    h5tb_get_field_info(loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
-    return field_names, field_sizes, field_offsets, type_size
+    while true
+        field_names = [Vector{UInt8}(undef,strlen) for _ in 1:nfields]
+        h5tb_get_field_info(loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
+        if any(!in(0x00, buf) for buf in field_names)
+            strlen *= 2 # double the buffer for every column untill string fits
+        else
+            return [unpad(buf, H5T_STR_NULLTERM) for buf in field_names], field_sizes, field_offsets, type_size
+        end
+    end
 end
 
 ###
