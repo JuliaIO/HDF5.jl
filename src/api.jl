@@ -1133,9 +1133,45 @@ function h5lt_dtype_to_text(datatype, str, lang_type, len)
     return nothing
 end
 
+function h5tb_append_records(loc_id, dset_name, nrecords, type_size, field_offset, field_sizes, data)
+    var"#status#" = ccall((:H5TBappend_records, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, hsize_t, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, dset_name, nrecords, type_size, field_offset, field_sizes, data)
+    var"#status#" < 0 && error("Error adding record to table")
+    return nothing
+end
+
 function h5tb_get_field_info(loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
-    var"#status#" = ccall((:H5TBget_field_info, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, Ptr{Ptr{UInt8}}, Ptr{UInt8}, Ptr{UInt8}, Ptr{UInt8}), loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
+    var"#status#" = ccall((:H5TBget_field_info, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, Ptr{Ptr{UInt8}}, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Csize_t}), loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
     var"#status#" < 0 && error("Error getting field information")
+    return nothing
+end
+
+function h5tb_get_table_info(loc_id, table_name, nfields, nrecords)
+    var"#status#" = ccall((:H5TBget_table_info, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, Ptr{hsize_t}, Ptr{hsize_t}), loc_id, table_name, nfields, nrecords)
+    var"#status#" < 0 && error("Error getting table information")
+    return nothing
+end
+
+function h5tb_make_table(table_title, loc_id, dset_name, nfields, nrecords, type_size, field_names, field_offset, field_types, chunk_size, fill_data, compress, data)
+    var"#status#" = ccall((:H5TBmake_table, libhdf5_hl), herr_t, (Ptr{UInt8}, hid_t, Ptr{UInt8}, hsize_t, hsize_t, hsize_t, Ptr{Ptr{UInt8}}, Ptr{hsize_t}, Ptr{hid_t}, hsize_t, Ptr{Cvoid}, Cint, Ptr{Cvoid}), table_title, loc_id, dset_name, nfields, nrecords, type_size, field_names, field_offset, field_types, chunk_size, fill_data, compress, data)
+    var"#status#" < 0 && error("Error creating and writing dataset to table")
+    return nothing
+end
+
+function h5tb_read_records(loc_id, table_name, start, nrecords, type_size, field_offsets, dst_sizes, data)
+    var"#status#" = ccall((:H5TBread_records, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, hsize_t, hsize_t, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, table_name, start, nrecords, type_size, field_offsets, dst_sizes, data)
+    var"#status#" < 0 && error("Error reading record from table")
+    return nothing
+end
+
+function h5tb_read_table(loc_id, table_name, dst_size, dst_offset, dst_sizes, dst_buf)
+    var"#status#" = ccall((:H5TBread_table, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, table_name, dst_size, dst_offset, dst_sizes, dst_buf)
+    var"#status#" < 0 && error("Error reading table")
+    return nothing
+end
+
+function h5tb_write_records(loc_id, table_name, start, nrecords, type_size, field_offsets, field_sizes, data)
+    var"#status#" = ccall((:H5TBwrite_records, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, hsize_t, hsize_t, Csize_t, Ptr{UInt8}, Ptr{UInt8}, Ptr{Cvoid}), loc_id, table_name, start, nrecords, type_size, field_offsets, field_sizes, data)
+    var"#status#" < 0 && error("Error writing record to table")
     return nothing
 end
 
