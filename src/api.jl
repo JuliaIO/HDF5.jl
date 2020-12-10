@@ -1152,7 +1152,7 @@ function h5tb_get_table_info(loc_id, table_name, nfields, nrecords)
 end
 
 function h5tb_make_table(table_title, loc_id, dset_name, nfields, nrecords, type_size, field_names, field_offset, field_types, chunk_size, fill_data, compress, data)
-    var"#status#" = ccall((:H5TBmake_table, libhdf5_hl), herr_t, (Ptr{UInt8}, hid_t, Ptr{UInt8}, hsize_t, hsize_t, hsize_t, Ptr{Ptr{UInt8}}, Ptr{hsize_t}, Ptr{hid_t}, hsize_t, Ptr{Cvoid}, Cint, Ptr{Cvoid}), table_title, loc_id, dset_name, nfields, nrecords, type_size, field_names, field_offset, field_types, chunk_size, fill_data, compress, data)
+    var"#status#" = ccall((:H5TBmake_table, libhdf5_hl), herr_t, (Ptr{UInt8}, hid_t, Ptr{UInt8}, hsize_t, hsize_t, Csize_t, Ptr{Ptr{UInt8}}, Ptr{Csize_t}, Ptr{hid_t}, hsize_t, Ptr{Cvoid}, Cint, Ptr{Cvoid}), table_title, loc_id, dset_name, nfields, nrecords, type_size, field_names, field_offset, field_types, chunk_size, fill_data, compress, data)
     var"#status#" < 0 && error("Error creating and writing dataset to table")
     return nothing
 end

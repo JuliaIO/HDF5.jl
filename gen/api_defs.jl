@@ -255,7 +255,7 @@
 @bind h5t_set_strpad(dtype_id::hid_t, sz::Cint)::herr_t "Error setting size of datatype"
 @bind h5t_set_tag(dtype_id::hid_t, tag::Cstring)::herr_t "Error setting opaque tag"
 @bind h5t_vlen_create(base_type_id::hid_t)::hid_t "Error creating vlen type"
-# The following are not autoatically wrapped since they have requirements about freeing
+# The following are not automatically wrapped since they have requirements about freeing
 # the memory that is returned from the calls.
 #@bind h5t_get_member_name(dtype_id::hid_t, index::Cuint)::Cstring error("Error getting name of compound datatype member #", index)
 #@bind h5t_get_tag(type_id::hid_t)::Cstring "Error getting datatype opaque tag"
@@ -294,7 +294,8 @@
 @bind h5tb_append_records(loc_id::hid_t, dset_name::Ptr{UInt8}, nrecords::hsize_t, type_size::Csize_t, field_offset::Ptr{Csize_t}, field_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})::herr_t "Error adding record to table"
 @bind h5tb_get_field_info(loc_id::hid_t, table_name::Ptr{UInt8}, field_names::Ptr{Ptr{UInt8}}, field_sizes::Ptr{Csize_t}, field_offsets::Ptr{Csize_t}, type_size::Ptr{Csize_t})::herr_t "Error getting field information"
 @bind h5tb_get_table_info(loc_id::hid_t, table_name::Ptr{UInt8}, nfields::Ptr{hsize_t}, nrecords::Ptr{hsize_t})::herr_t "Error getting table information"
-@bind h5tb_make_table(table_title::Ptr{UInt8}, loc_id::hid_t, dset_name::Ptr{UInt8}, nfields::hsize_t, nrecords::hsize_t, type_size::hsize_t, field_names::Ptr{Ptr{UInt8}}, field_offset::Ptr{hsize_t}, field_types::Ptr{hid_t}, chunk_size::hsize_t, fill_data::Ptr{Cvoid}, compress::Cint, data::Ptr{Cvoid})::herr_t "Error creating and writing dataset to table"
+# NOTE: The HDF5 docs incorrectly specify type_size::hsize_t where as it should be type_size::Csize_t
+@bind h5tb_make_table(table_title::Ptr{UInt8}, loc_id::hid_t, dset_name::Ptr{UInt8}, nfields::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_names::Ptr{Ptr{UInt8}}, field_offset::Ptr{Csize_t}, field_types::Ptr{hid_t}, chunk_size::hsize_t, fill_data::Ptr{Cvoid}, compress::Cint, data::Ptr{Cvoid})::herr_t "Error creating and writing dataset to table"
 @bind h5tb_read_records(loc_id::hid_t, table_name::Ptr{UInt8}, start::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_offsets::Ptr{Csize_t}, dst_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})::herr_t "Error reading record from table"
 @bind h5tb_read_table(loc_id::hid_t, table_name::Ptr{UInt8}, dst_size::Csize_t, dst_offset::Ptr{Csize_t}, dst_sizes::Ptr{Csize_t}, dst_buf::Ptr{Cvoid})::herr_t "Error reading table"
 @bind h5tb_write_records(loc_id::hid_t, table_name::Ptr{UInt8}, start::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_offsets::Ptr{UInt8}, field_sizes::Ptr{UInt8}, data::Ptr{Cvoid})::herr_t "Error writing record to table"
