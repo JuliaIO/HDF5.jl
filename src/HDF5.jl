@@ -704,7 +704,9 @@ end
 function create_group(parent::Union{File,Group}, path::AbstractString,
                   lcpl::Properties=_link_properties(path),
                   gcpl::Properties=DEFAULT_PROPERTIES)
-    Group(h5g_create(checkvalid(parent), path, lcpl, gcpl, H5P_DEFAULT), file(parent))
+    checkvalid(parent)
+    haskey(parent, path) && error("cannot create group: object \"", path, "\" already exists at ", name(parent))
+    Group(h5g_create(parent, path, lcpl, gcpl, H5P_DEFAULT), file(parent))
 end
 
 function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace,
@@ -718,7 +720,9 @@ function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::
     dcpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_CREATE; pv...)
     dxpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_XFER; pv...)
     dapl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_ACCESS; pv...)
-    Dataset(h5d_create(checkvalid(parent), path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
+    checkvalid(parent)
+    haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
+    Dataset(h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
 end
 create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Dims; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
 create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)

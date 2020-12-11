@@ -1167,3 +1167,21 @@ end
         @test read(d) == ref
     end
 end
+
+@testset "Object Exists" begin
+
+hfile = h5open(tempname(), "w")
+g1 = create_group(hfile, "group1")
+@test_throws ErrorException create_group(hfile, "group1")
+create_group(g1, "group1a")
+@test_throws ErrorException create_group(hfile, "/group1/group1a")
+@test_throws ErrorException create_group(g1, "group1a")
+
+create_dataset(hfile, "dset1", 1)
+create_dataset(hfile, "/group1/dset1", 1)
+
+@test_throws ErrorException create_dataset(hfile, "dset1", 1)
+@test_throws ErrorException create_dataset(hfile, "group1", 1)
+@test_throws ErrorException create_dataset(g1, "dset1", 1)
+
+end
