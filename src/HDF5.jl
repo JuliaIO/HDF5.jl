@@ -143,18 +143,18 @@ function _hdf5_type_map(class_id, is_signed, native_size)
                    native_size == 2 ? Int16 :
                    native_size == 4 ? Int32 :
                    native_size == 8 ? Int64 :
-                   throw(KeyError((class_id, is_signed, native_size))
+                   throw(KeyError((class_id, is_signed, native_size)))
         else
             return native_size == 1 ? UInt8 :
                    native_size == 2 ? UInt16 :
                    native_size == 4 ? UInt32 :
                    native_size == 8 ? UInt64 :
-                   throw(KeyError((class_id, is_signed, native_size))
+                   throw(KeyError((class_id, is_signed, native_size)))
         end
     else
         return native_size == 4 ? Float32 :
                native_size == 8 ? Float64 :
-               throw(KeyError("$class_id, $is_signed, $native_size"))
+               throw(KeyError((class_id, is_signed, native_size)))
     end
 end
 
