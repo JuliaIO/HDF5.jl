@@ -42,3 +42,5 @@ h5_colname, h5_fieldsize, h5_offset, h5_recsize = HDF5.h5tb_get_field_info(hf, n
 @test h5_fieldsize == fieldsize
 @test h5_offset == offset
 @test h5_recsize == recsize
+
+close(hf)
