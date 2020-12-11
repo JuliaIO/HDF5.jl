@@ -438,3 +438,12 @@ end
 @deprecate t_create create_datatype
 @deprecate t_open   open_datatype
 @deprecate t_commit commit_datatype
+
+
+###
+### v0.15 deprecations
+###
+
+### Changed in PR#776
+@deprecate create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace,
+    lcpl::Properties, dcpl::Properties, dapl::Properties, dxpl::Properties) HDF5.Dataset(HDF5.h5d_create(parent, path, dtype, dspace, lcpl, dcpl, dapl), HDF5.file(parent), dxpl) false
