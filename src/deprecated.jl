@@ -447,4 +447,5 @@ end
 ### Changed in PR#776
 @deprecate create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace,
 lcpl::Properties, dcpl::Properties,
-dapl::Properties, dxpl::Properties) create_dataset(parent, path, dtype, dspace; lcpl=lcpl, dcpl=dcpl, dapl=dapl, dxpl=dxpl) false
+dapl::Properties, dxpl::Properties) HDF5.Dataset(
+        HDF5.h5d_create(parent, path, dtype, dspace, lcpl, dcpl, dapl), HDF5.file(parent), dxpl)) false
