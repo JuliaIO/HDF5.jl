@@ -346,7 +346,6 @@ function h5tb_get_field_info(loc_id, table_name)
     tid = h5d_get_type(did)
     field_names = [h5t_get_member_name(tid, i-1) for i in 1:nfields]
     return field_names, field_sizes, field_offsets, type_size[]
-
 end
 
 ###
