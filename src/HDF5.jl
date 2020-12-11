@@ -722,7 +722,7 @@ function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::
     dapl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_ACCESS; pv...)
     checkvalid(parent)
     haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
-    Dataset(h5d_create(checkvalid(parent), path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
+    Dataset(h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
 end
 create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Dims; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
 create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
