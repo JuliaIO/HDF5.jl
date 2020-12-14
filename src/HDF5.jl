@@ -1315,7 +1315,7 @@ Array(x::Dataset) = read(x)
 function unpad(s::String, pad::Integer)::String
     if pad == H5T_STR_NULLTERM # null-terminated
         ind = findfirst(isequal('\0'), s)
-        isnothing(ind) ? s : s[1:ind-1]
+        isnothing(ind) ? s : s[1:prevind(s, ind)]
     elseif pad == H5T_STR_NULLPAD # padded with nulls
         rstrip(s, '\0')
     elseif pad == H5T_STR_SPACEPAD # padded with spaces
