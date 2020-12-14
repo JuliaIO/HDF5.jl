@@ -74,6 +74,7 @@
 
 @bind h5e_get_auto(estack_id::hid_t, func::Ref{Ptr{Cvoid}}, client_data::Ref{Ptr{Cvoid}})::herr_t "Error getting error reporting behavior"
 @bind h5e_set_auto(estack_id::hid_t, func::Ptr{Cvoid}, client_data::Ptr{Cvoid})::herr_t "Error setting error reporting behavior"
+@bind h5e_get_current_stack()::hid_t "Unable to return current error stack"
 
 ###
 ### File Interface
@@ -89,7 +90,7 @@
 @bind h5f_get_obj_count(file_id::hid_t, types::Cuint)::Cssize_t "Error getting object count"
 @bind h5f_get_obj_ids(file_id::hid_t, types::Cuint, max_objs::Csize_t, obj_id_list::Ptr{hid_t})::Cssize_t "Error getting objects"
 @bind h5f_get_vfd_handle(file_id::hid_t, fapl_id::hid_t, file_handle::Ref{Ptr{Cvoid}})::herr_t "Error getting VFD handle"
-@bind h5f_is_hdf5(pathname::Cstring)::htri_t error("Cannot access file ", pathname)
+@bind h5f_is_hdf5(pathname::Cstring)::htri_t error("Unable to access file ", pathname)
 @bind h5f_open(pathname::Cstring, flags::Cuint, fapl_id::hid_t)::hid_t error("Error opening file ", pathname)
 @bind h5f_start_swmr_write(id::hid_t)::herr_t "Error starting SWMR write"
 

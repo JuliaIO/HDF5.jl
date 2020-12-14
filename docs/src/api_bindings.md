@@ -70,6 +70,7 @@ h5d_write(dataset_id::hid_t, mem_type_id::hid_t, mem_space_id::hid_t, file_space
 ## [`H5E`](https://portal.hdfgroup.org/display/HDF5/Error+Handling) — Error Interface
 ```julia
 h5e_get_auto(estack_id::hid_t, func::Ref{Ptr{Cvoid}}, client_data::Ref{Ptr{Cvoid}})
+h5e_get_current_stack()
 h5e_set_auto(estack_id::hid_t, func::Ptr{Cvoid}, client_data::Ptr{Cvoid})
 ```
 

@@ -54,20 +54,15 @@ function Base.show(io::IO, dtype::Datatype)
         h5t_committed(dtype) && print(io, name(dtype), " ")
         print(io, h5lt_dtype_to_text(dtype))
     else
-        # Note that h5i_is_valid returns `false` on the built-in datatypes (e.g.
-        # H5T_NATIVE_INT), apparently because they have refcounts of 0 yet are always
-        # valid. Just temporarily turn off error printing and try the call to probe if
-        # dtype is valid since H5LTdtype_to_text special-cases all of the built-in types
-        # internally.
-        old_func, old_client_data = h5e_get_auto(H5E_DEFAULT)
-        h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
+        # Note that h5i_is_valid returns `false` on the built-in datatypes (e.g. H5T_NATIVE_INT),
+        # apparently because they have refcounts of 0 yet are always valid. Just temporarily turn
+        # off error printing and try the call to probe if dtype is valid since H5LTdtype_to_text
+        # special-cases all of the built-in types internally.
         local text
         try
-            text = h5lt_dtype_to_text(dtype)
+            text = silence_errors(() -> h5lt_dtype_to_text(dtype))
         catch
             text = "(invalid)"
-        finally
-            h5e_set_auto(H5E_DEFAULT, old_func, old_client_data)
         end
         print(io, text)
     end
