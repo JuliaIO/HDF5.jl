@@ -1310,13 +1310,13 @@ end
 Array(x::Dataset) = read(x)
 
 # Clean up string buffer according to padding mode
-function unpad(s::String, pad::Integer)
-    if pad == H5T_STR_NULLTERM
-        v = findfirst(isequal('\0'), s)
-        v === nothing ? s : s[1:v-1]
-    elseif pad == H5T_STR_NULLPAD
+function unpad(s::String, pad::Integer)::String
+    if pad == H5T_STR_NULLTERM # null-terminated
+        ind = findfirst(isequal('\0'), s)
+        isnothing(ind) ? s : s[1:prevind(s, ind)]
+    elseif pad == H5T_STR_NULLPAD # padded with nulls
         rstrip(s, '\0')
-    elseif pad == H5T_STR_SPACEPAD
+    elseif pad == H5T_STR_SPACEPAD # padded with spaces
         rstrip(s, ' ')
     else
         error("Unrecognized string padding mode $pad")
