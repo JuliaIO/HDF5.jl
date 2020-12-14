@@ -344,7 +344,9 @@ function h5tb_get_field_info(loc_id, table_name)
     h5tb_get_field_info(loc_id, table_name, C_NULL, field_sizes, field_offsets, type_size)
     did = h5d_open(loc_id, table_name, H5P_DEFAULT)
     tid = h5d_get_type(did)
+    h5d_close(did)
     field_names = [h5t_get_member_name(tid, i-1) for i in 1:nfields]
+    h5t_close(tid)
     return field_names, field_sizes, field_offsets, type_size[]
 end
 
