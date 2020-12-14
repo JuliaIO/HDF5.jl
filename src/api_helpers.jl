@@ -325,6 +325,31 @@ end
 ### Table Interface
 ###
 
+function h5tb_get_table_info(loc_id, table_name)
+    nfields = Ref{hsize_t}()
+    nrecords = Ref{hsize_t}()
+    h5tb_get_table_info(loc_id, table_name, nfields, nrecords)
+    return nfields[], nrecords[]
+end
+
+function h5tb_get_field_info(loc_id, table_name)
+    nfields, = h5tb_get_table_info(loc_id, table_name)
+    field_sizes = Vector{Csize_t}(undef, nfields)
+    field_offsets = Vector{Csize_t}(undef, nfields)
+    type_size = Ref{Csize_t}()
+    # pass C_NULL to field_names argument since libhdf5 does not provide a way to determine if the
+    # allocated buffer is the correct length, which is thus susceptible to a buffer overflow if
+    # an incorrect buffer length is passed. Instead, we manually compute the column names using the
+    # same calls that h5tb_get_field_info internally uses.
+    h5tb_get_field_info(loc_id, table_name, C_NULL, field_sizes, field_offsets, type_size)
+    did = h5d_open(loc_id, table_name, H5P_DEFAULT)
+    tid = h5d_get_type(did)
+    h5d_close(did)
+    field_names = [h5t_get_member_name(tid, i-1) for i in 1:nfields]
+    h5t_close(tid)
+    return field_names, field_sizes, field_offsets, type_size[]
+end
+
 ###
 ### Filter Interface
 ###

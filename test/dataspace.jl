@@ -1,3 +1,6 @@
+using HDF5
+using Test
+
 @testset "Dataspaces" begin
     hsize_t = HDF5.hsize_t
     # Reference objects without using high-level API
