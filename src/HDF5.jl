@@ -636,12 +636,13 @@ end
 Returns `true` if the file specified by `name` is in the HDF5 format, and `false` otherwise.
 """
 function ishdf5(name::AbstractString)
-    # v1.12 use more robust h5f_isaccesible
-    # docs say h5f_is_hdf5 doesn't error, but it does print the error stack on fail
+    isfile(name) || return false # fastpath in case the file is non-existant
+    # TODO: v1.12 use the more robust h5f_is_accesible
     try
-        # must silence the error in case h5f_is_hdf5 fails
+        # docs falsely claim h5f_is_hdf5 doesn't error, but it does and prints the error stack on fail
+        # silence the error stack in case the call throws
         return silence_errors(() -> h5f_is_hdf5(name))
-    catch # if call fails catch the exception and return false
+    catch
         return false
     end
 end
