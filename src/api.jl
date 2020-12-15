@@ -249,6 +249,12 @@ function h5e_set_auto(estack_id, func, client_data)
     return nothing
 end
 
+function h5e_get_current_stack()
+    var"#status#" = ccall((:H5Eget_current_stack, libhdf5), hid_t, ())
+    var"#status#" < 0 && error("Unable to return current error stack")
+    return var"#status#"
+end
+
 function h5f_close(file_id)
     var"#status#" = ccall((:H5Fclose, libhdf5), herr_t, (hid_t,), file_id)
     var"#status#" < 0 && error("Error closing file")
@@ -311,7 +317,7 @@ end
 
 function h5f_is_hdf5(pathname)
     var"#status#" = ccall((:H5Fis_hdf5, libhdf5), htri_t, (Cstring,), pathname)
-    var"#status#" < 0 && error("Cannot access file ", pathname)
+    var"#status#" < 0 && error("Unable to access file ", pathname)
     return var"#status#" > 0
 end
 

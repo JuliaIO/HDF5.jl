@@ -51,10 +51,10 @@ end
 ### Error Interface
 ###
 
-function h5e_get_auto(error_stack)
+function h5e_get_auto(estack_id)
     func = Ref{Ptr{Cvoid}}()
     client_data = Ref{Ptr{Cvoid}}()
-    h5e_get_auto(error_stack, func, client_data)
+    h5e_get_auto(estack_id, func, client_data)
     return func[], client_data[]
 end
 

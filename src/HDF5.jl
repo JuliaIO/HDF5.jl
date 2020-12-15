@@ -409,8 +409,8 @@ Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for
 """
 function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool = false, pv...)
     # With garbage collection, the other modes don't make sense
-    apl = create_property(H5P_FILE_ACCESS; pv..., fclose_degree = H5F_CLOSE_STRONG) # file access property list
-    cpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_FILE_CREATE; pv...) # file create property list
+    fapl = create_property(H5P_FILE_ACCESS; pv..., fclose_degree = H5F_CLOSE_STRONG) # file access property list
+    fcpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_FILE_CREATE; pv...) # file create property list
     rd, wr, cr, tr, ff =
         mode == "r"  ? (true,  false, false, false, false) :
         mode == "r+" ? (true,  true,  false, false, true ) :
@@ -425,20 +425,18 @@ function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool
 
     if cr && (tr || !isfile(filename))
         flag = swmr ? H5F_ACC_TRUNC|H5F_ACC_SWMR_WRITE : H5F_ACC_TRUNC
-        fid = h5f_create(filename, flag, cpl, apl)
+        fid = h5f_create(filename, flag, fcpl, fapl)
     else
-        if !h5f_is_hdf5(filename)
-            error("This does not appear to be an HDF5 file")
-        end
+        ishdf5(filename) || error("unable to determine if $filename is accessible in the HDF5 format (file may not exist)")
         if wr
             flag = swmr ? H5F_ACC_RDWR|H5F_ACC_SWMR_WRITE : H5F_ACC_RDWR
         else
             flag = swmr ? H5F_ACC_RDONLY|H5F_ACC_SWMR_READ : H5F_ACC_RDONLY
         end
-        fid = h5f_open(filename, flag, apl)
+        fid = h5f_open(filename, flag, fapl)
     end
-    close(apl)
-    cpl != DEFAULT_PROPERTIES && close(cpl)
+    close(fapl)
+    fcpl != DEFAULT_PROPERTIES && close(fcpl)
     return File(fid, filename)
 end
 
@@ -635,9 +633,19 @@ end
 """
     ishdf5(name::AbstractString)
 
-Returns `true` if `name` is a path to a valid hdf5 file, `false` otherwise.
+Returns `true` if the file specified by `name` is in the HDF5 format, and `false` otherwise.
 """
-ishdf5(name::AbstractString) = h5f_is_hdf5(name)
+function ishdf5(name::AbstractString)
+    isfile(name) || return false # fastpath in case the file is non-existant
+    # TODO: v1.12 use the more robust h5f_is_accesible
+    try
+        # docs falsely claim h5f_is_hdf5 doesn't error, but it does and prints the error stack on fail
+        # silence the error stack in case the call throws
+        return silence_errors(() -> h5f_is_hdf5(name))
+    catch
+        return false
+    end
+end
 
 # Extract the file
 file(f::File) = f
@@ -1968,14 +1976,15 @@ function create_external(source::Union{File,Group}, source_relpath, target_filen
 end
 
 # error handling
-function hiding_errors(f)
-    error_stack = H5E_DEFAULT
-    # error_stack = ccall((:H5Eget_current_stack, libhdf5), hid_t, ())
-    old_func, old_client_data = h5e_get_auto(error_stack)
-    h5e_set_auto(error_stack, C_NULL, C_NULL)
-    res = f()
-    h5e_set_auto(error_stack, old_func, old_client_data)
-    return res
+function silence_errors(f::Function)
+    estack = H5E_DEFAULT
+    func, client_data = h5e_get_auto(estack)
+    h5e_set_auto(estack, C_NULL, C_NULL)
+    try
+        return f()
+    finally
+        h5e_set_auto(estack, func, client_data)
+    end
 end
 
 # Define globally because JLD uses this, too

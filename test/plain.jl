@@ -1185,3 +1185,22 @@ create_dataset(hfile, "/group1/dset1", 1)
 @test_throws ErrorException create_dataset(g1, "dset1", 1)
 
 end
+
+@testset "HDF5 existance" begin
+
+fn1 = tempname()
+fn2 = tempname()
+
+open(fn1, "w") do f
+    write(f, "Hello text file")
+end
+
+@test !HDF5.ishdf5(fn1) # check that a non-hdf5 file retuns false
+@test !HDF5.ishdf5(fn2) # checks that a file that does not exist returns false
+
+@test_throws ErrorException h5write(fn1, "x", 1) # non hdf5 file throws
+h5write(fn2, "x", 1)
+
+@test HDF5.ishdf5(fn2)
+
+end

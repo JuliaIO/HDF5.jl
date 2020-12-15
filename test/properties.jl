@@ -41,7 +41,7 @@ h5open(fn, "w";
     @test HDF5.h5i_get_type(fapl[:driver]) == HDF5.H5I_VFL
     # Docs say h5p_get_driver_info() doesn't error, but it does print an error message...
     #   https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER_INFO
-    HDF5.hiding_errors() do
+    HDF5.silence_errors() do
         @test fapl[:driver_info] == C_NULL
     end
     @test fapl[:fclose_degree] == HDF5.H5F_CLOSE_STRONG
