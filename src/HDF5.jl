@@ -2033,7 +2033,7 @@ function __init__()
     ASCII_ATTRIBUTE_PROPERTIES[] = create_property(H5P_ATTRIBUTE_CREATE; char_encoding = H5T_CSET_ASCII)
     UTF8_ATTRIBUTE_PROPERTIES[]  = create_property(H5P_ATTRIBUTE_CREATE; char_encoding = H5T_CSET_UTF8)
 
-    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" @eval include("mpio.jl")
+    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" include("mpio.jl")
 
     return nothing
 end
