@@ -16,7 +16,7 @@ provides an interface to the HDF5 library for the Julia language.
 
 ## Changelog
 
-Please see [HISTORY.jl](HISTORY.md) for the changelog. Most changes have deprecation warnings and thus may not be listed under here, but for those that don't please refer to this file.
+Please see [HISTORY.jl](HISTORY.md) for the changelog. Most changes have deprecation warnings and thus may not be listed in this file.
 
 ## Installation
 
@@ -27,15 +27,26 @@ pkg> add HDF5
 
 Starting from Julia 1.3, the HDF5 binaries are by default downloaded using the
 [HDF5_jll](https://github.com/JuliaBinaryWrappers/HDF5_jll.jl) package.
-To use system-provided HDF5 binaries instead, set the environment variable
-`JULIA_HDF5_LIBRARY_PATH` to the HDF5 library path and then run
-`Pkg.build("HDF5")`.
-This is in particular needed for parallel HDF5 support, which is not provided
-by the `HDF5_jll` binaries.
 
-For example, you can set `JULIA_HDF5_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/`
-if you're using the system package [`libhdf5-mpich-dev`](https://packages.ubuntu.com/focal/libhdf5-mpich-dev)
-on Ubuntu 20.04.
+To use system-provided HDF5 binaries instead, set the environment variable `JULIA_HDF5_PATH` to the
+top-level installation directory HDF5, i.e. the library should be located in
+`${JULIA_HDF5_PATH}/lib`. Then run `Pkg.build("HDF5")`. In particular, this is required if you need
+parallel HDF5 support, which is not provided by the `HDF5_jll` binaries.
+
+For example, to use HDF5
+([`libhdf5-mpich-dev`](https://packages.ubuntu.com/focal/libhdf5-mpich-dev)) with MPI using system
+libraries on Ubuntu 20.04, you would run:
+```sh
+$ sudo apt install mpich libhdf5-mpich-dev
+$ JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/
+$ JULIA_MPI_BINARY=system
+```
+
+Then in Julia, run:
+```julia
+pkg> build
+```
+
 
 ## Quickstart
 
@@ -76,9 +87,9 @@ also be of interest:
 using HDF5
 
 h5open("test.h5", "w") do file
-    g = g_create(file, "mygroup") # create a group
-    g["dset1"] = 3.2              # create a scalar dataset inside the group
-    attrs(g)["Description"] = "This group contains only a single dataset" # an attribute
+    g = create_group(file, "mygroup") # create a group
+    g["dset1"] = 3.2                  # create a scalar dataset inside the group
+    attributes(g)["Description"] = "This group contains only a single dataset" # an attribute
 end
 ```
 

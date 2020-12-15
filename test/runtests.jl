@@ -2,7 +2,7 @@ using HDF5
 using Test
 using Pkg
 
-println("HDF5 version ", HDF5.h5_get_libversion())
+@info "libhdf5 v$(HDF5.h5_get_libversion())"
 
 @testset "HDF5.jl" begin
 
@@ -23,8 +23,10 @@ include("table.jl")
 
 try
     using MPI
-    # basic MPI tests, for actual parallel tests we need to run in MPI mode
-    include("mpio.jl")
+    if HDF5.has_parallel()
+        # basic MPI tests, for actual parallel tests we need to run in MPI mode
+        include("mpio.jl")
+    end
 catch
 end
 
