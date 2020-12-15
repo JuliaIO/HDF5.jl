@@ -1,6 +1,6 @@
 ## v0.14.2
 
-* We no longer ship binaries for Linux on i686 and armv7.
+* We no longer ship binaries for Linux on i686 and armv7 for the v1.12 release of HDF5_jll.
 
 ## v0.14
 
