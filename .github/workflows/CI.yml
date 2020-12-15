@@ -3,7 +3,30 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  test:
+
+  test1:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} (system libhdf5)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        version:
+          - '1.3'
+        os:
+          - ubuntu-20.04
+        arch:
+          - x64
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt-get install libhdf5-dev
+      - run: echo "JULIA_HDF5_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial/lib/" >> $GITHUB_ENV
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/julia-buildpkg@latest
+      - uses: julia-actions/julia-runtest@latest
+
+  test2:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -23,13 +46,16 @@ jobs:
         exclude:
           - os: macOS-latest
             arch: x86
+          - os: ubuntu-latest # excluded because HDF5_jll v1.12 does not support i686
+            arch: x86
           - version: '1.3'
             arch: x86
-          - version: '1'
-            arch: x86
-            os: ubuntu-latest
           - version: 'nightly'
             arch: x86
+          - version: '1.3'
+            os: macOS-latest
+          - version: '1.3'
+            os: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
