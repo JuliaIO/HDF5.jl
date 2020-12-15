@@ -2,7 +2,8 @@ using Libdl
 
 const depsfile = joinpath(@__DIR__, "deps.jl")
 
-const libpath = get(ENV, "JULIA_HDF5_LIBRARY_PATH", nothing)
+libpath = get(ENV, "JULIA_HDF5_LIBRARY_PATH", nothing)  # legacy env variable for compatibility
+libpath = get(ENV, "JULIA_HDF5_PATH", nothing)
 
 if libpath === nothing
     # By default, use HDF5_jll
@@ -17,11 +18,13 @@ if libpath === nothing
              )
     end
 else
-    libhdf5 = find_library("libhdf5", [libpath])
-    libhdf5_hl = find_library("libhdf5_hl", [libpath])
+    @info "using system HDF5"
 
-    isempty(libhdf5) && error("libhdf5 not found in $libpath")
-    isempty(libhdf5_hl) && error("libhdf5_hl not found in $libpath")
+    libhdf5 = find_library("libhdf5", [libpath, joinpath(libpath, "lib"), joinpath(libpath, "lib64")])
+    libhdf5_hl = find_library("libhdf5_hl", [libpath, joinpath(libpath, "lib"), joinpath(libpath, "lib64")])
+
+    isempty(libhdf5) && error("libhdf5 could not be found")
+    isempty(libhdf5_hl) && error("libhdf5_hl could not be found")
 
     libhdf5_size = filesize(dlpath(libhdf5))
 
