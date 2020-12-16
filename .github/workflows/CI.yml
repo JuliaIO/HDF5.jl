@@ -1,11 +1,13 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    tags: [v*]
+  pull_request:
 
 jobs:
-
-  test-hdf5-system:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} (system libhdf5 + mpich)
+  HDF5-system-libs:
+    name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} (system libhdf5 + mpich)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -28,14 +30,9 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
-      - uses: julia-actions/julia-processcoverage@latest
-      - uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: lcov.info
 
-  test-hdf5:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+  HDF5:
+    name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -72,3 +69,74 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
+      - uses: julia-actions/julia-processcoverage@latest
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: lcov.info
+
+  MAT-integration:
+    name: MAT.jl - julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1'
+        os:
+          - ubuntu-latest
+        arch:
+          - x64
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/julia-buildpkg@latest
+      - name: Clone MAT.jl
+        uses: actions/checkout@v2
+        with:
+          repository: JuliaIO/MAT.jl
+          path: "MAT.jl"
+      - name: Run the tests
+        run: julia --project="MAT.jl" -e "using Pkg; Pkg.develop(PackageSpec(path=\"./\")); Pkg.update(); Pkg.test()"
+        shell: bash
+
+  JLD-integration:
+    name: JLD.jl - julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1'
+        os:
+          - ubuntu-latest
+        arch:
+          - x64
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/julia-buildpkg@latest
+      - name: Clone JLD.jl
+        uses: actions/checkout@v2
+        with:
+          repository: JuliaIO/JLD.jl
+          path: "JLD.jl"
+      - name: Run the tests
+        run: julia --project="JLD.jl" -e "using Pkg; Pkg.develop(PackageSpec(path=\"./\")); Pkg.update(); Pkg.test()"
+        shell: bash
+
+  docs:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v2
+        - uses: julia-actions/julia-buildpkg@latest
+        - uses: julia-actions/julia-docdeploy@latest
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
