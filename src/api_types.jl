@@ -37,6 +37,14 @@ end
 const H5R_REF_T_NULL = H5R_ref_t(ntuple(_ -> 0x0, Val(64)))
 =#
 
+# For attribute information
+struct H5A_info_t
+    corder_valid::hbool_t
+    corder::UInt32 # typedef uint32_t H5O_msg_crt_idx_t
+    cset::Cint
+    data_size::hsize_t
+end
+
 # For group information
 struct H5G_info_t
     storage_type::Cint # enum H5G_storage_type_t

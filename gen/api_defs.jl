@@ -44,6 +44,7 @@
 @bind h5a_get_name_by_idx(loc_id::hid_t, obj_name::Cstring, index_type::Cint, order::Cint, idx::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting attribute name"
 @bind h5a_get_space(attr_id::hid_t)::hid_t "Error getting attribute dataspace"
 @bind h5a_get_type(attr_id::hid_t)::hid_t "Error getting attribute type"
+@bind h5a_iterate(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t error("Error iterating attributes in object ", h5i_get_name(obj_id))
 @bind h5a_open(obj_id::hid_t, pathname::Ptr{UInt8}, aapl_id::hid_t)::hid_t error("Error opening attribute ", h5i_get_name(obj_id), "/", pathname)
 @bind h5a_read(attr_id::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})::herr_t error("Error reading attribute ", h5a_get_name(attr_id))
 @bind h5a_write(attr_hid::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})::herr_t "Error writing attribute data"
@@ -129,6 +130,7 @@
 @bind h5l_exists(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::htri_t error("Cannot determine whether ", pathname, " exists")
 @bind h5l_get_info(link_loc_id::hid_t, link_name::Ptr{UInt8}, link_buf::Ptr{H5L_info_t}, lapl_id::hid_t)::herr_t error("Error getting info for link ", link_name)
 @bind h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting object name"
+@bind h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t error("Error iterating through links in group ", h5i_get_name(group_id))
 
 ###
 ### Object Interface

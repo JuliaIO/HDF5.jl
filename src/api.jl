@@ -129,6 +129,12 @@ function h5a_get_type(attr_id)
     return var"#status#"
 end
 
+function h5a_iterate(obj_id, idx_type, order, n, op, op_data)
+    var"#status#" = ccall((:H5Aiterate2, libhdf5), herr_t, (hid_t, Cint, Cint, Ptr{hsize_t}, Ptr{Cvoid}, Ptr{Cvoid}), obj_id, idx_type, order, n, op, op_data)
+    var"#status#" < 0 && error("Error iterating attributes in object ", h5i_get_name(obj_id))
+    return nothing
+end
+
 function h5a_open(obj_id, pathname, aapl_id)
     var"#status#" = ccall((:H5Aopen, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), obj_id, pathname, aapl_id)
     var"#status#" < 0 && error("Error opening attribute ", h5i_get_name(obj_id), "/", pathname)
@@ -457,6 +463,12 @@ function h5l_get_name_by_idx(loc_id, group_name, index_field, order, n, name, si
     var"#status#" = ccall((:H5Lget_name_by_idx, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, Ptr{UInt8}, Csize_t, hid_t), loc_id, group_name, index_field, order, n, name, size, lapl_id)
     var"#status#" < 0 && error("Error getting object name")
     return var"#status#"
+end
+
+function h5l_iterate(group_id, idx_type, order, idx, op, op_data)
+    var"#status#" = ccall((:H5Literate1, libhdf5), herr_t, (hid_t, Cint, Cint, Ptr{hsize_t}, Ptr{Cvoid}, Ptr{Cvoid}), group_id, idx_type, order, idx, op, op_data)
+    var"#status#" < 0 && error("Error iterating through links in group ", h5i_get_name(group_id))
+    return nothing
 end
 
 function h5o_close(object_id)
