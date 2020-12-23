@@ -43,6 +43,7 @@ h5a_get_name(attr_id::hid_t, buf_size::Csize_t, buf::Ptr{UInt8})
 h5a_get_name_by_idx(loc_id::hid_t, obj_name::Cstring, index_type::Cint, order::Cint, idx::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)
 h5a_get_space(attr_id::hid_t)
 h5a_get_type(attr_id::hid_t)
+h5a_iterate(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})
 h5a_open(obj_id::hid_t, pathname::Ptr{UInt8}, aapl_id::hid_t)
 h5a_read(attr_id::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})
 h5a_write(attr_hid::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})
@@ -122,6 +123,7 @@ h5l_delete(obj_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)
 h5l_exists(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)
 h5l_get_info(link_loc_id::hid_t, link_name::Ptr{UInt8}, link_buf::Ptr{H5L_info_t}, lapl_id::hid_t)
 h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)
+h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})
 ```
 
 ## [`H5O`](https://portal.hdfgroup.org/display/HDF5/Objects) — Object Interface

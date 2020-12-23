@@ -934,14 +934,22 @@ name(obj::Union{File,Group,Dataset,Datatype}) = h5i_get_name(checkvalid(obj))
 name(attr::Attribute) = h5a_get_name(attr)
 function Base.keys(x::Union{Group,File})
     checkvalid(x)
-    n = length(x)
-    return [h5l_get_name_by_idx(x, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, H5P_DEFAULT) for i = 1:n]
+    children = sizehint!(String[], length(x))
+    h5l_iterate(x, H5_INDEX_NAME, H5_ITER_INC) do group, name, info, data
+        push!(children, unsafe_string(name))
+        return herr_t(0)
+    end
+    return children
 end
 
 function Base.keys(x::Attributes)
     checkvalid(x.parent)
-    n = length(x)
-    return [h5a_get_name_by_idx(x.parent, ".", H5_INDEX_NAME, H5_ITER_INC, i-1, H5P_DEFAULT) for i = 1:n]
+    children = sizehint!(String[], length(x))
+    h5a_iterate(x.parent, H5_INDEX_NAME, H5_ITER_INC) do loc_id, attr_name, ainfo, data
+        push!(children, unsafe_string(attr_name))
+        return herr_t(0)
+    end
+    return children
 end
 
 # iteration by objects

@@ -37,6 +37,13 @@ function h5a_get_name_by_idx(loc_id, obj_name, idx_type, order, idx, lapl_id)
     return String(buf)
 end
 
+function h5a_iterate(f, obj_id, idx_type, order, idx = 0)
+    idxref = Ref{hsize_t}(idx)
+    fptr = @cfunction($f, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5A_info_t}, Ptr{Cvoid}))
+    h5a_iterate(obj_id, idx_type, order, idxref, fptr, C_NULL)
+    return idxref[]
+end
+
 ###
 ### Dataset Interface
 ###
@@ -131,6 +138,13 @@ function h5l_get_name_by_idx(loc_id, group_name, idx_type, order, idx, lapl_id)
     buf = StringVector(len)
     h5l_get_name_by_idx(loc_id, group_name, idx_type, order, idx, buf, len + 1, lapl_id)
     return String(buf)
+end
+
+function h5l_iterate(f, group_id, idx_type, order, idx = 0)
+    idxref = Ref{hsize_t}(idx)
+    fptr = @cfunction($f, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5L_info_t}, Ptr{Cvoid}))
+    h5l_iterate(group_id, idx_type, order, idxref, fptr, C_NULL)
+    return idxref[]
 end
 
 ###
