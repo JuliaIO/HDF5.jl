@@ -10,9 +10,10 @@
 #
 # The C library names are automatically generated from the Julia function name by
 # uppercasing the `h5?` and removing the first underscore ---
-# e.g. `h5d_close` -> `H5Dclose`.
-# For versioned bindings (such as `H5Dopen2`), the mapping between names is given
-# explicitly in the `bind_exceptions` Dict in `bind_generator.jl`.
+# e.g. `h5d_close` -> `H5Dclose`. Versioned function names (such as
+# `h5d_open2` -> `H5Dopen2`) have the trailing number removed for the Julia function
+# definition. Other arbitrary mappings may be added by adding an entry to the
+# `bind_exceptions` Dict in `bind_generator.jl`.
 
 ###
 ### HDF5 General library functions
@@ -32,7 +33,7 @@
 ###
 
 @bind h5a_close(id::hid_t)::herr_t "Error closing attribute"
-@bind h5a_create(loc_id::hid_t, pathname::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t)::hid_t error("Error creating attribute ", h5a_get_name(loc_id), "/", pathname)
+@bind h5a_create2(loc_id::hid_t, pathname::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t)::hid_t error("Error creating attribute ", h5a_get_name(loc_id), "/", pathname)
 @bind h5a_create_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t, lapl_id::hid_t)::hid_t error("Error creating attribute ", attr_name, " for object ", obj_name)
 @bind h5a_delete(loc_id::hid_t, attr_name::Ptr{UInt8})::herr_t error("Error deleting attribute ", attr_name)
 @bind h5a_delete_by_idx(loc_id::hid_t, obj_name::Ptr{UInt8}, idx_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::herr_t error("Error deleting attribute ", n, " from object ", obj_name)
@@ -44,7 +45,7 @@
 @bind h5a_get_name_by_idx(loc_id::hid_t, obj_name::Cstring, index_type::Cint, order::Cint, idx::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting attribute name"
 @bind h5a_get_space(attr_id::hid_t)::hid_t "Error getting attribute dataspace"
 @bind h5a_get_type(attr_id::hid_t)::hid_t "Error getting attribute type"
-@bind h5a_iterate(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t error("Error iterating attributes in object ", h5i_get_name(obj_id))
+@bind h5a_iterate2(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t error("Error iterating attributes in object ", h5i_get_name(obj_id))
 @bind h5a_open(obj_id::hid_t, pathname::Ptr{UInt8}, aapl_id::hid_t)::hid_t error("Error opening attribute ", h5i_get_name(obj_id), "/", pathname)
 @bind h5a_read(attr_id::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})::herr_t error("Error reading attribute ", h5a_get_name(attr_id))
 @bind h5a_write(attr_hid::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})::herr_t "Error writing attribute data"
@@ -54,14 +55,14 @@
 ###
 
 @bind h5d_close(dataset_id::hid_t)::herr_t "Error closing dataset"
-@bind h5d_create(loc_id::hid_t, pathname::Ptr{UInt8}, dtype_id::hid_t, space_id::hid_t, lcpl_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)::hid_t error("Error creating dataset ", h5i_get_name(loc_id), "/", pathname)
+@bind h5d_create2(loc_id::hid_t, pathname::Ptr{UInt8}, dtype_id::hid_t, space_id::hid_t, lcpl_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)::hid_t error("Error creating dataset ", h5i_get_name(loc_id), "/", pathname)
 @bind h5d_flush(dataset_id::hid_t)::herr_t "Error flushing dataset"
 @bind h5d_get_access_plist(dataset_id::hid_t)::hid_t "Error getting dataset access property list"
 @bind h5d_get_create_plist(dataset_id::hid_t)::hid_t "Error getting dataset create property list"
 @bind h5d_get_offset(dataset_id::hid_t)::haddr_t "Error getting offset"
 @bind h5d_get_space(dataset_id::hid_t)::hid_t "Error getting dataspace"
 @bind h5d_get_type(dataset_id::hid_t)::hid_t "Error getting dataspace type"
-@bind h5d_open(loc_id::hid_t, pathname::Ptr{UInt8}, dapl_id::hid_t)::hid_t error("Error opening dataset ", h5i_get_name(loc_id), "/", pathname)
+@bind h5d_open2(loc_id::hid_t, pathname::Ptr{UInt8}, dapl_id::hid_t)::hid_t error("Error opening dataset ", h5i_get_name(loc_id), "/", pathname)
 @bind h5d_read(dataset_id::hid_t, mem_type_id::hid_t, mem_space_id::hid_t, file_space_id::hid_t, xfer_plist_id::hid_t, buf::Ptr{Cvoid})::herr_t error("Error reading dataset ", h5i_get_name(dataset_id))
 @bind h5d_refresh(dataset_id::hid_t)::herr_t "Error refreshing dataset"
 @bind h5d_set_extent(dataset_id::hid_t, new_dims::Ptr{hsize_t})::herr_t "Error extending dataset dimensions"
@@ -73,8 +74,8 @@
 ### Error Interface
 ###
 
-@bind h5e_get_auto(estack_id::hid_t, func::Ref{Ptr{Cvoid}}, client_data::Ref{Ptr{Cvoid}})::herr_t "Error getting error reporting behavior"
-@bind h5e_set_auto(estack_id::hid_t, func::Ptr{Cvoid}, client_data::Ptr{Cvoid})::herr_t "Error setting error reporting behavior"
+@bind h5e_get_auto2(estack_id::hid_t, func::Ref{Ptr{Cvoid}}, client_data::Ref{Ptr{Cvoid}})::herr_t "Error getting error reporting behavior"
+@bind h5e_set_auto2(estack_id::hid_t, func::Ptr{Cvoid}, client_data::Ptr{Cvoid})::herr_t "Error setting error reporting behavior"
 @bind h5e_get_current_stack()::hid_t "Unable to return current error stack"
 
 ###
@@ -100,12 +101,12 @@
 ###
 
 @bind h5g_close(group_id::hid_t)::herr_t "Error closing group"
-@bind h5g_create(loc_id::hid_t, pathname::Ptr{UInt8}, lcpl_id::hid_t, gcpl_id::hid_t, gapl_id::hid_t)::hid_t error("Error creating group ", h5i_get_name(loc_id), "/", pathname)
+@bind h5g_create2(loc_id::hid_t, pathname::Ptr{UInt8}, lcpl_id::hid_t, gcpl_id::hid_t, gapl_id::hid_t)::hid_t error("Error creating group ", h5i_get_name(loc_id), "/", pathname)
 @bind h5g_get_create_plist(group_id::hid_t)::hid_t "Error getting group create property list"
 @bind h5g_get_info(group_id::hid_t, buf::Ptr{H5G_info_t})::herr_t "Error getting group info"
 @bind h5g_get_num_objs(loc_id::hid_t, num_obj::Ptr{hsize_t})::hid_t "Error getting group length"
 @bind h5g_get_objname_by_idx(loc_id::hid_t, idx::hsize_t, pathname::Ptr{UInt8}, size::Csize_t)::Cssize_t error("Error getting group object name ", h5i_get_name(loc_id), "/", pathname)
-@bind h5g_open(loc_id::hid_t, pathname::Ptr{UInt8}, gapl_id::hid_t)::hid_t error("Error opening group ", h5i_get_name(loc_id), "/", pathname)
+@bind h5g_open2(loc_id::hid_t, pathname::Ptr{UInt8}, gapl_id::hid_t)::hid_t error("Error opening group ", h5i_get_name(loc_id), "/", pathname)
 
 ###
 ### Identifier Interface
@@ -130,7 +131,7 @@
 @bind h5l_exists(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::htri_t error("Cannot determine whether ", pathname, " exists")
 @bind h5l_get_info(link_loc_id::hid_t, link_name::Ptr{UInt8}, link_buf::Ptr{H5L_info_t}, lapl_id::hid_t)::herr_t error("Error getting info for link ", link_name)
 @bind h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting object name"
-@bind h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t error("Error iterating through links in group ", h5i_get_name(group_id))
+@bind h5l_iterate1(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t error("Error iterating through links in group ", h5i_get_name(group_id))
 
 ###
 ### Object Interface
@@ -138,7 +139,7 @@
 
 @bind h5o_close(object_id::hid_t)::herr_t "Error closing object"
 @bind h5o_copy(src_loc_id::hid_t, src_name::Ptr{UInt8}, dst_loc_id::hid_t, dst_name::Ptr{UInt8}, ocpypl_id::hid_t, lcpl_id::hid_t)::herr_t error("Error copying object ", h5i_get_name(src_loc_id), "/", src_name, " to ", h5i_get_name(dst_loc_id), "/", dst_name)
-@bind h5o_get_info(object_id::hid_t, buf::Ptr{H5O_info_t})::herr_t "Error getting object info"
+@bind h5o_get_info1(object_id::hid_t, buf::Ptr{H5O_info_t})::herr_t "Error getting object info"
 @bind h5o_open(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::hid_t error("Error opening object ", h5i_get_name(loc_id), "/", pathname)
 @bind h5o_open_by_addr(loc_id::hid_t, addr::haddr_t)::hid_t error("Error opening object by address")
 @bind h5o_open_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::hid_t error("Error opening object of index ", n)
@@ -160,7 +161,7 @@
 @bind h5p_get_fapl_mpio32(fapl_id::hid_t, comm::Ptr{Hmpih32}, info::Ptr{Hmpih32})::herr_t "Error getting MPIO properties"
 @bind h5p_get_fapl_mpio64(fapl_id::hid_t, comm::Ptr{Hmpih64}, info::Ptr{Hmpih64})::herr_t "Error getting MPIO properties"
 @bind h5p_get_fclose_degree(fapl_id::hid_t, fc_degree::Ref{Cint})::herr_t "Error getting close degree"
-@bind h5p_get_filter_by_id(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Ref{Cuint}, cd_nelmts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{UInt8}, filter_config::Ptr{Cuint})::herr_t "Error getting filter ID"
+@bind h5p_get_filter_by_id2(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Ref{Cuint}, cd_nelmts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{UInt8}, filter_config::Ptr{Cuint})::herr_t "Error getting filter ID"
 @bind h5p_get_layout(plist_id::hid_t)::Cint error("Error getting layout")
 @bind h5p_get_libver_bounds(fapl_id::hid_t, low::Ref{Cint}, high::Ref{Cint})::herr_t "Error getting library version bounds"
 @bind h5p_get_local_heap_size_hint(plist_id::hid_t, size_hint::Ref{Csize_t})::herr_t "Error getting local heap size hint"
@@ -193,8 +194,8 @@
 ###
 
 @bind h5r_create(ref::Ptr{Cvoid}, loc_id::hid_t, pathname::Ptr{UInt8}, ref_type::Cint, space_id::hid_t)::herr_t error("Error creating reference to object ", h5i_get_name(loc_id), "/", pathname)
-@bind h5r_dereference(obj_id::hid_t, oapl_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid})::hid_t "Error dereferencing object"
-@bind h5r_get_obj_type(loc_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid}, obj_type::Ptr{Cint})::herr_t "Error getting object type"
+@bind h5r_dereference2(obj_id::hid_t, oapl_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid})::hid_t "Error dereferencing object"
+@bind h5r_get_obj_type2(loc_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid}, obj_type::Ptr{Cint})::herr_t "Error getting object type"
 @bind h5r_get_region(loc_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid})::hid_t "Error getting region from reference"
 
 ###
@@ -222,15 +223,15 @@
 ### Datatype Interface
 ###
 
-@bind h5t_array_create(basetype_id::hid_t, ndims::Cuint, sz::Ptr{hsize_t})::hid_t error("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz)
+@bind h5t_array_create2(basetype_id::hid_t, ndims::Cuint, sz::Ptr{hsize_t})::hid_t error("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz)
 @bind h5t_close(dtype_id::hid_t)::herr_t "Error closing datatype"
 @bind h5t_committed(dtype_id::hid_t)::htri_t error("Error determining whether datatype is committed")
-@bind h5t_commit(loc_id::hid_t, name::Ptr{UInt8}, dtype_id::hid_t, lcpl_id::hid_t, tcpl_id::hid_t, tapl_id::hid_t)::herr_t "Error committing type"
+@bind h5t_commit2(loc_id::hid_t, name::Ptr{UInt8}, dtype_id::hid_t, lcpl_id::hid_t, tcpl_id::hid_t, tapl_id::hid_t)::herr_t "Error committing type"
 @bind h5t_copy(dtype_id::hid_t)::hid_t "Error copying datatype"
 @bind h5t_create(class_id::Cint, sz::Csize_t)::hid_t error("Error creating datatype of id ", class_id)
 @bind h5t_enum_insert(dtype_id::hid_t, name::Cstring, value::Ptr{Cvoid})::herr_t error("Error adding ", name, " to enum datatype")
 @bind h5t_equal(dtype_id1::hid_t, dtype_id2::hid_t)::htri_t "Error checking datatype equality"
-@bind h5t_get_array_dims(dtype_id::hid_t, dims::Ptr{hsize_t})::Cint "Error getting dimensions of array"
+@bind h5t_get_array_dims2(dtype_id::hid_t, dims::Ptr{hsize_t})::Cint "Error getting dimensions of array"
 @bind h5t_get_array_ndims(dtype_id::hid_t)::Cint "Error getting ndims of array"
 @bind h5t_get_class(dtype_id::hid_t)::Cint "Error getting class"
 @bind h5t_get_cset(dtype_id::hid_t)::Cint "Error getting character set encoding"
@@ -249,7 +250,7 @@
 @bind h5t_insert(dtype_id::hid_t, fieldname::Ptr{UInt8}, offset::Csize_t, field_id::hid_t)::herr_t error("Error adding field ", fieldname, " to compound datatype")
 @bind h5t_is_variable_str(type_id::hid_t)::htri_t "Error determining whether string is of variable length"
 @bind h5t_lock(type_id::hid_t)::herr_t "Error locking type"
-@bind h5t_open(loc_id::hid_t, name::Ptr{UInt8}, tapl_id::hid_t)::hid_t error("Error opening type ", h5i_get_name(loc_id), "/", name)
+@bind h5t_open2(loc_id::hid_t, name::Ptr{UInt8}, tapl_id::hid_t)::hid_t error("Error opening type ", h5i_get_name(loc_id), "/", name)
 @bind h5t_set_cset(dtype_id::hid_t, cset::Cint)::herr_t "Error setting character set in datatype"
 @bind h5t_set_ebias(dtype_id::hid_t, ebias::Csize_t)::herr_t "Error setting datatype floating point exponent bias"
 @bind h5t_set_fields(dtype_id::hid_t, spos::Csize_t, epos::Csize_t, esize::Csize_t, mpos::Csize_t, msize::Csize_t)::herr_t "Error setting datatype floating point bit positions"
