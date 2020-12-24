@@ -4,6 +4,9 @@ include(joinpath(@__DIR__, "bind_generator.jl"))
 defs = read(joinpath(@__DIR__, "api_defs.jl"), String)
 # Have Julia expand/run the @bind macro to generate expressions for all of the functions
 exprs = Base.include_string(@__MODULE__, "@macroexpand1 begin\n" * defs * "\nend", "api_defs.jl")
+# Insert the conditional version helper expression
+prepend!(exprs.args, _libhdf5_build_ver_expr.args)
+
 # Definitions which are not automatically generated, but should still be documented as
 # part of the raw low-level API:
 append!(bound_api["H5P"],

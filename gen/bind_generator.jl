@@ -10,6 +10,20 @@ push!(bind_exceptions, :h5p_get_fapl_mpio64 => :H5Pget_fapl_mpio)
 push!(bind_exceptions, :h5p_set_fapl_mpio32 => :H5Pset_fapl_mpio)
 push!(bind_exceptions, :h5p_set_fapl_mpio64 => :H5Pset_fapl_mpio)
 
+# An expression which is injected at the beginning of the API defitions to aid in doing
+# (pre)compile-time conditional compilation based on the libhdf5 version.
+_libhdf5_build_ver_expr = quote
+    _libhdf5_build_ver = let
+            majnum, minnum, relnum = Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}()
+            r = ccall((:H5get_libversion, libhdf5), herr_t,
+                      (Ref{Cuint}, Ref{Cuint}, Ref{Cuint}),
+                      majnum, minnum, relnum)
+            r < 0 && error("Error getting HDF5 library version")
+            VersionNumber(majnum[], minnum[], relnum[])
+        end
+end
+
+
 # We'll also use this processing pass to automatically generate documentation that simply
 # lists all of the bound API functions.
 const bound_api = Dict{String,Vector{String}}()
@@ -64,7 +78,35 @@ It is assumed that the HDF library names are given in global constants named `li
 and `libhdf5_hl`. The former is used for all `ccall`s, except if the C library name begins
 with "H5DO" or "H5TB" then the latter library is used.
 """
-macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing)
+macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing,
+           vers::Union{Expr,Nothing} = nothing)
+    expr = _bind(__module__, __source__, sig, err)
+    isnothing(vers) && return esc(expr)
+
+    isexpr(vers, :tuple) || error("Expected 2-tuple of version bounds, got ", vers)
+    length(vers.args) == 2 || error("Expected 2-tuple of version bounds, got ", vers)
+    lb = vers.args[1]
+    ub = vers.args[2]
+
+    if lb !== :nothing && !(isexpr(lb, :macrocall) && lb.args[1] == Symbol("@v_str"))
+        error("Lower version bound must be `nothing` or version number literal, got ", lb)
+    end
+    if ub !== :nothing && !(isexpr(ub, :macrocall) && ub.args[1] == Symbol("@v_str"))
+        error("Upper version bound must be `nothing` or version number literal, got ", ub)
+    end
+
+    if lb === :nothing && ub !== :nothing
+        conditional = :(_libhdf5_build_ver < $(ub))
+    elseif lb !== :nothing && ub === :nothing
+        conditional = :($(lb) ≤ _libhdf5_build_ver)
+    else
+        conditional = :($(lb) ≤ _libhdf5_build_ver < $(ub))
+    end
+    conditional = Expr(:if, conditional, Expr(:block, expr))
+    return esc(Expr(:macrocall, Symbol("@static"), nothing, conditional))
+end
+
+function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing})
     sig.head === :(::) || error("return type required on function signature")
 
     # Pull apart return-type and rest of function declaration
@@ -105,7 +147,7 @@ macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing)
 
     # Store the function prototype in HDF5-module specific lists:
     funclist = get!(bound_api, uppercase(prefix), Vector{String}(undef, 0))
-    push!(funclist, string(funcsig))
+    string(funcsig) in funclist || push!(funclist, string(funcsig))
 
     # Determine the underlying C library to call
     lib = startswith(string(cfuncname), r"H5(DO|DS|LT|TB)") ? :libhdf5_hl : :libhdf5
@@ -159,5 +201,5 @@ macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing)
     end
     push!(jlfuncbody.args, returnexpr)
 
-    return esc(Expr(:function, jlfuncsig, jlfuncbody))
+    return Expr(:function, jlfuncsig, jlfuncbody)
 end
