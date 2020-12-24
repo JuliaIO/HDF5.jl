@@ -131,7 +131,10 @@
 @bind h5l_exists(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::htri_t error("Cannot determine whether ", pathname, " exists")
 @bind h5l_get_info(link_loc_id::hid_t, link_name::Ptr{UInt8}, link_buf::Ptr{H5L_info_t}, lapl_id::hid_t)::herr_t error("Error getting info for link ", link_name)
 @bind h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting object name"
-@bind h5l_iterate1(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t error("Error iterating through links in group ", h5i_get_name(group_id))
+# libhdf5 v1.10 provides the name H5Literate
+# libhdf5 v1.12 provides the same under H5Literate1, and a newer interface on H5Literate2
+@bind h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t error("Error iterating through links in group ", h5i_get_name(group_id)) (nothing, v"1.12")
+@bind h5l_iterate1(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t error("Error iterating through links in group ", h5i_get_name(group_id)) (v"1.12", nothing)
 
 ###
 ### Object Interface
@@ -203,7 +206,7 @@
 ###
 
 @bind h5s_close(space_id::hid_t)::herr_t "Error closing dataspace"
-@bind h5s_combine_select(space1_id::hid_t, op::Cint, space2_id::hid_t)::hid_t "Error combining dataspaces"
+@bind h5s_combine_select(space1_id::hid_t, op::Cint, space2_id::hid_t)::hid_t "Error combining dataspaces" (v"1.10.7", nothing)
 @bind h5s_copy(space_id::hid_t)::hid_t "Error copying dataspace"
 @bind h5s_create(class::Cint)::hid_t "Error creating dataspace"
 @bind h5s_create_simple(rank::Cint, current_dims::Ptr{hsize_t}, maximum_dims::Ptr{hsize_t})::hid_t "Error creating simple dataspace"

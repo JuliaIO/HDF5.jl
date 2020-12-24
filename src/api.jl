@@ -3,6 +3,13 @@
 # To add new bindings, define the binding in `gen/api_defs.jl`, re-run
 # `gen/gen_wrappers.jl`, and commit the updated `src/api.jl`.
 
+_libhdf5_build_ver = let
+        (majnum, minnum, relnum) = (Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}())
+        r = ccall((:H5get_libversion, libhdf5), herr_t, (Ref{Cuint}, Ref{Cuint}, Ref{Cuint}), majnum, minnum, relnum)
+        r < 0 && error("Error getting HDF5 library version")
+        VersionNumber(majnum[], minnum[], relnum[])
+    end
+
 function h5_close()
     var"#status#" = ccall((:H5close, libhdf5), herr_t, ())
     var"#status#" < 0 && error("Error closing the HDF5 resources")
@@ -465,11 +472,21 @@ function h5l_get_name_by_idx(loc_id, group_name, index_field, order, n, name, si
     return var"#status#"
 end
 
-function h5l_iterate(group_id, idx_type, order, idx, op, op_data)
-    var"#status#" = ccall((:H5Literate1, libhdf5), herr_t, (hid_t, Cint, Cint, Ptr{hsize_t}, Ptr{Cvoid}, Ptr{Cvoid}), group_id, idx_type, order, idx, op, op_data)
-    var"#status#" < 0 && error("Error iterating through links in group ", h5i_get_name(group_id))
-    return nothing
-end
+@static if _libhdf5_build_ver < v"1.12"
+        function h5l_iterate(group_id, idx_type, order, idx, op, op_data)
+            var"#status#" = ccall((:H5Literate, libhdf5), herr_t, (hid_t, Cint, Cint, Ptr{hsize_t}, Ptr{Cvoid}, Ptr{Cvoid}), group_id, idx_type, order, idx, op, op_data)
+            var"#status#" < 0 && error("Error iterating through links in group ", h5i_get_name(group_id))
+            return nothing
+        end
+    end
+
+@static if v"1.12" ≤ _libhdf5_build_ver
+        function h5l_iterate(group_id, idx_type, order, idx, op, op_data)
+            var"#status#" = ccall((:H5Literate1, libhdf5), herr_t, (hid_t, Cint, Cint, Ptr{hsize_t}, Ptr{Cvoid}, Ptr{Cvoid}), group_id, idx_type, order, idx, op, op_data)
+            var"#status#" < 0 && error("Error iterating through links in group ", h5i_get_name(group_id))
+            return nothing
+        end
+    end
 
 function h5o_close(object_id)
     var"#status#" = ccall((:H5Oclose, libhdf5), herr_t, (hid_t,), object_id)
@@ -776,11 +793,13 @@ function h5s_close(space_id)
     return nothing
 end
 
-function h5s_combine_select(space1_id, op, space2_id)
-    var"#status#" = ccall((:H5Scombine_select, libhdf5), hid_t, (hid_t, Cint, hid_t), space1_id, op, space2_id)
-    var"#status#" < 0 && error("Error combining dataspaces")
-    return var"#status#"
-end
+@static if v"1.10.7" ≤ _libhdf5_build_ver
+        function h5s_combine_select(space1_id, op, space2_id)
+            var"#status#" = ccall((:H5Scombine_select, libhdf5), hid_t, (hid_t, Cint, hid_t), space1_id, op, space2_id)
+            var"#status#" < 0 && error("Error combining dataspaces")
+            return var"#status#"
+        end
+    end
 
 function h5s_copy(space_id)
     var"#status#" = ccall((:H5Scopy, libhdf5), hid_t, (hid_t,), space_id)
