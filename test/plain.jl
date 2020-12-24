@@ -867,6 +867,60 @@ HDF5.SHOW_TREE[] = false
 HDF5.SHOW_TREE[] = true
 
 close(hfile)
+
+# Now test the print-limiting heuristics for large/complex datasets
+
+# group with a large number of children; tests child entry truncation heuristic
+h5open(fn, "w") do hfile
+    dt, ds = datatype(Int), dataspace(())
+    opts = Iterators.product('A':'Z', 1:9)
+    for ii in opts
+        create_dataset(hfile, string(ii...), dt, ds)
+    end
+
+    def = HDF5.SHOW_TREE_MAX_CHILDREN[]
+    HDF5.SHOW_TREE_MAX_CHILDREN[] = 5
+
+    HDF5.show_tree(buf, hfile)
+    msg = String(take!(buf))
+    @test occursin(r"""
+🗂️ HDF5.File: .*$
+├─ 🔢 A1
+├─ 🔢 A2
+├─ 🔢 A3
+├─ 🔢 A4
+├─ 🔢 A5
+└─ \(229 more children\)"""m, msg)
+    @test sprint(show3, hfile) == msg
+
+    HDF5.SHOW_TREE_MAX_CHILDREN[] = def
+end
+
+# deeply nested set of elements; test that the tree is truncated
+h5open(fn, "w") do hfile
+    p = HDF5.root(hfile)::HDF5.Group
+    for ii in 'A':'Z'
+        p = create_group(p, string(ii))
+    end
+
+    def = HDF5.SHOW_TREE_MAX_DEPTH[]
+    HDF5.SHOW_TREE_MAX_DEPTH[] = 5
+
+    HDF5.show_tree(buf, hfile)
+    msg = String(take!(buf))
+    @test occursin(r"""
+🗂️ HDF5.File: .*$
+└─ 📂 A
+   └─ 📂 B
+      └─ 📂 C
+         └─ 📂 D
+            └─ 📂 E
+               └─ \(1 child\)"""m, msg)
+    @test sprint(show3, hfile) == msg
+
+    HDF5.SHOW_TREE_MAX_DEPTH[] = def
+end
+
 rm(fn)
 
 end # show tests

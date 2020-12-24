@@ -922,8 +922,8 @@ Base.haskey(dset::Union{Dataset,Datatype}, path::AbstractString) = h5a_exists(ch
 group_info(obj::Union{Group,File}) = h5g_get_info(checkvalid(obj))
 object_info(obj::Union{File,Object}) = h5o_get_info(checkvalid(obj))
 
-Base.length(obj::Union{Group,File}) = h5g_get_num_objs(checkvalid(obj))
-Base.length(x::Attributes) = object_info(x.parent).num_attrs
+Base.length(obj::Union{Group,File}) = Int(h5g_get_num_objs(checkvalid(obj)))
+Base.length(x::Attributes) = Int(object_info(x.parent).num_attrs)
 
 Base.isempty(x::Union{Group,File}) = length(x) == 0
 Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
