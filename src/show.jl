@@ -126,6 +126,20 @@ Configurable option to control whether emoji icons (`true`) or a plain-text anno
 """
 const SHOW_TREE_ICONS = Ref{Bool}(true)
 
+"""
+    SHOW_TREE_MAX_DEPTH = Ref{Int}(5)
+
+Maximum recursive depth to descend during printing.
+"""
+const SHOW_TREE_MAX_DEPTH = Ref{Int}(5)
+
+"""
+    SHOW_TREE_MAX_CHILDREN = Ref{Int}(50)
+
+Maximum number of children to show at each node.
+"""
+const SHOW_TREE_MAX_CHILDREN = Ref{Int}(50)
+
 function Base.show(io::IO, ::MIME"text/plain", obj::Union{File,Group,Dataset,Attributes,Attribute})
     if SHOW_TREE[]
         show_tree(io, obj)
@@ -155,6 +169,13 @@ _tree_icon(obj::Attributes) = _tree_icon(obj.parent)
 
 _tree_head(io::IO, obj) = print(io, _tree_icon(obj), " ", obj)
 _tree_head(io::IO, obj::Datatype) = print(io, _tree_icon(obj), " HDF5.Datatype: ", name(obj))
+
+_tree_count(parent::Union{File,Group}, attributes::Bool) =
+    length(parent) + (attributes ? length(HDF5.attributes(parent)) : 0)
+_tree_count(parent::Dataset, attributes::Bool) =
+    attributes ? length(HDF5.attributes(parent)) : 0
+_tree_count(parent::Attributes, _::Bool) = length(parent)
+_tree_count(parent::Union{Attribute,Datatype}, _::Bool) = 0
 
 function _tree_children(parent::Union{File, Group}, attributes::Bool)
     names = keys(parent)
@@ -189,13 +210,26 @@ function _tree_children(parent::Union{Attribute, Datatype}, attributes::Bool)
 end
 
 function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,Attribute}, indent::String="";
-                    attributes::Bool = true)
+                    attributes::Bool = true, depth::Int = 1)
     isempty(indent) && _tree_head(io, obj)
-    !isvalid(obj) && return
+    isvalid(obj) || return
+
+    childstr(io, n, more=" ") = print(io, "\n", indent, "└─ (", n, more,
+            n == 1 ? "child" : "children", ")")
+
+    nchildren = _tree_count(obj, attributes)
+    if nchildren > 0 && depth > SHOW_TREE_MAX_DEPTH[]
+        childstr(io, nchildren)
+        return
+    end
 
     names, children = _tree_children(obj, attributes)
-    nchildren = length(children)
     for ii in 1:nchildren
+        if ii > max(2, SHOW_TREE_MAX_CHILDREN[] ÷ depth)
+            childstr(io, nchildren - ii + 1, " more ")
+            break
+        end
+
         name = names[ii]
         child  = children[ii]
 
@@ -204,7 +238,7 @@ function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,At
         print(io, "\n", indent, islast ? "└─ " : "├─ ", icon, " ", name)
 
         nextindent = indent * (islast ? "   " : "│  ")
-        _show_tree(io, child, nextindent; attributes = attributes)
+        _show_tree(io, child, nextindent; attributes = attributes, depth = depth + 1)
     end
     return nothing
 end
