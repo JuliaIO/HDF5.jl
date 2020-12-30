@@ -148,23 +148,13 @@ function Base.show(io::IO, ::MIME"text/plain", obj::Union{File,Group,Dataset,Att
     end
 end
 
-function _tree_icon(obj)
-    if SHOW_TREE_ICONS[]
-        return obj isa Attribute ? "🏷️" :
-               obj isa Group ? "📂" :
-               obj isa Dataset ? "🔢" :
-               obj isa Datatype ? "📄" :
-               obj isa File ? "🗂️" :
-               "❓"
-    else
-        return obj isa Attribute ? "[A]" :
-               obj isa Group ? "[G]" :
-               obj isa Dataset ? "[D]" :
-               obj isa Datatype ? "[T]" :
-               obj isa File ? "[F]" :
-               "[?]"
-    end
-end
+_tree_icon(::Type{Attribute}) = SHOW_TREE_ICONS[] ? "🏷️" : "[A]"
+_tree_icon(::Type{Group})     = SHOW_TREE_ICONS[] ? "📂" : "[G]"
+_tree_icon(::Type{Dataset})   = SHOW_TREE_ICONS[] ? "🔢" : "[D]"
+_tree_icon(::Type{Datatype})  = SHOW_TREE_ICONS[] ? "📄" : "[T]"
+_tree_icon(::Type{File})      = SHOW_TREE_ICONS[] ? "🗂️" : "[F]"
+_tree_icon(::Type)            = SHOW_TREE_ICONS[] ? "❓" : "[?]"
+_tree_icon(obj) = _tree_icon(typeof(obj))
 _tree_icon(obj::Attributes) = _tree_icon(obj.parent)
 
 _tree_head(io::IO, obj) = print(io, _tree_icon(obj), " ", obj)
@@ -177,68 +167,65 @@ _tree_count(parent::Dataset, attributes::Bool) =
 _tree_count(parent::Attributes, _::Bool) = length(parent)
 _tree_count(parent::Union{Attribute,Datatype}, _::Bool) = 0
 
-function _tree_children(parent::Union{File, Group}, attributes::Bool)
-    names = keys(parent)
-    objs  = Union{Object, Attribute}[parent[n] for n in names]
-    if attributes
-        attrn = keys(HDF5.attributes(parent))
-        attro = Union{Object, Attribute}[HDF5.attributes(parent)[n] for n in attrn]
-        names = append!(attrn, names)
-        objs  = append!(attro, objs)
-    end
-    return (names, objs)
-end
-function _tree_children(parent::Dataset, attributes::Bool)
-    names = String[]
-    objs = Union{Object, Attribute}[parent[n] for n in names]
-    if attributes
-        attrn = keys(HDF5.attributes(parent))
-        attro = Union{Object, Attribute}[HDF5.attributes(parent)[n] for n in attrn]
-        names = append!(attrn, names)
-        objs  = append!(attro, objs)
-    end
-    return (names, objs)
-end
-function _tree_children(parent::Attributes, attributes::Bool)
-    names = keys(parent)
-    objs  = Union{Object,Attribute}[parent[n] for n in names]
-    return (names, objs)
-end
-function _tree_children(parent::Union{Attribute, Datatype}, attributes::Bool)
-    # TODO: add our own implementation of much of what h5lt_dtype_to_text() does?
-    return (String[], Union{Object, Attribute}[])
-end
-
 function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,Attribute}, indent::String="";
                     attributes::Bool = true, depth::Int = 1)
     isempty(indent) && _tree_head(io, obj)
     isvalid(obj) || return
 
-    childstr(io, n, more=" ") = print(io, "\n", indent, "└─ (", n, more,
-            n == 1 ? "child" : "children", ")")
+    INDENT = "   "
+    PIPE   = "│  "
+    TEE    = "├─ "
+    ELBOW  = "└─ "
 
+    counter = 0
     nchildren = _tree_count(obj, attributes)
-    if nchildren > 0 && depth > SHOW_TREE_MAX_DEPTH[]
-        childstr(io, nchildren)
-        return
+
+    @inline function childstr(io, n, more=" ")
+        print(io, "\n", indent, ELBOW * "(", n, more, n == 1 ? "child" : "children", ")")
+    end
+    @inline function depth_check()
+        counter += 1
+        if counter > max(2, SHOW_TREE_MAX_CHILDREN[] ÷ depth)
+            childstr(io, nchildren - counter + 1, " more ")
+            return true
+        end
+        return false
     end
 
-    names, children = _tree_children(obj, attributes)
-    for ii in 1:nchildren
-        if ii > max(2, SHOW_TREE_MAX_CHILDREN[] ÷ depth)
-            childstr(io, nchildren - ii + 1, " more ")
-            break
+    if nchildren > 0 && depth > SHOW_TREE_MAX_DEPTH[]
+        childstr(io, nchildren)
+        return nothing
+    end
+
+    if attributes
+        obj′ = obj isa Attributes ? obj.parent : obj
+        h5a_iterate(obj′, H5_INDEX_NAME, H5_ITER_INC) do _, cname, _, _
+            depth_check() && return herr_t(1)
+
+            name = unsafe_string(cname)
+            icon = _tree_icon(Attribute)
+            islast = counter == nchildren
+            print(io, "\n", indent, islast ? ELBOW : TEE, icon, " ", name)
+            return herr_t(0)
         end
+    end
 
-        name = names[ii]
-        child  = children[ii]
+    typeof(obj) <: Union{File, Group} || return nothing
 
-        islast = ii == nchildren
+    h5l_iterate(obj, H5_INDEX_NAME, H5_ITER_INC) do loc_id, cname, _, _
+        depth_check() && return herr_t(1)
+
+        name = unsafe_string(cname)
+        child = obj[name]
         icon = _tree_icon(child)
-        print(io, "\n", indent, islast ? "└─ " : "├─ ", icon, " ", name)
 
-        nextindent = indent * (islast ? "   " : "│  ")
+        islast = counter == nchildren
+        print(io, "\n", indent, islast ? ELBOW : TEE, icon, " ", name)
+        nextindent = indent * (islast ? INDENT : PIPE)
         _show_tree(io, child, nextindent; attributes = attributes, depth = depth + 1)
+
+        close(child)
+        return herr_t(0)
     end
     return nothing
 end
