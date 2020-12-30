@@ -683,16 +683,19 @@ Base.getindex(dset::Dataset, name::AbstractString) = open_attribute(dset, name)
 Base.getindex(x::Attributes, name::AbstractString) = open_attribute(x.parent, name)
 
 function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
+    # Faster than below if defaults are OK
+    isempty(pv) && return open_object(parent, path)
+
     obj_type = gettype(parent, path)
     if obj_type == H5I_DATASET
-        dapl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_ACCESS; pv...)
-        dxpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_XFER; pv...)
+        dapl = create_property(H5P_DATASET_ACCESS; pv...)
+        dxpl = create_property(H5P_DATASET_XFER; pv...)
         return open_dataset(parent, path, dapl, dxpl)
     elseif obj_type == H5I_GROUP
-        gapl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_GROUP_ACCESS; pv...)
+        gapl = create_property(H5P_GROUP_ACCESS; pv...)
         return open_group(parent, path, gapl)
     else#if obj_type == H5I_DATATYPE # only remaining choice
-        tapl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATATYPE_ACCESS; pv...)
+        tapl = create_property(H5P_DATATYPE_ACCESS; pv...)
         return open_datatype(parent, path, tapl)
     end
 end
