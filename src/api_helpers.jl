@@ -234,7 +234,7 @@ end
 # cannot (yet) do the string wrapping and memory freeing.
 
 function h5p_get_class_name(pcid)
-    pc = ccall((:H5Pget_class_name, libhdf5), Ptr{UInt8}, (hid_t,), pcid)
+    pc = ccall(:H5Pget_class_name, Ptr{UInt8}, (hid_t,), pcid)
     if pc == C_NULL
         error("Error getting class name")
     end
@@ -300,7 +300,7 @@ end
 # Note: The following two functions implement direct ccalls because the binding generator
 # cannot (yet) do the string wrapping and memory freeing.
 function h5t_get_member_name(type_id, index)
-    pn = ccall((:H5Tget_member_name, libhdf5), Ptr{UInt8}, (hid_t, Cuint), type_id, index)
+    pn = ccall(:H5Tget_member_name, Ptr{UInt8}, (hid_t, Cuint), type_id, index)
     if pn == C_NULL
         error("Error getting name of compound datatype member #", index)
     end
@@ -310,7 +310,7 @@ function h5t_get_member_name(type_id, index)
 end
 
 function h5t_get_tag(type_id)
-    pc = ccall((:H5Tget_tag, libhdf5), Ptr{UInt8}, (hid_t,), type_id)
+    pc = ccall(:H5Tget_tag, Ptr{UInt8}, (hid_t,), type_id)
     if pc == C_NULL
         error("Error getting opaque tag")
     end
