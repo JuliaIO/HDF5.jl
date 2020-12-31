@@ -784,9 +784,10 @@ HDF5.h5t_insert(t, "type", sizeof(tmeta), tstr)
 commit_datatype(hfile, "dtype", t)
 
 buf = IOBuffer()
-show3(io::IO, x) = show(io, MIME"text/plain"(), x)
+iobuf = IOContext(buf, :limit => true, :module => Main)
+show3(io::IO, x) = show(IOContext(io, iobuf), MIME"text/plain"(), x)
 
-HDF5.show_tree(buf, hfile)
+HDF5.show_tree(iobuf, hfile)
 msg = String(take!(buf))
 @test occursin(r"""
 🗂️ HDF5.File: .*$
@@ -799,7 +800,7 @@ msg = String(take!(buf))
 └─ 🔢 version"""m, msg)
 @test sprint(show3, hfile) == msg
 
-HDF5.show_tree(buf, hfile, attributes = false)
+HDF5.show_tree(iobuf, hfile, attributes = false)
 @test occursin(r"""
 🗂️ HDF5.File: .*$
 ├─ 📄 dtype
@@ -807,14 +808,14 @@ HDF5.show_tree(buf, hfile, attributes = false)
 │  └─ 🔢 data
 └─ 🔢 version"""m, String(take!(buf)))
 
-HDF5.show_tree(buf, attributes(hfile))
+HDF5.show_tree(iobuf, attributes(hfile))
 msg = String(take!(buf))
 @test occursin(r"""
 🗂️ Attributes of HDF5.File: .*$
 └─ 🏷️ creator"""m, msg)
 @test sprint(show3, attributes(hfile)) == msg
 
-HDF5.show_tree(buf, hfile["inner"])
+HDF5.show_tree(iobuf, hfile["inner"])
 msg = String(take!(buf))
 @test occursin(r"""
 📂 HDF5.Group: /inner .*$
@@ -823,12 +824,12 @@ msg = String(take!(buf))
    └─ 🏷️ mode"""m, msg)
 @test sprint(show3, hfile["inner"]) == msg
 
-HDF5.show_tree(buf, hfile["inner"], attributes = false)
+HDF5.show_tree(iobuf, hfile["inner"], attributes = false)
 @test occursin(r"""
 📂 HDF5.Group: /inner .*$
 └─ 🔢 data"""m, String(take!(buf)))
 
-HDF5.show_tree(buf, hfile["inner/data"])
+HDF5.show_tree(iobuf, hfile["inner/data"])
 msg = String(take!(buf))
 @test occursin(r"""
 🔢 HDF5.Dataset: /inner/data .*$
@@ -838,11 +839,11 @@ msg = String(take!(buf))
 🔢 HDF5.Dataset: /inner/data .*$
 └─ 🏷️ mode"""m, sprint(show3, hfile["inner/data"]))
 
-HDF5.show_tree(buf, hfile["inner/data"], attributes = false)
+HDF5.show_tree(iobuf, hfile["inner/data"], attributes = false)
 @test occursin(r"""
 🔢 HDF5.Dataset: /inner/data .*$"""m, String(take!(buf)))
 
-HDF5.show_tree(buf, hfile["dtype"])
+HDF5.show_tree(iobuf, hfile["dtype"])
 @test occursin(r"""
 📄 HDF5.Datatype: /dtype""", String(take!(buf)))
 
@@ -862,9 +863,9 @@ HDF5.SHOW_TREE_ICONS[] = false
 HDF5.SHOW_TREE_ICONS[] = true
 
 # no tree printing
-HDF5.SHOW_TREE[] = false
-@test sprint(show3, hfile) == sprint(show, hfile)
-HDF5.SHOW_TREE[] = true
+show(IOContext(iobuf, :compact => true), MIME"text/plain"(), hfile)
+msg = String(take!(buf))
+@test msg == sprint(show, hfile)
 
 close(hfile)
 
@@ -881,7 +882,7 @@ h5open(fn, "w") do hfile
     def = HDF5.SHOW_TREE_MAX_CHILDREN[]
     HDF5.SHOW_TREE_MAX_CHILDREN[] = 5
 
-    HDF5.show_tree(buf, hfile)
+    HDF5.show_tree(iobuf, hfile)
     msg = String(take!(buf))
     @test occursin(r"""
 🗂️ HDF5.File: .*$
@@ -894,19 +895,25 @@ h5open(fn, "w") do hfile
     @test sprint(show3, hfile) == msg
 
     HDF5.SHOW_TREE_MAX_CHILDREN[] = def
+
+    # IOContext can halt limiting
+    HDF5.show_tree(IOContext(iobuf, :limit => false), hfile)
+    @test countlines(seekstart(buf)) == length(opts) + 1
+    truncate(buf, 0)
 end
 
 # deeply nested set of elements; test that the tree is truncated
 h5open(fn, "w") do hfile
     p = HDF5.root(hfile)::HDF5.Group
-    for ii in 'A':'Z'
+    opts = 'A':'Z'
+    for ii in opts
         p = create_group(p, string(ii))
     end
 
     def = HDF5.SHOW_TREE_MAX_DEPTH[]
     HDF5.SHOW_TREE_MAX_DEPTH[] = 5
 
-    HDF5.show_tree(buf, hfile)
+    HDF5.show_tree(iobuf, hfile)
     msg = String(take!(buf))
     @test occursin(r"""
 🗂️ HDF5.File: .*$
@@ -919,6 +926,11 @@ h5open(fn, "w") do hfile
     @test sprint(show3, hfile) == msg
 
     HDF5.SHOW_TREE_MAX_DEPTH[] = def
+
+    # IOContext can halt limiting
+    HDF5.show_tree(IOContext(iobuf, :limit => false), hfile)
+    @test countlines(seekstart(buf)) == length(opts) + 1
+    truncate(buf, 0)
 end
 
 rm(fn)
