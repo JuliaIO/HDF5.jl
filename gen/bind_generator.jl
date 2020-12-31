@@ -102,7 +102,7 @@ macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing,
     else
         conditional = :($(lb) ≤ _libhdf5_build_ver < $(ub))
     end
-    conditional = Expr(:if, conditional, Expr(:block, expr))
+    conditional = Expr(:if, conditional, expr)
     return esc(Expr(:macrocall, Symbol("@static"), nothing, conditional))
 end
 
@@ -141,13 +141,16 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
         # Remove the version number if present (excluding match to literal "hdf5" suffix)
         if occursin(r"\d(?<!hdf5)$", String(jlfuncname))
             jlfuncname = Symbol(chop(String(jlfuncname), tail = 1))
-            funcsig.args[1] = jlfuncname # for documentation print
         end
     end
 
     # Store the function prototype in HDF5-module specific lists:
     funclist = get!(bound_api, uppercase(prefix), Vector{String}(undef, 0))
-    string(funcsig) in funclist || push!(funclist, string(funcsig))
+    string(jlfuncname) in funclist || push!(funclist, string(jlfuncname))
+    # Also start building the matching doc string.
+    docfunc = copy(funcsig)
+    docfunc.args[1] = jlfuncname
+    docstr = "    $docfunc"
 
     # Determine the underlying C library to call
     lib = startswith(string(cfuncname), r"H5(DO|DS|LT|TB)") ? :libhdf5_hl : :libhdf5
@@ -180,16 +183,22 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
     if rettype === :htri_t
         # Returns a Boolean on non-error
         returnexpr = :(return $statsym > 0)
+        docstr *= " -> Bool"
     elseif rettype === :herr_t
         # Only used to indicate error status
         returnexpr = :(return nothing)
     elseif rettype === :Cint
         # Convert to Int type
         returnexpr = :(return Int($statsym))
+        docstr *= " -> Int"
     else
         # Returns a value
         returnexpr = :(return $statsym)
+        docstr *= " -> $rettype"
     end
+
+    docstr *= "\n\nSee `libhdf5` documentation for [`$cfuncname`]" *
+              "(https://portal.hdfgroup.org/display/HDF5/$(uppercase(string(funcsig.args[1])))).\n"
 
     # Then assemble the pieces. Doing it through explicit Expr() objects
     # avoids inserting the line number nodes for the macro --- the call site
@@ -200,6 +209,7 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
         push!(jlfuncbody.args, errexpr)
     end
     push!(jlfuncbody.args, returnexpr)
-
-    return Expr(:function, jlfuncsig, jlfuncbody)
+    jlfuncexpr = Expr(:function, jlfuncsig, jlfuncbody)
+    jlfuncexpr = Expr(:block, docstr, jlfuncexpr)
+    return jlfuncexpr
 end
