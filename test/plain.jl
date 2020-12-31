@@ -709,7 +709,7 @@ dspace_scal = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_SCALAR))
 dspace_norm = dataspace((100, 4))
 dspace_maxd = dataspace((100, 4), max_dims = (256, 4))
 dspace_slab = HDF5.hyperslab(dataspace((100, 4)), 1:20:100, 1:4)
-if HDF5.libversion ≥ v"1.10.7"
+if HDF5.h5_get_libversion() ≥ v"1.10.7"
 dspace_irrg = HDF5.Dataspace(HDF5.h5s_combine_select(
         HDF5.h5s_copy(dspace_slab), HDF5.H5S_SELECT_OR,
         HDF5.hyperslab(dataspace((100, 4)), 2, 2)))
