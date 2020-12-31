@@ -4,6 +4,7 @@ import Base: @deprecate, @deprecate_binding, depwarn
 ### v0.15 deprecations
 ###
 
+### Add empty exists method for JLD,MAT to extend to smooth over deprecation process PR#790
 export exists
 function exists end
 
