@@ -156,7 +156,7 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
     statsym = Symbol("#status#") # not using gensym() to have stable naming
 
     # The ccall(...) itself
-    cfunclib = Expr(:tuple, quot(cfuncname), lib)
+    cfunclib = Expr(:quote, cfuncname)
     ccallexpr = :(ccall($cfunclib, $rettype, ($(argt...),), $(args...)))
 
     # The error condition expression
