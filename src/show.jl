@@ -112,13 +112,6 @@ function Base.show(io::IO, dspace::Dataspace)
 end
 
 """
-    SHOW_TREE = Ref{Bool}(true)
-
-Configurable option to control whether the default `show` for HDF5 objects is printed
-using `show_tree` or not.
-"""
-const SHOW_TREE = Ref{Bool}(true)
-"""
     SHOW_TREE_ICONS = Ref{Bool}(true)
 
 Configurable option to control whether emoji icons (`true`) or a plain-text annotation
@@ -141,10 +134,10 @@ Maximum number of children to show at each node.
 const SHOW_TREE_MAX_CHILDREN = Ref{Int}(50)
 
 function Base.show(io::IO, ::MIME"text/plain", obj::Union{File,Group,Dataset,Attributes,Attribute})
-    if SHOW_TREE[]
-        show_tree(io, obj)
-    else
+    if get(io, :compact, false)::Bool
         show(io, obj)
+    else
+        show_tree(io, obj)
     end
 end
 
@@ -177,6 +170,7 @@ function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,At
     TEE    = "├─ "
     ELBOW  = "└─ "
 
+    limit = get(io, :limit, false)::Bool
     counter = 0
     nchildren = _tree_count(obj, attributes)
 
@@ -185,14 +179,14 @@ function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,At
     end
     @inline function depth_check()
         counter += 1
-        if counter > max(2, SHOW_TREE_MAX_CHILDREN[] ÷ depth)
+        if limit && counter > max(2, SHOW_TREE_MAX_CHILDREN[] ÷ depth)
             childstr(io, nchildren - counter + 1, " more ")
             return true
         end
         return false
     end
 
-    if nchildren > 0 && depth > SHOW_TREE_MAX_DEPTH[]
+    if limit && nchildren > 0 && depth > SHOW_TREE_MAX_DEPTH[]
         childstr(io, nchildren)
         return nothing
     end
