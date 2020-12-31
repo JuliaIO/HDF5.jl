@@ -38,6 +38,9 @@ dataspace, datatype
 # H5DataStore, Attribute, File, Group, Dataset, Datatype, Opaque,
 # Dataspace, Object, Properties, VLen, ChunkStorage, Reference
 
+# Define the handles to the shared objects (these will be set in __init__)
+const dlhdf5    = Ref{Ptr{Nothing}}(0)
+const dlhdf5_hl = Ref{Ptr{Nothing}}(0)
 
 const depsfile = joinpath(dirname(@__DIR__), "deps", "deps.jl")
 if isfile(depsfile)
@@ -1916,7 +1919,7 @@ h5t_get_native_type(type_id) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
 
 # Functions that require special handling
 
-const libversion = h5_get_libversion()
+const libversion = Ref{VersionNumber}(v"0.0.0")
 
 vlen_get_buf_size(dset::Dataset, dtype::Datatype, dspace::Dataspace) = h5d_vlen_get_buf_size(dset, dtype, dspace)
 
@@ -2022,7 +2025,13 @@ For the second condition to be true, MPI.jl must be imported before HDF5.jl.
 has_parallel() = HAS_PARALLEL[]
 
 function __init__()
+    # Load the shared objects (dlhdf5 Ref declared  way above)
+    dlhdf5[]    = Libdl.dlopen(libhdf5,    Libdl.RTLD_GLOBAL | Libdl.RTLD_LAZY)
+    dlhdf5_hl[] = Libdl.dlopen(libhdf5_hl, Libdl.RTLD_GLOBAL | Libdl.RTLD_LAZY)
+
+    libversion[] = h5_get_libversion()
     check_deps()
+
 
     # disable file locking as that can cause problems with mmap'ing
     if !haskey(ENV, "HDF5_USE_FILE_LOCKING")
