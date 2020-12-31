@@ -233,6 +233,11 @@ end
 # Note: The following function(s) implement direct ccalls because the binding generator
 # cannot (yet) do the string wrapping and memory freeing.
 
+"""
+    h5p_get_class_name(pcid::hid_t) -> String
+
+See `libhdf5` documentation for [`H5Oopen`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CLASS_NAME).
+"""
 function h5p_get_class_name(pcid)
     pc = ccall((:H5Pget_class_name, libhdf5), Ptr{UInt8}, (hid_t,), pcid)
     if pc == C_NULL
@@ -299,6 +304,11 @@ end
 
 # Note: The following two functions implement direct ccalls because the binding generator
 # cannot (yet) do the string wrapping and memory freeing.
+"""
+    h5t_get_member_name(type_id::hid_t, index::Cuint) -> String
+
+See `libhdf5` documentation for [`H5Oopen`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_MEMBER_NAME).
+"""
 function h5t_get_member_name(type_id, index)
     pn = ccall((:H5Tget_member_name, libhdf5), Ptr{UInt8}, (hid_t, Cuint), type_id, index)
     if pn == C_NULL
@@ -309,6 +319,11 @@ function h5t_get_member_name(type_id, index)
     return s
 end
 
+"""
+    h5t_get_tag(type_id::hid_t) -> String
+
+See `libhdf5` documentation for [`H5Oopen`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_TAG).
+"""
 function h5t_get_tag(type_id)
     pc = ccall((:H5Tget_tag, libhdf5), Ptr{UInt8}, (hid_t,), type_id)
     if pc == C_NULL
