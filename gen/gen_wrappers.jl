@@ -6,7 +6,7 @@ defs = read(joinpath(@__DIR__, "api_defs.jl"), String)
 exprs = Base.include_string(@__MODULE__, "@macroexpand1 begin\n" * defs * "\nend", "api_defs.jl")
 # Insert the conditional version helper expression
 prepend!(exprs.args, _libhdf5_build_ver_expr.args)
-exprs = Base.remove_linenums!(exprs)
+Base.remove_linenums!(exprs)
 
 # Definitions which are not automatically generated, but should still be documented as
 # part of the raw low-level API:
@@ -90,9 +90,14 @@ for (mod, desc, urltail) in (
     ("H5TB", "Table Interface", "Tables"),
     )
     global apidocs
-    funcs = join(sort!(bound_api[mod]), "\n")
+    funclist = sort!(bound_api[mod])
+    index = join(["- [`$f`](@ref HDF5.$f)" for f in funclist], "\n")
+    funcs = join(funclist, "\n")
     apidocs *= """
+        ---
+
         ## [`$mod`](https://portal.hdfgroup.org/display/HDF5/$urltail) — $desc
+        $index
         ```@docs
         $funcs
         ```

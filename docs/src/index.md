@@ -546,8 +546,10 @@ when reading or writing.
 Below we include a limited number of API references. Note not all of these are public interfaces, thus proceed with caution.
 
 ```@index
+Pages = ["index.md"]
 ```
 
 ```@autodocs
 Modules = [HDF5]
+Filter = not_low_level_api
 ```
