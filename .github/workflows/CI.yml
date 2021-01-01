@@ -2,7 +2,10 @@ name: CI
 
 on:
   push:
-    tags: [v*]
+    branches:
+      - master
+      - release-*
+    tags: '*'
   pull_request:
 
 jobs:
@@ -72,7 +75,6 @@ jobs:
       - uses: julia-actions/julia-processcoverage@latest
       - uses: codecov/codecov-action@v1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           file: lcov.info
 
   MAT-integration:
