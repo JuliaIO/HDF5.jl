@@ -58,13 +58,13 @@ using Test
     @test !HDF5.isnull(ds_zerosz)
     @test !HDF5.isnull(ds_vector)
 
-    @test HDF5.get_dims(ds_null)   === ((), ())
-    @test HDF5.get_dims(ds_scalar) === ((), ())
-    @test HDF5.get_dims(ds_zerosz) === ((0,), (0,))
-    @test HDF5.get_dims(ds_vector) === ((5,), (5,))
-    @test HDF5.get_dims(ds_matrix) === ((5, 7), (5, 7))
-    @test HDF5.get_dims(ds_maxdim) === ((5, 7), (20, 20))
-    @test HDF5.get_dims(ds_unlim)  === ((1,), (-1,))
+    @test HDF5.get_simple_extent_dims(ds_null)   === ((), ())
+    @test HDF5.get_simple_extent_dims(ds_scalar) === ((), ())
+    @test HDF5.get_simple_extent_dims(ds_zerosz) === ((0,), (0,))
+    @test HDF5.get_simple_extent_dims(ds_vector) === ((5,), (5,))
+    @test HDF5.get_simple_extent_dims(ds_matrix) === ((5, 7), (5, 7))
+    @test HDF5.get_simple_extent_dims(ds_maxdim) === ((5, 7), (20, 20))
+    @test HDF5.get_simple_extent_dims(ds_unlim)  === ((1,), (-1,))
 
     # Can create new copies
     ds_tmp  = copy(ds_maxdim)
