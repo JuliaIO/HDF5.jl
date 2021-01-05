@@ -685,7 +685,6 @@ Base.getindex(x::Attributes, name::AbstractString) = open_attribute(x.parent, na
 function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     # Faster than below if defaults are OK
     isempty(pv) && return open_object(parent, path)
-
     obj_type = gettype(parent, path)
     if obj_type == H5I_DATASET
         dapl = create_property(H5P_DATASET_ACCESS; pv...)
@@ -715,7 +714,6 @@ end
 function create_group(parent::Union{File,Group}, path::AbstractString,
                   lcpl::Properties=_link_properties(path),
                   gcpl::Properties=DEFAULT_PROPERTIES)
-    checkvalid(parent)
     haskey(parent, path) && error("cannot create group: object \"", path, "\" already exists at ", name(parent))
     Group(h5g_create(parent, path, lcpl, gcpl, H5P_DEFAULT), file(parent))
 end
@@ -725,7 +723,6 @@ function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::
     dcpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_CREATE; pv...)
     dxpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_XFER; pv...)
     dapl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_ACCESS; pv...)
-    checkvalid(parent)
     haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
     Dataset(h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
 end
@@ -904,6 +901,7 @@ end
 
 # Check existence
 function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::Properties = DEFAULT_PROPERTIES)
+    checkvalid(parent)
     first, rest = split1(path)
     if first == "/"
         parent = root(parent)
