@@ -981,6 +981,7 @@ group2 = create_group(group1, "group2")
 @test !haskey(hfile, GenericString("groupna"))
 @test haskey(hfile, "group1/group2")
 @test !haskey(hfile, "group1/groupna")
+@test_throws KeyError hfile["nothing"]
 
 dset1 = create_dataset(hfile, "dset1", datatype(Int), dataspace((1,)))
 dset2 = create_dataset(group1, "dset2", datatype(Int), dataspace((1,)))
@@ -993,19 +994,21 @@ dset2 = create_dataset(group1, "dset2", datatype(Int), dataspace((1,)))
 meta1 = create_attribute(dset1, "meta1", datatype(Bool), dataspace((1,)))
 @test haskey(dset1, "meta1")
 @test !haskey(dset1, "metana")
+@test_throws KeyError dset1["nothing"]
 
 
 attribs = attributes(hfile)
 attribs["test1"] = true
 attribs["test2"] = "foo"
 
-haskey(attribs, "test1")
-haskey(attribs, "test2")
-!haskey(attribs, "testna")
+@test haskey(attribs, "test1")
+@test haskey(attribs, "test2")
+@test !haskey(attribs, "testna")
+@test_throws KeyError attribs["nothing"]
 
 attribs = attributes(dset2)
 attribs["attr"] = "foo"
-haskey(attribs, GenericString("attr"))
+@test haskey(attribs, GenericString("attr"))
 
 close(hfile)
 rm(fn)
