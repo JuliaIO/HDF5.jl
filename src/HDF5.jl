@@ -678,11 +678,17 @@ end
 # Get the root group
 root(h5file::File) = open_group(h5file, "/")
 root(obj::Union{Group,Dataset}) = open_group(file(obj), "/")
-# getindex syntax: obj2 = obj1[path]
-Base.getindex(dset::Dataset, name::AbstractString) = open_attribute(dset, name)
-Base.getindex(x::Attributes, name::AbstractString) = open_attribute(x.parent, name)
 
+function Base.getindex(dset::Dataset, name::AbstractString)
+    haskey(dset, name) || throw(KeyError(name))
+    open_attribute(dset, name)
+end
+function Base.getindex(x::Attributes, name::AbstractString)
+    haskey(x, name) || throw(KeyError(name))
+    open_attribute(x.parent, name)
+end
 function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
+    haskey(parent, path) || throw(KeyError(path))
     # Faster than below if defaults are OK
     isempty(pv) && return open_object(parent, path)
     obj_type = gettype(parent, path)
