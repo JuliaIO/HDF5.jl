@@ -1107,21 +1107,6 @@ function isnull(obj::Union{Dataspace,Dataset,Attribute})
     return ret
 end
 
-"""
-    HDF5.get_simple_extent_dims(obj::Union{HDF5.Dataspace, HDF5.Dataset,HDF5.Attribute}) -> dims, maxdims
-
-Get the array dimensions from a dataset or attribute and return a tuple of dims and maxdims.
-"""
-function get_simple_extent_dims(obj::Union{Dataspace,Dataset,Attribute})
-    dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
-    h5_dims, h5_maxdims = h5s_get_simple_extent_dims(dspace)
-    # reverse dimensions since hdf5 uses C-style order
-    N = length(h5_dims)
-    dims = ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
-    maxdims = ntuple(i -> @inbounds(h5_maxdims[N-i+1]) % Int, N) # allows max_dims to be specified as -1 without triggering an overflow
-    obj isa Dataspace || close(dspace)
-    return dims, maxdims
-end
 
 function get_regular_hyperslab(dspace::Dataspace)
     start, stride, count, block = h5s_get_regular_hyperslab(dspace)
@@ -1130,14 +1115,6 @@ function get_regular_hyperslab(dspace::Dataspace)
     return rev(start), rev(stride), rev(count), rev(block)
 end
 
-
-"""
-    HDF5.set_extent!(dset::HDF5.Dataset, new_dims::Dims)
-
-Change the current dimensions of a dataset to `new_dims`, limited by
-`max_dims = get_simple_extent_dims(dset)[2]`. Reduction is possible and leads to loss of truncated data.
-"""
-set_extent!(dset::Dataset, new_dims::Dims) = h5d_set_extent(checkvalid(dset), hsize_t[reverse(new_dims)...])
 
 """
     start_swmr_write(h5::HDF5.File)
@@ -1746,6 +1723,9 @@ function Base.setindex!(chunk_storage::ChunkStorage, v::Tuple{<:Integer,Vector{U
 end
 
 # end of high-level interface
+
+
+include("api_midlevel.jl")
 
 
 ### HDF5 utilities ###

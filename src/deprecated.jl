@@ -13,5 +13,5 @@ function exists end
     lcpl::Properties, dcpl::Properties, dapl::Properties, dxpl::Properties) HDF5.Dataset(HDF5.h5d_create(parent, path, dtype, dspace, lcpl, dcpl, dapl), HDF5.file(parent), dxpl) false
 
 ### Changed in PR#798
-@deprecate get_dims(dspace::Union{Dataspace,Dataset,Attribute}) get_simple_extent_dims(dspace) false
-@deprecate set_dims!(dspace::Union{Dataspace,Dataset,Attribute}) set_extent!(dset) false
+@deprecate get_dims(dspace::Union{Dataspace,Dataset,Attribute}) get_extent_dims(dspace) false
+@deprecate set_dims!(dset::Dataspace) set_extent_dims(dset) false

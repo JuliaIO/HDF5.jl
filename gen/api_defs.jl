@@ -221,6 +221,7 @@
 @bind h5s_is_regular_hyperslab(space_id::hid_t)::htri_t "Error determining whether datapace is regular hyperslab"
 @bind h5s_is_simple(space_id::hid_t)::htri_t "Error determining whether dataspace is simple"
 @bind h5s_select_hyperslab(dspace_id::hid_t, seloper::Cint, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})::herr_t "Error selecting hyperslab"
+@bind h5s_set_extent_simple(dspace_id::hid_t, rank::Cint, current_size::Ptr{hsize_t}, maximum_size::Ptr{hsize_t})::herr_t "Error setting dataspace size"
 
 ###
 ### Datatype Interface

@@ -38,7 +38,7 @@ end
 function dataset_write(d, ch_written, ch_read)
     for i = 1:10
         @assert take!(ch_read) == true
-        HDF5.set_extent!(d, (i*10,))
+        HDF5.set_extent_dims(d, (i*10,))
         inds::UnitRange{Int} = (1:10) .+ (i - 1) * 10
         d[inds] = inds
         flush(d) # flush the dataset
