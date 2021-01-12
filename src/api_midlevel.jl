@@ -20,12 +20,12 @@ Change the current dimensions of a dataspace `dset` to `new_dims`, limited by
 `max_dims = get_simple_extent_dims(dset)[2]`. Reduction is possible and leads to loss of truncated data.
 """
 function set_extent_dims(dspace::Dataspace, size::Dims, max_dims::Union{Dims,Nothing} = nothing)
-    checkvalid(obj)
+    checkvalid(dspace)
     rank = length(size)
     current_size = hsize_t[reverse(new_dims)...]
     maximum_size = isnothing(max_dims) ? C_NULL : hsize_t[reverse(max_dims)...]
-    h5s_set_extent_simple(obj, rank, current_size, maximum_size)
-    close(obj)
+    h5s_set_extent_simple(dspace, rank, current_size, maximum_size)
+    close(dspace)
     return nothing
 end
 
