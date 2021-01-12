@@ -1271,3 +1271,18 @@ h5write(fn2, "x", 1)
 @test HDF5.ishdf5(fn2)
 
 end
+
+## mid-level routines
+dspace_norm = dataspace((100, 4))
+@test HDF5.get_extent_dims(dspace_norm)[1] == HDF5.get_extent_dims(dspace_norm)[2] == (100, 4)
+HDF5.set_extent_dims(dspace_norm, (8, 2))
+@test HDF5.get_extent_dims(dspace_norm)[1] == HDF5.get_extent_dims(dspace_norm)[2] == (8, 2)
+
+dspace_maxd = dataspace((100, 4), max_dims = (256, 5))
+@test HDF5.get_extent_dims(dspace_maxd)[1] == (100, 4)
+@test HDF5.get_extent_dims(dspace_maxd)[2] == (256, 5)
+HDF5.set_extent_dims(dspace_maxd, (8, 2))
+@test HDF5.get_extent_dims(dspace_maxd)[1] == (8, 2)
+HDF5.set_extent_dims(dspace_maxd, (3, 1), (4,2))
+@test HDF5.get_extent_dims(dspace_maxd)[1] == (3, 1)
+@test HDF5.get_extent_dims(dspace_maxd)[2] == (4, 2)

@@ -22,10 +22,9 @@ Change the current dimensions of a dataspace `dset` to `new_dims`, limited by
 function set_extent_dims(dspace::Dataspace, size::Dims, max_dims::Union{Dims,Nothing} = nothing)
     checkvalid(dspace)
     rank = length(size)
-    current_size = hsize_t[reverse(new_dims)...]
+    current_size = hsize_t[reverse(size)...]
     maximum_size = isnothing(max_dims) ? C_NULL : hsize_t[reverse(max_dims)...]
     h5s_set_extent_simple(dspace, rank, current_size, maximum_size)
-    close(dspace)
     return nothing
 end
 
