@@ -15,10 +15,11 @@ function set_extent_dims(dset::Dataset, size::Dims)
 end
 
 """
-    HDF5.set_extent_dims(dset::HDF5.Dataspace, new_dims::Dims, max_dims::Union{Dims,Nothing} = nothing)
+    HDF5.set_extent_dims(dspace::HDF5.Dataspace, new_dims::Dims, max_dims::Union{Dims,Nothing} = nothing)
 
-Change the current dimensions of a dataspace `dset` to `new_dims`, limited by
-`max_dims = get_simple_extent_dims(dset)[2]`. Reduction is possible and leads to loss of truncated data.
+Change the dimensions of a dataspace `dspace` to `new_dims`, optionally with the maximum possible
+dimensions `max_dims` different from the active size `new_dims`. If not given, `max_dims` is set equal
+to `new_dims`.
 """
 function set_extent_dims(dspace::Dataspace, size::Dims, max_dims::Union{Dims,Nothing} = nothing)
     checkvalid(dspace)
