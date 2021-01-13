@@ -1611,6 +1611,17 @@ function h5s_select_hyperslab(dspace_id, seloper, start, stride, count, block)
 end
 
 """
+    h5s_set_extent_simple(dspace_id::hid_t, rank::Cint, current_size::Ptr{hsize_t}, maximum_size::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Sset_extent_simple`](https://portal.hdfgroup.org/display/HDF5/H5S_SET_EXTENT_SIMPLE).
+"""
+function h5s_set_extent_simple(dspace_id, rank, current_size, maximum_size)
+    var"#status#" = ccall((:H5Sset_extent_simple, libhdf5), herr_t, (hid_t, Cint, Ptr{hsize_t}, Ptr{hsize_t}), dspace_id, rank, current_size, maximum_size)
+    var"#status#" < 0 && error("Error setting dataspace size")
+    return nothing
+end
+
+"""
     h5t_array_create(basetype_id::hid_t, ndims::Cuint, sz::Ptr{hsize_t}) -> hid_t
 
 See `libhdf5` documentation for [`H5Tarray_create2`](https://portal.hdfgroup.org/display/HDF5/H5T_ARRAY_CREATE2).

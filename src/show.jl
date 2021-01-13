@@ -83,7 +83,7 @@ function Base.show(io::IO, dspace::Dataspace)
         return
     end
     # otherwise type == H5S_SIMPLE
-    sz, maxsz = get_dims(dspace)
+    sz, maxsz = get_extent_dims(dspace)
     sel = h5s_get_select_type(dspace)
     if sel == H5S_SEL_HYPERSLABS && h5s_is_regular_hyperslab(dspace)
         start, stride, count, _ = get_regular_hyperslab(dspace)

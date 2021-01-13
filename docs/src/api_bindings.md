@@ -363,6 +363,7 @@ h5r_get_region
 - [`h5s_is_regular_hyperslab`](@ref HDF5.h5s_is_regular_hyperslab)
 - [`h5s_is_simple`](@ref HDF5.h5s_is_simple)
 - [`h5s_select_hyperslab`](@ref HDF5.h5s_select_hyperslab)
+- [`h5s_set_extent_simple`](@ref HDF5.h5s_set_extent_simple)
 ```@docs
 h5s_close
 h5s_combine_select
@@ -380,6 +381,7 @@ h5s_get_simple_extent_type
 h5s_is_regular_hyperslab
 h5s_is_simple
 h5s_select_hyperslab
+h5s_set_extent_simple
 ```
 
 ---

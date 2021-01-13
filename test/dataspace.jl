@@ -58,13 +58,13 @@ using Test
     @test !HDF5.isnull(ds_zerosz)
     @test !HDF5.isnull(ds_vector)
 
-    @test HDF5.get_dims(ds_null)   === ((), ())
-    @test HDF5.get_dims(ds_scalar) === ((), ())
-    @test HDF5.get_dims(ds_zerosz) === ((0,), (0,))
-    @test HDF5.get_dims(ds_vector) === ((5,), (5,))
-    @test HDF5.get_dims(ds_matrix) === ((5, 7), (5, 7))
-    @test HDF5.get_dims(ds_maxdim) === ((5, 7), (20, 20))
-    @test HDF5.get_dims(ds_unlim)  === ((1,), (-1,))
+    @test HDF5.get_extent_dims(ds_null)   === ((), ())
+    @test HDF5.get_extent_dims(ds_scalar) === ((), ())
+    @test HDF5.get_extent_dims(ds_zerosz) === ((0,), (0,))
+    @test HDF5.get_extent_dims(ds_vector) === ((5,), (5,))
+    @test HDF5.get_extent_dims(ds_matrix) === ((5, 7), (5, 7))
+    @test HDF5.get_extent_dims(ds_maxdim) === ((5, 7), (20, 20))
+    @test HDF5.get_extent_dims(ds_unlim)  === ((1,), (-1,))
 
     # Can create new copies
     ds_tmp  = copy(ds_maxdim)
@@ -137,4 +137,24 @@ using Test
             @test_throws ErrorException("File or object has been closed") dataspace(attr)
         end
     end
+
+
+    # Test mid-level routines: set/get_extent_dims
+
+    dspace_norm = dataspace((100, 4))
+    @test HDF5.get_extent_dims(dspace_norm)[1] == HDF5.get_extent_dims(dspace_norm)[2] == (100, 4)
+    HDF5.set_extent_dims(dspace_norm, (8, 2))
+    @test HDF5.get_extent_dims(dspace_norm)[1] == HDF5.get_extent_dims(dspace_norm)[2] == (8, 2)
+
+    dspace_maxd = dataspace((100, 4), max_dims = (256, 5))
+    @test HDF5.get_extent_dims(dspace_maxd)[1] == (100, 4)
+    @test HDF5.get_extent_dims(dspace_maxd)[2] == (256, 5)
+    HDF5.set_extent_dims(dspace_maxd, (8, 2))
+    @test HDF5.get_extent_dims(dspace_maxd)[1] == (8, 2)
+    HDF5.set_extent_dims(dspace_maxd, (3, 1), (4,2))
+    @test HDF5.get_extent_dims(dspace_maxd)[1] == (3, 1)
+    @test HDF5.get_extent_dims(dspace_maxd)[2] == (4, 2)
+    HDF5.set_extent_dims(dspace_maxd, (3, 1), (-1, -1)) # unlimited max size
+    @test HDF5.get_extent_dims(dspace_maxd)[1] == (3, 1)
+    @test HDF5.get_extent_dims(dspace_maxd)[2] == (-1, -1)
 end
