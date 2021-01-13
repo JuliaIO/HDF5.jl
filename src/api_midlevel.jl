@@ -25,7 +25,7 @@ function set_extent_dims(dspace::Dataspace, size::Dims, max_dims::Union{Dims,Not
     checkvalid(dspace)
     rank = length(size)
     current_size = hsize_t[reverse(size)...]
-    maximum_size = isnothing(max_dims) ? C_NULL : hsize_t[reverse(max_dims)...]
+    maximum_size = isnothing(max_dims) ? C_NULL : [reverse(max_dims .% hsize_t)...]
     h5s_set_extent_simple(dspace, rank, current_size, maximum_size)
     return nothing
 end
