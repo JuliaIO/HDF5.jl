@@ -6,7 +6,8 @@
     HDF5.set_extent_dims(dset::HDF5.Dataset, new_dims::Dims)
 
 Change the current dimensions of a dataset to `new_dims`, limited by
-`max_dims = get_simple_extent_dims(dset)[2]`. Reduction is possible and leads to loss of truncated data.
+`max_dims = get_extent_dims(dset)[2]`. Reduction is possible and leads to loss of truncated data.
+
 """
 function set_extent_dims(dset::Dataset, size::Dims)
     checkvalid(dset)
