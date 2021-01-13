@@ -18,7 +18,9 @@ HDF5.set_extent_dims(dspace_maxd, (8, 2))
 HDF5.set_extent_dims(dspace_maxd, (3, 1), (4,2))
 @test HDF5.get_extent_dims(dspace_maxd)[1] == (3, 1)
 @test HDF5.get_extent_dims(dspace_maxd)[2] == (4, 2)
-
+HDF5.set_extent_dims(dspace_maxd, (3, 1), (-1, -1)) # unlimited max size
+@test HDF5.get_extent_dims(dspace_maxd)[1] == (3, 1)
+@test HDF5.get_extent_dims(dspace_masd)[2] == (-1, -1)
 
 fn = tempname()
 
