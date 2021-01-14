@@ -6,14 +6,42 @@ CurrentModule = HDF5
 
 ## Overview
 
-[HDF5](https://www.hdfgroup.org/solutions/hdf5/) stands for Hierarchical Data Format v5 and is closely modeled on file systems. In HDF5, a "group" is analogous to a directory, a "dataset" is like a file. HDF5 also uses "attributes" to associate metadata with a particular group or dataset. HDF5 uses ASCII names for these different objects, and objects can be accessed by UNIX-like pathnames, e.g., "/sample1/tempsensor/firsttrial" for a top-level group "sample1", a subgroup "tempsensor", and a dataset "firsttrial".
+[HDF5](https://www.hdfgroup.org/solutions/hdf5/) stands for Hierarchical Data Format v5 and is closely modeled on file systems. In HDF5, a "group" is analogous to a directory, a "dataset" is like a file. HDF5 also uses "attributes" to associate metadata with a particular group or dataset. HDF5 uses ASCII names for these different objects, and objects can be accessed by Unix-like pathnames, e.g., "/sample1/tempsensor/firsttrial" for a top-level group "sample1", a subgroup "tempsensor", and a dataset "firsttrial".
 
 For simple types (scalars, strings, and arrays), HDF5 provides sufficient metadata to know how each item is to be interpreted. For example, HDF5 encodes that a given block of bytes is to be interpreted as an array of `Int64`, and represents them in a way that is compatible across different computing architectures.
 
-However, to preserve Julia objects, one generally needs additional type information to be supplied, which is easy to provide using attributes. This is handled for you automatically in the JLD and MatIO modules for \*.jld and \*.mat files. These specific formats (conventions) provide "extra" functionality, but they are still both regular HDF5 files and are therefore compatible with any HDF5 reader or writer.
+However, to preserve Julia objects, one generally needs additional type information to be supplied,
+which is easy to provide using attributes. This is handled for you automatically in the [JLD](https://github.com/JuliaIO/JLD.jl)/[JLD2](https://github.com/JuliaIO/JLD2.jl). These specific formats (conventions) provide "extra" functionality, but they are still both regular
+HDF5 files and are therefore compatible with any HDF5 reader or writer.
 
 Language wrappers for HDF5 are often described as either "low level" or "high level." This package contains both flavors: at the low level, it directly wraps HDF5's functions, thus copying their API and making them available from within Julia. At the high level, it provides a set of functions built on the low-level wrap which may make the usage of this library more convenient.
 
+## Installation
+
+```julia
+julia>]
+pkg> add HDF5
+```
+
+Starting from Julia 1.3, the HDF5 binaries are by default downloaded using the `HDF5_jll` package.
+
+### Using custom or system provided HDF5 binaries
+
+To use system-provided HDF5 binaries instead, set the environment variable `JULIA_HDF5_PATH` to the top-level installation directory HDF5, i.e. the library should be located in `${JULIA_HDF5_PATH}/lib`. Then run `import Pkg; Pkg.build("HDF5")`. In particular, this is required if you need parallel HDF5 support, which is not provided by the `HDF5_jll` binaries.
+
+For example, to use HDF5 (`libhdf5-mpich-dev`) with MPI using system libraries on Ubuntu 20.04, you would run:
+
+```sh
+$ sudo apt install mpich libhdf5-mpich-dev
+$ JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/
+$ JULIA_MPI_BINARY=system
+```
+
+Then in Julia, run:
+
+```julia
+pkg> build
+```
 
 ## Opening and closing files
 
@@ -25,20 +53,20 @@ fid = h5open(filename, mode)
 
 The mode can be any one of the following:
 
-| mode | Meaning
-|:---  | :---                                                              |
-|"r"   |read-only                                                          |
-|"r+"  |read-write, preserving any existing contents                       |
-|"cw"  |read-write, create file if not existing, preserve existing contents|
-|"w"   |read-write, destroying any existing contents (if any)              |
+| mode | Meaning                                                             |
+| :--- | :------------------------------------------------------------------ |
+| "r"  | read-only                                                           |
+| "r+" | read-write, preserving any existing contents                        |
+| "cw" | read-write, create file if not existing, preserve existing contents |
+| "w"  | read-write, destroying any existing contents (if any)               |
 
 For example
+
 ```@repl main
 using HDF5
 fname = tempname(); # temporary file
 fid = h5open(fname, "w")
 ```
-
 
 This produces an object of type `HDF5File`, a subtype of the abstract type `DataFile`. This file will have no elements (groups, datasets, or attributes) that are not explicitly created by the user.
 
@@ -53,27 +81,32 @@ Closing a file also closes any other open objects (e.g., datasets, groups) in th
 ## Writing a group or dataset
 
 Groups can be created as follows:
+
 ```@repl main
 create_group(fid, "mygroup")
 ```
 
 We can write the `"mydataset"` by:
+
 ```@repl main
 fid["mydataset"] = rand()
 ```
+
 Or
+
 ```@repl main
 create_dataset(fid, "myvector", rand(10))
 ```
 
 Writing to a dataset to a group is as simple as:
+
 ```@repl main
 g = fid["mygroup"]
 g["mydataset"] = "Hello World!"
 ```
 
-
 The `do` syntax is also supported, which will automatically take care of closing the file handle:
+
 ```@repl main
 h5open("example2.h5", "w") do fid
     create_group(fid, "mygroup")
@@ -103,7 +136,6 @@ dset = fid["mygroup/mydataset"]
 
 When you're done with an object, you can close it using `close(obj)`. If you forget to do this, it will be closed for you anyway when the file is closed, or if `obj` goes out of scope and gets garbage collected.
 
-
 ## Reading and writing data
 
 Suppose you have a group `g` which contains a dataset with path `"mydataset"`, and that you've also opened this dataset as `dset = g["mydataset"]`.
@@ -124,7 +156,6 @@ Datasets can be created with either
 g["mydataset"] = rand(3,5)
 write(g, "mydataset", rand(3,5))
 ```
-
 
 ## Passing parameters
 
@@ -153,7 +184,6 @@ The complete list if routines and their interfaces is available at the
 documentation. Note that not all properties are available. When searching
 for a property check whether the corresponding `h5pget/set` functions are
 available.
-
 
 ## Chunking and compression
 
@@ -200,7 +230,6 @@ If you know the typical size of subset reasons you'll be reading/writing, it can
 
 More [fine-grained control](#mid-level-routines) is also available.
 
-
 ## Memory mapping
 
 If you will frequently be accessing individual elements or small regions of array datasets, it can be substantially more efficient to bypass HDF5 routines and use direct [memory mapping](https://en.wikipedia.org/wiki/Memory-mapped_file).
@@ -225,14 +254,17 @@ Under the default
 a newly added `ismmappable` dataset can only be memory mapped after it has been written
 to.
 The following fails:
+
 ```julia
 vec_dset = create_dataset(g, "v", datatype(Float64), dataspace(10_000,1))
 ismmappable(vec_dset)    # == true
 vec = readmmap(vec_dset) # throws ErrorException("Error mmapping array")
 ```
+
 because although the dataset description has been added, the space within the HDF5 file
 has not yet actually been allocated (so the file region cannot be memory mapped by the OS).
 The storage can be allocated by making at least one write:
+
 ```julia
 vec_dset[1,1] = 0.0      # force allocation of /g/v within the file
 vec = readmmap(vec_dset) # and now the memory mapping can succeed
@@ -240,6 +272,7 @@ vec = readmmap(vec_dset) # and now the memory mapping can succeed
 
 Alternatively, the policy can be set so that the space is allocated immediately upon
 creation of the data set with the `alloc_time` keyword:
+
 ```julia
 mtx_dset = create_dataset(g, "M", datatype(Float64), dataspace(100, 1000),
                     alloc_time = HDF5.H5D_ALLOC_TIME_EARLY)
@@ -256,20 +289,25 @@ These field names are configurable with the `HDF5.set_complex_field_names(real::
 
 For `Array`s, note that the array dimensionality is preserved, including 0-length
 dimensions:
+
 ```julia
 fid["zero_vector"] = zeros(0)
 fid["zero_matrix"] = zeros(0, 0)
 size(fid["zero_vector"]) # == (0,)
 size(fid["zero_matrix"]) # == (0, 0)
 ```
+
 An _exception_ to this rule is Julia's 0-dimensional `Array`, which is stored as an HDF5
 scalar because there is a value to be preserved:
+
 ```julia
 fid["zero_dim_value"] = fill(1.0π)
 read(fid["zero_dim_value"]) # == 3.141592653589793, != [3.141592653589793]
 ```
+
 HDF5 also has the concept of a null array which contains a type but has neither size nor
 contents, which is represented by the type `HDF5.EmptyArray`:
+
 ```julia
 fid["empty_array"] = HDF5.EmptyArray{Float32}()
 HDF5.isnull(fid["empty_array"]) # == true
@@ -278,7 +316,6 @@ eltype(fid["empty_array"]) # == Float32
 ```
 
 This module also supports HDF5's VLEN, OPAQUE, and REFERENCE types, which can be used to encode more complex types. In general, you need to specify how you want to combine these more advanced facilities to represent more complex data types. For many of the data types in Julia, the JLD module implements support. You can likewise define your own file format if, for example, you need to interact with some external program that has explicit formatting requirements.
-
 
 ## Creating groups and attributes
 
@@ -298,7 +335,6 @@ attributes(parent)[name] = value
 
 where `attributes` simply indicates that the object referenced by `name` (a string) is an attribute, not another group or dataset. (Datasets cannot have child datasets, but groups can have either.) `value` must be a simple type: `BitsKind`s, strings, and arrays of either of these. The HDF5 standard recommends against storing large objects as attributes.
 
-
 ## Getting information
 
 ```julia
@@ -314,27 +350,33 @@ keys(g)
 returns a string array containing all objects inside group `g`. These relative pathnames, not absolute pathnames.
 
 You can iterate over the objects in a group, i.e.,
+
 ```julia
 for obj in g
   data = read(obj)
   println(data)
 end
 ```
+
 This gives you a straightforward way of recursively exploring an entire HDF5 file.
 
 If you need to know whether group `g` has a dataset named `mydata`, you can test that with
+
 ```julia
 if haskey(g, "mydata")
    ...
 end
 tf = haskey(g, "mydata")
 ```
+
 If instead you want to know whether `g` has an attribute named `myattribute`, do it this way:
+
 ```julia
 tf = haskey(attributes(g), "myattribute")
 ```
 
 If you have an HDF5 object, and you want to know where it fits in the hierarchy of the file, the following can be useful:
+
 ```julia
 p = parent(obj)     # p is the parent object (usually a group)
 fn = HDF5.filename(obj)  # fn is a string
@@ -342,6 +384,7 @@ g = HDF5.root(obj)       # g is the group "/"
 ```
 
 For array objects (datasets and attributes) the following methods work:
+
 ```
 dims = size(dset)
 nd = ndims(dset)
@@ -350,21 +393,24 @@ len = length(dset)
 
 Objects can be created with properties, and you can query those
 properties in the following way:
+
 ```
 p = get_create_properties(dset)
 chunksz = get_chunk(p)
 ```
+
 The simpler syntax `chunksz = get_chunk(dset)` is also available.
 
 Finally, sometimes you need to be able to conveniently test whether a file is an HDF5 file:
+
 ```julia
 tf = HDF5.ishdf5(filename)
 ```
 
-
 ## Mid-level routines
 
 Sometimes you might want more fine-grained control, which can be achieved using a different set of routines. For example,
+
 ```julia
 g = open_group(parent, name)
 dset = open_dataset(parent, name[, apl])
@@ -375,38 +421,47 @@ t = open_datatype(parent, name)
 These open the named group, dataset, attribute, and committed datatype, respectively. For datasets, `apl` stands for "access parameter list" and provides opportunities for more sophisticated control (see the [HDF5](https://www.hdfgroup.org/solutions/hdf5/) documentation).
 
 New objects can be created in the following ways:
+
 ```julia
 g = create_group(parent, name[, lcpl, dcpl])
 dset = create_dataset(parent, name, data[, lcpl, dcpl, dapl])
 attr = create_attribute(parent, name, data)
 ```
+
 creates groups, datasets, and attributes without writing any data to them. You can then use `write(obj, data)` to store the data. The optional property lists allow even more fine-grained control. This syntax uses `data` to infer the object's "HDF5.datatype" and "HDF5.dataspace"; for the most explicit control, `data` can be replaced with `dtype, dspace`, where `dtype` is an `HDF5.Datatype` and `dspace` is an `HDF5.Dataspace`.
 
 Analogously, to create committed data types, use
+
 ```julia
 t = commit_datatype(parent, name, dtype[, lcpl, tcpl, tapl])
 ```
 
 You can create and write data in one step,
+
 ```julia
 write_dataset(parent, name, data[, lcpl, dcpl, dapl])
 write_attribute(parent, name, data)
 ```
 
 You can use extendible dimensions,
+
 ```julia
 d = create_dataset(parent, name, dtype, (dims, max_dims), chunk=(chunk_dims))
 HDF5.set_dims!(d, new_dims)
 ```
-where dims is a tuple of integers.  For example
+
+where dims is a tuple of integers. For example
+
 ```julia
 b = create_dataset(fid, "b", Int, ((1000,),(-1,)), chunk=(100,)) #-1 is equivalent to typemax(hsize_t)
 HDF5.set_dims!(b, (10000,))
 b[1:10000] = collect(1:10000)
 ```
-when dimensions are reduced, the truncated data is lost.  A maximum dimension of -1 is often referred to as unlimited dimensions, though it is limited by the maximum size of an unsigned integer.
+
+when dimensions are reduced, the truncated data is lost. A maximum dimension of -1 is often referred to as unlimited dimensions, though it is limited by the maximum size of an unsigned integer.
 
 Finally, it's possible to delete objects:
+
 ```julia
 delete_object(parent, name)   # for groups, datasets, and datatypes
 delete_attribute(parent, name)   # for attributes
@@ -419,7 +474,6 @@ Many of the most commonly-used libhdf5 functions have been wrapped. These are no
 HDF5 is a large library, and the low-level wrap is not complete. However, many of the most-commonly used functions are wrapped, and in general wrapping a new function takes only a single line of code. Users who need additional functionality are encourage to contribute it.
 
 Note that Julia's HDF5 directly uses the "2" interfaces, e.g., `H5Dcreate2`, so you need to have version 1.8 of the HDF5 library or later.
-
 
 ## System-provided HDF5 libraries
 
@@ -435,7 +489,6 @@ For example, you can set `JULIA_HDF5_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5
 if you're using the system package [`libhdf5-mpich-dev`](https://packages.ubuntu.com/focal/libhdf5-mpich-dev)
 on Ubuntu 20.04.
 
-
 ## Parallel HDF5
 
 It is possible to read and write [parallel
@@ -450,7 +503,7 @@ distributions.
 
 Finally, note that the MPI.jl package is lazy-loaded by HDF5.jl
 using [Requires](https://github.com/JuliaPackaging/Requires.jl).
-In practice, this means that in Julia code, `MPI` must be imported *before*
+In practice, this means that in Julia code, `MPI` must be imported _before_
 `HDF5` for parallel functionality to be available.
 
 ### Setting-up Parallel HDF5
@@ -476,7 +529,7 @@ the HDF5 libraries compiled with parallel support are found.
 
 #### 3. Loading MPI-enabled HDF5
 
-In Julia code, MPI.jl must be loaded *before* HDF5.jl for MPI functionality to
+In Julia code, MPI.jl must be loaded _before_ HDF5.jl for MPI functionality to
 be available:
 
 ```julia
@@ -540,6 +593,26 @@ h5dump. This is the same convention as in Fortran and MATLAB's HDF5
 interfaces. The advantage is that no data rearrangement takes place
 when reading or writing.
 
+## Credits
+
+- Konrad Hinsen initiated Julia's support for HDF5
+
+- Tim Holy and Simon Kornblith (primary authors)
+
+- Tom Short contributed code and ideas to the dictionary-like
+  interface
+
+- Blake Johnson made several improvements, such as support for
+  iterating over attributes
+
+- Isaiah Norton and Elliot Saba improved installation on Windows and OSX
+
+- Steve Johnson contributed the `do` syntax and Blosc compression
+
+- Mike Nolta and Jameson Nash contributed code or suggestions for
+  improving the handling of HDF5's constants
+
+- Thanks also to the users who have reported bugs and tested fixes
 
 # API Reference
 
