@@ -4,11 +4,6 @@ CurrentModule = HDF5
 
 # HDF5.jl
 
-[HDF5](https://www.hdfgroup.org/solutions/hdf5/) is a file format and library for storing and
-accessing data, commonly used for scientific data. HDF5 files can be created and read by numerous
-[programming languages](https://en.wikipedia.org/wiki/Hierarchical_Data_Format#Interfaces). This
-package provides an interface to the HDF5 library for the Julia language.
-
 
 ## Installation
 
