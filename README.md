@@ -3,54 +3,32 @@
 
 _HDF5 interface for the Julia language_
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaIO.github.io/HDF5.jl/stable)
+
 [![Build Status](https://github.com/JuliaIO/HDF5.jl/workflows/CI/badge.svg?branch=master)](https://github.com/JuliaIO/HDF5.jl/actions)
 [![Coverage](https://codecov.io/gh/JuliaIO/HDF5.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaIO/HDF5.jl)
 <!-- [![Coverage](https://coveralls.io/repos/github/JuliaIO/HDF5.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaIO/HDF5.jl?branch=master) -->
 
-[HDF5](https://www.hdfgroup.org/solutions/hdf5/) is a file format and library for storing and accessing
-data, commonly used for scientific data. HDF5 files can be created and
-read by numerous [programming
-languages](https://en.wikipedia.org/wiki/Hierarchical_Data_Format#Interfaces).  This package
-provides an interface to the HDF5 library for the Julia language.
+[HDF5](https://www.hdfgroup.org/solutions/hdf5/) is a file format and library for storing and
+accessing data, commonly used for scientific data. HDF5 files can be created and read by numerous
+[programming languages](https://en.wikipedia.org/wiki/Hierarchical_Data_Format#Interfaces). This
+package provides an interface to the HDF5 library for the Julia language.
 
-## Changelog
+[![Stable](https://img.shields.io/badge/documentation-blue.svg)](https://JuliaIO.github.io/HDF5.jl/stable)
 
-Please see [HISTORY.jl](HISTORY.md) for the changelog. Most changes have deprecation warnings and thus may not be listed in this file.
+### Changelog
 
-## Installation
+Please see [HISTORY.md](HISTORY.md). Most changes have deprecation warnings and thus may not be listed in the changelog.
+
+### Installation
 
 ```julia
 julia>]
 pkg> add HDF5
 ```
+For custom build instructions please refer to the [documentation](https://JuliaIO.github.io/HDF5.jl/stable).
 
-Starting from Julia 1.3, the HDF5 binaries are by default downloaded using the
-[HDF5_jll](https://github.com/JuliaBinaryWrappers/HDF5_jll.jl) package.
+### Quickstart
 
-To use system-provided HDF5 binaries instead, set the environment variable `JULIA_HDF5_PATH` to the
-top-level installation directory HDF5, i.e. the library should be located in
-`${JULIA_HDF5_PATH}/lib`. Then run `Pkg.build("HDF5")`. In particular, this is required if you need
-parallel HDF5 support, which is not provided by the `HDF5_jll` binaries.
-
-For example, to use HDF5
-([`libhdf5-mpich-dev`](https://packages.ubuntu.com/focal/libhdf5-mpich-dev)) with MPI using system
-libraries on Ubuntu 20.04, you would run:
-```sh
-$ sudo apt install mpich libhdf5-mpich-dev
-$ JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/
-$ JULIA_MPI_BINARY=system
-```
-
-Then in Julia, run:
-```julia
-pkg> build
-```
-
-
-## Quickstart
-
-Begin your code with
 
 ```julia
 using HDF5
@@ -101,39 +79,3 @@ h5write("bar.h5", "foo", A)
 h5writeattr("bar.h5", "foo", Dict("c"=>"value for metadata parameter c","d"=>"metadata d"))
 h5readattr("bar.h5", "foo")
 ```
-
-
-## Specific file formats
-
-There is no conflict in having multiple modules (HDF5, [JLD](https://github.com/JuliaIO/JLD.jl), and
-[MAT](https://github.com/simonster/MAT.jl)) available simultaneously;
-the formatting of the file is determined by the open command.
-
-## Complete documentation
-
-The HDF5 API is much more extensive than suggested by this brief
-introduction.  More complete documentation is found in the [documentation](https://JuliaIO.github.io/HDF5.jl/stable).
-
-The [`test`](test/) directory contains a number of test scripts that also
-demonstrate usage.
-
-## Credits
-
-- Konrad Hinsen initiated Julia's support for HDF5
-
-- Tim Holy and Simon Kornblith (co-maintainers and primary authors)
-
-- Tom Short contributed code and ideas to the dictionary-like
-  interface
-
-- Blake Johnson made several improvements, such as support for
-  iterating over attributes
-
-- Isaiah Norton and Elliot Saba improved installation on Windows and OSX
-
-- Steve Johnson contributed the `do` syntax and Blosc compression
-
-- Mike Nolta and Jameson Nash contributed code or suggestions for
-  improving the handling of HDF5's constants
-
-- Thanks also to the users who have reported bugs and tested fixes
