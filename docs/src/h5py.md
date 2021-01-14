@@ -54,7 +54,7 @@ end
 Similarly `reversedims` can be used before saving arrays intended for use from python.
 If copying of data is undesirable, other options are:
 * using Fortran memory layout on the python side
-* using C-memory layout on the Julia side (e.g. a lazy variant of `reversedims`)
+* using C-memory layout on the Julia side (e.g. replace `permutedims` by `PermutedDimsArray` above)
 
 The whole example as a Julia executable script:
 ```julia
