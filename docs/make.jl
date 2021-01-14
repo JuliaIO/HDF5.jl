@@ -24,6 +24,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Low-level library bindings" => "api_bindings.md",
+        "Python interoperability" => "h5py.md"
     ],
 )
 
