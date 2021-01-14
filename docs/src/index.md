@@ -531,14 +531,16 @@ See also the [HDF5 docs](https://portal.hdfgroup.org/display/HDF5/H5P_SET_DXPL_M
 
 A few more examples are available in [`test/mpio.jl`](https://github.com/JuliaIO/HDF5.jl/blob/master/test/mpio.jl).
 
-## Details
+## Row- and column-major order
 
-Julia, like Fortran and MATLAB, stores arrays in column-major order.
-HDF5 uses C's row-major order, and consequently every array's
-dimensions are inverted compared to what you see with tools like
-h5dump. This is the same convention as in Fortran and MATLAB's HDF5
-interfaces. The advantage is that no data rearrangement takes place
-when reading or writing.
+There are two methods, [row-major order and column-major order](https://en.wikipedia.org/wiki/Row-_and_column-major_order), for storing multidimensional arrays in linear storage. Julia, like Fortran and MATLAB, stores multidimensional arrays in column-major order, while other languages, including C and Python (NumPy), use row-major order. So the arrays' dimensions are inverted if you open a column-major ordered HDF5 file with a row-major ordered language/library, and vise versa.
+
+To read a multidimensional array into the original shape from an HDF5 file written by Python (`numpy` and `h5py`) or C/C++/Objective-C, simply reverse the dimensions. For example, one may add the following line after reading the dataset `dset`:
+```julia
+dset = permutedims(dset, reverse(1:ndims(dset)))
+```
+
+Note that some languages or libraries use both methods, so please check the datset's description for the details. For example, NumPy arrays are row-major by default, but NumPy can use either row-major or column-major ordered arrays. For more details on this topic you can refer to [this issue](https://github.com/JuliaIO/HDF5.jl/issues/785).
 
 
 # API Reference
