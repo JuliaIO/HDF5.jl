@@ -4,6 +4,17 @@ CurrentModule = HDF5
 
 # HDF5.jl
 
+## Overview
+
+[HDF5](https://www.hdfgroup.org/solutions/hdf5/) stands for Hierarchical Data Format v5 and is closely modeled on file systems. In HDF5, a "group" is analogous to a directory, a "dataset" is like a file. HDF5 also uses "attributes" to associate metadata with a particular group or dataset. HDF5 uses ASCII names for these different objects, and objects can be accessed by Unix-like pathnames, e.g., "/sample1/tempsensor/firsttrial" for a top-level group "sample1", a subgroup "tempsensor", and a dataset "firsttrial".
+
+For simple types (scalars, strings, and arrays), HDF5 provides sufficient metadata to know how each item is to be interpreted. For example, HDF5 encodes that a given block of bytes is to be interpreted as an array of `Int64`, and represents them in a way that is compatible across different computing architectures.
+
+However, to preserve Julia objects, one generally needs additional type information to be supplied,
+which is easy to provide using attributes. This is handled for you automatically in the [JLD](https://github.com/JuliaIO/JLD.jl)/[JLD2](https://github.com/JuliaIO/JLD2.jl). These specific formats (conventions) provide "extra" functionality, but they are still both regular
+HDF5 files and are therefore compatible with any HDF5 reader or writer.
+
+Language wrappers for HDF5 are often described as either "low level" or "high level." This package contains both flavors: at the low level, it directly wraps HDF5's functions, thus copying their API and making them available from within Julia. At the high level, it provides a set of functions built on the low-level wrap which may make the usage of this library more convenient.
 
 ## Installation
 
@@ -31,16 +42,6 @@ Then in Julia, run:
 ```julia
 pkg> build
 ```
-
-## Overview
-
-[HDF5](https://www.hdfgroup.org/solutions/hdf5/) stands for Hierarchical Data Format v5 and is closely modeled on file systems. In HDF5, a "group" is analogous to a directory, a "dataset" is like a file. HDF5 also uses "attributes" to associate metadata with a particular group or dataset. HDF5 uses ASCII names for these different objects, and objects can be accessed by UNIX-like pathnames, e.g., "/sample1/tempsensor/firsttrial" for a top-level group "sample1", a subgroup "tempsensor", and a dataset "firsttrial".
-
-For simple types (scalars, strings, and arrays), HDF5 provides sufficient metadata to know how each item is to be interpreted. For example, HDF5 encodes that a given block of bytes is to be interpreted as an array of `Int64`, and represents them in a way that is compatible across different computing architectures.
-
-However, to preserve Julia objects, one generally needs additional type information to be supplied, which is easy to provide using attributes. This is handled for you automatically in the JLD and MatIO modules for \*.jld and \*.mat files. These specific formats (conventions) provide "extra" functionality, but they are still both regular HDF5 files and are therefore compatible with any HDF5 reader or writer.
-
-Language wrappers for HDF5 are often described as either "low level" or "high level." This package contains both flavors: at the low level, it directly wraps HDF5's functions, thus copying their API and making them available from within Julia. At the high level, it provides a set of functions built on the low-level wrap which may make the usage of this library more convenient.
 
 ## Opening and closing files
 
