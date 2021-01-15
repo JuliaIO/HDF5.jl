@@ -533,14 +533,14 @@ A few more examples are available in [`test/mpio.jl`](https://github.com/JuliaIO
 
 ## Row- and column-major order
 
-There are two methods, [row-major order and column-major order](https://en.wikipedia.org/wiki/Row-_and_column-major_order), for storing multidimensional arrays in linear storage. Julia, like Fortran and MATLAB, stores multidimensional arrays in column-major order, while other languages, including C and Python (NumPy), use row-major order. So the arrays' dimensions are inverted if you open a column-major ordered HDF5 file with a row-major ordered language/library, and vise versa.
+There are two main methods for storing multidimensional arrays in linear storage [row-major order and column-major order](https://en.wikipedia.org/wiki/Row-_and_column-major_order). Julia, like Fortran and MATLAB, stores multidimensional arrays in column-major order, while other languages, including C and Python (NumPy), use row-major order. Therefore when reading an array in Julia from row-major order language the dimensions may be inverted.
 
 To read a multidimensional array into the original shape from an HDF5 file written by Python (`numpy` and `h5py`) or C/C++/Objective-C, simply reverse the dimensions. For example, one may add the following line after reading the dataset `dset`:
 ```julia
 dset = permutedims(dset, reverse(1:ndims(dset)))
 ```
 
-Note that some languages or libraries use both methods, so please check the datset's description for the details. For example, NumPy arrays are row-major by default, but NumPy can use either row-major or column-major ordered arrays. For more details on this topic you can refer to [this issue](https://github.com/JuliaIO/HDF5.jl/issues/785).
+Note that some languages or libraries use both methods, so please check the datset's description for details. For example, NumPy arrays are row-major by default, but NumPy can use either row-major or column-major ordered arrays. For more details on this topic refer to (insert link to https://github.com/JuliaIO/HDF5.jl/pull/804/files#diff-e7499054ec4c3e135d59cc7f9b927d71b711e02038ab2d43e00ffc3bc5de9dac)
 
 
 # API Reference
