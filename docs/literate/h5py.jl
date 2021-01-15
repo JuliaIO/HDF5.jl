@@ -1,14 +1,8 @@
-```@meta
-EditURL = "<unknown>/literate/h5py.jl"
-```
+# # Python interoperability
 
-# Python interoperability
-
-When loading python created hdf5 files from Julia the dimensions of arrays are reversed.
-The reason is that in python C-memory layout is the default, while Julia uses Fortran layout.
-Here is an example:
-
-```@example h5py
+# When loading python created hdf5 files from Julia the dimensions of arrays are reversed.
+# The reason is that in python C-memory layout is the default, while Julia uses Fortran layout.
+# Here is an example:
 using PyCall #hide
 pyimport_conda("h5py", "h5py") #hide
 pyimport_conda("numpy", "numpy") #hide
@@ -28,11 +22,8 @@ file["2d"] = arr2d
 file["3d"] = arr3d
 file.close()
 """ #hide
-```
 
-When we try to load it from julia, dimensions are reversed:
-
-```@example h5py
+# When we try to load it from julia, dimensions are reversed:
 using HDF5
 using Test
 path = "created_by_h5py.h5"
@@ -44,11 +35,8 @@ h5open(path, "r") do file
     @test size(arr2d) == (3,2)
     @test size(arr3d) == (3,2,1)
 end
-```
+# To fix this, we can simply reverse the dimensions again:
 
-To fix this, we can simply reverse the dimensions again:
-
-```@example h5py
 function reversedims(arr)
     return permutedims(arr, reverse(1:ndims(arr)))
 end
@@ -62,14 +50,12 @@ h5open(path, "r") do file
     @test arr2d == [1 2 3; 4 5 6]
     @test arr3d == reshape(arr2d, (1,2,3))
 end
-```
+#   Similarly `reversedims` can be used before saving arrays intended for use from python.
+#   If copying of data is undesirable, other options are:
+#   * using Fortran memory layout on the python side
+#   * using C-memory layout on the Julia side (e.g. replace `permutedims` by `PermutedDimsArray` above)
+#
 
-  Similarly `reversedims` can be used before saving arrays intended for use from python.
-  If copying of data is undesirable, other options are:
-  * using Fortran memory layout on the python side
-  * using C-memory layout on the Julia side (e.g. replace `permutedims` by `PermutedDimsArray` above)
-
-```@example h5py
 using HDF5
 path = "created_by_h5py.h5"
 h5open(path, "r") do file
@@ -96,9 +82,3 @@ h5open(path, "r") do file
     @test arr2d == [1 2 3; 4 5 6]
     @test arr3d == reshape(arr2d, (1,2,3))
 end
-```
-
----
-
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
-
