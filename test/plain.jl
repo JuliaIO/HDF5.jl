@@ -847,6 +847,10 @@ HDF5.show_tree(iobuf, hfile["dtype"])
 @test occursin(r"""
 📄 HDF5.Datatype: /dtype""", String(take!(buf)))
 
+HDF5.show_tree(iobuf, hfile["inner/data"]["mode"], attributes = true)
+@test occursin(r"""
+🏷️ HDF5.Attribute: mode""", String(take!(buf)))
+
 # configurable options
 
 # no emoji icons

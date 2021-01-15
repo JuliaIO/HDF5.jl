@@ -191,7 +191,7 @@ function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,At
         return nothing
     end
 
-    if attributes
+    if attributes && !isa(obj, Attribute)
         obj′ = obj isa Attributes ? obj.parent : obj
         h5a_iterate(obj′, H5_INDEX_NAME, H5_ITER_INC) do _, cname, _, _
             depth_check() && return herr_t(1)
