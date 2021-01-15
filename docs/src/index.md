@@ -540,7 +540,7 @@ To read a multidimensional array into the original shape from an HDF5 file writt
 dset = permutedims(dset, reverse(1:ndims(dset)))
 ```
 
-Note that some languages or libraries use both methods, so please check the datset's description for details. For example, NumPy arrays are row-major by default, but NumPy can use either row-major or column-major ordered arrays. For more details on this topic refer to (insert link to https://github.com/JuliaIO/HDF5.jl/pull/804/files#diff-e7499054ec4c3e135d59cc7f9b927d71b711e02038ab2d43e00ffc3bc5de9dac)
+Note that some languages or libraries use both methods, so please check the datset's description for details. For example, NumPy arrays are row-major by default, but NumPy can use either row-major or column-major ordered arrays. For more details on this topic refer to [Python interoperability](https://juliaio.github.io/HDF5.jl/stable/h5py/).
 
 
 # API Reference
