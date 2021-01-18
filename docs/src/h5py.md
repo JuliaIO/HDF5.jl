@@ -1,7 +1,3 @@
-```@meta
-EditURL = "<unknown>/literate/h5py.jl"
-```
-
 # Python interoperability
 
 When loading python created hdf5 files from Julia the dimensions of arrays are reversed.
@@ -97,8 +93,3 @@ h5open(path, "r") do file
     @test arr3d == reshape(arr2d, (1,2,3))
 end
 ```
-
----
-
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
-

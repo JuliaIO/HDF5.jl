@@ -11,12 +11,6 @@ not_low_level_api(::typeof(HDF5.h5p_get_class_name)) = false
 not_low_level_api(::typeof(HDF5.h5t_get_member_name)) = false
 not_low_level_api(::typeof(HDF5.h5t_get_tag)) = false
 
-# literate
-using Literate
-src_path = joinpath(@__DIR__, "literate", "h5py.jl")
-md_dir = joinpath(@__DIR__, "src")
-rm(joinpath(md_dir, "h5py.md"), force=true)
-Literate.markdown(src_path, md_dir, )
 
 makedocs(;
     sitename="HDF5.jl",
@@ -33,6 +27,7 @@ makedocs(;
         "Low-level library bindings" => "api_bindings.md",
         "Python interoperability" => "h5py.md"
     ],
+    strict=true,
 )
 
 deploydocs(;
