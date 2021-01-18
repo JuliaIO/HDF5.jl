@@ -99,12 +99,12 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/julia-buildpkg@latest
-      - name: Clone downstream
+      - name: Clone ${{ matrix.package.repo }}
         uses: actions/checkout@v2
         with:
           repository: ${{ matrix.package.user }}/${{ matrix.package.repo }}
           path: downstream
-      - name: Run test
+      - name: Run ${{ matrix.package.repo }} tests
         shell: julia --project=downstream {0}
         run: |
             using Pkg
