@@ -531,7 +531,7 @@ See also the [HDF5 docs](https://portal.hdfgroup.org/display/HDF5/H5P_SET_DXPL_M
 
 A few more examples are available in [`test/mpio.jl`](https://github.com/JuliaIO/HDF5.jl/blob/master/test/mpio.jl).
 
-## Row- and column-major order
+## Language interoperability with row- and column-major order arrays
 
 There are two main methods for storing multidimensional arrays in linear storage [row-major order and column-major order](https://en.wikipedia.org/wiki/Row-_and_column-major_order). Julia, like Fortran and MATLAB, stores multidimensional arrays in column-major order, while other languages, including C and Python (NumPy), use row-major order. Therefore when reading an array in Julia from row-major order language the dimensions may be inverted.
 
@@ -540,7 +540,7 @@ To read a multidimensional array into the original shape from an HDF5 file writt
 dset = permutedims(dset, reverse(1:ndims(dset)))
 ```
 
-Note that some languages or libraries use both methods, so please check the datset's description for details. For example, NumPy arrays are row-major by default, but NumPy can use either row-major or column-major ordered arrays. For more details on this topic refer to [Python interoperability](https://juliaio.github.io/HDF5.jl/stable/h5py/).
+Note that some languages or libraries use both methods, so please check the datset's description for details. For example, NumPy arrays are row-major by default, but NumPy can use either row-major or column-major ordered arrays.
 
 
 # API Reference
