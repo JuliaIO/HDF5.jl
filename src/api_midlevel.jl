@@ -45,3 +45,19 @@ function get_extent_dims(obj::Union{Dataspace,Dataset,Attribute})
     obj isa Dataspace || close(dspace)
     return dims, maxdims
 end
+
+"""
+    silence_errors(f::Function)
+
+Silence errors in method call `f` from library methods that should not throw an error message.
+"""
+function silence_errors(f::Function)
+    estack = H5E_DEFAULT
+    func, client_data = h5e_get_auto(estack)
+    h5e_set_auto(estack, C_NULL, C_NULL)
+    try
+        return f()
+    finally
+        h5e_set_auto(estack, func, client_data)
+    end
+end

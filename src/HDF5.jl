@@ -1966,17 +1966,7 @@ function create_external(source::Union{File,Group}, source_relpath, target_filen
     nothing
 end
 
-# error handling
-function silence_errors(f::Function)
-    estack = H5E_DEFAULT
-    func, client_data = h5e_get_auto(estack)
-    h5e_set_auto(estack, C_NULL, C_NULL)
-    try
-        return f()
-    finally
-        h5e_set_auto(estack, func, client_data)
-    end
-end
+
 
 # Define globally because JLD uses this, too
 const rehash! = Base.rehash!
