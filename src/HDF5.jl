@@ -1966,11 +1966,6 @@ function create_external(source::Union{File,Group}, source_relpath, target_filen
     nothing
 end
 
-
-
-# Define globally because JLD uses this, too
-const rehash! = Base.rehash!
-
 # Across initializations of the library, the id of various properties
 # will change. So don't hard-code the id (important for precompilation)
 const UTF8_LINK_PROPERTIES = Ref{Properties}()
