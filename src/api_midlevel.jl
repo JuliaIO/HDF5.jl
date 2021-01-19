@@ -49,7 +49,7 @@ end
 """
     silence_errors(f::Function)
 
-Silence errors when calling the function `f` from internal hdf5 library methods that should not throw an error message.
+During execution of the function `f`, disable printing of internal HDF5 library error messages.
 """
 function silence_errors(f::Function)
     estack = H5E_DEFAULT
