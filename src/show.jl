@@ -83,7 +83,7 @@ function Base.show(io::IO, dspace::Dataspace)
         return
     end
     # otherwise type == H5S_SIMPLE
-    sz, maxsz = get_dims(dspace)
+    sz, maxsz = get_extent_dims(dspace)
     sel = h5s_get_select_type(dspace)
     if sel == H5S_SEL_HYPERSLABS && h5s_is_regular_hyperslab(dspace)
         start, stride, count, _ = get_regular_hyperslab(dspace)
@@ -112,13 +112,6 @@ function Base.show(io::IO, dspace::Dataspace)
 end
 
 """
-    SHOW_TREE = Ref{Bool}(true)
-
-Configurable option to control whether the default `show` for HDF5 objects is printed
-using `show_tree` or not.
-"""
-const SHOW_TREE = Ref{Bool}(true)
-"""
     SHOW_TREE_ICONS = Ref{Bool}(true)
 
 Configurable option to control whether emoji icons (`true`) or a plain-text annotation
@@ -126,85 +119,107 @@ Configurable option to control whether emoji icons (`true`) or a plain-text anno
 """
 const SHOW_TREE_ICONS = Ref{Bool}(true)
 
+"""
+    SHOW_TREE_MAX_DEPTH = Ref{Int}(5)
+
+Maximum recursive depth to descend during printing.
+"""
+const SHOW_TREE_MAX_DEPTH = Ref{Int}(5)
+
+"""
+    SHOW_TREE_MAX_CHILDREN = Ref{Int}(50)
+
+Maximum number of children to show at each node.
+"""
+const SHOW_TREE_MAX_CHILDREN = Ref{Int}(50)
+
 function Base.show(io::IO, ::MIME"text/plain", obj::Union{File,Group,Dataset,Attributes,Attribute})
-    if SHOW_TREE[]
-        show_tree(io, obj)
-    else
+    if get(io, :compact, false)::Bool
         show(io, obj)
+    else
+        show_tree(io, obj)
     end
 end
 
-function _tree_icon(obj)
-    if SHOW_TREE_ICONS[]
-        return obj isa Attribute ? "🏷️" :
-               obj isa Group ? "📂" :
-               obj isa Dataset ? "🔢" :
-               obj isa Datatype ? "📄" :
-               obj isa File ? "🗂️" :
-               "❓"
-    else
-        return obj isa Attribute ? "[A]" :
-               obj isa Group ? "[G]" :
-               obj isa Dataset ? "[D]" :
-               obj isa Datatype ? "[T]" :
-               obj isa File ? "[F]" :
-               "[?]"
-    end
-end
+_tree_icon(::Type{Attribute}) = SHOW_TREE_ICONS[] ? "🏷️" : "[A]"
+_tree_icon(::Type{Group})     = SHOW_TREE_ICONS[] ? "📂" : "[G]"
+_tree_icon(::Type{Dataset})   = SHOW_TREE_ICONS[] ? "🔢" : "[D]"
+_tree_icon(::Type{Datatype})  = SHOW_TREE_ICONS[] ? "📄" : "[T]"
+_tree_icon(::Type{File})      = SHOW_TREE_ICONS[] ? "🗂️" : "[F]"
+_tree_icon(::Type)            = SHOW_TREE_ICONS[] ? "❓" : "[?]"
+_tree_icon(obj) = _tree_icon(typeof(obj))
 _tree_icon(obj::Attributes) = _tree_icon(obj.parent)
 
 _tree_head(io::IO, obj) = print(io, _tree_icon(obj), " ", obj)
 _tree_head(io::IO, obj::Datatype) = print(io, _tree_icon(obj), " HDF5.Datatype: ", name(obj))
 
-function _tree_children(parent::Union{File, Group}, attributes::Bool)
-    names = keys(parent)
-    objs  = Union{Object, Attribute}[parent[n] for n in names]
-    if attributes
-        attrn = keys(HDF5.attributes(parent))
-        attro = Union{Object, Attribute}[HDF5.attributes(parent)[n] for n in attrn]
-        names = append!(attrn, names)
-        objs  = append!(attro, objs)
-    end
-    return (names, objs)
-end
-function _tree_children(parent::Dataset, attributes::Bool)
-    names = String[]
-    objs = Union{Object, Attribute}[parent[n] for n in names]
-    if attributes
-        attrn = keys(HDF5.attributes(parent))
-        attro = Union{Object, Attribute}[HDF5.attributes(parent)[n] for n in attrn]
-        names = append!(attrn, names)
-        objs  = append!(attro, objs)
-    end
-    return (names, objs)
-end
-function _tree_children(parent::Attributes, attributes::Bool)
-    names = keys(parent)
-    objs  = Union{Object,Attribute}[parent[n] for n in names]
-    return (names, objs)
-end
-function _tree_children(parent::Union{Attribute, Datatype}, attributes::Bool)
-    # TODO: add our own implementation of much of what h5lt_dtype_to_text() does?
-    return (String[], Union{Object, Attribute}[])
-end
+_tree_count(parent::Union{File,Group}, attributes::Bool) =
+    length(parent) + (attributes ? length(HDF5.attributes(parent)) : 0)
+_tree_count(parent::Dataset, attributes::Bool) =
+    attributes ? length(HDF5.attributes(parent)) : 0
+_tree_count(parent::Attributes, _::Bool) = length(parent)
+_tree_count(parent::Union{Attribute,Datatype}, _::Bool) = 0
 
 function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,Attribute}, indent::String="";
-                    attributes::Bool = true)
+                    attributes::Bool = true, depth::Int = 1)
     isempty(indent) && _tree_head(io, obj)
-    !isvalid(obj) && return
+    isvalid(obj) || return
 
-    names, children = _tree_children(obj, attributes)
-    nchildren = length(children)
-    for ii in 1:nchildren
-        name = names[ii]
-        child  = children[ii]
+    INDENT = "   "
+    PIPE   = "│  "
+    TEE    = "├─ "
+    ELBOW  = "└─ "
 
-        islast = ii == nchildren
+    limit = get(io, :limit, false)::Bool
+    counter = 0
+    nchildren = _tree_count(obj, attributes)
+
+    @inline function childstr(io, n, more=" ")
+        print(io, "\n", indent, ELBOW * "(", n, more, n == 1 ? "child" : "children", ")")
+    end
+    @inline function depth_check()
+        counter += 1
+        if limit && counter > max(2, SHOW_TREE_MAX_CHILDREN[] ÷ depth)
+            childstr(io, nchildren - counter + 1, " more ")
+            return true
+        end
+        return false
+    end
+
+    if limit && nchildren > 0 && depth > SHOW_TREE_MAX_DEPTH[]
+        childstr(io, nchildren)
+        return nothing
+    end
+
+    if attributes && !isa(obj, Attribute)
+        obj′ = obj isa Attributes ? obj.parent : obj
+        h5a_iterate(obj′, H5_INDEX_NAME, H5_ITER_INC) do _, cname, _, _
+            depth_check() && return herr_t(1)
+
+            name = unsafe_string(cname)
+            icon = _tree_icon(Attribute)
+            islast = counter == nchildren
+            print(io, "\n", indent, islast ? ELBOW : TEE, icon, " ", name)
+            return herr_t(0)
+        end
+    end
+
+    typeof(obj) <: Union{File, Group} || return nothing
+
+    h5l_iterate(obj, H5_INDEX_NAME, H5_ITER_INC) do loc_id, cname, _, _
+        depth_check() && return herr_t(1)
+
+        name = unsafe_string(cname)
+        child = obj[name]
         icon = _tree_icon(child)
-        print(io, "\n", indent, islast ? "└─ " : "├─ ", icon, " ", name)
 
-        nextindent = indent * (islast ? "   " : "│  ")
-        _show_tree(io, child, nextindent; attributes = attributes)
+        islast = counter == nchildren
+        print(io, "\n", indent, islast ? ELBOW : TEE, icon, " ", name)
+        nextindent = indent * (islast ? INDENT : PIPE)
+        _show_tree(io, child, nextindent; attributes = attributes, depth = depth + 1)
+
+        close(child)
+        return herr_t(0)
     end
     return nothing
 end

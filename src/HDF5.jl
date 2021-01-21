@@ -681,21 +681,29 @@ end
 # Get the root group
 root(h5file::File) = open_group(h5file, "/")
 root(obj::Union{Group,Dataset}) = open_group(file(obj), "/")
-# getindex syntax: obj2 = obj1[path]
-Base.getindex(dset::Dataset, name::AbstractString) = open_attribute(dset, name)
-Base.getindex(x::Attributes, name::AbstractString) = open_attribute(x.parent, name)
 
+function Base.getindex(dset::Dataset, name::AbstractString)
+    haskey(dset, name) || throw(KeyError(name))
+    open_attribute(dset, name)
+end
+function Base.getindex(x::Attributes, name::AbstractString)
+    haskey(x, name) || throw(KeyError(name))
+    open_attribute(x.parent, name)
+end
 function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
+    haskey(parent, path) || throw(KeyError(path))
+    # Faster than below if defaults are OK
+    isempty(pv) && return open_object(parent, path)
     obj_type = gettype(parent, path)
     if obj_type == H5I_DATASET
-        dapl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_ACCESS; pv...)
-        dxpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_XFER; pv...)
+        dapl = create_property(H5P_DATASET_ACCESS; pv...)
+        dxpl = create_property(H5P_DATASET_XFER; pv...)
         return open_dataset(parent, path, dapl, dxpl)
     elseif obj_type == H5I_GROUP
-        gapl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_GROUP_ACCESS; pv...)
+        gapl = create_property(H5P_GROUP_ACCESS; pv...)
         return open_group(parent, path, gapl)
     else#if obj_type == H5I_DATATYPE # only remaining choice
-        tapl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATATYPE_ACCESS; pv...)
+        tapl = create_property(H5P_DATATYPE_ACCESS; pv...)
         return open_datatype(parent, path, tapl)
     end
 end
@@ -715,7 +723,6 @@ end
 function create_group(parent::Union{File,Group}, path::AbstractString,
                   lcpl::Properties=_link_properties(path),
                   gcpl::Properties=DEFAULT_PROPERTIES)
-    checkvalid(parent)
     haskey(parent, path) && error("cannot create group: object \"", path, "\" already exists at ", name(parent))
     Group(h5g_create(parent, path, lcpl, gcpl, H5P_DEFAULT), file(parent))
 end
@@ -725,7 +732,6 @@ function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::
     dcpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_CREATE; pv...)
     dxpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_XFER; pv...)
     dapl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_ACCESS; pv...)
-    checkvalid(parent)
     haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
     Dataset(h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
 end
@@ -904,6 +910,7 @@ end
 
 # Check existence
 function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::Properties = DEFAULT_PROPERTIES)
+    checkvalid(parent)
     first, rest = split1(path)
     if first == "/"
         parent = root(parent)
@@ -925,8 +932,8 @@ Base.haskey(dset::Union{Dataset,Datatype}, path::AbstractString) = h5a_exists(ch
 group_info(obj::Union{Group,File}) = h5g_get_info(checkvalid(obj))
 object_info(obj::Union{File,Object}) = h5o_get_info(checkvalid(obj))
 
-Base.length(obj::Union{Group,File}) = h5g_get_num_objs(checkvalid(obj))
-Base.length(x::Attributes) = object_info(x.parent).num_attrs
+Base.length(obj::Union{Group,File}) = Int(h5g_get_num_objs(checkvalid(obj)))
+Base.length(x::Attributes) = Int(object_info(x.parent).num_attrs)
 
 Base.isempty(x::Union{Group,File}) = length(x) == 0
 Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
@@ -1087,7 +1094,7 @@ end
 Base.isempty(dspace::Union{Dataspace,Dataset,Attribute}) = length(dspace) == 0
 
 """
-    isnull(dspace::Union{Dataspace, Dataset, Attribute})
+    isnull(dspace::Union{HDF5.Dataspace, HDF5.Dataset, HDF5.Attribute})
 
 Determines whether the given object has no size (consistent with the `H5S_NULL` dataspace).
 
@@ -1107,14 +1114,6 @@ function isnull(obj::Union{Dataspace,Dataset,Attribute})
     return ret
 end
 
-function get_dims(dspace::Dataspace)
-    h5_dims, h5_maxdims = h5s_get_simple_extent_dims(dspace)
-    # reverse dimensions since hdf5 uses C-style order
-    N = length(h5_dims)
-    dims = ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
-    maxdims = ntuple(i -> @inbounds(h5_maxdims[N-i+1]) % Int, N) # allows max_dims to be specified as -1 without triggering an overflow
-    return dims, maxdims
-end
 
 function get_regular_hyperslab(dspace::Dataspace)
     start, stride, count, block = h5s_get_regular_hyperslab(dspace)
@@ -1123,25 +1122,6 @@ function get_regular_hyperslab(dspace::Dataspace)
     return rev(start), rev(stride), rev(count), rev(block)
 end
 
-"""
-    HDF5.get_dims(obj::Union{HDF5.Dataset, HDF5.Attribute})
-
-Get the array dimensions from a dataset or attribute and return a tuple of dims and maxdims.
-"""
-function get_dims(dset::Union{Dataset,Attribute})
-    dspace = dataspace(dset)
-    ret = get_dims(dspace)
-    close(dspace)
-    return ret
-end
-
-"""
-    set_dims!(dset::HDF5.Dataset, new_dims::Dims)
-
-Change the current dimensions of a dataset to `new_dims`, limited by
-`max_dims = get_dims(dset)[2]`. Reduction is possible and leads to loss of truncated data.
-"""
-set_dims!(dset::Dataset, new_dims::Dims) = h5d_set_extent(checkvalid(dset), hsize_t[reverse(new_dims)...])
 
 """
     start_swmr_write(h5::HDF5.File)
@@ -1752,6 +1732,9 @@ end
 # end of high-level interface
 
 
+include("api_midlevel.jl")
+
+
 ### HDF5 utilities ###
 
 function get_jl_type(obj_type::Datatype)
@@ -1985,21 +1968,6 @@ function create_external(source::Union{File,Group}, source_relpath, target_filen
     h5l_create_external(target_filename, target_path, source, source_relpath, lcpl_id, lapl_id)
     nothing
 end
-
-# error handling
-function silence_errors(f::Function)
-    estack = H5E_DEFAULT
-    func, client_data = h5e_get_auto(estack)
-    h5e_set_auto(estack, C_NULL, C_NULL)
-    try
-        return f()
-    finally
-        h5e_set_auto(estack, func, client_data)
-    end
-end
-
-# Define globally because JLD uses this, too
-const rehash! = Base.rehash!
 
 # Across initializations of the library, the id of various properties
 # will change. So don't hard-code the id (important for precompilation)

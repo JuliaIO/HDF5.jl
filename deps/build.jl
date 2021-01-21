@@ -2,8 +2,8 @@ using Libdl
 
 const depsfile = joinpath(@__DIR__, "deps.jl")
 
-libpath = get(ENV, "JULIA_HDF5_LIBRARY_PATH", nothing)  # legacy env variable for compatibility
-libpath = get(ENV, "JULIA_HDF5_PATH", nothing)
+libpath = get(ENV, "JULIA_HDF5_PATH",
+                get(ENV, "JULIA_HDF5_LIBRARY_PATH", nothing)) # legacy env variable for compatibility
 
 if libpath === nothing
     # By default, use HDF5_jll
