@@ -37,10 +37,19 @@ function h5a_get_name_by_idx(loc_id, obj_name, idx_type, order, idx, lapl_id)
     return String(buf)
 end
 
-function h5a_iterate(f, obj_id, idx_type, order, idx = 0)
+# Some architectures do not support runtime closures with @cfunction, so we instead
+# emulate the behavior by passing the intended callback (which may be a closure) through
+# as the user data pointer to a static Julia helper callback function. The helper then
+# just invokes the user callback via runtime dispatch.
+function h5a_iterate_helper(loc_id::hid_t, attr_name::Ptr{Cchar}, ainfo::Ptr{H5A_info_t}, @nospecialize(f))::herr_t
+    return f(loc_id, attr_name, ainfo, C_NULL)
+end
+function h5a_iterate(@nospecialize(f), obj_id, idx_type, order, idx = 0)
     idxref = Ref{hsize_t}(idx)
-    fptr = @cfunction($f, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5A_info_t}, Ptr{Cvoid}))
-    h5a_iterate(obj_id, idx_type, order, idxref, fptr, C_NULL)
+    fptr = @cfunction(h5a_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5A_info_t}, Ref{Any}))
+    userf = Ref{Any}(f)
+    GC.@preserve userf h5a_iterate(obj_id, idx_type, order, idxref, fptr,
+                                   unsafe_convert(Ptr{Any}, userf))
     return idxref[]
 end
 
@@ -140,10 +149,16 @@ function h5l_get_name_by_idx(loc_id, group_name, idx_type, order, idx, lapl_id)
     return String(buf)
 end
 
+# See explanation for h5a_iterate above.
+function h5l_iterate_helper(group::hid_t, name::Ptr{Cchar}, info::Ptr{H5L_info_t}, @nospecialize(f))::herr_t
+    return f(group, name, info, C_NULL)
+end
 function h5l_iterate(f, group_id, idx_type, order, idx = 0)
     idxref = Ref{hsize_t}(idx)
-    fptr = @cfunction($f, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5L_info_t}, Ptr{Cvoid}))
-    h5l_iterate(group_id, idx_type, order, idxref, fptr, C_NULL)
+    fptr = @cfunction(h5l_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5L_info_t}, Ref{Any}))
+    userf = Ref{Any}(f)
+    GC.@preserve userf h5l_iterate(group_id, idx_type, order, idxref, fptr,
+                                   unsafe_convert(Ptr{Any}, userf))
     return idxref[]
 end
 
