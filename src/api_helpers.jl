@@ -42,8 +42,29 @@ end
 # as the user data pointer to a static Julia helper callback function. The helper then
 # just invokes the user callback via runtime dispatch.
 function h5a_iterate_helper(loc_id::hid_t, attr_name::Ptr{Cchar}, ainfo::Ptr{H5A_info_t}, @nospecialize(f))::herr_t
-    return f(loc_id, attr_name, ainfo, C_NULL)
+    return f(loc_id, attr_name, ainfo)
 end
+"""
+    h5a_iterate(f, loc_id, idx_type, order, idx = 0) -> HDF5.hsize_t
+
+Executes [`h5a_iterate`](@ref h5a_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
+with the user-provided callback function `f`, returning the index where iteration ends.
+
+The callback function function must correspond to the signature
+```
+    f(loc::HDF5.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.H5A_info_t}) -> HDF5.herr_t
+```
+where a negative return value halts iteration abnormally, a positive value halts iteration
+successfully, and zero continues iteration.
+
+# Examples
+```julia-repl
+julia> HDF5.h5a_iterate(obj, HDF5.H5_INDEX_NAME, HDF5.H5_ITER_INC) do loc, name, info
+           println(unsafe_string(name))
+           return HDF5.herr_t(0)
+       end
+```
+"""
 function h5a_iterate(@nospecialize(f), obj_id, idx_type, order, idx = 0)
     idxref = Ref{hsize_t}(idx)
     fptr = @cfunction(h5a_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5A_info_t}, Ref{Any}))
@@ -151,8 +172,29 @@ end
 
 # See explanation for h5a_iterate above.
 function h5l_iterate_helper(group::hid_t, name::Ptr{Cchar}, info::Ptr{H5L_info_t}, @nospecialize(f))::herr_t
-    return f(group, name, info, C_NULL)
+    return f(group, name, info)
 end
+"""
+    h5l_iterate(f, group_id, idx_type, order, idx = 0) -> HDF5.hsize_t
+
+Executes [`h5l_iterate`](@ref h5l_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
+with the user-provided callback function `f`, returning the index where iteration ends.
+
+The callback function function must correspond to the signature
+```
+    f(group::HDF5.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.H5L_info_t}) -> HDF5.herr_t
+```
+where a negative return value halts iteration abnormally, a positive value halts iteration
+successfully, and zero continues iteration.
+
+# Examples
+```julia-repl
+julia> HDF5.h5l_iterate(hfile, HDF5.H5_INDEX_NAME, HDF5.H5_ITER_INC) do group, name, info
+           println(unsafe_string(name))
+           return HDF5.herr_t(0)
+       end
+```
+"""
 function h5l_iterate(f, group_id, idx_type, order, idx = 0)
     idxref = Ref{hsize_t}(idx)
     fptr = @cfunction(h5l_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5L_info_t}, Ref{Any}))

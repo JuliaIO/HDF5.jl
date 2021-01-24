@@ -942,7 +942,7 @@ name(attr::Attribute) = h5a_get_name(attr)
 function Base.keys(x::Union{Group,File})
     checkvalid(x)
     children = sizehint!(String[], length(x))
-    h5l_iterate(x, H5_INDEX_NAME, H5_ITER_INC) do group, name, info, data
+    h5l_iterate(x, H5_INDEX_NAME, H5_ITER_INC) do _, name, _
         push!(children, unsafe_string(name))
         return herr_t(0)
     end
@@ -952,7 +952,7 @@ end
 function Base.keys(x::Attributes)
     checkvalid(x.parent)
     children = sizehint!(String[], length(x))
-    h5a_iterate(x.parent, H5_INDEX_NAME, H5_ITER_INC) do loc_id, attr_name, ainfo, data
+    h5a_iterate(x.parent, H5_INDEX_NAME, H5_ITER_INC) do _, attr_name, _
         push!(children, unsafe_string(attr_name))
         return herr_t(0)
     end
