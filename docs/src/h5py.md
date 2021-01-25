@@ -6,8 +6,9 @@ Here is an example:
 
 ```@example h5py
 using PyCall #hide
-pyimport_conda("h5py", "h5py") #hide
-pyimport_conda("numpy", "numpy") #hide
+import Conda #hide
+Conda.add("h5py") #hide
+Conda.add("numpy") #hide
 py""" #hide
 import h5py
 import numpy as np
