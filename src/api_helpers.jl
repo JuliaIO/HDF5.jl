@@ -50,7 +50,7 @@ end
 Executes [`h5a_iterate`](@ref h5a_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
 with the user-provided callback function `f`, returning the index where iteration ends.
 
-The callback function function must correspond to the signature
+The callback function must correspond to the signature
 ```
     f(loc::HDF5.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.H5A_info_t}) -> HDF5.herr_t
 ```
