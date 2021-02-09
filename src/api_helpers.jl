@@ -37,10 +37,10 @@ function h5a_get_name_by_idx(loc_id, obj_name, idx_type, order, idx, lapl_id)
     return String(buf)
 end
 
-# Some architectures do not support runtime closures with @cfunction, so we instead
-# emulate the behavior by passing the intended callback (which may be a closure) through
-# as the user data pointer to a static Julia helper callback function. The helper then
-# just invokes the user callback via runtime dispatch.
+# libhdf5 supports proper closure environments, so we use that support rather than
+# emulating it with the less desirable form of creating closure handles directly in
+# `@cfunction` with `$f`.
+# This helper translates between the two preferred forms for each respective language.
 function h5a_iterate_helper(loc_id::hid_t, attr_name::Ptr{Cchar}, ainfo::Ptr{H5A_info_t}, @nospecialize(f::Any))::herr_t
     return f(loc_id, attr_name, ainfo)
 end
