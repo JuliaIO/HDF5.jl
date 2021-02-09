@@ -41,7 +41,7 @@ end
 # emulate the behavior by passing the intended callback (which may be a closure) through
 # as the user data pointer to a static Julia helper callback function. The helper then
 # just invokes the user callback via runtime dispatch.
-function h5a_iterate_helper(loc_id::hid_t, attr_name::Ptr{Cchar}, ainfo::Ptr{H5A_info_t}, @nospecialize(f))::herr_t
+function h5a_iterate_helper(loc_id::hid_t, attr_name::Ptr{Cchar}, ainfo::Ptr{H5A_info_t}, @nospecialize(f::Any))::herr_t
     return f(loc_id, attr_name, ainfo)
 end
 """
@@ -67,10 +67,9 @@ julia> HDF5.h5a_iterate(obj, HDF5.H5_INDEX_NAME, HDF5.H5_ITER_INC) do loc, name,
 """
 function h5a_iterate(@nospecialize(f), obj_id, idx_type, order, idx = 0)
     idxref = Ref{hsize_t}(idx)
-    fptr = @cfunction(h5a_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5A_info_t}, Ref{Any}))
+    fptr = @cfunction(h5a_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5A_info_t}, Any))
     userf = Ref{Any}(f)
-    GC.@preserve userf h5a_iterate(obj_id, idx_type, order, idxref, fptr,
-                                   unsafe_convert(Ptr{Any}, userf))
+    GC.@preserve userf h5a_iterate(obj_id, idx_type, order, idxref, fptr, userf)
     return idxref[]
 end
 
@@ -171,7 +170,7 @@ function h5l_get_name_by_idx(loc_id, group_name, idx_type, order, idx, lapl_id)
 end
 
 # See explanation for h5a_iterate above.
-function h5l_iterate_helper(group::hid_t, name::Ptr{Cchar}, info::Ptr{H5L_info_t}, @nospecialize(f))::herr_t
+function h5l_iterate_helper(group::hid_t, name::Ptr{Cchar}, info::Ptr{H5L_info_t}, @nospecialize(f::Any))::herr_t
     return f(group, name, info)
 end
 """
@@ -197,10 +196,9 @@ julia> HDF5.h5l_iterate(hfile, HDF5.H5_INDEX_NAME, HDF5.H5_ITER_INC) do group, n
 """
 function h5l_iterate(f, group_id, idx_type, order, idx = 0)
     idxref = Ref{hsize_t}(idx)
-    fptr = @cfunction(h5l_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5L_info_t}, Ref{Any}))
+    fptr = @cfunction(h5l_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5L_info_t}, Any))
     userf = Ref{Any}(f)
-    GC.@preserve userf h5l_iterate(group_id, idx_type, order, idxref, fptr,
-                                   unsafe_convert(Ptr{Any}, userf))
+    GC.@preserve userf h5l_iterate(group_id, idx_type, order, idxref, fptr, userf)
     return idxref[]
 end
 
