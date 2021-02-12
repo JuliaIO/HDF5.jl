@@ -242,12 +242,12 @@ function h5a_get_type(attr_id)
 end
 
 """
-    h5a_iterate(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})
+    h5a_iterate(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)
 
 See `libhdf5` documentation for [`H5Aiterate2`](https://portal.hdfgroup.org/display/HDF5/H5A_ITERATE2).
 """
 function h5a_iterate(obj_id, idx_type, order, n, op, op_data)
-    var"#status#" = ccall((:H5Aiterate2, libhdf5), herr_t, (hid_t, Cint, Cint, Ptr{hsize_t}, Ptr{Cvoid}, Ptr{Cvoid}), obj_id, idx_type, order, n, op, op_data)
+    var"#status#" = ccall((:H5Aiterate2, libhdf5), herr_t, (hid_t, Cint, Cint, Ptr{hsize_t}, Ptr{Cvoid}, Any), obj_id, idx_type, order, n, op, op_data)
     var"#status#" < 0 && error("Error iterating attributes in object ", h5i_get_name(obj_id))
     return nothing
 end
@@ -859,12 +859,12 @@ end
 
 @static if _libhdf5_build_ver < v"1.12"
     @doc """
-        h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})
+        h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)
 
     See `libhdf5` documentation for [`H5Literate`](https://portal.hdfgroup.org/display/HDF5/H5L_ITERATE).
     """
     function h5l_iterate(group_id, idx_type, order, idx, op, op_data)
-        var"#status#" = ccall((:H5Literate, libhdf5), herr_t, (hid_t, Cint, Cint, Ptr{hsize_t}, Ptr{Cvoid}, Ptr{Cvoid}), group_id, idx_type, order, idx, op, op_data)
+        var"#status#" = ccall((:H5Literate, libhdf5), herr_t, (hid_t, Cint, Cint, Ptr{hsize_t}, Ptr{Cvoid}, Any), group_id, idx_type, order, idx, op, op_data)
         var"#status#" < 0 && error("Error iterating through links in group ", h5i_get_name(group_id))
         return nothing
     end
@@ -872,12 +872,12 @@ end
 
 @static if v"1.12" ≤ _libhdf5_build_ver
     @doc """
-        h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})
+        h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)
 
     See `libhdf5` documentation for [`H5Literate1`](https://portal.hdfgroup.org/display/HDF5/H5L_ITERATE1).
     """
     function h5l_iterate(group_id, idx_type, order, idx, op, op_data)
-        var"#status#" = ccall((:H5Literate1, libhdf5), herr_t, (hid_t, Cint, Cint, Ptr{hsize_t}, Ptr{Cvoid}, Ptr{Cvoid}), group_id, idx_type, order, idx, op, op_data)
+        var"#status#" = ccall((:H5Literate1, libhdf5), herr_t, (hid_t, Cint, Cint, Ptr{hsize_t}, Ptr{Cvoid}, Any), group_id, idx_type, order, idx, op, op_data)
         var"#status#" < 0 && error("Error iterating through links in group ", h5i_get_name(group_id))
         return nothing
     end

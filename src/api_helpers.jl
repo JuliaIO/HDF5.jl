@@ -68,15 +68,7 @@ julia> HDF5.h5a_iterate(obj, HDF5.H5_INDEX_NAME, HDF5.H5_ITER_INC) do loc, name,
 function h5a_iterate(@nospecialize(f), obj_id, idx_type, order, idx = 0)
     idxref = Ref{hsize_t}(idx)
     fptr = @cfunction(h5a_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5A_info_t}, Any))
-    userf = Ref{Any}(f)
-    if VERSION < v"1.6.0-DEV.1038"
-        # unsafe_convert(Ptr{Cvoid}, ::RefValue{Any}) returns pointer to RefValue instead
-        # of data --- see JuliaLang/julia#37591
-        userfptr = unsafe_load(Ptr{Ptr{Cvoid}}(unsafe_convert(Ptr{Any}, userf)))
-        GC.@preserve userf h5a_iterate(obj_id, idx_type, order, idxref, fptr, userfptr)
-    else
-        GC.@preserve userf h5a_iterate(obj_id, idx_type, order, idxref, fptr, userf)
-    end
+    h5a_iterate(obj_id, idx_type, order, idxref, fptr, f)
     return idxref[]
 end
 
@@ -204,15 +196,7 @@ julia> HDF5.h5l_iterate(hfile, HDF5.H5_INDEX_NAME, HDF5.H5_ITER_INC) do group, n
 function h5l_iterate(@nospecialize(f), group_id, idx_type, order, idx = 0)
     idxref = Ref{hsize_t}(idx)
     fptr = @cfunction(h5l_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5L_info_t}, Any))
-    userf = Ref{Any}(f)
-    if VERSION < v"1.6.0-DEV.1038"
-        # unsafe_convert(Ptr{Cvoid}, ::RefValue{Any}) returns pointer to RefValue instead
-        # of data --- see JuliaLang/julia#37591
-        userfptr = unsafe_load(Ptr{Ptr{Cvoid}}(unsafe_convert(Ptr{Any}, userf)))
-        GC.@preserve userf h5l_iterate(group_id, idx_type, order, idxref, fptr, userfptr)
-    else
-        GC.@preserve userf h5l_iterate(group_id, idx_type, order, idxref, fptr, userf)
-    end
+    h5l_iterate(group_id, idx_type, order, idxref, fptr, f)
     return idxref[]
 end
 

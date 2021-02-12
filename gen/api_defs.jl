@@ -45,7 +45,7 @@
 @bind h5a_get_name_by_idx(loc_id::hid_t, obj_name::Cstring, index_type::Cint, order::Cint, idx::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting attribute name"
 @bind h5a_get_space(attr_id::hid_t)::hid_t "Error getting attribute dataspace"
 @bind h5a_get_type(attr_id::hid_t)::hid_t "Error getting attribute type"
-@bind h5a_iterate2(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t error("Error iterating attributes in object ", h5i_get_name(obj_id))
+@bind h5a_iterate2(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)::herr_t error("Error iterating attributes in object ", h5i_get_name(obj_id))
 @bind h5a_open(obj_id::hid_t, pathname::Ptr{UInt8}, aapl_id::hid_t)::hid_t error("Error opening attribute ", h5i_get_name(obj_id), "/", pathname)
 @bind h5a_read(attr_id::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})::herr_t error("Error reading attribute ", h5a_get_name(attr_id))
 @bind h5a_write(attr_hid::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})::herr_t "Error writing attribute data"
@@ -133,8 +133,8 @@
 @bind h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting object name"
 # libhdf5 v1.10 provides the name H5Literate
 # libhdf5 v1.12 provides the same under H5Literate1, and a newer interface on H5Literate2
-@bind h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t error("Error iterating through links in group ", h5i_get_name(group_id)) (nothing, v"1.12")
-@bind h5l_iterate1(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t error("Error iterating through links in group ", h5i_get_name(group_id)) (v"1.12", nothing)
+@bind h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)::herr_t error("Error iterating through links in group ", h5i_get_name(group_id)) (nothing, v"1.12")
+@bind h5l_iterate1(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)::herr_t error("Error iterating through links in group ", h5i_get_name(group_id)) (v"1.12", nothing)
 
 ###
 ### Object Interface
