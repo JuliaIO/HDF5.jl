@@ -238,8 +238,8 @@ You can use the `ismmappable` function to test whether this is possible; for exa
 
 ```julia
 dset = g["x"]
-if ismmappable(dset)
-    dset = readmmap(dset)
+if HDF5.ismmappable(dset)
+    dset = HDF5.readmmap(dset)
 end
 val = dset[15]
 ```
@@ -257,8 +257,8 @@ The following fails:
 
 ```julia
 vec_dset = create_dataset(g, "v", datatype(Float64), dataspace(10_000,1))
-ismmappable(vec_dset)    # == true
-vec = readmmap(vec_dset) # throws ErrorException("Error mmapping array")
+HDF5.ismmappable(vec_dset)    # == true
+vec = HDF5.readmmap(vec_dset) # throws ErrorException("Error mmapping array")
 ```
 
 because although the dataset description has been added, the space within the HDF5 file
@@ -267,7 +267,7 @@ The storage can be allocated by making at least one write:
 
 ```julia
 vec_dset[1,1] = 0.0      # force allocation of /g/v within the file
-vec = readmmap(vec_dset) # and now the memory mapping can succeed
+vec = HDF5.readmmap(vec_dset) # and now the memory mapping can succeed
 ```
 
 Alternatively, the policy can be set so that the space is allocated immediately upon
@@ -276,7 +276,7 @@ creation of the data set with the `alloc_time` keyword:
 ```julia
 mtx_dset = create_dataset(g, "M", datatype(Float64), dataspace(100, 1000),
                     alloc_time = HDF5.H5D_ALLOC_TIME_EARLY)
-mtx = readmmap(mtx_dset) # succeeds immediately
+mtx = HDF5.readmmap(mtx_dset) # succeeds immediately
 ```
 
 ## Supported data types
@@ -395,11 +395,11 @@ Objects can be created with properties, and you can query those
 properties in the following way:
 
 ```
-p = get_create_properties(dset)
-chunksz = get_chunk(p)
+p = HDF5.get_create_properties(dset)
+chunksz = HDF5.get_chunk(p)
 ```
 
-The simpler syntax `chunksz = get_chunk(dset)` is also available.
+The simpler syntax `chunksz = HDF5.get_chunk(dset)` is also available.
 
 Finally, sometimes you need to be able to conveniently test whether a file is an HDF5 file:
 
