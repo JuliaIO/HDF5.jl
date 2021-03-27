@@ -1712,10 +1712,31 @@ function create_external_dataset(parent::Union{File,Group}, name::AbstractString
     create_dataset(parent, name, datatype(t), dataspace(sz); dcpl=dcpl)
 end
 
+"""
+    do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
+
+    Write a raw chunk at a given offset.
+    offset is 1-based of rank `ndims(dataset)` and must fall on a chunk boundary.
+"""
 function do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
     checkvalid(dataset)
     offs = collect(hsize_t, reverse(offset)) .- 1
-    h5do_write_chunk(dataset, H5P_DEFAULT, UInt32(filter_mask), offs, length(chunk_bytes), chunk_bytes)
+    h5d_write_chunk(dataset, H5P_DEFAULT, UInt32(filter_mask), offs, length(chunk_bytes), chunk_bytes)
+end
+
+"""
+    do_read_chunk(dataset::Dataset, offset)
+
+    Read a raw chunk at a given offset.
+    offset is 1-based of rank `ndims(dataset)` and must fall on a chunk boundary.
+"""
+function do_read_chunk(dataset::Dataset, offset, filter_mask = Ref{UInt32}())
+    checkvalid(dataset)
+    offs = collect(hsize_t, reverse(offset)) .- 1
+    chunk_info = h5d_get_chunk_info_by_coord(dataset, offs)
+    chunk_bytes = Vector{UInt8}(undef, chunk_info[:size])
+    h5d_read_chunk(dataset, H5P_DEFAULT, offs, filter_mask, chunk_bytes)
+    return chunk_bytes
 end
 
 struct ChunkStorage
@@ -1724,6 +1745,10 @@ end
 
 function Base.setindex!(chunk_storage::ChunkStorage, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer...)
     do_write_chunk(chunk_storage.dataset, hsize_t.(index), v[2], UInt32(v[1]))
+end
+
+function Base.getindex(chunk_storage::ChunkStorage, index::Integer...)
+    do_read_chunk(chunk_storage.dataset, hsize_t.(index))
 end
 
 # end of high-level interface
