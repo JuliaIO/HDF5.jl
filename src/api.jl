@@ -308,6 +308,28 @@ function h5d_create(loc_id, pathname, dtype_id, space_id, lcpl_id, dcpl_id, dapl
 end
 
 """
+    h5d_extend(dataset_id::hid_t, size::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Dextend`](https://portal.hdfgroup.org/display/HDF5/H5D_EXTEND).
+"""
+function h5d_extend(dataset_id, size)
+    var"#status#" = ccall((:H5Dextend, libhdf5), herr_t, (hid_t, Ptr{hsize_t}), dataset_id, size)
+    var"#status#" < 0 && error("Error extending dataset")
+    return nothing
+end
+
+"""
+    h5d_fill(fill::Ptr{Cvoid}, fill_type_id::hid_t, buf::Ptr{Cvoid}, buf_type_id::hid_t, space_id::hid_t)
+
+See `libhdf5` documentation for [`H5Dfill`](https://portal.hdfgroup.org/display/HDF5/H5D_FILL).
+"""
+function h5d_fill(fill, fill_type_id, buf, buf_type_id, space_id)
+    var"#status#" = ccall((:H5Dfill, libhdf5), herr_t, (Ptr{Cvoid}, hid_t, Ptr{Cvoid}, hid_t, hid_t), fill, fill_type_id, buf, buf_type_id, space_id)
+    var"#status#" < 0 && error("Error filling dataset")
+    return nothing
+end
+
+"""
     h5d_flush(dataset_id::hid_t)
 
 See `libhdf5` documentation for [`H5Dflush`](https://portal.hdfgroup.org/display/HDF5/H5D_FLUSH).
@@ -315,6 +337,17 @@ See `libhdf5` documentation for [`H5Dflush`](https://portal.hdfgroup.org/display
 function h5d_flush(dataset_id)
     var"#status#" = ccall((:H5Dflush, libhdf5), herr_t, (hid_t,), dataset_id)
     var"#status#" < 0 && error("Error flushing dataset")
+    return nothing
+end
+
+"""
+    h5d_gather(src_space_id::hid_t, src_buf::Ptr{Cvoid}, type_id::hid_t, dst_buf_size::Csize_t, dst_buf::Ptr{Cvoid}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Dgather`](https://portal.hdfgroup.org/display/HDF5/H5D_GATHER).
+"""
+function h5d_gather(src_space_id, src_buf, type_id, dst_buf_size, dst_buf, op, op_data)
+    var"#status#" = ccall((:H5Dgather, libhdf5), herr_t, (hid_t, Ptr{Cvoid}, hid_t, Csize_t, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}), src_space_id, src_buf, type_id, dst_buf_size, dst_buf, op, op_data)
+    var"#status#" < 0 && error("Error gathering dataset")
     return nothing
 end
 
@@ -330,6 +363,39 @@ function h5d_get_access_plist(dataset_id)
 end
 
 """
+    h5d_get_chunk_info(dataset_id::hid_t, fspace_id::hid_t, index::hsize_t, offset::Ptr{hsize_t}, filter_mask::Ptr{UInt32}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Dget_chunk_info`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_CHUNK_INFO).
+"""
+function h5d_get_chunk_info(dataset_id, fspace_id, index, offset, filter_mask, addr, size)
+    var"#status#" = ccall((:H5Dget_chunk_info, libhdf5), herr_t, (hid_t, hid_t, hsize_t, Ptr{hsize_t}, Ptr{UInt32}, Ptr{haddr_t}, Ptr{hsize_t}), dataset_id, fspace_id, index, offset, filter_mask, addr, size)
+    var"#status#" < 0 && error("Error getting chunk info")
+    return nothing
+end
+
+"""
+    h5d_get_chunk_info_by_coord(dataset_id::hid_t, offset::Ptr{hsize_t}, filter_mask::Ptr{UInt32}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Dget_chunk_info_by_coord`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_CHUNK_INFO_BY_COORD).
+"""
+function h5d_get_chunk_info_by_coord(dataset_id, offset, filter_mask, addr, size)
+    var"#status#" = ccall((:H5Dget_chunk_info_by_coord, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{UInt32}, Ptr{haddr_t}, Ptr{hsize_t}), dataset_id, offset, filter_mask, addr, size)
+    var"#status#" < 0 && error("Error getting chunk info by coord")
+    return nothing
+end
+
+"""
+    h5d_get_chunk_storage_size(dataset_id::hid_t, offset::Ptr{hsize_t}, chunk_nbytes::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Dget_chunk_storage_size`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_CHUNK_STORAGE_SIZE).
+"""
+function h5d_get_chunk_storage_size(dataset_id, offset, chunk_nbytes)
+    var"#status#" = ccall((:H5Dget_chunk_storage_size, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}), dataset_id, offset, chunk_nbytes)
+    var"#status#" < 0 && error("Error getting chunk storage size")
+    return nothing
+end
+
+"""
     h5d_get_create_plist(dataset_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Dget_create_plist`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_CREATE_PLIST).
@@ -338,6 +404,17 @@ function h5d_get_create_plist(dataset_id)
     var"#status#" = ccall((:H5Dget_create_plist, libhdf5), hid_t, (hid_t,), dataset_id)
     var"#status#" < 0 && error("Error getting dataset create property list")
     return var"#status#"
+end
+
+"""
+    h5d_get_num_chunks(dataset_id::hid_t, fspace_id::hid_t, nchunks::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Dget_num_chunks`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_NUM_CHUNKS).
+"""
+function h5d_get_num_chunks(dataset_id, fspace_id, nchunks)
+    var"#status#" = ccall((:H5Dget_num_chunks, libhdf5), herr_t, (hid_t, hid_t, Ptr{hsize_t}), dataset_id, fspace_id, nchunks)
+    var"#status#" < 0 && error("Error getting number of chunks")
+    return nothing
 end
 
 """
@@ -363,6 +440,28 @@ function h5d_get_space(dataset_id)
 end
 
 """
+    h5d_get_space_status(dataset_id::hid_t, status::Ref{Cint})
+
+See `libhdf5` documentation for [`H5Dget_space_status`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_SPACE_STATUS).
+"""
+function h5d_get_space_status(dataset_id, status)
+    var"#status#" = ccall((:H5Dget_space_status, libhdf5), herr_t, (hid_t, Ref{Cint}), dataset_id, status)
+    var"#status#" < 0 && error("Error getting dataspace status")
+    return nothing
+end
+
+"""
+    h5d_get_storage_size(dataset_id::hid_t) -> hsize_t
+
+See `libhdf5` documentation for [`H5Dget_storage_size`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_STORAGE_SIZE).
+"""
+function h5d_get_storage_size(dataset_id)
+    var"#status#" = ccall((:H5Dget_storage_size, libhdf5), hsize_t, (hid_t,), dataset_id)
+    var"#status#" == -1 % hsize_t && error("Error getting storage size")
+    return var"#status#"
+end
+
+"""
     h5d_get_type(dataset_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Dget_type`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_TYPE).
@@ -371,6 +470,17 @@ function h5d_get_type(dataset_id)
     var"#status#" = ccall((:H5Dget_type, libhdf5), hid_t, (hid_t,), dataset_id)
     var"#status#" < 0 && error("Error getting dataspace type")
     return var"#status#"
+end
+
+"""
+    h5d_iterate(buf::Ptr{Cvoid}, type_id::hid_t, space_id::hid_t, operator::Ptr{Cvoid}, operator_data::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Diterate`](https://portal.hdfgroup.org/display/HDF5/H5D_ITERATE).
+"""
+function h5d_iterate(buf, type_id, space_id, operator, operator_data)
+    var"#status#" = ccall((:H5Diterate, libhdf5), herr_t, (Ptr{Cvoid}, hid_t, hid_t, Ptr{Cvoid}, Ptr{Cvoid}), buf, type_id, space_id, operator, operator_data)
+    var"#status#" < 0 && error("Error iterating dataset")
+    return nothing
 end
 
 """
@@ -396,6 +506,17 @@ function h5d_read(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_pli
 end
 
 """
+    h5d_read_chunk(dset::hid_t, dxpl_id::hid_t, offset::Ptr{hsize_t}, filters::Ptr{UInt32}, buf::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Dread_chunk`](https://portal.hdfgroup.org/display/HDF5/H5D_READ_CHUNK).
+"""
+function h5d_read_chunk(dset, dxpl_id, offset, filters, buf)
+    var"#status#" = ccall((:H5Dread_chunk, libhdf5), herr_t, (hid_t, hid_t, Ptr{hsize_t}, Ptr{UInt32}, Ptr{Cvoid}), dset, dxpl_id, offset, filters, buf)
+    var"#status#" < 0 && error("Error reading chunk")
+    return nothing
+end
+
+"""
     h5d_refresh(dataset_id::hid_t)
 
 See `libhdf5` documentation for [`H5Drefresh`](https://portal.hdfgroup.org/display/HDF5/H5D_REFRESH).
@@ -403,6 +524,17 @@ See `libhdf5` documentation for [`H5Drefresh`](https://portal.hdfgroup.org/displ
 function h5d_refresh(dataset_id)
     var"#status#" = ccall((:H5Drefresh, libhdf5), herr_t, (hid_t,), dataset_id)
     var"#status#" < 0 && error("Error refreshing dataset")
+    return nothing
+end
+
+"""
+    h5d_scatter(op::Ptr{Cvoid}, op_data::Ptr{Cvoid}, type_id::hid_t, dst_space_id::hid_t, dst_buf::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Dscatter`](https://portal.hdfgroup.org/display/HDF5/H5D_SCATTER).
+"""
+function h5d_scatter(op, op_data, type_id, dst_space_id, dst_buf)
+    var"#status#" = ccall((:H5Dscatter, libhdf5), herr_t, (Ptr{Cvoid}, Ptr{Cvoid}, hid_t, hid_t, Ptr{Cvoid}), op, op_data, type_id, dst_space_id, dst_buf)
+    var"#status#" < 0 && error("Error scattering to dataset")
     return nothing
 end
 
@@ -447,6 +579,17 @@ See `libhdf5` documentation for [`H5Dwrite`](https://portal.hdfgroup.org/display
 function h5d_write(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf)
     var"#status#" = ccall((:H5Dwrite, libhdf5), herr_t, (hid_t, hid_t, hid_t, hid_t, hid_t, Ptr{Cvoid}), dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf)
     var"#status#" < 0 && error("Error writing dataset")
+    return nothing
+end
+
+"""
+    h5d_write_chunk(dset_id::hid_t, dxpl_id::hid_t, filter_mask::UInt32, offset::Ptr{hsize_t}, bufsize::Csize_t, buf::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Dwrite_chunk`](https://portal.hdfgroup.org/display/HDF5/H5D_WRITE_CHUNK).
+"""
+function h5d_write_chunk(dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
+    var"#status#" = ccall((:H5Dwrite_chunk, libhdf5), herr_t, (hid_t, hid_t, UInt32, Ptr{hsize_t}, Csize_t, Ptr{Cvoid}), dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
+    var"#status#" < 0 && error("Error writing chunk")
     return nothing
 end
 
@@ -2026,12 +2169,12 @@ function h5do_append(dset_id, dxpl_id, index, num_elem, memtype, buffer)
 end
 
 """
-    h5do_write_chunk(dset_id::hid_t, dxpl_id::hid_t, filter_mask::Int32, offset::Ptr{hsize_t}, bufsize::Csize_t, buf::Ptr{Cvoid})
+    h5do_write_chunk(dset_id::hid_t, dxpl_id::hid_t, filter_mask::UInt32, offset::Ptr{hsize_t}, bufsize::Csize_t, buf::Ptr{Cvoid})
 
 See `libhdf5` documentation for [`H5DOwrite_chunk`](https://portal.hdfgroup.org/display/HDF5/H5DO_WRITE_CHUNK).
 """
 function h5do_write_chunk(dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
-    var"#status#" = ccall((:H5DOwrite_chunk, libhdf5_hl), herr_t, (hid_t, hid_t, Int32, Ptr{hsize_t}, Csize_t, Ptr{Cvoid}), dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
+    var"#status#" = ccall((:H5DOwrite_chunk, libhdf5_hl), herr_t, (hid_t, hid_t, UInt32, Ptr{hsize_t}, Csize_t, Ptr{Cvoid}), dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
     var"#status#" < 0 && error("Error writing chunk")
     return nothing
 end
