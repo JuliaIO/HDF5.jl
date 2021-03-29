@@ -84,18 +84,18 @@ end
 
 function h5d_get_chunk_info(dataset_id, fspace_id, index)
     offset = Vector{hsize_t}(undef, ndims(dataset_id))
-    filter_mask = Ref{UInt32}(0)
-    addr = Ref{HDF5.haddr_t}(0)
-    size = Ref{HDF5.hsize_t}(0)
+    filter_mask = Ref{UInt32}()
+    addr = Ref{HDF5.haddr_t}()
+    size = Ref{HDF5.hsize_t}()
     h5d_get_chunk_info(dataset_id, fspace_id, index, offset, filter_mask, addr, size)
     return (offset = offset, filter_mask = filter_mask[], addr = addr[], size = size[])
 end
 h5d_get_chunk_info(dataset_id, index; fspace_id = H5S_ALL) = h5d_get_chunk_info(dataset_id, fspace_id, index)
 
 function h5d_get_chunk_info_by_coord(dataset_id, offset)
-    filter_mask = Ref{UInt32}(0)
-    addr = Ref{HDF5.haddr_t}(0)
-    size = Ref{HDF5.hsize_t}(0)
+    filter_mask = Ref{UInt32}()
+    addr = Ref{HDF5.haddr_t}()
+    size = Ref{HDF5.hsize_t}()
     h5d_get_chunk_info_by_coord(dataset_id, offset, filter_mask, addr, size)
     return (filter_mask = filter_mask[], addr = addr[], size = size[])
 end

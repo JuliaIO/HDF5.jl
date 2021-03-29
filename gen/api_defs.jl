@@ -59,7 +59,7 @@
 @bind h5d_extend(dataset_id::hid_t, size::Ptr{hsize_t})::herr_t "Error extending dataset"
 @bind h5d_fill(fill::Ptr{Cvoid}, fill_type_id::hid_t, buf::Ptr{Cvoid}, buf_type_id::hid_t, space_id::hid_t)::herr_t "Error filling dataset"
 @bind h5d_flush(dataset_id::hid_t)::herr_t "Error flushing dataset"
-@bind h5d_gather(src_space_id::hid_t, src_buf::Ptr{Cvoid}, type_id::hid_t, dst_buf_size::Csize_t, dst_buf::Ptr{Cvoid}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})::herr_t "Error gathering dataset"
+@bind h5d_gather(src_space_id::hid_t, src_buf::Ptr{Cvoid}, type_id::hid_t, dst_buf_size::Csize_t, dst_buf::Ptr{Cvoid}, op::Ptr{Cvoid}, op_data::Any)::herr_t "Error gathering dataset"
 @bind h5d_get_access_plist(dataset_id::hid_t)::hid_t "Error getting dataset access property list"
 @bind h5d_get_chunk_info(dataset_id::hid_t, fspace_id::hid_t, index::hsize_t, offset::Ptr{hsize_t}, filter_mask::Ptr{UInt32}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})::herr_t "Error getting chunk info"
 @bind h5d_get_chunk_info_by_coord(dataset_id::hid_t, offset::Ptr{hsize_t}, filter_mask::Ptr{UInt32}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})::herr_t "Error getting chunk info by coord"
@@ -76,7 +76,7 @@
 @bind h5d_read(dataset_id::hid_t, mem_type_id::hid_t, mem_space_id::hid_t, file_space_id::hid_t, xfer_plist_id::hid_t, buf::Ptr{Cvoid})::herr_t error("Error reading dataset ", h5i_get_name(dataset_id))
 @bind h5d_read_chunk(dset::hid_t, dxpl_id::hid_t, offset::Ptr{hsize_t}, filters::Ptr{UInt32}, buf::Ptr{Cvoid})::herr_t "Error reading chunk"
 @bind h5d_refresh(dataset_id::hid_t)::herr_t "Error refreshing dataset"
-@bind h5d_scatter(op::Ptr{Cvoid}, op_data::Ptr{Cvoid}, type_id::hid_t, dst_space_id::hid_t, dst_buf::Ptr{Cvoid})::herr_t "Error scattering to dataset"
+@bind h5d_scatter(op::Ptr{Cvoid}, op_data::Any, type_id::hid_t, dst_space_id::hid_t, dst_buf::Ptr{Cvoid})::herr_t "Error scattering to dataset"
 @bind h5d_set_extent(dataset_id::hid_t, new_dims::Ptr{hsize_t})::herr_t "Error extending dataset dimensions"
 @bind h5d_vlen_get_buf_size(dset_id::hid_t, type_id::hid_t, space_id::hid_t, buf::Ptr{hsize_t})::herr_t "Error getting vlen buffer size"
 @bind h5d_vlen_reclaim(type_id::hid_t, space_id::hid_t, plist_id::hid_t, buf::Ptr{Cvoid})::herr_t "Error reclaiming vlen buffer"
