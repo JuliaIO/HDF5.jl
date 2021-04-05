@@ -1730,26 +1730,87 @@ end
     Read a raw chunk at a given offset.
     offset is 1-based of rank `ndims(dataset)` and must fall on a chunk boundary.
 """
-function do_read_chunk(dataset::Dataset, offset, filter_mask = Ref{UInt32}())
+function do_read_chunk(dataset::Dataset, offset)
     checkvalid(dataset)
     offs = collect(hsize_t, reverse(offset)) .- 1
-    chunk_info = h5d_get_chunk_info_by_coord(dataset, offs)
-    chunk_bytes = Vector{UInt8}(undef, chunk_info[:size])
-    h5d_read_chunk(dataset, H5P_DEFAULT, offs, filter_mask, chunk_bytes)
-    return chunk_bytes
+    filters = Ref{UInt32}()
+    buf = h5d_read_chunk(dataset, offs; filters)
+    return (filters[], buf)
 end
 
-struct ChunkStorage
+"""
+    do_read_chunk(dataset::Dataset, index::Integer)
+
+    Read a raw chunk at a given index.
+    index is 1-based and consecutive up to the number of chunks
+"""
+function do_read_chunk(dataset::Dataset, index::Integer)
+    checkvalid(dataset)
+    index -= 1
+    filters = Ref{UInt32}()
+    buf = h5d_read_chunk(dataset, index; filters)
+    return (filters[], buf)
+end
+
+struct ChunkStorage{I <: IndexStyle, N} <: AbstractArray{Tuple{UInt32,Vector{UInt8}},N}
     dataset::Dataset
 end
+ChunkStorage{I,N}(dataset) where {I,N}= ChunkStorage{I,N}(dataset)
+Base.IndexStyle(::ChunkStorage{I}) where {I <:IndexStyle} = I()
 
-function Base.setindex!(chunk_storage::ChunkStorage, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer...)
+# ChunkStorage{IndexCartesian,N} (default)
+
+function ChunkStorage(dataset)
+    ndims = get_extent_ndims(dataset)
+    ChunkStorage{IndexCartesian, ndims}(dataset)
+end
+
+Base.size(cs::ChunkStorage{IndexCartesian}) = Int64.(get_extent_dims(cs.dataset)[1])
+function Base.axes(cs::ChunkStorage{IndexCartesian})
+    chunk = get_chunk(cs.dataset)
+    sz = size(cs)
+    ntuple(i->1:chunk[i]:sz[i], length(sz))
+end
+
+function Base.setindex!(chunk_storage::ChunkStorage{IndexCartesian}, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer...)
     do_write_chunk(chunk_storage.dataset, hsize_t.(index), v[2], UInt32(v[1]))
 end
 
-function Base.getindex(chunk_storage::ChunkStorage, index::Integer...)
+function Base.getindex(chunk_storage::ChunkStorage{IndexCartesian}, index::Integer...)
     do_read_chunk(chunk_storage.dataset, hsize_t.(index))
 end
+
+# ChunkStorage{IndexLinear,1}
+
+ChunkStorage{IndexLinear}(dataset) = ChunkStorage{IndexLinear,1}(dataset)
+Base.size(cs::ChunkStorage{IndexLinear}) = (Int64(h5d_get_num_chunks(cs.dataset)),)
+Base.length(cs::ChunkStorage{IndexLinear}) = Int64(h5d_get_num_chunks(cs.dataset))
+
+function Base.setindex!(chunk_storage::ChunkStorage{IndexLinear}, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer)
+    do_write_chunk(chunk_storage.dataset, index, v[2], UInt32(v[1]))
+end
+
+function Base.getindex(chunk_storage::ChunkStorage{IndexLinear}, index::Integer)
+    do_read_chunk(chunk_storage.dataset, index)
+end
+
+# TODO: Move to show.jl. May need to include show.jl after this line.
+@static if VERSION <= v"1.6.0"
+# ChunkStorage axes may be StepRanges, but this is not available until v"1.6.0"
+# no method matching CartesianIndices(::Tuple{StepRange{Int64,Int64},UnitRange{Int64}}) until v"1.6.0"
+
+function Base.show(io::IO, cs::ChunkStorage{IndexCartesian,N}) where N
+    println(io, "HDF5.ChunkStorage{IndexCartesian,$N}")
+    print(io, "Axes: ")
+    println(io, axes(cs))
+    print(io,"\t")
+    print(io, cs.dataset)
+end
+Base.show(io::IO, ::MIME{Symbol("text/plain")}, cs::ChunkStorage{IndexCartesian,N}) where N = show(io, cs)
+
+end
+
+
 
 # end of high-level interface
 
