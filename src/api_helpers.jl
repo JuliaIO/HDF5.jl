@@ -167,8 +167,8 @@ function h5d_read_chunk(dataset_id, offset,
     h5d_read_chunk(dataset_id, dxpl_id, offset, filters, buf)
     return buf
 end
-h5d_read_chunk(dataset_id, dxpl_id, offset) = h5d_read_chunk(dataset_id, offset; dxpl_id)
-h5d_read_chunk(dataset_id, dxpl_id, offset, buf::Vector{UInt8}) = h5d_read_chunk(dataset_id, offset, buf; dxpl_id)
+h5d_read_chunk(dataset_id, dxpl_id, offset) = h5d_read_chunk(dataset_id, offset; dxpl_id = dxpl_id)
+h5d_read_chunk(dataset_id, dxpl_id, offset, buf::Vector{UInt8}) = h5d_read_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id)
 
 """
     h5d_read_chunk(dataset_id, index::Integer, [buf]; dxpl_id = H5P_DEFAULT, filters = Ref{UInt32}())
@@ -193,8 +193,8 @@ function h5d_read_chunk(dataset_id, index::Integer,
     end
     h5d_read_chunk(dataset_id, info[:offset], buf; dxpl_id, filters)
 end
-h5d_read_chunk(dataset_id, dxpl_id, index::Integer) = h5d_read_chunk(dataset_id, index; dxpl_id)
-h5d_read_chunk(dataset_id, dxpl_id, index::Integer, buf::Vector{UInt8}) = h5d_read_chunk(dataset_id, index, buf; dxpl_id)
+h5d_read_chunk(dataset_id, dxpl_id, index::Integer) = h5d_read_chunk(dataset_id, index; dxpl_id = dxpl_id)
+h5d_read_chunk(dataset_id, dxpl_id, index::Integer, buf::Vector{UInt8}) = h5d_read_chunk(dataset_id, index, buf; dxpl_id = dxpl_id)
 
 """
     h5d_write_chunk(dataset_id, offset, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask = 0)
