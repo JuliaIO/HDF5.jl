@@ -1746,7 +1746,7 @@ function do_read_chunk(dataset::Dataset, offset)
     checkvalid(dataset)
     offs = collect(hsize_t, reverse(offset)) .- 1
     filters = Ref{UInt32}()
-    buf = h5d_read_chunk(dataset, offs; filters)
+    buf = h5d_read_chunk(dataset, offs; filters = filters)
     return (filters[], buf)
 end
 
@@ -1760,7 +1760,7 @@ function do_read_chunk(dataset::Dataset, index::Integer)
     checkvalid(dataset)
     index -= 1
     filters = Ref{UInt32}()
-    buf = h5d_read_chunk(dataset, index; filters)
+    buf = h5d_read_chunk(dataset, index; filters = filters)
     return (filters[], buf)
 end
 
