@@ -205,9 +205,10 @@ function h5d_write_chunk(dataset_id, offset, buf::Vector{UInt8};
         dxpl_id = H5P_DEFAULT,
         filter_mask = 0
     )
-    h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, size(buf), buf)
+    h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, length(buf), buf)
 end
-h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, buf::Vector{UInt8}) = h5d_write_chunk(dataset_id, offset, buf; dxpl_id, filter_mask)
+h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, buf::Vector{UInt8}) =
+    h5d_write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
 
 """
     h5d_write_chunk(dataset_id, index::Integer, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask = 0)
@@ -215,10 +216,24 @@ h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, buf::Vector{UInt8}) = 
     Helper method to write chunks via 0-based Integer index
 """
 function h5d_write_chunk(dataset_id, index::Integer, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask = 0)
-    info = h5d_get_chunk_info(dataset_id, index)
-    h5d_write_chunk(dataset_id, info[:offset], buf; dxpl_id, filter_mask)
+    offset = [ get_chunk_offset(dataset_id, index)... ]
+    h5d_write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
 end    
-h5d_write_chunk(dataset_id, dxpl_id, filter_mask, index::Integer, buf::Vector{UInt8}) = h5d_write_chunk(dataset_id, index, buf; dxpl_id, filter_mask)
+h5d_write_chunk(dataset_id, dxpl_id, filter_mask, index::Integer, buf::Vector{UInt8}) =
+    h5d_write_chunk(dataset_id, index, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
+
+"""
+    get_chunk_offset(dataset_id, index)
+
+    Get 0-based offset of chunk from 0-based index
+"""
+function get_chunk_offset(dataset_id, index)
+    extent = get_extent_dims(dataset_id)[1]
+    chunk = get_chunk(dataset_id)
+    chunk_indices = CartesianIndices( ntuple(i->0:extent[i]÷chunk[i]-1, length(extent)) )
+    offset = chunk_indices[index + 1].I .* chunk
+    reverse(offset)
+end
 
 ###
 ### Error Interface
