@@ -231,7 +231,7 @@ function get_chunk_offset(dataset_id, index)
     extent = get_extent_dims(dataset_id)[1]
     chunk = get_chunk(dataset_id)
     chunk_indices = CartesianIndices( ntuple(i->0:extent[i]÷chunk[i]-1, length(extent)) )
-    offset = chunk_indices[index + 1].I .* chunk
+    offset = hsize_t.( chunk_indices[index + 1].I .* chunk )
     reverse(offset)
 end
 
