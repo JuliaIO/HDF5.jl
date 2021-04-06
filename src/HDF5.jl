@@ -1725,6 +1725,18 @@ function do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, fi
 end
 
 """
+    do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
+
+    Write a raw chunk at a given linear index
+    index is 1-based and consecutive up to the number of chunks
+"""
+function do_write_chunk(dataset::Dataset, index::Integer, chunk_bytes::Vector{UInt8}, filter_mask=0)
+    checkvalid(dataset)
+    index -= 1
+    h5d_write_chunk(dataset, H5P_DEFAULT, UInt32(filter_mask), index, chunk_bytes)
+end
+
+"""
     do_read_chunk(dataset::Dataset, offset)
 
     Read a raw chunk at a given offset.
@@ -1765,11 +1777,12 @@ function ChunkStorage(dataset)
     ChunkStorage{IndexCartesian, ndims}(dataset)
 end
 
-Base.size(cs::ChunkStorage{IndexCartesian}) = Int64.(get_extent_dims(cs.dataset)[1])
+Base.size(cs::ChunkStorage{IndexCartesian}) = Int64.(get_extent_dims(cs.dataset)[1] .÷ get_chunk(cs.dataset))
+
 function Base.axes(cs::ChunkStorage{IndexCartesian})
     chunk = get_chunk(cs.dataset)
-    sz = size(cs)
-    ntuple(i->1:chunk[i]:sz[i], length(sz))
+    extent = get_extent_dims(cs.dataset)[1]
+    ntuple(i->1:chunk[i]:extent[i], length(extent))
 end
 
 function Base.setindex!(chunk_storage::ChunkStorage{IndexCartesian}, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer...)
@@ -1783,8 +1796,8 @@ end
 # ChunkStorage{IndexLinear,1}
 
 ChunkStorage{IndexLinear}(dataset) = ChunkStorage{IndexLinear,1}(dataset)
-Base.size(cs::ChunkStorage{IndexLinear}) = (Int64(h5d_get_num_chunks(cs.dataset)),)
-Base.length(cs::ChunkStorage{IndexLinear}) = Int64(h5d_get_num_chunks(cs.dataset))
+Base.size(cs::ChunkStorage{IndexLinear}) = ( Int64( h5d_get_num_chunks(cs.dataset) ) ,)
+Base.length(cs::ChunkStorage{IndexLinear}) = Int64( h5d_get_num_chunks(cs.dataset) )
 
 function Base.setindex!(chunk_storage::ChunkStorage{IndexLinear}, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer)
     do_write_chunk(chunk_storage.dataset, index, v[2], UInt32(v[1]))

@@ -378,24 +378,79 @@ Wr = h5read(fn, "newgroup/W")
 close(f)
 rm(fn)
 
-if !isempty(HDF5.libhdf5_hl)
-    # Test direct chunk writing
-    h5open(fn, "w") do f
-      d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
-      raw = HDF5.ChunkStorage(d)
-      raw[1,1] = 0, collect(reinterpret(UInt8, [1,2,5,6]))
-      raw[3,1] = 0, collect(reinterpret(UInt8, [3,4,7,8]))
-      raw[1,3] = 0, collect(reinterpret(UInt8, [9,10,13,14]))
-      raw[3,3] = 0, collect(reinterpret(UInt8, [11,12,15,16]))
-    end
-
-    @test h5open(fn, "r") do f
-      vec(f["dataset"][:,:])
-    end == collect(1:16)
-
-    close(f)
-    rm(fn)
+@testset "Raw Chunk I/O" begin
+# Direct chunk write is no longer dependent on HL library
+# Test direct chunk writing Cartesian index
+h5open(fn, "w") do f
+    d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
+    raw = HDF5.ChunkStorage(d)
+    raw[1,1] = 0, collect(reinterpret(UInt8, [1,2,5,6]))
+    raw[3,1] = 0, collect(reinterpret(UInt8, [3,4,7,8]))
+    raw[1,3] = 0, collect(reinterpret(UInt8, [9,10,13,14]))
+    raw[3,3] = 0, collect(reinterpret(UInt8, [11,12,15,16]))
 end
+
+# Test read back
+@test h5open(fn, "r") do f
+    vec(f["dataset"][:,:])
+end == collect(1:16)
+
+# Test reading direct chunks via linear indexing
+h5open(fn, "r") do f
+    d = f["dataset"]
+    raw = HDF5.ChunkStorage{IndexLinear}(d)
+    @test size(raw) == (4,)
+    @test length(raw) == 4
+    @test axes(raw) == (Base.OneTo(4),)
+    @test reinterpret(Int, raw[1][2]) == [1,2,5,6]
+    @test reinterpret(Int, raw[2][2]) == [3,4,7,8]
+    @test reinterpret(Int, raw[3][2]) == [9,10,13,14]
+    @test reinterpret(Int, raw[4][2]) == [11,12,15,16]
+end
+
+close(f)
+rm(fn)
+
+# Test direct write chunk writing via linear indexing
+h5open(fn, "w") do f
+    d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 6), chunk=(2, 3))
+    raw = HDF5.ChunkStorage{IndexLinear}(d)
+    raw[1] = 0, collect(reinterpret(UInt8, [1,2,5,6, 9,10]))
+    raw[2] = 0, collect(reinterpret(UInt8, [3,4,7,8,11,12]))
+    raw[3] = 0, collect(reinterpret(UInt8, [13,14,17,18,21,22]))
+    raw[4] = 0, collect(reinterpret(UInt8, [15,16,19,20,23,24]))
+end
+
+@test h5open(fn, "r") do f
+    f["dataset"][:,:]
+end == reshape(1:24, 4, 6)
+
+h5open(fn, "r") do f
+    d = f["dataset"]
+    raw = HDF5.ChunkStorage(d)
+    chunk = HDF5.get_chunk(d)
+    extent = HDF5.get_extent_dims(d)[1]
+
+    @test chunk == (2, 3)
+    @test extent == (4, 6)
+    @test size(raw) == (2, 2)
+    @test length(raw) == 4
+    @test axes(raw) == (1:2:4, 1:3:6)
+
+    # Manually reconstruct matrix
+    A = Matrix{Int}(undef, extent)
+    for (r,c) in Iterators.product(axes(raw)...)
+        A[r:r+chunk[1]-1, c:c+chunk[2]-1] .= reshape( reinterpret(Int, raw[r,c][2]), chunk)
+    end
+    @test A == reshape(1:24, extent)
+end
+
+end # testset "Raw Chunk I/O"
+
+close(f)
+rm(fn)
+
+
 
 # Test that switching time tracking off results in identical files
 fn1 = tempname(); fn2 = tempname()
@@ -1125,6 +1180,8 @@ end
 fn_external = GenericString(tempname())
 dset = HDF5.create_external_dataset(hfile, "ext", fn_external, Int, (10,20))
 
+close(hfile)
+
 end
 
 @testset "opaque data" begin
@@ -1173,6 +1230,8 @@ end
         # Note: opaque tag is lost
         compound = read(fid["compound"])
         @test compound == (v = num, d = dat0)
+
+        close(fid)
     end
 end
 
@@ -1216,6 +1275,8 @@ end
         @test T <: NamedTuple
         @test fieldnames(T) == (:n, :a)
         @test read(c) == (n = num, a = ref)
+
+        close(fid)
     end
 
     fix = HDF5.FixedArray{Float64,(2,2),4}((1, 2, 3, 4))
@@ -1239,6 +1300,8 @@ end
         @test size(T) == size(ref)
         @test eltype(T) == eltype(ref)
         @test read(d) == ref
+
+        close(fid)
     end
 end
 
@@ -1258,6 +1321,8 @@ create_dataset(hfile, "/group1/dset1", 1)
 @test_throws ErrorException create_dataset(hfile, "group1", 1)
 @test_throws ErrorException create_dataset(g1, "dset1", 1)
 
+close(hfile)
+
 end
 
 @testset "HDF5 existance" begin
@@ -1276,5 +1341,8 @@ end
 h5write(fn2, "x", 1)
 
 @test HDF5.ishdf5(fn2)
+
+rm(fn1)
+rm(fn2)
 
 end
