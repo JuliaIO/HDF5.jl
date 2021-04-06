@@ -408,9 +408,6 @@ h5open(fn, "r") do f
     @test reinterpret(Int, raw[4][2]) == [11,12,15,16]
 end
 
-close(f)
-rm(fn)
-
 # Test direct write chunk writing via linear indexing
 h5open(fn, "w") do f
     d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 6), chunk=(2, 3))
@@ -445,12 +442,9 @@ h5open(fn, "r") do f
     @test A == reshape(1:24, extent)
 end
 
-end # testset "Raw Chunk I/O"
-
-close(f)
 rm(fn)
 
-
+end # testset "Raw Chunk I/O"
 
 # Test that switching time tracking off results in identical files
 fn1 = tempname(); fn2 = tempname()

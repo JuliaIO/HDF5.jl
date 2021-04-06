@@ -191,7 +191,7 @@ function h5d_read_chunk(dataset_id, index::Integer,
     if isempty(buf)
         resize!(buf, info[:size])
     end
-    h5d_read_chunk(dataset_id, info[:offset], buf; dxpl_id, filters)
+    h5d_read_chunk(dataset_id, info[:offset], buf; dxpl_id = dxpl_id, filters = filters)
 end
 h5d_read_chunk(dataset_id, dxpl_id, index::Integer) = h5d_read_chunk(dataset_id, index; dxpl_id = dxpl_id)
 h5d_read_chunk(dataset_id, dxpl_id, index::Integer, buf::Vector{UInt8}) = h5d_read_chunk(dataset_id, index, buf; dxpl_id = dxpl_id)
