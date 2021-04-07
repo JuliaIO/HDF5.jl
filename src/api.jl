@@ -341,12 +341,12 @@ function h5d_flush(dataset_id)
 end
 
 """
-    h5d_gather(src_space_id::hid_t, src_buf::Ptr{Cvoid}, type_id::hid_t, dst_buf_size::Csize_t, dst_buf::Ptr{Cvoid}, op::Ptr{Cvoid}, op_data::Ptr{Cvoid})
+    h5d_gather(src_space_id::hid_t, src_buf::Ptr{Cvoid}, type_id::hid_t, dst_buf_size::Csize_t, dst_buf::Ptr{Cvoid}, op::Ptr{Cvoid}, op_data::Any)
 
 See `libhdf5` documentation for [`H5Dgather`](https://portal.hdfgroup.org/display/HDF5/H5D_GATHER).
 """
 function h5d_gather(src_space_id, src_buf, type_id, dst_buf_size, dst_buf, op, op_data)
-    var"#status#" = ccall((:H5Dgather, libhdf5), herr_t, (hid_t, Ptr{Cvoid}, hid_t, Csize_t, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}), src_space_id, src_buf, type_id, dst_buf_size, dst_buf, op, op_data)
+    var"#status#" = ccall((:H5Dgather, libhdf5), herr_t, (hid_t, Ptr{Cvoid}, hid_t, Csize_t, Ptr{Cvoid}, Ptr{Cvoid}, Any), src_space_id, src_buf, type_id, dst_buf_size, dst_buf, op, op_data)
     var"#status#" < 0 && error("Error gathering dataset")
     return nothing
 end
@@ -373,15 +373,17 @@ function h5d_get_chunk_info(dataset_id, fspace_id, index, offset, filter_mask, a
     return nothing
 end
 
-"""
-    h5d_get_chunk_info_by_coord(dataset_id::hid_t, offset::Ptr{hsize_t}, filter_mask::Ptr{UInt32}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})
+@static if v"1.10.5" ≤ _libhdf5_build_ver
+    @doc """
+        h5d_get_chunk_info_by_coord(dataset_id::hid_t, offset::Ptr{hsize_t}, filter_mask::Ptr{UInt32}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Dget_chunk_info_by_coord`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_CHUNK_INFO_BY_COORD).
-"""
-function h5d_get_chunk_info_by_coord(dataset_id, offset, filter_mask, addr, size)
-    var"#status#" = ccall((:H5Dget_chunk_info_by_coord, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{UInt32}, Ptr{haddr_t}, Ptr{hsize_t}), dataset_id, offset, filter_mask, addr, size)
-    var"#status#" < 0 && error("Error getting chunk info by coord")
-    return nothing
+    See `libhdf5` documentation for [`H5Dget_chunk_info_by_coord`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_CHUNK_INFO_BY_COORD).
+    """
+    function h5d_get_chunk_info_by_coord(dataset_id, offset, filter_mask, addr, size)
+        var"#status#" = ccall((:H5Dget_chunk_info_by_coord, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{UInt32}, Ptr{haddr_t}, Ptr{hsize_t}), dataset_id, offset, filter_mask, addr, size)
+        var"#status#" < 0 && error("Error getting chunk info by coord")
+        return nothing
+    end
 end
 
 """
@@ -406,15 +408,17 @@ function h5d_get_create_plist(dataset_id)
     return var"#status#"
 end
 
-"""
-    h5d_get_num_chunks(dataset_id::hid_t, fspace_id::hid_t, nchunks::Ptr{hsize_t})
+@static if v"1.10.5" ≤ _libhdf5_build_ver
+    @doc """
+        h5d_get_num_chunks(dataset_id::hid_t, fspace_id::hid_t, nchunks::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Dget_num_chunks`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_NUM_CHUNKS).
-"""
-function h5d_get_num_chunks(dataset_id, fspace_id, nchunks)
-    var"#status#" = ccall((:H5Dget_num_chunks, libhdf5), herr_t, (hid_t, hid_t, Ptr{hsize_t}), dataset_id, fspace_id, nchunks)
-    var"#status#" < 0 && error("Error getting number of chunks")
-    return nothing
+    See `libhdf5` documentation for [`H5Dget_num_chunks`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_NUM_CHUNKS).
+    """
+    function h5d_get_num_chunks(dataset_id, fspace_id, nchunks)
+        var"#status#" = ccall((:H5Dget_num_chunks, libhdf5), herr_t, (hid_t, hid_t, Ptr{hsize_t}), dataset_id, fspace_id, nchunks)
+        var"#status#" < 0 && error("Error getting number of chunks")
+        return nothing
+    end
 end
 
 """
@@ -528,12 +532,12 @@ function h5d_refresh(dataset_id)
 end
 
 """
-    h5d_scatter(op::Ptr{Cvoid}, op_data::Ptr{Cvoid}, type_id::hid_t, dst_space_id::hid_t, dst_buf::Ptr{Cvoid})
+    h5d_scatter(op::Ptr{Cvoid}, op_data::Any, type_id::hid_t, dst_space_id::hid_t, dst_buf::Ptr{Cvoid})
 
 See `libhdf5` documentation for [`H5Dscatter`](https://portal.hdfgroup.org/display/HDF5/H5D_SCATTER).
 """
 function h5d_scatter(op, op_data, type_id, dst_space_id, dst_buf)
-    var"#status#" = ccall((:H5Dscatter, libhdf5), herr_t, (Ptr{Cvoid}, Ptr{Cvoid}, hid_t, hid_t, Ptr{Cvoid}), op, op_data, type_id, dst_space_id, dst_buf)
+    var"#status#" = ccall((:H5Dscatter, libhdf5), herr_t, (Ptr{Cvoid}, Any, hid_t, hid_t, Ptr{Cvoid}), op, op_data, type_id, dst_space_id, dst_buf)
     var"#status#" < 0 && error("Error scattering to dataset")
     return nothing
 end

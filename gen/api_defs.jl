@@ -62,10 +62,10 @@
 @bind h5d_gather(src_space_id::hid_t, src_buf::Ptr{Cvoid}, type_id::hid_t, dst_buf_size::Csize_t, dst_buf::Ptr{Cvoid}, op::Ptr{Cvoid}, op_data::Any)::herr_t "Error gathering dataset"
 @bind h5d_get_access_plist(dataset_id::hid_t)::hid_t "Error getting dataset access property list"
 @bind h5d_get_chunk_info(dataset_id::hid_t, fspace_id::hid_t, index::hsize_t, offset::Ptr{hsize_t}, filter_mask::Ptr{UInt32}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})::herr_t "Error getting chunk info"
-@bind h5d_get_chunk_info_by_coord(dataset_id::hid_t, offset::Ptr{hsize_t}, filter_mask::Ptr{UInt32}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})::herr_t "Error getting chunk info by coord"
+@bind h5d_get_chunk_info_by_coord(dataset_id::hid_t, offset::Ptr{hsize_t}, filter_mask::Ptr{UInt32}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})::herr_t "Error getting chunk info by coord" (v"1.10.5",nothing)
 @bind h5d_get_chunk_storage_size(dataset_id::hid_t, offset::Ptr{hsize_t}, chunk_nbytes::Ptr{hsize_t})::herr_t "Error getting chunk storage size"
 @bind h5d_get_create_plist(dataset_id::hid_t)::hid_t "Error getting dataset create property list"
-@bind h5d_get_num_chunks(dataset_id::hid_t, fspace_id::hid_t, nchunks::Ptr{hsize_t})::herr_t "Error getting number of chunks"
+@bind h5d_get_num_chunks(dataset_id::hid_t, fspace_id::hid_t, nchunks::Ptr{hsize_t})::herr_t "Error getting number of chunks" (v"1.10.5",nothing)
 @bind h5d_get_offset(dataset_id::hid_t)::haddr_t "Error getting offset"
 @bind h5d_get_space(dataset_id::hid_t)::hid_t "Error getting dataspace"
 @bind h5d_get_space_status(dataset_id::hid_t, status::Ref{Cint})::herr_t "Error getting dataspace status"
