@@ -136,7 +136,7 @@ function h5d_get_chunk_storage_size(dataset_id, offset)
 end
 
 """
-    h5d_get_num_chunks(dataset_id, fspace_id H5S_ALL) 
+    h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL) 
 
     Helper method to get the number of ChunkStorage
 
