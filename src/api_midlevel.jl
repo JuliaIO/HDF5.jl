@@ -49,7 +49,8 @@ end
 """
     HDF5.get_extent_ndims(obj::Union{HDF5.Dataspace, HDF5.Dataset, HDF5.Attribute}) -> ndims
 
-Get the number of array dimensions from a dataspace, dataset, or attribute
+Get the number of array dimensions from a dataspace, dataset, or attribute.
+
 """
 function get_extent_ndims(obj::Union{Dataspace,Dataset,Attribute})
     dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
