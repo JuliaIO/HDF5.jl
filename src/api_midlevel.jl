@@ -116,6 +116,20 @@ function get_num_chunks(dataset_id)
     prod( get_num_chunks_per_dim(dataset_id) )
 end
 
+
+"""
+    HDF5.get_chunk_length(dataset_id)
+
+    Get the length of a chunk in a dataset.
+
+    This should be equivalent to h5d_get_chunk_info(dataset_id)[:size]
+"""
+function get_chunk_length(dataset_id)
+    type = h5d_get_type(dataset_id)
+    chunk = get_chunk(dataset_id)
+    h5t_get_size( type ) * prod( chunk )
+end
+
 """
     silence_errors(f::Function)
 

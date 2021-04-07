@@ -122,14 +122,6 @@ function h5d_get_chunk_info_by_coord(dataset_id, offset)
     return (filter_mask = filter_mask[], addr = addr[], size = size[])
 end
 
-@static if v"1.10.5" > _libhdf5_build_ver
-    function h5d_get_chunk_info_by_coord(dataset_id, offset, filter_mask, addr, size)
-        index = get_chunk_index(dataset_id, reverse(offset))
-        offset_ref = Vector{hsize_t}(undef, ndims(dataset_id))
-        h5d_get_chunk_info(dataset_id, H5S_ALL, index, offset_ref, filter_mask, addr, size)
-    end
-end
-
 """
     h5d_get_chunk_storage_size(dataset_id, offset)
 
@@ -152,7 +144,7 @@ end
 """
 function h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
     @static if v"1.10.5" > _libhdf5_build_ver
-        assert(fspace_id == H5S_ALL)
+        @assert fspace_id == H5S_ALL
         return get_num_chunks(dataset_id)
     else
         nchunks = Ref{hsize_t}()
@@ -173,7 +165,7 @@ end
     Returns a Vector{UInt8}
 """
 function h5d_read_chunk(dataset_id, offset,
-        buf::Vector{UInt8} = Vector{UInt8}(undef, h5d_get_chunk_info_by_coord(dataset_id, offset)[:size] );
+        buf::Vector{UInt8} = Vector{UInt8}(undef, get_chunk_length(dataset_id) );
         dxpl_id = H5P_DEFAULT,
         filters = Ref{UInt32}()
     )
@@ -196,15 +188,12 @@ h5d_read_chunk(dataset_id, dxpl_id, offset, buf::Vector{UInt8}) = h5d_read_chunk
     Returns a Vector{UInt8}
 """
 function h5d_read_chunk(dataset_id, index::Integer,
-        buf::Vector{UInt8} = Vector{UInt8}();
+        buf::Vector{UInt8} = Vector{UInt8}(undef, get_chunk_length(dataset_id));
         dxpl_id = H5P_DEFAULT,
         filters = Ref{UInt32}()
     )
-    info = h5d_get_chunk_info(dataset_id, index)
-    if isempty(buf)
-        resize!(buf, info[:size])
-    end
-    h5d_read_chunk(dataset_id, info[:offset], buf; dxpl_id = dxpl_id, filters = filters)
+    offset = [reverse(get_chunk_offset(dataset_id, index))...]
+    h5d_read_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filters = filters)
 end
 h5d_read_chunk(dataset_id, dxpl_id, index::Integer) = h5d_read_chunk(dataset_id, index; dxpl_id = dxpl_id)
 h5d_read_chunk(dataset_id, dxpl_id, index::Integer, buf::Vector{UInt8}) = h5d_read_chunk(dataset_id, index, buf; dxpl_id = dxpl_id)
