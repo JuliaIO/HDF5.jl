@@ -122,6 +122,14 @@ function h5d_get_chunk_info_by_coord(dataset_id, offset)
     return (filter_mask = filter_mask[], addr = addr[], size = size[])
 end
 
+@static if v"1.10.5" > _libhdf5_build_ver
+    function h5d_get_chunk_info_by_coord(dataset_id, offset, filter_mask, addr, size)
+        index = get_chunk_index(dataset_id, reverse(offset))
+        offset_ref = Vector{hsize_t}(undef, ndims(dataset_id))
+        h5d_get_chunk_info(dataset_id, H5S_ALL, index, offset_ref, filter_mask, addr, size)
+    end
+end
+
 """
     h5d_get_chunk_storage_size(dataset_id, offset)
 
@@ -138,14 +146,19 @@ end
 """
     h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL) 
 
-    Helper method to get the number of ChunkStorage
+    Helper method to get the number of chunks
 
     Returns an Integer of type HDF5.hsize_t
 """
 function h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
-    nchunks = Ref{hsize_t}()
-    h5d_get_num_chunks(dataset_id, fspace_id, nchunks)
-    return nchunks[]
+    @static if v"1.10.5" > _libhdf5_build_ver
+        assert(fspace_id == H5S_ALL)
+        return get_num_chunks(dataset_id)
+    else
+        nchunks = Ref{hsize_t}()
+        h5d_get_num_chunks(dataset_id, fspace_id, nchunks)
+        return nchunks[]
+    end
 end
 
 """
@@ -216,24 +229,13 @@ h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, buf::Vector{UInt8}) =
     Helper method to write chunks via 0-based Integer index
 """
 function h5d_write_chunk(dataset_id, index::Integer, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask = 0)
-    offset = [ get_chunk_offset(dataset_id, index)... ]
+    offset = [ reverse(get_chunk_offset(dataset_id, index))... ]
     h5d_write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
 end    
 h5d_write_chunk(dataset_id, dxpl_id, filter_mask, index::Integer, buf::Vector{UInt8}) =
     h5d_write_chunk(dataset_id, index, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
 
-"""
-    get_chunk_offset(dataset_id, index)
 
-    Get 0-based offset of chunk from 0-based index
-"""
-function get_chunk_offset(dataset_id, index)
-    extent = get_extent_dims(dataset_id)[1]
-    chunk = get_chunk(dataset_id)
-    chunk_indices = CartesianIndices( ntuple(i->0:extent[i]÷chunk[i]-1, length(extent)) )
-    offset = hsize_t.( chunk_indices[index + 1].I .* chunk )
-    reverse(offset)
-end
 
 ###
 ### Error Interface

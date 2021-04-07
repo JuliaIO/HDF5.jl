@@ -402,6 +402,7 @@ h5open(fn, "r") do f
     @test size(raw) == (4,)
     @test length(raw) == 4
     @test axes(raw) == (Base.OneTo(4),)
+    @test HDF5.h5d_get_num_chunks(d) == HDF5.get_num_chunks(d)
     @test reinterpret(Int, raw[1][2]) == [1,2,5,6]
     @test reinterpret(Int, raw[2][2]) == [3,4,7,8]
     @test reinterpret(Int, raw[3][2]) == [9,10,13,14]
@@ -433,6 +434,7 @@ h5open(fn, "r") do f
     @test size(raw) == (2, 2)
     @test length(raw) == 4
     @test axes(raw) == (1:2:4, 1:3:6)
+    @test HDF5.h5d_get_num_chunks(d) == HDF5.get_num_chunks(d)
 
     # Manually reconstruct matrix
     A = Matrix{Int}(undef, extent)

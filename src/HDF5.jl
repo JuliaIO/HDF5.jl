@@ -1777,7 +1777,8 @@ function ChunkStorage(dataset)
     ChunkStorage{IndexCartesian, ndims}(dataset)
 end
 
-Base.size(cs::ChunkStorage{IndexCartesian}) = Int64.(get_extent_dims(cs.dataset)[1] .÷ get_chunk(cs.dataset))
+Base.size(cs::ChunkStorage{IndexCartesian}) = Int64.(get_num_chunks_per_dim(cs.dataset))
+ 
 
 function Base.axes(cs::ChunkStorage{IndexCartesian})
     chunk = get_chunk(cs.dataset)
@@ -1796,8 +1797,8 @@ end
 # ChunkStorage{IndexLinear,1}
 
 ChunkStorage{IndexLinear}(dataset) = ChunkStorage{IndexLinear,1}(dataset)
-Base.size(cs::ChunkStorage{IndexLinear}) = ( Int64( h5d_get_num_chunks(cs.dataset) ) ,)
-Base.length(cs::ChunkStorage{IndexLinear}) = Int64( h5d_get_num_chunks(cs.dataset) )
+Base.size(cs::ChunkStorage{IndexLinear}) = ( Int64( get_num_chunks(cs.dataset) ) ,)
+Base.length(cs::ChunkStorage{IndexLinear}) = Int64( get_num_chunks(cs.dataset) )
 
 function Base.setindex!(chunk_storage::ChunkStorage{IndexLinear}, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer)
     do_write_chunk(chunk_storage.dataset, index, v[2], UInt32(v[1]))
