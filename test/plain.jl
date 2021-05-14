@@ -704,6 +704,12 @@ dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
 commit_datatype(hfile, "type", dtype)
 @test sprint(show, dtype) == "HDF5.Datatype: /type H5T_IEEE_F64LE"
 
+dtypemeta = create_attribute(dtype, "dtypemeta", datatype(Bool), dataspace((1,)))
+@test sprint(show, dtypemeta) == "HDF5.Attribute: dtypemeta"
+
+dtypeattrs = attributes(dtype)
+@test sprint(show, dtypeattrs) == "Attributes of HDF5.Datatype: /type H5T_IEEE_F64LE"
+
 dspace_null = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_NULL))
 dspace_scal = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_SCALAR))
 dspace_norm = dataspace((100, 4))
@@ -734,6 +740,9 @@ close(prop)
 
 close(meta)
 @test sprint(show, meta) == "HDF5.Attribute: (invalid)"
+
+close(dtypemeta)
+@test sprint(show, dtypemeta) == "HDF5.Attribute: (invalid)"
 
 close(dset)
 @test sprint(show, dset) == "HDF5.Dataset: (invalid)"
