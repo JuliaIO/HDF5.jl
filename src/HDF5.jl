@@ -281,9 +281,9 @@ end
 Base.cconvert(::Type{hid_t}, attr::Attribute) = attr.id
 
 struct Attributes
-    parent::Union{File,Group,Dataset}
+    parent::Union{File,Object}
 end
-attributes(p::Union{File,Group,Dataset}) = Attributes(p)
+attributes(p::Union{File,Object}) = Attributes(p)
 
 # Methods for reference types
 function Reference(parent::Union{File,Group,Dataset}, name::AbstractString)
