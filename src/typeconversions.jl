@@ -547,16 +547,16 @@ function get_mem_compatible_jl_type(obj_type::Datatype)
 end
 
 
-function read_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::Properties=dataset.xfer)
+function read_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::DatasetTransferProperties=dataset.xfer)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
     h5d_read(dataset, memtype, H5S_ALL, H5S_ALL, xfer, buf)
 end
 
-function write_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::Properties=dataset.xfer)
+function write_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::DatasetTransferProperties=dataset.xfer)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
     h5d_write(dataset, memtype, H5S_ALL, H5S_ALL, xfer, buf)
 end
-function write_dataset(dataset::Dataset, memtype::Datatype, str::AbstractString, xfer::Properties=dataset.xfer)
+function write_dataset(dataset::Dataset, memtype::Datatype, str::AbstractString, xfer::DatasetTransferProperties=dataset.xfer)
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
         # unsafe_convert(Cstring, strbuf) is responsible for enforcing the no-'\0' policy,
@@ -566,15 +566,15 @@ function write_dataset(dataset::Dataset, memtype::Datatype, str::AbstractString,
         h5d_write(dataset, memtype, H5S_ALL, H5S_ALL, xfer, buf)
     end
 end
-function write_dataset(dataset::Dataset, memtype::Datatype, x::T, xfer::Properties=dataset.xfer) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
+function write_dataset(dataset::Dataset, memtype::Datatype, x::T, xfer::DatasetTransferProperties=dataset.xfer) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
     h5d_write(dataset, memtype, H5S_ALL, H5S_ALL, xfer, tmp)
 end
-function write_dataset(dataset::Dataset, memtype::Datatype, strs::Array{<:AbstractString}, xfer::Properties=dataset.xfer)
+function write_dataset(dataset::Dataset, memtype::Datatype, strs::Array{<:AbstractString}, xfer::DatasetTransferProperties=dataset.xfer)
     p = Ref{Cstring}(strs)
     h5d_write(dataset, memtype, H5S_ALL, H5S_ALL, xfer, p)
 end
-write_dataset(dataset::Dataset, memtype::Datatype, ::EmptyArray, xfer::Properties=dataset.xfer) = nothing
+write_dataset(dataset::Dataset, memtype::Datatype, ::EmptyArray, xfer::DatasetTransferProperties=dataset.xfer) = nothing
 
 # type-specific behaviors
 function write_attribute(attr::Attribute, memtype::Datatype, str::AbstractString)

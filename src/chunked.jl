@@ -3,9 +3,8 @@
 # If you need to link to multiple segments, use low-level interface
 function create_external_dataset(parent::Union{File,Group}, name::AbstractString, filepath::AbstractString, t, sz::Dims, offset::Integer=0)
     checkvalid(parent)
-    dcpl  = create_property(H5P_DATASET_CREATE)
-    h5p_set_external(dcpl , filepath, offset, prod(sz)*sizeof(t)) # TODO: allow H5F_UNLIMITED
-    create_dataset(parent, name, datatype(t), dataspace(sz); dcpl=dcpl)
+    dcpl_external  = (filepath, offset, prod(sz)*sizeof(t)) # TODO: allow H5F_UNLIMITED
+    create_dataset(parent, name, datatype(t), dataspace(sz); external=dcpl_external)
 end
 
 function do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)

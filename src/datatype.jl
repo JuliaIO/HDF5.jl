@@ -35,13 +35,16 @@ Base.isvalid(obj::Datatype) = obj.id != -1 && h5i_is_valid(obj)
 Base.hash(dtype::Datatype, h::UInt) = hash(dtype.id, hash(Datatype, h))
 Base.:(==)(dt1::Datatype, dt2::Datatype) = h5t_equal(dt1, dt2)
 
-open_datatype(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Datatype(h5t_open(checkvalid(parent), name, apl), file(parent))
+open_datatype(parent::Union{File,Group}, name::AbstractString, apl::DatatypeAccessProperties=DatatypeAccessProperties()) =
+    Datatype(h5t_open(checkvalid(parent), name, apl), file(parent))
 
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 create_datatype(class_id, sz) = Datatype(h5t_create(class_id, sz))
 function commit_datatype(parent::Union{File,Group}, path::AbstractString, dtype::Datatype,
-                  lcpl::Properties=create_property(H5P_LINK_CREATE), tcpl::Properties=DEFAULT_PROPERTIES, tapl::Properties=DEFAULT_PROPERTIES)
-    h5p_set_char_encoding(lcpl, cset(typeof(path)))
+                         lcpl::LinkCreateProperties=LinkCreateProperties(),
+                         tcpl::DatatypeCreateProperties=DatatypeCreateProperties(),
+                         tapl::DatatypeAccessProperties=DatatypeAccessProperties())
+    lcpl.char_encoding = cset(typeof(path))
     h5t_commit(checkvalid(parent), path, dtype, lcpl, tcpl, tapl)
     dtype.file = file(parent)
     return dtype

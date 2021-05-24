@@ -68,8 +68,8 @@ end
 
 Base.isvalid(obj::File) = obj.id != -1 && h5i_is_valid(obj)
 
-get_access_properties(f::File)      = Properties(h5f_get_access_plist(f), H5P_FILE_ACCESS)
-get_create_properties(f::File)      = Properties(h5f_get_create_plist(f), H5P_FILE_CREATE)
+get_access_properties(f::File)      = FileAccessProperties(h5f_get_access_plist(f))
+get_create_properties(f::File)      = FileCreateProperties(h5f_get_create_plist(f))
 
 
 """

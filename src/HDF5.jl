@@ -18,7 +18,6 @@ create_dataset, open_dataset, read_dataset, write_dataset,
 create_group, open_group,
 copy_object, open_object, delete_object,
 create_datatype, commit_datatype, open_datatype,
-create_property,
 group_info, object_info,
 dataspace, datatype
 
@@ -97,14 +96,10 @@ function __init__()
 
     # Turn off automatic error printing
     # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
-
-    ASCII_LINK_PROPERTIES[] = create_property(H5P_LINK_CREATE; char_encoding = H5T_CSET_ASCII,
-                                       create_intermediate_group = 1)
-    UTF8_LINK_PROPERTIES[]  = create_property(H5P_LINK_CREATE; char_encoding = H5T_CSET_UTF8,
-                                       create_intermediate_group = 1)
-    ASCII_ATTRIBUTE_PROPERTIES[] = create_property(H5P_ATTRIBUTE_CREATE; char_encoding = H5T_CSET_ASCII)
-    UTF8_ATTRIBUTE_PROPERTIES[]  = create_property(H5P_ATTRIBUTE_CREATE; char_encoding = H5T_CSET_UTF8)
-
+    ASCII_LINK_PROPERTIES[] = LinkCreateProperties(char_encoding = H5T_CSET_ASCII, create_intermediate_group = 1)
+    UTF8_LINK_PROPERTIES[]  = LinkCreateProperties(char_encoding = H5T_CSET_UTF8,  create_intermediate_group = 1)
+    ASCII_ATTRIBUTE_PROPERTIES[] = AttributeCreateProperties(char_encoding = H5T_CSET_ASCII)
+    UTF8_ATTRIBUTE_PROPERTIES[]  = AttributeCreateProperties(char_encoding = H5T_CSET_UTF8)
     @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" @eval include("mpio.jl")
 
     return nothing

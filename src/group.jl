@@ -25,7 +25,7 @@ end
 
 Base.isvalid(obj::Group) = obj.id != -1 && obj.file.id != -1 && h5i_is_valid(obj)
 
-get_create_properties(g::Group)     = Properties(h5g_get_create_plist(g), H5P_GROUP_CREATE)
+get_create_properties(g::Group)     = GroupCreateProperties(h5g_get_create_plist(g))
 
 
 # Get the root group
@@ -38,14 +38,15 @@ function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     isempty(pv) && return open_object(parent, path)
     obj_type = gettype(parent, path)
     if obj_type == H5I_DATASET
-        dapl = create_property(H5P_DATASET_ACCESS; pv...)
-        dxpl = create_property(H5P_DATASET_XFER; pv...)
+        dapl = DatasetAccessProperties()
+        dxpl = DatasetTransferProperties()
+        setproperties!((dapl, dxpl); pv...)
         return open_dataset(parent, path, dapl, dxpl)
     elseif obj_type == H5I_GROUP
-        gapl = create_property(H5P_GROUP_ACCESS; pv...)
+        gapl = GroupAccessProperties(;pv...)
         return open_group(parent, path, gapl)
     else#if obj_type == H5I_DATATYPE # only remaining choice
-        tapl = create_property(H5P_DATATYPE_ACCESS; pv...)
+        tapl = DatatypeAccessProperties(;pv...)
         return open_datatype(parent, path, tapl)
     end
 end
@@ -91,7 +92,7 @@ function split1(path::AbstractString)
     end
 end
 
-function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::Properties = DEFAULT_PROPERTIES)
+function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::LinkAccessProperties = LinkAccessProperties())
     checkvalid(parent)
     first, rest = split1(path)
     if first == "/"
@@ -132,13 +133,16 @@ end
 
 
 function create_group(parent::Union{File,Group}, path::AbstractString,
-                  lcpl::Properties=_link_properties(path),
-                  gcpl::Properties=DEFAULT_PROPERTIES)
+                      lcpl::LinkCreateProperties=_link_properties(path),
+                      gcpl::GroupCreateProperties=GroupCreateProperties(),
+                      gapl::GroupAccessProperties=GroupAccessProperties(),
+                      )
     haskey(parent, path) && error("cannot create group: object \"", path, "\" already exists at ", name(parent))
-    Group(h5g_create(parent, path, lcpl, gcpl, H5P_DEFAULT), file(parent))
+    Group(h5g_create(parent, path, lcpl, gcpl, gapl), file(parent))
 end
 
 
-open_group(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Group(h5g_open(checkvalid(parent), name, apl), file(parent))
+open_group(parent::Union{File,Group}, name::AbstractString, gapl::GroupAccessProperties=GroupAccessProperties()) =
+    Group(h5g_open(checkvalid(parent), name, gapl), file(parent))
 
 group_info(obj::Union{Group,File}) = h5g_get_info(checkvalid(obj))

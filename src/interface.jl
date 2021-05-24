@@ -13,8 +13,9 @@ Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for
 """
 function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool = false, pv...)
     # With garbage collection, the other modes don't make sense
-    fapl = create_property(H5P_FILE_ACCESS; pv..., fclose_degree = H5F_CLOSE_STRONG) # file access property list
-    fcpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_FILE_CREATE; pv...) # file create property list
+    fapl = FileAccessProperties(; fclose_degree = H5F_CLOSE_STRONG)
+    fcpl = FileCreateProperties()
+    setproperties!((fapl, fcpl); pv...)
     rd, wr, cr, tr, ff =
         mode == "r"  ? (true,  false, false, false, false) :
         mode == "r+" ? (true,  true,  false, false, true ) :
@@ -40,7 +41,7 @@ function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool
         fid = h5f_open(filename, flag, fapl)
     end
     close(fapl)
-    fcpl != DEFAULT_PROPERTIES && close(fcpl)
+    close(fcpl)
     return File(fid, filename)
 end
 

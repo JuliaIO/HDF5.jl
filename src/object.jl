@@ -8,7 +8,7 @@ file(o::Object) = o.file
 fd(obj::Object) = h5i_get_file_id(checkvalid(obj))
 
 
-delete_object(parent::Union{File,Group}, path::AbstractString, lapl::Properties=DEFAULT_PROPERTIES) = h5l_delete(checkvalid(parent), path, lapl)
+delete_object(parent::Union{File,Group}, path::AbstractString, lapl::LinkAccessProperties=LinkAccessProperties()) = h5l_delete(checkvalid(parent), path, lapl)
 delete_object(obj::Object) = delete_object(parent(obj), ascii(split(name(obj),"/")[end])) # FIXME: remove ascii?
 
 

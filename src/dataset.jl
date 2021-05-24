@@ -1,9 +1,9 @@
 mutable struct Dataset
     id::hid_t
     file::File
-    xfer::Properties
+    xfer::DatasetTransferProperties
 
-    function Dataset(id, file, xfer = DEFAULT_PROPERTIES)
+    function Dataset(id, file, xfer = DatasetTransferProperties())
         dset = new(id, file, xfer)
         finalizer(close, dset)
         dset
@@ -28,17 +28,18 @@ function Base.getindex(dset::Dataset, name::AbstractString)
     open_attribute(dset, name)
 end
 
-get_access_properties(d::Dataset)   = Properties(h5d_get_access_plist(d), H5P_DATASET_ACCESS)
-get_create_properties(d::Dataset)   = Properties(h5d_get_create_plist(d), H5P_DATASET_CREATE)
+get_access_properties(d::Dataset)   = DatasetAccessProperties(h5d_get_access_plist(d))
+get_create_properties(d::Dataset)   = DatasetCreateProperties(h5d_get_create_plist(d))
 
 
-open_dataset(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES, xpl::Properties=DEFAULT_PROPERTIES) = Dataset(h5d_open(checkvalid(parent), name, apl), file(parent), xpl)
+open_dataset(parent::Union{File,Group}, name::AbstractString, apl::FileAccessProperties=FileAccessProperties(), xpl::DatasetTransferProperties=DatasetTransferProperties()) = Dataset(h5d_open(checkvalid(parent), name, apl), file(parent), xpl)
 
 # Setting dset creation properties with name/value pairs
 function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace; pv...)
-    dcpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_CREATE; pv...)
-    dxpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_XFER; pv...)
-    dapl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(H5P_DATASET_ACCESS; pv...)
+    dcpl = DatasetCreateProperties()
+    dxpl = DatasetTransferProperties()
+    dapl = DatasetAccessProperties()
+    setproperties!((dcpl,dxpl,dapl); pv...)
     haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
     Dataset(h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
 end
@@ -205,9 +206,9 @@ end
     end
 end
 
-read_dataset(dset::Dataset, memtype::Datatype, buf, xfer::Properties=dset.xfer) =
+read_dataset(dset::Dataset, memtype::Datatype, buf, xfer::DatasetTransferProperties=dset.xfer) =
     h5d_read(dset, memtype, H5S_ALL, H5S_ALL, xfer, buf)
-write_dataset(dset::Dataset, memtype::Datatype, x, xfer::Properties=dset.xfer) =
+write_dataset(dset::Dataset, memtype::Datatype, x, xfer::DatasetTransferProperties=dset.xfer) =
     h5d_write(dset, memtype, H5S_ALL, H5S_ALL, xfer, x)
 
 function read_dataset(parent::Union{File,Group}, name::AbstractString)

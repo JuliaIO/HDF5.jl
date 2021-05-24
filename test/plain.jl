@@ -696,7 +696,7 @@ meta = create_attribute(dset, "meta", datatype(Bool), dataspace((1,)))
 dsetattrs = attributes(dset)
 @test sprint(show, dsetattrs) == "Attributes of HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
 
-prop = create_property(HDF5.H5P_DATASET_CREATE)
+prop = HDF5.init!(HDF5.DatasetCreateProperties())
 @test sprint(show, prop) == "HDF5.Properties: dataset create class"
 
 dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))

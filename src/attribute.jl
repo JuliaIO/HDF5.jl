@@ -22,7 +22,7 @@ end
 
 Base.isvalid(obj::Attribute) = obj.id != -1 && obj.file.id != -1 && h5i_is_valid(obj)
 
-get_create_properties(a::Attribute) = Properties(h5a_get_create_plist(a), H5P_ATTRIBUTE_CREATE)
+get_create_properties(a::Attribute) = AttributeCreateProperties(h5a_get_create_plist(a))
 
 
 file(o::Attribute) = o.file
@@ -38,7 +38,8 @@ function Base.getindex(x::Attributes, name::AbstractString)
     open_attribute(x.parent, name)
 end
 
-open_attribute(parent::Union{File,Object}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Attribute(h5a_open(checkvalid(parent), name, apl), file(parent))
+open_attribute(parent::Union{File,Object}, name::AbstractString, aapl::AttributeAccessProperties=AttributeAccessProperties()) =
+    Attribute(h5a_open(checkvalid(parent), name, aapl), file(parent))
 
 
 function create_attribute(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace)
