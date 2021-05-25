@@ -139,7 +139,8 @@ end
 Properties used when creating a new object.
 
 - `track_times`: governs the recording of times associated with an object. If set to 1,
-  time data will be recorded. If set to 0, time data will not be recorded.
+  time data will be recorded. If set to 0, time data will not be recorded. See
+  $(h5doc("H5P_SET_OBJ_TRACK_TIMES")).
 
 """
 @propertyclass(ObjectCreate, H5P_OBJECT_CREATE)
@@ -158,7 +159,8 @@ end
 
 Properties used when creating a new `Group`. Inherits from [`ObjectCreateProperties`](@ref).
 
-- `local_heap_size_hint :: Integer`:  the anticipated maximum local heap size in bytes.
+- `local_heap_size_hint :: Integer`: the anticipated maximum local heap size in bytes. See
+  $(h5doc("H5P_SET_LOCAL_HEAP_SIZE_HINT")).
 
 """
 @propertyclass(GroupCreate, H5P_GROUP_CREATE, ObjectCreate)
@@ -178,7 +180,8 @@ end
 Properties used when creating a new `Group`. Inherits from [`GroupCreateProperties`](@ref).
 
 - `userblock` :: Integer`: user block size in bytes. The default user block size is 0; it
-  may be set to any power of 2 equal to 512 or greater (512, 1024, 2048, etc.).
+  may be set to any power of 2 equal to 512 or greater (512, 1024, 2048,
+  etc.). See $(h5doc("H5P_SET_USERBLOCK")).
 
 """
 @propertyclass(FileCreate, H5P_FILE_CREATE, GroupCreate)
@@ -203,21 +206,34 @@ Properties used when creating a new `Dataset`. Inherits from [`ObjectCreatePrope
   one of `H5D_ALLOC_TIME_DEFAULT`, `H5D_ALLOC_TIME_EARLY` (Allocate all space when the
   dataset is created), `H5D_ALLOC_TIME_INCR` (Allocate space incrementally, as data is
   written to the dataset), `H5D_ALLOC_TIME_LATE` (Allocate all space when data is first
-  written to the dataset)
+  written to the dataset). See $(h5doc("H5P_SET_ALLOC_TIME")).
 
-- `blosc`: the level of the Blosc filter
+- `blosc`: the level of the Blosc filter.
 
-- `chunk`: a tuple containing the size of the chunks to store each dimension. This uses Julia's column-major ordering.
+- `chunk`: a tuple containing the size of the chunks to store each dimension. See
+  $(h5doc("H5P_SET_CHUNK")) (note that this uses Julia's column-major ordering).
 
-- `compress`
+- `compress`/`deflate`: the level of the deflate compression filter. This is an integer
+  from 0 to 9 (inclusive). See $(h5doc("H5P_SET_DEFLATE")).
 
-- `deflate`
+- `external`: A tuple of `(name,offset,size)`, See $(h5doc("H5P_SET_EXTERNAL")).
 
-- `external`
+- `layout`: the type of storage used to store the raw data for a dataset. Can be one of:
+   - `H5D_COMPACT`: Store raw data in the dataset object header in file. This should only
+     be used for datasets with small amounts of raw data.
 
-- `layout`
+   - `H5D_CONTIGUOUS`: Store raw data separately from the object header in one large chunk
+     in the file.
 
-- `shuffle`
+   - `H5D_CHUNKED`: Store raw data separately from the object header as chunks of data in
+     separate locations in the file.
+
+   - `H5D_VIRTUAL`:  Draw raw data from multiple datasets in different files.
+
+  See $(h5doc("H5P_SET_LAYOUT")).
+
+
+- `shuffle`: Sets the shuffle filter. See $(h5doc("H5P_SET_SHUFFLE")).
 """
 @propertyclass(DatasetCreate, H5P_DATASET_CREATE, ObjectCreate)
 _propertynames(::Type{DatasetCreatePropertyClass}) = (:alloc_time,

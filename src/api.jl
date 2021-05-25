@@ -1092,6 +1092,17 @@ function h5p_get_fclose_degree(fapl_id, fc_degree)
 end
 
 """
+    h5p_get_filter(plist_id::hid_t, idx::Cuint, flags::Ref{Cuint}, cd_nelmts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{UInt8}, filter_config::Ptr{Cuint}) -> H5Z_filter_t
+
+See `libhdf5` documentation for [`H5Pget_filter2`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILTER2).
+"""
+function h5p_get_filter(plist_id, idx, flags, cd_nelmts, cd_values, namelen, name, filter_config)
+    var"#status#" = ccall((:H5Pget_filter2, libhdf5), H5Z_filter_t, (hid_t, Cuint, Ref{Cuint}, Ref{Csize_t}, Ptr{Cuint}, Csize_t, Ptr{UInt8}, Ptr{Cuint}), plist_id, idx, flags, cd_nelmts, cd_values, namelen, name, filter_config)
+    var"#status#" < 0 && error("Error getting filter ID")
+    return var"#status#"
+end
+
+"""
     h5p_get_filter_by_id(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Ref{Cuint}, cd_nelmts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{UInt8}, filter_config::Ptr{Cuint})
 
 See `libhdf5` documentation for [`H5Pget_filter_by_id2`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILTER_BY_ID2).
@@ -1100,6 +1111,17 @@ function h5p_get_filter_by_id(plist_id, filter_id, flags, cd_nelmts, cd_values, 
     var"#status#" = ccall((:H5Pget_filter_by_id2, libhdf5), herr_t, (hid_t, H5Z_filter_t, Ref{Cuint}, Ref{Csize_t}, Ptr{Cuint}, Csize_t, Ptr{UInt8}, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values, namelen, name, filter_config)
     var"#status#" < 0 && error("Error getting filter ID")
     return nothing
+end
+
+"""
+    h5p_get_nfilters(plist_id::hid_t) -> Int
+
+See `libhdf5` documentation for [`H5Pget_nfilters`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_NFILTERS).
+"""
+function h5p_get_nfilters(plist_id)
+    var"#status#" = ccall((:H5Pget_nfilters, libhdf5), Cint, (hid_t,), plist_id)
+    var"#status#" < 0 && error("Error getting nfilters")
+    return Int(var"#status#")
 end
 
 """

@@ -113,3 +113,13 @@ function h5p_set_blosc(p::Properties, level::Integer=5)
 
     return nothing
 end
+
+struct BloscFilter <: Filter
+    blosc_version::Cuint
+    version_format::Cuint
+    typesize::Cuint
+    bufsize::Cuint
+    clevel::Cuint
+    shuffle::Cuint
+    compcode::Cuint
+end

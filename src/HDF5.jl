@@ -46,12 +46,15 @@ else
           "and restart Julia.")
 end
 
+h5doc(name) = "[`$name`](https://portal.hdfgroup.org/display/HDF5/$(name))"
+
 # Core API ccall wrappers
 include("api_types.jl")
 include("api.jl")
 include("api_helpers.jl")
 
 include("properties.jl")
+include("filters.jl")
 include("file.jl")
 include("group.jl")
 include("datatype.jl")
