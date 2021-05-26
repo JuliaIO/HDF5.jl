@@ -343,6 +343,7 @@ const H5Z_FLAG_REVERSE = 0x0100
 const H5Z_CLASS_T_VERS = 1
 
 # predefined filters
+const H5Z_FILTER_ALL = H5Z_filter_t(0)
 const H5Z_FILTER_NONE = H5Z_filter_t(0)
 const H5Z_FILTER_DEFLATE = H5Z_filter_t(1)
 const H5Z_FILTER_SHUFFLE = H5Z_filter_t(2)

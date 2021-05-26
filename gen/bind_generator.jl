@@ -9,6 +9,7 @@ push!(bind_exceptions, :h5p_get_fapl_mpio32 => :H5Pget_fapl_mpio)
 push!(bind_exceptions, :h5p_get_fapl_mpio64 => :H5Pget_fapl_mpio)
 push!(bind_exceptions, :h5p_set_fapl_mpio32 => :H5Pset_fapl_mpio)
 push!(bind_exceptions, :h5p_set_fapl_mpio64 => :H5Pset_fapl_mpio)
+push!(bind_exceptions, :h5p_set_fletcher32 => :h5p_set_fletcher32)
 
 # An expression which is injected at the beginning of the API defitions to aid in doing
 # (pre)compile-time conditional compilation based on the libhdf5 version.

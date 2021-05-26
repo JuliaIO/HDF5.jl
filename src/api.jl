@@ -1191,6 +1191,17 @@ function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
 end
 
 """
+    h5p_remove_filter(plist_id::hid_t, filter_id::H5Z_filter_t)
+
+See `libhdf5` documentation for [`H5Premove_filter`](https://portal.hdfgroup.org/display/HDF5/H5P_REMOVE_FILTER).
+"""
+function h5p_remove_filter(plist_id, filter_id)
+    var"#status#" = ccall((:H5Premove_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t), plist_id, filter_id)
+    var"#status#" < 0 && error("Error removing filter")
+    return nothing
+end
+
+"""
     h5p_set_alignment(plist_id::hid_t, threshold::hsize_t, alignment::hsize_t)
 
 See `libhdf5` documentation for [`H5Pset_alignment`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALIGNMENT).
@@ -1334,6 +1345,17 @@ function h5p_set_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
 end
 
 """
+    h5p_set_fletcher32(plist_id::hid_t)
+
+See `libhdf5` documentation for [`h5p_set_fletcher32`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FLETCHER32).
+"""
+function h5p_set_fletcher32(plist_id)
+    var"#status#" = ccall((:h5p_set_fletcher32, libhdf5), herr_t, (hid_t,), plist_id)
+    var"#status#" < 0 && error("Error enabling Fletcher32 filter")
+    return nothing
+end
+
+"""
     h5p_set_layout(plist_id::hid_t, setting::Cint)
 
 See `libhdf5` documentation for [`H5Pset_layout`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_LAYOUT).
@@ -1367,6 +1389,17 @@ function h5p_set_local_heap_size_hint(plist_id, size_hint)
 end
 
 """
+    h5p_set_nbit(plist_id::hid_t)
+
+See `libhdf5` documentation for [`H5Pset_nbit`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_NBIT).
+"""
+function h5p_set_nbit(plist_id)
+    var"#status#" = ccall((:H5Pset_nbit, libhdf5), herr_t, (hid_t,), plist_id)
+    var"#status#" < 0 && error("Error enabling nbit filter")
+    return nothing
+end
+
+"""
     h5p_set_obj_track_times(plist_id::hid_t, track_times::UInt8)
 
 See `libhdf5` documentation for [`H5Pset_obj_track_times`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_OBJ_TRACK_TIMES).
@@ -1378,6 +1411,17 @@ function h5p_set_obj_track_times(plist_id, track_times)
 end
 
 """
+    h5p_set_scaleoffset(plist_id::hid_t, scale_type::Cint, scale_factor::Cint)
+
+See `libhdf5` documentation for [`H5Pset_scaleoffset`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SCALEOFFSET).
+"""
+function h5p_set_scaleoffset(plist_id, scale_type, scale_factor)
+    var"#status#" = ccall((:H5Pset_scaleoffset, libhdf5), herr_t, (hid_t, Cint, Cint), plist_id, scale_type, scale_factor)
+    var"#status#" < 0 && error("Error enabling szip filter")
+    return nothing
+end
+
+"""
     h5p_set_shuffle(plist_id::hid_t)
 
 See `libhdf5` documentation for [`H5Pset_shuffle`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SHUFFLE).
@@ -1385,6 +1429,17 @@ See `libhdf5` documentation for [`H5Pset_shuffle`](https://portal.hdfgroup.org/d
 function h5p_set_shuffle(plist_id)
     var"#status#" = ccall((:H5Pset_shuffle, libhdf5), herr_t, (hid_t,), plist_id)
     var"#status#" < 0 && error("Error enabling shuffle filter")
+    return nothing
+end
+
+"""
+    h5p_set_szip(plist_id::hid_t, options_mask::Cuint, pixels_per_block::Cuint)
+
+See `libhdf5` documentation for [`H5Pset_szip`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SZIP).
+"""
+function h5p_set_szip(plist_id, options_mask, pixels_per_block)
+    var"#status#" = ccall((:H5Pset_szip, libhdf5), herr_t, (hid_t, Cuint, Cuint), plist_id, options_mask, pixels_per_block)
+    var"#status#" < 0 && error("Error enabling szip filter")
     return nothing
 end
 

@@ -1,10 +1,40 @@
-import Blosc
-
 # port of https://github.com/Blosc/c-blosc/blob/3a668dcc9f61ad22b5c0a0ab45fe8dad387277fd/hdf5/blosc_filter.c (copyright 2010 Francesc Alted, license: MIT/expat)
 
 const FILTER_BLOSC_VERSION = 2
 const FILTER_BLOSC = 32001 # Filter ID registered with the HDF Group for Blosc
 const blosc_name = "blosc"
+
+# to avoid namespace collisions
+# can later use import Blosc as BloscModule
+module BloscModule
+import Blosc
+end
+
+
+Base.@kwdef struct Blosc <: Filter
+    blosc_version::Cuint = 0
+    version_format::Cuint = 0
+    typesize::Cuint = 0
+    bufsize::Cuint = 0
+    level::Cuint = 5
+    shuffle::Cuint = 1
+    compcode::Cuint = 0
+end
+
+filterid(::Type{Blosc}) = FILTER_BLOSC
+FILTERS[FILTER_BLOSC] = Blosc
+
+function push!(f::Filters, blosc::Blosc)
+    0 <= blosc.level <= 9 || throw(ArgumentError("blosc compression $(blosc.level) not in 0:9"))
+    ref = Ref(blosc)
+    GC.@preserve ref begin
+        h5p_set_filter(p.id, filterid(Blosc), H5Z_FLAG_OPTIONAL, div(sizeof(F), sizeof(Cuint)), pointer_from_objref(ref))
+    end
+    return f
+end
+
+
+
 
 const blosc_flags = Ref{Cuint}()
 const blosc_values = Vector{Cuint}(undef,8)
@@ -114,12 +144,3 @@ function h5p_set_blosc(p::Properties, level::Integer=5)
     return nothing
 end
 
-struct BloscFilter <: Filter
-    blosc_version::Cuint
-    version_format::Cuint
-    typesize::Cuint
-    bufsize::Cuint
-    clevel::Cuint
-    shuffle::Cuint
-    compcode::Cuint
-end
