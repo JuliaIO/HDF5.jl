@@ -2,6 +2,27 @@ using HDF5
 using CRC32c
 using Test
 
+gatherf(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t(0)
+gatherf_bad(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t(-1)
+gatherf_data(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t((op_data == 9)-1)
+
+
+function scatterf(src_buf, src_buf_bytes_used, op_data)
+    A = [1,2,3,4]
+    unsafe_store!(src_buf, pointer(A))
+    unsafe_store!(src_buf_bytes_used, sizeof(A))
+    println(op_data)
+    return HDF5.herr_t(0)
+end
+scatterf_bad(src_buf, src_buf_bytes_used, op_data) = HDF5.herr_t(-1)
+function scatterf_data(src_buf, src_buf_bytes_used, op_data)
+    A = [1,2,3,4]
+    unsafe_store!(src_buf, pointer(A))
+    unsafe_store!(src_buf_bytes_used, sizeof(A))
+    println(op_data)
+    return HDF5.herr_t((op_data == 9)-1)
+end
+
 @testset "plain" begin
 
 # Create a new file
@@ -472,9 +493,6 @@ end # testset "Raw Chunk I/O"
     rm(fn)
 end # testset "Test h5d_fill
 
-gatherf(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t(0)
-gatherf_bad(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t(-1)
-gatherf_data(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t((op_data == 9)-1)
 @testset "h5d_gather" begin
     src_buf = rand(Int, (4,4) )
     dst_buf = Array{Int,2}(undef,(4,4))
@@ -490,23 +508,12 @@ gatherf_data(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t((op_data == 9)-
         @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, Ref(9)) |> isnothing
         @test_throws ErrorException HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, 10)
     end
+    rm(fn)
 end
 
-function scatterf(src_buf, src_buf_bytes_used, op_data)
-    A = [1,2,3,4]
-    unsafe_store!(src_buf, pointer(A))
-    unsafe_store!(src_buf_bytes_used, sizeof(A))
-    println(op_data)
-    return HDF5.herr_t(0)
-end
-scatterf_bad(src_buf, src_buf_bytes_used, op_data) = HDF5.herr_t(-1)
-function scatterf_data(src_buf, src_buf_bytes_used, op_data)
-    A = [1,2,3,4]
-    unsafe_store!(src_buf, pointer(A))
-    unsafe_store!(src_buf_bytes_used, sizeof(A))
-    println(op_data)
-    return HDF5.herr_t((op_data == 9)-1)
-end
+
+
+
 @testset "h5d_scatter" begin
     h5open(fn, "w") do f
         dst_buf = Array{Int,2}(undef,(4,4))
@@ -518,6 +525,7 @@ end
         scatterf_data_ptr = @cfunction(scatterf_data, HDF5.herr_t, (Ptr{Ptr{Int}}, Ptr{Csize_t}, Ref{Int}))
         @test HDF5.h5d_scatter(scatterf_data_ptr, Ref(9), datatype(Int), dataspace(d), dst_buf) |> isnothing
     end     
+    rm(fn)
 end
 
 # Test that switching time tracking off results in identical files
