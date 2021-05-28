@@ -441,10 +441,10 @@ end
 h5open(fn, "w") do f
     d = create_dataset(f, "dataset", datatype(Int64), dataspace(4, 6), chunk=(2, 3))
     raw = HDF5.ChunkStorage{IndexLinear}(d)
-    raw[1] = 0, collect(reinterpret(UInt8, [1,2,5,6, 9,10]))
-    raw[2] = 0, collect(reinterpret(UInt8, [3,4,7,8,11,12]))
-    raw[3] = 0, collect(reinterpret(UInt8, [13,14,17,18,21,22]))
-    raw[4] = 0, collect(reinterpret(UInt8, [15,16,19,20,23,24]))
+    raw[1] = 0, collect(reinterpret(UInt8, Int64[1,2,5,6, 9,10]))
+    raw[2] = 0, collect(reinterpret(UInt8, Int64[3,4,7,8,11,12]))
+    raw[3] = 0, collect(reinterpret(UInt8, Int64[13,14,17,18,21,22]))
+    raw[4] = 0, collect(reinterpret(UInt8, Int64[15,16,19,20,23,24]))
 end
 
 @test h5open(fn, "r") do f
