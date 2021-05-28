@@ -467,13 +467,8 @@ h5open(fn, "r") do f
         chunk_length = HDF5.get_chunk_length(d)
         @test chunk_length == HDF5.h5d_get_chunk_info(d,1)[:size]
         chunk_info = HDF5.h5d_get_chunk_info_by_coord(d, HDF5.hsize_t[0, 1])
-        #if Sys.iswindows() && Sys.WORD_SIZE != 64
-        #    @test_broken chunk_info[:filter_mask] == 0
-        #    @test_broken chunk_info[:size] == chunk_length
-        #else
-            @test chunk_info[:filter_mask] == 0
-            @test chunk_info[:size] == chunk_length
-        #end
+        @test chunk_info[:filter_mask] == 0
+        @test chunk_info[:size] == chunk_length
         @test HDF5.h5d_get_chunk_storage_size(d, HDF5.hsize_t[0, 1]) == chunk_length
         @test HDF5.h5d_get_storage_size(d) == sizeof(Int64)*24
         @test HDF5.h5d_get_space_status(d) == HDF5.H5D_SPACE_STATUS_ALLOCATED
