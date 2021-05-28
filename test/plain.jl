@@ -383,6 +383,8 @@ rm(fn)
 # Test direct chunk writing Cartesian index
 h5open(fn, "w") do f
     d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
+    HDF5.h5d_extend(d, HDF5.hsize_t[3,3]) # Should do nothing
+    HDF5.h5d_extend(d, HDF5.hsize_t[4,4]) # Should do nothing
     raw = HDF5.ChunkStorage(d)
     raw[1,1] = 0, collect(reinterpret(UInt8, [1,2,5,6]))
     raw[3,1] = 0, collect(reinterpret(UInt8, [3,4,7,8]))
@@ -453,6 +455,70 @@ end
 rm(fn)
 
 end # testset "Raw Chunk I/O"
+
+@testset "h5d_fill" begin
+    val = 5
+    h5open(fn, "w") do f
+        d = create_dataset(f, "dataset", datatype(Int), dataspace(6, 6), chunk=(2, 3))
+        buf = Array{Int,2}(undef,(6,6))
+        dtype = datatype(Int)
+        HDF5.h5d_fill(Ref(val), dtype, buf, datatype(Int), dataspace(d))
+        @test all(buf .== 5)
+        HDF5.h5d_write(d, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, buf)
+    end
+    h5open(fn, "r") do f
+        @test all( f["dataset"][:,:] .== 5 )
+    end
+    rm(fn)
+end # testset "Test h5d_fill
+
+gatherf(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t(0)
+gatherf_bad(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t(-1)
+gatherf_data(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t((op_data == 9)-1)
+@testset "h5d_gather" begin
+    src_buf = rand(Int, (4,4) )
+    dst_buf = Array{Int,2}(undef,(4,4))
+    h5open(fn ,"w") do f
+        d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
+        @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf), dst_buf, C_NULL, C_NULL) |> isnothing
+        @test src_buf == dst_buf
+        gatherf_ptr = @cfunction(gatherf, HDF5.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
+        @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_ptr, C_NULL) |> isnothing
+        gatherf_bad_ptr = @cfunction(gatherf_bad, HDF5.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
+        @test_throws ErrorException HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_bad_ptr, C_NULL) == 0
+        gatherf_data_ptr = @cfunction(gatherf_data, HDF5.herr_t, (Ptr{Nothing}, Csize_t, Ref{Int}))
+        @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, Ref(9)) |> isnothing
+        @test_throws ErrorException HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, 10)
+    end
+end
+
+function scatterf(src_buf, src_buf_bytes_used, op_data)
+    A = [1,2,3,4]
+    unsafe_store!(src_buf, pointer(A))
+    unsafe_store!(src_buf_bytes_used, sizeof(A))
+    println(op_data)
+    return HDF5.herr_t(0)
+end
+scatterf_bad(src_buf, src_buf_bytes_used, op_data) = HDF5.herr_t(-1)
+function scatterf_data(src_buf, src_buf_bytes_used, op_data)
+    A = [1,2,3,4]
+    unsafe_store!(src_buf, pointer(A))
+    unsafe_store!(src_buf_bytes_used, sizeof(A))
+    println(op_data)
+    return HDF5.herr_t((op_data == 9)-1)
+end
+@testset "h5d_scatter" begin
+    h5open(fn, "w") do f
+        dst_buf = Array{Int,2}(undef,(4,4))
+        d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
+        scatterf_ptr = @cfunction(scatterf, HDF5.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
+        @test HDF5.h5d_scatter(scatterf_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf) |> isnothing
+        scatterf_bad_ptr = @cfunction(scatterf_bad, HDF5.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
+        @test_throws ErrorException HDF5.h5d_scatter(scatterf_bad_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf)
+        scatterf_data_ptr = @cfunction(scatterf_data, HDF5.herr_t, (Ptr{Ptr{Int}}, Ptr{Csize_t}, Ref{Int}))
+        @test HDF5.h5d_scatter(scatterf_data_ptr, Ref(9), datatype(Int), dataspace(d), dst_buf) |> isnothing
+    end     
+end
 
 # Test that switching time tracking off results in identical files
 fn1 = tempname(); fn2 = tempname()

@@ -56,7 +56,7 @@
 
 @bind h5d_close(dataset_id::hid_t)::herr_t "Error closing dataset"
 @bind h5d_create2(loc_id::hid_t, pathname::Ptr{UInt8}, dtype_id::hid_t, space_id::hid_t, lcpl_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)::hid_t error("Error creating dataset ", h5i_get_name(loc_id), "/", pathname)
-@bind h5d_extend(dataset_id::hid_t, size::Ptr{hsize_t})::herr_t "Error extending dataset"
+@bind h5d_extend(dataset_id::hid_t, size::Ptr{hsize_t})::herr_t "Error extending dataset" # deprecated in favor of h5d_set_extent
 @bind h5d_fill(fill::Ptr{Cvoid}, fill_type_id::hid_t, buf::Ptr{Cvoid}, buf_type_id::hid_t, space_id::hid_t)::herr_t "Error filling dataset"
 @bind h5d_flush(dataset_id::hid_t)::herr_t "Error flushing dataset"
 @bind h5d_gather(src_space_id::hid_t, src_buf::Ptr{Cvoid}, type_id::hid_t, dst_buf_size::Csize_t, dst_buf::Ptr{Cvoid}, op::Ptr{Cvoid}, op_data::Any)::herr_t "Error gathering dataset"
