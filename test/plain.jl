@@ -466,13 +466,15 @@ h5open(fn, "r") do f
     if v"1.10.5" ≤ HDF5._libhdf5_build_ver
         chunk_length = HDF5.get_chunk_length(d)
         @test chunk_length == HDF5.h5d_get_chunk_info(d,1)[:size]
-        chunk_info = HDF5.h5d_get_chunk_info_by_coord(d, [0, 1])
-        # If there is an issue with getting the chunk_size, no need to check the filter mask
-        #if chunk_info[:size] != 0
+        chunk_info = HDF5.h5d_get_chunk_info_by_coord(d, HDF5.hsize_t[0, 1])
+        #if Sys.iswindows() && Sys.WORD_SIZE != 64
+        #    @test_broken chunk_info[:filter_mask] == 0
+        #    @test_broken chunk_info[:size] == chunk_length
+        #else
             @test chunk_info[:filter_mask] == 0
             @test chunk_info[:size] == chunk_length
         #end
-        @test HDF5.h5d_get_chunk_storage_size(d, [0, 1]) == chunk_length
+        @test HDF5.h5d_get_chunk_storage_size(d, HDF5.hsize_t[0, 1]) == chunk_length
         @test HDF5.h5d_get_storage_size(d) == sizeof(Int64)*24
         @test HDF5.h5d_get_space_status(d) == HDF5.H5D_SPACE_STATUS_ALLOCATED
     end
@@ -480,7 +482,7 @@ h5open(fn, "r") do f
     # Manually reconstruct matrix
     A = Matrix{Int}(undef, extent)
     for (r,c) in Iterators.product(axes(raw)...)
-        A[r:r+chunk[1]-1, c:c+chunk[2]-1] .= reshape( reinterpret(Int, raw[r,c][2]), chunk)
+        A[r:r+chunk[1]-1, c:c+chunk[2]-1] .= reshape( reinterpret(Int64, raw[r,c][2]), chunk)
     end
     @test A == reshape(1:24, extent)
 
