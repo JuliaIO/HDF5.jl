@@ -151,6 +151,13 @@ const H5D_CHUNK_CACHE_NSLOTS_DEFAULT = -1 % Csize_t
 const H5D_CHUNK_CACHE_NBYTES_DEFAULT = -1 % Csize_t
 const H5D_CHUNK_CACHE_W0_DEFAULT = Cdouble(-1)
 
+# space status
+const H5D_SPACE_STATUS_ERROR = Cint(-1)
+const H5D_SPACE_STATUS_NOT_ALLOCATED = Cint(0)
+const H5D_SPACE_STATUS_PART_ALLOCATED = Cint(1)
+const H5D_SPACE_STATUS_ALLOCATED = Cint(2)
+const H5D_space_status_t = Cint
+
 # error-related constants
 const H5E_DEFAULT      = 0
 

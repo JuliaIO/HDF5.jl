@@ -154,6 +154,19 @@ function h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
 end
 
 """
+    h5d_get_space_status(dataset_id)
+
+    Helper method to get the status of the dataset space
+
+    Returns a H5D_space_status_t (Cint) indicating the status, see H5D_SPACE_STATUS*
+"""
+function h5d_get_space_status(dataset_id)
+    r = Ref{H5D_space_status_t}()
+    h5d_get_space_status(dataset_id, r)
+    return r[]
+end
+
+"""
     h5d_read_chunk(dataset_id, offset, [buf]; dxpl_id = H5P_DEFAULT, filters = Ref{UInt32}())
 
     Helper method to read chunks via 0-based offsets in a Tuple.
