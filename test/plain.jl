@@ -439,7 +439,7 @@ end
 
 # Test direct write chunk writing via linear indexing
 h5open(fn, "w") do f
-    d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 6), chunk=(2, 3))
+    d = create_dataset(f, "dataset", datatype(Int64), dataspace(4, 6), chunk=(2, 3))
     raw = HDF5.ChunkStorage{IndexLinear}(d)
     raw[1] = 0, collect(reinterpret(UInt8, [1,2,5,6, 9,10]))
     raw[2] = 0, collect(reinterpret(UInt8, [3,4,7,8,11,12]))
@@ -467,10 +467,13 @@ h5open(fn, "r") do f
         chunk_length = HDF5.get_chunk_length(d)
         @test chunk_length == HDF5.h5d_get_chunk_info(d,1)[:size]
         chunk_info = HDF5.h5d_get_chunk_info_by_coord(d, [0, 1])
-        @test chunk_info[:filter_mask] == 0
-        @test chunk_info[:size] == chunk_length
+        # If there is an issue with getting the chunk_size, no need to check the filter mask
+        #if chunk_info[:size] != 0
+            @test chunk_info[:filter_mask] == 0
+            @test chunk_info[:size] == chunk_length
+        #end
         @test HDF5.h5d_get_chunk_storage_size(d, [0, 1]) == chunk_length
-        @test HDF5.h5d_get_storage_size(d) == 192
+        @test HDF5.h5d_get_storage_size(d) == sizeof(Int64)*24
         @test HDF5.h5d_get_space_status(d) == HDF5.H5D_SPACE_STATUS_ALLOCATED
     end
 
