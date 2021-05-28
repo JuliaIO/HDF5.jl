@@ -11,7 +11,7 @@ function scatterf(src_buf, src_buf_bytes_used, op_data)
     A = [1,2,3,4]
     unsafe_store!(src_buf, pointer(A))
     unsafe_store!(src_buf_bytes_used, sizeof(A))
-    println(op_data)
+    @debug "op_data: " opdata
     return HDF5.herr_t(0)
 end
 scatterf_bad(src_buf, src_buf_bytes_used, op_data) = HDF5.herr_t(-1)
@@ -19,7 +19,7 @@ function scatterf_data(src_buf, src_buf_bytes_used, op_data)
     A = [1,2,3,4]
     unsafe_store!(src_buf, pointer(A))
     unsafe_store!(src_buf_bytes_used, sizeof(A))
-    println(op_data)
+    @debug "op_data: " opdata
     return HDF5.herr_t((op_data == 9)-1)
 end
 
@@ -204,6 +204,8 @@ salut_splitr = read(fr, "salut_split")
 salut_2dr = read(fr, "salut_2d")
 @test salut_2d == salut_2dr
 salut_vlenr = read(fr, "salut_vlen")
+@test HDF5.vlen_get_buf_size(fr["salut_vlen"]) == 7
+@test HDF5.h5d_get_access_plist(fr["salut-vlen"]) != 0
 #@test salut_vlenr == salut_split
 vlen_intr = read(fr, "int_vlen")
 @test vlen_intr == vlen_int
@@ -461,8 +463,15 @@ h5open(fn, "r") do f
     @test length(raw) == 4
     @test axes(raw) == (1:2:4, 1:3:6)
     @test HDF5.h5d_get_num_chunks(d) == HDF5.get_num_chunks(d)
-    if v"1.10.5" ≤ HDF5._libhdf5_build_ver 
-        @test HDF5.get_chunk_length(d) == HDF5.h5d_get_chunk_info(d,1)[:size]
+    if v"1.10.5" ≤ HDF5._libhdf5_build_ver
+        chunk_length = HDF5.get_chunk_length(d)
+        @test chunk_length == HDF5.h5d_get_chunk_info(d,1)[:size]
+        chunk_info = HDF5.h5d_get_chunk_info_by_coord(d, [0, 1])
+        @test chunk_info[:filter_mask] == 0
+        @test chunk_info[:size] == chunk_length
+        @test HDF5.h5d_get_chunk_storage_size(d, [0, 1]) == chunk_length
+        @test HDF5.h5d_get_storage_size(d) == 192
+        @test HDF5.h5d_get_space_status(d) == HDF5.H5D_SPACE_STATUS_ALLOCATED
     end
 
     # Manually reconstruct matrix
@@ -471,6 +480,7 @@ h5open(fn, "r") do f
         A[r:r+chunk[1]-1, c:c+chunk[2]-1] .= reshape( reinterpret(Int, raw[r,c][2]), chunk)
     end
     @test A == reshape(1:24, extent)
+
 end
 
 rm(fn)
