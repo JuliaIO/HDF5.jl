@@ -45,6 +45,31 @@ expression. If not provided, no error check is done. If it is a `String`, the st
 as the message in an `error()` call, otherwise the expression is used as-is. Note that the
 expression may refer to any arguments by name.
 
+## Special behaviors
+
+**Library names:**
+
+It is assumed that the HDF library names are given in global constants named `libhdf5`
+and `libhdf5_hl`. The former is used for all `ccall`s, except if the C library name begins
+with one of "H5DO", "H5DS", "H5L5", or "H5TB" then the latter library is used.
+
+**Argument type:**
+
+All arguments are automatically converted to the declared type following Julia's standard
+[Calling C and Fortran Code](https://docs.julialang.org/en/v1/manual/calling-c-and-fortran-code/)
+rules, _except_ in the special case where the argument type is declared as `::Ref{Cvoid}`.
+In this exceptional case, the argument `arg::Ref{Cvoid}` is transformed following the rule
+```julia
+c_arg = arg isa Ref{<:Any} ? arg : Base.cconvert(Ref{eltype(arg)}, arg)
+```
+and the `ccall` is expanded as if the original argument had been declared as
+`c_arg::Ptr{Cvoid}`.
+This conversion rule allows for automatically boxing scalars while passing through
+explicit `Ref` values.
+(`Array` arguments are wrapped with a benign `RefArray`.)
+
+**Return types:**
+
 The declared return type in the function-like signature must be the return type of the C
 function, and the Julia return type is inferred as one of the following possibilities:
 
@@ -60,7 +85,9 @@ function, and the Julia return type is inferred as one of the following possibil
    - If the return type is an C integer type compatible with Int, the return type is
      converted to an Int.
 
-Furthermore, the C return value is interpreted to automatically generate error checks
+**Error checking:**
+
+The C return value is also interpreted to automatically generate error checks
 (only when `ErrorStringOrExpression` is provided):
 
 1. If `ReturnType === :herr_t` or `ReturnType === :htri_t`, an error is raised when the return
@@ -73,10 +100,6 @@ Furthermore, the C return value is interpreted to automatically generate error c
    equal to `C_NULL`.
 
 3. For all other return types, it is assumed a negative value indicates error.
-
-It is assumed that the HDF library names are given in global constants named `libhdf5`
-and `libhdf5_hl`. The former is used for all `ccall`s, except if the C library name begins
-with "H5DO" or "H5TB" then the latter library is used.
 """
 macro bind(sig::Expr, err::Union{String,Expr,Nothing} = nothing,
            vers::Union{Expr,Nothing} = nothing)
@@ -120,15 +143,30 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
     funcargs = funcsig.args[2:end]
 
     # Pull apart argument names and types
-    args = Vector{Symbol}()
-    argt = Vector{Union{Expr,Symbol}}()
+    args = Vector{Symbol}() # arguments in function signature
+    argv = Vector{Symbol}() # arguments passed in ccall
+    argt = Vector{Union{Expr,Symbol}}() # types of ccall arguments
+    argc = Vector{Expr}() # optional conversions taking args => argv
     for ii in 1:length(funcargs)
         argex = funcargs[ii]
         if !isexpr(argex, :(::)) || !(argex.args[1] isa Symbol)
             error("expected `name::type` expression in argument ", ii, ", got ", funcargs[ii])
         end
         push!(args, argex.args[1])
-        push!(argt, argex.args[2])
+        if isexpr(argex.args[2], :curly) && argex.args[2] == :(Ref{Cvoid})
+            # Special case: maybe box the argument in Ref
+            arg = argex.args[1]::Symbol
+            sym = Symbol("#", arg, "#")
+            push!(argc, :($sym = $arg isa Ref{<:Any} ? $arg : $(GlobalRef(Base, :cconvert))(Ref{eltype($arg)}, $arg)))
+            push!(argv, sym)
+            push!(argt, :(Ptr{Cvoid}))
+            # in-place modify funcargs so that the doc generation (`string(funcsig)` below)
+            # shows the C argument type.
+            funcargs[ii].args[2] = :(Ptr{Cvoid})
+        else
+            push!(argv, argex.args[1])
+            push!(argt, argex.args[2])
+        end
     end
 
     prefix, rest = split(string(jlfuncname), "_", limit = 2)
@@ -160,7 +198,7 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
 
     # The ccall(...) itself
     cfunclib = Expr(:tuple, quot(cfuncname), lib)
-    ccallexpr = :(ccall($cfunclib, $rettype, ($(argt...),), $(args...)))
+    ccallexpr = :(ccall($cfunclib, $rettype, ($(argt...),), $(argv...)))
 
     # The error condition expression
     errexpr = err isa String ? :(error($err)) : err
@@ -204,7 +242,11 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
     # avoids inserting the line number nodes for the macro --- the call site
     # is instead explicitly injected into the function body via __source__.
     jlfuncsig = Expr(:call, jlfuncname, args...)
-    jlfuncbody = Expr(:block, __source__, :($statsym = $ccallexpr))
+    jlfuncbody = Expr(:block, __source__)
+    if !isempty(argc)
+        append!(jlfuncbody.args, argc)
+    end
+    push!(jlfuncbody.args, :($statsym = $ccallexpr))
     if errexpr !== nothing
         push!(jlfuncbody.args, errexpr)
     end
