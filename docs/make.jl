@@ -29,8 +29,8 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Interface" => [
-            "Properties" => "properties.md",
-         ],
+            "properties.md",
+        ],
         "Low-level library bindings" => "api_bindings.md",
     ],
 )

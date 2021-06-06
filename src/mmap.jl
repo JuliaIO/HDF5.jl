@@ -6,8 +6,8 @@ ismmappable(obj::Dataset) = ismmappable(obj, get_jl_type(obj))
 
 function readmmap(obj::Dataset, ::Type{T}) where {T}
     dspace = dataspace(obj)
-    stype = h5s_get_simple_extent_type(dspace)
-    (stype != H5S_SIMPLE) && error("can only mmap simple dataspaces")
+    stype = API.h5s_get_simple_extent_type(dspace)
+    (stype != API.H5S_SIMPLE) && error("can only mmap simple dataspaces")
     dims = size(dspace)
 
     if isempty(dims)
@@ -15,13 +15,13 @@ function readmmap(obj::Dataset, ::Type{T}) where {T}
     end
     if !Sys.iswindows()
         local fdint
-        prop = h5d_get_access_plist(obj)
+        prop = API.h5d_get_access_plist(obj)
         try
             # TODO: Should check return value of h5f_get_driver()
-            fdptr = h5f_get_vfd_handle(obj.file, prop)
+            fdptr = API.h5f_get_vfd_handle(obj.file, prop)
             fdint = unsafe_load(convert(Ptr{Cint}, fdptr))
         finally
-            h5p_close(prop)
+            API.h5p_close(prop)
         end
         fd = fdio(fdint)
     else
@@ -39,12 +39,12 @@ function readmmap(obj::Dataset, ::Type{T}) where {T}
         # function
 
         # Check permissions
-        intent = h5f_get_intent(obj.file)
-        flag = intent == H5F_ACC_RDONLY ? "r" : "r+"
+        intent = API.h5f_get_intent(obj.file)
+        flag = intent == API.H5F_ACC_RDONLY ? "r" : "r+"
         fd = open(obj.file.filename, flag)
     end
 
-    offset = h5d_get_offset(obj)
+    offset = API.h5d_get_offset(obj)
     if offset % Base.datatype_alignment(T) == 0
         A = Mmap.mmap(fd, Array{T,length(dims)}, dims, offset)
     else

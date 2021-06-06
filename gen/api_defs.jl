@@ -183,6 +183,7 @@
 @bind h5p_set_deflate(plist_id::hid_t, setting::Cuint)::herr_t "Error setting compression method and level (deflate)"
 @bind h5p_set_dxpl_mpio(dxpl_id::hid_t, xfer_mode::Cint)::herr_t "Error setting MPIO transfer mode"
 @bind h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::Int, size::Csize_t)::herr_t "Error setting external property"
+@bind h5p_set_fapl_sec2(fapl_id::hid_t)::herr_t "Error setting Sec2 properties"
 @bind h5p_set_fapl_mpio32(fapl_id::hid_t, comm::Hmpih32, info::Hmpih32)::herr_t "Error setting MPIO properties"
 @bind h5p_set_fapl_mpio64(fapl_id::hid_t, comm::Hmpih64, info::Hmpih64)::herr_t "Error setting MPIO properties"
 @bind h5p_set_fclose_degree(plist_id::hid_t, fc_degree::Cint)::herr_t "Error setting close degree"

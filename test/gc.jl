@@ -27,9 +27,9 @@ GC.enable(false)
 fn = tempname()
 for i = 1:10
     file = h5open(fn, "w")
-    memtype_id = HDF5.h5t_create(HDF5.H5T_COMPOUND, 2*sizeof(Float64))
-    HDF5.h5t_insert(memtype_id, "real", 0, HDF5.hdf5_type_id(Float64))
-    HDF5.h5t_insert(memtype_id, "imag", sizeof(Float64), HDF5.hdf5_type_id(Float64))
+    memtype_id = HDF5.API.h5t_create(HDF5.API.H5T_COMPOUND, 2*sizeof(Float64))
+    HDF5.API.h5t_insert(memtype_id, "real", 0, HDF5.hdf5_type_id(Float64))
+    HDF5.API.h5t_insert(memtype_id, "imag", sizeof(Float64), HDF5.hdf5_type_id(Float64))
     dt = HDF5.Datatype(memtype_id)
     commit_datatype(file, "dt", dt)
     ds = dataspace((2,))
@@ -66,7 +66,7 @@ GC.enable(true)
 
 let plist = HDF5.FileAccessProperties()  # related to issue #620
     HDF5.init!(plist)
-    HDF5.h5p_close(plist)
+    HDF5.API.h5p_close(plist)
     @test_nowarn finalize(plist)
 end
 

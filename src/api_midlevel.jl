@@ -10,7 +10,7 @@ Change the current dimensions of a dataset to `new_dims`, limited by
 """
 function set_extent_dims(dset::Dataset, size::Dims)
     checkvalid(dset)
-    h5d_set_extent(dset, hsize_t[reverse(size)...])
+    API.h5d_set_extent(dset, API.hsize_t[reverse(size)...])
 end
 
 """
@@ -23,9 +23,9 @@ to `new_dims`.
 function set_extent_dims(dspace::Dataspace, size::Dims, max_dims::Union{Dims,Nothing} = nothing)
     checkvalid(dspace)
     rank = length(size)
-    current_size = hsize_t[reverse(size)...]
-    maximum_size = isnothing(max_dims) ? C_NULL : [reverse(max_dims .% hsize_t)...]
-    h5s_set_extent_simple(dspace, rank, current_size, maximum_size)
+    current_size = API.hsize_t[reverse(size)...]
+    maximum_size = isnothing(max_dims) ? C_NULL : [reverse(max_dims .% API.hsize_t)...]
+    API.h5s_set_extent_simple(dspace, rank, current_size, maximum_size)
     return nothing
 end
 
@@ -37,7 +37,7 @@ Get the array dimensions from a dataspace, dataset, or attribute and return a tu
 """
 function get_extent_dims(obj::Union{Dataspace,Dataset,Attribute})
     dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
-    h5_dims, h5_maxdims = h5s_get_simple_extent_dims(dspace)
+    h5_dims, h5_maxdims = API.h5s_get_simple_extent_dims(dspace)
     # reverse dimensions since hdf5 uses C-style order
     N = length(h5_dims)
     dims = ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
@@ -52,12 +52,12 @@ end
 During execution of the function `f`, disable printing of internal HDF5 library error messages.
 """
 function silence_errors(f::Function)
-    estack = H5E_DEFAULT
-    func, client_data = h5e_get_auto(estack)
-    h5e_set_auto(estack, C_NULL, C_NULL)
+    estack = API.H5E_DEFAULT
+    func, client_data = API.h5e_get_auto(estack)
+    API.h5e_set_auto(estack, C_NULL, C_NULL)
     try
         return f()
     finally
-        h5e_set_auto(estack, func, client_data)
+        API.h5e_set_auto(estack, func, client_data)
     end
 end

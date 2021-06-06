@@ -1,7 +1,6 @@
 module HDF5
 
-using Base: unsafe_convert, StringVector
-using Requires: @require
+using Base: unsafe_convert
 # needed for filter(f, tuple) in julia 1.3
 using Compat
 
@@ -38,23 +37,14 @@ dataspace, datatype
 # Dataspace, Object, Properties, VLen, ChunkStorage, Reference
 
 
-const depsfile = joinpath(dirname(@__DIR__), "deps", "deps.jl")
-if isfile(depsfile)
-    include(depsfile)
-else
-    error("HDF5 is not properly installed. Please run Pkg.build(\"HDF5\") ",
-          "and restart Julia.")
-end
-
 h5doc(name) = "[`$name`](https://portal.hdfgroup.org/display/HDF5/$(name))"
 
 # Core API ccall wrappers
-include("api_types.jl")
-include("api.jl")
-include("api_helpers.jl")
-
+include("api/api.jl")
 include("properties.jl")
-include("filters.jl")
+include("filters/filters.jl")
+include("drivers/drivers.jl")
+
 include("file.jl")
 include("group.jl")
 include("datatype.jl")
@@ -64,7 +54,6 @@ include("object.jl")
 include("attribute.jl")
 include("typeconversions.jl")
 include("show.jl")
-include("blosc_filter.jl")
 include("interface.jl")
 include("mmap.jl")
 include("chunked.jl")
@@ -73,7 +62,7 @@ include("api_midlevel.jl")
 
 
 
-const libversion = h5_get_libversion()
+const libversion = API.h5_get_libversion()
 
 const HAS_PARALLEL = Ref(false)
 
@@ -88,22 +77,21 @@ For the second condition to be true, MPI.jl must be imported before HDF5.jl.
 has_parallel() = HAS_PARALLEL[]
 
 function __init__()
-    check_deps()
+    API.check_deps()
 
     # disable file locking as that can cause problems with mmap'ing
     if !haskey(ENV, "HDF5_USE_FILE_LOCKING")
         ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
     end
 
-    register_blosc()
+    Filters.register_blosc()
 
     # Turn off automatic error printing
     # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
-    ASCII_LINK_PROPERTIES[] = LinkCreateProperties(char_encoding = H5T_CSET_ASCII, create_intermediate_group = 1)
-    UTF8_LINK_PROPERTIES[]  = LinkCreateProperties(char_encoding = H5T_CSET_UTF8,  create_intermediate_group = 1)
-    ASCII_ATTRIBUTE_PROPERTIES[] = AttributeCreateProperties(char_encoding = H5T_CSET_ASCII)
-    UTF8_ATTRIBUTE_PROPERTIES[]  = AttributeCreateProperties(char_encoding = H5T_CSET_UTF8)
-    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" @eval include("mpio.jl")
+    ASCII_LINK_PROPERTIES[] = LinkCreateProperties(char_encoding = API.H5T_CSET_ASCII, create_intermediate_group = 1)
+    UTF8_LINK_PROPERTIES[]  = LinkCreateProperties(char_encoding = API.H5T_CSET_UTF8,  create_intermediate_group = 1)
+    ASCII_ATTRIBUTE_PROPERTIES[] = AttributeCreateProperties(char_encoding = API.H5T_CSET_ASCII)
+    UTF8_ATTRIBUTE_PROPERTIES[]  = AttributeCreateProperties(char_encoding = API.H5T_CSET_UTF8)
 
     return nothing
 end

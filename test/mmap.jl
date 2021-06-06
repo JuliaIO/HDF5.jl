@@ -12,7 +12,7 @@ f = h5open(fn, "w")
 # datasets) and the other with explicit early allocation.
 hdf5_A = create_dataset(f, "A", datatype(Int64), dataspace(3,3))
 hdf5_B = create_dataset(f, "B", datatype(Float64), dataspace(3,3);
-                  alloc_time = HDF5.H5D_ALLOC_TIME_EARLY)
+                  alloc_time = :early)
 # The late case cannot be mapped yet.
 @test_throws ErrorException("Error getting offset") HDF5.readmmap(f["A"])
 # Then write and fill dataset A, making it mappable. B was filled with 0.0 at

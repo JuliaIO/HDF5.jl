@@ -1,0 +1,27 @@
+HDF5 has at least 6 mechanisms for referring to external data:
+
+
+* mounted files: a HDF5 object (file, group, etc), can be temporarily mounted at a location in another HDF5 file
+ - https://portal.hdfgroup.org/display/HDF5/H5F_MOUNT (added <= v1.2)
+
+* external storage properties: this stores a dataset in one or more non-HDF5 files (added <= v1.2)
+ - Must be stored as H5D_CONTIGUOUS (i.e. no chunking or compression can be used)
+ - https://portal.hdfgroup.org/display/HDF5/H5P_SET_EXTERNAL
+ - https://support.hdfgroup.org/HDF5/doc1.6/UG/10_Datasets.html
+
+* Virtual File Layer (VFL): specifies how the whole file is laid out on disk (added in v1.4)
+ - https://portal.hdfgroup.org/display/HDF5/Virtual+File+Drivers
+ - e.g. https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MULTI 
+ 
+* external links: like mounting, but permanent (added in v1.8)
+ - https://portal.hdfgroup.org/display/HDF5/H5L_CREATE_EXTERNAL
+ 
+* Virtual Datasets (VDS): A dataset which is made up of other datasets (potentially in different files)
+ - add in v1.10
+ - https://portal.hdfgroup.org/display/HDF5/Introduction+to+the+Virtual+Dataset++-+VDS
+ - https://portal.hdfgroup.org/display/HDF5/Virtual+Dataset++-+VDS
+ - https://portal.hdfgroup.org/display/HDF5/H5P_SET_VIRTUAL
+ - https://docs.h5py.org/en/stable/vds.html
+
+* Virtual Object Layer (VOL): specifies a mechanism for working with different formats/access mechanisms (added in v1.12)
+ - https://www.hdfgroup.org/2020/03/release-of-hdf5-1-12-0-newsletter-172/

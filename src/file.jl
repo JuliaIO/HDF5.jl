@@ -44,7 +44,7 @@ end
 
 # This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
 mutable struct File <: H5DataStore
-    id::hid_t
+    id::API.hid_t
     filename::String
 
     function File(id, filename, toclose::Bool=true)
@@ -55,21 +55,22 @@ mutable struct File <: H5DataStore
         f
     end
 end
-Base.cconvert(::Type{hid_t}, f::File) = f.id
+Base.cconvert(::Type{API.hid_t}, f::File) = f
+Base.unsafe_convert(::Type{API.hid_t}, f::File) = f.id
 
 # Close functions that should try calling close regardless
 function Base.close(obj::File)
     if obj.id != -1
-        h5f_close(obj)
+        API.h5f_close(obj)
         obj.id = -1
     end
     nothing
 end
 
-Base.isvalid(obj::File) = obj.id != -1 && h5i_is_valid(obj)
+Base.isvalid(obj::File) = obj.id != -1 && API.h5i_is_valid(obj)
 
-get_access_properties(f::File)      = FileAccessProperties(h5f_get_access_plist(f))
-get_create_properties(f::File)      = FileCreateProperties(h5f_get_create_plist(f))
+get_access_properties(f::File)      = FileAccessProperties(API.h5f_get_access_plist(f))
+get_create_properties(f::File)      = FileCreateProperties(API.h5f_get_create_plist(f))
 
 
 """
@@ -85,4 +86,4 @@ Base.isopen(obj::File) = obj.id != -1
 Start Single Reader Multiple Writer (SWMR) writing mode.
 See [SWMR documentation](https://portal.hdfgroup.org/display/HDF5/Single+Writer+Multiple+Reader++-+SWMR).
 """
-start_swmr_write(h5::File) = h5f_start_swmr_write(h5)
+start_swmr_write(h5::File) = API.h5f_start_swmr_write(h5)

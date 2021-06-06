@@ -1,9 +1,9 @@
 function Base.show(io::IO, fid::File)
     if isvalid(fid)
-        intent = h5f_get_intent(fid)
-        RW_MASK   = H5F_ACC_RDONLY | H5F_ACC_RDWR
-        SWMR_MASK = H5F_ACC_SWMR_READ | H5F_ACC_SWMR_WRITE
-        rw = (intent & RW_MASK) == H5F_ACC_RDONLY ? "(read-only" : "(read-write"
+        intent = API.h5f_get_intent(fid)
+        RW_MASK   = API.H5F_ACC_RDONLY | API.H5F_ACC_RDWR
+        SWMR_MASK = API.H5F_ACC_SWMR_READ | API.H5F_ACC_SWMR_WRITE
+        rw = (intent & RW_MASK) == API.H5F_ACC_RDONLY ? "(read-only" : "(read-write"
         swmr = (intent & SWMR_MASK) != 0 ? ", swmr) " : ") "
         print(io, "HDF5.File: ", rw, swmr, fid.filename)
     else
@@ -20,10 +20,10 @@ function Base.show(io::IO, g::Group)
 end
 
 function Base.show(io::IO, prop::Properties)
-    if prop.class == H5P_DEFAULT
+    if prop.class == API.H5P_DEFAULT
         print(io, "HDF5.Properties: default class")
     elseif isvalid(prop)
-        print(io, "HDF5.Properties: ", h5p_get_class_name(prop.class), " class")
+        print(io, "HDF5.Properties: ", API.h5p_get_class_name(prop.class), " class")
     else
         print(io, "HDF5.Properties: (invalid)")
     end
@@ -51,16 +51,16 @@ end
 function Base.show(io::IO, dtype::Datatype)
     print(io, "HDF5.Datatype: ")
     if isvalid(dtype)
-        h5t_committed(dtype) && print(io, name(dtype), " ")
-        print(io, h5lt_dtype_to_text(dtype))
+        API.h5t_committed(dtype) && print(io, name(dtype), " ")
+        print(io, API.h5lt_dtype_to_text(dtype))
     else
-        # Note that h5i_is_valid returns `false` on the built-in datatypes (e.g. H5T_NATIVE_INT),
+        # Note that API.h5i_is_valid returns `false` on the built-in datatypes (e.g. API.H5T_NATIVE_INT),
         # apparently because they have refcounts of 0 yet are always valid. Just temporarily turn
-        # off error printing and try the call to probe if dtype is valid since H5LTdtype_to_text
+        # off error printing and try the call to probe if dtype is valid since API.H5LTdtype_to_text
         # special-cases all of the built-in types internally.
         local text
         try
-            text = silence_errors(() -> h5lt_dtype_to_text(dtype))
+            text = silence_errors(() -> API.h5lt_dtype_to_text(dtype))
         catch
             text = "(invalid)"
         end
@@ -74,18 +74,18 @@ function Base.show(io::IO, dspace::Dataspace)
         return
     end
     print(io, "HDF5.Dataspace: ")
-    type = h5s_get_simple_extent_type(dspace)
-    if type == H5S_NULL
+    type = API.h5s_get_simple_extent_type(dspace)
+    if type == API.H5S_NULL
         print(io, "H5S_NULL")
         return
-    elseif type == H5S_SCALAR
+    elseif type == API.H5S_SCALAR
         print(io, "H5S_SCALAR")
         return
     end
     # otherwise type == H5S_SIMPLE
     sz, maxsz = get_extent_dims(dspace)
-    sel = h5s_get_select_type(dspace)
-    if sel == H5S_SEL_HYPERSLABS && h5s_is_regular_hyperslab(dspace)
+    sel = API.h5s_get_select_type(dspace)
+    if sel == API.H5S_SEL_HYPERSLABS && API.h5s_is_regular_hyperslab(dspace)
         start, stride, count, _ = get_regular_hyperslab(dspace)
         ndims = length(start)
         print(io, "(")
@@ -105,7 +105,7 @@ function Base.show(io::IO, dspace::Dataspace)
         if maxsz != sz
             print(io, " / ", maxsz)
         end
-        if sel != H5S_SEL_ALL
+        if sel != API.H5S_SEL_ALL
             print(io, " [irregular selection]")
         end
     end
@@ -193,21 +193,21 @@ function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,At
 
     if attributes && !isa(obj, Attribute)
         obj′ = obj isa Attributes ? obj.parent : obj
-        h5a_iterate(obj′, H5_INDEX_NAME, H5_ITER_INC) do _, cname, _
-            depth_check() && return herr_t(1)
+        API.h5a_iterate(obj′, API.H5_INDEX_NAME, API.H5_ITER_INC) do _, cname, _
+            depth_check() && return API.herr_t(1)
 
             name = unsafe_string(cname)
             icon = _tree_icon(Attribute)
             islast = counter == nchildren
             print(io, "\n", indent, islast ? ELBOW : TEE, icon, " ", name)
-            return herr_t(0)
+            return API.herr_t(0)
         end
     end
 
     typeof(obj) <: Union{File, Group} || return nothing
 
-    h5l_iterate(obj, H5_INDEX_NAME, H5_ITER_INC) do loc_id, cname, _
-        depth_check() && return herr_t(1)
+    API.h5l_iterate(obj, API.H5_INDEX_NAME, API.H5_ITER_INC) do loc_id, cname, _
+        depth_check() && return API.herr_t(1)
 
         name = unsafe_string(cname)
         child = obj[name]
@@ -219,7 +219,7 @@ function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,At
         _show_tree(io, child, nextindent; attributes = attributes, depth = depth + 1)
 
         close(child)
-        return herr_t(0)
+        return API.herr_t(0)
     end
     return nothing
 end

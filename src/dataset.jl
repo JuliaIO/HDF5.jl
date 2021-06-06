@@ -1,5 +1,5 @@
 mutable struct Dataset
-    id::hid_t
+    id::API.hid_t
     file::File
     xfer::DatasetTransferProperties
 
@@ -9,30 +9,36 @@ mutable struct Dataset
         dset
     end
 end
-Base.cconvert(::Type{hid_t}, dset::Dataset) = dset.id
+Base.cconvert(::Type{API.hid_t}, dset::Dataset) = dset
+Base.unsafe_convert(::Type{API.hid_t}, dset::Dataset) = dset.id
 
 function Base.close(obj::Dataset)
     if obj.id != -1
         if obj.file.id != -1 && isvalid(obj)
-            h5o_close(obj)
+            API.h5d_close(obj)
         end
         obj.id = -1
     end
     nothing
 end
 
-Base.isvalid(obj::Dataset) = obj.id != -1 && obj.file.id != -1 && h5i_is_valid(obj)
+Base.isvalid(obj::Dataset) = obj.id != -1 && obj.file.id != -1 && API.h5i_is_valid(obj)
 
 function Base.getindex(dset::Dataset, name::AbstractString)
     haskey(dset, name) || throw(KeyError(name))
     open_attribute(dset, name)
 end
-
-get_access_properties(d::Dataset)   = DatasetAccessProperties(h5d_get_access_plist(d))
-get_create_properties(d::Dataset)   = DatasetCreateProperties(h5d_get_create_plist(d))
+Base.setindex!(dset::Dataset, val, name::AbstractString) = write_attribute(dset, name, val)
 
 
-open_dataset(parent::Union{File,Group}, name::AbstractString, apl::FileAccessProperties=FileAccessProperties(), xpl::DatasetTransferProperties=DatasetTransferProperties()) = Dataset(h5d_open(checkvalid(parent), name, apl), file(parent), xpl)
+get_access_properties(d::Dataset)   = DatasetAccessProperties(API.h5d_get_access_plist(d))
+get_create_properties(d::Dataset)   = DatasetCreateProperties(API.h5d_get_create_plist(d))
+
+
+open_dataset(parent::Union{File,Group}, name::AbstractString,
+             fapl::FileAccessProperties=FileAccessProperties(),
+             dxpl::DatasetTransferProperties=DatasetTransferProperties()) =
+    Dataset(API.h5d_open(checkvalid(parent), name, fapl), file(parent), dxpl)
 
 # Setting dset creation properties with name/value pairs
 function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace; pv...)
@@ -41,7 +47,7 @@ function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::
     dapl = DatasetAccessProperties()
     setproperties!((dcpl,dxpl,dapl); pv...)
     haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
-    Dataset(h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
+    Dataset(API.h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
 end
 create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Dims; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
 create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
@@ -49,9 +55,9 @@ create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Type, dsp
 
 
 # Get the dataspace of a dataset
-dataspace(dset::Dataset) = Dataspace(h5d_get_space(checkvalid(dset)))
+dataspace(dset::Dataset) = Dataspace(API.h5d_get_space(checkvalid(dset)))
 # Get the datatype of a dataset
-datatype(dset::Dataset) = Datatype(h5d_get_type(checkvalid(dset)), file(dset))
+datatype(dset::Dataset) = Datatype(API.h5d_get_type(checkvalid(dset)), file(dset))
 
 Base.ndims(dset::Dataset) =
     dataspace(dspace -> Base.ndims(dspace), dset)
@@ -77,40 +83,15 @@ Base.lastindex(dset::Dataset) = length(dset)
 Base.lastindex(dset::Dataset, d::Int) = size(dset, d)
 
 
-function iscompact(obj::Dataset)
-    prop = h5d_get_create_plist(checkvalid(obj))
-    try
-        h5p_get_layout(prop) == H5D_COMPACT
-    finally
-        h5p_close(prop)
-    end
-end
+iscompact(obj::Dataset) = get_create_properties(checkvalid(obj)).layout == :compact
+ischunked(obj::Dataset) = get_create_properties(checkvalid(obj)).layout == :chunked
+iscontiguous(obj::Dataset) = get_create_properties(checkvalid(obj)).layout == :contiguous
 
-function ischunked(obj::Dataset)
-    prop = h5d_get_create_plist(checkvalid(obj))
-    try
-        h5p_get_layout(prop) == H5D_CHUNKED
-    finally
-        h5p_close(prop)
-    end
-end
-
-function iscontiguous(obj::Dataset)
-    prop = h5d_get_create_plist(checkvalid(obj))
-    try
-        h5p_get_layout(prop) == H5D_CONTIGUOUS
-    finally
-        h5p_close(prop)
-    end
-end
-
-
-refresh(ds::Dataset) = h5d_refresh(checkvalid(ds))
-Base.flush(ds::Dataset) = h5d_flush(checkvalid(ds))
+refresh(ds::Dataset) = API.h5d_refresh(checkvalid(ds))
+Base.flush(ds::Dataset) = API.h5d_flush(checkvalid(ds))
 
 
 # Indexing
-
 Base.eachindex(::IndexLinear, A::Dataset) = Base.OneTo(length(A))
 Base.axes(dset::Dataset) = map(Base.OneTo, size(dset))
 
@@ -127,7 +108,7 @@ function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where T
     end
 
     filetype = datatype(dset)
-    memtype = Datatype(h5t_get_native_type(filetype))  # padded layout in memory
+    memtype = Datatype(API.h5t_get_native_type(filetype))  # padded layout in memory
     close(filetype)
 
     elT = eltype(X)
@@ -140,20 +121,20 @@ function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where T
     end
 
     dspace = dataspace(dset)
-    stype = h5s_get_simple_extent_type(dspace)
-    stype == H5S_NULL && error("attempting to write to null dataspace")
+    stype = API.h5s_get_simple_extent_type(dspace)
+    stype == API.H5S_NULL && error("attempting to write to null dataspace")
 
     indices = Base.to_indices(dset, I)
     dspace = hyperslab(dspace, indices...)
 
     memspace = dataspace(X)
 
-    if h5s_get_select_npoints(dspace) != h5s_get_select_npoints(memspace)
+    if API.h5s_get_select_npoints(dspace) != API.h5s_get_select_npoints(memspace)
         error("number of elements in src and dest arrays must be equal")
     end
 
     try
-        h5d_write(dset, memtype, memspace, dspace, dset.xfer, X)
+        API.h5d_write(dset, memtype, memspace, dspace, dset.xfer, X)
     finally
         close(memtype)
         close(memspace)
@@ -173,7 +154,7 @@ function Base.setindex!(dset::Dataset, X::AbstractArray, I::IndexType...)
     Base.setindex!(dset, Array(X), I...)
 end
 
-vlen_get_buf_size(dset::Dataset, dtype::Datatype, dspace::Dataspace) = h5d_vlen_get_buf_size(dset, dtype, dspace)
+vlen_get_buf_size(dset::Dataset, dtype::Datatype, dspace::Dataspace) = API.h5d_vlen_get_buf_size(dset, dtype, dspace)
 
 function get_chunk(dset::Dataset)
     p = get_create_properties(dset)
@@ -207,9 +188,9 @@ end
 end
 
 read_dataset(dset::Dataset, memtype::Datatype, buf, xfer::DatasetTransferProperties=dset.xfer) =
-    h5d_read(dset, memtype, H5S_ALL, H5S_ALL, xfer, buf)
+    API.h5d_read(dset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
 write_dataset(dset::Dataset, memtype::Datatype, x, xfer::DatasetTransferProperties=dset.xfer) =
-    h5d_write(dset, memtype, H5S_ALL, H5S_ALL, xfer, x)
+    API.h5d_write(dset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, x)
 
 function read_dataset(parent::Union{File,Group}, name::AbstractString)
     local ret
@@ -248,3 +229,4 @@ function write_dataset(parent::Union{File,Group}, name::AbstractString, data; pv
     end
     nothing
 end
+

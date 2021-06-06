@@ -283,6 +283,24 @@ function h5p_get_userblock(plist_id)
     return len[]
 end
 
+
+h5p_set_fapl_mpio(fapl_id, comm::Hmpih32, info::Hmpih32) =
+    h5p_set_fapl_mpio32(fapl_id, comm, info)
+h5p_set_fapl_mpio(fapl_id, comm::Hmpih64, info::Hmpih64) =
+    h5p_set_fapl_mpio64(fapl_id, comm, info)
+
+function h5p_get_fapl_mpio(fapl_id, ::Type{Hmpih32})
+    comm, info = Ref{Hmpih32}(), Ref{Hmpih32}()
+    h5p_get_fapl_mpio32(fapl_id, comm, info)
+    comm[], info[]
+end
+function h5p_get_fapl_mpio(fapl_id, ::Type{Hmpih64})
+    comm, info = Ref{Hmpih64}(), Ref{Hmpih64}()
+    h5p_get_fapl_mpio64(fapl_id, comm, info)
+    comm[], info[]
+end
+
+
 # Note: The following function(s) implement direct ccalls because the binding generator
 # cannot (yet) do the string wrapping and memory freeing.
 
@@ -354,6 +372,8 @@ function h5t_get_fields(type_id)
     h5t_get_fields(type_id, spos, epos, esize, mpos, msize)
     return (spos[], epos[], esize[], mpos[], msize[])
 end
+
+h5t_get_native_type(type_id) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
 
 # Note: The following two functions implement direct ccalls because the binding generator
 # cannot (yet) do the string wrapping and memory freeing.

@@ -2,10 +2,10 @@
 
 # High-level reference handler
 struct Reference
-    r::hobj_ref_t
+    r::API.hobj_ref_t
 end
-Reference() = Reference(HOBJ_REF_T_NULL) # NULL reference to compare to
-Base.cconvert(::Type{Ptr{T}}, ref::Reference) where {T<:Union{Reference,hobj_ref_t,Cvoid}} = Ref(ref)
+Reference() = Reference(API.HOBJ_REF_T_NULL) # NULL reference to compare to
+Base.cconvert(::Type{Ptr{T}}, ref::Reference) where {T<:Union{Reference,API.hobj_ref_t,Cvoid}} = Ref(ref)
 
 # Single character types
 # These are needed to safely handle VLEN objects
@@ -25,33 +25,33 @@ chartype(::Type{String}) = ASCIIChar
 stringtype(::Type{ASCIIChar}) = String
 stringtype(::Type{UTF8Char}) = String
 
-cset(::Type{<:AbstractString}) = H5T_CSET_UTF8
-cset(::Type{UTF8Char}) = H5T_CSET_UTF8
-cset(::Type{ASCIIChar}) = H5T_CSET_ASCII
+cset(::Type{<:AbstractString}) = API.H5T_CSET_UTF8
+cset(::Type{UTF8Char}) = API.H5T_CSET_UTF8
+cset(::Type{ASCIIChar}) = API.H5T_CSET_ASCII
 
 ## Conversion between Julia types and HDF5 atomic types
-hdf5_type_id(::Type{Bool})      = H5T_NATIVE_B8
-hdf5_type_id(::Type{Int8})      = H5T_NATIVE_INT8
-hdf5_type_id(::Type{UInt8})     = H5T_NATIVE_UINT8
-hdf5_type_id(::Type{Int16})     = H5T_NATIVE_INT16
-hdf5_type_id(::Type{UInt16})    = H5T_NATIVE_UINT16
-hdf5_type_id(::Type{Int32})     = H5T_NATIVE_INT32
-hdf5_type_id(::Type{UInt32})    = H5T_NATIVE_UINT32
-hdf5_type_id(::Type{Int64})     = H5T_NATIVE_INT64
-hdf5_type_id(::Type{UInt64})    = H5T_NATIVE_UINT64
-hdf5_type_id(::Type{Float32})   = H5T_NATIVE_FLOAT
-hdf5_type_id(::Type{Float64})   = H5T_NATIVE_DOUBLE
-hdf5_type_id(::Type{Reference}) = H5T_STD_REF_OBJ
+hdf5_type_id(::Type{Bool})      = API.H5T_NATIVE_B8
+hdf5_type_id(::Type{Int8})      = API.H5T_NATIVE_INT8
+hdf5_type_id(::Type{UInt8})     = API.H5T_NATIVE_UINT8
+hdf5_type_id(::Type{Int16})     = API.H5T_NATIVE_INT16
+hdf5_type_id(::Type{UInt16})    = API.H5T_NATIVE_UINT16
+hdf5_type_id(::Type{Int32})     = API.H5T_NATIVE_INT32
+hdf5_type_id(::Type{UInt32})    = API.H5T_NATIVE_UINT32
+hdf5_type_id(::Type{Int64})     = API.H5T_NATIVE_INT64
+hdf5_type_id(::Type{UInt64})    = API.H5T_NATIVE_UINT64
+hdf5_type_id(::Type{Float32})   = API.H5T_NATIVE_FLOAT
+hdf5_type_id(::Type{Float64})   = API.H5T_NATIVE_DOUBLE
+hdf5_type_id(::Type{Reference}) = API.H5T_STD_REF_OBJ
 
-hdf5_type_id(::Type{<:AbstractString}) = H5T_C_S1
+hdf5_type_id(::Type{<:AbstractString}) = API.H5T_C_S1
 
 const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
 const ScalarType = Union{BitsType,Reference}
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
 function _hdf5_type_map(class_id, is_signed, native_size)
-    if class_id == H5T_INTEGER
-        if is_signed == H5T_SGN_2
+    if class_id == API.H5T_INTEGER
+        if is_signed == API.H5T_SGN_2
             return native_size == 1 ? Int8 :
                    native_size == 2 ? Int16 :
                    native_size == 4 ? Int32 :
@@ -81,8 +81,8 @@ set_complex_field_names(real::AbstractString, imag::AbstractString) =  COMPLEX_F
 
 # Methods for reference types
 function Reference(parent::Union{File,Group,Dataset}, name::AbstractString)
-    ref = Ref{hobj_ref_t}()
-    h5r_create(ref, checkvalid(parent), name, H5R_OBJECT, -1)
+    ref = Ref{API.hobj_ref_t}()
+    API.h5r_create(ref, checkvalid(parent), name, API.H5R_OBJECT, -1)
     return Reference(ref[])
 end
 Base.:(==)(a::Reference, b::Reference) = a.r == b.r
@@ -147,11 +147,11 @@ VLen(A::Array{Array{T}}) where {T<:ScalarType} = VLen{T}(A)
 VLen(A::Array{Array{T,N}}) where {T<:ScalarType,N} = VLen{T}(A)
 function Base.cconvert(::Type{Ptr{Cvoid}}, v::VLen)
     len = length(v.data)
-    h = Vector{hvl_t}(undef, len)
+    h = Vector{API.hvl_t}(undef, len)
     for ii in 1:len
         d = v.data[ii]
         p = unsafe_convert(Ptr{UInt8}, d)
-        h[ii] = hvl_t(length(d), p)
+        h[ii] = API.hvl_t(length(d), p)
     end
     return h
 end
@@ -164,56 +164,56 @@ datatype(::Type{T}) where {T<:ScalarType} = Datatype(hdf5_type_id(T), false)
 datatype(A::AbstractArray{T}) where {T<:ScalarType} = Datatype(hdf5_type_id(T), false)
 function datatype(::Type{Complex{T}}) where {T<:ScalarType}
   COMPLEX_SUPPORT[] || error("complex support disabled. call HDF5.enable_complex_support() to enable")
-  dtype = h5t_create(H5T_COMPOUND, 2*sizeof(T))
-  h5t_insert(dtype, COMPLEX_FIELD_NAMES[][1], 0, hdf5_type_id(T))
-  h5t_insert(dtype, COMPLEX_FIELD_NAMES[][2], sizeof(T), hdf5_type_id(T))
+  dtype = API.h5t_create(API.H5T_COMPOUND, 2*sizeof(T))
+  API.h5t_insert(dtype, COMPLEX_FIELD_NAMES[][1], 0, hdf5_type_id(T))
+  API.h5t_insert(dtype, COMPLEX_FIELD_NAMES[][2], sizeof(T), hdf5_type_id(T))
   return Datatype(dtype)
 end
 datatype(x::Complex{<:ScalarType}) = datatype(typeof(x))
 datatype(A::AbstractArray{Complex{T}}) where {T<:ScalarType} = datatype(eltype(A))
 
 function datatype(str::AbstractString)
-    type_id = h5t_copy(hdf5_type_id(typeof(str)))
-    h5t_set_size(type_id, max(sizeof(str), 1))
-    h5t_set_cset(type_id, cset(typeof(str)))
+    type_id = API.h5t_copy(hdf5_type_id(typeof(str)))
+    API.h5t_set_size(type_id, max(sizeof(str), 1))
+    API.h5t_set_cset(type_id, cset(typeof(str)))
     Datatype(type_id)
 end
 function datatype(::Array{S}) where {S<:AbstractString}
-    type_id = h5t_copy(hdf5_type_id(S))
-    h5t_set_size(type_id, H5T_VARIABLE)
-    h5t_set_cset(type_id, cset(S))
+    type_id = API.h5t_copy(hdf5_type_id(S))
+    API.h5t_set_size(type_id, API.H5T_VARIABLE)
+    API.h5t_set_cset(type_id, cset(S))
     Datatype(type_id)
 end
-datatype(A::VLen{T}) where {T<:ScalarType} = Datatype(h5t_vlen_create(hdf5_type_id(T)))
+datatype(A::VLen{T}) where {T<:ScalarType} = Datatype(API.h5t_vlen_create(hdf5_type_id(T)))
 function datatype(str::VLen{C}) where {C<:CharType}
-    type_id = h5t_copy(hdf5_type_id(C))
-    h5t_set_size(type_id, 1)
-    h5t_set_cset(type_id, cset(C))
-    Datatype(h5t_vlen_create(type_id))
+    type_id = API.h5t_copy(hdf5_type_id(C))
+    API.h5t_set_size(type_id, 1)
+    API.h5t_set_cset(type_id, cset(C))
+    Datatype(API.h5t_vlen_create(type_id))
 end
 
 
 
 # Create a dataspace from in-memory types
-dataspace(x::Union{T, Complex{T}}) where {T<:ScalarType} = Dataspace(h5s_create(H5S_SCALAR))
-dataspace(::AbstractString) = Dataspace(h5s_create(H5S_SCALAR))
+dataspace(x::Union{T, Complex{T}}) where {T<:ScalarType} = Dataspace(API.h5s_create(API.H5S_SCALAR))
+dataspace(::AbstractString) = Dataspace(API.h5s_create(API.H5S_SCALAR))
 
 function _dataspace(sz::Dims{N}, max_dims::Union{Dims{N}, Tuple{}}=()) where N
-    dims = hsize_t[sz[i] for i in N:-1:1]
+    dims = API.hsize_t[sz[i] for i in N:-1:1]
     if isempty(max_dims)
         maxd = dims
     else
         # This allows max_dims to be specified as -1 without triggering an overflow
         # exception due to the signed -> unsigned conversion.
-        maxd = hsize_t[hssize_t(max_dims[i]) % hsize_t for i in N:-1:1]
+        maxd = API.hsize_t[API.hssize_t(max_dims[i]) % API.hsize_t for i in N:-1:1]
     end
-    return Dataspace(h5s_create_simple(length(dims), dims, maxd))
+    return Dataspace(API.h5s_create_simple(length(dims), dims, maxd))
 end
 dataspace(A::AbstractArray{T,N}; max_dims::Union{Dims{N},Tuple{}} = ()) where {T,N} = _dataspace(size(A), max_dims)
 # special array types
 dataspace(v::VLen; max_dims::Union{Dims,Tuple{}}=()) = _dataspace(size(v.data), max_dims)
-dataspace(A::EmptyArray) = Dataspace(h5s_create(H5S_NULL))
-dataspace(n::Nothing) = Dataspace(h5s_create(H5S_NULL))
+dataspace(A::EmptyArray) = Dataspace(API.h5s_create(API.H5S_NULL))
+dataspace(n::Nothing) = Dataspace(API.h5s_create(API.H5S_NULL))
 # for giving sizes explicitly
 dataspace(sz::Dims{N}; max_dims::Union{Dims{N},Tuple{}}=()) where {N} = _dataspace(sz, max_dims)
 dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
@@ -256,7 +256,7 @@ function generic_read(obj::DatasetOrAttribute, filetype::Datatype, ::Type{Opaque
     else
         read_attribute(obj, filetype, buf)
     end
-    tag = h5t_get_tag(filetype)
+    tag = API.h5t_get_tag(filetype)
     if isempty(sz)
         # scalar (only) result
         data = vec(buf)
@@ -272,7 +272,7 @@ function generic_read(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T}, I.
     !isconcretetype(T) && error("type $T is not concrete")
     !isempty(I) && obj isa Attribute && error("HDF5 attributes do not support hyperslab selections")
 
-    memtype = Datatype(h5t_get_native_type(filetype))  # padded layout in memory
+    memtype = Datatype(API.h5t_get_native_type(filetype))  # padded layout in memory
 
     if sizeof(T) != sizeof(memtype)
         error("""
@@ -283,8 +283,8 @@ function generic_read(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T}, I.
     end
 
     dspace = dataspace(obj)
-    stype = h5s_get_simple_extent_type(dspace)
-    stype == H5S_NULL && return EmptyArray{T}()
+    stype = API.h5s_get_simple_extent_type(dspace)
+    stype == API.H5S_NULL && return EmptyArray{T}()
 
     if !isempty(I)
         indices = Base.to_indices(obj, I)
@@ -292,7 +292,7 @@ function generic_read(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T}, I.
     end
 
     scalar = false
-    if stype == H5S_SCALAR
+    if stype == API.H5S_SCALAR
         sz = (1,)
         scalar = true
     elseif isempty(I)
@@ -316,9 +316,9 @@ function generic_read(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T}, I.
     memspace = isempty(I) ? dspace : dataspace(sz)
 
     if obj isa Dataset
-        h5d_read(obj, memtype, memspace, dspace, obj.xfer, buf)
+        API.h5d_read(obj, memtype, memspace, dspace, obj.xfer, buf)
     else
-        h5a_read(obj, memtype, buf)
+        API.h5a_read(obj, memtype, buf)
     end
 
     if do_normalize(T)
@@ -327,8 +327,8 @@ function generic_read(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T}, I.
         out = buf
     end
 
-    xfer_id = obj isa Dataset ? obj.xfer.id : H5P_DEFAULT
-    do_reclaim(T) && h5d_vlen_reclaim(memtype, memspace, xfer_id, buf)
+    xfer_id = obj isa Dataset ? obj.xfer.id : API.H5P_DEFAULT
+    do_reclaim(T) && API.h5d_vlen_reclaim(memtype, memspace, xfer_id, buf)
 
     close(memtype)
     close(memspace)
@@ -346,12 +346,12 @@ Array(x::Dataset) = read(x)
 
 # Clean up string buffer according to padding mode
 function unpad(s::String, pad::Integer)::String
-    if pad == H5T_STR_NULLTERM # null-terminated
+    if pad == API.H5T_STR_NULLTERM # null-terminated
         ind = findfirst(isequal('\0'), s)
         isnothing(ind) ? s : s[1:prevind(s, ind)]
-    elseif pad == H5T_STR_NULLPAD # padded with nulls
+    elseif pad == API.H5T_STR_NULLPAD # padded with nulls
         rstrip(s, '\0')
-    elseif pad == H5T_STR_SPACEPAD # padded with spaces
+    elseif pad == API.H5T_STR_SPACEPAD # padded with spaces
         rstrip(s, ' ')
     else
         error("Unrecognized string padding mode $pad")
@@ -362,7 +362,7 @@ unpad(s, pad::Integer) = unpad(String(s), pad)
 # Dereference
 function _deref(parent, r::Reference)
     r == Reference() && error("Reference is null")
-    obj_id = h5r_dereference(checkvalid(parent), H5P_DEFAULT, H5R_OBJECT, r)
+    obj_id = API.h5r_dereference(checkvalid(parent), API.H5P_DEFAULT, API.H5R_OBJECT, r)
     h5object(obj_id, parent)
 end
 Base.getindex(parent::Union{File,Group}, r::Reference) = _deref(parent, r)
@@ -443,8 +443,8 @@ do_reclaim(::Type{T}) where T <: Union{Cstring,VariableArray} = true
 
 
 function get_jl_type(obj_type::Datatype)
-    class_id = h5t_get_class(obj_type)
-    if class_id == H5T_OPAQUE
+    class_id = API.h5t_get_class(obj_type)
+    if class_id == API.H5T_OPAQUE
         return Opaque
     else
         return get_mem_compatible_jl_type(obj_type)
@@ -461,65 +461,65 @@ function get_jl_type(obj)
 end
 
 function get_mem_compatible_jl_type(obj_type::Datatype)
-    class_id = h5t_get_class(obj_type)
-    if class_id == H5T_STRING
-        if h5t_is_variable_str(obj_type)
+    class_id = API.h5t_get_class(obj_type)
+    if class_id == API.H5T_STRING
+        if API.h5t_is_variable_str(obj_type)
             return Cstring
         else
             N = sizeof(obj_type)
-            PAD = h5t_get_strpad(obj_type)
+            PAD = API.h5t_get_strpad(obj_type)
             return FixedString{N,PAD}
         end
-    elseif class_id == H5T_INTEGER || class_id == H5T_FLOAT
-        native_type = h5t_get_native_type(obj_type)
+    elseif class_id == API.H5T_INTEGER || class_id == API.H5T_FLOAT
+        native_type = API.h5t_get_native_type(obj_type)
         try
-            native_size = h5t_get_size(native_type)
-            if class_id == H5T_INTEGER
-                is_signed = h5t_get_sign(native_type)
+            native_size = API.h5t_get_size(native_type)
+            if class_id == API.H5T_INTEGER
+                is_signed = API.h5t_get_sign(native_type)
             else
                 is_signed = nothing
             end
             return _hdf5_type_map(class_id, is_signed, native_size)
         finally
-            h5t_close(native_type)
+            API.h5t_close(native_type)
         end
-    elseif class_id == H5T_BITFIELD
+    elseif class_id == API.H5T_BITFIELD
         return Bool
-    elseif class_id == H5T_ENUM
-        super_type = h5t_get_super(obj_type)
+    elseif class_id == API.H5T_ENUM
+        super_type = API.h5t_get_super(obj_type)
         try
-            native_type = h5t_get_native_type(super_type)
+            native_type = API.h5t_get_native_type(super_type)
             try
-                native_size = h5t_get_size(native_type)
-                is_signed = h5t_get_sign(native_type)
-                return _hdf5_type_map(H5T_INTEGER, is_signed, native_size)
+                native_size = API.h5t_get_size(native_type)
+                is_signed = API.h5t_get_sign(native_type)
+                return _hdf5_type_map(API.H5T_INTEGER, is_signed, native_size)
             finally
-                h5t_close(native_type)
+                API.h5t_close(native_type)
             end
         finally
-            h5t_close(super_type)
+            API.h5t_close(super_type)
         end
-    elseif class_id == H5T_REFERENCE
+    elseif class_id == API.H5T_REFERENCE
         # TODO update to use version 1.12 reference functions/types
         return Reference
-    elseif class_id == H5T_OPAQUE
+    elseif class_id == API.H5T_OPAQUE
         # TODO: opaque objects should get their own fixed-size data type; punning like
         #       this permits recursively reading (i.e. compound data type containing an
         #       opaque field). Requires figuring out what to do about the tag...
-        len = Int(h5t_get_size(obj_type))
+        len = Int(API.h5t_get_size(obj_type))
         return FixedArray{UInt8, (len,), len}
-    elseif class_id == H5T_VLEN
-        superid = h5t_get_super(obj_type)
+    elseif class_id == API.H5T_VLEN
+        superid = API.h5t_get_super(obj_type)
         return VariableArray{get_mem_compatible_jl_type(Datatype(superid))}
-    elseif class_id == H5T_COMPOUND
-        N = h5t_get_nmembers(obj_type)
+    elseif class_id == API.H5T_COMPOUND
+        N = API.h5t_get_nmembers(obj_type)
 
         membernames = ntuple(N) do i
-            h5t_get_member_name(obj_type, i-1)
+            API.h5t_get_member_name(obj_type, i-1)
         end
 
         membertypes = ntuple(N) do i
-            dtype = Datatype(h5t_get_member_type(obj_type, i-1))
+            dtype = Datatype(API.h5t_get_member_type(obj_type, i-1))
             return get_mem_compatible_jl_type(dtype)
         end
 
@@ -535,10 +535,10 @@ function get_mem_compatible_jl_type(obj_type::Datatype)
         else
             return NamedTuple{Symbol.(membernames), Tuple{membertypes...}}
         end
-    elseif class_id == H5T_ARRAY
-        dims = h5t_get_array_dims(obj_type)
+    elseif class_id == API.H5T_ARRAY
+        dims = API.h5t_get_array_dims(obj_type)
         nd = length(dims)
-        eltyp = Datatype(h5t_get_super(obj_type))
+        eltyp = Datatype(API.h5t_get_super(obj_type))
         elT = get_mem_compatible_jl_type(eltyp)
         dimsizes = ntuple(i -> Int(dims[nd-i+1]), nd)  # reverse order
         return FixedArray{elT, dimsizes, prod(dimsizes)}
@@ -549,12 +549,12 @@ end
 
 function read_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::DatasetTransferProperties=dataset.xfer)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
-    h5d_read(dataset, memtype, H5S_ALL, H5S_ALL, xfer, buf)
+    API.h5d_read(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
 end
 
 function write_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::DatasetTransferProperties=dataset.xfer)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
-    h5d_write(dataset, memtype, H5S_ALL, H5S_ALL, xfer, buf)
+    API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
 end
 function write_dataset(dataset::Dataset, memtype::Datatype, str::AbstractString, xfer::DatasetTransferProperties=dataset.xfer)
     strbuf = Base.cconvert(Cstring, str)
@@ -563,16 +563,16 @@ function write_dataset(dataset::Dataset, memtype::Datatype, str::AbstractString,
         # but then need explicit convert to Ptr{UInt8} since Ptr{Cstring} -> Ptr{Cvoid} is
         # not automatic.
         buf = convert(Ptr{UInt8}, Base.unsafe_convert(Cstring, strbuf))
-        h5d_write(dataset, memtype, H5S_ALL, H5S_ALL, xfer, buf)
+        API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
     end
 end
 function write_dataset(dataset::Dataset, memtype::Datatype, x::T, xfer::DatasetTransferProperties=dataset.xfer) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
-    h5d_write(dataset, memtype, H5S_ALL, H5S_ALL, xfer, tmp)
+    API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, tmp)
 end
 function write_dataset(dataset::Dataset, memtype::Datatype, strs::Array{<:AbstractString}, xfer::DatasetTransferProperties=dataset.xfer)
     p = Ref{Cstring}(strs)
-    h5d_write(dataset, memtype, H5S_ALL, H5S_ALL, xfer, p)
+    API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, p)
 end
 write_dataset(dataset::Dataset, memtype::Datatype, ::EmptyArray, xfer::DatasetTransferProperties=dataset.xfer) = nothing
 
@@ -581,15 +581,15 @@ function write_attribute(attr::Attribute, memtype::Datatype, str::AbstractString
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
         buf = Base.unsafe_convert(Ptr{UInt8}, strbuf)
-        h5a_write(attr, memtype, buf)
+        API.h5a_write(attr, memtype, buf)
     end
 end
 function write_attribute(attr::Attribute, memtype::Datatype, x::T) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
-    h5a_write(attr, memtype, tmp)
+    API.h5a_write(attr, memtype, tmp)
 end
 function write_attribute(attr::Attribute, memtype::Datatype, strs::Array{<:AbstractString})
     p = Ref{Cstring}(strs)
-    h5a_write(attr, memtype, p)
+    API.h5a_write(attr, memtype, p)
 end
 write_attribute(attr::Attribute, memtype::Datatype, ::EmptyArray) = nothing

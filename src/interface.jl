@@ -13,7 +13,7 @@ Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for
 """
 function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool = false, pv...)
     # With garbage collection, the other modes don't make sense
-    fapl = FileAccessProperties(; fclose_degree = H5F_CLOSE_STRONG)
+    fapl = FileAccessProperties(; fclose_degree = :strong)
     fcpl = FileCreateProperties()
     setproperties!((fapl, fcpl); pv...)
     rd, wr, cr, tr, ff =
@@ -29,16 +29,16 @@ function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool
     end
 
     if cr && (tr || !isfile(filename))
-        flag = swmr ? H5F_ACC_TRUNC|H5F_ACC_SWMR_WRITE : H5F_ACC_TRUNC
-        fid = h5f_create(filename, flag, fcpl, fapl)
+        flag = swmr ? API.H5F_ACC_TRUNC | API.H5F_ACC_SWMR_WRITE : API.H5F_ACC_TRUNC
+        fid = API.h5f_create(filename, flag, fcpl, fapl)
     else
         ishdf5(filename) || error("unable to determine if $filename is accessible in the HDF5 format (file may not exist)")
         if wr
-            flag = swmr ? H5F_ACC_RDWR|H5F_ACC_SWMR_WRITE : H5F_ACC_RDWR
+            flag = swmr ? API.H5F_ACC_RDWR | API.H5F_ACC_SWMR_WRITE : API.H5F_ACC_RDWR
         else
-            flag = swmr ? H5F_ACC_RDONLY|H5F_ACC_SWMR_READ : H5F_ACC_RDONLY
+            flag = swmr ? API.H5F_ACC_RDONLY | API.H5F_ACC_SWMR_READ : API.H5F_ACC_RDONLY
         end
-        fid = h5f_open(filename, flag, fapl)
+        fid = API.h5f_open(filename, flag, fapl)
     end
     close(fapl)
     close(fcpl)
@@ -167,7 +167,7 @@ function ishdf5(name::AbstractString)
     try
         # docs falsely claim h5f_is_hdf5 doesn't error, but it does and prints the error stack on fail
         # silence the error stack in case the call throws
-        return silence_errors(() -> h5f_is_hdf5(name))
+        return silence_errors(() -> API.h5f_is_hdf5(name))
     catch
         return false
     end
@@ -177,11 +177,11 @@ end
 checkvalid(obj) = isvalid(obj) ? obj : error("File or object has been closed")
 
 # Flush buffers
-Base.flush(f::Union{Object,Attribute,Datatype,File}, scope = H5F_SCOPE_GLOBAL) = h5f_flush(checkvalid(f), scope)
+Base.flush(f::Union{Object,Attribute,Datatype,File}, scope = API.H5F_SCOPE_GLOBAL) = API.h5f_flush(checkvalid(f), scope)
 
 # filename and name
-filename(obj::Union{File,Group,Dataset,Attribute,Datatype}) = h5f_get_name(checkvalid(obj))
-name(obj::Union{File,Group,Dataset,Datatype}) = h5i_get_name(checkvalid(obj))
+filename(obj::Union{File,Group,Dataset,Attribute,Datatype}) = API.h5f_get_name(checkvalid(obj))
+name(obj::Union{File,Group,Dataset,Datatype}) = API.h5i_get_name(checkvalid(obj))
 
 # Generic read functions
 
@@ -280,13 +280,27 @@ Base.write(parent::Union{File,Group}, name::AbstractString, data; pv...) = write
 Base.write(parent::Dataset, name::AbstractString, data; pv...) = write_attribute(parent, name, data; pv...)
 
 """
-    create_external(source::Union{HDF5.File, HDF5.Group}, source_relpath, target_filename, target_path;
-                    lcpl_id=HDF5.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
+    create_external(source::Union{HDF5.File, HDF5.Group}, source_relpath, target_filename, target_path, 
+                    [lcpl::LinkCreateProperties, lapl::LinkAccessProperties])
 
 Create an external link such that `source[source_relpath]` points to `target_path` within the file
-with path `target_filename`; Calls `[H5Lcreate_external](https://www.hdfgroup.org/HDF5/doc/RM/RM_H5L.html#Link-CreateExternal)`.
+with path `target_filename`
+
+# External links
+- $(h5doc("H5L_CREATE_EXTERNAL"))
 """
-function create_external(source::Union{File,Group}, source_relpath, target_filename, target_path; lcpl_id=H5P_DEFAULT, lapl_id=H5P_DEFAULT)
-    h5l_create_external(target_filename, target_path, source, source_relpath, lcpl_id, lapl_id)
+function create_external(source::Union{File,Group}, source_relpath, target_filename, target_path,
+                         lcpl::LinkCreateProperties=LinkCreateProperties(), lapl::LinkAccessProperties=LinkAccessProperties();
+                         lcpl_id=nothing, lapl_id=nothing)
+    if lcpl_id !== nothing
+        depwarn("lcpl_id keyword argument has been deprecated, use `lcpl` positional argument instead", :create_external)
+        lcpl = lcpl_id
+    end    
+    if lapl_id !== nothing
+        depwarn("lapl_id keyword argument has been deprecated, use `lcpl` positional argument instead", :create_external)
+        lapl = lapl_id
+    end 
+    API.h5l_create_external(target_filename, target_path, source, source_relpath, lcpl, lapl)
     nothing
 end
+

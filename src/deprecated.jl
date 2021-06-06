@@ -40,3 +40,16 @@ function exists end
 import Base: getindex, setindex!
 @deprecate getindex(p::Properties, name::Symbol) Base.getproperty(p, name)
 @deprecate setindex!(p::Properties, val, name::Symbol) Base.setproperty!(p, name, val)
+
+function Filters.set_shuffle!(p::Properties, ::Tuple{})
+    depwarn("`shuffle=()` option is deprecated, use `shuffle=true`", :set_shuffle!)
+    Filters.set_shuffle!(p, true)
+end
+
+for name in names(API; all=true)
+    if name ∉ names(HDF5; all=true) && startswith(uppercase(String(name)), "H")
+        depmsg = ", use HDF5.API.$name instead."
+        @eval Base.@deprecate_binding $name API.$name false $depmsg
+    end
+end
+

@@ -3,16 +3,12 @@ abstract type PropertyClass end
 """
     Properties{PC}
 
-A HDF5 _property list_: a collection of name/value pairs which can be passed to
-various other HDF5 functions to control features that are typically unimportant or whose
-default values are usually used. Values may be get and set `getproperty`/`setproperty!`.
-
-`PC` is an abstract subtype of `PropertyClass`: this determines the class and inheritance
-of the property list.
+A Julia object corresponding to a HDF5 property list. `PC` is an abstract subtype of
+`PropertyClass`: this determines the class and inheritance of the property list.
 """
 mutable struct Properties{PC <: PropertyClass}
-    id::hid_t
-    class::hid_t
+    id::API.hid_t
+    class::API.hid_t
     function Properties{PC}(id, class = classid(PC)) where {PC}
         p = new{PC}(id, class)
         finalizer(close, p) # Essential, otherwise we get a memory leak, since closing file with CLOSE_STRONG is not doing it for us
@@ -20,30 +16,30 @@ mutable struct Properties{PC <: PropertyClass}
     end
 end
 
-Base.cconvert(::Type{hid_t}, p::Properties) = p.id
+Base.cconvert(::Type{API.hid_t}, p::Properties) = p.id
 
 function Base.close(obj::Properties)
     if obj.id != -1
         if isvalid(obj)
-            h5p_close(obj)
+            API.h5p_close(obj)
         end
         obj.id = -1
     end
     nothing
 end
 
-Base.isvalid(obj::Properties) = obj.id != -1 && h5i_is_valid(obj)
+Base.isvalid(obj::Properties) = obj.id != -1 && API.h5i_is_valid(obj)
 
 # the identifier of the property class
-classid(::Type{PropertyClass}) = H5P_DEFAULT
+classid(::Type{PropertyClass}) = API.H5P_DEFAULT
 
 function init!(prop::Properties)
-    prop.id = h5p_create(prop.class)
+    prop.id = API.h5p_create(prop.class)
     return prop
 end
 
 function Properties{PC}(;kwargs...) where {PC}
-    prop = Properties{PC}(H5P_DEFAULT)
+    prop = Properties{PC}(API.H5P_DEFAULT)
     for (k, v) in kwargs
         setproperty!(prop, k, v)
     end
@@ -74,9 +70,9 @@ end
 
 function Base.setproperty!(p::Properties{PC}, name::Symbol, val) where {PC<:PropertyClass}
     if name === :id
-        return setfield!(p, :id, val)
+        return setfield!(p, :id, API.hid_t(val))
     elseif name === :class
-        return setfield!(p, :class, val)
+        return setfield!(p, :class, API.hid_t(val))
     end
     if !isvalid(p)
         init!(p)
@@ -132,110 +128,189 @@ macro propertyclass(name, classid, supername=nothing)
         end)
 end
 
+"""
+    @enum_property(name, sym1 => enumvalue1, sym2 => enumvalue2, ...)
+
+Wrap an API getter/setter function that operates on enum values to use symbol instead.
+"""
+macro enum_property(property, pairs...)
+    get_property = Symbol(:get_,property)
+    set_property! = Symbol(:set_,property,:!)
+    api_get_property = :(API.$(Symbol(:h5p_get_,property)))
+    api_set_property = :(API.$(Symbol(:h5p_set_,property)))
+
+    get_expr = :(error("Unknown $property value $enum"))
+    set_expr = :(throw(ArgumentError("Invalid $property $val")))
+    
+    for pair in reverse(pairs)
+        @assert pair isa Expr && pair.head == :call && pair.args[1] == :(=>)
+        _, val, enum = pair.args
+        get_expr = :(enum == $enum ? $val : $get_expr)
+        set_expr = :(val == $val ? $enum : $set_expr)
+    end
+    quote
+        function $(esc(get_property))(p::Properties)
+            property = $(QuoteNode(property))
+            enum = $api_get_property(p)
+            return $get_expr
+        end
+        function $(esc(set_property!))(p::Properties, val)
+            property = $(QuoteNode(property))
+            enum = $set_expr
+            return $api_set_property(p, enum)
+        end
+        function $(esc(set_property!))(p::Properties, enum::Integer)
+            # deprecate?
+            return $api_set_property(p, enum)
+        end
+    end
+end
+
+"""
+    @bool_property(name)
+
+Wrap an API getter/setter function that returns boolean values
+"""
+macro bool_property(property)
+    get_property = Symbol(:get_,property)
+    set_property! = Symbol(:set_,property,:!)
+    api_get_property = :(API.$(Symbol(:h5p_get_,property)))
+    api_set_property = :(API.$(Symbol(:h5p_set_,property)))
+    quote
+        function $(esc(get_property))(p::Properties)
+            return $api_get_property(p) != 0
+        end
+        function $(esc(set_property!))(p::Properties, val)
+            return $api_set_property(p, val)
+        end
+    end
+end
+
 
 """
     ObjectCreateProperties(;kws...)
 
-Properties used when creating a new object.
+Properties used when creating a new object. Available options:
 
-- `track_times`: governs the recording of times associated with an object. If set to 1,
-  time data will be recorded. If set to 0, time data will not be recorded. See
-  $(h5doc("H5P_SET_OBJ_TRACK_TIMES")).
+- `track_times :: Bool`: governs the recording of times associated with an object. If set to `true`,
+  time data will be recorded. See $(h5doc("H5P_SET_OBJ_TRACK_TIMES")).
 
 """
-@propertyclass(ObjectCreate, H5P_OBJECT_CREATE)
+@propertyclass(ObjectCreate, API.H5P_OBJECT_CREATE)
+
+@bool_property(obj_track_times)
+
 _propertynames(::Type{ObjectCreatePropertyClass}) = (:track_times,)
 function _getproperty(::Type{ObjectCreatePropertyClass}, p::Properties, name::Symbol)
-    name === :track_times ? h5p_get_obj_track_times(p) :
+    name === :track_times ? get_obj_track_times(p) :
     _getproperty(supertype(ObjectCreatePropertyClass), p, name)
 end
 function _setproperty!(::Type{ObjectCreatePropertyClass}, p::Properties, name::Symbol, val)
-    name === :track_times ? h5p_set_obj_track_times(p, val...) :
+    name === :track_times ? set_obj_track_times!(p, val) :
     _setproperty!(supertype(ObjectCreatePropertyClass), p, name, val)
 end
 
 """
     GroupCreateProperties(;kws...)
 
-Properties used when creating a new `Group`. Inherits from [`ObjectCreateProperties`](@ref).
+Properties used when creating a new `Group`. Inherits from
+[`ObjectCreateProperties`](@ref), with additional options:
 
 - `local_heap_size_hint :: Integer`: the anticipated maximum local heap size in bytes. See
   $(h5doc("H5P_SET_LOCAL_HEAP_SIZE_HINT")).
 
 """
-@propertyclass(GroupCreate, H5P_GROUP_CREATE, ObjectCreate)
+@propertyclass(GroupCreate, API.H5P_GROUP_CREATE, ObjectCreate)
 _propertynames(::Type{GroupCreatePropertyClass}) = (:local_heap_size_hint,)
 function _getproperty(::Type{GroupCreatePropertyClass}, p::Properties, name::Symbol)
-    name === :local_heap_size_hint ? h5p_get_local_heap_size_hint(p) :
+    name === :local_heap_size_hint ? API.h5p_get_local_heap_size_hint(p) :
     _getproperty(supertype(GroupCreatePropertyClass), p, name)
 end
 function _setproperty!(::Type{GroupCreatePropertyClass}, p::Properties, name::Symbol, val)
-    name === :local_heap_size_hint ? h5p_set_local_heap_size_hint(p, val...) :
+    name === :local_heap_size_hint ? API.h5p_set_local_heap_size_hint(p, val...) :
     _setproperty!(supertype(GroupCreatePropertyClass), p, name, val)
 end
 
 """
     FileCreateProperties(;kws...)
 
-Properties used when creating a new `Group`. Inherits from [`GroupCreateProperties`](@ref).
+Properties used when creating a new `Group`. Inherits from [`GroupCreateProperties`](@ref),  with additional properties:
 
-- `userblock` :: Integer`: user block size in bytes. The default user block size is 0; it
+- `userblock :: Integer`: user block size in bytes. The default user block size is 0; it
   may be set to any power of 2 equal to 512 or greater (512, 1024, 2048,
   etc.). See $(h5doc("H5P_SET_USERBLOCK")).
 
 """
-@propertyclass(FileCreate, H5P_FILE_CREATE, GroupCreate)
+@propertyclass(FileCreate, API.H5P_FILE_CREATE, GroupCreate)
 _propertynames(::Type{FileCreatePropertyClass}) = (:userblock,)
 function _getproperty(::Type{FileCreatePropertyClass}, p::Properties, name::Symbol)
-    name === :userblock   ? h5p_get_userblock(p) :
+    name === :userblock   ? API.h5p_get_userblock(p) :
     _getproperty(supertype(FileCreatePropertyClass), p, name)
 end
 function _setproperty!(::Type{FileCreatePropertyClass}, p::Properties, name::Symbol, val)
-    name === :userblock   ? h5p_set_userblock(p, val...) :
+    name === :userblock   ? API.h5p_set_userblock(p, val...) :
     _setproperty!(supertype(FileCreatePropertyClass), p, name, val)
 end
 
-@propertyclass(DatatypeCreate, H5P_DATATYPE_CREATE, ObjectCreate)
+@propertyclass(DatatypeCreate, API.H5P_DATATYPE_CREATE, ObjectCreate)
 
 """
     DatasetCreateProperties(;kws...)
 
-Properties used when creating a new `Dataset`. Inherits from [`ObjectCreateProperties`](@ref).
+Properties used when creating a new `Dataset`. Inherits from [`ObjectCreateProperties`](@ref), with additional properties:
 
 - `alloc_time`: the timing for the allocation of storage space for a dataset's raw data;
-  one of `H5D_ALLOC_TIME_DEFAULT`, `H5D_ALLOC_TIME_EARLY` (Allocate all space when the
-  dataset is created), `H5D_ALLOC_TIME_INCR` (Allocate space incrementally, as data is
-  written to the dataset), `H5D_ALLOC_TIME_LATE` (Allocate all space when data is first
-  written to the dataset). See $(h5doc("H5P_SET_ALLOC_TIME")).
+  one of:
+   - `:default`
 
-- `blosc`: the level of the Blosc filter.
+   - `:early`: allocate all space when the dataset is created
+
+   - `:incremental`: Allocate space incrementally, as data is  written to the dataset
+
+   - `:late`: Allocate all space when data is first written to the dataset.
+   
+  See $(h5doc("H5P_SET_ALLOC_TIME")).
 
 - `chunk`: a tuple containing the size of the chunks to store each dimension. See
   $(h5doc("H5P_SET_CHUNK")) (note that this uses Julia's column-major ordering).
 
-- `compress`/`deflate`: the level of the deflate compression filter. This is an integer
-  from 0 to 9 (inclusive). See $(h5doc("H5P_SET_DEFLATE")).
-
 - `external`: A tuple of `(name,offset,size)`, See $(h5doc("H5P_SET_EXTERNAL")).
 
+- `filters` (only valid when `layout=:chunked`): a filter or vector of filters that are
+  applied to applied to each chunk of a dataset, see [Filters](@ref). When accessed, will
+  return a [`Filters.FilterPipeline`](@ref) object that can be modified in-place.
+
 - `layout`: the type of storage used to store the raw data for a dataset. Can be one of:
-   - `H5D_COMPACT`: Store raw data in the dataset object header in file. This should only
+
+   - `:compact`: Store raw data in the dataset object header in file. This should only
      be used for datasets with small amounts of raw data.
 
-   - `H5D_CONTIGUOUS`: Store raw data separately from the object header in one large chunk
+   - `:contiguous`: Store raw data separately from the object header in one large chunk
      in the file.
 
-   - `H5D_CHUNKED`: Store raw data separately from the object header as chunks of data in
+   - `:chunked`: Store raw data separately from the object header as chunks of data in
      separate locations in the file.
 
-   - `H5D_VIRTUAL`:  Draw raw data from multiple datasets in different files.
+   - `:virtual`:  Draw raw data from multiple datasets in different files.
 
   See $(h5doc("H5P_SET_LAYOUT")).
 
 
-- `shuffle`: Sets the shuffle filter. See $(h5doc("H5P_SET_SHUFFLE")).
+The following options are shortcuts for the various filters, and are set-only. They will
+be appended to the filter pipeline in the order in which they appear
+
+- `blosc = true | level`: set the [`Filters.BloscFilter`](ref) compression filter;
+  argument can be either `true`, or the compression level.
+
+- `deflate = true | level`: set the [`Filters.Deflate`](@ref) compression filter; argument
+  can be either `true`, or the compression level.
+
+- `fletcher32 = true`: set the [`Filters.Fletcher32`](@ref) checksum filter.
+
+- `shuffle = true`: set the [`Filters.Shuffle`](@ref) filter.
+
 """
-@propertyclass(DatasetCreate, H5P_DATASET_CREATE, ObjectCreate)
+@propertyclass(DatasetCreate, API.H5P_DATASET_CREATE, ObjectCreate)
 _propertynames(::Type{DatasetCreatePropertyClass}) = (:alloc_time,
                                                       :blosc,
                                                       :chunk,
@@ -246,71 +321,95 @@ _propertynames(::Type{DatasetCreatePropertyClass}) = (:alloc_time,
                                                       :shuffle,
                                                       )
 
+@enum_property(alloc_time,
+               :default     => API.H5D_ALLOC_TIME_DEFAULT,
+               :early       => API.H5D_ALLOC_TIME_EARLY,
+               :incremental => API.H5D_ALLOC_TIME_INCR,
+               :late        => API.H5D_ALLOC_TIME_LATE)
+
+
+
 # reverse indices
-get_chunk(p::Properties) = tuple(convert(Vector{Int}, reverse(h5p_get_chunk(p)))...)
-set_chunk(p::Properties, dims...) = h5p_set_chunk(p, length(dims), hsize_t[reverse(dims)...])
+get_chunk(p::Properties) = tuple(convert(Vector{Int}, reverse(API.h5p_get_chunk(p)))...)
+set_chunk!(p::Properties, dims) = API.h5p_set_chunk(p, length(dims), API.hsize_t[reverse(dims)...])
+
+@enum_property(layout,
+               :compact    => API.H5D_COMPACT,
+               :contiguous => API.H5D_CONTIGUOUS,
+               :chunked    => API.H5D_CHUNKED,
+               :virtual    => API.H5D_VIRTUAL)
+
 
 function _getproperty(::Type{DatasetCreatePropertyClass}, p::Properties, name::Symbol)
-    name === :alloc_time  ? h5p_get_alloc_time(p) :
+    name === :alloc_time  ? get_alloc_time(p) :
     name === :chunk       ? get_chunk(p) :
-    #name === :external    ? h5p_get_external(p) :
-    name === :layout      ? h5p_get_layout(p) :
+    #name === :external    ? API.h5p_get_external(p) :
+    name === :filters     ? Filters.get_filters(p) :
+    name === :layout      ? get_layout(p) :
     _getproperty(supertype(DatasetCreatePropertyClass), p, name)
 end
 function _setproperty!(::Type{DatasetCreatePropertyClass}, p::Properties, name::Symbol, val)
-    name === :alloc_time  ? h5p_set_alloc_time(p, val...) :
-    name === :blosc       ? h5p_set_blosc(p, val...) :
-    name === :chunk       ? set_chunk(p, val...) :
-    name === :compress    ? h5p_set_deflate(p, val...) :
-    name === :deflate     ? h5p_set_deflate(p, val...) :
-    name === :external    ? h5p_set_external(p, val...) :
-    name === :layout      ? h5p_set_layout(p, val...) :
-    name === :shuffle     ? h5p_set_shuffle(p, val...) :
+    name === :alloc_time  ? set_alloc_time!(p, val) :
+    name === :chunk       ? set_chunk!(p, val) :
+    name === :external    ? API.h5p_set_external(p, val...) :
+    name === :filters     ? Filters.set_filters!(p, val) :
+    name === :layout      ? set_layout!(p, val) :
+    # set-only
+    name === :blosc       ? Filters.set_blosc!(p, val) :
+    name === :deflate     ? Filters.set_deflate!(p, val) :
+    name === :fletcher32  ? Filters.set_fletcher32!(p, val) :
+    name === :shuffle     ? Filters.set_shuffle!(p, val) :    
+    # deprecated
+    name === :compress    ? (depwarn("`compress=$val` keyword option is deprecated, use `deflate=$val` instead",:compress); Filters.set_deflate!(p, val)) :
     _setproperty!(supertype(DatasetCreatePropertyClass), p, name, val)
 end
 
-"""
-    StringCreateProperties(;kws...)
+@propertyclass(StringCreate, API.H5P_STRING_CREATE)
+@enum_property(char_encoding,
+               :ascii => API.H5T_CSET_ASCII,
+               :utf8  => API.H5T_CSET_UTF8)
+    
 
-Properties used when creating strings.
-
-- `char_encoding`: the character enconding, either `H5T_CSET_ASCII` or `H5T_CSET_UTF8`.
-"""
-@propertyclass(StringCreate, H5P_STRING_CREATE)
 _propertynames(::Type{StringCreatePropertyClass}) = (:char_encoding,)
 function _getproperty(::Type{StringCreatePropertyClass}, p::Properties, name::Symbol)
-    name === :char_encoding ? h5p_get_char_encoding(p) :
+    name === :char_encoding ? get_char_encoding(p) :
     _getproperty(supertype(StringCreatePropertyClass), p, name)
 end
 function _setproperty!(::Type{StringCreatePropertyClass}, p::Properties, name::Symbol, val)
-    name === :char_encoding ? h5p_set_char_encoding(p, val...) :
+    name === :char_encoding ? set_char_encoding!(p, val) :
     _setproperty!(supertype(StringCreatePropertyClass), p, name, val)
 end
 
 """
     LinkCreateProperties(;kws...)
 
-Properties used when creating links. Inherits from [`StringCreateProperties`](@ref)
+Properties used when creating links.
 
-- `create_intermediate_group :: Integer`: If positive, missing intermediate groups will be created.
+- `char_encoding`: the character enconding, either `:ascii` or `:utf8`.
+- `create_intermediate_group :: Bool`: if `true`, will create missing intermediate groups
 """
-@propertyclass(LinkCreate, H5P_LINK_CREATE, StringCreate)
+@propertyclass(LinkCreate, API.H5P_LINK_CREATE, StringCreate)
+
+@bool_property(create_intermediate_group)
+
 _propertynames(::Type{LinkCreatePropertyClass}) = (:create_intermediate_group,)
 function _getproperty(::Type{LinkCreatePropertyClass}, p::Properties, name::Symbol)
-    name === :create_intermediate_group ? h5p_get_create_intermediate_group(p) :
+    name === :create_intermediate_group ? get_create_intermediate_group(p) :
     _getproperty(supertype(LinkCreatePropertyClass), p, name)
 end
 function _setproperty!(::Type{LinkCreatePropertyClass}, p::Properties, name::Symbol, val)
-    name === :create_intermediate_group ? h5p_set_create_intermediate_group(p, val...) :
+    name === :create_intermediate_group ? set_create_intermediate_group!(p, val) :
     _setproperty!(supertype(LinkCreatePropertyClass), p, name, val)
 end
 
 """
     AttributeCreateProperties(;kws...)
 
-Properties used when creating attributes. Inherits from [`StringCreateProperties`](@ref)
+Properties used when creating attributes.
+
+- `char_encoding`: the character enconding, either `:ascii` or `:utf8`.
 """
-@propertyclass(AttributeCreate, H5P_ATTRIBUTE_CREATE, StringCreate)
+@propertyclass(AttributeCreate, API.H5P_ATTRIBUTE_CREATE, StringCreate)
 
 
 """
@@ -322,73 +421,128 @@ Properties used when accessing files.
   greater than or equal in size to threshold bytes will be aligned on an address which is
   a multiple of alignment. Default values are 1, implying no alignment.
 
-- `driver` (get only)
+- `driver`: the file driver used to access the file. See [Drivers](@ref).
 
 - `driver_info` (get only)
 
-- `fapl_mpio :: Tuple{MPI.Comm, MPI.Info}`: Set the MPI communicator and info object to
-  use for parallel I/O.
+- `fclose_degree`: file close degree property. One of:
 
-- `fclose_degree`: file close degree property. One of: `H5F_CLOSE_WEAK`, `H5F_CLOSE_SEMI`,
-  `H5F_CLOSE_STRONG` or `H5F_CLOSE_DEFAULT`.
+  - `:weak`
+  - `:semi`
+  - `:strong`
+  - `:default`
 
 - `libver_bounds`: a `(low, high)` pair: `low` sets the earliest possible format versions
-  that the library will use when creating objects in the file;`high` sets the latest
+  that the library will use when creating objects in the file; `high` sets the latest
   format versions that the library will be allowed to use when creating objects in the
-  file. Possible values are `H5F_LIBVER_EARLIEST`, `H5F_LIBVER_V18`, `H5F_LIBVER_V110`,
-  `H5F_LIBVER_NBOUNDS`.
+  file. Possible values are:
+
+  - `:earliest`
+  - `v"1.8"`
+  - `v"1.10"`
+  - `v"1.12"`
+  - `:latest` (an alias for the latest version)
+
+  See $(h5doc("H5P_SET_LIBVER_BOUNDS"))
 
 """
-@propertyclass(FileAccess, H5P_FILE_ACCESS)
+@propertyclass(FileAccess, API.H5P_FILE_ACCESS)
+
+
+@enum_property(fclose_degree,
+               :weak    => API.H5F_CLOSE_WEAK,
+               :semi    => API.H5F_CLOSE_SEMI,
+               :strong  => API.H5F_CLOSE_STRONG,
+               :default => API.H5F_CLOSE_DEFAULT)
+
+
+libver_bound_to_enum(val::Integer) = val
+function libver_bound_to_enum(val)
+    val == :earliest ? API.H5F_LIBVER_EARLIEST :
+    val == v"1.8"    ? API.H5F_LIBVER_V18 :
+    val == v"1.10"   ? API.H5F_LIBVER_V110 :
+    val == v"1.12"   ? API.H5F_LIBVER_V112 :
+    val == :latest   ? API.H5F_LIBVER_LATEST :
+    throw(ArgumentError("Invalid libver_bound value $val"))
+end
+function libver_bound_from_enum(enum)
+    enum == API.H5F_LIBVER_EARLIEST ? :earliest :
+    enum == API.H5F_LIBVER_V18      ? v"1.8" :
+    enum == API.H5F_LIBVER_V110     ? v"1.10" :
+    enum == API.H5F_LIBVER_V112     ? v"1.12" :
+    error("Unknown libver_bound value $enum")
+end
+
+function get_libver_bounds(p::Properties)
+    low, high = API.h5p_get_libver_bounds(p)
+    return libver_bound_from_enum(low), libver_bound_from_enum(high)
+end
+function set_libver_bounds!(p::Properties, (low, high)::Tuple{Any,Any})
+    API.h5p_set_libver_bounds(p, libver_bound_to_enum(low), libver_bound_to_enum(high))
+end
+function set_libver_bounds!(p::Properties, val)
+    API.h5p_set_libver_bounds(p, libver_bound_to_enum(val), libver_bound_to_enum(val))
+end
+
 _propertynames(::Type{FileAccessPropertyClass}) = (:alignment,
                                                    :driver,
                                                    :driver_info,
                                                    :fapl_mpio,
                                                    :fclose_degree,
                                                    :libver_bounds,)
+
 function _getproperty(::Type{FileAccessPropertyClass}, p::Properties, name::Symbol)
-    name === :alignment     ? h5p_get_alignment(p) :
-    name === :driver        ? h5p_get_driver(p) :
-    name === :driver_info   ? h5p_get_driver_info(p) :
-    name === :fapl_mpio     ? h5p_get_fapl_mpio(p) :
-    name === :fclose_degree ? h5p_get_fclose_degree(p) :
-    name === :libver_bounds ? h5p_get_libver_bounds(p) :
+    name === :alignment     ? API.h5p_get_alignment(p) :
+    name === :driver        ? Drivers.get_driver(p) :
+    name === :driver_info   ? API.h5p_get_driver_info(p) :
+    name === :fclose_degree ? get_fclose_degree(p) :
+    name === :libver_bounds ? get_libver_bounds(p) :
+    # deprecated
+    name === :fapl_mpio     ? (depwarn("The `fapl_mpio=...` property is deprecated, use `driver=HDF5.Drivers.MPIO(...)` instead.", :fapl_mpio); drv = get_driver(p, MPIO); (drv.comm, drv.info)) :
     _getproperty(supertype(FileAccessPropertyClass), p, name)
 end
 function _setproperty!(::Type{FileAccessPropertyClass}, p::Properties, name::Symbol, val)
-    name === :alignment     ? h5p_set_alignment(p, val...) :
-    name === :fapl_mpio     ? h5p_set_fapl_mpio(p, val...) :
-    name === :fclose_degree ? h5p_set_fclose_degree(p, val...) :
-    name === :libver_bounds ? h5p_set_libver_bounds(p, val...) :
+    name === :alignment     ? API.h5p_set_alignment(p, val...) :
+    name === :fclose_degree ? set_fclose_degree!(p, val) :
+    name === :libver_bounds ? set_libver_bounds!(p, val) :
+    # deprecated
+    name === :fapl_mpio     ? (depwarn("The `fapl_mpio=...` property is deprecated, use `driver=HDF5.Drivers.MPIO(...)` instead.", :fapl_mpio); p.driver = Drivers.MPIO(val...)) :    
     _setproperty!(supertype(FileAccessPropertyClass), p, name, val)
 end
 
 
-@propertyclass(LinkAccess, H5P_LINK_ACCESS)
-@propertyclass(GroupAccess, H5P_GROUP_ACCESS, LinkAccess)
-@propertyclass(DatatypeAccess, H5P_DATATYPE_ACCESS, LinkAccess)
-@propertyclass(DatasetAccess, H5P_DATASET_ACCESS, LinkAccess)
-@propertyclass(AttributeAccess, H5P_ATTRIBUTE_ACCESS, LinkAccess)
+@propertyclass(LinkAccess, API.H5P_LINK_ACCESS)
+@propertyclass(GroupAccess, API.H5P_GROUP_ACCESS, LinkAccess)
+@propertyclass(DatatypeAccess, API.H5P_DATATYPE_ACCESS, LinkAccess)
+@propertyclass(DatasetAccess, API.H5P_DATASET_ACCESS, LinkAccess)
+@propertyclass(AttributeAccess, API.H5P_ATTRIBUTE_ACCESS, LinkAccess)
 
 """
     DatasetTransferProperties(;kws...)
 
 Properties used when transferring data to/from datasets
 
-- `dxpl_mpio`: MPI transfer mode: `H5FD_MPIO_INDEPENDENT` Use independent I/O access (default), `H5FD_MPIO_COLLECTIVE` Use collective I/O access,
+- `dxpl_mpio`: MPI transfer mode: 
+   - `:independent`: use independent I/O access (default),
+   - `:collective`: use collective I/O access.
 """
-@propertyclass(DatasetTransfer, H5P_DATASET_XFER)
+@propertyclass(DatasetTransfer, API.H5P_DATASET_XFER)
+
+@enum_property(dxpl_mpio,
+               :independent => API.H5FD_MPIO_INDEPENDENT,
+               :collective  => API.H5FD_MPIO_COLLECTIVE)
+
 _propertynames(::Type{DatasetTransferPropertyClass}) = (:dxpl_mpio,)
 function _getproperty(::Type{DatasetTransferPropertyClass}, p::Properties, name::Symbol)
-    name === :dxpl_mpio  ? h5p_get_dxpl_mpio(p) :
+    name === :dxpl_mpio  ? API.h5p_get_dxpl_mpio(p) :
     _getproperty(supertype(DatasetTransferPropertyClass), p, name)
 end
 function _setproperty!(::Type{DatasetTransferPropertyClass}, p::Properties, name::Symbol, val)
-    name === :dxpl_mpio  ? h5p_set_dxpl_mpio(p, val...) :
+    name === :dxpl_mpio  ? API.h5p_set_dxpl_mpio(p, val...) :
     _setproperty!(supertype(DatasetTransferPropertyClass), p, name, val)
 end
-@propertyclass(FileMount, H5P_FILE_MOUNT)
-@propertyclass(ObjectCopy, H5P_OBJECT_COPY)
+@propertyclass(FileMount, API.H5P_FILE_MOUNT)
+@propertyclass(ObjectCopy, API.H5P_OBJECT_COPY)
 
 
 # Across initializations of the library, the id of various properties

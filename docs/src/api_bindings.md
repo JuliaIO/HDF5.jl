@@ -280,6 +280,7 @@ h5o_open_by_idx
 - [`h5p_set_external`](@ref HDF5.h5p_set_external)
 - [`h5p_set_fapl_mpio32`](@ref HDF5.h5p_set_fapl_mpio32)
 - [`h5p_set_fapl_mpio64`](@ref HDF5.h5p_set_fapl_mpio64)
+- [`h5p_set_fapl_sec2`](@ref HDF5.h5p_set_fapl_sec2)
 - [`h5p_set_fclose_degree`](@ref HDF5.h5p_set_fclose_degree)
 - [`h5p_set_filter`](@ref HDF5.h5p_set_filter)
 - [`h5p_set_fletcher32`](@ref HDF5.h5p_set_fletcher32)
@@ -329,6 +330,7 @@ h5p_set_dxpl_mpio
 h5p_set_external
 h5p_set_fapl_mpio32
 h5p_set_fapl_mpio64
+h5p_set_fapl_sec2
 h5p_set_fclose_degree
 h5p_set_filter
 h5p_set_fletcher32
