@@ -34,7 +34,9 @@ Base.isvalid(obj::Properties) = obj.id != -1 && API.h5i_is_valid(obj)
 classid(::Type{PropertyClass}) = API.H5P_DEFAULT
 
 function init!(prop::Properties)
-    prop.id = API.h5p_create(prop.class)
+    if !isvalid(prop)
+        prop.id = API.h5p_create(prop.class)
+    end
     return prop
 end
 
@@ -457,13 +459,16 @@ Properties used when accessing files.
 
 
 libver_bound_to_enum(val::Integer) = val
-function libver_bound_to_enum(val)
+function libver_bound_to_enum(val::VersionNumber)
+    val >= v"1.12"   ? API.H5F_LIBVER_V112 :
+    val >= v"1.10"   ? API.H5F_LIBVER_V110 :
+    val >= v"1.8"    ? API.H5F_LIBVER_V18 :
+    throw(ArgumentError("libver_bound must be >= v\"1.8\"."))
+end
+function libver_bound_to_enum(val::Symbol)
     val == :earliest ? API.H5F_LIBVER_EARLIEST :
-    val == v"1.8"    ? API.H5F_LIBVER_V18 :
-    val == v"1.10"   ? API.H5F_LIBVER_V110 :
-    val == v"1.12"   ? API.H5F_LIBVER_V112 :
-    val == :latest   ? API.H5F_LIBVER_LATEST :
-    throw(ArgumentError("Invalid libver_bound value $val"))
+    val == :latest   ? libver_bound_to_enum(libversion) :
+    throw(ArgumentError("Invalid libver_bound $val."))
 end
 function libver_bound_from_enum(enum)
     enum == API.H5F_LIBVER_EARLIEST ? :earliest :

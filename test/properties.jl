@@ -45,7 +45,7 @@ h5open(fn, "w";
         @test fapl.driver_info == C_NULL
     end
     @test fapl.fclose_degree == :strong
-    @test fapl.libver_bounds == (:earliest, v"1.12")
+    @test fapl.libver_bounds == (:earliest, Base.thisminor(HDF5.libversion))
 
     @test gcpl.local_heap_size_hint == 0
     @test gcpl.track_times == true

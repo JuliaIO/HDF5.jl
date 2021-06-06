@@ -17,26 +17,31 @@ function exists end
 @deprecate set_dims!(dset::Dataspace) set_extent_dims(dset) false
 
 
-### 
-@deprecate(create_property(class; kwargs...),
-           class == HDF5.H5P_OBJECT_CREATE   ? ObjectCreateProperties(;kwargs...) :
-           class == HDF5.H5P_FILE_CREATE     ? FileCreateProperties(;kwargs...) :
-           class == HDF5.H5P_FILE_ACCESS     ? FileAccessProperties(;kwargs...) :
-           class == HDF5.H5P_DATASET_CREATE  ? DatasetCreateProperties(;kwargs...) :
-           class == HDF5.H5P_DATASET_ACCESS  ? DatasetAccessProperties(;kwargs...) :
-           class == HDF5.H5P_DATASET_XFER    ? DatasetTransferProperties(;kwargs...) :
-           class == HDF5.H5P_FILE_MOUNT      ? FileMountProperties(;kwargs...) :
-           class == HDF5.H5P_GROUP_CREATE    ? GroupCreateProperties(;kwargs...) :
-           class == HDF5.H5P_GROUP_ACCESS    ? GroupAccessProperties(;kwargs...) :
-           class == HDF5.H5P_DATATYPE_CREATE ? DatatypeCreateProperties(;kwargs...) :
-           class == HDF5.H5P_DATATYPE_ACCESS ? DatatypeAccessProperties(;kwargs...) :
-           class == HDF5.H5P_STRING_CREATE   ? StringCreateProperties(;kwargs...) :
-           class == HDF5.H5P_ATTRIBUTE_CREATE ? AttributeCreateProperties(;kwargs...) :
-           class == HDF5.H5P_OBJECT_COPY     ? ObjectCopyProperties(;kwargs...) :
-           class == HDF5.H5P_LINK_CREATE     ? LinkCreateProperties(;kwargs...) :
-           class == HDF5.H5P_LINK_ACCESS     ? LinkAccessProperties(;kwargs...) :
-           error("invalid class"))
+###
+export create_property
 
+function create_property(class; kwargs...)
+    (oldname, newname, newtype) =
+        class == HDF5.API.H5P_OBJECT_CREATE    ? (:H5P_OBJECT_CREATE, :ObjectCreateProperties, ObjectCreateProperties) :
+        class == HDF5.API.H5P_FILE_CREATE      ? (:H5P_FILE_CREATE, :FileCreateProperties, FileCreateProperties) :
+        class == HDF5.API.H5P_FILE_ACCESS      ? (:H5P_FILE_ACCESS, :FileAccessProperties, FileAccessProperties) :
+        class == HDF5.API.H5P_DATASET_CREATE   ? (:H5P_DATASET_CREATE, :DatasetCreateProperties, DatasetCreateProperties) :
+        class == HDF5.API.H5P_DATASET_ACCESS   ? (:H5P_DATASET_ACCESS, :DatasetAccessProperties, DatasetAccessProperties) :
+        class == HDF5.API.H5P_DATASET_XFER     ? (:H5P_DATASET_XFER, :DatasetTransferProperties, DatasetTransferProperties) :
+        class == HDF5.API.H5P_FILE_MOUNT       ? (:H5P_FILE_MOUNT, :FileMountProperties, FileMountProperties) :
+        class == HDF5.API.H5P_GROUP_CREATE     ? (:H5P_GROUP_CREATE, :GroupCreateProperties, GroupCreateProperties) :
+        class == HDF5.API.H5P_GROUP_ACCESS     ? (:H5P_GROUP_ACCESS, :GroupAccessProperties, GroupAccessProperties) :
+        class == HDF5.API.H5P_DATATYPE_CREATE  ? (:H5P_DATATYPE_CREATE, :DatatypeCreateProperties, DatatypeCreateProperties) :
+        class == HDF5.API.H5P_DATATYPE_ACCESS  ? (:H5P_DATATYPE_ACCESS, :DatatypeAccessProperties, DatatypeAccessProperties) :
+        class == HDF5.API.H5P_STRING_CREATE    ? (:H5P_STRING_CREATE, :StringCreateProperties, StringCreateProperties) :
+        class == HDF5.API.H5P_ATTRIBUTE_CREATE ? (:H5P_ATTRIBUTE_CREATE, :AttributeCreateProperties, AttributeCreateProperties) :
+        class == HDF5.API.H5P_OBJECT_COPY      ? (:H5P_OBJECT_COPY, :ObjectCopyProperties, ObjectCopyProperties) :
+        class == HDF5.API.H5P_LINK_CREATE      ? (:H5P_LINK_CREATE, :LinkCreateProperties, LinkCreateProperties) :
+        class == HDF5.API.H5P_LINK_ACCESS      ? (:H5P_LINK_ACCESS, :LinkAccessProperties, LinkAccessProperties) :
+        error("invalid class")
+    Base.depwarn("`create_property(HDF5,$oldname; kwargs...)` has been deprecated, use `$newname(;kwargs...)` instead.", :create_property)
+    init!(newtype(;kwargs...))
+end
 import Base: getindex, setindex!
 @deprecate getindex(p::Properties, name::Symbol) Base.getproperty(p, name)
 @deprecate setindex!(p::Properties, val, name::Symbol) Base.setproperty!(p, name, val)
