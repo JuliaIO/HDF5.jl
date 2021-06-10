@@ -51,6 +51,8 @@ function Filters.set_shuffle!(p::Properties, ::Tuple{})
     Filters.set_shuffle!(p, true)
 end
 
+Base.@deprecate_binding DEFAULT_PROPERTIES Properties{PropertyClass}() false
+
 for name in names(API; all=true)
     if name ∉ names(HDF5; all=true) && startswith(uppercase(String(name)), "H")
         depmsg = ", use HDF5.API.$name instead."
