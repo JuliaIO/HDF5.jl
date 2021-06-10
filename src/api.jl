@@ -16,7 +16,7 @@ _libhdf5_build_ver = let
 See `libhdf5` documentation for [`H5close`](https://portal.hdfgroup.org/display/HDF5/H5_CLOSE).
 """
 function h5_close()
-    var"#status#" = ccall((:H5close, libhdf5), herr_t, ())
+    var"#status#" = ccall(:H5close, herr_t, ())
     var"#status#" < 0 && error("Error closing the HDF5 resources")
     return nothing
 end
@@ -27,7 +27,7 @@ end
 See `libhdf5` documentation for [`H5dont_atexit`](https://portal.hdfgroup.org/display/HDF5/H5_DONT_ATEXIT).
 """
 function h5_dont_atexit()
-    var"#status#" = ccall((:H5dont_atexit, libhdf5), herr_t, ())
+    var"#status#" = ccall(:H5dont_atexit, herr_t, ())
     var"#status#" < 0 && error("Error calling dont_atexit")
     return nothing
 end
@@ -38,7 +38,7 @@ end
 See `libhdf5` documentation for [`H5free_memory`](https://portal.hdfgroup.org/display/HDF5/H5_FREE_MEMORY).
 """
 function h5_free_memory(buf)
-    var"#status#" = ccall((:H5free_memory, libhdf5), herr_t, (Ptr{Cvoid},), buf)
+    var"#status#" = ccall(:H5free_memory, herr_t, (Ptr{Cvoid},), buf)
     var"#status#" < 0 && error("Error freeing memory")
     return nothing
 end
@@ -49,7 +49,7 @@ end
 See `libhdf5` documentation for [`H5garbage_collect`](https://portal.hdfgroup.org/display/HDF5/H5_GARBAGE_COLLECT).
 """
 function h5_garbage_collect()
-    var"#status#" = ccall((:H5garbage_collect, libhdf5), herr_t, ())
+    var"#status#" = ccall(:H5garbage_collect, herr_t, ())
     var"#status#" < 0 && error("Error on garbage collect")
     return nothing
 end
@@ -60,7 +60,7 @@ end
 See `libhdf5` documentation for [`H5get_libversion`](https://portal.hdfgroup.org/display/HDF5/H5_GET_LIBVERSION).
 """
 function h5_get_libversion(majnum, minnum, relnum)
-    var"#status#" = ccall((:H5get_libversion, libhdf5), herr_t, (Ref{Cuint}, Ref{Cuint}, Ref{Cuint}), majnum, minnum, relnum)
+    var"#status#" = ccall(:H5get_libversion, herr_t, (Ref{Cuint}, Ref{Cuint}, Ref{Cuint}), majnum, minnum, relnum)
     var"#status#" < 0 && error("Error getting HDF5 library version")
     return nothing
 end
@@ -71,7 +71,7 @@ end
 See `libhdf5` documentation for [`H5is_library_threadsafe`](https://portal.hdfgroup.org/display/HDF5/H5_IS_LIBRARY_THREADSAFE).
 """
 function h5_is_library_threadsafe(is_ts)
-    var"#status#" = ccall((:H5is_library_threadsafe, libhdf5), herr_t, (Ref{Cuint},), is_ts)
+    var"#status#" = ccall(:H5is_library_threadsafe, herr_t, (Ref{Cuint},), is_ts)
     var"#status#" < 0 && error("Error determining thread safety")
     return nothing
 end
@@ -82,7 +82,7 @@ end
 See `libhdf5` documentation for [`H5open`](https://portal.hdfgroup.org/display/HDF5/H5_OPEN).
 """
 function h5_open()
-    var"#status#" = ccall((:H5open, libhdf5), herr_t, ())
+    var"#status#" = ccall(:H5open, herr_t, ())
     var"#status#" < 0 && error("Error initializing the HDF5 library")
     return nothing
 end
@@ -93,7 +93,7 @@ end
 See `libhdf5` documentation for [`H5set_free_list_limits`](https://portal.hdfgroup.org/display/HDF5/H5_SET_FREE_LIST_LIMITS).
 """
 function h5_set_free_list_limits(reg_global_lim, reg_list_lim, arr_global_lim, arr_list_lim, blk_global_lim, blk_list_lim)
-    var"#status#" = ccall((:H5set_free_list_limits, libhdf5), herr_t, (Cint, Cint, Cint, Cint, Cint, Cint), reg_global_lim, reg_list_lim, arr_global_lim, arr_list_lim, blk_global_lim, blk_list_lim)
+    var"#status#" = ccall(:H5set_free_list_limits, herr_t, (Cint, Cint, Cint, Cint, Cint, Cint), reg_global_lim, reg_list_lim, arr_global_lim, arr_list_lim, blk_global_lim, blk_list_lim)
     var"#status#" < 0 && error("Error setting limits on free lists")
     return nothing
 end
@@ -104,7 +104,7 @@ end
 See `libhdf5` documentation for [`H5Aclose`](https://portal.hdfgroup.org/display/HDF5/H5A_CLOSE).
 """
 function h5a_close(id)
-    var"#status#" = ccall((:H5Aclose, libhdf5), herr_t, (hid_t,), id)
+    var"#status#" = ccall(:H5Aclose, herr_t, (hid_t,), id)
     var"#status#" < 0 && error("Error closing attribute")
     return nothing
 end
@@ -115,7 +115,7 @@ end
 See `libhdf5` documentation for [`H5Acreate2`](https://portal.hdfgroup.org/display/HDF5/H5A_CREATE2).
 """
 function h5a_create(loc_id, pathname, type_id, space_id, acpl_id, aapl_id)
-    var"#status#" = ccall((:H5Acreate2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t), loc_id, pathname, type_id, space_id, acpl_id, aapl_id)
+    var"#status#" = ccall(:H5Acreate2, hid_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t), loc_id, pathname, type_id, space_id, acpl_id, aapl_id)
     var"#status#" < 0 && error("Error creating attribute ", h5a_get_name(loc_id), "/", pathname)
     return var"#status#"
 end
@@ -126,7 +126,7 @@ end
 See `libhdf5` documentation for [`H5Acreate_by_name`](https://portal.hdfgroup.org/display/HDF5/H5A_CREATE_BY_NAME).
 """
 function h5a_create_by_name(loc_id, obj_name, attr_name, type_id, space_id, acpl_id, aapl_id, lapl_id)
-    var"#status#" = ccall((:H5Acreate_by_name, libhdf5), hid_t, (hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t, hid_t), loc_id, obj_name, attr_name, type_id, space_id, acpl_id, aapl_id, lapl_id)
+    var"#status#" = ccall(:H5Acreate_by_name, hid_t, (hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t, hid_t), loc_id, obj_name, attr_name, type_id, space_id, acpl_id, aapl_id, lapl_id)
     var"#status#" < 0 && error("Error creating attribute ", attr_name, " for object ", obj_name)
     return var"#status#"
 end
@@ -137,7 +137,7 @@ end
 See `libhdf5` documentation for [`H5Adelete`](https://portal.hdfgroup.org/display/HDF5/H5A_DELETE).
 """
 function h5a_delete(loc_id, attr_name)
-    var"#status#" = ccall((:H5Adelete, libhdf5), herr_t, (hid_t, Ptr{UInt8}), loc_id, attr_name)
+    var"#status#" = ccall(:H5Adelete, herr_t, (hid_t, Ptr{UInt8}), loc_id, attr_name)
     var"#status#" < 0 && error("Error deleting attribute ", attr_name)
     return nothing
 end
@@ -148,7 +148,7 @@ end
 See `libhdf5` documentation for [`H5Adelete_by_idx`](https://portal.hdfgroup.org/display/HDF5/H5A_DELETE_BY_IDX).
 """
 function h5a_delete_by_idx(loc_id, obj_name, idx_type, order, n, lapl_id)
-    var"#status#" = ccall((:H5Adelete_by_idx, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, hid_t), loc_id, obj_name, idx_type, order, n, lapl_id)
+    var"#status#" = ccall(:H5Adelete_by_idx, herr_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, hid_t), loc_id, obj_name, idx_type, order, n, lapl_id)
     var"#status#" < 0 && error("Error deleting attribute ", n, " from object ", obj_name)
     return nothing
 end
@@ -159,7 +159,7 @@ end
 See `libhdf5` documentation for [`H5Adelete_by_name`](https://portal.hdfgroup.org/display/HDF5/H5A_DELETE_BY_NAME).
 """
 function h5a_delete_by_name(loc_id, obj_name, attr_name, lapl_id)
-    var"#status#" = ccall((:H5Adelete_by_name, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t), loc_id, obj_name, attr_name, lapl_id)
+    var"#status#" = ccall(:H5Adelete_by_name, herr_t, (hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t), loc_id, obj_name, attr_name, lapl_id)
     var"#status#" < 0 && error("Error removing attribute ", attr_name, " from object ", obj_name)
     return nothing
 end
@@ -170,7 +170,7 @@ end
 See `libhdf5` documentation for [`H5Aexists`](https://portal.hdfgroup.org/display/HDF5/H5A_EXISTS).
 """
 function h5a_exists(obj_id, attr_name)
-    var"#status#" = ccall((:H5Aexists, libhdf5), htri_t, (hid_t, Ptr{UInt8}), obj_id, attr_name)
+    var"#status#" = ccall(:H5Aexists, htri_t, (hid_t, Ptr{UInt8}), obj_id, attr_name)
     var"#status#" < 0 && error("Error checking whether attribute ", attr_name, " exists")
     return var"#status#" > 0
 end
@@ -181,7 +181,7 @@ end
 See `libhdf5` documentation for [`H5Aexists_by_name`](https://portal.hdfgroup.org/display/HDF5/H5A_EXISTS_BY_NAME).
 """
 function h5a_exists_by_name(loc_id, obj_name, attr_name, lapl_id)
-    var"#status#" = ccall((:H5Aexists_by_name, libhdf5), htri_t, (hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t), loc_id, obj_name, attr_name, lapl_id)
+    var"#status#" = ccall(:H5Aexists_by_name, htri_t, (hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t), loc_id, obj_name, attr_name, lapl_id)
     var"#status#" < 0 && error("Error checking whether object ", obj_name, " has attribute ", attr_name)
     return var"#status#" > 0
 end
@@ -192,7 +192,7 @@ end
 See `libhdf5` documentation for [`H5Aget_create_plist`](https://portal.hdfgroup.org/display/HDF5/H5A_GET_CREATE_PLIST).
 """
 function h5a_get_create_plist(attr_id)
-    var"#status#" = ccall((:H5Aget_create_plist, libhdf5), hid_t, (hid_t,), attr_id)
+    var"#status#" = ccall(:H5Aget_create_plist, hid_t, (hid_t,), attr_id)
     var"#status#" < 0 && error("Cannot get creation property list")
     return var"#status#"
 end
@@ -203,7 +203,7 @@ end
 See `libhdf5` documentation for [`H5Aget_name`](https://portal.hdfgroup.org/display/HDF5/H5A_GET_NAME).
 """
 function h5a_get_name(attr_id, buf_size, buf)
-    var"#status#" = ccall((:H5Aget_name, libhdf5), Cssize_t, (hid_t, Csize_t, Ptr{UInt8}), attr_id, buf_size, buf)
+    var"#status#" = ccall(:H5Aget_name, Cssize_t, (hid_t, Csize_t, Ptr{UInt8}), attr_id, buf_size, buf)
     var"#status#" < 0 && error("Error getting attribute name")
     return var"#status#"
 end
@@ -214,7 +214,7 @@ end
 See `libhdf5` documentation for [`H5Aget_name_by_idx`](https://portal.hdfgroup.org/display/HDF5/H5A_GET_NAME_BY_IDX).
 """
 function h5a_get_name_by_idx(loc_id, obj_name, index_type, order, idx, name, size, lapl_id)
-    var"#status#" = ccall((:H5Aget_name_by_idx, libhdf5), Cssize_t, (hid_t, Cstring, Cint, Cint, hsize_t, Ptr{UInt8}, Csize_t, hid_t), loc_id, obj_name, index_type, order, idx, name, size, lapl_id)
+    var"#status#" = ccall(:H5Aget_name_by_idx, Cssize_t, (hid_t, Cstring, Cint, Cint, hsize_t, Ptr{UInt8}, Csize_t, hid_t), loc_id, obj_name, index_type, order, idx, name, size, lapl_id)
     var"#status#" < 0 && error("Error getting attribute name")
     return var"#status#"
 end
@@ -225,7 +225,7 @@ end
 See `libhdf5` documentation for [`H5Aget_space`](https://portal.hdfgroup.org/display/HDF5/H5A_GET_SPACE).
 """
 function h5a_get_space(attr_id)
-    var"#status#" = ccall((:H5Aget_space, libhdf5), hid_t, (hid_t,), attr_id)
+    var"#status#" = ccall(:H5Aget_space, hid_t, (hid_t,), attr_id)
     var"#status#" < 0 && error("Error getting attribute dataspace")
     return var"#status#"
 end
@@ -236,7 +236,7 @@ end
 See `libhdf5` documentation for [`H5Aget_type`](https://portal.hdfgroup.org/display/HDF5/H5A_GET_TYPE).
 """
 function h5a_get_type(attr_id)
-    var"#status#" = ccall((:H5Aget_type, libhdf5), hid_t, (hid_t,), attr_id)
+    var"#status#" = ccall(:H5Aget_type, hid_t, (hid_t,), attr_id)
     var"#status#" < 0 && error("Error getting attribute type")
     return var"#status#"
 end
@@ -258,7 +258,7 @@ end
 See `libhdf5` documentation for [`H5Aopen`](https://portal.hdfgroup.org/display/HDF5/H5A_OPEN).
 """
 function h5a_open(obj_id, pathname, aapl_id)
-    var"#status#" = ccall((:H5Aopen, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), obj_id, pathname, aapl_id)
+    var"#status#" = ccall(:H5Aopen, hid_t, (hid_t, Ptr{UInt8}, hid_t), obj_id, pathname, aapl_id)
     var"#status#" < 0 && error("Error opening attribute ", h5i_get_name(obj_id), "/", pathname)
     return var"#status#"
 end
@@ -269,7 +269,7 @@ end
 See `libhdf5` documentation for [`H5Aread`](https://portal.hdfgroup.org/display/HDF5/H5A_READ).
 """
 function h5a_read(attr_id, mem_type_id, buf)
-    var"#status#" = ccall((:H5Aread, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cvoid}), attr_id, mem_type_id, buf)
+    var"#status#" = ccall(:H5Aread, herr_t, (hid_t, hid_t, Ptr{Cvoid}), attr_id, mem_type_id, buf)
     var"#status#" < 0 && error("Error reading attribute ", h5a_get_name(attr_id))
     return nothing
 end
@@ -280,7 +280,7 @@ end
 See `libhdf5` documentation for [`H5Awrite`](https://portal.hdfgroup.org/display/HDF5/H5A_WRITE).
 """
 function h5a_write(attr_hid, mem_type_id, buf)
-    var"#status#" = ccall((:H5Awrite, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cvoid}), attr_hid, mem_type_id, buf)
+    var"#status#" = ccall(:H5Awrite, herr_t, (hid_t, hid_t, Ptr{Cvoid}), attr_hid, mem_type_id, buf)
     var"#status#" < 0 && error("Error writing attribute data")
     return nothing
 end
@@ -291,7 +291,7 @@ end
 See `libhdf5` documentation for [`H5Dclose`](https://portal.hdfgroup.org/display/HDF5/H5D_CLOSE).
 """
 function h5d_close(dataset_id)
-    var"#status#" = ccall((:H5Dclose, libhdf5), herr_t, (hid_t,), dataset_id)
+    var"#status#" = ccall(:H5Dclose, herr_t, (hid_t,), dataset_id)
     var"#status#" < 0 && error("Error closing dataset")
     return nothing
 end
@@ -302,7 +302,7 @@ end
 See `libhdf5` documentation for [`H5Dcreate2`](https://portal.hdfgroup.org/display/HDF5/H5D_CREATE2).
 """
 function h5d_create(loc_id, pathname, dtype_id, space_id, lcpl_id, dcpl_id, dapl_id)
-    var"#status#" = ccall((:H5Dcreate2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t, hid_t), loc_id, pathname, dtype_id, space_id, lcpl_id, dcpl_id, dapl_id)
+    var"#status#" = ccall(:H5Dcreate2, hid_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t, hid_t), loc_id, pathname, dtype_id, space_id, lcpl_id, dcpl_id, dapl_id)
     var"#status#" < 0 && error("Error creating dataset ", h5i_get_name(loc_id), "/", pathname)
     return var"#status#"
 end
@@ -313,7 +313,7 @@ end
 See `libhdf5` documentation for [`H5Dflush`](https://portal.hdfgroup.org/display/HDF5/H5D_FLUSH).
 """
 function h5d_flush(dataset_id)
-    var"#status#" = ccall((:H5Dflush, libhdf5), herr_t, (hid_t,), dataset_id)
+    var"#status#" = ccall(:H5Dflush, herr_t, (hid_t,), dataset_id)
     var"#status#" < 0 && error("Error flushing dataset")
     return nothing
 end
@@ -324,7 +324,7 @@ end
 See `libhdf5` documentation for [`H5Dget_access_plist`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_ACCESS_PLIST).
 """
 function h5d_get_access_plist(dataset_id)
-    var"#status#" = ccall((:H5Dget_access_plist, libhdf5), hid_t, (hid_t,), dataset_id)
+    var"#status#" = ccall(:H5Dget_access_plist, hid_t, (hid_t,), dataset_id)
     var"#status#" < 0 && error("Error getting dataset access property list")
     return var"#status#"
 end
@@ -335,7 +335,7 @@ end
 See `libhdf5` documentation for [`H5Dget_create_plist`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_CREATE_PLIST).
 """
 function h5d_get_create_plist(dataset_id)
-    var"#status#" = ccall((:H5Dget_create_plist, libhdf5), hid_t, (hid_t,), dataset_id)
+    var"#status#" = ccall(:H5Dget_create_plist, hid_t, (hid_t,), dataset_id)
     var"#status#" < 0 && error("Error getting dataset create property list")
     return var"#status#"
 end
@@ -346,7 +346,7 @@ end
 See `libhdf5` documentation for [`H5Dget_offset`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_OFFSET).
 """
 function h5d_get_offset(dataset_id)
-    var"#status#" = ccall((:H5Dget_offset, libhdf5), haddr_t, (hid_t,), dataset_id)
+    var"#status#" = ccall(:H5Dget_offset, haddr_t, (hid_t,), dataset_id)
     var"#status#" == -1 % haddr_t && error("Error getting offset")
     return var"#status#"
 end
@@ -357,7 +357,7 @@ end
 See `libhdf5` documentation for [`H5Dget_space`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_SPACE).
 """
 function h5d_get_space(dataset_id)
-    var"#status#" = ccall((:H5Dget_space, libhdf5), hid_t, (hid_t,), dataset_id)
+    var"#status#" = ccall(:H5Dget_space, hid_t, (hid_t,), dataset_id)
     var"#status#" < 0 && error("Error getting dataspace")
     return var"#status#"
 end
@@ -368,7 +368,7 @@ end
 See `libhdf5` documentation for [`H5Dget_type`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_TYPE).
 """
 function h5d_get_type(dataset_id)
-    var"#status#" = ccall((:H5Dget_type, libhdf5), hid_t, (hid_t,), dataset_id)
+    var"#status#" = ccall(:H5Dget_type, hid_t, (hid_t,), dataset_id)
     var"#status#" < 0 && error("Error getting dataspace type")
     return var"#status#"
 end
@@ -379,7 +379,7 @@ end
 See `libhdf5` documentation for [`H5Dopen2`](https://portal.hdfgroup.org/display/HDF5/H5D_OPEN2).
 """
 function h5d_open(loc_id, pathname, dapl_id)
-    var"#status#" = ccall((:H5Dopen2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, pathname, dapl_id)
+    var"#status#" = ccall(:H5Dopen2, hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, pathname, dapl_id)
     var"#status#" < 0 && error("Error opening dataset ", h5i_get_name(loc_id), "/", pathname)
     return var"#status#"
 end
@@ -390,7 +390,7 @@ end
 See `libhdf5` documentation for [`H5Dread`](https://portal.hdfgroup.org/display/HDF5/H5D_READ).
 """
 function h5d_read(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf)
-    var"#status#" = ccall((:H5Dread, libhdf5), herr_t, (hid_t, hid_t, hid_t, hid_t, hid_t, Ptr{Cvoid}), dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf)
+    var"#status#" = ccall(:H5Dread, herr_t, (hid_t, hid_t, hid_t, hid_t, hid_t, Ptr{Cvoid}), dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf)
     var"#status#" < 0 && error("Error reading dataset ", h5i_get_name(dataset_id))
     return nothing
 end
@@ -401,7 +401,7 @@ end
 See `libhdf5` documentation for [`H5Drefresh`](https://portal.hdfgroup.org/display/HDF5/H5D_REFRESH).
 """
 function h5d_refresh(dataset_id)
-    var"#status#" = ccall((:H5Drefresh, libhdf5), herr_t, (hid_t,), dataset_id)
+    var"#status#" = ccall(:H5Drefresh, herr_t, (hid_t,), dataset_id)
     var"#status#" < 0 && error("Error refreshing dataset")
     return nothing
 end
@@ -412,7 +412,7 @@ end
 See `libhdf5` documentation for [`H5Dset_extent`](https://portal.hdfgroup.org/display/HDF5/H5D_SET_EXTENT).
 """
 function h5d_set_extent(dataset_id, new_dims)
-    var"#status#" = ccall((:H5Dset_extent, libhdf5), herr_t, (hid_t, Ptr{hsize_t}), dataset_id, new_dims)
+    var"#status#" = ccall(:H5Dset_extent, herr_t, (hid_t, Ptr{hsize_t}), dataset_id, new_dims)
     var"#status#" < 0 && error("Error extending dataset dimensions")
     return nothing
 end
@@ -423,7 +423,7 @@ end
 See `libhdf5` documentation for [`H5Dvlen_get_buf_size`](https://portal.hdfgroup.org/display/HDF5/H5D_VLEN_GET_BUF_SIZE).
 """
 function h5d_vlen_get_buf_size(dset_id, type_id, space_id, buf)
-    var"#status#" = ccall((:H5Dvlen_get_buf_size, libhdf5), herr_t, (hid_t, hid_t, hid_t, Ptr{hsize_t}), dset_id, type_id, space_id, buf)
+    var"#status#" = ccall(:H5Dvlen_get_buf_size, herr_t, (hid_t, hid_t, hid_t, Ptr{hsize_t}), dset_id, type_id, space_id, buf)
     var"#status#" < 0 && error("Error getting vlen buffer size")
     return nothing
 end
@@ -434,7 +434,7 @@ end
 See `libhdf5` documentation for [`H5Dvlen_reclaim`](https://portal.hdfgroup.org/display/HDF5/H5D_VLEN_RECLAIM).
 """
 function h5d_vlen_reclaim(type_id, space_id, plist_id, buf)
-    var"#status#" = ccall((:H5Dvlen_reclaim, libhdf5), herr_t, (hid_t, hid_t, hid_t, Ptr{Cvoid}), type_id, space_id, plist_id, buf)
+    var"#status#" = ccall(:H5Dvlen_reclaim, herr_t, (hid_t, hid_t, hid_t, Ptr{Cvoid}), type_id, space_id, plist_id, buf)
     var"#status#" < 0 && error("Error reclaiming vlen buffer")
     return nothing
 end
@@ -445,7 +445,7 @@ end
 See `libhdf5` documentation for [`H5Dwrite`](https://portal.hdfgroup.org/display/HDF5/H5D_WRITE).
 """
 function h5d_write(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf)
-    var"#status#" = ccall((:H5Dwrite, libhdf5), herr_t, (hid_t, hid_t, hid_t, hid_t, hid_t, Ptr{Cvoid}), dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf)
+    var"#status#" = ccall(:H5Dwrite, herr_t, (hid_t, hid_t, hid_t, hid_t, hid_t, Ptr{Cvoid}), dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf)
     var"#status#" < 0 && error("Error writing dataset")
     return nothing
 end
@@ -456,7 +456,7 @@ end
 See `libhdf5` documentation for [`H5Eget_auto2`](https://portal.hdfgroup.org/display/HDF5/H5E_GET_AUTO2).
 """
 function h5e_get_auto(estack_id, func, client_data)
-    var"#status#" = ccall((:H5Eget_auto2, libhdf5), herr_t, (hid_t, Ref{Ptr{Cvoid}}, Ref{Ptr{Cvoid}}), estack_id, func, client_data)
+    var"#status#" = ccall(:H5Eget_auto2, herr_t, (hid_t, Ref{Ptr{Cvoid}}, Ref{Ptr{Cvoid}}), estack_id, func, client_data)
     var"#status#" < 0 && error("Error getting error reporting behavior")
     return nothing
 end
@@ -467,7 +467,7 @@ end
 See `libhdf5` documentation for [`H5Eset_auto2`](https://portal.hdfgroup.org/display/HDF5/H5E_SET_AUTO2).
 """
 function h5e_set_auto(estack_id, func, client_data)
-    var"#status#" = ccall((:H5Eset_auto2, libhdf5), herr_t, (hid_t, Ptr{Cvoid}, Ptr{Cvoid}), estack_id, func, client_data)
+    var"#status#" = ccall(:H5Eset_auto2, herr_t, (hid_t, Ptr{Cvoid}, Ptr{Cvoid}), estack_id, func, client_data)
     var"#status#" < 0 && error("Error setting error reporting behavior")
     return nothing
 end
@@ -478,7 +478,7 @@ end
 See `libhdf5` documentation for [`H5Eget_current_stack`](https://portal.hdfgroup.org/display/HDF5/H5E_GET_CURRENT_STACK).
 """
 function h5e_get_current_stack()
-    var"#status#" = ccall((:H5Eget_current_stack, libhdf5), hid_t, ())
+    var"#status#" = ccall(:H5Eget_current_stack, hid_t, ())
     var"#status#" < 0 && error("Unable to return current error stack")
     return var"#status#"
 end
@@ -489,7 +489,7 @@ end
 See `libhdf5` documentation for [`H5Fclose`](https://portal.hdfgroup.org/display/HDF5/H5F_CLOSE).
 """
 function h5f_close(file_id)
-    var"#status#" = ccall((:H5Fclose, libhdf5), herr_t, (hid_t,), file_id)
+    var"#status#" = ccall(:H5Fclose, herr_t, (hid_t,), file_id)
     var"#status#" < 0 && error("Error closing file")
     return nothing
 end
@@ -500,7 +500,7 @@ end
 See `libhdf5` documentation for [`H5Fcreate`](https://portal.hdfgroup.org/display/HDF5/H5F_CREATE).
 """
 function h5f_create(pathname, flags, fcpl_id, fapl_id)
-    var"#status#" = ccall((:H5Fcreate, libhdf5), hid_t, (Ptr{UInt8}, Cuint, hid_t, hid_t), pathname, flags, fcpl_id, fapl_id)
+    var"#status#" = ccall(:H5Fcreate, hid_t, (Ptr{UInt8}, Cuint, hid_t, hid_t), pathname, flags, fcpl_id, fapl_id)
     var"#status#" < 0 && error("Error creating file ", pathname)
     return var"#status#"
 end
@@ -511,7 +511,7 @@ end
 See `libhdf5` documentation for [`H5Fflush`](https://portal.hdfgroup.org/display/HDF5/H5F_FLUSH).
 """
 function h5f_flush(object_id, scope)
-    var"#status#" = ccall((:H5Fflush, libhdf5), herr_t, (hid_t, Cint), object_id, scope)
+    var"#status#" = ccall(:H5Fflush, herr_t, (hid_t, Cint), object_id, scope)
     var"#status#" < 0 && error("Error flushing object to file")
     return nothing
 end
@@ -522,7 +522,7 @@ end
 See `libhdf5` documentation for [`H5Fget_access_plist`](https://portal.hdfgroup.org/display/HDF5/H5F_GET_ACCESS_PLIST).
 """
 function h5f_get_access_plist(file_id)
-    var"#status#" = ccall((:H5Fget_access_plist, libhdf5), hid_t, (hid_t,), file_id)
+    var"#status#" = ccall(:H5Fget_access_plist, hid_t, (hid_t,), file_id)
     var"#status#" < 0 && error("Error getting file access property list")
     return var"#status#"
 end
@@ -533,7 +533,7 @@ end
 See `libhdf5` documentation for [`H5Fget_create_plist`](https://portal.hdfgroup.org/display/HDF5/H5F_GET_CREATE_PLIST).
 """
 function h5f_get_create_plist(file_id)
-    var"#status#" = ccall((:H5Fget_create_plist, libhdf5), hid_t, (hid_t,), file_id)
+    var"#status#" = ccall(:H5Fget_create_plist, hid_t, (hid_t,), file_id)
     var"#status#" < 0 && error("Error getting file create property list")
     return var"#status#"
 end
@@ -544,7 +544,7 @@ end
 See `libhdf5` documentation for [`H5Fget_intent`](https://portal.hdfgroup.org/display/HDF5/H5F_GET_INTENT).
 """
 function h5f_get_intent(file_id, intent)
-    var"#status#" = ccall((:H5Fget_intent, libhdf5), herr_t, (hid_t, Ptr{Cuint}), file_id, intent)
+    var"#status#" = ccall(:H5Fget_intent, herr_t, (hid_t, Ptr{Cuint}), file_id, intent)
     var"#status#" < 0 && error("Error getting file intent")
     return nothing
 end
@@ -555,7 +555,7 @@ end
 See `libhdf5` documentation for [`H5Fget_name`](https://portal.hdfgroup.org/display/HDF5/H5F_GET_NAME).
 """
 function h5f_get_name(obj_id, buf, buf_size)
-    var"#status#" = ccall((:H5Fget_name, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Csize_t), obj_id, buf, buf_size)
+    var"#status#" = ccall(:H5Fget_name, Cssize_t, (hid_t, Ptr{UInt8}, Csize_t), obj_id, buf, buf_size)
     var"#status#" < 0 && error("Error getting file name")
     return var"#status#"
 end
@@ -566,7 +566,7 @@ end
 See `libhdf5` documentation for [`H5Fget_obj_count`](https://portal.hdfgroup.org/display/HDF5/H5F_GET_OBJ_COUNT).
 """
 function h5f_get_obj_count(file_id, types)
-    var"#status#" = ccall((:H5Fget_obj_count, libhdf5), Cssize_t, (hid_t, Cuint), file_id, types)
+    var"#status#" = ccall(:H5Fget_obj_count, Cssize_t, (hid_t, Cuint), file_id, types)
     var"#status#" < 0 && error("Error getting object count")
     return var"#status#"
 end
@@ -577,7 +577,7 @@ end
 See `libhdf5` documentation for [`H5Fget_obj_ids`](https://portal.hdfgroup.org/display/HDF5/H5F_GET_OBJ_IDS).
 """
 function h5f_get_obj_ids(file_id, types, max_objs, obj_id_list)
-    var"#status#" = ccall((:H5Fget_obj_ids, libhdf5), Cssize_t, (hid_t, Cuint, Csize_t, Ptr{hid_t}), file_id, types, max_objs, obj_id_list)
+    var"#status#" = ccall(:H5Fget_obj_ids, Cssize_t, (hid_t, Cuint, Csize_t, Ptr{hid_t}), file_id, types, max_objs, obj_id_list)
     var"#status#" < 0 && error("Error getting objects")
     return var"#status#"
 end
@@ -588,7 +588,7 @@ end
 See `libhdf5` documentation for [`H5Fget_vfd_handle`](https://portal.hdfgroup.org/display/HDF5/H5F_GET_VFD_HANDLE).
 """
 function h5f_get_vfd_handle(file_id, fapl_id, file_handle)
-    var"#status#" = ccall((:H5Fget_vfd_handle, libhdf5), herr_t, (hid_t, hid_t, Ref{Ptr{Cvoid}}), file_id, fapl_id, file_handle)
+    var"#status#" = ccall(:H5Fget_vfd_handle, herr_t, (hid_t, hid_t, Ref{Ptr{Cvoid}}), file_id, fapl_id, file_handle)
     var"#status#" < 0 && error("Error getting VFD handle")
     return nothing
 end
@@ -599,7 +599,7 @@ end
 See `libhdf5` documentation for [`H5Fis_hdf5`](https://portal.hdfgroup.org/display/HDF5/H5F_IS_HDF5).
 """
 function h5f_is_hdf5(pathname)
-    var"#status#" = ccall((:H5Fis_hdf5, libhdf5), htri_t, (Cstring,), pathname)
+    var"#status#" = ccall(:H5Fis_hdf5, htri_t, (Cstring,), pathname)
     var"#status#" < 0 && error("Unable to access file ", pathname)
     return var"#status#" > 0
 end
@@ -610,7 +610,7 @@ end
 See `libhdf5` documentation for [`H5Fopen`](https://portal.hdfgroup.org/display/HDF5/H5F_OPEN).
 """
 function h5f_open(pathname, flags, fapl_id)
-    var"#status#" = ccall((:H5Fopen, libhdf5), hid_t, (Cstring, Cuint, hid_t), pathname, flags, fapl_id)
+    var"#status#" = ccall(:H5Fopen, hid_t, (Cstring, Cuint, hid_t), pathname, flags, fapl_id)
     var"#status#" < 0 && error("Error opening file ", pathname)
     return var"#status#"
 end
@@ -621,7 +621,7 @@ end
 See `libhdf5` documentation for [`H5Fstart_swmr_write`](https://portal.hdfgroup.org/display/HDF5/H5F_START_SWMR_WRITE).
 """
 function h5f_start_swmr_write(id)
-    var"#status#" = ccall((:H5Fstart_swmr_write, libhdf5), herr_t, (hid_t,), id)
+    var"#status#" = ccall(:H5Fstart_swmr_write, herr_t, (hid_t,), id)
     var"#status#" < 0 && error("Error starting SWMR write")
     return nothing
 end
@@ -632,7 +632,7 @@ end
 See `libhdf5` documentation for [`H5Gclose`](https://portal.hdfgroup.org/display/HDF5/H5G_CLOSE).
 """
 function h5g_close(group_id)
-    var"#status#" = ccall((:H5Gclose, libhdf5), herr_t, (hid_t,), group_id)
+    var"#status#" = ccall(:H5Gclose, herr_t, (hid_t,), group_id)
     var"#status#" < 0 && error("Error closing group")
     return nothing
 end
@@ -643,7 +643,7 @@ end
 See `libhdf5` documentation for [`H5Gcreate2`](https://portal.hdfgroup.org/display/HDF5/H5G_CREATE2).
 """
 function h5g_create(loc_id, pathname, lcpl_id, gcpl_id, gapl_id)
-    var"#status#" = ccall((:H5Gcreate2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t), loc_id, pathname, lcpl_id, gcpl_id, gapl_id)
+    var"#status#" = ccall(:H5Gcreate2, hid_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t), loc_id, pathname, lcpl_id, gcpl_id, gapl_id)
     var"#status#" < 0 && error("Error creating group ", h5i_get_name(loc_id), "/", pathname)
     return var"#status#"
 end
@@ -654,7 +654,7 @@ end
 See `libhdf5` documentation for [`H5Gget_create_plist`](https://portal.hdfgroup.org/display/HDF5/H5G_GET_CREATE_PLIST).
 """
 function h5g_get_create_plist(group_id)
-    var"#status#" = ccall((:H5Gget_create_plist, libhdf5), hid_t, (hid_t,), group_id)
+    var"#status#" = ccall(:H5Gget_create_plist, hid_t, (hid_t,), group_id)
     var"#status#" < 0 && error("Error getting group create property list")
     return var"#status#"
 end
@@ -665,7 +665,7 @@ end
 See `libhdf5` documentation for [`H5Gget_info`](https://portal.hdfgroup.org/display/HDF5/H5G_GET_INFO).
 """
 function h5g_get_info(group_id, buf)
-    var"#status#" = ccall((:H5Gget_info, libhdf5), herr_t, (hid_t, Ptr{H5G_info_t}), group_id, buf)
+    var"#status#" = ccall(:H5Gget_info, herr_t, (hid_t, Ptr{H5G_info_t}), group_id, buf)
     var"#status#" < 0 && error("Error getting group info")
     return nothing
 end
@@ -676,7 +676,7 @@ end
 See `libhdf5` documentation for [`H5Gget_num_objs`](https://portal.hdfgroup.org/display/HDF5/H5G_GET_NUM_OBJS).
 """
 function h5g_get_num_objs(loc_id, num_obj)
-    var"#status#" = ccall((:H5Gget_num_objs, libhdf5), hid_t, (hid_t, Ptr{hsize_t}), loc_id, num_obj)
+    var"#status#" = ccall(:H5Gget_num_objs, hid_t, (hid_t, Ptr{hsize_t}), loc_id, num_obj)
     var"#status#" < 0 && error("Error getting group length")
     return var"#status#"
 end
@@ -687,7 +687,7 @@ end
 See `libhdf5` documentation for [`H5Gget_objname_by_idx`](https://portal.hdfgroup.org/display/HDF5/H5G_GET_OBJNAME_BY_IDX).
 """
 function h5g_get_objname_by_idx(loc_id, idx, pathname, size)
-    var"#status#" = ccall((:H5Gget_objname_by_idx, libhdf5), Cssize_t, (hid_t, hsize_t, Ptr{UInt8}, Csize_t), loc_id, idx, pathname, size)
+    var"#status#" = ccall(:H5Gget_objname_by_idx, Cssize_t, (hid_t, hsize_t, Ptr{UInt8}, Csize_t), loc_id, idx, pathname, size)
     var"#status#" < 0 && error("Error getting group object name ", h5i_get_name(loc_id), "/", pathname)
     return var"#status#"
 end
@@ -698,7 +698,7 @@ end
 See `libhdf5` documentation for [`H5Gopen2`](https://portal.hdfgroup.org/display/HDF5/H5G_OPEN2).
 """
 function h5g_open(loc_id, pathname, gapl_id)
-    var"#status#" = ccall((:H5Gopen2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, pathname, gapl_id)
+    var"#status#" = ccall(:H5Gopen2, hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, pathname, gapl_id)
     var"#status#" < 0 && error("Error opening group ", h5i_get_name(loc_id), "/", pathname)
     return var"#status#"
 end
@@ -709,7 +709,7 @@ end
 See `libhdf5` documentation for [`H5Idec_ref`](https://portal.hdfgroup.org/display/HDF5/H5I_DEC_REF).
 """
 function h5i_dec_ref(obj_id)
-    var"#status#" = ccall((:H5Idec_ref, libhdf5), Cint, (hid_t,), obj_id)
+    var"#status#" = ccall(:H5Idec_ref, Cint, (hid_t,), obj_id)
     var"#status#" < 0 && error("Error decementing reference")
     return Int(var"#status#")
 end
@@ -720,7 +720,7 @@ end
 See `libhdf5` documentation for [`H5Iget_file_id`](https://portal.hdfgroup.org/display/HDF5/H5I_GET_FILE_ID).
 """
 function h5i_get_file_id(obj_id)
-    var"#status#" = ccall((:H5Iget_file_id, libhdf5), hid_t, (hid_t,), obj_id)
+    var"#status#" = ccall(:H5Iget_file_id, hid_t, (hid_t,), obj_id)
     var"#status#" < 0 && error("Error getting file identifier")
     return var"#status#"
 end
@@ -731,7 +731,7 @@ end
 See `libhdf5` documentation for [`H5Iget_name`](https://portal.hdfgroup.org/display/HDF5/H5I_GET_NAME).
 """
 function h5i_get_name(obj_id, buf, buf_size)
-    var"#status#" = ccall((:H5Iget_name, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Csize_t), obj_id, buf, buf_size)
+    var"#status#" = ccall(:H5Iget_name, Cssize_t, (hid_t, Ptr{UInt8}, Csize_t), obj_id, buf, buf_size)
     var"#status#" < 0 && error("Error getting object name")
     return var"#status#"
 end
@@ -742,7 +742,7 @@ end
 See `libhdf5` documentation for [`H5Iget_ref`](https://portal.hdfgroup.org/display/HDF5/H5I_GET_REF).
 """
 function h5i_get_ref(obj_id)
-    var"#status#" = ccall((:H5Iget_ref, libhdf5), Cint, (hid_t,), obj_id)
+    var"#status#" = ccall(:H5Iget_ref, Cint, (hid_t,), obj_id)
     var"#status#" < 0 && error("Error getting reference count")
     return Int(var"#status#")
 end
@@ -753,7 +753,7 @@ end
 See `libhdf5` documentation for [`H5Iget_type`](https://portal.hdfgroup.org/display/HDF5/H5I_GET_TYPE).
 """
 function h5i_get_type(obj_id)
-    var"#status#" = ccall((:H5Iget_type, libhdf5), Cint, (hid_t,), obj_id)
+    var"#status#" = ccall(:H5Iget_type, Cint, (hid_t,), obj_id)
     var"#status#" < 0 && error("Error getting type")
     return Int(var"#status#")
 end
@@ -764,7 +764,7 @@ end
 See `libhdf5` documentation for [`H5Iinc_ref`](https://portal.hdfgroup.org/display/HDF5/H5I_INC_REF).
 """
 function h5i_inc_ref(obj_id)
-    var"#status#" = ccall((:H5Iinc_ref, libhdf5), Cint, (hid_t,), obj_id)
+    var"#status#" = ccall(:H5Iinc_ref, Cint, (hid_t,), obj_id)
     var"#status#" < 0 && error("Error incrementing identifier refcount")
     return Int(var"#status#")
 end
@@ -775,7 +775,7 @@ end
 See `libhdf5` documentation for [`H5Iis_valid`](https://portal.hdfgroup.org/display/HDF5/H5I_IS_VALID).
 """
 function h5i_is_valid(obj_id)
-    var"#status#" = ccall((:H5Iis_valid, libhdf5), htri_t, (hid_t,), obj_id)
+    var"#status#" = ccall(:H5Iis_valid, htri_t, (hid_t,), obj_id)
     var"#status#" < 0 && error("Cannot determine whether object is valid")
     return var"#status#" > 0
 end
@@ -786,7 +786,7 @@ end
 See `libhdf5` documentation for [`H5Lcreate_external`](https://portal.hdfgroup.org/display/HDF5/H5L_CREATE_EXTERNAL).
 """
 function h5l_create_external(target_file_name, target_obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
-    var"#status#" = ccall((:H5Lcreate_external, libhdf5), herr_t, (Ptr{UInt8}, Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), target_file_name, target_obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
+    var"#status#" = ccall(:H5Lcreate_external, herr_t, (Ptr{UInt8}, Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), target_file_name, target_obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
     var"#status#" < 0 && error("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name)
     return nothing
 end
@@ -797,7 +797,7 @@ end
 See `libhdf5` documentation for [`H5Lcreate_hard`](https://portal.hdfgroup.org/display/HDF5/H5L_CREATE_HARD).
 """
 function h5l_create_hard(obj_loc_id, obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
-    var"#status#" = ccall((:H5Lcreate_hard, libhdf5), herr_t, (hid_t, Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), obj_loc_id, obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
+    var"#status#" = ccall(:H5Lcreate_hard, herr_t, (hid_t, Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), obj_loc_id, obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
     var"#status#" < 0 && error("Error creating hard link ", link_name, " pointing to ", obj_name)
     return nothing
 end
@@ -808,7 +808,7 @@ end
 See `libhdf5` documentation for [`H5Lcreate_soft`](https://portal.hdfgroup.org/display/HDF5/H5L_CREATE_SOFT).
 """
 function h5l_create_soft(target_path, link_loc_id, link_name, lcpl_id, lapl_id)
-    var"#status#" = ccall((:H5Lcreate_soft, libhdf5), herr_t, (Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), target_path, link_loc_id, link_name, lcpl_id, lapl_id)
+    var"#status#" = ccall(:H5Lcreate_soft, herr_t, (Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), target_path, link_loc_id, link_name, lcpl_id, lapl_id)
     var"#status#" < 0 && error("Error creating soft link ", link_name, " pointing to ", target_path)
     return nothing
 end
@@ -819,7 +819,7 @@ end
 See `libhdf5` documentation for [`H5Ldelete`](https://portal.hdfgroup.org/display/HDF5/H5L_DELETE).
 """
 function h5l_delete(obj_id, pathname, lapl_id)
-    var"#status#" = ccall((:H5Ldelete, libhdf5), herr_t, (hid_t, Ptr{UInt8}, hid_t), obj_id, pathname, lapl_id)
+    var"#status#" = ccall(:H5Ldelete, herr_t, (hid_t, Ptr{UInt8}, hid_t), obj_id, pathname, lapl_id)
     var"#status#" < 0 && error("Error deleting ", h5i_get_name(obj_id), "/", pathname)
     return nothing
 end
@@ -830,7 +830,7 @@ end
 See `libhdf5` documentation for [`H5Lexists`](https://portal.hdfgroup.org/display/HDF5/H5L_EXISTS).
 """
 function h5l_exists(loc_id, pathname, lapl_id)
-    var"#status#" = ccall((:H5Lexists, libhdf5), htri_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, pathname, lapl_id)
+    var"#status#" = ccall(:H5Lexists, htri_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, pathname, lapl_id)
     var"#status#" < 0 && error("Cannot determine whether ", pathname, " exists")
     return var"#status#" > 0
 end
@@ -841,7 +841,7 @@ end
 See `libhdf5` documentation for [`H5Lget_info`](https://portal.hdfgroup.org/display/HDF5/H5L_GET_INFO).
 """
 function h5l_get_info(link_loc_id, link_name, link_buf, lapl_id)
-    var"#status#" = ccall((:H5Lget_info, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Ptr{H5L_info_t}, hid_t), link_loc_id, link_name, link_buf, lapl_id)
+    var"#status#" = ccall(:H5Lget_info, herr_t, (hid_t, Ptr{UInt8}, Ptr{H5L_info_t}, hid_t), link_loc_id, link_name, link_buf, lapl_id)
     var"#status#" < 0 && error("Error getting info for link ", link_name)
     return nothing
 end
@@ -852,7 +852,7 @@ end
 See `libhdf5` documentation for [`H5Lget_name_by_idx`](https://portal.hdfgroup.org/display/HDF5/H5L_GET_NAME_BY_IDX).
 """
 function h5l_get_name_by_idx(loc_id, group_name, index_field, order, n, name, size, lapl_id)
-    var"#status#" = ccall((:H5Lget_name_by_idx, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, Ptr{UInt8}, Csize_t, hid_t), loc_id, group_name, index_field, order, n, name, size, lapl_id)
+    var"#status#" = ccall(:H5Lget_name_by_idx, Cssize_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, Ptr{UInt8}, Csize_t, hid_t), loc_id, group_name, index_field, order, n, name, size, lapl_id)
     var"#status#" < 0 && error("Error getting object name")
     return var"#status#"
 end
@@ -889,7 +889,7 @@ end
 See `libhdf5` documentation for [`H5Oclose`](https://portal.hdfgroup.org/display/HDF5/H5O_CLOSE).
 """
 function h5o_close(object_id)
-    var"#status#" = ccall((:H5Oclose, libhdf5), herr_t, (hid_t,), object_id)
+    var"#status#" = ccall(:H5Oclose, herr_t, (hid_t,), object_id)
     var"#status#" < 0 && error("Error closing object")
     return nothing
 end
@@ -900,7 +900,7 @@ end
 See `libhdf5` documentation for [`H5Ocopy`](https://portal.hdfgroup.org/display/HDF5/H5O_COPY).
 """
 function h5o_copy(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id)
-    var"#status#" = ccall((:H5Ocopy, libhdf5), herr_t, (hid_t, Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id)
+    var"#status#" = ccall(:H5Ocopy, herr_t, (hid_t, Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id)
     var"#status#" < 0 && error("Error copying object ", h5i_get_name(src_loc_id), "/", src_name, " to ", h5i_get_name(dst_loc_id), "/", dst_name)
     return nothing
 end
@@ -911,7 +911,7 @@ end
 See `libhdf5` documentation for [`H5Oget_info1`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO1).
 """
 function h5o_get_info(object_id, buf)
-    var"#status#" = ccall((:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info_t}), object_id, buf)
+    var"#status#" = ccall(:H5Oget_info1, herr_t, (hid_t, Ptr{H5O_info_t}), object_id, buf)
     var"#status#" < 0 && error("Error getting object info")
     return nothing
 end
@@ -922,7 +922,7 @@ end
 See `libhdf5` documentation for [`H5Oopen`](https://portal.hdfgroup.org/display/HDF5/H5O_OPEN).
 """
 function h5o_open(loc_id, pathname, lapl_id)
-    var"#status#" = ccall((:H5Oopen, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, pathname, lapl_id)
+    var"#status#" = ccall(:H5Oopen, hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, pathname, lapl_id)
     var"#status#" < 0 && error("Error opening object ", h5i_get_name(loc_id), "/", pathname)
     return var"#status#"
 end
@@ -933,7 +933,7 @@ end
 See `libhdf5` documentation for [`H5Oopen_by_addr`](https://portal.hdfgroup.org/display/HDF5/H5O_OPEN_BY_ADDR).
 """
 function h5o_open_by_addr(loc_id, addr)
-    var"#status#" = ccall((:H5Oopen_by_addr, libhdf5), hid_t, (hid_t, haddr_t), loc_id, addr)
+    var"#status#" = ccall(:H5Oopen_by_addr, hid_t, (hid_t, haddr_t), loc_id, addr)
     var"#status#" < 0 && error("Error opening object by address")
     return var"#status#"
 end
@@ -944,7 +944,7 @@ end
 See `libhdf5` documentation for [`H5Oopen_by_idx`](https://portal.hdfgroup.org/display/HDF5/H5O_OPEN_BY_IDX).
 """
 function h5o_open_by_idx(loc_id, group_name, index_type, order, n, lapl_id)
-    var"#status#" = ccall((:H5Oopen_by_idx, libhdf5), hid_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, hid_t), loc_id, group_name, index_type, order, n, lapl_id)
+    var"#status#" = ccall(:H5Oopen_by_idx, hid_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, hid_t), loc_id, group_name, index_type, order, n, lapl_id)
     var"#status#" < 0 && error("Error opening object of index ", n)
     return var"#status#"
 end
@@ -955,7 +955,7 @@ end
 See `libhdf5` documentation for [`H5Pclose`](https://portal.hdfgroup.org/display/HDF5/H5P_CLOSE).
 """
 function h5p_close(id)
-    var"#status#" = ccall((:H5Pclose, libhdf5), herr_t, (hid_t,), id)
+    var"#status#" = ccall(:H5Pclose, herr_t, (hid_t,), id)
     var"#status#" < 0 && error("Error closing property list")
     return nothing
 end
@@ -966,7 +966,7 @@ end
 See `libhdf5` documentation for [`H5Pcreate`](https://portal.hdfgroup.org/display/HDF5/H5P_CREATE).
 """
 function h5p_create(cls_id)
-    var"#status#" = ccall((:H5Pcreate, libhdf5), hid_t, (hid_t,), cls_id)
+    var"#status#" = ccall(:H5Pcreate, hid_t, (hid_t,), cls_id)
     var"#status#" < 0 && error("Error creating property list")
     return var"#status#"
 end
@@ -977,7 +977,7 @@ end
 See `libhdf5` documentation for [`H5Pget_alignment`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_ALIGNMENT).
 """
 function h5p_get_alignment(fapl_id, threshold, alignment)
-    var"#status#" = ccall((:H5Pget_alignment, libhdf5), herr_t, (hid_t, Ref{hsize_t}, Ref{hsize_t}), fapl_id, threshold, alignment)
+    var"#status#" = ccall(:H5Pget_alignment, herr_t, (hid_t, Ref{hsize_t}, Ref{hsize_t}), fapl_id, threshold, alignment)
     var"#status#" < 0 && error("Error getting alignment")
     return nothing
 end
@@ -988,7 +988,7 @@ end
 See `libhdf5` documentation for [`H5Pget_alloc_time`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_ALLOC_TIME).
 """
 function h5p_get_alloc_time(plist_id, alloc_time)
-    var"#status#" = ccall((:H5Pget_alloc_time, libhdf5), herr_t, (hid_t, Ptr{Cint}), plist_id, alloc_time)
+    var"#status#" = ccall(:H5Pget_alloc_time, herr_t, (hid_t, Ptr{Cint}), plist_id, alloc_time)
     var"#status#" < 0 && error("Error getting allocation timing")
     return nothing
 end
@@ -999,7 +999,7 @@ end
 See `libhdf5` documentation for [`H5Pget_char_encoding`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CHAR_ENCODING).
 """
 function h5p_get_char_encoding(plist_id, encoding)
-    var"#status#" = ccall((:H5Pget_char_encoding, libhdf5), herr_t, (hid_t, Ref{Cint}), plist_id, encoding)
+    var"#status#" = ccall(:H5Pget_char_encoding, herr_t, (hid_t, Ref{Cint}), plist_id, encoding)
     var"#status#" < 0 && error("Error getting char encoding")
     return nothing
 end
@@ -1010,7 +1010,7 @@ end
 See `libhdf5` documentation for [`H5Pget_chunk`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CHUNK).
 """
 function h5p_get_chunk(plist_id, n_dims, dims)
-    var"#status#" = ccall((:H5Pget_chunk, libhdf5), Cint, (hid_t, Cint, Ptr{hsize_t}), plist_id, n_dims, dims)
+    var"#status#" = ccall(:H5Pget_chunk, Cint, (hid_t, Cint, Ptr{hsize_t}), plist_id, n_dims, dims)
     var"#status#" < 0 && error("Error getting chunk size")
     return Int(var"#status#")
 end
@@ -1021,7 +1021,7 @@ end
 See `libhdf5` documentation for [`H5Pget_create_intermediate_group`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CREATE_INTERMEDIATE_GROUP).
 """
 function h5p_get_create_intermediate_group(lcpl_id, crt_intermed_group)
-    var"#status#" = ccall((:H5Pget_create_intermediate_group, libhdf5), herr_t, (hid_t, Ref{Cuint}), lcpl_id, crt_intermed_group)
+    var"#status#" = ccall(:H5Pget_create_intermediate_group, herr_t, (hid_t, Ref{Cuint}), lcpl_id, crt_intermed_group)
     var"#status#" < 0 && error("Error getting create intermediate group property")
     return nothing
 end
@@ -1032,7 +1032,7 @@ end
 See `libhdf5` documentation for [`H5Pget_driver`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER).
 """
 function h5p_get_driver(plist_id)
-    var"#status#" = ccall((:H5Pget_driver, libhdf5), hid_t, (hid_t,), plist_id)
+    var"#status#" = ccall(:H5Pget_driver, hid_t, (hid_t,), plist_id)
     var"#status#" < 0 && error("Error getting driver identifier")
     return var"#status#"
 end
@@ -1043,7 +1043,7 @@ end
 See `libhdf5` documentation for [`H5Pget_driver_info`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER_INFO).
 """
 function h5p_get_driver_info(plist_id)
-    var"#status#" = ccall((:H5Pget_driver_info, libhdf5), Ptr{Cvoid}, (hid_t,), plist_id)
+    var"#status#" = ccall(:H5Pget_driver_info, Ptr{Cvoid}, (hid_t,), plist_id)
     return var"#status#"
 end
 
@@ -1053,7 +1053,7 @@ end
 See `libhdf5` documentation for [`H5Pget_dxpl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_DXPL_MPIO).
 """
 function h5p_get_dxpl_mpio(dxpl_id, xfer_mode)
-    var"#status#" = ccall((:H5Pget_dxpl_mpio, libhdf5), herr_t, (hid_t, Ptr{Cint}), dxpl_id, xfer_mode)
+    var"#status#" = ccall(:H5Pget_dxpl_mpio, herr_t, (hid_t, Ptr{Cint}), dxpl_id, xfer_mode)
     var"#status#" < 0 && error("Error getting MPIO transfer mode")
     return nothing
 end
@@ -1064,7 +1064,7 @@ end
 See `libhdf5` documentation for [`H5Pget_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MPIO32).
 """
 function h5p_get_fapl_mpio32(fapl_id, comm, info)
-    var"#status#" = ccall((:H5Pget_fapl_mpio, libhdf5), herr_t, (hid_t, Ptr{Hmpih32}, Ptr{Hmpih32}), fapl_id, comm, info)
+    var"#status#" = ccall(:H5Pget_fapl_mpio, herr_t, (hid_t, Ptr{Hmpih32}, Ptr{Hmpih32}), fapl_id, comm, info)
     var"#status#" < 0 && error("Error getting MPIO properties")
     return nothing
 end
@@ -1075,7 +1075,7 @@ end
 See `libhdf5` documentation for [`H5Pget_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MPIO64).
 """
 function h5p_get_fapl_mpio64(fapl_id, comm, info)
-    var"#status#" = ccall((:H5Pget_fapl_mpio, libhdf5), herr_t, (hid_t, Ptr{Hmpih64}, Ptr{Hmpih64}), fapl_id, comm, info)
+    var"#status#" = ccall(:H5Pget_fapl_mpio, herr_t, (hid_t, Ptr{Hmpih64}, Ptr{Hmpih64}), fapl_id, comm, info)
     var"#status#" < 0 && error("Error getting MPIO properties")
     return nothing
 end
@@ -1086,7 +1086,7 @@ end
 See `libhdf5` documentation for [`H5Pget_fclose_degree`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FCLOSE_DEGREE).
 """
 function h5p_get_fclose_degree(fapl_id, fc_degree)
-    var"#status#" = ccall((:H5Pget_fclose_degree, libhdf5), herr_t, (hid_t, Ref{Cint}), fapl_id, fc_degree)
+    var"#status#" = ccall(:H5Pget_fclose_degree, herr_t, (hid_t, Ref{Cint}), fapl_id, fc_degree)
     var"#status#" < 0 && error("Error getting close degree")
     return nothing
 end
@@ -1097,7 +1097,7 @@ end
 See `libhdf5` documentation for [`H5Pget_filter_by_id2`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILTER_BY_ID2).
 """
 function h5p_get_filter_by_id(plist_id, filter_id, flags, cd_nelmts, cd_values, namelen, name, filter_config)
-    var"#status#" = ccall((:H5Pget_filter_by_id2, libhdf5), herr_t, (hid_t, H5Z_filter_t, Ref{Cuint}, Ref{Csize_t}, Ptr{Cuint}, Csize_t, Ptr{UInt8}, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values, namelen, name, filter_config)
+    var"#status#" = ccall(:H5Pget_filter_by_id2, herr_t, (hid_t, H5Z_filter_t, Ref{Cuint}, Ref{Csize_t}, Ptr{Cuint}, Csize_t, Ptr{UInt8}, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values, namelen, name, filter_config)
     var"#status#" < 0 && error("Error getting filter ID")
     return nothing
 end
@@ -1108,7 +1108,7 @@ end
 See `libhdf5` documentation for [`H5Pget_layout`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_LAYOUT).
 """
 function h5p_get_layout(plist_id)
-    var"#status#" = ccall((:H5Pget_layout, libhdf5), Cint, (hid_t,), plist_id)
+    var"#status#" = ccall(:H5Pget_layout, Cint, (hid_t,), plist_id)
     var"#status#" < 0 && error("Error getting layout")
     return Int(var"#status#")
 end
@@ -1119,7 +1119,7 @@ end
 See `libhdf5` documentation for [`H5Pget_libver_bounds`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_LIBVER_BOUNDS).
 """
 function h5p_get_libver_bounds(fapl_id, low, high)
-    var"#status#" = ccall((:H5Pget_libver_bounds, libhdf5), herr_t, (hid_t, Ref{Cint}, Ref{Cint}), fapl_id, low, high)
+    var"#status#" = ccall(:H5Pget_libver_bounds, herr_t, (hid_t, Ref{Cint}, Ref{Cint}), fapl_id, low, high)
     var"#status#" < 0 && error("Error getting library version bounds")
     return nothing
 end
@@ -1130,7 +1130,7 @@ end
 See `libhdf5` documentation for [`H5Pget_local_heap_size_hint`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_LOCAL_HEAP_SIZE_HINT).
 """
 function h5p_get_local_heap_size_hint(plist_id, size_hint)
-    var"#status#" = ccall((:H5Pget_local_heap_size_hint, libhdf5), herr_t, (hid_t, Ref{Csize_t}), plist_id, size_hint)
+    var"#status#" = ccall(:H5Pget_local_heap_size_hint, herr_t, (hid_t, Ref{Csize_t}), plist_id, size_hint)
     var"#status#" < 0 && error("Error getting local heap size hint")
     return nothing
 end
@@ -1141,7 +1141,7 @@ end
 See `libhdf5` documentation for [`H5Pget_obj_track_times`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_OBJ_TRACK_TIMES).
 """
 function h5p_get_obj_track_times(plist_id, track_times)
-    var"#status#" = ccall((:H5Pget_obj_track_times, libhdf5), herr_t, (hid_t, Ref{UInt8}), plist_id, track_times)
+    var"#status#" = ccall(:H5Pget_obj_track_times, herr_t, (hid_t, Ref{UInt8}), plist_id, track_times)
     var"#status#" < 0 && error("Error setting object time tracking")
     return nothing
 end
@@ -1152,7 +1152,7 @@ end
 See `libhdf5` documentation for [`H5Pget_userblock`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_USERBLOCK).
 """
 function h5p_get_userblock(plist_id, len)
-    var"#status#" = ccall((:H5Pget_userblock, libhdf5), herr_t, (hid_t, Ptr{hsize_t}), plist_id, len)
+    var"#status#" = ccall(:H5Pget_userblock, herr_t, (hid_t, Ptr{hsize_t}), plist_id, len)
     var"#status#" < 0 && error("Error getting userblock")
     return nothing
 end
@@ -1163,7 +1163,7 @@ end
 See `libhdf5` documentation for [`H5Pmodify_filter`](https://portal.hdfgroup.org/display/HDF5/H5P_MODIFY_FILTER).
 """
 function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
-    var"#status#" = ccall((:H5Pmodify_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
+    var"#status#" = ccall(:H5Pmodify_filter, herr_t, (hid_t, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
     var"#status#" < 0 && error("Error modifying filter")
     return nothing
 end
@@ -1174,7 +1174,7 @@ end
 See `libhdf5` documentation for [`H5Pset_alignment`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALIGNMENT).
 """
 function h5p_set_alignment(plist_id, threshold, alignment)
-    var"#status#" = ccall((:H5Pset_alignment, libhdf5), herr_t, (hid_t, hsize_t, hsize_t), plist_id, threshold, alignment)
+    var"#status#" = ccall(:H5Pset_alignment, herr_t, (hid_t, hsize_t, hsize_t), plist_id, threshold, alignment)
     var"#status#" < 0 && error("Error setting alignment")
     return nothing
 end
@@ -1185,7 +1185,7 @@ end
 See `libhdf5` documentation for [`H5Pset_alloc_time`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALLOC_TIME).
 """
 function h5p_set_alloc_time(plist_id, alloc_time)
-    var"#status#" = ccall((:H5Pset_alloc_time, libhdf5), herr_t, (hid_t, Cint), plist_id, alloc_time)
+    var"#status#" = ccall(:H5Pset_alloc_time, herr_t, (hid_t, Cint), plist_id, alloc_time)
     var"#status#" < 0 && error("Error setting allocation timing")
     return nothing
 end
@@ -1196,7 +1196,7 @@ end
 See `libhdf5` documentation for [`H5Pset_char_encoding`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_CHAR_ENCODING).
 """
 function h5p_set_char_encoding(plist_id, encoding)
-    var"#status#" = ccall((:H5Pset_char_encoding, libhdf5), herr_t, (hid_t, Cint), plist_id, encoding)
+    var"#status#" = ccall(:H5Pset_char_encoding, herr_t, (hid_t, Cint), plist_id, encoding)
     var"#status#" < 0 && error("Error setting char encoding")
     return nothing
 end
@@ -1207,7 +1207,7 @@ end
 See `libhdf5` documentation for [`H5Pset_chunk`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_CHUNK).
 """
 function h5p_set_chunk(plist_id, ndims, dims)
-    var"#status#" = ccall((:H5Pset_chunk, libhdf5), herr_t, (hid_t, Cint, Ptr{hsize_t}), plist_id, ndims, dims)
+    var"#status#" = ccall(:H5Pset_chunk, herr_t, (hid_t, Cint, Ptr{hsize_t}), plist_id, ndims, dims)
     var"#status#" < 0 && error("Error setting chunk size")
     return nothing
 end
@@ -1218,7 +1218,7 @@ end
 See `libhdf5` documentation for [`H5Pset_chunk_cache`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_CHUNK_CACHE).
 """
 function h5p_set_chunk_cache(dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
-    var"#status#" = ccall((:H5Pset_chunk_cache, libhdf5), herr_t, (hid_t, Csize_t, Csize_t, Cdouble), dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
+    var"#status#" = ccall(:H5Pset_chunk_cache, herr_t, (hid_t, Csize_t, Csize_t, Cdouble), dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
     var"#status#" < 0 && error("Error setting chunk cache")
     return nothing
 end
@@ -1229,7 +1229,7 @@ end
 See `libhdf5` documentation for [`H5Pset_create_intermediate_group`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_CREATE_INTERMEDIATE_GROUP).
 """
 function h5p_set_create_intermediate_group(plist_id, setting)
-    var"#status#" = ccall((:H5Pset_create_intermediate_group, libhdf5), herr_t, (hid_t, Cuint), plist_id, setting)
+    var"#status#" = ccall(:H5Pset_create_intermediate_group, herr_t, (hid_t, Cuint), plist_id, setting)
     var"#status#" < 0 && error("Error setting create intermediate group")
     return nothing
 end
@@ -1240,7 +1240,7 @@ end
 See `libhdf5` documentation for [`H5Pset_deflate`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_DEFLATE).
 """
 function h5p_set_deflate(plist_id, setting)
-    var"#status#" = ccall((:H5Pset_deflate, libhdf5), herr_t, (hid_t, Cuint), plist_id, setting)
+    var"#status#" = ccall(:H5Pset_deflate, herr_t, (hid_t, Cuint), plist_id, setting)
     var"#status#" < 0 && error("Error setting compression method and level (deflate)")
     return nothing
 end
@@ -1251,7 +1251,7 @@ end
 See `libhdf5` documentation for [`H5Pset_dxpl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_DXPL_MPIO).
 """
 function h5p_set_dxpl_mpio(dxpl_id, xfer_mode)
-    var"#status#" = ccall((:H5Pset_dxpl_mpio, libhdf5), herr_t, (hid_t, Cint), dxpl_id, xfer_mode)
+    var"#status#" = ccall(:H5Pset_dxpl_mpio, herr_t, (hid_t, Cint), dxpl_id, xfer_mode)
     var"#status#" < 0 && error("Error setting MPIO transfer mode")
     return nothing
 end
@@ -1262,7 +1262,7 @@ end
 See `libhdf5` documentation for [`H5Pset_external`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_EXTERNAL).
 """
 function h5p_set_external(plist_id, name, offset, size)
-    var"#status#" = ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Int, Csize_t), plist_id, name, offset, size)
+    var"#status#" = ccall(:H5Pset_external, herr_t, (hid_t, Ptr{UInt8}, Int, Csize_t), plist_id, name, offset, size)
     var"#status#" < 0 && error("Error setting external property")
     return nothing
 end
@@ -1273,7 +1273,7 @@ end
 See `libhdf5` documentation for [`H5Pset_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MPIO32).
 """
 function h5p_set_fapl_mpio32(fapl_id, comm, info)
-    var"#status#" = ccall((:H5Pset_fapl_mpio, libhdf5), herr_t, (hid_t, Hmpih32, Hmpih32), fapl_id, comm, info)
+    var"#status#" = ccall(:H5Pset_fapl_mpio, herr_t, (hid_t, Hmpih32, Hmpih32), fapl_id, comm, info)
     var"#status#" < 0 && error("Error setting MPIO properties")
     return nothing
 end
@@ -1284,7 +1284,7 @@ end
 See `libhdf5` documentation for [`H5Pset_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MPIO64).
 """
 function h5p_set_fapl_mpio64(fapl_id, comm, info)
-    var"#status#" = ccall((:H5Pset_fapl_mpio, libhdf5), herr_t, (hid_t, Hmpih64, Hmpih64), fapl_id, comm, info)
+    var"#status#" = ccall(:H5Pset_fapl_mpio, herr_t, (hid_t, Hmpih64, Hmpih64), fapl_id, comm, info)
     var"#status#" < 0 && error("Error setting MPIO properties")
     return nothing
 end
@@ -1295,7 +1295,7 @@ end
 See `libhdf5` documentation for [`H5Pset_fclose_degree`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FCLOSE_DEGREE).
 """
 function h5p_set_fclose_degree(plist_id, fc_degree)
-    var"#status#" = ccall((:H5Pset_fclose_degree, libhdf5), herr_t, (hid_t, Cint), plist_id, fc_degree)
+    var"#status#" = ccall(:H5Pset_fclose_degree, herr_t, (hid_t, Cint), plist_id, fc_degree)
     var"#status#" < 0 && error("Error setting close degree")
     return nothing
 end
@@ -1306,7 +1306,7 @@ end
 See `libhdf5` documentation for [`H5Pset_filter`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILTER).
 """
 function h5p_set_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
-    var"#status#" = ccall((:H5Pset_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
+    var"#status#" = ccall(:H5Pset_filter, herr_t, (hid_t, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
     var"#status#" < 0 && error("Error setting filter")
     return nothing
 end
@@ -1317,7 +1317,7 @@ end
 See `libhdf5` documentation for [`H5Pset_layout`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_LAYOUT).
 """
 function h5p_set_layout(plist_id, setting)
-    var"#status#" = ccall((:H5Pset_layout, libhdf5), herr_t, (hid_t, Cint), plist_id, setting)
+    var"#status#" = ccall(:H5Pset_layout, herr_t, (hid_t, Cint), plist_id, setting)
     var"#status#" < 0 && error("Error setting layout")
     return nothing
 end
@@ -1328,7 +1328,7 @@ end
 See `libhdf5` documentation for [`H5Pset_libver_bounds`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_LIBVER_BOUNDS).
 """
 function h5p_set_libver_bounds(fapl_id, low, high)
-    var"#status#" = ccall((:H5Pset_libver_bounds, libhdf5), herr_t, (hid_t, Cint, Cint), fapl_id, low, high)
+    var"#status#" = ccall(:H5Pset_libver_bounds, herr_t, (hid_t, Cint, Cint), fapl_id, low, high)
     var"#status#" < 0 && error("Error setting library version bounds")
     return nothing
 end
@@ -1339,7 +1339,7 @@ end
 See `libhdf5` documentation for [`H5Pset_local_heap_size_hint`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_LOCAL_HEAP_SIZE_HINT).
 """
 function h5p_set_local_heap_size_hint(plist_id, size_hint)
-    var"#status#" = ccall((:H5Pset_local_heap_size_hint, libhdf5), herr_t, (hid_t, Csize_t), plist_id, size_hint)
+    var"#status#" = ccall(:H5Pset_local_heap_size_hint, herr_t, (hid_t, Csize_t), plist_id, size_hint)
     var"#status#" < 0 && error("Error setting local heap size hint")
     return nothing
 end
@@ -1350,7 +1350,7 @@ end
 See `libhdf5` documentation for [`H5Pset_obj_track_times`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_OBJ_TRACK_TIMES).
 """
 function h5p_set_obj_track_times(plist_id, track_times)
-    var"#status#" = ccall((:H5Pset_obj_track_times, libhdf5), herr_t, (hid_t, UInt8), plist_id, track_times)
+    var"#status#" = ccall(:H5Pset_obj_track_times, herr_t, (hid_t, UInt8), plist_id, track_times)
     var"#status#" < 0 && error("Error setting object time tracking")
     return nothing
 end
@@ -1361,7 +1361,7 @@ end
 See `libhdf5` documentation for [`H5Pset_shuffle`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SHUFFLE).
 """
 function h5p_set_shuffle(plist_id)
-    var"#status#" = ccall((:H5Pset_shuffle, libhdf5), herr_t, (hid_t,), plist_id)
+    var"#status#" = ccall(:H5Pset_shuffle, herr_t, (hid_t,), plist_id)
     var"#status#" < 0 && error("Error enabling shuffle filter")
     return nothing
 end
@@ -1372,7 +1372,7 @@ end
 See `libhdf5` documentation for [`H5Pset_userblock`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_USERBLOCK).
 """
 function h5p_set_userblock(plist_id, len)
-    var"#status#" = ccall((:H5Pset_userblock, libhdf5), herr_t, (hid_t, hsize_t), plist_id, len)
+    var"#status#" = ccall(:H5Pset_userblock, herr_t, (hid_t, hsize_t), plist_id, len)
     var"#status#" < 0 && error("Error setting userblock")
     return nothing
 end
@@ -1383,7 +1383,7 @@ end
 See `libhdf5` documentation for [`H5Pset_virtual`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_VIRTUAL).
 """
 function h5p_set_virtual(dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
-    var"#status#" = ccall((:H5Pset_virtual, libhdf5), herr_t, (hid_t, hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t), dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
+    var"#status#" = ccall(:H5Pset_virtual, herr_t, (hid_t, hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t), dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
     var"#status#" < 0 && error("Error setting virtual")
     return nothing
 end
@@ -1394,7 +1394,7 @@ end
 See `libhdf5` documentation for [`H5Rcreate`](https://portal.hdfgroup.org/display/HDF5/H5R_CREATE).
 """
 function h5r_create(ref, loc_id, pathname, ref_type, space_id)
-    var"#status#" = ccall((:H5Rcreate, libhdf5), herr_t, (Ptr{Cvoid}, hid_t, Ptr{UInt8}, Cint, hid_t), ref, loc_id, pathname, ref_type, space_id)
+    var"#status#" = ccall(:H5Rcreate, herr_t, (Ptr{Cvoid}, hid_t, Ptr{UInt8}, Cint, hid_t), ref, loc_id, pathname, ref_type, space_id)
     var"#status#" < 0 && error("Error creating reference to object ", h5i_get_name(loc_id), "/", pathname)
     return nothing
 end
@@ -1405,7 +1405,7 @@ end
 See `libhdf5` documentation for [`H5Rdereference2`](https://portal.hdfgroup.org/display/HDF5/H5R_DEREFERENCE2).
 """
 function h5r_dereference(obj_id, oapl_id, ref_type, ref)
-    var"#status#" = ccall((:H5Rdereference2, libhdf5), hid_t, (hid_t, hid_t, Cint, Ptr{Cvoid}), obj_id, oapl_id, ref_type, ref)
+    var"#status#" = ccall(:H5Rdereference2, hid_t, (hid_t, hid_t, Cint, Ptr{Cvoid}), obj_id, oapl_id, ref_type, ref)
     var"#status#" < 0 && error("Error dereferencing object")
     return var"#status#"
 end
@@ -1416,7 +1416,7 @@ end
 See `libhdf5` documentation for [`H5Rget_obj_type2`](https://portal.hdfgroup.org/display/HDF5/H5R_GET_OBJ_TYPE2).
 """
 function h5r_get_obj_type(loc_id, ref_type, ref, obj_type)
-    var"#status#" = ccall((:H5Rget_obj_type2, libhdf5), herr_t, (hid_t, Cint, Ptr{Cvoid}, Ptr{Cint}), loc_id, ref_type, ref, obj_type)
+    var"#status#" = ccall(:H5Rget_obj_type2, herr_t, (hid_t, Cint, Ptr{Cvoid}, Ptr{Cint}), loc_id, ref_type, ref, obj_type)
     var"#status#" < 0 && error("Error getting object type")
     return nothing
 end
@@ -1427,7 +1427,7 @@ end
 See `libhdf5` documentation for [`H5Rget_region`](https://portal.hdfgroup.org/display/HDF5/H5R_GET_REGION).
 """
 function h5r_get_region(loc_id, ref_type, ref)
-    var"#status#" = ccall((:H5Rget_region, libhdf5), hid_t, (hid_t, Cint, Ptr{Cvoid}), loc_id, ref_type, ref)
+    var"#status#" = ccall(:H5Rget_region, hid_t, (hid_t, Cint, Ptr{Cvoid}), loc_id, ref_type, ref)
     var"#status#" < 0 && error("Error getting region from reference")
     return var"#status#"
 end
@@ -1438,7 +1438,7 @@ end
 See `libhdf5` documentation for [`H5Sclose`](https://portal.hdfgroup.org/display/HDF5/H5S_CLOSE).
 """
 function h5s_close(space_id)
-    var"#status#" = ccall((:H5Sclose, libhdf5), herr_t, (hid_t,), space_id)
+    var"#status#" = ccall(:H5Sclose, herr_t, (hid_t,), space_id)
     var"#status#" < 0 && error("Error closing dataspace")
     return nothing
 end
@@ -1450,7 +1450,7 @@ end
     See `libhdf5` documentation for [`H5Scombine_select`](https://portal.hdfgroup.org/display/HDF5/H5S_COMBINE_SELECT).
     """
     function h5s_combine_select(space1_id, op, space2_id)
-        var"#status#" = ccall((:H5Scombine_select, libhdf5), hid_t, (hid_t, Cint, hid_t), space1_id, op, space2_id)
+        var"#status#" = ccall(:H5Scombine_select, hid_t, (hid_t, Cint, hid_t), space1_id, op, space2_id)
         var"#status#" < 0 && error("Error combining dataspaces")
         return var"#status#"
     end
@@ -1462,7 +1462,7 @@ end
 See `libhdf5` documentation for [`H5Scopy`](https://portal.hdfgroup.org/display/HDF5/H5S_COPY).
 """
 function h5s_copy(space_id)
-    var"#status#" = ccall((:H5Scopy, libhdf5), hid_t, (hid_t,), space_id)
+    var"#status#" = ccall(:H5Scopy, hid_t, (hid_t,), space_id)
     var"#status#" < 0 && error("Error copying dataspace")
     return var"#status#"
 end
@@ -1473,7 +1473,7 @@ end
 See `libhdf5` documentation for [`H5Screate`](https://portal.hdfgroup.org/display/HDF5/H5S_CREATE).
 """
 function h5s_create(class)
-    var"#status#" = ccall((:H5Screate, libhdf5), hid_t, (Cint,), class)
+    var"#status#" = ccall(:H5Screate, hid_t, (Cint,), class)
     var"#status#" < 0 && error("Error creating dataspace")
     return var"#status#"
 end
@@ -1484,7 +1484,7 @@ end
 See `libhdf5` documentation for [`H5Screate_simple`](https://portal.hdfgroup.org/display/HDF5/H5S_CREATE_SIMPLE).
 """
 function h5s_create_simple(rank, current_dims, maximum_dims)
-    var"#status#" = ccall((:H5Screate_simple, libhdf5), hid_t, (Cint, Ptr{hsize_t}, Ptr{hsize_t}), rank, current_dims, maximum_dims)
+    var"#status#" = ccall(:H5Screate_simple, hid_t, (Cint, Ptr{hsize_t}, Ptr{hsize_t}), rank, current_dims, maximum_dims)
     var"#status#" < 0 && error("Error creating simple dataspace")
     return var"#status#"
 end
@@ -1495,7 +1495,7 @@ end
 See `libhdf5` documentation for [`H5Sextent_equal`](https://portal.hdfgroup.org/display/HDF5/H5S_EXTENT_EQUAL).
 """
 function h5s_extent_equal(space1_id, space2_id)
-    var"#status#" = ccall((:H5Sextent_equal, libhdf5), htri_t, (hid_t, hid_t), space1_id, space2_id)
+    var"#status#" = ccall(:H5Sextent_equal, htri_t, (hid_t, hid_t), space1_id, space2_id)
     var"#status#" < 0 && error("Error comparing dataspaces")
     return var"#status#" > 0
 end
@@ -1506,7 +1506,7 @@ end
 See `libhdf5` documentation for [`H5Sget_regular_hyperslab`](https://portal.hdfgroup.org/display/HDF5/H5S_GET_REGULAR_HYPERSLAB).
 """
 function h5s_get_regular_hyperslab(space_id, start, stride, count, block)
-    var"#status#" = ccall((:H5Sget_regular_hyperslab, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}), space_id, start, stride, count, block)
+    var"#status#" = ccall(:H5Sget_regular_hyperslab, herr_t, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}), space_id, start, stride, count, block)
     var"#status#" < 0 && error("Error getting regular hyperslab selection")
     return nothing
 end
@@ -1517,7 +1517,7 @@ end
 See `libhdf5` documentation for [`H5Sget_simple_extent_dims`](https://portal.hdfgroup.org/display/HDF5/H5S_GET_SIMPLE_EXTENT_DIMS).
 """
 function h5s_get_simple_extent_dims(space_id, dims, maxdims)
-    var"#status#" = ccall((:H5Sget_simple_extent_dims, libhdf5), Cint, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}), space_id, dims, maxdims)
+    var"#status#" = ccall(:H5Sget_simple_extent_dims, Cint, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}), space_id, dims, maxdims)
     var"#status#" < 0 && error("Error getting the dimensions for a dataspace")
     return Int(var"#status#")
 end
@@ -1528,7 +1528,7 @@ end
 See `libhdf5` documentation for [`H5Sget_simple_extent_ndims`](https://portal.hdfgroup.org/display/HDF5/H5S_GET_SIMPLE_EXTENT_NDIMS).
 """
 function h5s_get_simple_extent_ndims(space_id)
-    var"#status#" = ccall((:H5Sget_simple_extent_ndims, libhdf5), Cint, (hid_t,), space_id)
+    var"#status#" = ccall(:H5Sget_simple_extent_ndims, Cint, (hid_t,), space_id)
     var"#status#" < 0 && error("Error getting the number of dimensions for a dataspace")
     return Int(var"#status#")
 end
@@ -1539,7 +1539,7 @@ end
 See `libhdf5` documentation for [`H5Sget_simple_extent_type`](https://portal.hdfgroup.org/display/HDF5/H5S_GET_SIMPLE_EXTENT_TYPE).
 """
 function h5s_get_simple_extent_type(space_id)
-    var"#status#" = ccall((:H5Sget_simple_extent_type, libhdf5), Cint, (hid_t,), space_id)
+    var"#status#" = ccall(:H5Sget_simple_extent_type, Cint, (hid_t,), space_id)
     var"#status#" < 0 && error("Error getting the dataspace type")
     return Int(var"#status#")
 end
@@ -1550,7 +1550,7 @@ end
 See `libhdf5` documentation for [`H5Sget_select_hyper_nblocks`](https://portal.hdfgroup.org/display/HDF5/H5S_GET_SELECT_HYPER_NBLOCKS).
 """
 function h5s_get_select_hyper_nblocks(space_id)
-    var"#status#" = ccall((:H5Sget_select_hyper_nblocks, libhdf5), hssize_t, (hid_t,), space_id)
+    var"#status#" = ccall(:H5Sget_select_hyper_nblocks, hssize_t, (hid_t,), space_id)
     var"#status#" < 0 && error("Error getting number of selected blocks")
     return var"#status#"
 end
@@ -1561,7 +1561,7 @@ end
 See `libhdf5` documentation for [`H5Sget_select_npoints`](https://portal.hdfgroup.org/display/HDF5/H5S_GET_SELECT_NPOINTS).
 """
 function h5s_get_select_npoints(space_id)
-    var"#status#" = ccall((:H5Sget_select_npoints, libhdf5), hsize_t, (hid_t,), space_id)
+    var"#status#" = ccall(:H5Sget_select_npoints, hsize_t, (hid_t,), space_id)
     var"#status#" == -1 % hsize_t && error("Error getting the number of selected points")
     return var"#status#"
 end
@@ -1572,7 +1572,7 @@ end
 See `libhdf5` documentation for [`H5Sget_select_type`](https://portal.hdfgroup.org/display/HDF5/H5S_GET_SELECT_TYPE).
 """
 function h5s_get_select_type(space_id)
-    var"#status#" = ccall((:H5Sget_select_type, libhdf5), Cint, (hid_t,), space_id)
+    var"#status#" = ccall(:H5Sget_select_type, Cint, (hid_t,), space_id)
     var"#status#" < 0 && error("Error getting the selection type")
     return Int(var"#status#")
 end
@@ -1583,7 +1583,7 @@ end
 See `libhdf5` documentation for [`H5Sis_regular_hyperslab`](https://portal.hdfgroup.org/display/HDF5/H5S_IS_REGULAR_HYPERSLAB).
 """
 function h5s_is_regular_hyperslab(space_id)
-    var"#status#" = ccall((:H5Sis_regular_hyperslab, libhdf5), htri_t, (hid_t,), space_id)
+    var"#status#" = ccall(:H5Sis_regular_hyperslab, htri_t, (hid_t,), space_id)
     var"#status#" < 0 && error("Error determining whether datapace is regular hyperslab")
     return var"#status#" > 0
 end
@@ -1594,7 +1594,7 @@ end
 See `libhdf5` documentation for [`H5Sis_simple`](https://portal.hdfgroup.org/display/HDF5/H5S_IS_SIMPLE).
 """
 function h5s_is_simple(space_id)
-    var"#status#" = ccall((:H5Sis_simple, libhdf5), htri_t, (hid_t,), space_id)
+    var"#status#" = ccall(:H5Sis_simple, htri_t, (hid_t,), space_id)
     var"#status#" < 0 && error("Error determining whether dataspace is simple")
     return var"#status#" > 0
 end
@@ -1605,7 +1605,7 @@ end
 See `libhdf5` documentation for [`H5Sselect_hyperslab`](https://portal.hdfgroup.org/display/HDF5/H5S_SELECT_HYPERSLAB).
 """
 function h5s_select_hyperslab(dspace_id, seloper, start, stride, count, block)
-    var"#status#" = ccall((:H5Sselect_hyperslab, libhdf5), herr_t, (hid_t, Cint, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}), dspace_id, seloper, start, stride, count, block)
+    var"#status#" = ccall(:H5Sselect_hyperslab, herr_t, (hid_t, Cint, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}), dspace_id, seloper, start, stride, count, block)
     var"#status#" < 0 && error("Error selecting hyperslab")
     return nothing
 end
@@ -1627,7 +1627,7 @@ end
 See `libhdf5` documentation for [`H5Tarray_create2`](https://portal.hdfgroup.org/display/HDF5/H5T_ARRAY_CREATE2).
 """
 function h5t_array_create(basetype_id, ndims, sz)
-    var"#status#" = ccall((:H5Tarray_create2, libhdf5), hid_t, (hid_t, Cuint, Ptr{hsize_t}), basetype_id, ndims, sz)
+    var"#status#" = ccall(:H5Tarray_create2, hid_t, (hid_t, Cuint, Ptr{hsize_t}), basetype_id, ndims, sz)
     var"#status#" < 0 && error("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz)
     return var"#status#"
 end
@@ -1638,7 +1638,7 @@ end
 See `libhdf5` documentation for [`H5Tclose`](https://portal.hdfgroup.org/display/HDF5/H5T_CLOSE).
 """
 function h5t_close(dtype_id)
-    var"#status#" = ccall((:H5Tclose, libhdf5), herr_t, (hid_t,), dtype_id)
+    var"#status#" = ccall(:H5Tclose, herr_t, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error closing datatype")
     return nothing
 end
@@ -1649,7 +1649,7 @@ end
 See `libhdf5` documentation for [`H5Tcommitted`](https://portal.hdfgroup.org/display/HDF5/H5T_COMMITTED).
 """
 function h5t_committed(dtype_id)
-    var"#status#" = ccall((:H5Tcommitted, libhdf5), htri_t, (hid_t,), dtype_id)
+    var"#status#" = ccall(:H5Tcommitted, htri_t, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error determining whether datatype is committed")
     return var"#status#" > 0
 end
@@ -1660,7 +1660,7 @@ end
 See `libhdf5` documentation for [`H5Tcommit2`](https://portal.hdfgroup.org/display/HDF5/H5T_COMMIT2).
 """
 function h5t_commit(loc_id, name, dtype_id, lcpl_id, tcpl_id, tapl_id)
-    var"#status#" = ccall((:H5Tcommit2, libhdf5), herr_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t), loc_id, name, dtype_id, lcpl_id, tcpl_id, tapl_id)
+    var"#status#" = ccall(:H5Tcommit2, herr_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t), loc_id, name, dtype_id, lcpl_id, tcpl_id, tapl_id)
     var"#status#" < 0 && error("Error committing type")
     return nothing
 end
@@ -1671,7 +1671,7 @@ end
 See `libhdf5` documentation for [`H5Tcopy`](https://portal.hdfgroup.org/display/HDF5/H5T_COPY).
 """
 function h5t_copy(dtype_id)
-    var"#status#" = ccall((:H5Tcopy, libhdf5), hid_t, (hid_t,), dtype_id)
+    var"#status#" = ccall(:H5Tcopy, hid_t, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error copying datatype")
     return var"#status#"
 end
@@ -1682,7 +1682,7 @@ end
 See `libhdf5` documentation for [`H5Tcreate`](https://portal.hdfgroup.org/display/HDF5/H5T_CREATE).
 """
 function h5t_create(class_id, sz)
-    var"#status#" = ccall((:H5Tcreate, libhdf5), hid_t, (Cint, Csize_t), class_id, sz)
+    var"#status#" = ccall(:H5Tcreate, hid_t, (Cint, Csize_t), class_id, sz)
     var"#status#" < 0 && error("Error creating datatype of id ", class_id)
     return var"#status#"
 end
@@ -1693,7 +1693,7 @@ end
 See `libhdf5` documentation for [`H5Tenum_insert`](https://portal.hdfgroup.org/display/HDF5/H5T_ENUM_INSERT).
 """
 function h5t_enum_insert(dtype_id, name, value)
-    var"#status#" = ccall((:H5Tenum_insert, libhdf5), herr_t, (hid_t, Cstring, Ptr{Cvoid}), dtype_id, name, value)
+    var"#status#" = ccall(:H5Tenum_insert, herr_t, (hid_t, Cstring, Ptr{Cvoid}), dtype_id, name, value)
     var"#status#" < 0 && error("Error adding ", name, " to enum datatype")
     return nothing
 end
@@ -1704,7 +1704,7 @@ end
 See `libhdf5` documentation for [`H5Tequal`](https://portal.hdfgroup.org/display/HDF5/H5T_EQUAL).
 """
 function h5t_equal(dtype_id1, dtype_id2)
-    var"#status#" = ccall((:H5Tequal, libhdf5), htri_t, (hid_t, hid_t), dtype_id1, dtype_id2)
+    var"#status#" = ccall(:H5Tequal, htri_t, (hid_t, hid_t), dtype_id1, dtype_id2)
     var"#status#" < 0 && error("Error checking datatype equality")
     return var"#status#" > 0
 end
@@ -1715,7 +1715,7 @@ end
 See `libhdf5` documentation for [`H5Tget_array_dims2`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_ARRAY_DIMS2).
 """
 function h5t_get_array_dims(dtype_id, dims)
-    var"#status#" = ccall((:H5Tget_array_dims2, libhdf5), Cint, (hid_t, Ptr{hsize_t}), dtype_id, dims)
+    var"#status#" = ccall(:H5Tget_array_dims2, Cint, (hid_t, Ptr{hsize_t}), dtype_id, dims)
     var"#status#" < 0 && error("Error getting dimensions of array")
     return Int(var"#status#")
 end
@@ -1726,7 +1726,7 @@ end
 See `libhdf5` documentation for [`H5Tget_array_ndims`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_ARRAY_NDIMS).
 """
 function h5t_get_array_ndims(dtype_id)
-    var"#status#" = ccall((:H5Tget_array_ndims, libhdf5), Cint, (hid_t,), dtype_id)
+    var"#status#" = ccall(:H5Tget_array_ndims, Cint, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting ndims of array")
     return Int(var"#status#")
 end
@@ -1737,7 +1737,7 @@ end
 See `libhdf5` documentation for [`H5Tget_class`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_CLASS).
 """
 function h5t_get_class(dtype_id)
-    var"#status#" = ccall((:H5Tget_class, libhdf5), Cint, (hid_t,), dtype_id)
+    var"#status#" = ccall(:H5Tget_class, Cint, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting class")
     return Int(var"#status#")
 end
@@ -1748,7 +1748,7 @@ end
 See `libhdf5` documentation for [`H5Tget_cset`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_CSET).
 """
 function h5t_get_cset(dtype_id)
-    var"#status#" = ccall((:H5Tget_cset, libhdf5), Cint, (hid_t,), dtype_id)
+    var"#status#" = ccall(:H5Tget_cset, Cint, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting character set encoding")
     return Int(var"#status#")
 end
@@ -1759,7 +1759,7 @@ end
 See `libhdf5` documentation for [`H5Tget_ebias`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_EBIAS).
 """
 function h5t_get_ebias(dtype_id)
-    var"#status#" = ccall((:H5Tget_ebias, libhdf5), Csize_t, (hid_t,), dtype_id)
+    var"#status#" = ccall(:H5Tget_ebias, Csize_t, (hid_t,), dtype_id)
     return var"#status#"
 end
 
@@ -1769,7 +1769,7 @@ end
 See `libhdf5` documentation for [`H5Tget_fields`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_FIELDS).
 """
 function h5t_get_fields(dtype_id, spos, epos, esize, mpos, msize)
-    var"#status#" = ccall((:H5Tget_fields, libhdf5), herr_t, (hid_t, Ref{Csize_t}, Ref{Csize_t}, Ref{Csize_t}, Ref{Csize_t}, Ref{Csize_t}), dtype_id, spos, epos, esize, mpos, msize)
+    var"#status#" = ccall(:H5Tget_fields, herr_t, (hid_t, Ref{Csize_t}, Ref{Csize_t}, Ref{Csize_t}, Ref{Csize_t}, Ref{Csize_t}), dtype_id, spos, epos, esize, mpos, msize)
     var"#status#" < 0 && error("Error getting datatype floating point bit positions")
     return nothing
 end
@@ -1780,7 +1780,7 @@ end
 See `libhdf5` documentation for [`H5Tget_member_class`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_MEMBER_CLASS).
 """
 function h5t_get_member_class(dtype_id, index)
-    var"#status#" = ccall((:H5Tget_member_class, libhdf5), Cint, (hid_t, Cuint), dtype_id, index)
+    var"#status#" = ccall(:H5Tget_member_class, Cint, (hid_t, Cuint), dtype_id, index)
     var"#status#" < 0 && error("Error getting class of compound datatype member #", index)
     return Int(var"#status#")
 end
@@ -1791,7 +1791,7 @@ end
 See `libhdf5` documentation for [`H5Tget_member_index`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_MEMBER_INDEX).
 """
 function h5t_get_member_index(dtype_id, membername)
-    var"#status#" = ccall((:H5Tget_member_index, libhdf5), Cint, (hid_t, Ptr{UInt8}), dtype_id, membername)
+    var"#status#" = ccall(:H5Tget_member_index, Cint, (hid_t, Ptr{UInt8}), dtype_id, membername)
     var"#status#" < 0 && error("Error getting index of compound datatype member \"", membername, "\"")
     return Int(var"#status#")
 end
@@ -1802,7 +1802,7 @@ end
 See `libhdf5` documentation for [`H5Tget_member_offset`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_MEMBER_OFFSET).
 """
 function h5t_get_member_offset(dtype_id, index)
-    var"#status#" = ccall((:H5Tget_member_offset, libhdf5), Csize_t, (hid_t, Cuint), dtype_id, index)
+    var"#status#" = ccall(:H5Tget_member_offset, Csize_t, (hid_t, Cuint), dtype_id, index)
     return var"#status#"
 end
 
@@ -1812,7 +1812,7 @@ end
 See `libhdf5` documentation for [`H5Tget_member_type`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_MEMBER_TYPE).
 """
 function h5t_get_member_type(dtype_id, index)
-    var"#status#" = ccall((:H5Tget_member_type, libhdf5), hid_t, (hid_t, Cuint), dtype_id, index)
+    var"#status#" = ccall(:H5Tget_member_type, hid_t, (hid_t, Cuint), dtype_id, index)
     var"#status#" < 0 && error("Error getting type of compound datatype member #", index)
     return var"#status#"
 end
@@ -1823,7 +1823,7 @@ end
 See `libhdf5` documentation for [`H5Tget_native_type`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_NATIVE_TYPE).
 """
 function h5t_get_native_type(dtype_id, direction)
-    var"#status#" = ccall((:H5Tget_native_type, libhdf5), hid_t, (hid_t, Cint), dtype_id, direction)
+    var"#status#" = ccall(:H5Tget_native_type, hid_t, (hid_t, Cint), dtype_id, direction)
     var"#status#" < 0 && error("Error getting native type")
     return var"#status#"
 end
@@ -1834,7 +1834,7 @@ end
 See `libhdf5` documentation for [`H5Tget_nmembers`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_NMEMBERS).
 """
 function h5t_get_nmembers(dtype_id)
-    var"#status#" = ccall((:H5Tget_nmembers, libhdf5), Cint, (hid_t,), dtype_id)
+    var"#status#" = ccall(:H5Tget_nmembers, Cint, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting the number of members")
     return Int(var"#status#")
 end
@@ -1845,7 +1845,7 @@ end
 See `libhdf5` documentation for [`H5Tget_sign`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_SIGN).
 """
 function h5t_get_sign(dtype_id)
-    var"#status#" = ccall((:H5Tget_sign, libhdf5), Cint, (hid_t,), dtype_id)
+    var"#status#" = ccall(:H5Tget_sign, Cint, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting sign")
     return Int(var"#status#")
 end
@@ -1856,7 +1856,7 @@ end
 See `libhdf5` documentation for [`H5Tget_size`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_SIZE).
 """
 function h5t_get_size(dtype_id)
-    var"#status#" = ccall((:H5Tget_size, libhdf5), Csize_t, (hid_t,), dtype_id)
+    var"#status#" = ccall(:H5Tget_size, Csize_t, (hid_t,), dtype_id)
     return var"#status#"
 end
 
@@ -1866,7 +1866,7 @@ end
 See `libhdf5` documentation for [`H5Tget_strpad`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_STRPAD).
 """
 function h5t_get_strpad(dtype_id)
-    var"#status#" = ccall((:H5Tget_strpad, libhdf5), Cint, (hid_t,), dtype_id)
+    var"#status#" = ccall(:H5Tget_strpad, Cint, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting string padding")
     return Int(var"#status#")
 end
@@ -1877,7 +1877,7 @@ end
 See `libhdf5` documentation for [`H5Tget_super`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_SUPER).
 """
 function h5t_get_super(dtype_id)
-    var"#status#" = ccall((:H5Tget_super, libhdf5), hid_t, (hid_t,), dtype_id)
+    var"#status#" = ccall(:H5Tget_super, hid_t, (hid_t,), dtype_id)
     var"#status#" < 0 && error("Error getting super type")
     return var"#status#"
 end
@@ -1888,7 +1888,7 @@ end
 See `libhdf5` documentation for [`H5Tinsert`](https://portal.hdfgroup.org/display/HDF5/H5T_INSERT).
 """
 function h5t_insert(dtype_id, fieldname, offset, field_id)
-    var"#status#" = ccall((:H5Tinsert, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Csize_t, hid_t), dtype_id, fieldname, offset, field_id)
+    var"#status#" = ccall(:H5Tinsert, herr_t, (hid_t, Ptr{UInt8}, Csize_t, hid_t), dtype_id, fieldname, offset, field_id)
     var"#status#" < 0 && error("Error adding field ", fieldname, " to compound datatype")
     return nothing
 end
@@ -1899,7 +1899,7 @@ end
 See `libhdf5` documentation for [`H5Tis_variable_str`](https://portal.hdfgroup.org/display/HDF5/H5T_IS_VARIABLE_STR).
 """
 function h5t_is_variable_str(type_id)
-    var"#status#" = ccall((:H5Tis_variable_str, libhdf5), htri_t, (hid_t,), type_id)
+    var"#status#" = ccall(:H5Tis_variable_str, htri_t, (hid_t,), type_id)
     var"#status#" < 0 && error("Error determining whether string is of variable length")
     return var"#status#" > 0
 end
@@ -1910,7 +1910,7 @@ end
 See `libhdf5` documentation for [`H5Tlock`](https://portal.hdfgroup.org/display/HDF5/H5T_LOCK).
 """
 function h5t_lock(type_id)
-    var"#status#" = ccall((:H5Tlock, libhdf5), herr_t, (hid_t,), type_id)
+    var"#status#" = ccall(:H5Tlock, herr_t, (hid_t,), type_id)
     var"#status#" < 0 && error("Error locking type")
     return nothing
 end
@@ -1921,7 +1921,7 @@ end
 See `libhdf5` documentation for [`H5Topen2`](https://portal.hdfgroup.org/display/HDF5/H5T_OPEN2).
 """
 function h5t_open(loc_id, name, tapl_id)
-    var"#status#" = ccall((:H5Topen2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, name, tapl_id)
+    var"#status#" = ccall(:H5Topen2, hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, name, tapl_id)
     var"#status#" < 0 && error("Error opening type ", h5i_get_name(loc_id), "/", name)
     return var"#status#"
 end
@@ -1932,7 +1932,7 @@ end
 See `libhdf5` documentation for [`H5Tset_cset`](https://portal.hdfgroup.org/display/HDF5/H5T_SET_CSET).
 """
 function h5t_set_cset(dtype_id, cset)
-    var"#status#" = ccall((:H5Tset_cset, libhdf5), herr_t, (hid_t, Cint), dtype_id, cset)
+    var"#status#" = ccall(:H5Tset_cset, herr_t, (hid_t, Cint), dtype_id, cset)
     var"#status#" < 0 && error("Error setting character set in datatype")
     return nothing
 end
@@ -1943,7 +1943,7 @@ end
 See `libhdf5` documentation for [`H5Tset_ebias`](https://portal.hdfgroup.org/display/HDF5/H5T_SET_EBIAS).
 """
 function h5t_set_ebias(dtype_id, ebias)
-    var"#status#" = ccall((:H5Tset_ebias, libhdf5), herr_t, (hid_t, Csize_t), dtype_id, ebias)
+    var"#status#" = ccall(:H5Tset_ebias, herr_t, (hid_t, Csize_t), dtype_id, ebias)
     var"#status#" < 0 && error("Error setting datatype floating point exponent bias")
     return nothing
 end
@@ -1954,7 +1954,7 @@ end
 See `libhdf5` documentation for [`H5Tset_fields`](https://portal.hdfgroup.org/display/HDF5/H5T_SET_FIELDS).
 """
 function h5t_set_fields(dtype_id, spos, epos, esize, mpos, msize)
-    var"#status#" = ccall((:H5Tset_fields, libhdf5), herr_t, (hid_t, Csize_t, Csize_t, Csize_t, Csize_t, Csize_t), dtype_id, spos, epos, esize, mpos, msize)
+    var"#status#" = ccall(:H5Tset_fields, herr_t, (hid_t, Csize_t, Csize_t, Csize_t, Csize_t, Csize_t), dtype_id, spos, epos, esize, mpos, msize)
     var"#status#" < 0 && error("Error setting datatype floating point bit positions")
     return nothing
 end
@@ -1965,7 +1965,7 @@ end
 See `libhdf5` documentation for [`H5Tset_precision`](https://portal.hdfgroup.org/display/HDF5/H5T_SET_PRECISION).
 """
 function h5t_set_precision(dtype_id, sz)
-    var"#status#" = ccall((:H5Tset_precision, libhdf5), herr_t, (hid_t, Csize_t), dtype_id, sz)
+    var"#status#" = ccall(:H5Tset_precision, herr_t, (hid_t, Csize_t), dtype_id, sz)
     var"#status#" < 0 && error("Error setting precision of datatype")
     return nothing
 end
@@ -1976,7 +1976,7 @@ end
 See `libhdf5` documentation for [`H5Tset_size`](https://portal.hdfgroup.org/display/HDF5/H5T_SET_SIZE).
 """
 function h5t_set_size(dtype_id, sz)
-    var"#status#" = ccall((:H5Tset_size, libhdf5), herr_t, (hid_t, Csize_t), dtype_id, sz)
+    var"#status#" = ccall(:H5Tset_size, herr_t, (hid_t, Csize_t), dtype_id, sz)
     var"#status#" < 0 && error("Error setting size of datatype")
     return nothing
 end
@@ -1987,7 +1987,7 @@ end
 See `libhdf5` documentation for [`H5Tset_strpad`](https://portal.hdfgroup.org/display/HDF5/H5T_SET_STRPAD).
 """
 function h5t_set_strpad(dtype_id, sz)
-    var"#status#" = ccall((:H5Tset_strpad, libhdf5), herr_t, (hid_t, Cint), dtype_id, sz)
+    var"#status#" = ccall(:H5Tset_strpad, herr_t, (hid_t, Cint), dtype_id, sz)
     var"#status#" < 0 && error("Error setting size of datatype")
     return nothing
 end
@@ -1998,7 +1998,7 @@ end
 See `libhdf5` documentation for [`H5Tset_tag`](https://portal.hdfgroup.org/display/HDF5/H5T_SET_TAG).
 """
 function h5t_set_tag(dtype_id, tag)
-    var"#status#" = ccall((:H5Tset_tag, libhdf5), herr_t, (hid_t, Cstring), dtype_id, tag)
+    var"#status#" = ccall(:H5Tset_tag, herr_t, (hid_t, Cstring), dtype_id, tag)
     var"#status#" < 0 && error("Error setting opaque tag")
     return nothing
 end
@@ -2009,7 +2009,7 @@ end
 See `libhdf5` documentation for [`H5Tvlen_create`](https://portal.hdfgroup.org/display/HDF5/H5T_VLEN_CREATE).
 """
 function h5t_vlen_create(base_type_id)
-    var"#status#" = ccall((:H5Tvlen_create, libhdf5), hid_t, (hid_t,), base_type_id)
+    var"#status#" = ccall(:H5Tvlen_create, hid_t, (hid_t,), base_type_id)
     var"#status#" < 0 && error("Error creating vlen type")
     return var"#status#"
 end
@@ -2020,7 +2020,7 @@ end
 See `libhdf5` documentation for [`H5DOappend`](https://portal.hdfgroup.org/display/HDF5/H5DO_APPEND).
 """
 function h5do_append(dset_id, dxpl_id, index, num_elem, memtype, buffer)
-    var"#status#" = ccall((:H5DOappend, libhdf5_hl), herr_t, (hid_t, hid_t, Cuint, hsize_t, hid_t, Ptr{Cvoid}), dset_id, dxpl_id, index, num_elem, memtype, buffer)
+    var"#status#" = ccall(:H5DOappend, herr_t, (hid_t, hid_t, Cuint, hsize_t, hid_t, Ptr{Cvoid}), dset_id, dxpl_id, index, num_elem, memtype, buffer)
     var"#status#" < 0 && error("error appending")
     return nothing
 end
@@ -2031,7 +2031,7 @@ end
 See `libhdf5` documentation for [`H5DOwrite_chunk`](https://portal.hdfgroup.org/display/HDF5/H5DO_WRITE_CHUNK).
 """
 function h5do_write_chunk(dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
-    var"#status#" = ccall((:H5DOwrite_chunk, libhdf5_hl), herr_t, (hid_t, hid_t, Int32, Ptr{hsize_t}, Csize_t, Ptr{Cvoid}), dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
+    var"#status#" = ccall(:H5DOwrite_chunk, herr_t, (hid_t, hid_t, Int32, Ptr{hsize_t}, Csize_t, Ptr{Cvoid}), dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
     var"#status#" < 0 && error("Error writing chunk")
     return nothing
 end
@@ -2042,7 +2042,7 @@ end
 See `libhdf5` documentation for [`H5DSattach_scale`](https://portal.hdfgroup.org/display/HDF5/H5DS_ATTACH_SCALE).
 """
 function h5ds_attach_scale(did, dsid, idx)
-    var"#status#" = ccall((:H5DSattach_scale, libhdf5_hl), herr_t, (hid_t, hid_t, Cuint), did, dsid, idx)
+    var"#status#" = ccall(:H5DSattach_scale, herr_t, (hid_t, hid_t, Cuint), did, dsid, idx)
     var"#status#" < 0 && error("Unable to attach scale")
     return nothing
 end
@@ -2053,7 +2053,7 @@ end
 See `libhdf5` documentation for [`H5DSdetach_scale`](https://portal.hdfgroup.org/display/HDF5/H5DS_DETACH_SCALE).
 """
 function h5ds_detach_scale(did, dsid, idx)
-    var"#status#" = ccall((:H5DSdetach_scale, libhdf5_hl), herr_t, (hid_t, hid_t, Cuint), did, dsid, idx)
+    var"#status#" = ccall(:H5DSdetach_scale, herr_t, (hid_t, hid_t, Cuint), did, dsid, idx)
     var"#status#" < 0 && error("Unable to detach scale")
     return nothing
 end
@@ -2064,7 +2064,7 @@ end
 See `libhdf5` documentation for [`H5DSget_label`](https://portal.hdfgroup.org/display/HDF5/H5DS_GET_LABEL).
 """
 function h5ds_get_label(did, idx, label, size)
-    var"#status#" = ccall((:H5DSget_label, libhdf5_hl), herr_t, (hid_t, Cuint, Ptr{UInt8}, hsize_t), did, idx, label, size)
+    var"#status#" = ccall(:H5DSget_label, herr_t, (hid_t, Cuint, Ptr{UInt8}, hsize_t), did, idx, label, size)
     var"#status#" < 0 && error("Unable to get label")
     return nothing
 end
@@ -2075,7 +2075,7 @@ end
 See `libhdf5` documentation for [`H5DSget_num_scales`](https://portal.hdfgroup.org/display/HDF5/H5DS_GET_NUM_SCALES).
 """
 function h5ds_get_num_scales(did, idx)
-    var"#status#" = ccall((:H5DSget_num_scales, libhdf5_hl), Cint, (hid_t, Cuint), did, idx)
+    var"#status#" = ccall(:H5DSget_num_scales, Cint, (hid_t, Cuint), did, idx)
     var"#status#" < 0 && error("Error getting number of scales")
     return Int(var"#status#")
 end
@@ -2086,7 +2086,7 @@ end
 See `libhdf5` documentation for [`H5DSget_scale_name`](https://portal.hdfgroup.org/display/HDF5/H5DS_GET_SCALE_NAME).
 """
 function h5ds_get_scale_name(did, name, size)
-    var"#status#" = ccall((:H5DSget_scale_name, libhdf5_hl), Cssize_t, (hid_t, Ptr{UInt8}, Csize_t), did, name, size)
+    var"#status#" = ccall(:H5DSget_scale_name, Cssize_t, (hid_t, Ptr{UInt8}, Csize_t), did, name, size)
     var"#status#" < 0 && error("Unable to get scale name")
     return var"#status#"
 end
@@ -2097,7 +2097,7 @@ end
 See `libhdf5` documentation for [`H5DSis_attached`](https://portal.hdfgroup.org/display/HDF5/H5DS_IS_ATTACHED).
 """
 function h5ds_is_attached(did, dsid, idx)
-    var"#status#" = ccall((:H5DSis_attached, libhdf5_hl), htri_t, (hid_t, hid_t, Cuint), did, dsid, idx)
+    var"#status#" = ccall(:H5DSis_attached, htri_t, (hid_t, hid_t, Cuint), did, dsid, idx)
     var"#status#" < 0 && error("Unable to check if dimension is attached")
     return var"#status#" > 0
 end
@@ -2108,7 +2108,7 @@ end
 See `libhdf5` documentation for [`H5DSis_scale`](https://portal.hdfgroup.org/display/HDF5/H5DS_IS_SCALE).
 """
 function h5ds_is_scale(did)
-    var"#status#" = ccall((:H5DSis_scale, libhdf5_hl), htri_t, (hid_t,), did)
+    var"#status#" = ccall(:H5DSis_scale, htri_t, (hid_t,), did)
     var"#status#" < 0 && error("Unable to check if dataset is scale")
     return var"#status#" > 0
 end
@@ -2119,7 +2119,7 @@ end
 See `libhdf5` documentation for [`H5DSset_label`](https://portal.hdfgroup.org/display/HDF5/H5DS_SET_LABEL).
 """
 function h5ds_set_label(did, idx, label)
-    var"#status#" = ccall((:H5DSset_label, libhdf5_hl), herr_t, (hid_t, Cuint, Ref{UInt8}), did, idx, label)
+    var"#status#" = ccall(:H5DSset_label, herr_t, (hid_t, Cuint, Ref{UInt8}), did, idx, label)
     var"#status#" < 0 && error("Unable to set label")
     return nothing
 end
@@ -2130,7 +2130,7 @@ end
 See `libhdf5` documentation for [`H5DSset_scale`](https://portal.hdfgroup.org/display/HDF5/H5DS_SET_SCALE).
 """
 function h5ds_set_scale(dsid, dimname)
-    var"#status#" = ccall((:H5DSset_scale, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}), dsid, dimname)
+    var"#status#" = ccall(:H5DSset_scale, herr_t, (hid_t, Ptr{UInt8}), dsid, dimname)
     var"#status#" < 0 && error("Unable to set scale")
     return nothing
 end
@@ -2141,7 +2141,7 @@ end
 See `libhdf5` documentation for [`H5LTdtype_to_text`](https://portal.hdfgroup.org/display/HDF5/H5LT_DTYPE_TO_TEXT).
 """
 function h5lt_dtype_to_text(datatype, str, lang_type, len)
-    var"#status#" = ccall((:H5LTdtype_to_text, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, Cint, Ref{Csize_t}), datatype, str, lang_type, len)
+    var"#status#" = ccall(:H5LTdtype_to_text, herr_t, (hid_t, Ptr{UInt8}, Cint, Ref{Csize_t}), datatype, str, lang_type, len)
     var"#status#" < 0 && error("Error getting datatype text representation")
     return nothing
 end
@@ -2152,7 +2152,7 @@ end
 See `libhdf5` documentation for [`H5TBappend_records`](https://portal.hdfgroup.org/display/HDF5/H5TB_APPEND_RECORDS).
 """
 function h5tb_append_records(loc_id, dset_name, nrecords, type_size, field_offset, field_sizes, data)
-    var"#status#" = ccall((:H5TBappend_records, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, hsize_t, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, dset_name, nrecords, type_size, field_offset, field_sizes, data)
+    var"#status#" = ccall(:H5TBappend_records, herr_t, (hid_t, Ptr{UInt8}, hsize_t, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, dset_name, nrecords, type_size, field_offset, field_sizes, data)
     var"#status#" < 0 && error("Error adding record to table")
     return nothing
 end
@@ -2163,7 +2163,7 @@ end
 See `libhdf5` documentation for [`H5TBget_field_info`](https://portal.hdfgroup.org/display/HDF5/H5TB_GET_FIELD_INFO).
 """
 function h5tb_get_field_info(loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
-    var"#status#" = ccall((:H5TBget_field_info, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, Ptr{Ptr{UInt8}}, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Csize_t}), loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
+    var"#status#" = ccall(:H5TBget_field_info, herr_t, (hid_t, Ptr{UInt8}, Ptr{Ptr{UInt8}}, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Csize_t}), loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
     var"#status#" < 0 && error("Error getting field information")
     return nothing
 end
@@ -2174,7 +2174,7 @@ end
 See `libhdf5` documentation for [`H5TBget_table_info`](https://portal.hdfgroup.org/display/HDF5/H5TB_GET_TABLE_INFO).
 """
 function h5tb_get_table_info(loc_id, table_name, nfields, nrecords)
-    var"#status#" = ccall((:H5TBget_table_info, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, Ptr{hsize_t}, Ptr{hsize_t}), loc_id, table_name, nfields, nrecords)
+    var"#status#" = ccall(:H5TBget_table_info, herr_t, (hid_t, Ptr{UInt8}, Ptr{hsize_t}, Ptr{hsize_t}), loc_id, table_name, nfields, nrecords)
     var"#status#" < 0 && error("Error getting table information")
     return nothing
 end
@@ -2185,7 +2185,7 @@ end
 See `libhdf5` documentation for [`H5TBmake_table`](https://portal.hdfgroup.org/display/HDF5/H5TB_MAKE_TABLE).
 """
 function h5tb_make_table(table_title, loc_id, dset_name, nfields, nrecords, type_size, field_names, field_offset, field_types, chunk_size, fill_data, compress, data)
-    var"#status#" = ccall((:H5TBmake_table, libhdf5_hl), herr_t, (Ptr{UInt8}, hid_t, Ptr{UInt8}, hsize_t, hsize_t, Csize_t, Ptr{Ptr{UInt8}}, Ptr{Csize_t}, Ptr{hid_t}, hsize_t, Ptr{Cvoid}, Cint, Ptr{Cvoid}), table_title, loc_id, dset_name, nfields, nrecords, type_size, field_names, field_offset, field_types, chunk_size, fill_data, compress, data)
+    var"#status#" = ccall(:H5TBmake_table, herr_t, (Ptr{UInt8}, hid_t, Ptr{UInt8}, hsize_t, hsize_t, Csize_t, Ptr{Ptr{UInt8}}, Ptr{Csize_t}, Ptr{hid_t}, hsize_t, Ptr{Cvoid}, Cint, Ptr{Cvoid}), table_title, loc_id, dset_name, nfields, nrecords, type_size, field_names, field_offset, field_types, chunk_size, fill_data, compress, data)
     var"#status#" < 0 && error("Error creating and writing dataset to table")
     return nothing
 end
@@ -2196,7 +2196,7 @@ end
 See `libhdf5` documentation for [`H5TBread_records`](https://portal.hdfgroup.org/display/HDF5/H5TB_READ_RECORDS).
 """
 function h5tb_read_records(loc_id, table_name, start, nrecords, type_size, field_offsets, dst_sizes, data)
-    var"#status#" = ccall((:H5TBread_records, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, hsize_t, hsize_t, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, table_name, start, nrecords, type_size, field_offsets, dst_sizes, data)
+    var"#status#" = ccall(:H5TBread_records, herr_t, (hid_t, Ptr{UInt8}, hsize_t, hsize_t, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, table_name, start, nrecords, type_size, field_offsets, dst_sizes, data)
     var"#status#" < 0 && error("Error reading record from table")
     return nothing
 end
@@ -2207,7 +2207,7 @@ end
 See `libhdf5` documentation for [`H5TBread_table`](https://portal.hdfgroup.org/display/HDF5/H5TB_READ_TABLE).
 """
 function h5tb_read_table(loc_id, table_name, dst_size, dst_offset, dst_sizes, dst_buf)
-    var"#status#" = ccall((:H5TBread_table, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, table_name, dst_size, dst_offset, dst_sizes, dst_buf)
+    var"#status#" = ccall(:H5TBread_table, herr_t, (hid_t, Ptr{UInt8}, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, table_name, dst_size, dst_offset, dst_sizes, dst_buf)
     var"#status#" < 0 && error("Error reading table")
     return nothing
 end
@@ -2218,7 +2218,7 @@ end
 See `libhdf5` documentation for [`H5TBwrite_records`](https://portal.hdfgroup.org/display/HDF5/H5TB_WRITE_RECORDS).
 """
 function h5tb_write_records(loc_id, table_name, start, nrecords, type_size, field_offsets, field_sizes, data)
-    var"#status#" = ccall((:H5TBwrite_records, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, hsize_t, hsize_t, Csize_t, Ptr{UInt8}, Ptr{UInt8}, Ptr{Cvoid}), loc_id, table_name, start, nrecords, type_size, field_offsets, field_sizes, data)
+    var"#status#" = ccall(:H5TBwrite_records, herr_t, (hid_t, Ptr{UInt8}, hsize_t, hsize_t, Csize_t, Ptr{UInt8}, Ptr{UInt8}, Ptr{Cvoid}), loc_id, table_name, start, nrecords, type_size, field_offsets, field_sizes, data)
     var"#status#" < 0 && error("Error writing record to table")
     return nothing
 end
@@ -2229,7 +2229,7 @@ end
 See `libhdf5` documentation for [`H5Zregister`](https://portal.hdfgroup.org/display/HDF5/H5Z_REGISTER).
 """
 function h5z_register(filter_class)
-    var"#status#" = ccall((:H5Zregister, libhdf5), herr_t, (Ref{H5Z_class_t},), filter_class)
+    var"#status#" = ccall(:H5Zregister, herr_t, (Ref{H5Z_class_t},), filter_class)
     var"#status#" < 0 && error("Unable to register new filter")
     return nothing
 end

@@ -2,9 +2,8 @@ using .MPI
 import Libdl
 
 # Check whether the HDF5 libraries were compiled with parallel support.
-HAS_PARALLEL[] = Libdl.dlopen(libhdf5) do lib
-    Libdl.dlsym(lib, :H5Pget_fapl_mpio, throw_error=false) !== nothing
-end
+HAS_PARALLEL[] = Libdl.dlsym(dlhdf5[], :H5Pget_fapl_mpio, throw_error=false) !== nothing
+
 
 # Low-level MPI handles.
 const MPIHandle = Union{MPI.MPI_Comm, MPI.MPI_Info}
