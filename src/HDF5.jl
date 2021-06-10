@@ -1715,8 +1715,8 @@ end
 """
     do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
 
-    Write a raw chunk at a given offset.
-    offset is 1-based of rank `ndims(dataset)` and must fall on a chunk boundary.
+Write a raw chunk at a given offset.
+`offset` is a 1-based list of rank `ndims(dataset)` and must fall on a chunk boundary.
 """
 function do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
     checkvalid(dataset)
@@ -1725,10 +1725,10 @@ function do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, fi
 end
 
 """
-    do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
+    do_write_chunk(dataset::Dataset, index, chunk_bytes::Vector{UInt8}, filter_mask=0)
 
-    Write a raw chunk at a given linear index
-    index is 1-based and consecutive up to the number of chunks
+Write a raw chunk at a given linear index.
+`index` is 1-based and consecutive up to the number of chunks.
 """
 function do_write_chunk(dataset::Dataset, index::Integer, chunk_bytes::Vector{UInt8}, filter_mask=0)
     checkvalid(dataset)
@@ -1739,8 +1739,8 @@ end
 """
     do_read_chunk(dataset::Dataset, offset)
 
-    Read a raw chunk at a given offset.
-    offset is 1-based of rank `ndims(dataset)` and must fall on a chunk boundary.
+Read a raw chunk at a given offset.
+`offset` is a 1-based list of rank `ndims(dataset)` and must fall on a chunk boundary.
 """
 function do_read_chunk(dataset::Dataset, offset)
     checkvalid(dataset)
@@ -1753,8 +1753,8 @@ end
 """
     do_read_chunk(dataset::Dataset, index::Integer)
 
-    Read a raw chunk at a given index.
-    index is 1-based and consecutive up to the number of chunks
+Read a raw chunk at a given index.
+`index` is 1-based and consecutive up to the number of chunks.
 """
 function do_read_chunk(dataset::Dataset, index::Integer)
     checkvalid(dataset)
@@ -1767,7 +1767,7 @@ end
 struct ChunkStorage{I <: IndexStyle, N} <: AbstractArray{Tuple{UInt32,Vector{UInt8}},N}
     dataset::Dataset
 end
-ChunkStorage{I,N}(dataset) where {I,N}= ChunkStorage{I,N}(dataset)
+ChunkStorage{I,N}(dataset) where {I,N} = ChunkStorage{I,N}(dataset)
 Base.IndexStyle(::ChunkStorage{I}) where {I <:IndexStyle} = I()
 
 # ChunkStorage{IndexCartesian,N} (default)
@@ -1797,8 +1797,8 @@ end
 # ChunkStorage{IndexLinear,1}
 
 ChunkStorage{IndexLinear}(dataset) = ChunkStorage{IndexLinear,1}(dataset)
-Base.size(cs::ChunkStorage{IndexLinear}) = ( Int64( get_num_chunks(cs.dataset) ) ,)
-Base.length(cs::ChunkStorage{IndexLinear}) = Int64( get_num_chunks(cs.dataset) )
+Base.size(cs::ChunkStorage{IndexLinear})   = (Int64(get_num_chunks(cs.dataset)),)
+Base.length(cs::ChunkStorage{IndexLinear}) =  Int64(get_num_chunks(cs.dataset))
 
 function Base.setindex!(chunk_storage::ChunkStorage{IndexLinear}, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer)
     do_write_chunk(chunk_storage.dataset, index, v[2], UInt32(v[1]))

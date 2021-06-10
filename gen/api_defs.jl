@@ -71,7 +71,7 @@
 @bind h5d_get_space_status(dataset_id::hid_t, status::Ref{Cint})::herr_t "Error getting dataspace status"
 @bind h5d_get_storage_size(dataset_id::hid_t)::hsize_t "Error getting storage size"
 @bind h5d_get_type(dataset_id::hid_t)::hid_t "Error getting dataspace type"
-@bind h5d_iterate(buf::Ptr{Cvoid}, type_id::hid_t, space_id::hid_t, operator::Ptr{Cvoid}, operator_data::Ptr{Cvoid})::herr_t "Error iterating dataset"
+@bind h5d_iterate(buf::Ptr{Cvoid}, type_id::hid_t, space_id::hid_t, operator::Ptr{Cvoid}, operator_data::Any)::herr_t "Error iterating dataset"
 @bind h5d_open2(loc_id::hid_t, pathname::Ptr{UInt8}, dapl_id::hid_t)::hid_t error("Error opening dataset ", h5i_get_name(loc_id), "/", pathname)
 @bind h5d_read(dataset_id::hid_t, mem_type_id::hid_t, mem_space_id::hid_t, file_space_id::hid_t, xfer_plist_id::hid_t, buf::Ptr{Cvoid})::herr_t error("Error reading dataset ", h5i_get_name(dataset_id))
 @bind h5d_read_chunk(dset::hid_t, dxpl_id::hid_t, offset::Ptr{hsize_t}, filters::Ptr{UInt32}, buf::Ptr{Cvoid})::herr_t "Error reading chunk"
