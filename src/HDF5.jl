@@ -1182,10 +1182,10 @@ function Base.read(obj::DatasetOrAttribute)
     return val
 end
 
-function Base.getindex(dset::Dataset, I...)
-    dtype = datatype(dset)
+function Base.getindex(obj::DatasetOrAttribute, I...)
+    dtype = datatype(obj)
     T = get_jl_type(dtype)
-    val = generic_read(dset, dtype, T, I...)
+    val = generic_read(obj, dtype, T, I...)
     close(dtype)
     return val
 end
