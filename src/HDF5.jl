@@ -1925,8 +1925,17 @@ function get_chunk(dset::Dataset)
     ret
 end
 
+# Set a single filter
 function set_filter(p::Properties, filter_id, flags, cd_values...)
     h5p_set_filter(p::Properties, filter_id, flags, length(cd_values), Ref(UInt32.(cd_values)))
+end
+
+# Set multiple filters
+function set_filter(p::Properties, filter::Tuple, more_filters...)
+    set_filter(p::Properties, filter...)
+    for f in more_filters
+      set_filter(p::Properties, f...)
+    end
 end
 
 get_alignment(p::Properties)     = h5p_get_alignment(checkvalid(p))
