@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Install libraries
         run: |
-          sudo apt-get udpate
+          sudo apt-get update
           sudo apt-get install mpich libhdf5-mpich-dev
           echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/" >> $GITHUB_ENV
           echo "JULIA_MPI_BINARY=system" >> $GITHUB_ENV
