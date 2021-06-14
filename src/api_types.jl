@@ -336,6 +336,7 @@ const H5T_NATIVE_DOUBLE   = _read_const(:H5T_NATIVE_DOUBLE_g)
 const H5T_VARIABLE = reinterpret(UInt, -1)
 
 # Filter constants
+const H5Z_FLAG_MANDATORY = 0x0000
 const H5Z_FLAG_OPTIONAL = 0x0001
 const H5Z_FLAG_REVERSE = 0x0100
 const H5Z_CLASS_T_VERS = 1
