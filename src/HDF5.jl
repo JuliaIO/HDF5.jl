@@ -1927,13 +1927,13 @@ end
 
 # Set a single filter
 function set_filter(p::Properties, filter_id, flags, cd_values...)
-    h5p_set_filter(p::Properties, filter_id, flags, length(cd_values), Ref(UInt32.(cd_values)))
+    h5p_set_filter(p::Properties, filter_id, flags, length(cd_values), Ref(Cuint.(cd_values)))
 end
 
 # Set multiple filters
-function set_filter(p::Properties, filter::Tuple, more_filters...)
+function set_filter(p::Properties, filter::Tuple, additional_filters...)
     set_filter(p::Properties, filter...)
-    for f in more_filters
+    for f in additional_filters
       set_filter(p::Properties, f...)
     end
 end
