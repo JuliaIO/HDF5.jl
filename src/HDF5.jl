@@ -1927,7 +1927,7 @@ end
 
 # Set a single filter
 function set_filter(p::Properties, filter_id, flags, cd_values...)
-    h5p_set_filter(p::Properties, filter_id, flags, length(cd_values), Ref(Cuint.(cd_values)))
+    h5p_set_filter(p::Properties, filter_id, flags, length(cd_values), Cuint[cd_values...])
 end
 
 # Set multiple filters
