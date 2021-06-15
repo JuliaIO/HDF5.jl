@@ -1927,6 +1927,8 @@ end
 
 # Set a single filter
 function set_filter(p::Properties, filter_id, flags, cd_values...)
+    # Passing cd_values as Cuint[] allocates less than passing as
+    # Ref{NTuple{N,Cuint}} (and it is compatible with Julia 1.3)
     h5p_set_filter(p::Properties, filter_id, flags, length(cd_values), Cuint[cd_values...])
 end
 
