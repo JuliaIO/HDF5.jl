@@ -78,12 +78,17 @@ write(f, "empty_array_of_strings", empty_array_of_strings)
 # attributes
 species = [["N", "C"]; ["A", "B"]]
 attributes(f)["species"] = species
+@test read(attributes(f)["species"]) == species
+@test attributes(f)["species"][] == species
 C∞ = 42
 attributes(f)["C∞"] = C∞
 dset = f["salut"]
 @test !isempty(dset)
 label = "This is a string"
 attributes(dset)["typeinfo"] = label
+@test read(attributes(dset)["typeinfo"]) == label
+@test attributes(dset)["typeinfo"][] == label
+@test dset["typeinfo"][] == label
 close(dset)
 # Scalar reference values in attributes
 attributes(f)["ref_test"] = HDF5.Reference(f, "empty_array_of_strings")
