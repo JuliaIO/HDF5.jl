@@ -20,6 +20,7 @@ include("swmr.jl")
 include("mmap.jl")
 include("properties.jl")
 include("table.jl")
+include("filter.jl")
 
 try
     using MPI
