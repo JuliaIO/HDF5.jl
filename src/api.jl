@@ -363,24 +363,24 @@ function h5d_get_access_plist(dataset_id)
 end
 
 """
-    h5d_get_chunk_info(dataset_id::hid_t, fspace_id::hid_t, index::hsize_t, offset::Ptr{hsize_t}, filter_mask::Ptr{UInt32}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})
+    h5d_get_chunk_info(dataset_id::hid_t, fspace_id::hid_t, index::hsize_t, offset::Ptr{hsize_t}, filter_mask::Ptr{Cuint}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})
 
 See `libhdf5` documentation for [`H5Dget_chunk_info`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_CHUNK_INFO).
 """
 function h5d_get_chunk_info(dataset_id, fspace_id, index, offset, filter_mask, addr, size)
-    var"#status#" = ccall((:H5Dget_chunk_info, libhdf5), herr_t, (hid_t, hid_t, hsize_t, Ptr{hsize_t}, Ptr{UInt32}, Ptr{haddr_t}, Ptr{hsize_t}), dataset_id, fspace_id, index, offset, filter_mask, addr, size)
+    var"#status#" = ccall((:H5Dget_chunk_info, libhdf5), herr_t, (hid_t, hid_t, hsize_t, Ptr{hsize_t}, Ptr{Cuint}, Ptr{haddr_t}, Ptr{hsize_t}), dataset_id, fspace_id, index, offset, filter_mask, addr, size)
     var"#status#" < 0 && error("Error getting chunk info")
     return nothing
 end
 
 @static if v"1.10.5" ≤ _libhdf5_build_ver
     @doc """
-        h5d_get_chunk_info_by_coord(dataset_id::hid_t, offset::Ptr{hsize_t}, filter_mask::Ptr{UInt32}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})
+        h5d_get_chunk_info_by_coord(dataset_id::hid_t, offset::Ptr{hsize_t}, filter_mask::Ptr{Cuint}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})
 
     See `libhdf5` documentation for [`H5Dget_chunk_info_by_coord`](https://portal.hdfgroup.org/display/HDF5/H5D_GET_CHUNK_INFO_BY_COORD).
     """
     function h5d_get_chunk_info_by_coord(dataset_id, offset, filter_mask, addr, size)
-        var"#status#" = ccall((:H5Dget_chunk_info_by_coord, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{UInt32}, Ptr{haddr_t}, Ptr{hsize_t}), dataset_id, offset, filter_mask, addr, size)
+        var"#status#" = ccall((:H5Dget_chunk_info_by_coord, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{Cuint}, Ptr{haddr_t}, Ptr{hsize_t}), dataset_id, offset, filter_mask, addr, size)
         var"#status#" < 0 && error("Error getting chunk info by coord")
         return nothing
     end
@@ -477,12 +477,12 @@ function h5d_get_type(dataset_id)
 end
 
 """
-    h5d_iterate(buf::Ptr{Cvoid}, type_id::hid_t, space_id::hid_t, operator::Ptr{Cvoid}, operator_data::Ptr{Cvoid})
+    h5d_iterate(buf::Ptr{Cvoid}, type_id::hid_t, space_id::hid_t, operator::Ptr{Cvoid}, operator_data::Any)
 
 See `libhdf5` documentation for [`H5Diterate`](https://portal.hdfgroup.org/display/HDF5/H5D_ITERATE).
 """
 function h5d_iterate(buf, type_id, space_id, operator, operator_data)
-    var"#status#" = ccall((:H5Diterate, libhdf5), herr_t, (Ptr{Cvoid}, hid_t, hid_t, Ptr{Cvoid}, Ptr{Cvoid}), buf, type_id, space_id, operator, operator_data)
+    var"#status#" = ccall((:H5Diterate, libhdf5), herr_t, (Ptr{Cvoid}, hid_t, hid_t, Ptr{Cvoid}, Any), buf, type_id, space_id, operator, operator_data)
     var"#status#" < 0 && error("Error iterating dataset")
     return nothing
 end
