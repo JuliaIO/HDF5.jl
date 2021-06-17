@@ -406,8 +406,8 @@ rm(fn)
 # Test direct chunk writing Cartesian index
 h5open(fn, "w") do f
     d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
-    HDF5.h5d_extend(d, HDF5.hsize_t[3,3]) # Should do nothing
-    HDF5.h5d_extend(d, HDF5.hsize_t[4,4]) # Should do nothing
+    HDF5.h5d_extend(d, HDF5.hsize_t[3,3]) # should do nothing (deprecated call)
+    HDF5.h5d_extend(d, HDF5.hsize_t[4,4]) # should do nothing (deprecated call)
     raw = HDF5.ChunkStorage(d)
     raw[1,1] = 0, collect(reinterpret(UInt8, [1,2,5,6]))
     raw[3,1] = 0, collect(reinterpret(UInt8, [3,4,7,8]))

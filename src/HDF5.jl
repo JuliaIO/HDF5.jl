@@ -1764,7 +1764,7 @@ function do_read_chunk(dataset::Dataset, index::Integer)
     return (filters[], buf)
 end
 
-struct ChunkStorage{I <: IndexStyle, N} <: AbstractArray{Tuple{UInt32,Vector{UInt8}},N}
+struct ChunkStorage{I<:IndexStyle,N} <: AbstractArray{Tuple{UInt32,Vector{UInt8}},N}
     dataset::Dataset
 end
 ChunkStorage{I,N}(dataset) where {I,N} = ChunkStorage{I,N}(dataset)
@@ -1773,8 +1773,7 @@ Base.IndexStyle(::ChunkStorage{I}) where {I <:IndexStyle} = I()
 # ChunkStorage{IndexCartesian,N} (default)
 
 function ChunkStorage(dataset)
-    ndims = get_extent_ndims(dataset)
-    ChunkStorage{IndexCartesian, ndims}(dataset)
+    ChunkStorage{IndexCartesian, ndims(dataset)}(dataset)
 end
 
 Base.size(cs::ChunkStorage{IndexCartesian}) = Int64.(get_num_chunks_per_dim(cs.dataset))
@@ -1782,7 +1781,7 @@ Base.size(cs::ChunkStorage{IndexCartesian}) = Int64.(get_num_chunks_per_dim(cs.d
 
 function Base.axes(cs::ChunkStorage{IndexCartesian})
     chunk = get_chunk(cs.dataset)
-    extent = get_extent_dims(cs.dataset)[1]
+    extent = size(cs.dataset)
     ntuple(i->1:chunk[i]:extent[i], length(extent))
 end
 
@@ -1809,7 +1808,7 @@ function Base.getindex(chunk_storage::ChunkStorage{IndexLinear}, index::Integer)
 end
 
 # TODO: Move to show.jl. May need to include show.jl after this line.
-@static if VERSION <= v"1.6.0"
+@static if VERSION < v"1.7"
 # ChunkStorage axes may be StepRanges, but this is not available until v"1.6.0"
 # no method matching CartesianIndices(::Tuple{StepRange{Int64,Int64},UnitRange{Int64}}) until v"1.6.0"
 
@@ -1817,10 +1816,9 @@ function Base.show(io::IO, cs::ChunkStorage{IndexCartesian,N}) where N
     println(io, "HDF5.ChunkStorage{IndexCartesian,$N}")
     print(io, "Axes: ")
     println(io, axes(cs))
-    print(io,"\t")
     print(io, cs.dataset)
 end
-Base.show(io::IO, ::MIME{Symbol("text/plain")}, cs::ChunkStorage{IndexCartesian,N}) where N = show(io, cs)
+Base.show(io::IO, ::MIME{Symbol("text/plain")}, cs::ChunkStorage{IndexCartesian,N}) where {N} = show(io, cs)
 
 end
 

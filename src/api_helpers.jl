@@ -95,13 +95,13 @@ end
 
     Helper method to get chunk information.
 
-    Returns a NamedTuple{(:offset, :filter_mask, :addr, :size), Tuple{hsize_t, UInt32, haddr_t, hsize_t}} 
+    Returns a NamedTuple{(:offset, :filter_mask, :addr, :size), Tuple{hsize_t, UInt32, haddr_t, hsize_t}}
 """
 function h5d_get_chunk_info(dataset_id, fspace_id, index)
     offset = Vector{hsize_t}(undef, ndims(dataset_id))
     filter_mask = Ref{UInt32}()
-    addr = Ref{HDF5.haddr_t}()
-    size = Ref{HDF5.hsize_t}()
+    addr = Ref{haddr_t}()
+    size = Ref{hsize_t}()
     h5d_get_chunk_info(dataset_id, fspace_id, index, offset, filter_mask, addr, size)
     return (offset = offset, filter_mask = filter_mask[], addr = addr[], size = size[])
 end
@@ -116,8 +116,8 @@ h5d_get_chunk_info(dataset_id, index; fspace_id = H5S_ALL) = h5d_get_chunk_info(
 """
 function h5d_get_chunk_info_by_coord(dataset_id, offset)
     filter_mask = Ref{UInt32}()
-    addr = Ref{HDF5.haddr_t}()
-    size = Ref{HDF5.hsize_t}()
+    addr = Ref{haddr_t}()
+    size = Ref{hsize_t}()
     h5d_get_chunk_info_by_coord(dataset_id, offset, filter_mask, addr, size)
     return (filter_mask = filter_mask[], addr = addr[], size = size[])
 end
@@ -231,7 +231,7 @@ h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, buf::Vector{UInt8}) =
     Helper method to write chunks via 0-based Integer index
 """
 function h5d_write_chunk(dataset_id, index::Integer, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask = 0)
-    offset = [ reverse(get_chunk_offset(dataset_id, index))... ]
+    offset = [reverse(get_chunk_offset(dataset_id, index))...]
     h5d_write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
 end    
 h5d_write_chunk(dataset_id, dxpl_id, filter_mask, index::Integer, buf::Vector{UInt8}) =

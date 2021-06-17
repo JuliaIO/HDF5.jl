@@ -46,18 +46,6 @@ function get_extent_dims(obj::Union{Dataspace,Dataset,Attribute})
     return dims, maxdims
 end
 
-"""
-    HDF5.get_extent_ndims(obj::Union{HDF5.Dataspace, HDF5.Dataset, HDF5.Attribute}) -> ndims
-
-Get the number of array dimensions from a dataspace, dataset, or attribute.
-
-"""
-function get_extent_ndims(obj::Union{Dataspace,Dataset,Attribute})
-    dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
-    h5_ndims = h5s_get_simple_extent_ndims(dspace)
-    obj isa Dataspace || close(dspace)
-    return h5_ndims
-end
 
 """
     HDF5.get_chunk_offset(dataset_id, index)
@@ -69,10 +57,12 @@ end
     The returned offsets are in Julian order than HDF5's C-order.
 """
 function get_chunk_offset(dataset_id, index)
-    extent = get_extent_dims(dataset_id)[1]
+    extent = size(dataset_id)
+
     chunk = get_chunk(dataset_id)
     chunk_indices = CartesianIndices( ntuple(i->0:extent[i]÷chunk[i]-1, length(extent)) )
-    offset = hsize_t.( chunk_indices[index + 1].I .* chunk )
+    offset = hsize_t.(chunk_indices[index + 1].I .* chunk)
+
     offset
 end
 
@@ -87,7 +77,8 @@ end
     Unlike h5d_get_chunk_info_by_coord, this method is available prior to HDF5 1.10.5
 """
 function get_chunk_index(dataset_id, offset)
-    extent = get_extent_dims(dataset_id)[1]
+    extent = size(dataset_id)
+
     chunk = get_chunk(dataset_id)
     chunk_indices = LinearIndices( ntuple(i->0:extent[i]÷chunk[i]-1, length(extent)) )
     chunk_indices[(offset .+ 1)...] - 1
@@ -99,35 +90,31 @@ end
     Get the number of chunks in each dimension in Julian order
 """
 function get_num_chunks_per_dim(dataset_id)
-    extent = get_extent_dims(dataset_id)[1]
+    extent = size(dataset_id)
+
     chunk = get_chunk(dataset_id)
-    extent .÷ chunk
+    return extent .÷ chunk
 end
 
 """
     HDF5.get_num_chunks(dataset_id)
 
-    Get the number of chunks in a dataset.
-
-    This should be equivalent to h5d_get_num_chunks(dataset_id, H5S_ALL)
-    but does not directly depend on it.
+Returns the number of chunks in a dataset. Equivalent to `h5d_get_num_chunks(dataset_id, H5S_ALL)`.
 """
 function get_num_chunks(dataset_id)
-    prod( get_num_chunks_per_dim(dataset_id) )
+    return prod(get_num_chunks_per_dim(dataset_id))
 end
 
 
 """
     HDF5.get_chunk_length(dataset_id)
 
-    Get the length of a chunk in a dataset.
-
-    This should be equivalent to h5d_get_chunk_info(dataset_id)[:size]
+Retrieves the chunk size in bytes. Equivalent to `h5d_get_chunk_info(dataset_id)[:size]`.
 """
 function get_chunk_length(dataset_id)
     type = h5d_get_type(dataset_id)
     chunk = get_chunk(dataset_id)
-    h5t_get_size( type ) * prod( chunk )
+    return Int(h5t_get_size(type) * prod(chunk))
 end
 
 function vlen_get_buf_size(dataset_id)
