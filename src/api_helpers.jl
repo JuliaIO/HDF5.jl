@@ -136,7 +136,7 @@ function h5d_get_chunk_storage_size(dataset_id, offset)
 end
 
 """
-    h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL) 
+    h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
 
 Helper method to get the number of chunks
 
@@ -233,7 +233,7 @@ Helper method to write chunks via 0-based Integer index
 function h5d_write_chunk(dataset_id, index::Integer, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask = 0)
     offset = [reverse(get_chunk_offset(dataset_id, index))...]
     h5d_write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
-end    
+end
 h5d_write_chunk(dataset_id, dxpl_id, filter_mask, index::Integer, buf::Vector{UInt8}) =
     h5d_write_chunk(dataset_id, index, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
 
@@ -391,10 +391,10 @@ function h5p_get_char_encoding(plist_id)
 end
 
 function h5p_get_chunk(plist_id)
-    n = h5p_get_chunk(plist_id, 0, C_NULL)
-    cdims = Vector{hsize_t}(undef, n)
-    h5p_get_chunk(plist_id, n, cdims)
-    return cdims
+    ndims = h5p_get_chunk(plist_id, 0, C_NULL)
+    dims = Vector{hsize_t}(undef, ndims)
+    h5p_get_chunk(plist_id, ndims, dims)
+    return dims, ndims
 end
 
 function h5p_get_create_intermediate_group(plist_id)

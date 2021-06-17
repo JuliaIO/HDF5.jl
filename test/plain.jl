@@ -428,7 +428,7 @@ h5open(fn, "r") do f
     @test length(raw) == 4
     @test axes(raw) == (Base.OneTo(4),)
     @test HDF5.h5d_get_num_chunks(d) == HDF5.get_num_chunks(d)
-    if v"1.10.5" ≤ HDF5._libhdf5_build_ver 
+    if v"1.10.5" ≤ HDF5._libhdf5_build_ver
         @test HDF5.get_chunk_length(d) == HDF5.h5d_get_chunk_info(d,1)[:size]
     end
     @test reinterpret(Int, raw[1][2]) == [1,2,5,6]
@@ -534,7 +534,7 @@ end
         @test_throws ErrorException HDF5.h5d_scatter(scatterf_bad_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf)
         scatterf_data_ptr = @cfunction(scatterf_data, HDF5.herr_t, (Ptr{Ptr{Int}}, Ptr{Csize_t}, Ref{Int}))
         @test HDF5.h5d_scatter(scatterf_data_ptr, Ref(9), datatype(Int), dataspace(d), dst_buf) |> isnothing
-    end     
+    end
     rm(fn)
 end
 

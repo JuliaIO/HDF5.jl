@@ -58,12 +58,10 @@ The returned offsets are in Julian order than HDF5's C-order.
 """
 function get_chunk_offset(dataset_id, index)
     extent = size(dataset_id)
-
     chunk = get_chunk(dataset_id)
-    chunk_indices = CartesianIndices( ntuple(i->0:extent[i]÷chunk[i]-1, length(extent)) )
+    chunk_indices = CartesianIndices(ntuple(i -> 0:extent[i]÷chunk[i]-1, length(extent)))
     offset = hsize_t.(chunk_indices[index + 1].I .* chunk)
-
-    offset
+    return offset
 end
 
 """
@@ -80,7 +78,7 @@ function get_chunk_index(dataset_id, offset)
     extent = size(dataset_id)
 
     chunk = get_chunk(dataset_id)
-    chunk_indices = LinearIndices( ntuple(i->0:extent[i]÷chunk[i]-1, length(extent)) )
+    chunk_indices = LinearIndices(ntuple(i->0:extent[i]÷chunk[i]-1, length(extent)))
     chunk_indices[(offset .+ 1)...] - 1
 end
 

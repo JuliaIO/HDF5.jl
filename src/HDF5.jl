@@ -1782,7 +1782,7 @@ Base.size(cs::ChunkStorage{IndexCartesian}) = Int64.(get_num_chunks_per_dim(cs.d
 function Base.axes(cs::ChunkStorage{IndexCartesian})
     chunk = get_chunk(cs.dataset)
     extent = size(cs.dataset)
-    ntuple(i->1:chunk[i]:extent[i], length(extent))
+    ntuple(i -> 1:chunk[i]:extent[i], length(extent))
 end
 
 function Base.setindex!(chunk_storage::ChunkStorage{IndexCartesian}, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer...)
@@ -2009,8 +2009,11 @@ get_create_properties(g::Group)     = Properties(h5g_get_create_plist(g), H5P_GR
 get_create_properties(f::File)      = Properties(h5f_get_create_plist(f), H5P_FILE_CREATE)
 get_create_properties(a::Attribute) = Properties(h5a_get_create_plist(a), H5P_ATTRIBUTE_CREATE)
 
-get_chunk(p::Properties) = tuple(convert(Vector{Int}, reverse(h5p_get_chunk(p)))...)
-set_chunk(p::Properties, dims...) = h5p_set_chunk(p, length(dims), hsize_t[reverse(dims)...])
+function get_chunk(p::Properties)
+    dims, N = h5p_get_chunk(p)
+    ntuple(i -> Int(dims[N-i+1]), N)
+end
+
 function get_chunk(dset::Dataset)
     p = get_create_properties(dset)
     local ret
@@ -2021,6 +2024,8 @@ function get_chunk(dset::Dataset)
     end
     ret
 end
+
+set_chunk(p::Properties, dims...) = h5p_set_chunk(p, length(dims), hsize_t[reverse(dims)...])
 
 get_alignment(p::Properties)     = h5p_get_alignment(checkvalid(p))
 get_alloc_time(p::Properties)    = h5p_get_alloc_time(checkvalid(p))
