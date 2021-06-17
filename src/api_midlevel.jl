@@ -50,11 +50,11 @@ end
 """
     HDF5.get_chunk_offset(dataset_id, index)
 
-    Get 0-based offset of chunk from 0-based index.
-    
-    For a 1-based API, see HDF5.ChunkStorage.
+Get 0-based offset of chunk from 0-based index.
 
-    The returned offsets are in Julian order than HDF5's C-order.
+For a 1-based API, see HDF5.ChunkStorage.
+
+The returned offsets are in Julian order than HDF5's C-order.
 """
 function get_chunk_offset(dataset_id, index)
     extent = size(dataset_id)
@@ -69,12 +69,12 @@ end
 """
     HDF5.get_chunk_index(dataset_id, offset)
 
-    Get 0-based index of chunk from 0-based offset in Julian order.
+Get 0-based index of chunk from 0-based offset in Julian order.
 
-    For a 1-based API, see HDF5.ChunkStorage.
+For a 1-based API, see HDF5.ChunkStorage.
 
-    This should be equivalent to h5d_get_chunk_info_by_coord( dataset_id, reverse(offset) )[:index].
-    Unlike h5d_get_chunk_info_by_coord, this method is available prior to HDF5 1.10.5
+This should be equivalent to h5d_get_chunk_info_by_coord( dataset_id, reverse(offset) )[:index].
+Unlike h5d_get_chunk_info_by_coord, this method is available prior to HDF5 1.10.5
 """
 function get_chunk_index(dataset_id, offset)
     extent = size(dataset_id)
@@ -87,7 +87,7 @@ end
 """
     HDF5.get_num_chunks_per_dim(dataset_id)
 
-    Get the number of chunks in each dimension in Julian order
+Get the number of chunks in each dimension in Julian order
 """
 function get_num_chunks_per_dim(dataset_id)
     extent = size(dataset_id)
