@@ -475,19 +475,6 @@ HDF5 is a large library, and the low-level wrap is not complete. However, many o
 
 Note that Julia's HDF5 directly uses the "2" interfaces, e.g., `H5Dcreate2`, so you need to have version 1.8 of the HDF5 library or later.
 
-## System-provided HDF5 libraries
-
-Starting from Julia 1.3, the HDF5 binaries are by default downloaded using the
-[HDF5_jll](https://github.com/JuliaBinaryWrappers/HDF5_jll.jl) package.
-To use system-provided HDF5 binaries instead, set the environment variable
-`JULIA_HDF5_LIBRARY_PATH` to the HDF5 library path and then run
-`Pkg.build("HDF5")`.
-This is in particular needed for [parallel HDF5 support](@ref Parallel-HDF5),
-which is not provided by the `HDF5_jll` binaries.
-
-For example, you can set `JULIA_HDF5_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/`
-if you're using the system package [`libhdf5-mpich-dev`](https://packages.ubuntu.com/focal/libhdf5-mpich-dev)
-on Ubuntu 20.04.
 
 ## Parallel HDF5
 
@@ -523,9 +510,10 @@ for details.
 
 #### 2. Using parallel HDF5 libraries
 
-As detailed in [System-provided HDF5 libraries](@ref), set the
-`JULIA_HDF5_LIBRARY_PATH` environment variable to the directory where
-the HDF5 libraries compiled with parallel support are found.
+As detailed in [Using custom or system provided HDF5 binaries](@ref), set the
+`JULIA_HDF5_PATH` environment variable to the path where the parallel HDF5
+binaries are located.
+Then run `]build HDF5` from Julia.
 
 #### 3. Loading MPI-enabled HDF5
 

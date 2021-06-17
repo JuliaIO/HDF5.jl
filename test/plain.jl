@@ -99,12 +99,17 @@ write(f, "empty_array_of_strings", empty_array_of_strings)
 # attributes
 species = [["N", "C"]; ["A", "B"]]
 attributes(f)["species"] = species
+@test read(attributes(f)["species"]) == species
+@test attributes(f)["species"][] == species
 C∞ = 42
 attributes(f)["C∞"] = C∞
 dset = f["salut"]
 @test !isempty(dset)
 label = "This is a string"
 attributes(dset)["typeinfo"] = label
+@test read(attributes(dset)["typeinfo"]) == label
+@test attributes(dset)["typeinfo"][] == label
+@test dset["typeinfo"][] == label
 close(dset)
 # Scalar reference values in attributes
 attributes(f)["ref_test"] = HDF5.Reference(f, "empty_array_of_strings")
@@ -845,6 +850,12 @@ dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
 commit_datatype(hfile, "type", dtype)
 @test sprint(show, dtype) == "HDF5.Datatype: /type H5T_IEEE_F64LE"
 
+dtypemeta = create_attribute(dtype, "dtypemeta", datatype(Bool), dataspace((1,)))
+@test sprint(show, dtypemeta) == "HDF5.Attribute: dtypemeta"
+
+dtypeattrs = attributes(dtype)
+@test sprint(show, dtypeattrs) == "Attributes of HDF5.Datatype: /type H5T_IEEE_F64LE"
+
 dspace_null = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_NULL))
 dspace_scal = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_SCALAR))
 dspace_norm = dataspace((100, 4))
@@ -875,6 +886,9 @@ close(prop)
 
 close(meta)
 @test sprint(show, meta) == "HDF5.Attribute: (invalid)"
+
+close(dtypemeta)
+@test sprint(show, dtypemeta) == "HDF5.Attribute: (invalid)"
 
 close(dset)
 @test sprint(show, dset) == "HDF5.Dataset: (invalid)"

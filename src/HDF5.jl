@@ -281,9 +281,9 @@ end
 Base.cconvert(::Type{hid_t}, attr::Attribute) = attr.id
 
 struct Attributes
-    parent::Union{File,Group,Dataset}
+    parent::Union{File,Object}
 end
-attributes(p::Union{File,Group,Dataset}) = Attributes(p)
+attributes(p::Union{File,Object}) = Attributes(p)
 
 # Methods for reference types
 function Reference(parent::Union{File,Group,Dataset}, name::AbstractString)
@@ -840,6 +840,7 @@ function _prop_set!(p::Properties, name::Symbol, val, check::Bool = true)
                name === :compress    ? h5p_set_deflate(p, val...) :
                name === :deflate     ? h5p_set_deflate(p, val...) :
                name === :external    ? h5p_set_external(p, val...) :
+               name === :filter      ? set_filter(p, val...) :
                name === :layout      ? h5p_set_layout(p, val...) :
                name === :shuffle     ? h5p_set_shuffle(p, val...) :
                name === :track_times ? h5p_set_obj_track_times(p, val...) : # H5P_OBJECT_CREATE
@@ -1182,10 +1183,10 @@ function Base.read(obj::DatasetOrAttribute)
     return val
 end
 
-function Base.getindex(dset::Dataset, I...)
-    dtype = datatype(dset)
+function Base.getindex(obj::DatasetOrAttribute, I...)
+    dtype = datatype(obj)
     T = get_jl_type(dtype)
-    val = generic_read(dset, dtype, T, I...)
+    val = generic_read(obj, dtype, T, I...)
     close(dtype)
     return val
 end
@@ -2026,6 +2027,21 @@ function get_chunk(dset::Dataset)
 end
 
 set_chunk(p::Properties, dims...) = h5p_set_chunk(p, length(dims), hsize_t[reverse(dims)...])
+
+# Set a single filter
+function set_filter(p::Properties, filter_id, flags, cd_values...)
+    # Passing cd_values as Cuint[] allocates less than passing as
+    # Ref{NTuple{N,Cuint}} (and it is compatible with Julia 1.3)
+    h5p_set_filter(p::Properties, filter_id, flags, length(cd_values), Cuint[cd_values...])
+end
+
+# Set multiple filters
+function set_filter(p::Properties, filter::Tuple, additional_filters...)
+    set_filter(p::Properties, filter...)
+    for f in additional_filters
+      set_filter(p::Properties, f...)
+    end
+end
 
 get_alignment(p::Properties)     = h5p_get_alignment(checkvalid(p))
 get_alloc_time(p::Properties)    = h5p_get_alloc_time(checkvalid(p))
