@@ -2,6 +2,27 @@ using HDF5
 using CRC32c
 using Test
 
+gatherf(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t(0)
+gatherf_bad(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t(-1)
+gatherf_data(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t((op_data == 9)-1)
+
+
+function scatterf(src_buf, src_buf_bytes_used, op_data)
+    A = [1,2,3,4]
+    unsafe_store!(src_buf, pointer(A))
+    unsafe_store!(src_buf_bytes_used, sizeof(A))
+    @debug "op_data: " opdata
+    return HDF5.herr_t(0)
+end
+scatterf_bad(src_buf, src_buf_bytes_used, op_data) = HDF5.herr_t(-1)
+function scatterf_data(src_buf, src_buf_bytes_used, op_data)
+    A = [1,2,3,4]
+    unsafe_store!(src_buf, pointer(A))
+    unsafe_store!(src_buf_bytes_used, sizeof(A))
+    @debug "op_data: " opdata
+    return HDF5.herr_t((op_data == 9)-1)
+end
+
 @testset "plain" begin
 
 # Create a new file
@@ -188,6 +209,8 @@ salut_splitr = read(fr, "salut_split")
 salut_2dr = read(fr, "salut_2d")
 @test salut_2d == salut_2dr
 salut_vlenr = read(fr, "salut_vlen")
+@test HDF5.vlen_get_buf_size(fr["salut_vlen"]) == 7
+@test HDF5.h5d_get_access_plist(fr["salut-vlen"]) != 0
 #@test salut_vlenr == salut_split
 vlen_intr = read(fr, "int_vlen")
 @test vlen_intr == vlen_int
@@ -383,22 +406,55 @@ Wr = h5read(fn, "newgroup/W")
 close(f)
 rm(fn)
 
-if !isempty(HDF5.libhdf5_hl)
-    # Test direct chunk writing
+
+@testset "h5d_fill" begin
+    val = 5
     h5open(fn, "w") do f
-      d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
-      raw = HDF5.ChunkStorage(d)
-      raw[1,1] = 0, collect(reinterpret(UInt8, [1,2,5,6]))
-      raw[3,1] = 0, collect(reinterpret(UInt8, [3,4,7,8]))
-      raw[1,3] = 0, collect(reinterpret(UInt8, [9,10,13,14]))
-      raw[3,3] = 0, collect(reinterpret(UInt8, [11,12,15,16]))
+        d = create_dataset(f, "dataset", datatype(Int), dataspace(6, 6), chunk=(2, 3))
+        buf = Array{Int,2}(undef,(6,6))
+        dtype = datatype(Int)
+        HDF5.h5d_fill(Ref(val), dtype, buf, datatype(Int), dataspace(d))
+        @test all(buf .== 5)
+        HDF5.h5d_write(d, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, buf)
     end
+    h5open(fn, "r") do f
+        @test all( f["dataset"][:,:] .== 5 )
+    end
+    rm(fn)
+end # testset "Test h5d_fill
 
-    @test h5open(fn, "r") do f
-      vec(f["dataset"][:,:])
-    end == collect(1:16)
+@testset "h5d_gather" begin
+    src_buf = rand(Int, (4,4) )
+    dst_buf = Array{Int,2}(undef,(4,4))
+    h5open(fn ,"w") do f
+        d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
+        @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf), dst_buf, C_NULL, C_NULL) |> isnothing
+        @test src_buf == dst_buf
+        gatherf_ptr = @cfunction(gatherf, HDF5.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
+        @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_ptr, C_NULL) |> isnothing
+        gatherf_bad_ptr = @cfunction(gatherf_bad, HDF5.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
+        @test_throws ErrorException HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_bad_ptr, C_NULL) == 0
+        gatherf_data_ptr = @cfunction(gatherf_data, HDF5.herr_t, (Ptr{Nothing}, Csize_t, Ref{Int}))
+        @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, Ref(9)) |> isnothing
+        @test_throws ErrorException HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, 10)
+    end
+    rm(fn)
+end
 
-    close(f)
+
+
+
+@testset "h5d_scatter" begin
+    h5open(fn, "w") do f
+        dst_buf = Array{Int,2}(undef,(4,4))
+        d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
+        scatterf_ptr = @cfunction(scatterf, HDF5.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
+        @test HDF5.h5d_scatter(scatterf_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf) |> isnothing
+        scatterf_bad_ptr = @cfunction(scatterf_bad, HDF5.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
+        @test_throws ErrorException HDF5.h5d_scatter(scatterf_bad_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf)
+        scatterf_data_ptr = @cfunction(scatterf_data, HDF5.herr_t, (Ptr{Ptr{Int}}, Ptr{Csize_t}, Ref{Int}))
+        @test HDF5.h5d_scatter(scatterf_data_ptr, Ref(9), datatype(Int), dataspace(d), dst_buf) |> isnothing
+    end
     rm(fn)
 end
 
@@ -1139,6 +1195,8 @@ end
 fn_external = GenericString(tempname())
 dset = HDF5.create_external_dataset(hfile, "ext", fn_external, Int, (10,20))
 
+close(hfile)
+
 end
 
 @testset "opaque data" begin
@@ -1187,6 +1245,8 @@ end
         # Note: opaque tag is lost
         compound = read(fid["compound"])
         @test compound == (v = num, d = dat0)
+
+        close(fid)
     end
 end
 
@@ -1230,6 +1290,8 @@ end
         @test T <: NamedTuple
         @test fieldnames(T) == (:n, :a)
         @test read(c) == (n = num, a = ref)
+
+        close(fid)
     end
 
     fix = HDF5.FixedArray{Float64,(2,2),4}((1, 2, 3, 4))
@@ -1253,6 +1315,8 @@ end
         @test size(T) == size(ref)
         @test eltype(T) == eltype(ref)
         @test read(d) == ref
+
+        close(fid)
     end
 end
 
@@ -1272,6 +1336,8 @@ create_dataset(hfile, "/group1/dset1", 1)
 @test_throws ErrorException create_dataset(hfile, "group1", 1)
 @test_throws ErrorException create_dataset(g1, "dset1", 1)
 
+close(hfile)
+
 end
 
 @testset "HDF5 existance" begin
@@ -1290,5 +1356,8 @@ end
 h5write(fn2, "x", 1)
 
 @test HDF5.ishdf5(fn2)
+
+rm(fn1)
+rm(fn2)
 
 end
