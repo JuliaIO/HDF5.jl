@@ -1769,7 +1769,7 @@ struct ChunkStorage{I<:IndexStyle,N} <: AbstractArray{Tuple{UInt32,Vector{UInt8}
     dataset::Dataset
 end
 ChunkStorage{I,N}(dataset) where {I,N} = ChunkStorage{I,N}(dataset)
-Base.IndexStyle(::ChunkStorage{I}) where {I <:IndexStyle} = I()
+Base.IndexStyle(::ChunkStorage{I}) where {I<:IndexStyle} = I()
 
 # ChunkStorage{IndexCartesian,N} (default)
 
@@ -1777,7 +1777,7 @@ function ChunkStorage(dataset)
     ChunkStorage{IndexCartesian, ndims(dataset)}(dataset)
 end
 
-Base.size(cs::ChunkStorage{IndexCartesian}) = Int64.(get_num_chunks_per_dim(cs.dataset))
+Base.size(cs::ChunkStorage{IndexCartesian}) = get_num_chunks_per_dim(cs.dataset)
  
 
 function Base.axes(cs::ChunkStorage{IndexCartesian})
@@ -1787,7 +1787,7 @@ function Base.axes(cs::ChunkStorage{IndexCartesian})
 end
 
 function Base.setindex!(chunk_storage::ChunkStorage{IndexCartesian}, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer...)
-    do_write_chunk(chunk_storage.dataset, hsize_t.(index), v[2], UInt32(v[1]))
+    do_write_chunk(chunk_storage.dataset, index, v[2], v[1])
 end
 
 function Base.getindex(chunk_storage::ChunkStorage{IndexCartesian}, index::Integer...)
@@ -1797,11 +1797,11 @@ end
 # ChunkStorage{IndexLinear,1}
 
 ChunkStorage{IndexLinear}(dataset) = ChunkStorage{IndexLinear,1}(dataset)
-Base.size(cs::ChunkStorage{IndexLinear})   = (Int64(get_num_chunks(cs.dataset)),)
-Base.length(cs::ChunkStorage{IndexLinear}) =  Int64(get_num_chunks(cs.dataset))
+Base.size(cs::ChunkStorage{IndexLinear})   = (get_num_chunks(cs.dataset),)
+Base.length(cs::ChunkStorage{IndexLinear}) =  get_num_chunks(cs.dataset)
 
 function Base.setindex!(chunk_storage::ChunkStorage{IndexLinear}, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer)
-    do_write_chunk(chunk_storage.dataset, index, v[2], UInt32(v[1]))
+    do_write_chunk(chunk_storage.dataset, index, v[2], v[1])
 end
 
 function Base.getindex(chunk_storage::ChunkStorage{IndexLinear}, index::Integer)

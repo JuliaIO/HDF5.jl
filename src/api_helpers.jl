@@ -171,7 +171,7 @@ end
 
 Helper method to read chunks via 0-based offsets in a Tuple.
 `buf` is optional and defaults to a Vector{UInt8} of length determined by
-h5d_get_chunk_info_by_coord.
+`get_chunk_length`.
 `dxpl_id` can be supplied a keyword and defaults to H5P_DEFAULT
 `filters` can be retrieved by supplying a Ref{UInt32} as via a keyword
 
