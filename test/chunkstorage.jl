@@ -39,6 +39,21 @@ h5open(fn, "r") do f
     @test reinterpret(Int, raw[2][2]) == [3,4,7,8]
     @test reinterpret(Int, raw[3][2]) == [9,10,13,14]
     @test reinterpret(Int, raw[4][2]) == [11,12,15,16]
+    # Test 0-based indexed API
+    @test HDF5.get_chunk_offset(d, 0) == (0, 0)
+    @test HDF5.get_chunk_offset(d, 1) == (2, 0)
+    @test HDF5.get_chunk_offset(d, 2) == (0, 2)
+    @test HDF5.get_chunk_offset(d, 3) == (2, 2)
+    # Test reverse look up of index from coords
+    @test HDF5.get_chunk_index(d, (0, 0)) == 0
+    @test HDF5.get_chunk_index(d, (2, 0)) == 1
+    @test HDF5.get_chunk_index(d, (0, 2)) == 2
+    @test HDF5.get_chunk_index(d, (2, 2)) == 3
+    # Test internal coordinates
+    @test HDF5.get_chunk_index(d, (1, 1)) == 0
+    @test HDF5.get_chunk_index(d, (3, 1)) == 1
+    @test HDF5.get_chunk_index(d, (1, 3)) == 2
+    @test HDF5.get_chunk_index(d, (3, 3)) == 3
 end
 
 # Test direct write chunk writing via linear indexing
@@ -67,13 +82,40 @@ h5open(fn, "r") do f
     @test length(raw) == 4
     @test axes(raw) == (1:2:4, 1:3:6)
     @test HDF5.h5d_get_num_chunks(d) == HDF5.get_num_chunks(d)
+
+    # Test 0-based indexed API
+    @test HDF5.get_chunk_offset(d, 0) == (0, 0)
+    @test HDF5.get_chunk_offset(d, 1) == (2, 0)
+    @test HDF5.get_chunk_offset(d, 2) == (0, 3)
+    @test HDF5.get_chunk_offset(d, 3) == (2, 3)
+    # Test reverse look up of index from coords
+    @test HDF5.get_chunk_index(d, (0, 0)) == 0
+    @test HDF5.get_chunk_index(d, (2, 0)) == 1
+    @test HDF5.get_chunk_index(d, (0, 3)) == 2
+    @test HDF5.get_chunk_index(d, (2, 3)) == 3
+    # Test internal coordinates
+    @test HDF5.get_chunk_index(d, (1, 1)) == 0
+    @test HDF5.get_chunk_index(d, (3, 1)) == 1
+    @test HDF5.get_chunk_index(d, (1, 4)) == 2
+    @test HDF5.get_chunk_index(d, (3, 4)) == 3
+
     if v"1.10.5" ≤ HDF5._libhdf5_build_ver
         chunk_length = HDF5.get_chunk_length(d)
-        @test chunk_length == HDF5.h5d_get_chunk_info(d,1)[:size]
-        chunk_info = HDF5.h5d_get_chunk_info_by_coord(d, HDF5.hsize_t[0, 1])
+        origin = HDF5.h5d_get_chunk_info(d, 0)
+        @test chunk_length == origin[:size]
+        chunk_info = HDF5.h5d_get_chunk_info_by_coord(d, [0, 1])
         @test chunk_info[:filter_mask] == 0
         @test chunk_info[:size] == chunk_length
-        @test HDF5.h5d_get_chunk_storage_size(d, HDF5.hsize_t[0, 1]) == chunk_length
+
+        # Test HDF5.get_chunk_offset equivalence to h5d_get_chunk_info information
+        @test all(reverse(HDF5.h5d_get_chunk_info(d, 3)[:offset]) .== HDF5.get_chunk_offset(d, 3))
+
+        # Test HDF5.get_chunk_index equivalence to h5d_get_chunk_info_by_coord information
+        offset = [2,3]
+        chunk_info = HDF5.h5d_get_chunk_info_by_coord(d, reverse(offset))
+        @test HDF5.get_chunk_index(d, offset) == (chunk_info[:addr] - origin[:addr]) ÷ chunk_info[:size]
+
+        @test HDF5.h5d_get_chunk_storage_size(d, [0, 1]) == chunk_length
         @test HDF5.h5d_get_storage_size(d) == sizeof(Int64)*24
         @test HDF5.h5d_get_space_status(d) == HDF5.H5D_SPACE_STATUS_ALLOCATED
     end
