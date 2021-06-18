@@ -54,7 +54,12 @@ Get 0-based offset of chunk from 0-based index.
 
 For a 1-based API, see HDF5.ChunkStorage.
 
-The returned offsets are in Julian order than HDF5's C-order.
+The returned offsets are in Julian order rather than HDF5's C-order.
+
+The following statement should be true:
+```
+all(reverse(HDF5.h5d_get_chunk_info(dataset_id, index)[:offset]) .== HDF5.get_chunk_offset(dataset_id, index))
+````
 """
 function get_chunk_offset(dataset_id, index)
     extent = size(dataset_id)
@@ -71,14 +76,19 @@ Get 0-based index of chunk from 0-based offset in Julian order.
 
 For a 1-based API, see HDF5.ChunkStorage.
 
-This should be equivalent to `h5d_get_chunk_info_by_coord( dataset_id, reverse(offset) )[:addr]`.
+The following block should be true.
+```
+origin = HDF5.h5d_get_chunk_info( dataset_id, 0 )
+info = HDF5.h5d_get_chunk_info_by_coord( dataset_id, reverse(offset) )
+(info[:addr] - origin[:addr]) ÷ info[:size] == HDF5.get_chunk_index(dataset_id, offset)
+```
 Unlike `h5d_get_chunk_info_by_coord`, this method is available prior to HDF5 v"1.10.5"
 """
 function get_chunk_index(dataset_id, offset)
     extent = size(dataset_id)
     chunk = get_chunk(dataset_id)
     chunk_indices = LinearIndices(ntuple(i->0:extent[i]÷chunk[i]-1, length(extent)))
-    chunk_indices[(offset .+ 1)...] - 1
+    chunk_indices[(offset .÷ chunk .+ 1)...] - 1
 end
 
 """
