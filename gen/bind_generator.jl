@@ -29,7 +29,7 @@ end
 const bound_api = Dict{String,Vector{String}}()
 
 """
-    @bind h5_function(arg1::Arg1Type, ...)::ReturnType [ErrorStringOrExpression]
+    @bind h5_function(arg1::Arg1Type, ...)::ReturnType [ErrorStringOrExpression] [(lb,ub)]
 
 A binding generator for translating `@ccall`-like declarations of HDF5 library functions
 to error-checked `ccall` expressions.
@@ -44,6 +44,11 @@ The optional `ErrorStringOrExpression` can be either a string literal or an arbi
 expression. If not provided, no error check is done. If it is a `String`, the string is used
 as the message in an `error()` call, otherwise the expression is used as-is. Note that the
 expression may refer to any arguments by name.
+
+The optional Tuple `(lb,ub)` is a tuple of version literals (e.g. v"1.10.5") or `nothing`
+defining an inclusive lower bound (lb) and exclusive upper bound (ub) such that
+the binding is only defined if `lb ≤ _libhdf5_build_ver < ub`. If either bound is `nothing`
+then that bound is ignored and the version is unbounded on that side.
 
 The declared return type in the function-like signature must be the return type of the C
 function, and the Julia return type is inferred as one of the following possibilities:

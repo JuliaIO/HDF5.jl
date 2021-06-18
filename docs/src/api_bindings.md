@@ -87,35 +87,61 @@ h5a_write
 ## [`H5D`](https://portal.hdfgroup.org/display/HDF5/Datasets) — Dataset Interface
 - [`h5d_close`](@ref HDF5.h5d_close)
 - [`h5d_create`](@ref HDF5.h5d_create)
+- [`h5d_extend`](@ref HDF5.h5d_extend)
+- [`h5d_fill`](@ref HDF5.h5d_fill)
 - [`h5d_flush`](@ref HDF5.h5d_flush)
+- [`h5d_gather`](@ref HDF5.h5d_gather)
 - [`h5d_get_access_plist`](@ref HDF5.h5d_get_access_plist)
+- [`h5d_get_chunk_info`](@ref HDF5.h5d_get_chunk_info)
+- [`h5d_get_chunk_info_by_coord`](@ref HDF5.h5d_get_chunk_info_by_coord)
+- [`h5d_get_chunk_storage_size`](@ref HDF5.h5d_get_chunk_storage_size)
 - [`h5d_get_create_plist`](@ref HDF5.h5d_get_create_plist)
+- [`h5d_get_num_chunks`](@ref HDF5.h5d_get_num_chunks)
 - [`h5d_get_offset`](@ref HDF5.h5d_get_offset)
 - [`h5d_get_space`](@ref HDF5.h5d_get_space)
+- [`h5d_get_space_status`](@ref HDF5.h5d_get_space_status)
+- [`h5d_get_storage_size`](@ref HDF5.h5d_get_storage_size)
 - [`h5d_get_type`](@ref HDF5.h5d_get_type)
+- [`h5d_iterate`](@ref HDF5.h5d_iterate)
 - [`h5d_open`](@ref HDF5.h5d_open)
 - [`h5d_read`](@ref HDF5.h5d_read)
+- [`h5d_read_chunk`](@ref HDF5.h5d_read_chunk)
 - [`h5d_refresh`](@ref HDF5.h5d_refresh)
+- [`h5d_scatter`](@ref HDF5.h5d_scatter)
 - [`h5d_set_extent`](@ref HDF5.h5d_set_extent)
 - [`h5d_vlen_get_buf_size`](@ref HDF5.h5d_vlen_get_buf_size)
 - [`h5d_vlen_reclaim`](@ref HDF5.h5d_vlen_reclaim)
 - [`h5d_write`](@ref HDF5.h5d_write)
+- [`h5d_write_chunk`](@ref HDF5.h5d_write_chunk)
 ```@docs
 h5d_close
 h5d_create
+h5d_extend
+h5d_fill
 h5d_flush
+h5d_gather
 h5d_get_access_plist
+h5d_get_chunk_info
+h5d_get_chunk_info_by_coord
+h5d_get_chunk_storage_size
 h5d_get_create_plist
+h5d_get_num_chunks
 h5d_get_offset
 h5d_get_space
+h5d_get_space_status
+h5d_get_storage_size
 h5d_get_type
+h5d_iterate
 h5d_open
 h5d_read
+h5d_read_chunk
 h5d_refresh
+h5d_scatter
 h5d_set_extent
 h5d_vlen_get_buf_size
 h5d_vlen_reclaim
 h5d_write
+h5d_write_chunk
 ```
 
 ---
@@ -259,6 +285,7 @@ h5o_open_by_idx
 - [`h5p_get_fapl_mpio32`](@ref HDF5.h5p_get_fapl_mpio32)
 - [`h5p_get_fapl_mpio64`](@ref HDF5.h5p_get_fapl_mpio64)
 - [`h5p_get_fclose_degree`](@ref HDF5.h5p_get_fclose_degree)
+- [`h5p_get_filter`](@ref HDF5.h5p_get_filter)
 - [`h5p_get_filter_by_id`](@ref HDF5.h5p_get_filter_by_id)
 - [`h5p_get_layout`](@ref HDF5.h5p_get_layout)
 - [`h5p_get_libver_bounds`](@ref HDF5.h5p_get_libver_bounds)
@@ -301,6 +328,7 @@ h5p_get_dxpl_mpio
 h5p_get_fapl_mpio32
 h5p_get_fapl_mpio64
 h5p_get_fclose_degree
+h5p_get_filter
 h5p_get_filter_by_id
 h5p_get_layout
 h5p_get_libver_bounds
