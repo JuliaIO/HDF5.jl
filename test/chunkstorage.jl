@@ -1,5 +1,4 @@
 using HDF5
-using CRC32c
 using Test
 
 @testset "Raw Chunk I/O" begin
@@ -103,7 +102,7 @@ h5open(fn, "r") do f
         chunk_length = HDF5.get_chunk_length(d)
         origin = HDF5.h5d_get_chunk_info(d, 0)
         @test chunk_length == origin[:size]
-        chunk_info = HDF5.h5d_get_chunk_info_by_coord(d, [0, 1])
+        chunk_info = HDF5.h5d_get_chunk_info_by_coord(d, HDF5.hsize_t[0, 1])
         @test chunk_info[:filter_mask] == 0
         @test chunk_info[:size] == chunk_length
 
@@ -111,11 +110,11 @@ h5open(fn, "r") do f
         @test all(reverse(HDF5.h5d_get_chunk_info(d, 3)[:offset]) .== HDF5.get_chunk_offset(d, 3))
 
         # Test HDF5.get_chunk_index equivalence to h5d_get_chunk_info_by_coord information
-        offset = [2,3]
+        offset = HDF5.hsize_t[2,3]
         chunk_info = HDF5.h5d_get_chunk_info_by_coord(d, reverse(offset))
         @test HDF5.get_chunk_index(d, offset) == (chunk_info[:addr] - origin[:addr]) ÷ chunk_info[:size]
 
-        @test HDF5.h5d_get_chunk_storage_size(d, [0, 1]) == chunk_length
+        @test HDF5.h5d_get_chunk_storage_size(d, HDF5.hsize_t[0, 1]) == chunk_length
         @test HDF5.h5d_get_storage_size(d) == sizeof(Int64)*24
         @test HDF5.h5d_get_space_status(d) == HDF5.H5D_SPACE_STATUS_ALLOCATED
     end
@@ -132,4 +131,3 @@ end
 rm(fn)
 
 end # testset "Raw Chunk I/O"
-
