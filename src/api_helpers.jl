@@ -79,9 +79,7 @@ end
 """
     h5d_vlen_get_buf_size(dataset_id, type_id, space_id)
 
-Helper method to determines the number of bytes required to store the VL data from the dataset
-
-Returns a value of type hsize_t
+Helper method to determines the number of bytes required to store the variable length data from the dataset. Returns a value of type `HDF5.hsize_t`.
 """
 function h5d_vlen_get_buf_size(dataset_id, type_id, space_id)
     sz = Ref{hsize_t}()
@@ -91,9 +89,9 @@ end
 
 """
     h5d_get_chunk_info(dataset_id, fspace_id, index)
-    h5d_get_chunk_info(dataset_id, index; fspace_id = H5S_ALL)
+    h5d_get_chunk_info(dataset_id, index; fspace_id = HDF5.H5S_ALL)
 
-Helper method to get chunk information.
+Helper method to retrieve chunk information.
 
 Returns a NamedTuple{(:offset, :filter_mask, :addr, :size), Tuple{hsize_t, UInt32, haddr_t, hsize_t}}
 """
@@ -110,9 +108,7 @@ h5d_get_chunk_info(dataset_id, index; fspace_id = H5S_ALL) = h5d_get_chunk_info(
 """
     h5d_get_chunk_info_by_coord(dataset_id, offset)
 
-Helper method to read chunk information by coordinate.
-
-Returns a NamedTuple{(:filter_mask, :addr, :size), Tuple{UInt32, haddr_t, hsize_t}}
+Helper method to read chunk information by coordinate. Returns a `NamedTuple{(:filter_mask, :addr, :size), Tuple{UInt32, haddr_t, hsize_t}}`.
 """
 function h5d_get_chunk_info_by_coord(dataset_id, offset)
     filter_mask = Ref{UInt32}()
@@ -125,9 +121,7 @@ end
 """
     h5d_get_chunk_storage_size(dataset_id, offset)
 
-Helper method to get the chunk storage size in bytes
-
-Returns an Integer of type HDF5.hsize_t
+Helper method to retrieve the chunk storage size in bytes. Returns an integer of type `HDF5.hsize_t`.
 """
 function h5d_get_chunk_storage_size(dataset_id, offset)
     chunk_nbytes = Ref{HDF5.hsize_t}()
@@ -138,9 +132,7 @@ end
 """
     h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
 
-Helper method to get the number of chunks
-
-Returns an Integer of type HDF5.hsize_t
+Helper method to retrieve the number of chunks. Returns an integer of type `HDF5.hsize_t`.
 """
 function h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
     @static if v"1.10.5" > _libhdf5_build_ver
@@ -156,9 +148,8 @@ end
 """
     h5d_get_space_status(dataset_id)
 
-Helper method to get the status of the dataset space
-
-Returns a H5D_space_status_t (Cint) indicating the status, see H5D_SPACE_STATUS*
+Helper method to retrieve the status of the dataset space.
+Returns a `HDF5.H5D_space_status_t` (`Cint`) indicating the status, see `HDF5.H5D_SPACE_STATUS_`* constants.
 """
 function h5d_get_space_status(dataset_id)
     r = Ref{H5D_space_status_t}()
@@ -167,18 +158,18 @@ function h5d_get_space_status(dataset_id)
 end
 
 """
-    h5d_read_chunk(dataset_id, offset, [buf]; dxpl_id = H5P_DEFAULT, filters = Ref{UInt32}())
+    h5d_read_chunk(dataset_id, offset, [buf]; dxpl_id = HDF5.H5P_DEFAULT, filters = Ref{UInt32}())
 
-Helper method to read chunks via 0-based offsets in a Tuple.
-`buf` is optional and defaults to a Vector{UInt8} of length determined by
-`get_chunk_length`.
-`dxpl_id` can be supplied a keyword and defaults to H5P_DEFAULT
-`filters` can be retrieved by supplying a Ref{UInt32} as via a keyword
+Helper method to read chunks via 0-based offsets in a `Tuple`.
 
-Returns a Vector{UInt8}
+Argument `buf` is optional and defaults to a `Vector{UInt8}` of length determined by `HDF5.get_chunk_length`.
+Argument `dxpl_id` can be supplied a keyword and defaults to `HDF5.H5P_DEFAULT`.
+Argument `filters` can be retrieved by supplying a `Ref{UInt32}` value via a keyword argument.
+
+This method returns `Vector{UInt8}`.
 """
 function h5d_read_chunk(dataset_id, offset,
-        buf::Vector{UInt8} = Vector{UInt8}(undef, get_chunk_length(dataset_id) );
+        buf::Vector{UInt8} = Vector{UInt8}(undef, get_chunk_length(dataset_id));
         dxpl_id = H5P_DEFAULT,
         filters = Ref{UInt32}()
     )
@@ -189,16 +180,15 @@ h5d_read_chunk(dataset_id, dxpl_id, offset) = h5d_read_chunk(dataset_id, offset;
 h5d_read_chunk(dataset_id, dxpl_id, offset, buf::Vector{UInt8}) = h5d_read_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id)
 
 """
-    h5d_read_chunk(dataset_id, index::Integer, [buf]; dxpl_id = H5P_DEFAULT, filters = Ref{UInt32}())
+    h5d_read_chunk(dataset_id, index::Integer, [buf]; dxpl_id = HDF5.H5P_DEFAULT, filters = Ref{UInt32}())
 
-Helper method to read chunks via 0-based Integer index
+Helper method to read chunks via 0-based integer `index`.
 
-`buf` is optional and defaults to a Vector{UInt8} of length determined by
-h5d_get_chunk_info
-`dxpl_id` can be supplied a keyword and defaults to H5P_DEFAULT
-`filters` can be retrieved by supplying a Ref{UInt32} as via a keyword
+Argument `buf` is optional and defaults to a `Vector{UInt8}` of length determined by `HDF5.h5d_get_chunk_info`.
+Argument `dxpl_id` can be supplied a keyword and defaults to `HDF5.H5P_DEFAULT`.
+Argument `filters` can be retrieved by supplying a `Ref{UInt32}` value via a keyword argument.
 
-Returns a Vector{UInt8}
+This method returns `Vector{UInt8}`.
 """
 function h5d_read_chunk(dataset_id, index::Integer,
         buf::Vector{UInt8} = Vector{UInt8}(undef, get_chunk_length(dataset_id));
@@ -212,14 +202,11 @@ h5d_read_chunk(dataset_id, dxpl_id, index::Integer) = h5d_read_chunk(dataset_id,
 h5d_read_chunk(dataset_id, dxpl_id, index::Integer, buf::Vector{UInt8}) = h5d_read_chunk(dataset_id, index, buf; dxpl_id = dxpl_id)
 
 """
-    h5d_write_chunk(dataset_id, offset, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask = 0)
+    h5d_write_chunk(dataset_id, offset, buf::Vector{UInt8}; dxpl_id = HDF5.H5P_DEFAULT, filter_mask = 0)
 
-Helper method to write chunks via 0-based offsets as a Tuple
+Helper method to write chunks via 0-based offsets `offset` as a `Tuple`.
 """
-function h5d_write_chunk(dataset_id, offset, buf::Vector{UInt8};
-        dxpl_id = H5P_DEFAULT,
-        filter_mask = 0
-    )
+function h5d_write_chunk(dataset_id, offset, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask=0)
     h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, length(buf), buf)
 end
 h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, buf::Vector{UInt8}) =
@@ -228,7 +215,7 @@ h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, buf::Vector{UInt8}) =
 """
     h5d_write_chunk(dataset_id, index::Integer, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask = 0)
 
-Helper method to write chunks via 0-based Integer index
+Helper method to write chunks via 0-based integer `index`.
 """
 function h5d_write_chunk(dataset_id, index::Integer, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask = 0)
     offset = [reverse(get_chunk_offset(dataset_id, index))...]
