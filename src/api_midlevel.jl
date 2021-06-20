@@ -111,19 +111,3 @@ function vlen_get_buf_size(dataset_id)
     space = h5d_get_space(dataset_id)
     h5d_vlen_get_buf_size(dataset_id, type, space)
 end
-
-"""
-    silence_errors(f::Function)
-
-During execution of the function `f`, disable printing of internal HDF5 library error messages.
-"""
-function silence_errors(f::Function)
-    estack = H5E_DEFAULT
-    func, client_data = h5e_get_auto(estack)
-    h5e_set_auto(estack, C_NULL, C_NULL)
-    try
-        return f()
-    finally
-        h5e_set_auto(estack, func, client_data)
-    end
-end

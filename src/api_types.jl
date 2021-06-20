@@ -107,6 +107,30 @@ struct H5Z_class_t # version 2 type H5Z_class2_t
     filter::Ptr{Cvoid} # The filter callback
 end
 
+"""
+    H5E_error2_t
+
+Information about an error; element of error stack. 
+See https://github.com/HDFGroup/hdf5/blob/hdf5-1_12_0/src/H5Epublic.h#L36-L44
+"""
+struct H5E_error2_t
+    "class ID"
+    cls_id::hid_t
+    "major error ID"
+    maj_num::hid_t
+    "minor error number"
+    min_num::hid_t
+    "line in file where the error occurs"
+    line::Cuint
+    "function where the error occurred"
+    func_name::Cstring
+    "file in which the error occurred"
+    file_name::Cstring
+    "optional supplied description"
+    desc::Cstring
+end
+
+
 # MPI communicators required by H5P
 abstract  type Hmpih end
 primitive type Hmpih32 <: Hmpih 32 end # MPICH C/Fortran, OpenMPI Fortran: 32 bit handles
@@ -160,6 +184,10 @@ const H5D_space_status_t = Cint
 
 # error-related constants
 const H5E_DEFAULT      = 0
+
+const H5E_WALK_UPWARD   = 0
+const H5E_WALK_DOWNWARD = 1
+
 
 # file access modes
 const H5F_ACC_RDONLY     = 0x0000

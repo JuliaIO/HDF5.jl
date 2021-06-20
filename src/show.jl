@@ -60,7 +60,7 @@ function Base.show(io::IO, dtype::Datatype)
         # special-cases all of the built-in types internally.
         local text
         try
-            text = silence_errors(() -> h5lt_dtype_to_text(dtype))
+            text = h5lt_dtype_to_text(dtype)
         catch
             text = "(invalid)"
         end
