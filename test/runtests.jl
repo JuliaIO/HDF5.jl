@@ -22,6 +22,7 @@ include("properties.jl")
 include("table.jl")
 include("filter.jl")
 include("chunkstorage.jl")
+include("fileio.jl")
 
 try
     using MPI
