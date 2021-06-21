@@ -23,3 +23,9 @@ rm(fn)
 # test saver
 save(fn, data)
 @test load(fn) == data
+@test load(fn, "A") == 1.0
+fr = h5open(fn, "r")
+read(fr, "A") == 1.0
+close(fr)
+
+rm(fn)
