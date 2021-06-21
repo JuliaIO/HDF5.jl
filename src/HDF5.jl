@@ -2129,6 +2129,7 @@ function __init__()
     UTF8_ATTRIBUTE_PROPERTIES[]  = create_property(H5P_ATTRIBUTE_CREATE; char_encoding = H5T_CSET_UTF8)
 
     @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" @eval include("mpio.jl")
+    @require FileIO="5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" @eval include("fileio.jl")
 
     return nothing
 end
