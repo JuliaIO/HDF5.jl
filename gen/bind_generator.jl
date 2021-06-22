@@ -172,7 +172,7 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
     # The error condition expression
     #  errexpr = :(@hdf5error($err))
     # avoid generating line numbers in macrocall
-    errexpr = Expr(:macrocall, Symbol("@hdf5error"), nothing, err)
+    errexpr = Expr(:macrocall, Symbol("@h5error"), nothing, err)
     if rettype === :Csize_t
         :($statsym == 0 % $rettype && $errexpr)
         # pass through
