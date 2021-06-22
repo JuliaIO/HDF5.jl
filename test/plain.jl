@@ -2,9 +2,9 @@ using HDF5
 using CRC32c
 using Test
 
-gatherf(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t(0)
-gatherf_bad(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t(-1)
-gatherf_data(dst_buf, dst_buf_bytes_used, op_data) = HDF5.herr_t((op_data == 9)-1)
+gatherf(dst_buf, dst_buf_bytes_used, op_data) = HDF5.API.herr_t(0)
+gatherf_bad(dst_buf, dst_buf_bytes_used, op_data) = HDF5.API.herr_t(-1)
+gatherf_data(dst_buf, dst_buf_bytes_used, op_data) = HDF5.API.herr_t((op_data == 9)-1)
 
 
 function scatterf(src_buf, src_buf_bytes_used, op_data)
@@ -12,15 +12,15 @@ function scatterf(src_buf, src_buf_bytes_used, op_data)
     unsafe_store!(src_buf, pointer(A))
     unsafe_store!(src_buf_bytes_used, sizeof(A))
     @debug "op_data: " opdata
-    return HDF5.herr_t(0)
+    return HDF5.API.herr_t(0)
 end
-scatterf_bad(src_buf, src_buf_bytes_used, op_data) = HDF5.herr_t(-1)
+scatterf_bad(src_buf, src_buf_bytes_used, op_data) = HDF5.API.herr_t(-1)
 function scatterf_data(src_buf, src_buf_bytes_used, op_data)
     A = [1,2,3,4]
     unsafe_store!(src_buf, pointer(A))
     unsafe_store!(src_buf_bytes_used, sizeof(A))
     @debug "op_data: " opdata
-    return HDF5.herr_t((op_data == 9)-1)
+    return HDF5.API.herr_t((op_data == 9)-1)
 end
 
 @testset "plain" begin
@@ -430,11 +430,11 @@ end # testset "Test h5d_fill
         d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
         @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf), dst_buf, C_NULL, C_NULL) |> isnothing
         @test src_buf == dst_buf
-        gatherf_ptr = @cfunction(gatherf, HDF5.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
+        gatherf_ptr = @cfunction(gatherf, HDF5.API.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
         @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_ptr, C_NULL) |> isnothing
-        gatherf_bad_ptr = @cfunction(gatherf_bad, HDF5.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
+        gatherf_bad_ptr = @cfunction(gatherf_bad, HDF5.API.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
         @test_throws HDF5.H5Error HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_bad_ptr, C_NULL)
-        gatherf_data_ptr = @cfunction(gatherf_data, HDF5.herr_t, (Ptr{Nothing}, Csize_t, Ref{Int}))
+        gatherf_data_ptr = @cfunction(gatherf_data, HDF5.API.herr_t, (Ptr{Nothing}, Csize_t, Ref{Int}))
         @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, Ref(9)) |> isnothing
         @test_throws HDF5.H5Error HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, 10)
     end
@@ -448,11 +448,11 @@ end
     h5open(fn, "w") do f
         dst_buf = Array{Int,2}(undef,(4,4))
         d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
-        scatterf_ptr = @cfunction(scatterf, HDF5.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
+        scatterf_ptr = @cfunction(scatterf, HDF5.API.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
         @test HDF5.h5d_scatter(scatterf_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf) |> isnothing
-        scatterf_bad_ptr = @cfunction(scatterf_bad, HDF5.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
+        scatterf_bad_ptr = @cfunction(scatterf_bad, HDF5.API.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
         @test_throws HDF5.H5Error HDF5.h5d_scatter(scatterf_bad_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf)
-        scatterf_data_ptr = @cfunction(scatterf_data, HDF5.herr_t, (Ptr{Ptr{Int}}, Ptr{Csize_t}, Ref{Int}))
+        scatterf_data_ptr = @cfunction(scatterf_data, HDF5.API.herr_t, (Ptr{Ptr{Int}}, Ptr{Csize_t}, Ref{Int}))
         @test HDF5.h5d_scatter(scatterf_data_ptr, Ref(9), datatype(Int), dataspace(d), dst_buf) |> isnothing
     end
     rm(fn)

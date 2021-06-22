@@ -31,7 +31,7 @@ h5open(fn, "r") do f
     @test length(raw) == 4
     @test axes(raw) == (Base.OneTo(4),)
     @test HDF5.h5d_get_num_chunks(d) == HDF5.get_num_chunks(d)
-    if v"1.10.5" ≤ HDF5._libhdf5_build_ver
+    if v"1.10.5" ≤ HDF5.API._libhdf5_build_ver
         @test HDF5.get_chunk_length(d) == HDF5.h5d_get_chunk_info(d,1)[:size]
     end
     @test reinterpret(Int, raw[1][2]) == [1,2,5,6]
@@ -98,7 +98,7 @@ h5open(fn, "r") do f
     @test HDF5.get_chunk_index(d, (1, 4)) == 2
     @test HDF5.get_chunk_index(d, (3, 4)) == 3
 
-    if v"1.10.5" ≤ HDF5._libhdf5_build_ver
+    if v"1.10.5" ≤ HDF5.API._libhdf5_build_ver
         chunk_length = HDF5.get_chunk_length(d)
         origin = HDF5.h5d_get_chunk_info(d, 0)
         @test chunk_length == origin[:size]

@@ -10,7 +10,7 @@ Change the current dimensions of a dataset to `new_dims`, limited by
 """
 function set_extent_dims(dset::Dataset, size::Dims)
     checkvalid(dset)
-    h5d_set_extent(dset, hsize_t[reverse(size)...])
+    API.h5d_set_extent(dset, API.hsize_t[reverse(size)...])
 end
 
 """
@@ -23,9 +23,9 @@ to `new_dims`.
 function set_extent_dims(dspace::Dataspace, size::Dims, max_dims::Union{Dims,Nothing} = nothing)
     checkvalid(dspace)
     rank = length(size)
-    current_size = hsize_t[reverse(size)...]
-    maximum_size = isnothing(max_dims) ? C_NULL : [reverse(max_dims .% hsize_t)...]
-    h5s_set_extent_simple(dspace, rank, current_size, maximum_size)
+    current_size = API.hsize_t[reverse(size)...]
+    maximum_size = isnothing(max_dims) ? C_NULL : [reverse(max_dims .% API.hsize_t)...]
+    API.h5s_set_extent_simple(dspace, rank, current_size, maximum_size)
     return nothing
 end
 
@@ -37,7 +37,7 @@ Get the array dimensions from a dataspace, dataset, or attribute and return a tu
 """
 function get_extent_dims(obj::Union{Dataspace,Dataset,Attribute})
     dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
-    h5_dims, h5_maxdims = h5s_get_simple_extent_dims(dspace)
+    h5_dims, h5_maxdims = API.h5s_get_simple_extent_dims(dspace)
     # reverse dimensions since hdf5 uses C-style order
     N = length(h5_dims)
     dims = ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
@@ -57,7 +57,7 @@ function get_chunk_offset(dataset_id, index)
     extent = size(dataset_id)
     chunk = get_chunk(dataset_id)
     chunk_indices = CartesianIndices(ntuple(i -> 0:extent[i]÷chunk[i]-1, length(extent)))
-    offset = hsize_t.(chunk_indices[index + 1].I .* chunk)
+    offset = API.hsize_t.(chunk_indices[index + 1].I .* chunk)
     return offset
 end
 
@@ -88,7 +88,7 @@ end
 """
     HDF5.get_num_chunks(dataset_id)
 
-Returns the number of chunks in a dataset. Equivalent to `h5d_get_num_chunks(dataset_id, HDF5.H5S_ALL)`.
+Returns the number of chunks in a dataset. Equivalent to `API.h5d_get_num_chunks(dataset_id, HDF5.H5S_ALL)`.
 """
 function get_num_chunks(dataset_id)
     return prod(get_num_chunks_per_dim(dataset_id))
@@ -98,16 +98,16 @@ end
 """
     HDF5.get_chunk_length(dataset_id)
 
-Retrieves the chunk size in bytes. Equivalent to `h5d_get_chunk_info(dataset_id, index)[:size]`.
+Retrieves the chunk size in bytes. Equivalent to `API.h5d_get_chunk_info(dataset_id, index)[:size]`.
 """
 function get_chunk_length(dataset_id)
-    type = h5d_get_type(dataset_id)
+    type = API.h5d_get_type(dataset_id)
     chunk = get_chunk(dataset_id)
-    return Int(h5t_get_size(type) * prod(chunk))
+    return Int(API.h5t_get_size(type) * prod(chunk))
 end
 
 function vlen_get_buf_size(dataset_id)
-    type = h5d_get_type(dataset_id)
-    space = h5d_get_space(dataset_id)
-    h5d_vlen_get_buf_size(dataset_id, type, space)
+    type = API.h5d_get_type(dataset_id)
+    space = API.h5d_get_space(dataset_id)
+    API.h5d_vlen_get_buf_size(dataset_id, type, space)
 end
