@@ -1,42 +1,42 @@
 """
-    HDF5Error
+    H5Error
 
 An error thrown by libhdf5.
 """
-mutable struct HDF5Error <: Exception
+mutable struct H5Error <: Exception
     msg::String
     id::hid_t
 end
 
 
-Base.cconvert(::Type{hid_t}, err::HDF5Error) = err
-Base.unsafe_convert(::Type{hid_t}, err::HDF5Error) = err.id
+Base.cconvert(::Type{hid_t}, err::H5Error) = err
+Base.unsafe_convert(::Type{hid_t}, err::H5Error) = err.id
 
-function Base.close(err::HDF5Error)
+function Base.close(err::H5Error)
     if err.id != -1 && isvalid(err)
         h5e_close_stack(err)
         err.id = -1
     end
     return nothing
 end
-Base.isvalid(err::HDF5Error) = err.id != -1 && h5i_is_valid(err)
+Base.isvalid(err::H5Error) = err.id != -1 && h5i_is_valid(err)
 
-Base.length(err::HDF5Error) = h5e_get_num(err)
-Base.isempty(err::HDF5Error) = length(err) == 0
+Base.length(err::H5Error) = h5e_get_num(err)
+Base.isempty(err::H5Error) = length(err) == 0
 
-function HDF5Error(msg::AbstractString)
+function H5Error(msg::AbstractString)
     id = h5e_get_current_stack()
-    err = HDF5Error(msg,id)
+    err = H5Error(msg, id)
     finalizer(close, err)
     return err
 end
 
 const SHORT_ERROR = Ref(true)
 
-function Base.showerror(io::IO, err::HDF5Error)
+function Base.showerror(io::IO, err::H5Error)
     n_total = length(err)
-    print(io, "HDF5Error: ", err.msg)
-    print(io, "\nLibrary stacktrace:")
+    print(io, "H5Error: ", err.msg)
+    print(io, "\lLibrary Stacktrace:")
     h5e_walk(err, H5E_WALK_UPWARD) do n, errptr
         n += 1
         if SHORT_ERROR[] && 1 < n < n_total

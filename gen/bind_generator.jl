@@ -41,7 +41,7 @@ removed. Explicit name mappings can be made by inserting a `:jlname => :h5name` 
 the `bind_exceptions` dictionary.
 
 The optional `ErrorStringOrExpression` can be either a string literal or an expression
-which evaluates to a string. This string is used as the message in `hdf5error(msg)`
+which evaluates to a string. This string is used as the message in `h5error(msg)`
 call. Note that the expression may refer to any arguments by name.
 
 The optional Tuple `(lb,ub)` is a tuple of version literals (e.g. v"1.10.5") or `nothing`
@@ -75,19 +75,18 @@ Furthermore, the C return value is interpreted to automatically generate error c
 3. If `ReturnType` is a `Ptr` expression, an error is raised when the return value is
    equal to `C_NULL`.
 
-3. If `ReturnType` is a `Csize_t` expression, an error is raised when the return value is
+4. If `ReturnType` is a `Csize_t` expression, an error is raised when the return value is
    equal to `0`. Note that at least in the case of `h5t_get_member_offset`, `0` is also a
-   valid return value, so it is necessary for `hdf5error()` to check the error stack to
+   valid return value, so it is necessary for `h5error()` to check the error stack to
    determine whether or not an error should be thrown.
 
-3. For all other return types, it is assumed a negative value indicates error.
+5. For all other return types, it is assumed a negative value indicates error.
 
 It is assumed that the HDF library names are given in global constants named `libhdf5`
 and `libhdf5_hl`. The former is used for all `ccall`s, except if the C library name begins
 with "H5DO" or "H5TB" then the latter library is used.
 """
-macro bind(sig::Expr, err::Union{String,Expr},
-           vers::Union{Expr,Nothing} = nothing)
+macro bind(sig::Expr, err::Union{String,Expr}, vers::Union{Expr,Nothing}=nothing)
     expr = _bind(__module__, __source__, sig, err)
     isnothing(vers) && return esc(expr)
 

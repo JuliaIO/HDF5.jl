@@ -1125,7 +1125,7 @@ See `libhdf5` documentation for [`H5Oopen_by_addr`](https://portal.hdfgroup.org/
 """
 function h5o_open_by_addr(loc_id, addr)
     var"#status#" = ccall((:H5Oopen_by_addr, libhdf5), hid_t, (hid_t, haddr_t), loc_id, addr)
-    var"#status#" < 0 && @hdf5error(string("Error opening object by address"))
+    var"#status#" < 0 && @hdf5error("Error opening object by address")
     return var"#status#"
 end
 
@@ -1853,7 +1853,7 @@ See `libhdf5` documentation for [`H5Tcommitted`](https://portal.hdfgroup.org/dis
 """
 function h5t_committed(dtype_id)
     var"#status#" = ccall((:H5Tcommitted, libhdf5), htri_t, (hid_t,), dtype_id)
-    var"#status#" < 0 && @hdf5error(string("Error determining whether datatype is committed"))
+    var"#status#" < 0 && @hdf5error("Error determining whether datatype is committed")
     return var"#status#" > 0
 end
 

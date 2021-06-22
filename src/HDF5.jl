@@ -49,7 +49,7 @@ end
 
 
 # function stub: methods defined in error.jl
-macro hdf5error(msg)
+macro h5error(msg)
     # Check if the is actually any errors on the stack. This is necessary as there are a
     # small number of functions which return `0` in case of an error, but `0` is also a
     # valid return value, e.g. `h5t_get_member_offset`
@@ -60,7 +60,7 @@ macro hdf5error(msg)
     quote
         err_id = h5e_get_current_stack()
         if h5e_get_num(err_id) > 0
-            throw(HDF5.HDF5Error($(esc(msg)), err_id))
+            throw(HDF5.H5Error($(esc(msg)), err_id))
         else
             h5e_close_stack(err_id)
         end
@@ -1801,7 +1801,7 @@ function ChunkStorage(dataset)
 end
 
 Base.size(cs::ChunkStorage{IndexCartesian}) = get_num_chunks_per_dim(cs.dataset)
- 
+
 
 function Base.axes(cs::ChunkStorage{IndexCartesian})
     chunk = get_chunk(cs.dataset)
@@ -2141,11 +2141,8 @@ function __init__()
 
     register_blosc()
 
-    # use our own error handling machinery
+    # use our own error handling machinery (i.e. turn off automatic error printing)
     h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
-
-    # Turn off automatic error printing
-    # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
     ASCII_LINK_PROPERTIES[] = create_property(H5P_LINK_CREATE; char_encoding = H5T_CSET_ASCII,
                                        create_intermediate_group = 1)

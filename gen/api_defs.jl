@@ -161,7 +161,7 @@
 @bind h5o_copy(src_loc_id::hid_t, src_name::Ptr{UInt8}, dst_loc_id::hid_t, dst_name::Ptr{UInt8}, ocpypl_id::hid_t, lcpl_id::hid_t)::herr_t string("Error copying object ", h5i_get_name(src_loc_id), "/", src_name, " to ", h5i_get_name(dst_loc_id), "/", dst_name)
 @bind h5o_get_info1(object_id::hid_t, buf::Ptr{H5O_info_t})::herr_t "Error getting object info"
 @bind h5o_open(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::hid_t string("Error opening object ", h5i_get_name(loc_id), "/", pathname)
-@bind h5o_open_by_addr(loc_id::hid_t, addr::haddr_t)::hid_t string("Error opening object by address")
+@bind h5o_open_by_addr(loc_id::hid_t, addr::haddr_t)::hid_t "Error opening object by address"
 @bind h5o_open_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::hid_t string("Error opening object of index ", n)
 
 ###
@@ -247,7 +247,7 @@
 
 @bind h5t_array_create2(basetype_id::hid_t, ndims::Cuint, sz::Ptr{hsize_t})::hid_t string("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz)
 @bind h5t_close(dtype_id::hid_t)::herr_t "Error closing datatype"
-@bind h5t_committed(dtype_id::hid_t)::htri_t string("Error determining whether datatype is committed")
+@bind h5t_committed(dtype_id::hid_t)::htri_t "Error determining whether datatype is committed"
 @bind h5t_commit2(loc_id::hid_t, name::Ptr{UInt8}, dtype_id::hid_t, lcpl_id::hid_t, tcpl_id::hid_t, tapl_id::hid_t)::herr_t "Error committing type"
 @bind h5t_copy(dtype_id::hid_t)::hid_t "Error copying datatype"
 @bind h5t_create(class_id::Cint, sz::Csize_t)::hid_t string("Error creating datatype of id ", class_id)

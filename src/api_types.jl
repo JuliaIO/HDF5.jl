@@ -110,24 +110,17 @@ end
 """
     H5E_error2_t
 
-Information about an error; element of error stack. 
+Information about an error; element of error stack.
 See https://github.com/HDFGroup/hdf5/blob/hdf5-1_12_0/src/H5Epublic.h#L36-L44
 """
 struct H5E_error2_t
-    "class ID"
-    cls_id::hid_t
-    "major error ID"
-    maj_num::hid_t
-    "minor error number"
-    min_num::hid_t
-    "line in file where the error occurs"
-    line::Cuint
-    "function where the error occurred"
-    func_name::Cstring
-    "file in which the error occurred"
-    file_name::Cstring
-    "optional supplied description"
-    desc::Cstring
+    cls_id::hid_t # class ID"
+    maj_num::hid_t # major error ID
+    min_num::hid_t # minor error number
+    line::Cuint # line in file where the error occurs
+    func_name::Cstring # function where the error occurred
+    file_name::Cstring # file in which the error occurred
+    desc::Cstring # optional supplied description
 end
 
 
@@ -184,10 +177,8 @@ const H5D_space_status_t = Cint
 
 # error-related constants
 const H5E_DEFAULT      = 0
-
 const H5E_WALK_UPWARD   = 0
 const H5E_WALK_DOWNWARD = 1
-
 
 # file access modes
 const H5F_ACC_RDONLY     = 0x0000
