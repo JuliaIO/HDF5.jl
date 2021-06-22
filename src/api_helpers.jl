@@ -237,6 +237,30 @@ function h5e_get_auto(estack_id)
     return func[], client_data[]
 end
 
+"""
+    mesg_type, mesg = h5e_get_msg(meshg_id)
+
+"""
+function h5e_get_msg(mesg_id)
+    mesg_type = Ref{Cint}()
+    mesg_len = h5e_get_msg(mesg_id, mesg_type, C_NULL, 0)
+    buffer = StringVector(mesg_len)
+    h5e_get_msg(mesg_id, mesg_type, buffer, mesg_len+1)
+    resize!(buffer, mesg_len)
+    return mesg_type[], String(buffer)
+end
+
+
+# See explanation for h5a_iterate above.
+function h5e_walk_helper(n::Cuint, err_desc::Ptr{H5E_error2_t}, @nospecialize(f::Any))::herr_t
+    f(n, err_desc)
+    return herr_t(0)
+end
+function h5e_walk(f::Function, stack_id, direction)
+    fptr = @cfunction(h5e_walk_helper, herr_t, (Cuint, Ptr{H5E_error2_t}, Any))
+    h5e_walk(stack_id, direction, fptr, f)
+end
+
 ###
 ### File Interface
 ###
@@ -438,7 +462,7 @@ See `libhdf5` documentation for [`H5P_GET_CLASS_NAME`](https://portal.hdfgroup.o
 function h5p_get_class_name(pcid)
     pc = ccall((:H5Pget_class_name, libhdf5), Ptr{UInt8}, (hid_t,), pcid)
     if pc == C_NULL
-        error("Error getting class name")
+        @h5error("Error getting class name")
     end
     s = unsafe_string(pc)
     h5_free_memory(pc)
@@ -509,7 +533,7 @@ See `libhdf5` documentation for [`H5Oopen`](https://portal.hdfgroup.org/display/
 function h5t_get_member_name(type_id, index)
     pn = ccall((:H5Tget_member_name, libhdf5), Ptr{UInt8}, (hid_t, Cuint), type_id, index)
     if pn == C_NULL
-        error("Error getting name of compound datatype member #", index)
+        @h5error("Error getting name of compound datatype member #$index")
     end
     s = unsafe_string(pn)
     h5_free_memory(pn)
@@ -524,7 +548,7 @@ See `libhdf5` documentation for [`H5Oopen`](https://portal.hdfgroup.org/display/
 function h5t_get_tag(type_id)
     pc = ccall((:H5Tget_tag, libhdf5), Ptr{UInt8}, (hid_t,), type_id)
     if pc == C_NULL
-        error("Error getting opaque tag")
+        @h5error("Error getting opaque tag")
     end
     s = unsafe_string(pc)
     h5_free_memory(pc)

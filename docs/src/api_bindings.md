@@ -147,13 +147,21 @@ h5d_write_chunk
 ---
 
 ## [`H5E`](https://portal.hdfgroup.org/display/HDF5/Error+Handling) — Error Interface
+- [`h5e_close_stack`](@ref HDF5.h5e_close_stack)
 - [`h5e_get_auto`](@ref HDF5.h5e_get_auto)
 - [`h5e_get_current_stack`](@ref HDF5.h5e_get_current_stack)
+- [`h5e_get_msg`](@ref HDF5.h5e_get_msg)
+- [`h5e_get_num`](@ref HDF5.h5e_get_num)
 - [`h5e_set_auto`](@ref HDF5.h5e_set_auto)
+- [`h5e_walk`](@ref HDF5.h5e_walk)
 ```@docs
+h5e_close_stack
 h5e_get_auto
 h5e_get_current_stack
+h5e_get_msg
+h5e_get_num
 h5e_set_auto
+h5e_walk
 ```
 
 ---

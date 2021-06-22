@@ -47,6 +47,26 @@ else
           "and restart Julia.")
 end
 
+
+# function stub: methods defined in error.jl
+macro h5error(msg)
+    # Check if the is actually any errors on the stack. This is necessary as there are a
+    # small number of functions which return `0` in case of an error, but `0` is also a
+    # valid return value, e.g. `h5t_get_member_offset`
+
+    # This needs to be a macro as we need to call `h5e_get_current_stack()` _before_
+    # evaluating the message expression, as some message expressions can call API
+    # functions, which would clear the error stack.
+    quote
+        err_id = h5e_get_current_stack()
+        if h5e_get_num(err_id) > 0
+            throw(HDF5.H5Error($(esc(msg)), err_id))
+        else
+            h5e_close_stack(err_id)
+        end
+    end
+end
+
 # Core API ccall wrappers
 include("api_types.jl")
 include("api.jl")
@@ -362,6 +382,7 @@ function Base.cconvert(::Type{Ptr{Cvoid}}, v::VLen)
     return h
 end
 
+include("error.jl")
 include("show.jl")
 
 # Blosc compression:
@@ -639,9 +660,8 @@ function ishdf5(name::AbstractString)
     isfile(name) || return false # fastpath in case the file is non-existant
     # TODO: v1.12 use the more robust h5f_is_accesible
     try
-        # docs falsely claim h5f_is_hdf5 doesn't error, but it does and prints the error stack on fail
-        # silence the error stack in case the call throws
-        return silence_errors(() -> h5f_is_hdf5(name))
+        # docs falsely claim h5f_is_hdf5 doesn't error, but it does
+        return h5f_is_hdf5(name)
     catch
         return false
     end
@@ -1479,7 +1499,10 @@ function readmmap(obj::Dataset, ::Type{T}) where {T}
     end
 
     offset = h5d_get_offset(obj)
-    if offset % Base.datatype_alignment(T) == 0
+    if offset == -1 % haddr_t
+        # note that h5d_get_offset may not actually raise an error, so we need to check it here
+        error("Error getting offset")
+    elseif offset % Base.datatype_alignment(T) == 0
         A = Mmap.mmap(fd, Array{T,length(dims)}, dims, offset)
     else
         Aflat = Mmap.mmap(fd, Vector{UInt8}, prod(dims)*sizeof(T), offset)
@@ -1778,7 +1801,7 @@ function ChunkStorage(dataset)
 end
 
 Base.size(cs::ChunkStorage{IndexCartesian}) = get_num_chunks_per_dim(cs.dataset)
- 
+
 
 function Base.axes(cs::ChunkStorage{IndexCartesian})
     chunk = get_chunk(cs.dataset)
@@ -2118,8 +2141,8 @@ function __init__()
 
     register_blosc()
 
-    # Turn off automatic error printing
-    # h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
+    # use our own error handling machinery (i.e. turn off automatic error printing)
+    h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 
     ASCII_LINK_PROPERTIES[] = create_property(H5P_LINK_CREATE; char_encoding = H5T_CSET_ASCII,
                                        create_intermediate_group = 1)
