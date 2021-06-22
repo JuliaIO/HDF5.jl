@@ -78,7 +78,7 @@ end
 struct Reference
     r::API.hobj_ref_t
 end
-Reference() = Reference(HOBJ_REF_T_NULL) # NULL reference to compare to
+Reference() = Reference(API.HOBJ_REF_T_NULL) # NULL reference to compare to
 Base.cconvert(::Type{Ptr{T}}, ref::Reference) where {T<:Union{Reference,API.hobj_ref_t,Cvoid}} = Ref(ref)
 
 # Single character types
@@ -930,7 +930,7 @@ name(attr::Attribute) = API.h5a_get_name(attr)
 function Base.keys(x::Union{Group,File})
     checkvalid(x)
     children = sizehint!(String[], length(x))
-    API.h5l_iterate(x, H5_INDEX_NAME, H5_ITER_INC) do _, name, _
+    API.h5l_iterate(x, API.H5_INDEX_NAME, API.H5_ITER_INC) do _, name, _
         push!(children, unsafe_string(name))
         return API.herr_t(0)
     end
@@ -940,7 +940,7 @@ end
 function Base.keys(x::Attributes)
     checkvalid(x.parent)
     children = sizehint!(String[], length(x))
-    API.h5a_iterate(x.parent, H5_INDEX_NAME, H5_ITER_INC) do _, attr_name, _
+    API.h5a_iterate(x.parent, API.H5_INDEX_NAME, API.H5_ITER_INC) do _, attr_name, _
         push!(children, unsafe_string(attr_name))
         return API.herr_t(0)
     end
@@ -952,7 +952,7 @@ function Base.iterate(parent::Union{File,Group}, iter = (1,nothing))
     n, prev_obj = iter
     prev_obj ≢ nothing && close(prev_obj)
     n > length(parent) && return nothing
-    obj = h5object(API.h5o_open_by_idx(checkvalid(parent), ".", H5_INDEX_NAME, H5_ITER_INC, n-1, API.H5P_DEFAULT), parent)
+    obj = h5object(API.h5o_open_by_idx(checkvalid(parent), ".", API.H5_INDEX_NAME, API.H5_ITER_INC, n-1, API.H5P_DEFAULT), parent)
     return (obj, (n+1,obj))
 end
 

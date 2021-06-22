@@ -62,13 +62,13 @@ write(f, "salut", salut)
 write(f, "ucode", ucode)
 # Manually write a variable-length string (issue #187)
 let
-    dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
-    HDF5.h5t_set_size(dtype, HDF5.H5T_VARIABLE)
-    HDF5.h5t_set_cset(dtype, HDF5.cset(typeof(salut)))
+    dtype = HDF5.Datatype(HDF5.API.h5t_copy(HDF5.API.H5T_C_S1))
+    HDF5.API.h5t_set_size(dtype, HDF5.API.H5T_VARIABLE)
+    HDF5.API.h5t_set_cset(dtype, HDF5.cset(typeof(salut)))
     dspace = dataspace(salut)
     dset = create_dataset(f, "salut-vlen", dtype, dspace)
     GC.@preserve salut begin
-        HDF5.h5d_write(dset, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(salut)])
+        HDF5.API.h5d_write(dset, dtype, HDF5.API.H5S_ALL, HDF5.API.H5S_ALL, HDF5.API.H5P_DEFAULT, [pointer(salut)])
     end
 end
 # Arrays of strings
@@ -210,7 +210,7 @@ salut_2dr = read(fr, "salut_2d")
 @test salut_2d == salut_2dr
 salut_vlenr = read(fr, "salut_vlen")
 @test HDF5.vlen_get_buf_size(fr["salut_vlen"]) == 7
-@test HDF5.h5d_get_access_plist(fr["salut-vlen"]) != 0
+@test HDF5.API.h5d_get_access_plist(fr["salut-vlen"]) != 0
 #@test salut_vlenr == salut_split
 vlen_intr = read(fr, "int_vlen")
 @test vlen_intr == vlen_int
@@ -381,10 +381,10 @@ close(fd)
 rm(fn)
 
 # File creation and access property lists
-fid = h5open(fn, "w", userblock=1024, libver_bounds=(HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST))
+fid = h5open(fn, "w", userblock=1024, libver_bounds=(HDF5.API.H5F_LIBVER_EARLIEST, HDF5.API.H5F_LIBVER_LATEST))
 write(fid, "intarray", [1, 2, 3])
 close(fid)
-h5open(fn, "r", libver_bounds=(HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)) do fid
+h5open(fn, "r", libver_bounds=(HDF5.API.H5F_LIBVER_EARLIEST, HDF5.API.H5F_LIBVER_LATEST)) do fid
     intarray = read(fid, "intarray")
     @test intarray == [1, 2, 3]
 end
@@ -413,9 +413,9 @@ rm(fn)
         d = create_dataset(f, "dataset", datatype(Int), dataspace(6, 6), chunk=(2, 3))
         buf = Array{Int,2}(undef,(6,6))
         dtype = datatype(Int)
-        HDF5.h5d_fill(Ref(val), dtype, buf, datatype(Int), dataspace(d))
+        HDF5.API.h5d_fill(Ref(val), dtype, buf, datatype(Int), dataspace(d))
         @test all(buf .== 5)
-        HDF5.h5d_write(d, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, buf)
+        HDF5.API.h5d_write(d, dtype, HDF5.API.H5S_ALL, HDF5.API.H5S_ALL, HDF5.API.H5P_DEFAULT, buf)
     end
     h5open(fn, "r") do f
         @test all( f["dataset"][:,:] .== 5 )
@@ -428,15 +428,15 @@ end # testset "Test h5d_fill
     dst_buf = Array{Int,2}(undef,(4,4))
     h5open(fn ,"w") do f
         d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
-        @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf), dst_buf, C_NULL, C_NULL) |> isnothing
+        @test HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf), dst_buf, C_NULL, C_NULL) |> isnothing
         @test src_buf == dst_buf
         gatherf_ptr = @cfunction(gatherf, HDF5.API.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
-        @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_ptr, C_NULL) |> isnothing
+        @test HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_ptr, C_NULL) |> isnothing
         gatherf_bad_ptr = @cfunction(gatherf_bad, HDF5.API.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
-        @test_throws HDF5.H5Error HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_bad_ptr, C_NULL)
+        @test_throws HDF5.H5Error HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_bad_ptr, C_NULL)
         gatherf_data_ptr = @cfunction(gatherf_data, HDF5.API.herr_t, (Ptr{Nothing}, Csize_t, Ref{Int}))
-        @test HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, Ref(9)) |> isnothing
-        @test_throws HDF5.H5Error HDF5.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, 10)
+        @test HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, Ref(9)) |> isnothing
+        @test_throws HDF5.H5Error HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, 10)
     end
     rm(fn)
 end
@@ -449,11 +449,11 @@ end
         dst_buf = Array{Int,2}(undef,(4,4))
         d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
         scatterf_ptr = @cfunction(scatterf, HDF5.API.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
-        @test HDF5.h5d_scatter(scatterf_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf) |> isnothing
+        @test HDF5.API.h5d_scatter(scatterf_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf) |> isnothing
         scatterf_bad_ptr = @cfunction(scatterf_bad, HDF5.API.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
-        @test_throws HDF5.H5Error HDF5.h5d_scatter(scatterf_bad_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf)
+        @test_throws HDF5.H5Error HDF5.API.h5d_scatter(scatterf_bad_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf)
         scatterf_data_ptr = @cfunction(scatterf_data, HDF5.API.herr_t, (Ptr{Ptr{Int}}, Ptr{Csize_t}, Ref{Int}))
-        @test HDF5.h5d_scatter(scatterf_data_ptr, Ref(9), datatype(Int), dataspace(d), dst_buf) |> isnothing
+        @test HDF5.API.h5d_scatter(scatterf_data_ptr, Ref(9), datatype(Int), dataspace(d), dst_buf) |> isnothing
     end
     rm(fn)
 end
@@ -681,8 +681,8 @@ end # empty and 0-size arrays
 fn = tempname()
 hfile = h5open(fn, "w")
 
-dtype_varstring = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
-HDF5.h5t_set_size(dtype_varstring, HDF5.H5T_VARIABLE)
+dtype_varstring = HDF5.Datatype(HDF5.API.h5t_copy(HDF5.API.H5T_C_S1))
+HDF5.API.h5t_set_size(dtype_varstring, HDF5.API.H5T_VARIABLE)
 
 write(hfile, "uint8_array", UInt8[(1:8)...])
 write(hfile, "bool_scalar", true)
@@ -692,7 +692,7 @@ varstring = "var"
 write(hfile, "fixed_string", fixstring)
 vardset = create_dataset(hfile, "variable_string", dtype_varstring, dataspace(varstring))
 GC.@preserve varstring begin
-    HDF5.h5d_write(vardset, dtype_varstring, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(varstring)])
+    HDF5.API.h5d_write(vardset, dtype_varstring, HDF5.API.H5S_ALL, HDF5.API.H5S_ALL, HDF5.API.H5P_DEFAULT, [pointer(varstring)])
 end
 flush(hfile)
 close(dtype_varstring)
@@ -757,10 +757,10 @@ meta = create_attribute(dset, "meta", datatype(Bool), dataspace((1,)))
 dsetattrs = attributes(dset)
 @test sprint(show, dsetattrs) == "Attributes of HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
 
-prop = create_property(HDF5.H5P_DATASET_CREATE)
+prop = create_property(HDF5.API.H5P_DATASET_CREATE)
 @test sprint(show, prop) == "HDF5.Properties: dataset create class"
 
-dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
+dtype = HDF5.Datatype(HDF5.API.h5t_copy(HDF5.API.H5T_IEEE_F64LE))
 @test sprint(show, dtype) == "HDF5.Datatype: H5T_IEEE_F64LE"
 commit_datatype(hfile, "type", dtype)
 @test sprint(show, dtype) == "HDF5.Datatype: /type H5T_IEEE_F64LE"
@@ -771,14 +771,14 @@ dtypemeta = create_attribute(dtype, "dtypemeta", datatype(Bool), dataspace((1,))
 dtypeattrs = attributes(dtype)
 @test sprint(show, dtypeattrs) == "Attributes of HDF5.Datatype: /type H5T_IEEE_F64LE"
 
-dspace_null = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_NULL))
-dspace_scal = HDF5.Dataspace(HDF5.h5s_create(HDF5.H5S_SCALAR))
+dspace_null = HDF5.Dataspace(HDF5.API.h5s_create(HDF5.API.H5S_NULL))
+dspace_scal = HDF5.Dataspace(HDF5.API.h5s_create(HDF5.API.H5S_SCALAR))
 dspace_norm = dataspace((100, 4))
 dspace_maxd = dataspace((100, 4), max_dims = (256, 4))
 dspace_slab = HDF5.hyperslab(dataspace((100, 4)), 1:20:100, 1:4)
 if HDF5.libversion ≥ v"1.10.7"
-dspace_irrg = HDF5.Dataspace(HDF5.h5s_combine_select(
-        HDF5.h5s_copy(dspace_slab), HDF5.H5S_SELECT_OR,
+dspace_irrg = HDF5.Dataspace(HDF5.API.h5s_combine_select(
+        HDF5.API.h5s_copy(dspace_slab), HDF5.API.H5S_SELECT_OR,
         HDF5.hyperslab(dataspace((100, 4)), 2, 2)))
 @test sprint(show, dspace_irrg) == "HDF5.Dataspace: (100, 4) [irregular selection]"
 end
@@ -844,13 +844,13 @@ hfile["inner/data"] = collect(-5:5)
 attributes(hfile["inner/data"])["mode"] = 1
 # non-trivial committed datatype
 # TODO: print more datatype information
-tmeta = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(Int) + sizeof(Float64)))
-HDF5.h5t_insert(tmeta, "scale", 0, HDF5.hdf5_type_id(Int))
-HDF5.h5t_insert(tmeta, "bias", sizeof(Int), HDF5.hdf5_type_id(Float64))
+tmeta = HDF5.Datatype(HDF5.API.h5t_create(HDF5.API.H5T_COMPOUND, sizeof(Int) + sizeof(Float64)))
+HDF5.API.h5t_insert(tmeta, "scale", 0, HDF5.hdf5_type_id(Int))
+HDF5.API.h5t_insert(tmeta, "bias", sizeof(Int), HDF5.hdf5_type_id(Float64))
 tstr = datatype("fixed")
-t = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(tmeta) + sizeof(tstr)))
-HDF5.h5t_insert(t, "meta", 0, tmeta)
-HDF5.h5t_insert(t, "type", sizeof(tmeta), tstr)
+t = HDF5.Datatype(HDF5.API.h5t_create(HDF5.API.H5T_COMPOUND, sizeof(tmeta) + sizeof(tstr)))
+HDF5.API.h5t_insert(t, "meta", 0, tmeta)
+HDF5.API.h5t_insert(t, "type", sizeof(tmeta), tstr)
 commit_datatype(hfile, "dtype", t)
 
 buf = IOBuffer()
@@ -1121,11 +1121,11 @@ hfile[GenericString("test")] = 17.2
 @test_nowarn delete_attribute(dset1, GenericString("meta1"))
 
 # transient types
-memtype_id = HDF5.h5t_copy(HDF5.H5T_NATIVE_DOUBLE)
+memtype_id = HDF5.API.h5t_copy(HDF5.API.H5T_NATIVE_DOUBLE)
 dt = HDF5.Datatype(memtype_id)
-@test !HDF5.h5t_committed(dt)
+@test !HDF5.API.h5t_committed(dt)
 commit_datatype(hfile, GenericString("dt"), dt)
-@test HDF5.h5t_committed(dt)
+@test HDF5.API.h5t_committed(dt)
 
 dt = datatype(Int)
 ds = dataspace(0)
@@ -1206,8 +1206,8 @@ end
 
         num   = 1
         olen  = 4
-        otype = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_OPAQUE, olen))
-        HDF5.h5t_set_tag(otype, "opaque test")
+        otype = HDF5.Datatype(HDF5.API.h5t_create(HDF5.API.H5T_OPAQUE, olen))
+        HDF5.API.h5t_set_tag(otype, "opaque test")
 
         # scalar
         dat0 = rand(UInt8, olen)
@@ -1225,9 +1225,9 @@ end
         write_dataset(fid["matrix"], otype, buf2)
 
         # opaque data within a compound data type
-        ctype = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(num) + sizeof(otype)))
-        HDF5.h5t_insert(ctype, "v", 0, datatype(num))
-        HDF5.h5t_insert(ctype, "d", sizeof(num), otype)
+        ctype = HDF5.Datatype(HDF5.API.h5t_create(HDF5.API.H5T_COMPOUND, sizeof(num) + sizeof(otype)))
+        HDF5.API.h5t_insert(ctype, "v", 0, datatype(num))
+        HDF5.API.h5t_insert(ctype, "d", sizeof(num), otype)
         cdat = vcat(reinterpret(UInt8, [num]), dat0)
         create_dataset(fid, "compound", ctype, dataspace(()))
         write_dataset(fid["compound"], ctype, cdat)
@@ -1267,9 +1267,9 @@ end
         fid["longstring"] = ref
 
         # compound datatype containing a FixedString
-        compound_dtype = HDF5.Datatype(HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(num) + sizeof(ref)))
-        HDF5.h5t_insert(compound_dtype, "n", 0, datatype(num))
-        HDF5.h5t_insert(compound_dtype, "a", sizeof(num), datatype(ref))
+        compound_dtype = HDF5.Datatype(HDF5.API.h5t_create(HDF5.API.H5T_COMPOUND, sizeof(num) + sizeof(ref)))
+        HDF5.API.h5t_insert(compound_dtype, "n", 0, datatype(num))
+        HDF5.API.h5t_insert(compound_dtype, "a", sizeof(num), datatype(ref))
         c = create_dataset(fid, "compoundlongstring", compound_dtype, dataspace(()))
         # normally this is done with a `struct name{N}; n::Int64; a::NTuple{N,Char}; end`,
         # but we need to not actually instantiate the `NTuple`.
@@ -1303,7 +1303,7 @@ end
     mktemp() do path, io
         close(io)
         ref = rand(Float64, 3000)
-        t = HDF5.Datatype(HDF5.h5t_array_create(datatype(Float64), ndims(ref), collect(size(ref))))
+        t = HDF5.Datatype(HDF5.API.h5t_array_create(datatype(Float64), ndims(ref), collect(size(ref))))
         scalarspace = dataspace(())
 
         fid = h5open(path, "w")
