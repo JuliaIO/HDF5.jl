@@ -52,10 +52,10 @@ function Base.showerror(io::IO, err::H5Error)
         minor = h5e_get_msg(errval.min_num)[2]
         print(io, major, "/", minor)
         if errval.desc != C_NULL
-            print(io, "\n    ", unsafe_string(errval.desc))
+            printstyled(io, "\n", " "^(4 + ndigits(n_total)), unsafe_string(errval.desc), color=:light_black)
         end
         if SHORT_ERROR[] && n == 1 && n_total > 2
-            print(io, "\n      ...")
+            print(io, "\n", lpad("⋮", 2 + ndigits(n_total)))
         end
     end
     return nothing
