@@ -36,7 +36,7 @@ const SHORT_ERROR = Ref(true)
 function Base.showerror(io::IO, err::H5Error)
     n_total = length(err)
     print(io, "H5Error: ", err.msg)
-    print(io, "\lLibrary Stacktrace:")
+    print(io, "\nlibhdf5 Stacktrace:")
     h5e_walk(err, H5E_WALK_UPWARD) do n, errptr
         n += 1
         if SHORT_ERROR[] && 1 < n < n_total
