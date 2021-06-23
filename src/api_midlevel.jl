@@ -111,3 +111,64 @@ function vlen_get_buf_size(dataset_id)
     space = API.h5d_get_space(dataset_id)
     API.h5d_vlen_get_buf_size(dataset_id, type, space)
 end
+
+
+
+"""
+    HDF5.read_chunk(dataset_id, offset, [buf]; dxpl_id = HDF5.API.H5P_DEFAULT, filters = Ref{UInt32}())
+
+Helper method to read chunks via 0-based offsets in a `Tuple`.
+
+Argument `buf` is optional and defaults to a `Vector{UInt8}` of length determined by `HDF5.get_chunk_length`.
+Argument `dxpl_id` can be supplied a keyword and defaults to `HDF5.API.H5P_DEFAULT`.
+Argument `filters` can be retrieved by supplying a `Ref{UInt32}` value via a keyword argument.
+
+This method returns `Vector{UInt8}`.
+"""
+function read_chunk(dataset_id, offset,
+        buf::Vector{UInt8} = Vector{UInt8}(undef, get_chunk_length(dataset_id));
+        dxpl_id = API.H5P_DEFAULT,
+        filters = Ref{UInt32}()
+    )
+    API.h5d_read_chunk(dataset_id, dxpl_id, offset, filters, buf)
+    return buf
+end
+
+"""
+    HDF5.read_chunk(dataset_id, index::Integer, [buf]; dxpl_id = HDF5.API.H5P_DEFAULT, filters = Ref{UInt32}())
+
+Helper method to read chunks via 0-based integer `index`.
+
+Argument `buf` is optional and defaults to a `Vector{UInt8}` of length determined by `HDF5.h5d_get_chunk_info`.
+Argument `dxpl_id` can be supplied a keyword and defaults to `HDF5.API.H5P_DEFAULT`.
+Argument `filters` can be retrieved by supplying a `Ref{UInt32}` value via a keyword argument.
+
+This method returns `Vector{UInt8}`.
+"""
+function read_chunk(dataset_id, index::Integer,
+        buf::Vector{UInt8} = Vector{UInt8}(undef, get_chunk_length(dataset_id));
+        dxpl_id = API.H5P_DEFAULT,
+        filters = Ref{UInt32}()
+    )
+    offset = [reverse(get_chunk_offset(dataset_id, index))...]
+    read_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filters = filters)
+end
+
+"""
+    HDF5.write_chunk(dataset_id, offset, buf::Vector{UInt8}; dxpl_id = HDF5.API.H5P_DEFAULT, filter_mask = 0)
+
+Helper method to write chunks via 0-based offsets `offset` as a `Tuple`.
+"""
+function write_chunk(dataset_id, offset, buf::Vector{UInt8}; dxpl_id = API.H5P_DEFAULT, filter_mask=0)
+    API.h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, length(buf), buf)
+end
+
+"""
+    HDF5.write_chunk(dataset_id, index::Integer, buf::Vector{UInt8}; dxpl_id = API.H5P_DEFAULT, filter_mask = 0)
+
+Helper method to write chunks via 0-based integer `index`.
+"""
+function write_chunk(dataset_id, index::Integer, buf::Vector{UInt8}; dxpl_id = API.H5P_DEFAULT, filter_mask = 0)
+    offset = [reverse(get_chunk_offset(dataset_id, index))...]
+    write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
+end

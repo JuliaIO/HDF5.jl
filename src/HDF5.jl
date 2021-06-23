@@ -1712,7 +1712,7 @@ Write a raw chunk at a given offset.
 function do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
     checkvalid(dataset)
     offs = collect(API.hsize_t, reverse(offset)) .- 1
-    API.h5d_write_chunk(dataset, API.H5P_DEFAULT, UInt32(filter_mask), offs, length(chunk_bytes), chunk_bytes)
+    write_chunk(dataset, offs, chunk_bytes; filter_mask=UInt32(filter_mask))
 end
 
 """
@@ -1724,7 +1724,7 @@ Write a raw chunk at a given linear index.
 function do_write_chunk(dataset::Dataset, index::Integer, chunk_bytes::Vector{UInt8}, filter_mask=0)
     checkvalid(dataset)
     index -= 1
-    API.h5d_write_chunk(dataset, API.H5P_DEFAULT, UInt32(filter_mask), index, chunk_bytes)
+    write_chunk(dataset, index, chunk_bytes; filter_mask=UInt32(filter_mask))
 end
 
 """
@@ -1737,7 +1737,7 @@ function do_read_chunk(dataset::Dataset, offset)
     checkvalid(dataset)
     offs = collect(API.hsize_t, reverse(offset)) .- 1
     filters = Ref{UInt32}()
-    buf = API.h5d_read_chunk(dataset, offs; filters = filters)
+    buf = read_chunk(dataset, offs; filters = filters)
     return (filters[], buf)
 end
 
@@ -1751,7 +1751,7 @@ function do_read_chunk(dataset::Dataset, index::Integer)
     checkvalid(dataset)
     index -= 1
     filters = Ref{UInt32}()
-    buf = API.h5d_read_chunk(dataset, index; filters = filters)
+    buf = read_chunk(dataset, index; filters = filters)
     return (filters[], buf)
 end
 
