@@ -129,16 +129,13 @@ function h5d_get_chunk_storage_size(dataset_id, offset)
     return chunk_nbytes[]
 end
 
-"""
-    h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
+@static if v"1.10.5" ≤ _libhdf5_build_ver
+    """
+        h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
 
-Helper method to retrieve the number of chunks. Returns an integer of type `HDF5.API.hsize_t`.
-"""
-function h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
-    @static if v"1.10.5" > _libhdf5_build_ver
-        @assert fspace_id == H5S_ALL
-        return get_num_chunks(dataset_id)
-    else
+    Helper method to retrieve the number of chunks. Returns an integer of type `HDF5.API.hsize_t`.
+    """
+    function h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
         nchunks = Ref{hsize_t}()
         h5d_get_num_chunks(dataset_id, fspace_id, nchunks)
         return nchunks[]

@@ -91,7 +91,11 @@ end
 Returns the number of chunks in a dataset. Equivalent to `API.h5d_get_num_chunks(dataset_id, HDF5.H5S_ALL)`.
 """
 function get_num_chunks(dataset_id)
-    return prod(get_num_chunks_per_dim(dataset_id))
+    @static if v"1.10.5" ≤ API._libhdf5_build_ver
+        API.h5d_get_num_chunks(dataset_id)
+    else
+        prod(get_num_chunks_per_dim(dataset_id))
+    end
 end
 
 

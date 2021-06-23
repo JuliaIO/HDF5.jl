@@ -30,7 +30,7 @@ h5open(fn, "r") do f
     @test size(raw) == (4,)
     @test length(raw) == 4
     @test axes(raw) == (Base.OneTo(4),)
-    @test HDF5.API.h5d_get_num_chunks(d) == HDF5.get_num_chunks(d)
+    @test prod(HDF5.get_num_chunks_per_dim(d)) == HDF5.get_num_chunks(d)
     if v"1.10.5" ≤ HDF5.API._libhdf5_build_ver
         @test HDF5.get_chunk_length(d) == HDF5.API.h5d_get_chunk_info(d,1)[:size]
     end
@@ -80,7 +80,7 @@ h5open(fn, "r") do f
     @test size(raw) == (2, 2)
     @test length(raw) == 4
     @test axes(raw) == (1:2:4, 1:3:6)
-    @test HDF5.API.h5d_get_num_chunks(d) == HDF5.get_num_chunks(d)
+    @test prod(HDF5.get_num_chunks_per_dim(d)) == HDF5.get_num_chunks(d)
 
     # Test 0-based indexed API
     @test HDF5.get_chunk_offset(d, 0) == (0, 0)
