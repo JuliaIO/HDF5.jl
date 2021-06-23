@@ -2,7 +2,7 @@ using HDF5
 using Test
 using Pkg
 
-@info "libhdf5 v$(HDF5.h5_get_libversion())"
+@info "libhdf5 v$(HDF5.API.h5_get_libversion())"
 
 @testset "HDF5.jl" begin
 

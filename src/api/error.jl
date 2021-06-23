@@ -1,5 +1,6 @@
+
 """
-    H5Error
+H5Error
 
 An error thrown by libhdf5.
 """
@@ -8,6 +9,23 @@ mutable struct H5Error <: Exception
     id::hid_t
 end
 
+macro h5error(msg)
+    # Check if the is actually any errors on the stack. This is necessary as there are a
+    # small number of functions which return `0` in case of an error, but `0` is also a
+    # valid return value, e.g. `h5t_get_member_offset`
+
+    # This needs to be a macro as we need to call `h5e_get_current_stack()` _before_
+    # evaluating the message expression, as some message expressions can call API
+    # functions, which would clear the error stack.
+    quote
+        err_id = h5e_get_current_stack()
+        if h5e_get_num(err_id) > 0
+            throw(H5Error($(esc(msg)), err_id))
+        else
+            h5e_close_stack(err_id)
+        end
+    end
+end
 
 Base.cconvert(::Type{hid_t}, err::H5Error) = err
 Base.unsafe_convert(::Type{hid_t}, err::H5Error) = err.id
@@ -35,7 +53,7 @@ const SHORT_ERROR = Ref(true)
 
 function Base.showerror(io::IO, err::H5Error)
     n_total = length(err)
-    print(io, "H5Error: ", err.msg)
+    print(io, "$(typeof(err)): ", err.msg)
     print(io, "\nlibhdf5 Stacktrace:")
     h5e_walk(err, H5E_WALK_UPWARD) do n, errptr
         n += 1

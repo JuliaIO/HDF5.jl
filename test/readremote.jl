@@ -89,7 +89,7 @@ d = read(fid, "DS1")
 @test d == icmp
 close(fid)
 
-if HDF5.h5_get_libversion() >= v"1.8.11"
+if HDF5.API.h5_get_libversion() >= v"1.8.11"
   file = joinpath(test_files, "h5ex_t_enumatt.h5")
   fid = h5open(file, "r")
   dset = fid["DS1"]

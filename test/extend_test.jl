@@ -45,11 +45,11 @@ b = create_dataset(fid, "b", Int, ((1000,), (-1,)), chunk=(100,)) #-1 is equival
 b[1:200] = ones(200)
 dims, max_dims = HDF5.get_extent_dims(b)
 @test dims == (UInt64(1000),)
-@test max_dims == (HDF5.H5S_UNLIMITED % Int,)
+@test max_dims == (HDF5.API.H5S_UNLIMITED % Int,)
 HDF5.set_extent_dims(b, (10000,))
 dims, max_dims = HDF5.get_extent_dims(b)
 @test dims == (UInt64(10000),)
-@test max_dims == (HDF5.H5S_UNLIMITED % Int,)
+@test max_dims == (HDF5.API.H5S_UNLIMITED % Int,)
 #println("b is size current $(map(int,HDF5.get_extent_dims(b)[1])) max $(map(int,HDF5.get_extent_dims(b)[2]))")
 # b[:] = [1:10000] # gave error no method lastindex(HDF5.Dataset{PlainHDF5File},),
 # so I defined lastindex(dset::HDF5.Dataset) = length(dset), and exported lastindex
@@ -71,7 +71,7 @@ dims, max_dims = HDF5.get_extent_dims(d_again)
 b_again = fid["b"]
 dims, max_dims = HDF5.get_extent_dims(b_again)
 @test dims == (UInt64(10000),)
-@test max_dims == (HDF5.H5S_UNLIMITED % Int,)
+@test max_dims == (HDF5.API.H5S_UNLIMITED % Int,)
 #println("b is size current $(map(int,HDF5.get_extent_dims(b)[1])) max $(map(int,HDF5.get_extent_dims(b)[2]))")
 
 close(fid)

@@ -45,21 +45,21 @@ function h5a_iterate_helper(loc_id::hid_t, attr_name::Ptr{Cchar}, ainfo::Ptr{H5A
     return f(loc_id, attr_name, ainfo)
 end
 """
-    h5a_iterate(f, loc_id, idx_type, order, idx = 0) -> HDF5.hsize_t
+    h5a_iterate(f, loc_id, idx_type, order, idx = 0) -> HDF5.API.hsize_t
 
-Executes [`h5a_iterate`](@ref h5a_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
+Executes [`h5a_iterate`](@ref h5a_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{HDF5.API.hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
 with the user-provided callback function `f`, returning the index where iteration ends.
 
 The callback function must correspond to the signature
 ```
-    f(loc::HDF5.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.H5A_info_t}) -> HDF5.herr_t
+    f(loc::HDF5.API.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.API.H5A_info_t}) -> HDF5.API.herr_t
 ```
 where a negative return value halts iteration abnormally, a positive value halts iteration
 successfully, and zero continues iteration.
 
 # Examples
 ```julia-repl
-julia> HDF5.h5a_iterate(obj, HDF5.H5_INDEX_NAME, HDF5.H5_ITER_INC) do loc, name, info
+julia> HDF5.API.h5a_iterate(obj, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC) do loc, name, info
            println(unsafe_string(name))
            return HDF5.herr_t(0)
        end
@@ -79,7 +79,7 @@ end
 """
     h5d_vlen_get_buf_size(dataset_id, type_id, space_id)
 
-Helper method to determines the number of bytes required to store the variable length data from the dataset. Returns a value of type `HDF5.hsize_t`.
+Helper method to determines the number of bytes required to store the variable length data from the dataset. Returns a value of type `HDF5.API.hsize_t`.
 """
 function h5d_vlen_get_buf_size(dataset_id, type_id, space_id)
     sz = Ref{hsize_t}()
@@ -89,11 +89,11 @@ end
 
 """
     h5d_get_chunk_info(dataset_id, fspace_id, index)
-    h5d_get_chunk_info(dataset_id, index; fspace_id = HDF5.H5S_ALL)
+    h5d_get_chunk_info(dataset_id, index; fspace_id = HDF5.API.H5S_ALL)
 
 Helper method to retrieve chunk information.
 
-Returns a NamedTuple{(:offset, :filter_mask, :addr, :size), Tuple{hsize_t, UInt32, haddr_t, hsize_t}}
+Returns a NamedTuple{(:offset, :filter_mask, :addr, :size), Tuple{HDF5.API.hsize_t, UInt32, HDF5.API.haddr_t, HDF5.API.hsize_t}}
 """
 function h5d_get_chunk_info(dataset_id, fspace_id, index)
     offset = Vector{hsize_t}(undef, ndims(dataset_id))
@@ -108,7 +108,7 @@ h5d_get_chunk_info(dataset_id, index; fspace_id = H5S_ALL) = h5d_get_chunk_info(
 """
     h5d_get_chunk_info_by_coord(dataset_id, offset)
 
-Helper method to read chunk information by coordinate. Returns a `NamedTuple{(:filter_mask, :addr, :size), Tuple{UInt32, haddr_t, hsize_t}}`.
+Helper method to read chunk information by coordinate. Returns a `NamedTuple{(:filter_mask, :addr, :size), Tuple{UInt32, HDF5.API.haddr_t, HDF5.API.hsize_t}}`.
 """
 function h5d_get_chunk_info_by_coord(dataset_id, offset)
     filter_mask = Ref{UInt32}()
@@ -121,24 +121,21 @@ end
 """
     h5d_get_chunk_storage_size(dataset_id, offset)
 
-Helper method to retrieve the chunk storage size in bytes. Returns an integer of type `HDF5.hsize_t`.
+Helper method to retrieve the chunk storage size in bytes. Returns an integer of type `HDF5.API.API.hsize_t`.
 """
 function h5d_get_chunk_storage_size(dataset_id, offset)
-    chunk_nbytes = Ref{HDF5.hsize_t}()
+    chunk_nbytes = Ref{hsize_t}()
     h5d_get_chunk_storage_size(dataset_id, offset, chunk_nbytes)
     return chunk_nbytes[]
 end
 
-"""
-    h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
+@static if v"1.10.5" ≤ _libhdf5_build_ver
+    """
+        h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
 
-Helper method to retrieve the number of chunks. Returns an integer of type `HDF5.hsize_t`.
-"""
-function h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
-    @static if v"1.10.5" > _libhdf5_build_ver
-        @assert fspace_id == H5S_ALL
-        return get_num_chunks(dataset_id)
-    else
+    Helper method to retrieve the number of chunks. Returns an integer of type `HDF5.API.hsize_t`.
+    """
+    function h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
         nchunks = Ref{hsize_t}()
         h5d_get_num_chunks(dataset_id, fspace_id, nchunks)
         return nchunks[]
@@ -149,81 +146,13 @@ end
     h5d_get_space_status(dataset_id)
 
 Helper method to retrieve the status of the dataset space.
-Returns a `HDF5.H5D_space_status_t` (`Cint`) indicating the status, see `HDF5.H5D_SPACE_STATUS_`* constants.
+Returns a `HDF5.API.H5D_space_status_t` (`Cint`) indicating the status, see `HDF5.API.H5D_SPACE_STATUS_`* constants.
 """
 function h5d_get_space_status(dataset_id)
     r = Ref{H5D_space_status_t}()
     h5d_get_space_status(dataset_id, r)
     return r[]
 end
-
-"""
-    h5d_read_chunk(dataset_id, offset, [buf]; dxpl_id = HDF5.H5P_DEFAULT, filters = Ref{UInt32}())
-
-Helper method to read chunks via 0-based offsets in a `Tuple`.
-
-Argument `buf` is optional and defaults to a `Vector{UInt8}` of length determined by `HDF5.get_chunk_length`.
-Argument `dxpl_id` can be supplied a keyword and defaults to `HDF5.H5P_DEFAULT`.
-Argument `filters` can be retrieved by supplying a `Ref{UInt32}` value via a keyword argument.
-
-This method returns `Vector{UInt8}`.
-"""
-function h5d_read_chunk(dataset_id, offset,
-        buf::Vector{UInt8} = Vector{UInt8}(undef, get_chunk_length(dataset_id));
-        dxpl_id = H5P_DEFAULT,
-        filters = Ref{UInt32}()
-    )
-    h5d_read_chunk(dataset_id, dxpl_id, offset, filters, buf)
-    return buf
-end
-h5d_read_chunk(dataset_id, dxpl_id, offset) = h5d_read_chunk(dataset_id, offset; dxpl_id = dxpl_id)
-h5d_read_chunk(dataset_id, dxpl_id, offset, buf::Vector{UInt8}) = h5d_read_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id)
-
-"""
-    h5d_read_chunk(dataset_id, index::Integer, [buf]; dxpl_id = HDF5.H5P_DEFAULT, filters = Ref{UInt32}())
-
-Helper method to read chunks via 0-based integer `index`.
-
-Argument `buf` is optional and defaults to a `Vector{UInt8}` of length determined by `HDF5.h5d_get_chunk_info`.
-Argument `dxpl_id` can be supplied a keyword and defaults to `HDF5.H5P_DEFAULT`.
-Argument `filters` can be retrieved by supplying a `Ref{UInt32}` value via a keyword argument.
-
-This method returns `Vector{UInt8}`.
-"""
-function h5d_read_chunk(dataset_id, index::Integer,
-        buf::Vector{UInt8} = Vector{UInt8}(undef, get_chunk_length(dataset_id));
-        dxpl_id = H5P_DEFAULT,
-        filters = Ref{UInt32}()
-    )
-    offset = [reverse(get_chunk_offset(dataset_id, index))...]
-    h5d_read_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filters = filters)
-end
-h5d_read_chunk(dataset_id, dxpl_id, index::Integer) = h5d_read_chunk(dataset_id, index; dxpl_id = dxpl_id)
-h5d_read_chunk(dataset_id, dxpl_id, index::Integer, buf::Vector{UInt8}) = h5d_read_chunk(dataset_id, index, buf; dxpl_id = dxpl_id)
-
-"""
-    h5d_write_chunk(dataset_id, offset, buf::Vector{UInt8}; dxpl_id = HDF5.H5P_DEFAULT, filter_mask = 0)
-
-Helper method to write chunks via 0-based offsets `offset` as a `Tuple`.
-"""
-function h5d_write_chunk(dataset_id, offset, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask=0)
-    h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, length(buf), buf)
-end
-h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, buf::Vector{UInt8}) =
-    h5d_write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
-
-"""
-    h5d_write_chunk(dataset_id, index::Integer, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask = 0)
-
-Helper method to write chunks via 0-based integer `index`.
-"""
-function h5d_write_chunk(dataset_id, index::Integer, buf::Vector{UInt8}; dxpl_id = H5P_DEFAULT, filter_mask = 0)
-    offset = [reverse(get_chunk_offset(dataset_id, index))...]
-    h5d_write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
-end
-h5d_write_chunk(dataset_id, dxpl_id, filter_mask, index::Integer, buf::Vector{UInt8}) =
-    h5d_write_chunk(dataset_id, index, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
-
 
 
 ###
@@ -341,14 +270,14 @@ function h5l_iterate_helper(group::hid_t, name::Ptr{Cchar}, info::Ptr{H5L_info_t
     return f(group, name, info)
 end
 """
-    h5l_iterate(f, group_id, idx_type, order, idx = 0) -> HDF5.hsize_t
+    h5l_iterate(f, group_id, idx_type, order, idx = 0) -> HDF5.API.hsize_t
 
-Executes [`h5l_iterate`](@ref h5l_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
+Executes [`h5l_iterate`](@ref h5l_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{HDF.API.hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
 with the user-provided callback function `f`, returning the index where iteration ends.
 
 The callback function must correspond to the signature
 ```
-    f(group::HDF5.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.H5L_info_t}) -> HDF5.herr_t
+    f(group::HDF5.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.H5L_info_t}) -> HDF5.API.herr_t
 ```
 where a negative return value halts iteration abnormally, a positive value halts iteration
 successfully, and zero continues iteration.
@@ -357,7 +286,7 @@ successfully, and zero continues iteration.
 ```julia-repl
 julia> HDF5.h5l_iterate(hfile, HDF5.H5_INDEX_NAME, HDF5.H5_ITER_INC) do group, name, info
            println(unsafe_string(name))
-           return HDF5.herr_t(0)
+           return HDF5.API.herr_t(0)
        end
 ```
 """
@@ -603,3 +532,26 @@ end
 ###
 ### Filter Interface
 ###
+
+
+
+###
+### MPIO
+###
+
+h5p_set_fapl_mpio(fapl_id, comm::Hmpih32, info::Hmpih32) =
+    h5p_set_fapl_mpio32(fapl_id, comm, info)
+h5p_set_fapl_mpio(fapl_id, comm::Hmpih64, info::Hmpih64) =
+    h5p_set_fapl_mpio64(fapl_id, comm, info)
+
+
+h5p_get_fapl_mpio(fapl_id, comm::Ref{Hmpih32}, info::Ref{Hmpih32}) =
+    h5p_get_fapl_mpio32(fapl_id, comm, info)
+h5p_get_fapl_mpio(fapl_id, comm::Ref{Hmpih64}, info::Ref{Hmpih64}) =
+    h5p_get_fapl_mpio64(fapl_id, comm, info)
+
+function h5p_get_fapl_mpio(fapl_id, ::Type{Hmpih}) where {Hmpih<:Union{Hmpih32,Hmpih64}}
+    comm, info = Ref{Hmpih}(), Ref{Hmpih}()
+    h5p_get_fapl_mpio(fapl_id, comm, info)
+    return comm[], info[]
+end
