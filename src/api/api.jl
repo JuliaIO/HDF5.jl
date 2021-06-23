@@ -1,7 +1,6 @@
 module API
 
 import Libdl
-import ..HDF5
 using Base: StringVector
 
 const depsfile = joinpath(@__DIR__, "..", "..", "deps", "deps.jl")
