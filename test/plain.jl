@@ -433,10 +433,10 @@ end # testset "Test h5d_fill
         gatherf_ptr = @cfunction(gatherf, HDF5.API.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
         @test HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_ptr, C_NULL) |> isnothing
         gatherf_bad_ptr = @cfunction(gatherf_bad, HDF5.API.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
-        @test_throws HDF5.H5Error HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_bad_ptr, C_NULL)
+        @test_throws HDF5.API.H5Error HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_bad_ptr, C_NULL)
         gatherf_data_ptr = @cfunction(gatherf_data, HDF5.API.herr_t, (Ptr{Nothing}, Csize_t, Ref{Int}))
         @test HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, Ref(9)) |> isnothing
-        @test_throws HDF5.H5Error HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, 10)
+        @test_throws HDF5.API.H5Error HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, 10)
     end
     rm(fn)
 end
@@ -451,7 +451,7 @@ end
         scatterf_ptr = @cfunction(scatterf, HDF5.API.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
         @test HDF5.API.h5d_scatter(scatterf_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf) |> isnothing
         scatterf_bad_ptr = @cfunction(scatterf_bad, HDF5.API.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
-        @test_throws HDF5.H5Error HDF5.API.h5d_scatter(scatterf_bad_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf)
+        @test_throws HDF5.API.H5Error HDF5.API.h5d_scatter(scatterf_bad_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf)
         scatterf_data_ptr = @cfunction(scatterf_data, HDF5.API.herr_t, (Ptr{Ptr{Int}}, Ptr{Csize_t}, Ref{Int}))
         @test HDF5.API.h5d_scatter(scatterf_data_ptr, Ref(9), datatype(Int), dataspace(d), dst_buf) |> isnothing
     end

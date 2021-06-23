@@ -349,7 +349,6 @@ function Base.cconvert(::Type{Ptr{Cvoid}}, v::VLen)
     return h
 end
 
-include("error.jl")
 include("show.jl")
 
 # Blosc compression:

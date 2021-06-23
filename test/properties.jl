@@ -39,7 +39,7 @@ h5open(fn, "w";
     @test fapl[:alignment] == (0, sizeof(Int))
     # value is H5FD_SEC2, but "constant" is runtime value not loadable by _read_const()
     @test HDF5.API.h5i_get_type(fapl[:driver]) == HDF5.API.H5I_VFL
-    @test_throws HDF5.H5Error fapl[:driver_info]
+    @test_throws HDF5.API.H5Error fapl[:driver_info]
     @test fapl[:fclose_degree] == HDF5.API.H5F_CLOSE_STRONG
     @test fapl[:libver_bounds] == (HDF5.API.H5F_LIBVER_EARLIEST, HDF5.API.H5F_LIBVER_LATEST)
 
