@@ -24,35 +24,20 @@ mpi_to_h5(mpiobj::MPIHandleWrapper) = mpi_to_h5(mpiobj.val)
 
 # Set MPIO properties in HDF5.
 # Note: HDF5 creates a COPY of the comm and info objects.
-function API.h5p_set_fapl_mpio(fapl_id, comm::MPI.Comm, info::MPI.Info)
+function set_fapl_mpio(fapl_id, comm::MPI.Comm, info::MPI.Info)
     h5comm = mpi_to_h5(comm)
     h5info = mpi_to_h5(info)
     API.h5p_set_fapl_mpio(fapl_id, h5comm, h5info)
 end
 
-API.h5p_set_fapl_mpio(fapl_id, comm::API.Hmpih32, info::API.Hmpih32) =
-    API.h5p_set_fapl_mpio32(fapl_id, comm, info)
-API.h5p_set_fapl_mpio(fapl_id, comm::API.Hmpih64, info::API.Hmpih64) =
-    API.h5p_set_fapl_mpio64(fapl_id, comm, info)
-
 # Retrieves the copies of the comm and info MPIO objects from the HDF5 property list.
-function API.h5p_get_fapl_mpio(fapl_id)
+function get_fapl_mpio(fapl_id)
     h5comm, h5info = API.h5p_get_fapl_mpio(fapl_id, H5MPIHandle)
     comm = MPI.Comm(h5_to_mpi(h5comm))
     info = MPI.Info(h5_to_mpi(h5info))
     comm, info
 end
 
-function API.h5p_get_fapl_mpio(fapl_id, ::Type{h}) where {h}
-    comm, info = Ref{h}(), Ref{h}()
-    API.h5p_get_fapl_mpio(fapl_id, comm, info)
-    comm[], info[]
-end
-
-API.h5p_get_fapl_mpio(fapl_id, comm::Ref{API.Hmpih32}, info::Ref{API.Hmpih32}) =
-    API.h5p_get_fapl_mpio32(fapl_id, comm, info)
-API.h5p_get_fapl_mpio(fapl_id, comm::Ref{API.Hmpih64}, info::Ref{API.Hmpih64}) =
-    API.h5p_get_fapl_mpio64(fapl_id, comm, info)
 
 function check_hdf5_parallel()
     has_parallel() && return

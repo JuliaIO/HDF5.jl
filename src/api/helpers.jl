@@ -603,3 +603,26 @@ end
 ###
 ### Filter Interface
 ###
+
+
+
+###
+### MPIO
+###
+
+h5p_set_fapl_mpio(fapl_id, comm::Hmpih32, info::Hmpih32) =
+    h5p_set_fapl_mpio32(fapl_id, comm, info)
+h5p_set_fapl_mpio(fapl_id, comm::Hmpih64, info::Hmpih64) =
+    h5p_set_fapl_mpio64(fapl_id, comm, info)
+
+
+h5p_get_fapl_mpio(fapl_id, comm::Ref{Hmpih32}, info::Ref{Hmpih32}) =
+    h5p_get_fapl_mpio32(fapl_id, comm, info)
+h5p_get_fapl_mpio(fapl_id, comm::Ref{Hmpih64}, info::Ref{Hmpih64}) =
+    h5p_get_fapl_mpio64(fapl_id, comm, info)
+
+function h5p_get_fapl_mpio(fapl_id, ::Type{Hmpih}) where {Hmpih<:Union{Hmpih32,Hmpih64}}
+    comm, info = Ref{Hmpih}(), Ref{Hmpih}()
+    h5p_get_fapl_mpio(fapl_id, comm, info)
+    return comm[], info[]
+end
