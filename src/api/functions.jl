@@ -1284,14 +1284,14 @@ function h5p_get_fclose_degree(fapl_id, fc_degree)
 end
 
 """
-    h5p_get_filter(plist_id::hid_t, idx::Cuint, flags::Ptr{Cuint}, cd_nemlts::Ptr{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{Cchar}, filter_config::Ptr{Cuint})
+    h5p_get_filter(plist_id::hid_t, idx::Cuint, flags::Ptr{Cuint}, cd_nemlts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{Cchar}, filter_config::Ptr{Cuint}) -> H5Z_filter_t
 
 See `libhdf5` documentation for [`H5Pget_filter2`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILTER2).
 """
 function h5p_get_filter(plist_id, idx, flags, cd_nemlts, cd_values, namelen, name, filter_config)
-    var"#status#" = ccall((:H5Pget_filter2, libhdf5), herr_t, (hid_t, Cuint, Ptr{Cuint}, Ptr{Csize_t}, Ptr{Cuint}, Csize_t, Ptr{Cchar}, Ptr{Cuint}), plist_id, idx, flags, cd_nemlts, cd_values, namelen, name, filter_config)
+    var"#status#" = ccall((:H5Pget_filter2, libhdf5), H5Z_filter_t, (hid_t, Cuint, Ptr{Cuint}, Ref{Csize_t}, Ptr{Cuint}, Csize_t, Ptr{Cchar}, Ptr{Cuint}), plist_id, idx, flags, cd_nemlts, cd_values, namelen, name, filter_config)
     var"#status#" < 0 && @h5error("Error getting filter")
-    return nothing
+    return var"#status#"
 end
 
 """
@@ -1339,6 +1339,17 @@ function h5p_get_local_heap_size_hint(plist_id, size_hint)
 end
 
 """
+    h5p_get_nfilters(plist_id::hid_t) -> Int
+
+See `libhdf5` documentation for [`H5Pget_nfilters`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_NFILTERS).
+"""
+function h5p_get_nfilters(plist_id)
+    var"#status#" = ccall((:H5Pget_nfilters, libhdf5), Cint, (hid_t,), plist_id)
+    var"#status#" < 0 && @h5error("Error getting nfilters")
+    return Int(var"#status#")
+end
+
+"""
     h5p_get_obj_track_times(plist_id::hid_t, track_times::Ref{UInt8})
 
 See `libhdf5` documentation for [`H5Pget_obj_track_times`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_OBJ_TRACK_TIMES).
@@ -1368,6 +1379,17 @@ See `libhdf5` documentation for [`H5Pmodify_filter`](https://portal.hdfgroup.org
 function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
     var"#status#" = ccall((:H5Pmodify_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
     var"#status#" < 0 && @h5error("Error modifying filter")
+    return nothing
+end
+
+"""
+    h5p_remove_filter(plist_id::hid_t, filter_id::H5Z_filter_t)
+
+See `libhdf5` documentation for [`H5Premove_filter`](https://portal.hdfgroup.org/display/HDF5/H5P_REMOVE_FILTER).
+"""
+function h5p_remove_filter(plist_id, filter_id)
+    var"#status#" = ccall((:H5Premove_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t), plist_id, filter_id)
+    var"#status#" < 0 && @h5error("Error removing filter")
     return nothing
 end
 
@@ -1493,6 +1515,17 @@ function h5p_set_fapl_mpio64(fapl_id, comm, info)
 end
 
 """
+    h5p_set_fapl_sec2(fapl_id::hid_t)
+
+See `libhdf5` documentation for [`H5Pset_fapl_sec2`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_SEC2).
+"""
+function h5p_set_fapl_sec2(fapl_id)
+    var"#status#" = ccall((:H5Pset_fapl_sec2, libhdf5), herr_t, (hid_t,), fapl_id)
+    var"#status#" < 0 && @h5error("Error setting Sec2 properties")
+    return nothing
+end
+
+"""
     h5p_set_fclose_degree(plist_id::hid_t, fc_degree::Cint)
 
 See `libhdf5` documentation for [`H5Pset_fclose_degree`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FCLOSE_DEGREE).
@@ -1511,6 +1544,17 @@ See `libhdf5` documentation for [`H5Pset_filter`](https://portal.hdfgroup.org/di
 function h5p_set_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
     var"#status#" = ccall((:H5Pset_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
     var"#status#" < 0 && @h5error("Error setting filter")
+    return nothing
+end
+
+"""
+    h5p_set_fletcher32(plist_id::hid_t)
+
+See `libhdf5` documentation for [`H5Pset_fletcher32`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FLETCHER32).
+"""
+function h5p_set_fletcher32(plist_id)
+    var"#status#" = ccall((:H5Pset_fletcher32, libhdf5), herr_t, (hid_t,), plist_id)
+    var"#status#" < 0 && @h5error("Error enabling Fletcher32 filter")
     return nothing
 end
 
@@ -1548,6 +1592,17 @@ function h5p_set_local_heap_size_hint(plist_id, size_hint)
 end
 
 """
+    h5p_set_nbit(plist_id::hid_t)
+
+See `libhdf5` documentation for [`H5Pset_nbit`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_NBIT).
+"""
+function h5p_set_nbit(plist_id)
+    var"#status#" = ccall((:H5Pset_nbit, libhdf5), herr_t, (hid_t,), plist_id)
+    var"#status#" < 0 && @h5error("Error enabling nbit filter")
+    return nothing
+end
+
+"""
     h5p_set_obj_track_times(plist_id::hid_t, track_times::UInt8)
 
 See `libhdf5` documentation for [`H5Pset_obj_track_times`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_OBJ_TRACK_TIMES).
@@ -1559,6 +1614,17 @@ function h5p_set_obj_track_times(plist_id, track_times)
 end
 
 """
+    h5p_set_scaleoffset(plist_id::hid_t, scale_type::Cint, scale_factor::Cint)
+
+See `libhdf5` documentation for [`H5Pset_scaleoffset`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SCALEOFFSET).
+"""
+function h5p_set_scaleoffset(plist_id, scale_type, scale_factor)
+    var"#status#" = ccall((:H5Pset_scaleoffset, libhdf5), herr_t, (hid_t, Cint, Cint), plist_id, scale_type, scale_factor)
+    var"#status#" < 0 && @h5error("Error enabling szip filter")
+    return nothing
+end
+
+"""
     h5p_set_shuffle(plist_id::hid_t)
 
 See `libhdf5` documentation for [`H5Pset_shuffle`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SHUFFLE).
@@ -1566,6 +1632,17 @@ See `libhdf5` documentation for [`H5Pset_shuffle`](https://portal.hdfgroup.org/d
 function h5p_set_shuffle(plist_id)
     var"#status#" = ccall((:H5Pset_shuffle, libhdf5), herr_t, (hid_t,), plist_id)
     var"#status#" < 0 && @h5error("Error enabling shuffle filter")
+    return nothing
+end
+
+"""
+    h5p_set_szip(plist_id::hid_t, options_mask::Cuint, pixels_per_block::Cuint)
+
+See `libhdf5` documentation for [`H5Pset_szip`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SZIP).
+"""
+function h5p_set_szip(plist_id, options_mask, pixels_per_block)
+    var"#status#" = ccall((:H5Pset_szip, libhdf5), herr_t, (hid_t, Cuint, Cuint), plist_id, options_mask, pixels_per_block)
+    var"#status#" < 0 && @h5error("Error enabling szip filter")
     return nothing
 end
 
@@ -2438,5 +2515,82 @@ function h5z_register(filter_class)
     var"#status#" = ccall((:H5Zregister, libhdf5), herr_t, (Ref{H5Z_class_t},), filter_class)
     var"#status#" < 0 && @h5error("Unable to register new filter")
     return nothing
+end
+
+"""
+    h5fd_core_init() -> hid_t
+
+See `libhdf5` documentation for [`H5FD_core_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_CORE_INIT).
+"""
+function h5fd_core_init()
+    var"#status#" = ccall((:H5FD_core_init, libhdf5), hid_t, ())
+    var"#status#" < 0 && @h5error("Error initializing file driver")
+    return var"#status#"
+end
+
+"""
+    h5fd_family_init() -> hid_t
+
+See `libhdf5` documentation for [`H5FD_family_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_FAMILY_INIT).
+"""
+function h5fd_family_init()
+    var"#status#" = ccall((:H5FD_family_init, libhdf5), hid_t, ())
+    var"#status#" < 0 && @h5error("Error initializing file driver")
+    return var"#status#"
+end
+
+"""
+    h5fd_log_init() -> hid_t
+
+See `libhdf5` documentation for [`H5FD_log_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_LOG_INIT).
+"""
+function h5fd_log_init()
+    var"#status#" = ccall((:H5FD_log_init, libhdf5), hid_t, ())
+    var"#status#" < 0 && @h5error("Error initializing file driver")
+    return var"#status#"
+end
+
+"""
+    h5fd_mpio_init() -> hid_t
+
+See `libhdf5` documentation for [`H5FD_mpio_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_MPIO_INIT).
+"""
+function h5fd_mpio_init()
+    var"#status#" = ccall((:H5FD_mpio_init, libhdf5), hid_t, ())
+    var"#status#" < 0 && @h5error("Error initializing file driver")
+    return var"#status#"
+end
+
+"""
+    h5fd_multi_init() -> hid_t
+
+See `libhdf5` documentation for [`H5FD_multi_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_MULTI_INIT).
+"""
+function h5fd_multi_init()
+    var"#status#" = ccall((:H5FD_multi_init, libhdf5), hid_t, ())
+    var"#status#" < 0 && @h5error("Error initializing file driver")
+    return var"#status#"
+end
+
+"""
+    h5fd_sec2_init() -> hid_t
+
+See `libhdf5` documentation for [`H5FD_sec2_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_SEC2_INIT).
+"""
+function h5fd_sec2_init()
+    var"#status#" = ccall((:H5FD_sec2_init, libhdf5), hid_t, ())
+    var"#status#" < 0 && @h5error("Error initializing file driver")
+    return var"#status#"
+end
+
+"""
+    h5fd_stdio_init() -> hid_t
+
+See `libhdf5` documentation for [`H5FD_stdio_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_STDIO_INIT).
+"""
+function h5fd_stdio_init()
+    var"#status#" = ccall((:H5FD_stdio_init, libhdf5), hid_t, ())
+    var"#status#" < 0 && @h5error("Error initializing file driver")
+    return var"#status#"
 end
 

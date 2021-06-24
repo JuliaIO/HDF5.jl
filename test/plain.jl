@@ -33,9 +33,9 @@ f = h5open(fn, "w")
 f["Float64"] = 3.2
 f["Int16"] = Int16(4)
 # compression of empty array (issue #246)
-f["compressedempty", shuffle=(), compress=4] = Int64[]
+f["compressedempty", shuffle=true, deflate=4] = Int64[]
 # compression of zero-dimensional array (pull request #445)
-f["compressed_zerodim", shuffle=(), compress=4] = fill(Int32(42), ())
+f["compressed_zerodim", shuffle=true, deflate=4] = fill(Int32(42), ())
 f["bloscempty", blosc=4] = Int64[]
 # Create arrays of different types
 A = randn(3, 5)
@@ -118,8 +118,8 @@ attributes(f)["ref_test"] = HDF5.Reference(f, "empty_array_of_strings")
 g = create_group(f, "mygroup")
 # Test dataset with compression
 R = rand(1:20, 20, 40);
-g["CompressedA", chunk=(5, 6), shuffle=(), compress=9] = R
-g["BloscA", chunk=(5, 6), shuffle=(), blosc=9] = R
+g["CompressedA", chunk=(5, 6), shuffle=true, deflate=9] = R
+g["BloscA", chunk=(5, 6), shuffle=true, blosc=9] = R
 close(g)
 # Copy group containing dataset
 copy_object(f, "mygroup", f, "mygroup2")
@@ -461,11 +461,11 @@ end
 # Test that switching time tracking off results in identical files
 fn1 = tempname(); fn2 = tempname()
 h5open(fn1, "w") do f
-    f["x", track_times=false] = [1, 2, 3]
+    f["x", obj_track_times=false] = [1, 2, 3]
 end
 sleep(1)
 h5open(fn2, "w") do f
-    f["x", track_times=false] = [1, 2, 3]
+    f["x", obj_track_times=false] = [1, 2, 3]
 end
 @test open(crc32c, fn1) == open(crc32c, fn2)
 rm(fn1); rm(fn2)
@@ -757,8 +757,15 @@ meta = create_attribute(dset, "meta", datatype(Bool), dataspace((1,)))
 dsetattrs = attributes(dset)
 @test sprint(show, dsetattrs) == "Attributes of HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
 
-prop = create_property(HDF5.API.H5P_DATASET_CREATE)
-@test sprint(show, prop) == "HDF5.Properties: dataset create class"
+prop = HDF5.init!(HDF5.LinkCreateProperties())
+@test sprint(show, prop) == """
+HDF5.LinkCreateProperties(
+  create_intermediate_group = false,
+  char_encoding   = :ascii,
+)"""
+
+prop = HDF5.DatasetCreateProperties()
+@test sprint(show, prop) == "HDF5.DatasetCreateProperties()"
 
 dtype = HDF5.Datatype(HDF5.API.h5t_copy(HDF5.API.H5T_IEEE_F64LE))
 @test sprint(show, dtype) == "HDF5.Datatype: H5T_IEEE_F64LE"
@@ -797,7 +804,7 @@ close(dtype)
 @test sprint(show, dtype) == "HDF5.Datatype: (invalid)"
 
 close(prop)
-@test sprint(show, prop) == "HDF5.Properties: (invalid)"
+@test sprint(show, prop) == "HDF5.DatasetCreateProperties: (invalid)"
 
 close(meta)
 @test sprint(show, meta) == "HDF5.Attribute: (invalid)"

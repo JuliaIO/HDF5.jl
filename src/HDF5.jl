@@ -19,7 +19,8 @@ copy_object, open_object, delete_object,
 create_datatype, commit_datatype, open_datatype,
 create_property,
 group_info, object_info,
-dataspace, datatype
+dataspace, datatype,
+Filters, Drivers
 
 ### The following require module scoping ###
 
@@ -37,8 +38,10 @@ dataspace, datatype
 # H5DataStore, Attribute, File, Group, Dataset, Datatype, Opaque,
 # Dataspace, Object, Properties, VLen, ChunkStorage, Reference
 
+h5doc(name) = "[`$name`](https://portal.hdfgroup.org/display/HDF5/$(name))"
 
 include("api/api.jl")
+include("properties.jl")
 
 ### Generic H5DataStore interface ###
 
@@ -190,17 +193,6 @@ mutable struct Group <: H5DataStore
 end
 Base.cconvert(::Type{API.hid_t}, g::Group) = g.id
 
-mutable struct Properties
-    id::API.hid_t
-    class::API.hid_t
-    function Properties(id = API.H5P_DEFAULT, class = API.H5P_DEFAULT)
-        p = new(id, class)
-        finalizer(close, p) # Essential, otherwise we get a memory leak, since closing file with CLOSE_STRONG is not doing it for us
-        p
-    end
-end
-Base.cconvert(::Type{API.hid_t}, p::Properties) = p.id
-
 mutable struct Dataset
     id::API.hid_t
     file::File
@@ -351,9 +343,6 @@ end
 
 include("show.jl")
 
-# Blosc compression:
-include("blosc_filter.jl")
-
 # heuristic chunk layout (return empty array to disable chunking)
 function heuristic_chunk(T, shape)
     Ts = sizeof(T)
@@ -396,8 +385,9 @@ Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for
 """
 function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool = false, pv...)
     # With garbage collection, the other modes don't make sense
-    fapl = create_property(API.H5P_FILE_ACCESS; pv..., fclose_degree = API.H5F_CLOSE_STRONG) # file access property list
-    fcpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(API.H5P_FILE_CREATE; pv...) # file create property list
+    fapl = FileAccessProperties(; fclose_degree = :strong)
+    fcpl = FileCreateProperties()
+    setproperties!(fapl, fcpl; pv...)
     rd, wr, cr, tr, ff =
         mode == "r"  ? (true,  false, false, false, false) :
         mode == "r+" ? (true,  true,  false, false, true ) :
@@ -539,7 +529,7 @@ function h5readattr(filename, name::AbstractString)
 end
 
 # Ensure that objects haven't been closed
-Base.isvalid(obj::Union{File,Properties,Datatype,Dataspace}) = obj.id != -1 && API.h5i_is_valid(obj)
+Base.isvalid(obj::Union{File,Datatype,Dataspace}) = obj.id != -1 && API.h5i_is_valid(obj)
 Base.isvalid(obj::Union{Group,Dataset,Attribute}) = obj.id != -1 && obj.file.id != -1 && API.h5i_is_valid(obj)
 Base.isvalid(obj::Attributes) = isvalid(obj.parent)
 checkvalid(obj) = isvalid(obj) ? obj : error("File or object has been closed")
@@ -601,16 +591,6 @@ function Base.close(obj::Dataspace)
     if obj.id != -1
         if isvalid(obj)
             API.h5s_close(obj)
-        end
-        obj.id = -1
-    end
-    nothing
-end
-
-function Base.close(obj::Properties)
-    if obj.id != -1
-        if isvalid(obj)
-            API.h5p_close(obj)
         end
         obj.id = -1
     end
@@ -679,14 +659,15 @@ function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     isempty(pv) && return open_object(parent, path)
     obj_type = gettype(parent, path)
     if obj_type == API.H5I_DATASET
-        dapl = create_property(API.H5P_DATASET_ACCESS; pv...)
-        dxpl = create_property(API.H5P_DATASET_XFER; pv...)
+        dapl = DatasetAccessProperties()
+        dxpl = DatasetTransferProperties()
+        setproperties!(dapl, dxpl; pv...)
         return open_dataset(parent, path, dapl, dxpl)
     elseif obj_type == API.H5I_GROUP
-        gapl = create_property(API.H5P_GROUP_ACCESS; pv...)
+        gapl = GroupAccessProperties(; pv...)
         return open_group(parent, path, gapl)
     else#if obj_type == API.H5I_DATATYPE # only remaining choice
-        tapl = create_property(API.H5P_DATATYPE_ACCESS; pv...)
+        tapl = DatatypeAccessProperties(; pv...)
         return open_datatype(parent, path, tapl)
     end
 end
@@ -712,9 +693,10 @@ end
 
 # Setting dset creation properties with name/value pairs
 function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace; pv...)
-    dcpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(API.H5P_DATASET_CREATE; pv...)
-    dxpl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(API.H5P_DATASET_XFER; pv...)
-    dapl = isempty(pv) ? DEFAULT_PROPERTIES : create_property(API.H5P_DATASET_ACCESS; pv...)
+    dcpl = DatasetCreateProperties()
+    dxpl = DatasetTransferProperties()
+    dapl = DatasetAccessProperties()
+    setproperties!(dcpl,dxpl,dapl; pv...)
     haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
     Dataset(API.h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
 end
@@ -725,8 +707,8 @@ create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Type, dsp
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 create_datatype(class_id, sz) = Datatype(API.h5t_create(class_id, sz))
 function commit_datatype(parent::Union{File,Group}, path::AbstractString, dtype::Datatype,
-                  lcpl::Properties=create_property(API.H5P_LINK_CREATE), tcpl::Properties=DEFAULT_PROPERTIES, tapl::Properties=DEFAULT_PROPERTIES)
-    API.h5p_set_char_encoding(lcpl, cset(typeof(path)))
+                  lcpl::Properties=LinkCreateProperties(), tcpl::Properties=DEFAULT_PROPERTIES, tapl::Properties=DEFAULT_PROPERTIES)
+    lcpl.char_encoding = cset(typeof(path))
     API.h5t_commit(checkvalid(parent), path, dtype, lcpl, tcpl, tapl)
     dtype.file = file(parent)
     return dtype
@@ -735,123 +717,6 @@ end
 function create_attribute(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace)
     attrid = API.h5a_create(checkvalid(parent), name, dtype, dspace, _attr_properties(name), API.H5P_DEFAULT)
     return Attribute(attrid, file(parent))
-end
-
-function _prop_get(p::Properties, name::Symbol)
-    class = p.class
-
-    if class == API.H5P_FILE_CREATE
-        return name === :userblock   ? API.h5p_get_userblock(p) :
-               name === :track_times ? API.h5p_get_obj_track_times(p) : # API.H5P_OBJECT_CREATE
-               error("unknown file create property ", name)
-    end
-
-    if class == API.H5P_FILE_ACCESS
-        return name === :alignment     ? API.h5p_get_alignment(p) :
-               name === :driver        ? API.h5p_get_driver(p) :
-               name === :driver_info   ? API.h5p_get_driver_info(p) :
-               name === :fapl_mpio     ? API.h5p_get_fapl_mpio(p) :
-               name === :fclose_degree ? API.h5p_get_fclose_degree(p) :
-               name === :libver_bounds ? API.h5p_get_libver_bounds(p) :
-               error("unknown file access property ", name)
-    end
-
-    if class == API.H5P_GROUP_CREATE
-        return name === :local_heap_size_hint ? API.h5p_get_local_heap_size_hint(p) :
-               name === :track_times ? API.h5p_get_obj_track_times(p) : # API.H5P_OBJECT_CREATE
-               error("unknown group create property ", name)
-    end
-
-    if class == API.H5P_LINK_CREATE
-        return name === :char_encoding ? API.h5p_get_char_encoding(p) :
-               name === :create_intermediate_group ? API.h5p_get_create_intermediate_group(p) :
-               error("unknown link create property ", name)
-    end
-
-    if class == API.H5P_DATASET_CREATE
-        return name === :alloc_time  ? API.h5p_get_alloc_time(p) :
-               name === :chunk       ? get_chunk(p) :
-               #name === :external    ? API.h5p_get_external(p) :
-               name === :layout      ? API.h5p_get_layout(p) :
-               name === :track_times ? API.h5p_get_obj_track_times(p) : # API.H5P_OBJECT_CREATE
-               error("unknown dataset create property ", name)
-    end
-
-    if class == API.H5P_DATASET_XFER
-        return name === :dxpl_mpio  ? API.h5p_get_dxpl_mpio(p) :
-               error("unknown dataset transfer property ", name)
-    end
-
-    if class == API.H5P_ATTRIBUTE_CREATE
-        return name === :char_encoding ? API.h5p_get_char_encoding(p) :
-               error("unknown attribute create property ", name)
-    end
-
-    error("unknown property class ", class)
-end
-
-function _prop_set!(p::Properties, name::Symbol, val, check::Bool = true)
-    class = p.class
-
-    if class == API.H5P_FILE_CREATE
-        return name === :userblock   ? API.h5p_set_userblock(p, val...) :
-               name === :track_times ? API.h5p_set_obj_track_times(p, val...) : # API.H5P_OBJECT_CREATE
-               check ? error("unknown file create property ", name) : nothing
-    end
-
-    if class == API.H5P_FILE_ACCESS
-        return name === :alignment     ? API.h5p_set_alignment(p, val...) :
-               name === :fapl_mpio     ? set_fapl_mpio(p, val...) :
-               name === :fclose_degree ? API.h5p_set_fclose_degree(p, val...) :
-               name === :libver_bounds ? API.h5p_set_libver_bounds(p, val...) :
-               check ? error("unknown file access property ", name) : nothing
-    end
-
-    if class == API.H5P_GROUP_CREATE
-        return name === :local_heap_size_hint ? API.h5p_set_local_heap_size_hint(p, val...) :
-               name === :track_times          ? API.h5p_set_obj_track_times(p, val...) : # API.H5P_OBJECT_CREATE
-               check ? error("unknown group create property ", name) : nothing
-    end
-
-    if class == API.H5P_LINK_CREATE
-        return name === :char_encoding ? API.h5p_set_char_encoding(p, val...) :
-               name === :create_intermediate_group ? API.h5p_set_create_intermediate_group(p, val...) :
-               check ? error("unknown link create property ", name) : nothing
-    end
-
-    if class == API.H5P_DATASET_CREATE
-        return name === :alloc_time  ? API.h5p_set_alloc_time(p, val...) :
-               name === :blosc       ? set_blosc(p, val...) :
-               name === :chunk       ? set_chunk(p, val...) :
-               name === :compress    ? API.h5p_set_deflate(p, val...) :
-               name === :deflate     ? API.h5p_set_deflate(p, val...) :
-               name === :external    ? API.h5p_set_external(p, val...) :
-               name === :filter      ? set_filter(p, val...) :
-               name === :layout      ? API.h5p_set_layout(p, val...) :
-               name === :shuffle     ? API.h5p_set_shuffle(p, val...) :
-               name === :track_times ? API.h5p_set_obj_track_times(p, val...) : # API.H5P_OBJECT_CREATE
-               check ? error("unknown dataset create property ", name) : nothing
-    end
-
-    if class == API.H5P_DATASET_XFER
-        return name === :dxpl_mpio  ? API.h5p_set_dxpl_mpio(p, val...) :
-               check ? error("unknown dataset transfer property ", name) : nothing
-    end
-
-    if class == API.H5P_ATTRIBUTE_CREATE
-        return name === :char_encoding ? API.h5p_set_char_encoding(p, val...) :
-               check ? error("unknown attribute create property ", name) : nothing
-    end
-
-    return check ? error("unknown property class ", class) : nothing
-end
-
-function create_property(class; pv...)
-    p = Properties(API.h5p_create(class), class)
-    for (k, v) in pairs(pv)
-        _prop_set!(p, k, v, false)
-    end
-    return p
 end
 
 # Delete objects
@@ -867,12 +732,6 @@ copy_object(src_obj::Object, dst_parent::Union{File,Group}, dst_path::AbstractSt
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
 Base.setindex!(dset::Dataset, val, name::AbstractString) = write_attribute(dset, name, val)
 Base.setindex!(x::Attributes, val, name::AbstractString) = write_attribute(x.parent, name, val)
-# Getting and setting properties: p[:chunk] = dims, p[:compress] = 6
-Base.getindex(p::Properties, name::Symbol) = _prop_get(checkvalid(p), name)
-function Base.setindex!(p::Properties, val, name::Symbol)
-    _prop_set!(checkvalid(p), name, val, true)
-    return p
-end
 # Create a dataset with properties: obj[path, prop = val, ...] = val
 function Base.setindex!(parent::Union{File,Group}, val, path::AbstractString; pv...)
     need_chunks = any(k in keys(chunked_props) for k in keys(pv))
@@ -1709,9 +1568,7 @@ end
 # If you need to link to multiple segments, use low-level interface
 function create_external_dataset(parent::Union{File,Group}, name::AbstractString, filepath::AbstractString, t, sz::Dims, offset::Integer=0)
     checkvalid(parent)
-    dcpl  = create_property(API.H5P_DATASET_CREATE)
-    API.h5p_set_external(dcpl , filepath, offset, prod(sz)*sizeof(t)) # TODO: allow API.H5F_UNLIMITED
-    create_dataset(parent, name, datatype(t), dataspace(sz); dcpl=dcpl)
+    create_dataset(parent, name, datatype(t), dataspace(sz); external=(filepath, offset, prod(sz)*sizeof(t)))
 end
 
 """
@@ -2004,17 +1861,12 @@ const libversion = API.h5_get_libversion()
 vlen_get_buf_size(dset::Dataset, dtype::Datatype, dspace::Dataspace) = API.h5d_vlen_get_buf_size(dset, dtype, dspace)
 
 ### Property manipulation ###
-get_access_properties(d::Dataset)   = Properties(API.h5d_get_access_plist(d), API.H5P_DATASET_ACCESS)
-get_access_properties(f::File)      = Properties(API.h5f_get_access_plist(f), API.H5P_FILE_ACCESS)
-get_create_properties(d::Dataset)   = Properties(API.h5d_get_create_plist(d), API.H5P_DATASET_CREATE)
-get_create_properties(g::Group)     = Properties(API.h5g_get_create_plist(g), API.H5P_GROUP_CREATE)
-get_create_properties(f::File)      = Properties(API.h5f_get_create_plist(f), API.H5P_FILE_CREATE)
-get_create_properties(a::Attribute) = Properties(API.h5a_get_create_plist(a), API.H5P_ATTRIBUTE_CREATE)
-
-function get_chunk(p::Properties)
-    dims, N = API.h5p_get_chunk(p)
-    ntuple(i -> Int(dims[N-i+1]), N)
-end
+get_access_properties(d::Dataset)   = DatasetAccessProperties(API.h5d_get_access_plist(d))
+get_access_properties(f::File)      = FileAccessProperties(API.h5f_get_access_plist(f))
+get_create_properties(d::Dataset)   = DatasetCreateProperties(API.h5d_get_create_plist(d))
+get_create_properties(g::Group)     = GroupCreateProperties(API.h5g_get_create_plist(g))
+get_create_properties(f::File)      = FileCreateProperties(API.h5f_get_create_plist(f))
+get_create_properties(a::Attribute) = AttributeCreateProperties(API.h5a_get_create_plist(a))
 
 function get_chunk(dset::Dataset)
     p = get_create_properties(dset)
@@ -2027,28 +1879,6 @@ function get_chunk(dset::Dataset)
     ret
 end
 
-set_chunk(p::Properties, dims...) = API.h5p_set_chunk(p, length(dims), API.hsize_t[reverse(dims)...])
-
-# Set a single filter
-function set_filter(p::Properties, filter_id, flags, cd_values...)
-    # Passing cd_values as Cuint[] allocates less than passing as
-    # Ref{NTuple{N,Cuint}} (and it is compatible with Julia 1.3)
-    API.h5p_set_filter(p::Properties, filter_id, flags, length(cd_values), Cuint[cd_values...])
-end
-
-# Set multiple filters
-function set_filter(p::Properties, filter::Tuple, additional_filters...)
-    set_filter(p::Properties, filter...)
-    for f in additional_filters
-      set_filter(p::Properties, f...)
-    end
-end
-
-get_alignment(p::Properties)     = API.h5p_get_alignment(checkvalid(p))
-get_alloc_time(p::Properties)    = API.h5p_get_alloc_time(checkvalid(p))
-get_userblock(p::Properties)     = API.h5p_get_userblock(checkvalid(p))
-get_fclose_degree(p::Properties) = API.h5p_get_fclose_degree(checkvalid(p))
-get_libver_bounds(p::Properties) = API.h5p_get_libver_bounds(checkvalid(p))
 
 """
     get_datasets(file::HDF5.File) -> datasets::Vector{HDF5.Dataset}
@@ -2086,17 +1916,6 @@ function create_external(source::Union{File,Group}, source_relpath, target_filen
     nothing
 end
 
-# Across initializations of the library, the id of various properties
-# will change. So don't hard-code the id (important for precompilation)
-const UTF8_LINK_PROPERTIES = Ref{Properties}()
-_link_properties(::AbstractString) = UTF8_LINK_PROPERTIES[]
-const UTF8_ATTRIBUTE_PROPERTIES = Ref{Properties}()
-_attr_properties(::AbstractString) = UTF8_ATTRIBUTE_PROPERTIES[]
-const ASCII_LINK_PROPERTIES = Ref{Properties}()
-const ASCII_ATTRIBUTE_PROPERTIES = Ref{Properties}()
-
-const DEFAULT_PROPERTIES = Properties()
-
 const HAS_PARALLEL = Ref(false)
 
 """
@@ -2117,19 +1936,19 @@ function __init__()
         ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
     end
 
-    register_blosc()
+    Filters.register_blosc()
 
     # use our own error handling machinery (i.e. turn off automatic error printing)
     API.h5e_set_auto(API.H5E_DEFAULT, C_NULL, C_NULL)
 
-    ASCII_LINK_PROPERTIES[] = create_property(API.H5P_LINK_CREATE; char_encoding = API.H5T_CSET_ASCII,
-                                       create_intermediate_group = 1)
-    UTF8_LINK_PROPERTIES[]  = create_property(API.H5P_LINK_CREATE; char_encoding = API.H5T_CSET_UTF8,
-                                       create_intermediate_group = 1)
-    ASCII_ATTRIBUTE_PROPERTIES[] = create_property(API.H5P_ATTRIBUTE_CREATE; char_encoding = API.H5T_CSET_ASCII)
-    UTF8_ATTRIBUTE_PROPERTIES[]  = create_property(API.H5P_ATTRIBUTE_CREATE; char_encoding = API.H5T_CSET_UTF8)
+    # initialize default properties
+    ASCII_LINK_PROPERTIES.char_encoding = :ascii
+    ASCII_LINK_PROPERTIES.create_intermediate_group = true
+    UTF8_LINK_PROPERTIES.char_encoding = :utf8
+    UTF8_LINK_PROPERTIES.create_intermediate_group = true
+    ASCII_ATTRIBUTE_PROPERTIES.char_encoding = :ascii
+    UTF8_ATTRIBUTE_PROPERTIES.char_encoding = :utf8
 
-    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" @eval include("mpio.jl")
     @require FileIO="5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" @eval include("fileio.jl")
 
     return nothing

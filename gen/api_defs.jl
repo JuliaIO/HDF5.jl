@@ -181,14 +181,16 @@
 @bind h5p_get_fapl_mpio32(fapl_id::hid_t, comm::Ptr{Hmpih32}, info::Ptr{Hmpih32})::herr_t "Error getting MPIO properties"
 @bind h5p_get_fapl_mpio64(fapl_id::hid_t, comm::Ptr{Hmpih64}, info::Ptr{Hmpih64})::herr_t "Error getting MPIO properties"
 @bind h5p_get_fclose_degree(fapl_id::hid_t, fc_degree::Ref{Cint})::herr_t "Error getting close degree"
-@bind h5p_get_filter2(plist_id::hid_t, idx::Cuint, flags::Ptr{Cuint}, cd_nemlts::Ptr{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{Cchar}, filter_config::Ptr{Cuint})::herr_t "Error getting filter"
+@bind h5p_get_filter2(plist_id::hid_t, idx::Cuint, flags::Ptr{Cuint}, cd_nemlts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{Cchar}, filter_config::Ptr{Cuint})::H5Z_filter_t "Error getting filter"
 @bind h5p_get_filter_by_id2(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Ref{Cuint}, cd_nelmts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{UInt8}, filter_config::Ptr{Cuint})::herr_t "Error getting filter ID"
 @bind h5p_get_layout(plist_id::hid_t)::Cint string("Error getting layout")
 @bind h5p_get_libver_bounds(fapl_id::hid_t, low::Ref{Cint}, high::Ref{Cint})::herr_t "Error getting library version bounds"
 @bind h5p_get_local_heap_size_hint(plist_id::hid_t, size_hint::Ref{Csize_t})::herr_t "Error getting local heap size hint"
+@bind h5p_get_nfilters(plist_id::hid_t)::Cint "Error getting nfilters"
 @bind h5p_get_obj_track_times(plist_id::hid_t, track_times::Ref{UInt8})::herr_t "Error setting object time tracking"
 @bind h5p_get_userblock(plist_id::hid_t, len::Ptr{hsize_t})::herr_t "Error getting userblock"
 @bind h5p_modify_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})::herr_t "Error modifying filter"
+@bind h5p_remove_filter(plist_id::hid_t, filter_id::H5Z_filter_t)::herr_t "Error removing filter"
 @bind h5p_set_alignment(plist_id::hid_t, threshold::hsize_t, alignment::hsize_t)::herr_t "Error setting alignment"
 @bind h5p_set_alloc_time(plist_id::hid_t, alloc_time::Cint)::herr_t "Error setting allocation timing"
 @bind h5p_set_char_encoding(plist_id::hid_t, encoding::Cint)::herr_t "Error setting char encoding"
@@ -200,13 +202,18 @@
 @bind h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::Int, size::Csize_t)::herr_t "Error setting external property"
 @bind h5p_set_fapl_mpio32(fapl_id::hid_t, comm::Hmpih32, info::Hmpih32)::herr_t "Error setting MPIO properties"
 @bind h5p_set_fapl_mpio64(fapl_id::hid_t, comm::Hmpih64, info::Hmpih64)::herr_t "Error setting MPIO properties"
+@bind h5p_set_fapl_sec2(fapl_id::hid_t)::herr_t "Error setting Sec2 properties"
 @bind h5p_set_fclose_degree(plist_id::hid_t, fc_degree::Cint)::herr_t "Error setting close degree"
 @bind h5p_set_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})::herr_t "Error setting filter"
+@bind h5p_set_fletcher32(plist_id::hid_t)::herr_t "Error enabling Fletcher32 filter"
 @bind h5p_set_layout(plist_id::hid_t, setting::Cint)::herr_t "Error setting layout"
 @bind h5p_set_libver_bounds(fapl_id::hid_t, low::Cint, high::Cint)::herr_t "Error setting library version bounds"
 @bind h5p_set_local_heap_size_hint(plist_id::hid_t, size_hint::Csize_t)::herr_t "Error setting local heap size hint"
+@bind h5p_set_nbit(plist_id::hid_t)::herr_t "Error enabling nbit filter"
 @bind h5p_set_obj_track_times(plist_id::hid_t, track_times::UInt8)::herr_t "Error setting object time tracking"
+@bind h5p_set_scaleoffset(plist_id::hid_t, scale_type::Cint, scale_factor::Cint)::herr_t "Error enabling szip filter"
 @bind h5p_set_shuffle(plist_id::hid_t)::herr_t "Error enabling shuffle filter"
+@bind h5p_set_szip(plist_id::hid_t, options_mask::Cuint, pixels_per_block::Cuint)::herr_t "Error enabling szip filter"
 @bind h5p_set_userblock(plist_id::hid_t, len::hsize_t)::herr_t "Error setting userblock"
 @bind h5p_set_virtual(dcpl_id::hid_t, vspace_id::hid_t, src_file_name::Ptr{UInt8}, src_dset_name::Ptr{UInt8}, src_space_id::hid_t)::herr_t "Error setting virtual"
 
@@ -332,3 +339,16 @@
 ###
 
 @bind h5z_register(filter_class::Ref{H5Z_class_t})::herr_t "Unable to register new filter"
+
+
+###
+### File driver interface
+### FD consts: these are defined in hdf5 as macros
+
+@bind h5fd_core_init()::hid_t "Error initializing file driver"
+@bind h5fd_family_init()::hid_t "Error initializing file driver"
+@bind h5fd_log_init()::hid_t "Error initializing file driver"
+@bind h5fd_mpio_init()::hid_t "Error initializing file driver"
+@bind h5fd_multi_init()::hid_t "Error initializing file driver"
+@bind h5fd_sec2_init()::hid_t "Error initializing file driver"
+@bind h5fd_stdio_init()::hid_t "Error initializing file driver"

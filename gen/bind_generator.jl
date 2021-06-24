@@ -5,10 +5,21 @@ using Base.Meta: isexpr, quot
 const bind_exceptions = Dict{Symbol,Symbol}()
 
 # Distinguishes 32-bit vs 64-bit handle arguments
-push!(bind_exceptions, :h5p_get_fapl_mpio32 => :H5Pget_fapl_mpio)
-push!(bind_exceptions, :h5p_get_fapl_mpio64 => :H5Pget_fapl_mpio)
-push!(bind_exceptions, :h5p_set_fapl_mpio32 => :H5Pset_fapl_mpio)
-push!(bind_exceptions, :h5p_set_fapl_mpio64 => :H5Pset_fapl_mpio)
+bind_exceptions[:h5p_get_fapl_mpio32] = :H5Pget_fapl_mpio
+bind_exceptions[:h5p_get_fapl_mpio64] = :H5Pget_fapl_mpio
+bind_exceptions[:h5p_set_fapl_mpio32] = :H5Pset_fapl_mpio
+bind_exceptions[:h5p_set_fapl_mpio64] = :H5Pset_fapl_mpio
+# have numbers at the end
+bind_exceptions[:h5p_set_fletcher32]  = :H5Pset_fletcher32
+bind_exceptions[:h5p_set_fapl_sec2]   = :H5Pset_fapl_sec2
+# underscore separator not removed
+bind_exceptions[:h5fd_core_init]      = :H5FD_core_init
+bind_exceptions[:h5fd_family_init]    = :H5FD_family_init
+bind_exceptions[:h5fd_log_init]       = :H5FD_log_init
+bind_exceptions[:h5fd_mpio_init]      = :H5FD_mpio_init
+bind_exceptions[:h5fd_multi_init]     = :H5FD_multi_init
+bind_exceptions[:h5fd_sec2_init]      = :H5FD_sec2_init
+bind_exceptions[:h5fd_stdio_init]     = :H5FD_stdio_init
 
 # An expression which is injected at the beginning of the API defitions to aid in doing
 # (pre)compile-time conditional compilation based on the libhdf5 version.

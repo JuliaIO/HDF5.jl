@@ -14,7 +14,7 @@ This page documents the function names and nominal C argument types of the API w
 have bindings in this package.
 Note that in many cases, high-level data types are valid arguments through automatic
 `ccall` conversions.
-For instance, `HDF5Datatype` objects will be automatically converted to their `hid_t` ID
+For instance, `HDF5.Datatype` objects will be automatically converted to their `hid_t` ID
 by Julia's `cconvert`+`unsafe_convert` `ccall` rules.
 
 There are additional helper wrappers (often for out-argument functions) which are not
@@ -298,9 +298,11 @@ h5o_open_by_idx
 - [`h5p_get_layout`](@ref h5p_get_layout)
 - [`h5p_get_libver_bounds`](@ref h5p_get_libver_bounds)
 - [`h5p_get_local_heap_size_hint`](@ref h5p_get_local_heap_size_hint)
+- [`h5p_get_nfilters`](@ref h5p_get_nfilters)
 - [`h5p_get_obj_track_times`](@ref h5p_get_obj_track_times)
 - [`h5p_get_userblock`](@ref h5p_get_userblock)
 - [`h5p_modify_filter`](@ref h5p_modify_filter)
+- [`h5p_remove_filter`](@ref h5p_remove_filter)
 - [`h5p_set_alignment`](@ref h5p_set_alignment)
 - [`h5p_set_alloc_time`](@ref h5p_set_alloc_time)
 - [`h5p_set_char_encoding`](@ref h5p_set_char_encoding)
@@ -312,13 +314,18 @@ h5o_open_by_idx
 - [`h5p_set_external`](@ref h5p_set_external)
 - [`h5p_set_fapl_mpio32`](@ref h5p_set_fapl_mpio32)
 - [`h5p_set_fapl_mpio64`](@ref h5p_set_fapl_mpio64)
+- [`h5p_set_fapl_sec2`](@ref h5p_set_fapl_sec2)
 - [`h5p_set_fclose_degree`](@ref h5p_set_fclose_degree)
 - [`h5p_set_filter`](@ref h5p_set_filter)
+- [`h5p_set_fletcher32`](@ref h5p_set_fletcher32)
 - [`h5p_set_layout`](@ref h5p_set_layout)
 - [`h5p_set_libver_bounds`](@ref h5p_set_libver_bounds)
 - [`h5p_set_local_heap_size_hint`](@ref h5p_set_local_heap_size_hint)
+- [`h5p_set_nbit`](@ref h5p_set_nbit)
 - [`h5p_set_obj_track_times`](@ref h5p_set_obj_track_times)
+- [`h5p_set_scaleoffset`](@ref h5p_set_scaleoffset)
 - [`h5p_set_shuffle`](@ref h5p_set_shuffle)
+- [`h5p_set_szip`](@ref h5p_set_szip)
 - [`h5p_set_userblock`](@ref h5p_set_userblock)
 - [`h5p_set_virtual`](@ref h5p_set_virtual)
 ```@docs
@@ -341,9 +348,11 @@ h5p_get_filter_by_id
 h5p_get_layout
 h5p_get_libver_bounds
 h5p_get_local_heap_size_hint
+h5p_get_nfilters
 h5p_get_obj_track_times
 h5p_get_userblock
 h5p_modify_filter
+h5p_remove_filter
 h5p_set_alignment
 h5p_set_alloc_time
 h5p_set_char_encoding
@@ -355,13 +364,18 @@ h5p_set_dxpl_mpio
 h5p_set_external
 h5p_set_fapl_mpio32
 h5p_set_fapl_mpio64
+h5p_set_fapl_sec2
 h5p_set_fclose_degree
 h5p_set_filter
+h5p_set_fletcher32
 h5p_set_layout
 h5p_set_libver_bounds
 h5p_set_local_heap_size_hint
+h5p_set_nbit
 h5p_set_obj_track_times
+h5p_set_scaleoffset
 h5p_set_shuffle
+h5p_set_szip
 h5p_set_userblock
 h5p_set_virtual
 ```

@@ -20,12 +20,27 @@ function Base.show(io::IO, g::Group)
 end
 
 function Base.show(io::IO, prop::Properties)
-    if prop.class == API.H5P_DEFAULT
-        print(io, "HDF5.Properties: default class")
-    elseif isvalid(prop)
-        print(io, "HDF5.Properties: ", API.h5p_get_class_name(prop.class), " class")
+    print(io, typeof(prop))
+    if prop.id == API.H5P_DEFAULT
+        print(io, "()")
+    elseif !isvalid(prop)
+        print(io, ": (invalid)")
     else
-        print(io, "HDF5.Properties: (invalid)")
+        print(io, "(")
+        for name in all_propertynames(typeof(prop))
+            # skip deprecated names
+            if name in (:compress, :track_times, :fapl_mpio)
+                continue
+            end
+            # not all properties have getters (e.g. shuffle, deflate, etc.),
+            # or always well-defined (e.g. chunk if layout != :chunked, dxpl_mpio if no MPI)
+            try
+                val = getproperty(prop, name)
+                print(io, "\n  ", rpad(name, 15), " = ", repr(val),",")
+            catch e
+            end
+        end
+        print(io, "\n)")
     end
 end
 
