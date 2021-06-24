@@ -1,6 +1,14 @@
 using .MPI
 import Libdl
 
+const depsfile = joinpath(@__DIR__, "..", "deps", "deps.jl")
+if isfile(depsfile)
+    include(depsfile)
+else
+    error("HDF5 is not properly installed. Please run Pkg.build(\"HDF5\") ",
+          "and restart Julia.")
+end
+
 # Check whether the HDF5 libraries were compiled with parallel support.
 HAS_PARALLEL[] = Libdl.dlopen(libhdf5) do lib
     Libdl.dlsym(lib, :H5Pget_fapl_mpio, throw_error=false) !== nothing

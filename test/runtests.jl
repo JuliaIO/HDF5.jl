@@ -24,13 +24,10 @@ include("filter.jl")
 include("chunkstorage.jl")
 include("fileio.jl")
 
-try
-    using MPI
-    if HDF5.has_parallel()
-        # basic MPI tests, for actual parallel tests we need to run in MPI mode
-        include("mpio.jl")
-    end
-catch
+using MPI
+if HDF5.has_parallel()
+    # basic MPI tests, for actual parallel tests we need to run in MPI mode
+    include("mpio.jl")
 end
 
 end

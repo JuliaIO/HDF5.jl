@@ -107,12 +107,8 @@ struct H5Z_class_t # version 2 type H5Z_class2_t
     filter::Ptr{Cvoid} # The filter callback
 end
 
-"""
-    H5E_error2_t
-
-Information about an error; element of error stack.
-See https://github.com/HDFGroup/hdf5/blob/hdf5-1_12_0/src/H5Epublic.h#L36-L44
-"""
+# Information about an error; element of error stack.
+# See https://github.com/HDFGroup/hdf5/blob/hdf5-1_12_0/src/H5Epublic.h#L36-L44
 struct H5E_error2_t
     cls_id::hid_t # class ID"
     maj_num::hid_t # major error ID
