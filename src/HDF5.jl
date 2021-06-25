@@ -196,9 +196,9 @@ Base.cconvert(::Type{API.hid_t}, g::Group) = g.id
 mutable struct Dataset
     id::API.hid_t
     file::File
-    xfer::Properties
+    xfer::DatasetTransferProperties
 
-    function Dataset(id, file, xfer = DEFAULT_PROPERTIES)
+    function Dataset(id, file, xfer = DatasetTransferProperties())
         dset = new(id, file, xfer)
         finalizer(close, dset)
         dset
@@ -635,10 +635,15 @@ fd(obj::Object) = API.h5i_get_file_id(checkvalid(obj))
 Base.flush(f::Union{Object,Attribute,Datatype,File}, scope = API.H5F_SCOPE_GLOBAL) = API.h5f_flush(checkvalid(f), scope)
 
 # Open objects
-open_group(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Group(API.h5g_open(checkvalid(parent), name, apl), file(parent))
-open_dataset(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES, xpl::Properties=DEFAULT_PROPERTIES) = Dataset(API.h5d_open(checkvalid(parent), name, apl), file(parent), xpl)
-open_datatype(parent::Union{File,Group}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Datatype(API.h5t_open(checkvalid(parent), name, apl), file(parent))
-open_attribute(parent::Union{File,Object}, name::AbstractString, apl::Properties=DEFAULT_PROPERTIES) = Attribute(API.h5a_open(checkvalid(parent), name, apl), file(parent))
+open_group(parent::Union{File,Group}, name::AbstractString, gapl::GroupAccessProperties=GroupAccessProperties()) =
+    Group(API.h5g_open(checkvalid(parent), name, gapl), file(parent))
+open_dataset(parent::Union{File,Group}, name::AbstractString,
+    dapl::DatasetAccessProperties=DatasetAccessProperties(), dxpl::DatasetTransferProperties=DatasetTransferProperties()) =
+    Dataset(API.h5d_open(checkvalid(parent), name, dapl), file(parent), dxpl)
+open_datatype(parent::Union{File,Group}, name::AbstractString, tapl::DatatypeAccessProperties=DatatypeAccessProperties()) =
+    Datatype(API.h5t_open(checkvalid(parent), name, tapl), file(parent))
+open_attribute(parent::Union{File,Object}, name::AbstractString, aapl::AttributeAccessProperties=AttributeAccessProperties()) =
+    Attribute(API.h5a_open(checkvalid(parent), name, aapl), file(parent))
 # Object (group, named datatype, or dataset) open
 function h5object(obj_id::API.hid_t, parent)
     obj_type = API.h5i_get_type(obj_id)
@@ -699,8 +704,8 @@ function split1(path::AbstractString)
 end
 
 function create_group(parent::Union{File,Group}, path::AbstractString,
-                  lcpl::Properties=_link_properties(path),
-                  gcpl::Properties=DEFAULT_PROPERTIES)
+                  lcpl::LinkCreateProperties=_link_properties(path),
+                  gcpl::GroupCreateProperties=GroupCreateProperties())
     haskey(parent, path) && error("cannot create group: object \"", path, "\" already exists at ", name(parent))
     Group(API.h5g_create(parent, path, lcpl, gcpl, API.H5P_DEFAULT), file(parent))
 end
@@ -722,7 +727,9 @@ create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Type, dsp
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 create_datatype(class_id, sz) = Datatype(API.h5t_create(class_id, sz))
 function commit_datatype(parent::Union{File,Group}, path::AbstractString, dtype::Datatype,
-                  lcpl::Properties=LinkCreateProperties(), tcpl::Properties=DEFAULT_PROPERTIES, tapl::Properties=DEFAULT_PROPERTIES)
+                  lcpl::LinkCreateProperties=LinkCreateProperties(),
+                  tcpl::DatatypeCreateProperties=DatatypeCreateProperties(),
+                  tapl::DatatypeAccessProperties=DatatypeAccessProperties())
     lcpl.char_encoding = cset(typeof(path))
     API.h5t_commit(checkvalid(parent), path, dtype, lcpl, tcpl, tapl)
     dtype.file = file(parent)
@@ -736,7 +743,8 @@ end
 
 # Delete objects
 delete_attribute(parent::Union{File,Object}, path::AbstractString) = API.h5a_delete(checkvalid(parent), path)
-delete_object(parent::Union{File,Group}, path::AbstractString, lapl::Properties=DEFAULT_PROPERTIES) = API.h5l_delete(checkvalid(parent), path, lapl)
+delete_object(parent::Union{File,Group}, path::AbstractString, lapl::LinkAccessProperties=LinkAccessProperties()) =
+    API.h5l_delete(checkvalid(parent), path, lapl)
 delete_object(obj::Object) = delete_object(parent(obj), ascii(split(name(obj),"/")[end])) # FIXME: remove ascii?
 
 # Copy objects
@@ -767,7 +775,7 @@ function Base.setindex!(parent::Union{File,Group}, val, path::AbstractString; pv
 end
 
 # Check existence
-function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::Properties = DEFAULT_PROPERTIES)
+function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::LinkAccessProperties = LinkAccessProperties())
     checkvalid(parent)
     first, rest = split1(path)
     if first == "/"
@@ -1813,9 +1821,9 @@ end
 # default behavior
 read_attribute(attr::Attribute, memtype::Datatype, buf) = API.h5a_read(attr, memtype, buf)
 write_attribute(attr::Attribute, memtype::Datatype, x) = API.h5a_write(attr, memtype, x)
-read_dataset(dset::Dataset, memtype::Datatype, buf, xfer::Properties=dset.xfer) =
+read_dataset(dset::Dataset, memtype::Datatype, buf, xfer::DatasetTransferProperties=dset.xfer) =
     API.h5d_read(dset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
-write_dataset(dset::Dataset, memtype::Datatype, x, xfer::Properties=dset.xfer) =
+write_dataset(dset::Dataset, memtype::Datatype, x, xfer::DatasetTransferProperties=dset.xfer) =
     API.h5d_write(dset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, x)
 
 # type-specific behaviors
@@ -1836,16 +1844,16 @@ function write_attribute(attr::Attribute, memtype::Datatype, strs::Array{<:Abstr
 end
 write_attribute(attr::Attribute, memtype::Datatype, ::EmptyArray) = nothing
 
-function read_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::Properties=dataset.xfer)
+function read_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::DatasetTransferProperties=dataset.xfer)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
     API.h5d_read(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
 end
 
-function write_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::Properties=dataset.xfer)
+function write_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::DatasetTransferProperties=dataset.xfer)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
     API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
 end
-function write_dataset(dataset::Dataset, memtype::Datatype, str::AbstractString, xfer::Properties=dataset.xfer)
+function write_dataset(dataset::Dataset, memtype::Datatype, str::AbstractString, xfer::DatasetTransferProperties=dataset.xfer)
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
         # unsafe_convert(Cstring, strbuf) is responsible for enforcing the no-'\0' policy,
@@ -1855,15 +1863,15 @@ function write_dataset(dataset::Dataset, memtype::Datatype, str::AbstractString,
         API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
     end
 end
-function write_dataset(dataset::Dataset, memtype::Datatype, x::T, xfer::Properties=dataset.xfer) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
+function write_dataset(dataset::Dataset, memtype::Datatype, x::T, xfer::DatasetTransferProperties=dataset.xfer) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
     API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, tmp)
 end
-function write_dataset(dataset::Dataset, memtype::Datatype, strs::Array{<:AbstractString}, xfer::Properties=dataset.xfer)
+function write_dataset(dataset::Dataset, memtype::Datatype, strs::Array{<:AbstractString}, xfer::DatasetTransferProperties=dataset.xfer)
     p = Ref{Cstring}(strs)
     API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, p)
 end
-write_dataset(dataset::Dataset, memtype::Datatype, ::EmptyArray, xfer::Properties=dataset.xfer) = nothing
+write_dataset(dataset::Dataset, memtype::Datatype, ::EmptyArray, xfer::DatasetTransferProperties=dataset.xfer) = nothing
 
 #API.h5s_get_simple_extent_ndims(space_id::API.hid_t) = API.h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
 API.h5t_get_native_type(type_id) = API.h5t_get_native_type(type_id, API.H5T_DIR_ASCEND)
