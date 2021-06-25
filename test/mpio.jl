@@ -15,7 +15,7 @@ myrank = MPI.Comm_rank(comm)
 @test HDF5.has_parallel()
 
 let fileprop = create_property(HDF5.API.H5P_FILE_ACCESS)
-    HDF5.API.h5p_set_fapl_mpio(fileprop, comm, info)
+    HDF5.set_fapl_mpio(fileprop, comm, info)
     h5comm, h5info = HDF5.get_fapl_mpio(fileprop)
 
     # check that the two communicators point to the same group
