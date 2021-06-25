@@ -801,7 +801,7 @@ function _prop_set!(p::Properties, name::Symbol, val, check::Bool = true)
 
     if class == API.H5P_FILE_ACCESS
         return name === :alignment     ? API.h5p_set_alignment(p, val...) :
-               name === :fapl_mpio     ? API.h5p_set_fapl_mpio(p, val...) :
+               name === :fapl_mpio     ? set_fapl_mpio(p, val...) :
                name === :fclose_degree ? API.h5p_set_fclose_degree(p, val...) :
                name === :libver_bounds ? API.h5p_set_libver_bounds(p, val...) :
                check ? error("unknown file access property ", name) : nothing
