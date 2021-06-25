@@ -29,7 +29,6 @@ function set_extent_dims(dspace::Dataspace, size::Dims, max_dims::Union{Dims,Not
     return nothing
 end
 
-
 """
     HDF5.get_extent_dims(obj::Union{HDF5.Dataspace, HDF5.Dataset, HDF5.Attribute}) -> dims, maxdims
 
@@ -45,7 +44,6 @@ function get_extent_dims(obj::Union{Dataspace,Dataset,Attribute})
     obj isa Dataspace || close(dspace)
     return dims, maxdims
 end
-
 
 """
     HDF5.get_chunk_offset(dataset_id, index)
@@ -98,7 +96,6 @@ function get_num_chunks(dataset_id)
     end
 end
 
-
 """
     HDF5.get_chunk_length(dataset_id)
 
@@ -115,8 +112,6 @@ function vlen_get_buf_size(dataset_id)
     space = API.h5d_get_space(dataset_id)
     API.h5d_vlen_get_buf_size(dataset_id, type, space)
 end
-
-
 
 """
     HDF5.read_chunk(dataset_id, offset, [buf]; dxpl_id = HDF5.API.H5P_DEFAULT, filters = Ref{UInt32}())

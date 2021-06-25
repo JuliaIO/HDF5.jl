@@ -44,10 +44,11 @@ end
 function h5a_iterate_helper(loc_id::hid_t, attr_name::Ptr{Cchar}, ainfo::Ptr{H5A_info_t}, @nospecialize(f::Any))::herr_t
     return f(loc_id, attr_name, ainfo)
 end
-"""
-    h5a_iterate(f, loc_id, idx_type, order, idx = 0) -> HDF5.API.hsize_t
 
-Executes [`h5a_iterate`](@ref h5a_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{HDF5.API.hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
+"""
+    h5a_iterate(f, loc_id, idx_type, order, idx = 0) -> hsize_t
+
+Executes [`h5a_iterate`](@ref h5a_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
 with the user-provided callback function `f`, returning the index where iteration ends.
 
 The callback function must correspond to the signature
@@ -61,7 +62,7 @@ successfully, and zero continues iteration.
 ```julia-repl
 julia> HDF5.API.h5a_iterate(obj, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC) do loc, name, info
            println(unsafe_string(name))
-           return HDF5.herr_t(0)
+           return HDF5.API.herr_t(0)
        end
 ```
 """
@@ -93,7 +94,7 @@ end
 
 Helper method to retrieve chunk information.
 
-Returns a NamedTuple{(:offset, :filter_mask, :addr, :size), Tuple{HDF5.API.hsize_t, UInt32, HDF5.API.haddr_t, HDF5.API.hsize_t}}
+Returns a `NamedTuple{(:offset, :filter_mask, :addr, :size), Tuple{HDF5.API.hsize_t, UInt32, HDF5.API.haddr_t, HDF5.API.hsize_t}}`.
 """
 function h5d_get_chunk_info(dataset_id, fspace_id, index)
     offset = Vector{hsize_t}(undef, ndims(dataset_id))
@@ -121,7 +122,7 @@ end
 """
     h5d_get_chunk_storage_size(dataset_id, offset)
 
-Helper method to retrieve the chunk storage size in bytes. Returns an integer of type `HDF5.API.API.hsize_t`.
+Helper method to retrieve the chunk storage size in bytes. Returns an integer of type `HDF5.API.hsize_t`.
 """
 function h5d_get_chunk_storage_size(dataset_id, offset)
     chunk_nbytes = Ref{hsize_t}()
@@ -270,21 +271,21 @@ function h5l_iterate_helper(group::hid_t, name::Ptr{Cchar}, info::Ptr{H5L_info_t
     return f(group, name, info)
 end
 """
-    h5l_iterate(f, group_id, idx_type, order, idx = 0) -> HDF5.API.hsize_t
+    h5l_iterate(f, group_id, idx_type, order, idx = 0) -> hsize_t
 
-Executes [`h5l_iterate`](@ref h5l_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{HDF.API.hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
+Executes [`h5l_iterate`](@ref h5l_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
 with the user-provided callback function `f`, returning the index where iteration ends.
 
 The callback function must correspond to the signature
 ```
-    f(group::HDF5.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.H5L_info_t}) -> HDF5.API.herr_t
+    f(group::HDF5.API.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.API.H5L_info_t}) -> HDF5.API.herr_t
 ```
 where a negative return value halts iteration abnormally, a positive value halts iteration
 successfully, and zero continues iteration.
 
 # Examples
 ```julia-repl
-julia> HDF5.h5l_iterate(hfile, HDF5.H5_INDEX_NAME, HDF5.H5_ITER_INC) do group, name, info
+julia> HDF5.API.h5l_iterate(hfile, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC) do group, name, info
            println(unsafe_string(name))
            return HDF5.API.herr_t(0)
        end

@@ -91,7 +91,7 @@ for (mod, desc, urltail) in (
     )
     global apidocs
     funclist = sort!(bound_api[mod])
-    index = join(["- [`$f`](@ref HDF5.$f)" for f in funclist], "\n")
+    index = join(["- [`$f`](@ref $f)" for f in funclist], "\n")
     funcs = join(funclist, "\n")
     apidocs *= """
         ---
@@ -113,7 +113,7 @@ open(joinpath(@__DIR__, "..", "docs", "src", "api_bindings.md"), "w") do fid
 gen/gen_wrappers.jl script -->
 ```
 ```@meta
-CurrentModule = HDF5
+CurrentModule = HDF5.API
 ```
 
 # Low-level library bindings
@@ -124,7 +124,7 @@ This page documents the function names and nominal C argument types of the API w
 have bindings in this package.
 Note that in many cases, high-level data types are valid arguments through automatic
 `ccall` conversions.
-For instance, `HDF5Datatype` objects will be automatically converted to their `hid_t` ID
+For instance, `HDF5.Datatype` objects will be automatically converted to their `hid_t` ID
 by Julia's `cconvert`+`unsafe_convert` `ccall` rules.
 
 There are additional helper wrappers (often for out-argument functions) which are not

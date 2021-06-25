@@ -1,9 +1,4 @@
-
-"""
-H5Error
-
-An error thrown by libhdf5.
-"""
+# An error thrown by libhdf5
 mutable struct H5Error <: Exception
     msg::String
     id::hid_t
