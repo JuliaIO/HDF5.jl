@@ -115,8 +115,15 @@ all_propertynames(::Type{GenericProperties}) = ()
 
 
 # for initializing multiple Properties from a set of keyword arguments
+"""
+    setproperties!(props::Properties...; kwargs...)
+
+For each `(key, value)` pair in `kwargs`, set the corresponding properties in
+each `Properties` object in `props`. Returns a `Dict` of any pairs which didn't
+match properties in `props`.
+"""
 function setproperties!(props::Properties...; kwargs...)
-    for (k,v) in kwargs
+    filter(kwargs) do (k,v)
         found = false
         for prop in props
             if k in all_propertynames(typeof(prop))
@@ -124,9 +131,7 @@ function setproperties!(props::Properties...; kwargs...)
                 found = true
             end
         end
-        if !found
-            error("Property $k not found in $(join(map(typeof, props), ", ", " or "))")
-        end
+        return !found
     end
 end
 

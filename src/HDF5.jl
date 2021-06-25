@@ -383,11 +383,7 @@ Open or create an HDF5 file where `mode` is one of:
 Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for "w" and
 "r+", or SWMR read access for "r".
 """
-function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool = false, pv...)
-    # With garbage collection, the other modes don't make sense
-    fapl = FileAccessProperties(; fclose_degree = :strong)
-    fcpl = FileCreateProperties()
-    setproperties!(fapl, fcpl; pv...)
+function h5open(filename::AbstractString, mode::AbstractString, fapl::FileAccessProperties, fcpl::FileCreateProperties=FileCreateProperties(); swmr::Bool = false)
     rd, wr, cr, tr, ff =
         mode == "r"  ? (true,  false, false, false, false) :
         mode == "r+" ? (true,  true,  false, false, true ) :
@@ -412,10 +408,22 @@ function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool
         end
         fid = API.h5f_open(filename, flag, fapl)
     end
-    close(fapl)
-    fcpl != DEFAULT_PROPERTIES && close(fcpl)
     return File(fid, filename)
 end
+
+
+function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool = false, pv...)
+    # With garbage collection, the other modes don't make sense
+    fapl = FileAccessProperties(; fclose_degree = :strong)
+    fcpl = FileCreateProperties()
+    pv = setproperties!(fapl, fcpl; pv...)
+    isempty(pv) || error("invalid keyword options $pv")
+    file = h5open(filename, mode, fapl, fcpl; swmr=swmr)
+    close(fapl)
+    close(fcpl)
+    return file
+end
+
 
 """
     function h5open(f::Function, args...; swmr=false, pv...)
@@ -423,18 +431,17 @@ end
 Apply the function f to the result of `h5open(args...;kwargs...)` and close the resulting
 `HDF5.File` upon completion. For example with a `do` block:
 
-
     h5open("foo.h5","w") do h5
         h5["foo"]=[1,2,3]
     end
 
 """
 function h5open(f::Function, args...; swmr=false, pv...)
-    fid = h5open(args...; swmr=swmr, pv...)
+    file = h5open(args...; swmr=swmr, pv...)
     try
-        f(fid)
+        f(file)
     finally
-        close(fid)
+        close(file)
     end
 end
 
@@ -453,77 +460,83 @@ function h5rewrite(f::Function, filename::AbstractString, args...)
 end
 
 function h5write(filename, name::AbstractString, data; pv...)
-    fid = h5open(filename, "cw"; pv...)
+    file = h5open(filename, "cw"; pv...)
     try
-        write(fid, name, data)
+        write(file, name, data)
     finally
-        close(fid)
+        close(file)
     end
 end
 
 function h5read(filename, name::AbstractString; pv...)
     local dat
-    fid = h5open(filename, "r"; pv...)
+    fapl = FileAccessProperties(; fclose_degree = :strong)
+    pv = setproperties!(fapl; pv...)
+    file = h5open(filename, "r", fapl)
     try
-        obj = getindex(fid, name; pv...)
+        obj = getindex(file, name; pv...)
         dat = read(obj)
         close(obj)
     finally
-        close(fid)
+        close(file)
     end
     dat
 end
 
 function h5read(filename, name_type_pair::Pair{<:AbstractString,DataType}; pv...)
     local dat
-    fid = h5open(filename, "r"; pv...)
+    fapl = FileAccessProperties(; fclose_degree = :strong)
+    pv = setproperties!(fapl; pv...)
+    file = h5open(filename, "r", fapl)
     try
-        obj = getindex(fid, name_type_pair[1]; pv...)
+        obj = getindex(file, name_type_pair[1]; pv...)
         dat = read(obj, name_type_pair[2])
         close(obj)
     finally
-        close(fid)
+        close(file)
     end
     dat
 end
 
 function h5read(filename, name::AbstractString, indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}}; pv...)
     local dat
-    fid = h5open(filename, "r"; pv...)
+    fapl = FileAccessProperties(; fclose_degree = :strong)
+    pv = setproperties!(fapl; pv...)
+    file = h5open(filename, "r", fapl)
     try
-        dset = getindex(fid, name; pv...)
+        dset = getindex(file, name; pv...)
         dat = dset[indices...]
         close(dset)
     finally
-        close(fid)
+        close(file)
     end
     dat
 end
 
 function h5writeattr(filename, name::AbstractString, data::Dict)
-    fid = h5open(filename, "r+")
+    file = h5open(filename, "r+")
     try
-        obj = fid[name]
+        obj = file[name]
         attrs = attributes(obj)
         for x in keys(data)
             attrs[x] = data[x]
         end
         close(obj)
     finally
-        close(fid)
+        close(file)
     end
 end
 
 function h5readattr(filename, name::AbstractString)
     local dat
-    fid = h5open(filename,"r")
+    file = h5open(filename,"r")
     try
-        obj = fid[name]
+        obj = file[name]
         a = attributes(obj)
         dat = Dict(x => read(a[x]) for x in keys(a))
         close(obj)
     finally
-        close(fid)
+        close(file)
     end
     dat
 end
@@ -661,7 +674,8 @@ function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     if obj_type == API.H5I_DATASET
         dapl = DatasetAccessProperties()
         dxpl = DatasetTransferProperties()
-        setproperties!(dapl, dxpl; pv...)
+        pv = setproperties!(dapl, dxpl; pv...)
+        isempty(pv) || error("invalid keyword options $pv")
         return open_dataset(parent, path, dapl, dxpl)
     elseif obj_type == API.H5I_GROUP
         gapl = GroupAccessProperties(; pv...)
@@ -696,7 +710,8 @@ function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::
     dcpl = DatasetCreateProperties()
     dxpl = DatasetTransferProperties()
     dapl = DatasetAccessProperties()
-    setproperties!(dcpl,dxpl,dapl; pv...)
+    pv = setproperties!(dcpl,dxpl,dapl; pv...)
+    isempty(pv) || error("invalid keyword options")
     haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
     Dataset(API.h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
 end
