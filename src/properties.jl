@@ -666,20 +666,3 @@ const UTF8_ATTRIBUTE_PROPERTIES = AttributeCreateProperties()
 
 _link_properties(::AbstractString) = UTF8_LINK_PROPERTIES
 _attr_properties(::AbstractString) = UTF8_ATTRIBUTE_PROPERTIES
-
-
-
-# Set a single filter
-function set_filter(p::Properties, filter_id, flags, cd_values...)
-    # Passing cd_values as Cuint[] allocates less than passing as
-    # Ref{NTuple{N,Cuint}} (and it is compatible with Julia 1.3)
-    API.h5p_set_filter(p::Properties, filter_id, flags, length(cd_values), Cuint[cd_values...])
-end
-
-# Set multiple filters
-function set_filter(p::Properties, filter::Tuple, additional_filters...)
-    set_filter(p::Properties, filter...)
-    for f in additional_filters
-      set_filter(p::Properties, f...)
-    end
-end
