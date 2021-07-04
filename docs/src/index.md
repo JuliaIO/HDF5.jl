@@ -335,6 +335,16 @@ attributes(parent)[name] = value
 
 where `attributes` simply indicates that the object referenced by `name` (a string) is an attribute, not another group or dataset. (Datasets cannot have child datasets, but groups can have either.) `value` must be a simple type: `BitsKind`s, strings, and arrays of either of these. The HDF5 standard recommends against storing large objects as attributes.
 
+The value stored in an attribute can be retrieved like
+```julia
+read_attribute(parent, name)
+```
+You can also access the value of an attribute by indexing, like so:
+```julia
+julia> attr = attribute(parent)[name];
+julia> attr[]
+```
+
 ## Getting information
 
 ```julia
