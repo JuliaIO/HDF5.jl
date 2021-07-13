@@ -487,6 +487,10 @@ function h5t_get_tag(type_id)
     return s
 end
 
+h5t_get_native_type(type_id) =
+    h5t_get_native_type(type_id, H5T_DIR_ASCEND)
+
+
 ###
 ### Optimized Functions Interface
 ###
