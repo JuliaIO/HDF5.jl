@@ -35,4 +35,25 @@ A_mmaped = HDF5.readmmap(f["A"])
 A_mmaped[1,1] = 33
 close(f)
 
-end
+# issue #863 - fix mmapping complex arrays
+fn = tempname()
+f = h5open(fn, "w")
+A = rand(ComplexF32, 5, 5)
+f["A"] = A
+close(f)
+f = h5open(fn, "r+")
+complex_support = HDF5.COMPLEX_SUPPORT[]
+# Complex arrays can be mmapped when complex support is enabled
+complex_support || HDF5.enable_complex_support()
+@test A == read(f["A"])
+@test A == HDF5.readmmap(f["A"])
+# But mmapping should throw an error when support is disabled
+HDF5.disable_complex_support()
+At = [(r = real(c), i = imag(c)) for c in A]
+@test read(f["A"]) == At # readable as array of NamedTuples
+@test_throws ErrorException("Cannot mmap datasets of type $(eltype(At))") HDF5.readmmap(f["A"])
+close(f)
+# Restore complex support state
+complex_support && HDF5.enable_complex_support()
+
+end # testset
