@@ -1434,6 +1434,7 @@ end
 
 # Reading with mmap
 ismmappable(::Type{<:ScalarType}) = true
+ismmappable(::Type{Complex{T}}) where {T<:BitsType} = true
 ismmappable(::Type) = false
 ismmappable(obj::Dataset, ::Type{T}) where {T} = ismmappable(T) && iscontiguous(obj)
 ismmappable(obj::Dataset) = ismmappable(obj, get_jl_type(obj))
