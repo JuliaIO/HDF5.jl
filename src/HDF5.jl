@@ -15,7 +15,7 @@ h5open, h5read, h5write, h5rewrite, h5writeattr, h5readattr,
 create_attribute, open_attribute, read_attribute, write_attribute, delete_attribute, attributes,
 create_dataset, open_dataset, read_dataset, write_dataset,
 create_group, open_group,
-copy_object, open_object, delete_object, move_object,
+copy_object, open_object, delete_object, move_link,
 create_datatype, commit_datatype, open_datatype,
 create_property,
 group_info, object_info,
@@ -863,9 +863,9 @@ delete_object(obj::Object) = delete_object(parent(obj), ascii(split(name(obj),"/
 copy_object(src_parent::Union{File,Group}, src_path::AbstractString, dst_parent::Union{File,Group}, dst_path::AbstractString) = API.h5o_copy(checkvalid(src_parent), src_path, checkvalid(dst_parent), dst_path, API.H5P_DEFAULT, _link_properties(dst_path))
 copy_object(src_obj::Object, dst_parent::Union{File,Group}, dst_path::AbstractString) = API.h5o_copy(checkvalid(src_obj), ".", checkvalid(dst_parent), dst_path, API.H5P_DEFAULT, _link_properties(dst_path))
 
-# Move objects
-move_object(src::Union{File,Group}, src_name::AbstractString, dest::Union{File,Group}, dest_name::AbstractString=src_name, lapl::Properties=DEFAULT_PROPERTIES, lcpl::Properties=DEFAULT_PROPERTIES) = h5l_move(checkvalid(src), src_name, checkvalid(dest), dest_name, lcpl, lapl)
-move_object(parent::Union{File,Group}, src_name::AbstractString, dest_name::AbstractString, lapl::Properties=DEFAULT_PROPERTIES, lcpl::Properties=DEFAULT_PROPERTIES) = h5l_move(checkvalid(parent), src_name, parent, dest_name, lcpl, lapl)
+# Move links
+move_link(src::Union{File,Group}, src_name::AbstractString, dest::Union{File,Group}, dest_name::AbstractString=src_name, lapl::Properties=DEFAULT_PROPERTIES, lcpl::Properties=DEFAULT_PROPERTIES) = h5l_move(checkvalid(src), src_name, checkvalid(dest), dest_name, lcpl, lapl)
+move_link(parent::Union{File,Group}, src_name::AbstractString, dest_name::AbstractString, lapl::Properties=DEFAULT_PROPERTIES, lcpl::Properties=DEFAULT_PROPERTIES) = h5l_move(checkvalid(parent), src_name, parent, dest_name, lcpl, lapl)
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute

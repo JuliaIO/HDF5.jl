@@ -294,7 +294,7 @@ end
 h5open(fn, "r+") do io
   @test haskey(io, "moveme")
   @test haskey(io, "moveto") && !haskey(io, "moveto/moveme")
-  move_object(io, "moveme", io["moveto"])
+  move_link(io, "moveme", io["moveto"])
   @test haskey(io, "moveto/moveme") && !haskey(io, "moveme")
 end
 
