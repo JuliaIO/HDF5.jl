@@ -457,14 +457,14 @@ You can use extendible dimensions,
 
 ```julia
 d = create_dataset(parent, name, dtype, (dims, max_dims), chunk=(chunk_dims))
-HDF5.set_dims!(d, new_dims)
+HDF5.set_extent_dims(d, new_dims)
 ```
 
 where dims is a tuple of integers. For example
 
 ```julia
 b = create_dataset(fid, "b", Int, ((1000,),(-1,)), chunk=(100,)) #-1 is equivalent to typemax(hsize_t)
-HDF5.set_dims!(b, (10000,))
+HDF5.set_extent_dims(b, (10000,))
 b[1:10000] = collect(1:10000)
 ```
 
