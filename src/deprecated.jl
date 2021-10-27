@@ -14,4 +14,4 @@ function exists end
 
 ### Changed in PR#798
 @deprecate get_dims(dspace::Union{Dataspace,Dataset,Attribute}) get_extent_dims(dspace) false
-@deprecate set_dims!(dset::Dataspace) set_extent_dims(dset) false
+@deprecate set_dims!(dset::Dataset, size::Dims) set_extent_dims(dset, size) false
