@@ -1017,11 +1017,11 @@ end
 
 """
     h5l_move(src_obj_id::hid_t, src_name::Ptr{UInt8}, dest_obj_id::hid_t, dest_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)
+
 See `libhdf5` documentation for [`H5Lmove`](https://portal.hdfgroup.org/display/HDF5/H5L_MOVE).
 """
 function h5l_move(src_obj_id, src_name, dest_obj_id, dest_name, lcpl_id, lapl_id)
-    var"#status#" = ccall((:H5Lmove, libhdf5), herr_t, (hid_t, Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t),
-            src_obj_id, src_name, dest_obj_id, dest_name, lcpl_id, lapl_id)
+    var"#status#" = ccall((:H5Lmove, libhdf5), herr_t, (hid_t, Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), src_obj_id, src_name, dest_obj_id, dest_name, lcpl_id, lapl_id)
     var"#status#" < 0 && @h5error(string("Error moving ", h5i_get_name(src_obj_id), "/", src_name, " to ", h5i_get_name(dest_obj_id), "/", dest_name))
     return nothing
 end
