@@ -26,7 +26,7 @@ dataspace, datatype
 # file, filename, name,
 # get_chunk, get_datasets,
 # get_access_properties, get_create_properties,
-# root, readmmap, set_dims!,
+# root, readmmap,
 # iscontiguous, iscompact, ischunked,
 # ishdf5, ismmappable,
 # refresh
