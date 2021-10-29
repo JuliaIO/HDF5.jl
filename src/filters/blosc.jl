@@ -6,22 +6,6 @@ const FILTER_BLOSC = API.H5Z_filter_t(32001) # Filter ID registered with the HDF
 const FILTER_BLOSC_VERSION = 2
 const blosc_name = "blosc"
 
-
-# until https://github.com/JuliaIO/Blosc.jl/pull/81 is merged:
-function blosc_compcode(s)
-    compcode = ccall((:blosc_compname_to_compcode,Blosc.libblosc), Cint, (Cstring,), s)
-    compcode == -1 && throw(ArgumentError("unrecognized compressor $s"))
-    return compcode
-end
-function blosc_compname(compcode)
-    refstr = Ref{Cstring}()
-    retcode = ccall((:blosc_compcode_to_compname,Blosc.libblosc), Cint, (Cint,Ptr{Cstring}), compcode, refstr)
-    retcode == -1 && throw(ArgumentError("unrecognized compcode $compcode"))
-    return unsafe_string(refstr[]) # we don't actually need the string, the Cstring object is fine
-end
-
-
-
 function blosc_set_local(dcpl::API.hid_t, htype::API.hid_t, space::API.hid_t)
     blosc_flags = Ref{Cuint}()
     blosc_values = Vector{Cuint}(undef,8)
@@ -75,7 +59,6 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
     clevel = cd_nelmts >= 5 ? unsafe_load(cd_values, 5) : Cuint(5)
     # Do shuffle:
     doshuffle = cd_nelmts >= 6 ? unsafe_load(cd_values, 6) != 0 : true
-    # to do: set compressor based on compcode in unsafe_load(cd_values, 7)?
 
     if (flags & API.H5Z_FLAG_REVERSE) == 0 # compressing
         # Allocate an output buffer exactly as long as the input data; if
@@ -87,7 +70,7 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
 
         compname = if cd_nelmts >= 7
             compcode = unsafe_load(cd_values, 7)
-            blosc_compname(compcode)
+            Blosc.compname(compcode)
         else
             "blosclz"
         end
@@ -155,7 +138,7 @@ struct BloscFilter <: Filter
 end
 
 function BloscFilter(;level=5, shuffle=true, compressor="blosclz")
-    compcode = blosc_compcode(compressor)
+    compcode = Blosc.compcode(compressor)
     BloscFilter(0,0,0,0,level,shuffle,compcode)
 end
 
@@ -163,7 +146,7 @@ function Base.show(io::IO, blosc::BloscFilter)
     print(io, BloscFilter,
           "(level=", Int(blosc.level),
           ",shuffle=", blosc.shuffle!=0,
-          ",compressor=", blosc_compname(blosc.compcode),
+          ",compressor=", Blosc.compname(blosc.compcode),
           ")")
 end
 
