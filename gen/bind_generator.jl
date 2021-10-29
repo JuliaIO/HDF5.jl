@@ -218,9 +218,16 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
         docstr *= " -> $rettype"
     end
 
-    docstr *= "\n\nSee `libhdf5` documentation for [`$cfuncname`]" *
-              "(https://portal.hdfgroup.org/display/HDF5/$(uppercase(string(funcsig.args[1])))).\n"
-
+    if prefix == "h5fd" && endswith(rest, "_init")
+        # remove trailing _init
+        drivername = rest[1:end-5]
+        docstr *= "\n\nThis function is exposed in `libhdf5` as the macro `H5FD_$(uppercase(drivername))`. " *
+            "See `libhdf5` documentation for [`H5Pget_driver`]" *
+            "(https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER).\n"
+    else
+        docstr *= "\n\nSee `libhdf5` documentation for [`$cfuncname`]" *
+            "(https://portal.hdfgroup.org/display/HDF5/$(uppercase(string(funcsig.args[1])))).\n"
+    end
     # Then assemble the pieces. Doing it through explicit Expr() objects
     # avoids inserting the line number nodes for the macro --- the call site
     # is instead explicitly injected into the function body via __source__.

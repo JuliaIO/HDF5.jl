@@ -2520,7 +2520,7 @@ end
 """
     h5fd_core_init() -> hid_t
 
-See `libhdf5` documentation for [`H5FD_core_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_CORE_INIT).
+This function is exposed in `libhdf5` as the macro `H5FD_CORE`. See `libhdf5` documentation for [`H5Pget_driver`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER).
 """
 function h5fd_core_init()
     var"#status#" = ccall((:H5FD_core_init, libhdf5), hid_t, ())
@@ -2531,7 +2531,7 @@ end
 """
     h5fd_family_init() -> hid_t
 
-See `libhdf5` documentation for [`H5FD_family_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_FAMILY_INIT).
+This function is exposed in `libhdf5` as the macro `H5FD_FAMILY`. See `libhdf5` documentation for [`H5Pget_driver`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER).
 """
 function h5fd_family_init()
     var"#status#" = ccall((:H5FD_family_init, libhdf5), hid_t, ())
@@ -2542,7 +2542,7 @@ end
 """
     h5fd_log_init() -> hid_t
 
-See `libhdf5` documentation for [`H5FD_log_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_LOG_INIT).
+This function is exposed in `libhdf5` as the macro `H5FD_LOG`. See `libhdf5` documentation for [`H5Pget_driver`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER).
 """
 function h5fd_log_init()
     var"#status#" = ccall((:H5FD_log_init, libhdf5), hid_t, ())
@@ -2553,7 +2553,7 @@ end
 """
     h5fd_mpio_init() -> hid_t
 
-See `libhdf5` documentation for [`H5FD_mpio_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_MPIO_INIT).
+This function is exposed in `libhdf5` as the macro `H5FD_MPIO`. See `libhdf5` documentation for [`H5Pget_driver`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER).
 """
 function h5fd_mpio_init()
     var"#status#" = ccall((:H5FD_mpio_init, libhdf5), hid_t, ())
@@ -2564,7 +2564,7 @@ end
 """
     h5fd_multi_init() -> hid_t
 
-See `libhdf5` documentation for [`H5FD_multi_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_MULTI_INIT).
+This function is exposed in `libhdf5` as the macro `H5FD_MULTI`. See `libhdf5` documentation for [`H5Pget_driver`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER).
 """
 function h5fd_multi_init()
     var"#status#" = ccall((:H5FD_multi_init, libhdf5), hid_t, ())
@@ -2575,7 +2575,7 @@ end
 """
     h5fd_sec2_init() -> hid_t
 
-See `libhdf5` documentation for [`H5FD_sec2_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_SEC2_INIT).
+This function is exposed in `libhdf5` as the macro `H5FD_SEC2`. See `libhdf5` documentation for [`H5Pget_driver`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER).
 """
 function h5fd_sec2_init()
     var"#status#" = ccall((:H5FD_sec2_init, libhdf5), hid_t, ())
@@ -2586,7 +2586,7 @@ end
 """
     h5fd_stdio_init() -> hid_t
 
-See `libhdf5` documentation for [`H5FD_stdio_init`](https://portal.hdfgroup.org/display/HDF5/H5FD_STDIO_INIT).
+This function is exposed in `libhdf5` as the macro `H5FD_STDIO`. See `libhdf5` documentation for [`H5Pget_driver`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER).
 """
 function h5fd_stdio_init()
     var"#status#" = ccall((:H5FD_stdio_init, libhdf5), hid_t, ())
