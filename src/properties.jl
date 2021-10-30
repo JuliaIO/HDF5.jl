@@ -281,8 +281,8 @@ end
 """
     FileCreateProperties(;kws...)
 
-Properties used when creating a new `Group`. Inherits from
-[`GroupCreateProperties`](@ref),  with additional properties:
+Properties used when creating a new `File`. Inherits from
+[`ObjectCreateProperties`](@ref),  with additional properties:
 
 - `userblock :: Integer`: user block size in bytes. The default user block size
   is 0; it may be set to any power of 2 equal to 512 or greater (512, 1024,
