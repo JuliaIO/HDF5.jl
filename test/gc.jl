@@ -64,7 +64,7 @@ for i = 1:10
 end
 GC.enable(true)
 
-let plist = create_property(HDF5.API.H5P_FILE_ACCESS)  # related to issue #620
+let plist = HDF5.init!(HDF5.FileAccessProperties())  # related to issue #620
     HDF5.API.h5p_close(plist)
     @test_nowarn finalize(plist)
 end

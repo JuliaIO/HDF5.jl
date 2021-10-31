@@ -5,10 +5,21 @@ using Base.Meta: isexpr, quot
 const bind_exceptions = Dict{Symbol,Symbol}()
 
 # Distinguishes 32-bit vs 64-bit handle arguments
-push!(bind_exceptions, :h5p_get_fapl_mpio32 => :H5Pget_fapl_mpio)
-push!(bind_exceptions, :h5p_get_fapl_mpio64 => :H5Pget_fapl_mpio)
-push!(bind_exceptions, :h5p_set_fapl_mpio32 => :H5Pset_fapl_mpio)
-push!(bind_exceptions, :h5p_set_fapl_mpio64 => :H5Pset_fapl_mpio)
+bind_exceptions[:h5p_get_fapl_mpio32] = :H5Pget_fapl_mpio
+bind_exceptions[:h5p_get_fapl_mpio64] = :H5Pget_fapl_mpio
+bind_exceptions[:h5p_set_fapl_mpio32] = :H5Pset_fapl_mpio
+bind_exceptions[:h5p_set_fapl_mpio64] = :H5Pset_fapl_mpio
+# have numbers at the end
+bind_exceptions[:h5p_set_fletcher32]  = :H5Pset_fletcher32
+bind_exceptions[:h5p_set_fapl_sec2]   = :H5Pset_fapl_sec2
+# underscore separator not removed
+bind_exceptions[:h5fd_core_init]      = :H5FD_core_init
+bind_exceptions[:h5fd_family_init]    = :H5FD_family_init
+bind_exceptions[:h5fd_log_init]       = :H5FD_log_init
+bind_exceptions[:h5fd_mpio_init]      = :H5FD_mpio_init
+bind_exceptions[:h5fd_multi_init]     = :H5FD_multi_init
+bind_exceptions[:h5fd_sec2_init]      = :H5FD_sec2_init
+bind_exceptions[:h5fd_stdio_init]     = :H5FD_stdio_init
 
 # An expression which is injected at the beginning of the API defitions to aid in doing
 # (pre)compile-time conditional compilation based on the libhdf5 version.
@@ -207,9 +218,16 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
         docstr *= " -> $rettype"
     end
 
-    docstr *= "\n\nSee `libhdf5` documentation for [`$cfuncname`]" *
-              "(https://portal.hdfgroup.org/display/HDF5/$(uppercase(string(funcsig.args[1])))).\n"
-
+    if prefix == "h5fd" && endswith(rest, "_init")
+        # remove trailing _init
+        drivername = rest[1:end-5]
+        docstr *= "\n\nThis function is exposed in `libhdf5` as the macro `H5FD_$(uppercase(drivername))`. " *
+            "See `libhdf5` documentation for [`H5Pget_driver`]" *
+            "(https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER).\n"
+    else
+        docstr *= "\n\nSee `libhdf5` documentation for [`$cfuncname`]" *
+            "(https://portal.hdfgroup.org/display/HDF5/$(uppercase(string(funcsig.args[1])))).\n"
+    end
     # Then assemble the pieces. Doing it through explicit Expr() objects
     # avoids inserting the line number nodes for the macro --- the call site
     # is instead explicitly injected into the function body via __source__.

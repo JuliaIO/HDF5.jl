@@ -1,17 +1,17 @@
-import Blosc
-
 # port of https://github.com/Blosc/c-blosc/blob/3a668dcc9f61ad22b5c0a0ab45fe8dad387277fd/hdf5/blosc_filter.c (copyright 2010 Francesc Alted, license: MIT/expat)
 
+import Blosc
+
+const FILTER_BLOSC = API.H5Z_filter_t(32001) # Filter ID registered with the HDF Group for Blosc
 const FILTER_BLOSC_VERSION = 2
-const FILTER_BLOSC = 32001 # Filter ID registered with the HDF Group for Blosc
 const blosc_name = "blosc"
 
-const blosc_flags = Ref{Cuint}()
-const blosc_values = Vector{Cuint}(undef,8)
-const blosc_nelements = Ref{Csize_t}(length(blosc_values))
-const blosc_chunkdims = Vector{API.hsize_t}(undef,32)
-
 function blosc_set_local(dcpl::API.hid_t, htype::API.hid_t, space::API.hid_t)
+    blosc_flags = Ref{Cuint}()
+    blosc_values = Vector{Cuint}(undef,8)
+    blosc_nelements = Ref{Csize_t}(length(blosc_values))
+    blosc_chunkdims = Vector{API.hsize_t}(undef,32)
+
     API.h5p_get_filter_by_id(dcpl, FILTER_BLOSC, blosc_flags, blosc_nelements, blosc_values, 0, C_NULL, C_NULL)
     flags = blosc_flags[]
 
@@ -59,7 +59,6 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
     clevel = cd_nelmts >= 5 ? unsafe_load(cd_values, 5) : Cuint(5)
     # Do shuffle:
     doshuffle = cd_nelmts >= 6 ? unsafe_load(cd_values, 6) != 0 : true
-    # to do: set compressor based on compcode in unsafe_load(cd_values, 7)?
 
     if (flags & API.H5Z_FLAG_REVERSE) == 0 # compressing
         # Allocate an output buffer exactly as long as the input data; if
@@ -68,6 +67,14 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
         outbuf_size = unsafe_load(buf_size)
         outbuf = Libc.malloc(outbuf_size)
         outbuf == C_NULL && return Csize_t(0)
+
+        compname = if cd_nelmts >= 7
+            compcode = unsafe_load(cd_values, 7)
+            Blosc.compname(compcode)
+        else
+            "blosclz"
+        end
+        Blosc.set_compressor(compname)
         status = Blosc.blosc_compress(clevel, doshuffle, typesize, nbytes,
                                       unsafe_load(buf), outbuf, nbytes)
         status < 0 && (Libc.free(outbuf); return Csize_t(0))
@@ -91,12 +98,14 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
         unsafe_store!(buf_size, outbuf_size)
         return Csize_t(status) # size of compressed/decompressed data
     end
-    Libc.free(outbuf); return Csize_t(0)
+    Libc.free(outbuf)
+    return Csize_t(0)
 end
+
 
 # register the Blosc filter function with HDF5
 function register_blosc()
-    c_blosc_set_local = @cfunction(blosc_set_local, API.API.herr_t, (API.hid_t,API.hid_t,API.hid_t))
+    c_blosc_set_local = @cfunction(blosc_set_local, API.herr_t, (API.hid_t,API.hid_t,API.hid_t))
     c_blosc_filter = @cfunction(blosc_filter, Csize_t,
                                 (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
                                  Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
@@ -105,11 +114,50 @@ function register_blosc()
     return nothing
 end
 
-const set_blosc_values = Cuint[0,0,0,0,5,1,0]
-function set_blosc(p::Properties, level::Integer=5)
-    0 <= level <= 9 || throw(ArgumentError("blosc compression $level not in [0,9]"))
-    set_blosc_values[5] = level
-    API.h5p_set_filter(p.id, FILTER_BLOSC, API.H5Z_FLAG_OPTIONAL, length(set_blosc_values), set_blosc_values)
 
-    return nothing
+"""
+    BloscFilter(;level=5, shuffle=true, compressor="blosclz")
+
+The Blosc compression filter, using [Blosc.jl](https://github.com/JuliaIO/Blosc.jl). Options:
+
+ - `level`: compression level
+ - `shuffle`: whether to shuffle data before compressing (this option should be used instead of the [`Shuffle`](@ref) filter)
+ - `compressor`: the compression algorithm. Call `Blosc.compressors()` for the available compressors.
+
+# External links
+- [What Is Blosc?](https://www.blosc.org/pages/blosc-in-depth/)
+"""
+struct BloscFilter <: Filter
+    blosc_version::Cuint
+    version_format::Cuint
+    typesize::Cuint
+    bufsize::Cuint
+    level::Cuint
+    shuffle::Cuint
+    compcode::Cuint
+end
+
+function BloscFilter(;level=5, shuffle=true, compressor="blosclz")
+    compcode = Blosc.compcode(compressor)
+    BloscFilter(0,0,0,0,level,shuffle,compcode)
+end
+
+function Base.show(io::IO, blosc::BloscFilter)
+    print(io, BloscFilter,
+          "(level=", Int(blosc.level),
+          ",shuffle=", blosc.shuffle!=0,
+          ",compressor=", Blosc.compname(blosc.compcode),
+          ")")
+end
+
+filterid(::Type{BloscFilter}) = FILTER_BLOSC
+FILTERS[FILTER_BLOSC] = BloscFilter
+
+function Base.push!(f::FilterPipeline, blosc::BloscFilter)
+    0 <= blosc.level <= 9 || throw(ArgumentError("blosc compression $(blosc.level) not in [0,9]"))
+    ref = Ref(blosc)
+    GC.@preserve ref begin
+        API.h5p_set_filter(f.plist, filterid(BloscFilter), API.H5Z_FLAG_OPTIONAL, div(sizeof(BloscFilter), sizeof(Cuint)), pointer_from_objref(ref))
+    end
+    return f
 end

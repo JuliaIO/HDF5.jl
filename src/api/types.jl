@@ -190,7 +190,8 @@ const H5F_ACC_SWMR_READ  = 0x0040
 const H5F_LIBVER_EARLIEST = 0
 const H5F_LIBVER_V18      = 1
 const H5F_LIBVER_V110     = 2
-const H5F_LIBVER_LATEST   = H5F_LIBVER_V110
+const H5F_LIBVER_V112     = 3
+# H5F_LIBVER_LATEST defined in helpers.jl
 
 # object types
 const H5F_OBJ_FILE     = 0x0001
@@ -362,3 +363,17 @@ const H5Z_FLAG_MANDATORY = 0x0000
 const H5Z_FLAG_OPTIONAL = 0x0001
 const H5Z_FLAG_REVERSE = 0x0100
 const H5Z_CLASS_T_VERS = 1
+
+# predefined filters
+const H5Z_FILTER_ALL = H5Z_filter_t(0)
+const H5Z_FILTER_NONE = H5Z_filter_t(0)
+const H5Z_FILTER_DEFLATE = H5Z_filter_t(1)
+const H5Z_FILTER_SHUFFLE = H5Z_filter_t(2)
+const H5Z_FILTER_FLETCHER32 = H5Z_filter_t(3)
+const H5Z_FILTER_SZIP = H5Z_filter_t(4)
+const H5Z_FILTER_NBIT = H5Z_filter_t(5)
+const H5Z_FILTER_SCALEOFFSET = H5Z_filter_t(6)
+
+const H5_SZIP_EC_OPTION_MASK = Cuint(4)
+const H5_SZIP_NN_OPTION_MASK = Cuint(32)
+const H5_SZIP_MAX_PIXELS_PER_BLOCK = Cuint(32)
