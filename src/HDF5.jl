@@ -712,12 +712,12 @@ end
 
 # Setting dset creation properties with name/value pairs
 function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace; pv...)
+    haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
     dcpl = DatasetCreateProperties()
     dxpl = DatasetTransferProperties()
     dapl = DatasetAccessProperties()
     pv = setproperties!(dcpl,dxpl,dapl; pv...)
     isempty(pv) || error("invalid keyword options")
-    haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
     Dataset(API.h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
 end
 create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace_dims::Dims; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
