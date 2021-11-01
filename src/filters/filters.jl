@@ -1,6 +1,6 @@
 module Filters
 
-export Deflate, Shuffle, Fletcher32, Szip, NBit, ScaleOffset, BloscFilter
+export Deflate, Shuffle, Fletcher32, Szip, NBit, ScaleOffset, BloscFilter, Bzip2Filter, Lz4Filter, ZstdFilter
 
 import ..HDF5: Properties, h5doc, API
 
@@ -106,8 +106,35 @@ function Base.append!(filters::FilterPipeline, extra)
     end
     return filters
 end
+function Base.push!(p::FilterPipeline, f::F) where F <: Filter
+    ref = Ref(f)
+    GC.@preserve ref begin
+        API.h5p_set_filter(p.plist, filterid(F), API.H5Z_FLAG_OPTIONAL, div(sizeof(F), sizeof(Cuint)), pointer_from_objref(ref))
+    end
+    return p
+end
+function Base.push!(p::FilterPipeline, f::UnknownFilter)
+    GC.@preserve f begin
+        API.h5p_set_filter(p.plist, f.filter_id, f.flags, length(f.data), pointer(f.data))
+    end
+end
 
 include("builtin.jl")
 include("blosc.jl")
+include("TestUtils.jl")
+include("H5Zbzip2.jl")
+include("H5Zlz4.jl")
+include("H5Zzstd.jl")
+
+import .H5Zbzip2: register_bzip2, Bzip2Filter
+import .H5Zlz4: register_lz4, Lz4Filter
+import .H5Zzstd: register_zstd, ZstdFilter
+
+function register()
+    register_blosc()
+    register_bzip2()
+    register_lz4()
+    register_zstd()
+end
 
 end # module
