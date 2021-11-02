@@ -4,6 +4,40 @@ export Deflate, Shuffle, Fletcher32, Szip, NBit, ScaleOffset, BloscFilter, Bzip2
 
 import ..HDF5: Properties, h5doc, API
 
+"""
+    Filter
+
+Abstract type to describe HDF5 Filters.
+See the Extended Help for information on implementing a new filter.
+
+# Extended Help
+
+## Filter interface
+
+The Filter interface can be implemented upon either the Filter subtype or an instance.
+The instance methods default to calling the same method on the type.
+
+See API.h5z_register for details.
+
+### Required Methods to Implement
+* `filterid` - registered filter ID
+* `filter_func` - implement the actual filter
+
+### Optional Methods to Implement
+* `filtername` - defaults to "Unnamed Filter"
+* `encoder_present` - defaults to true
+* `decoder_present` - defaults to true
+* `can_apply_func` - defaults to nothing
+* `set_local_func` - defaults to nothing
+
+### Advanced Methods to Implement
+* `can_apply_cfunc` - Defaults to wrapping @cfunction around the result of `can_apply_func`
+* `set_local_cfunc` - Defaults to wrapping @cfunction around the result of `set_local_func`
+* `filter_cfunc` - Defaults to wrapping @cfunction around the result of `filter_func`
+* `register_filter` - Defaults to using the above functions to register the filter
+
+Implement the Advanced Methods to avoid @cfunction from generating a runtime closure which may not work on all systems.
+"""
 abstract type Filter end
 
 """
@@ -14,12 +48,101 @@ Maps filter id to filter type.
 const FILTERS = Dict{API.H5Z_filter_t, Any}()
 
 """
-    filterid(::F)
-    filterid(F)
+    filterid(::F) where {F <: Filter}
+    filterid(F) where {F <: Filter}
+
 
 The internal filter id of a filter of type `F`.
 """
 filterid(::F) where {F<:Filter} = filterid(F)
+
+"""
+    encoder_present(::F) where {F<:Filter}
+
+Can the filter have an encode or compress the data?
+Defaults to true.
+Returns a Bool. See `API.h5z_register`.
+"""
+encoder_present(::F) where {F<:Filter} = encoder_present(F)
+encoder_present(::Type{F}) where {F<:Filter} = true
+
+"""
+    decoder_present(::F) where {F<:Filter}
+
+Can the filter decode or decompress the data?
+Defaults to true.
+Returns a Bool.
+See `API.h5z_register`
+"""
+decoder_present(::F) where {F<:Filter} = decoder_present(F)
+decoder_present(::Type{F}) where {F<:Filter} = true
+
+"""
+    filtername(::F) where {F<:Filter}
+
+What is the name of a filter?
+Defaults to "Unnamed Filter"
+Returns a String describing the filter. See `API.h5z_register`
+"""
+filtername(::F) where {F<:Filter} = filtername(F)
+filtername(::Type{F}) where {F<:Filter} = "Unnamed Filter"
+
+"""
+    can_apply_func(::F) where {F<:Filter}
+
+Return a function indicating whether the filter can be applied or `nothing` is no function exists.
+The function signature is `func(dcpl_id::API.hid_t, type_id::API.hid_t, space_id::API.hid_t)`.
+See `API.h5z_register`
+"""
+can_apply_func(::F) where {F<:Filter} = can_apply_func(F)
+can_apply_func(::Type{F}) where {F<:Filter} = nothing
+function can_apply_cfunc(f::F) where {F<:Filter}
+    func = can_apply_func(f)
+    if func === nothing
+        return C_NULL
+    else
+        return @cfunction($func, API.herr_t, (API.hid_t,API.hid_t,API.hid_t))
+    end
+end
+
+"""
+    set_local_func(::F) where {F<:Filter}
+
+Return a function that sets dataset specific parameters or `nothing` if no function exists.
+The function signature is `func(dcpl_id::API.hid_t, type_id::API.hid_t, space_id::API.hid_t)`.
+See `API.h5z_register`
+"""
+set_local_func(::F) where {F<:Filter} = set_local_func(F)
+set_local_func(::Type{F}) where {F<:Filter} = nothing
+function set_local_cfunc(f::F) where {F<:Filter}
+    func = set_local_func(f)
+    if func === nothing
+        return C_NULL
+    else
+        return @cfunction($func, API.herr_t, (API.hid_t,API.hid_t,API.hid_t))
+    end
+end
+
+
+"""
+    filter_func(::F) where {F<:Filter}
+
+Returns a function that performs the actual filtering.
+
+See `API.h5z_register`
+"""
+filter_func(::F) where {F<:Filter} = filter_func(F)
+filter_func(::Type{F}) where {F<:Filter} = nothing
+function filter_cfunc(f::F) where {F<:Filter}
+    func = filter_func(f)
+    if func === nothing
+        error("Filter function for $f must be defined via `filter_func`.")
+    end
+    c_filter_func = @cfunction($func, Csize_t,
+                               (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
+                               Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
+    return c_filter_func
+end
 
 struct UnknownFilter <: Filter
     filter_id::API.H5Z_filter_t
@@ -28,6 +151,11 @@ struct UnknownFilter <: Filter
     name::String
     config::Cuint
 end
+filterid(filter::UnknownFilter) = filter.filter_id
+filtername(filter::UnknownFilter) = filter.name
+filtername(::Type{UnknownFilter}) = "Unknown Filter"
+encoder_present(::Type{UnknownFilter}) = false
+decoder_present(::Type{UnknownFilter}) = false
 
 """
     FilterPipeline(plist::DatasetCreateProperties)
@@ -119,22 +247,54 @@ function Base.push!(p::FilterPipeline, f::UnknownFilter)
     end
 end
 
+# Generic implementation of register_filter
+"""
+    register_filter(filter::F) where F <: Filter
+
+Register the filter with the HDF5 library via API.h5z_register.
+Also add F to the FILTERS dictionary.
+"""
+function register_filter(filter::F) where F <: Filter
+    id = filterid(filter)
+    encoder = encoder_present(filter)
+    decoder = decoder_present(filter)
+    name = filtername(filter)
+    can_apply = can_apply_cfunc(filter)
+    set_local = set_local_cfunc(filter)
+    func = filter_cfunc(filter)
+    GC.@preserve name begin
+        API.h5z_register(API.H5Z_class_t(
+            API.H5Z_CLASS_T_VERS,
+            id,
+            encoder,
+            decoder,
+            pointer(name),
+            can_apply,
+            set_local,
+            func
+        ))
+    end
+    # Should this be the filter instance rather than the type?
+    FILTERS[id] = F
+    return nothing
+end
+register_filter(::Type{F}) where {F<:Filter} = register_filter(F())
+
 include("builtin.jl")
 include("blosc.jl")
-include("TestUtils.jl")
 include("H5Zbzip2.jl")
 include("H5Zlz4.jl")
 include("H5Zzstd.jl")
 
+import .H5Zblosc: register_blosc, BloscFilter
 import .H5Zbzip2: register_bzip2, Bzip2Filter
 import .H5Zlz4: register_lz4, Lz4Filter
 import .H5Zzstd: register_zstd, ZstdFilter
 
-function register()
-    register_blosc()
-    register_bzip2()
-    register_lz4()
-    register_zstd()
+const FILTERS_TO_REGISTER = [BloscFilter, Bzip2Filter, Lz4Filter, ZstdFilter]
+
+function register_filters()
+    register_filter.(FILTERS_TO_REGISTER)
 end
 
 end # module

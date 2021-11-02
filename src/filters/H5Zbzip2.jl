@@ -14,10 +14,11 @@ module H5Zbzip2
 using ..API
 using CodecBzip2
 import CodecBzip2: libbzip2
-import ..TestUtils: test_filter
-import ..Filters: FILTERS, Filter, filterid
+import ..Filters: FILTERS, Filter, filterid, register_filter, FilterPipeline
+import ..Filters: filterid, filtername, encoder_present, decoder_present
+import ..Filters: set_local_func, set_local_cfunc, can_apply_func, can_apply_cfunc, filter_func, filter_cfunc
 
-export H5Z_FILTER_BZIP2, H5Z_filter_bzip2, register_bzip2
+export H5Z_FILTER_BZIP2, H5Z_filter_bzip2, Bzip2Filter
 
 
 const H5Z_FILTER_BZIP2 = API.H5Z_filter_t(307)
@@ -148,6 +149,7 @@ function register_bzip2()
         C_NULL,
         c_bzip2_filter
     ))
+    FILTERS[H5Z_FILTER_BZIP2] = Bzip2Filter
     return nothing
 end
 
@@ -182,18 +184,20 @@ function BZ2_bzBuffToBuffDecompress(dest, destLen, source, sourceLen, small, ver
     )
 end
 
-function test_bzip2_filter(data = ones(UInt8, 1024))
-    cd_values = Cuint[8]
-    test_filter(H5Z_filter_bzip2; cd_values = cd_values, data = data)
-end
-
 # Filters Module
 
 struct Bzip2Filter <: Filter
     blockSize100k::Cuint
 end
+Bzip2Filter() = Bzip2Filter(9)
  
 filterid(::Type{Bzip2Filter}) = H5Z_FILTER_BZIP2
-FILTERS[H5Z_FILTER_BZIP2] = Bzip2Filter
+filtername(::Type{Bzip2Filter}) = bzip2_name
+filter_func(::Type{Bzip2Filter}) = H5Z_filter_bzip2
+filter_cfunc(::Type{Bzip2Filter}) = @cfunction(H5Z_filter_bzip2, Csize_t,
+                                               (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
+                                               Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
+register_filter(::Type{Bzip2Filter}) = register_bzip2()
+
 
 end # module H5Zbzip2

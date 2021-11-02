@@ -1,6 +1,15 @@
-module TestUtils
+"""
+    module FilterTestUtils
 
-import ..API
+This module contains utilities for evaluating and debugging HDF5 Filters.
+"""
+module FilterTestUtils
+
+import HDF5.API
+import HDF5.Filters.H5Zlz4: H5Z_filter_lz4
+import HDF5.Filters.H5Zzstd: H5Z_filter_zstd
+import HDF5.Filters.H5Zbzip2: H5Z_filter_bzip2
+using Test
 
 export test_filter
 
@@ -75,6 +84,33 @@ function test_filter(filter_func; cd_values::Vector{Cuint} = Cuint[], data = one
     end
     @info "Compression Ratio" nbytes_compressed / nbytes_decompressed
     return nbytes_compressed, nbytes_decompressed
+end
+
+function test_bzip2_filter(data = ones(UInt8, 1024))
+    cd_values = Cuint[8]
+    test_filter(H5Z_filter_bzip2; cd_values = cd_values, data = data)
+end
+
+function test_lz4_filter(data = ones(UInt8, 1024))
+    cd_values = Cuint[1024]
+    test_filter(H5Z_filter_lz4; cd_values = cd_values, data = data)
+end
+
+function test_zstd_filter(data = ones(UInt8, 1024))
+    cd_values = Cuint[3] # aggression
+    test_filter(H5Z_filter_zstd; cd_values = cd_values, data = data)
+end
+
+function __init__()
+    @testset "Compression Filter Unit Tests" begin
+        @test argmin(test_bzip2_filter()) == 1
+        @test argmin(test_lz4_filter()) == 1
+        @test argmin(test_zstd_filter()) == 1
+        str = codeunits(repeat("foobar", 1000))
+        @test argmin(test_bzip2_filter(str)) == 1
+        @test argmin(test_lz4_filter(str)) == 1
+        @test argmin(test_zstd_filter(str)) == 1
+    end
 end
 
 end
