@@ -12,13 +12,15 @@ module H5Zzstd
 using ..API
 using CodecZstd
 import CodecZstd.LibZstd
-import ..TestUtils: test_filter
-import ..Filters: FILTERS, Filter, filterid
+import ..Filters: FILTERS, Filter, filterid, register_filter, FilterPipeline
+import ..Filters: filterid, filtername, encoder_present, decoder_present
+import ..Filters: set_local_func, set_local_cfunc, can_apply_func, can_apply_cfunc, filter_func, filter_cfunc
+
 
 const H5Z_FILTER_ZSTD = API.H5Z_filter_t(32015)
 const zstd_name = "Zstandard compression: http://www.zstd.net"
 
-export H5Z_filter_zstd, H5Z_FILTER_ZSTD, register_zstd
+export H5Z_filter_zstd, H5Z_FILTER_ZSTD, ZstdFilter 
 
 
 function H5Z_filter_zstd(flags::Cuint, cd_nelmts::Csize_t,
@@ -86,11 +88,6 @@ function H5Z_filter_zstd(flags::Cuint, cd_nelmts::Csize_t,
 
 end
 
-function test_zstd_filter()
-    cd_values = Cuint[3] # aggression
-    test_filter(H5Z_filter_zstd; cd_values = cd_values)
-end
-
 function register_zstd()
     c_zstd_filter = @cfunction(H5Z_filter_zstd, Csize_t,
                               (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
@@ -105,6 +102,7 @@ function register_zstd()
         C_NULL,
         c_zstd_filter
     ))
+    FILTERS[H5Z_FILTER_ZSTD] = ZstdFilter
     return nothing
 end
 
@@ -113,8 +111,14 @@ end
 struct ZstdFilter <: Filter
     clevel::Cuint
 end
+ZstdFilter() = ZstdFilter(CodecZstd.LibZstd.ZSTD_CLEVEL_DEFAULT)
  
 filterid(::Type{ZstdFilter}) = H5Z_FILTER_ZSTD
-FILTERS[H5Z_FILTER_ZSTD] = ZstdFilter
+filtername(::Type{ZstdFilter}) = zstd_name
+filter_func(::Type{ZstdFilter}) = H5Z_filter_zstd
+filter_cfunc(::Type{ZstdFilter}) = @cfunction(H5Z_filter_zstd, Csize_t,
+                                             (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
+                                             Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
+register_filter(::Type{ZstdFilter}) = register_zstd()
 
 end # module H5Zzstd

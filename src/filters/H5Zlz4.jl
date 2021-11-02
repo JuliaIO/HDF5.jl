@@ -15,10 +15,13 @@ module H5Zlz4
 
 using ..API
 using CodecLz4
-import ..TestUtils: test_filter
-import ..Filters: FILTERS, Filter, filterid
+import ..Filters: FILTERS, Filter, filterid, register_filter, FilterPipeline
+import ..Filters: filterid, filtername, encoder_present, decoder_present
+import ..Filters: set_local_func, set_local_cfunc, can_apply_func, can_apply_cfunc, filter_func, filter_cfunc
 
-export H5Z_FILTER_LZ4, H5Z_filter_lz4, register_lz4
+
+
+export H5Z_FILTER_LZ4, H5Z_filter_lz4, Lz4Filter
 
 const H5Z_FILTER_LZ4 = API.H5Z_filter_t(32004)
 
@@ -185,11 +188,6 @@ function H5Z_filter_lz4(flags::Cuint, cd_nelmts::Csize_t,
     return Csize_t(ret_value)
 end
 
-function test_lz4_filter()
-    cd_values = Cuint[1024]
-    test_filter(H5Z_filter_lz4; cd_values = cd_values)
-end
-
 function register_lz4(; aggression = 1)
     LZ4_AGGRESSION[] = aggression
     c_lz4_filter = @cfunction(H5Z_filter_lz4, Csize_t,
@@ -205,7 +203,7 @@ function register_lz4(; aggression = 1)
         C_NULL,
         c_lz4_filter
     ))
-
+    FILTERS[H5Z_FILTER_LZ4] = Lz4Filter
     return nothing
 end
 
@@ -214,8 +212,14 @@ end
 struct Lz4Filter <: Filter
     blockSize::Cuint
 end
+Lz4Filter() = Lz4Filter(DEFAULT_BLOCK_SIZE)
  
 filterid(::Type{Lz4Filter}) = H5Z_FILTER_LZ4
-FILTERS[H5Z_FILTER_LZ4] = Lz4Filter
+filtername(::Type{Lz4Filter}) = lz4_name
+filter_func(::Type{Lz4Filter}) = H5Z_filter_lz4
+filter_cfunc(::Type{Lz4Filter}) = @cfunction(H5Z_filter_lz4, Csize_t,
+                                             (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
+                                             Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
+register_filter(::Type{Lz4Filter}) = register_lz4()
 
 end
