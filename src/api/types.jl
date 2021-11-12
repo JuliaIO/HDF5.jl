@@ -304,6 +304,7 @@ const H5S_SEL_HYPERSLABS = 2
 const H5S_SEL_ALL        = 3
 
 # type classes (C enum H5T_class_t)
+const H5T_NO_CLASS     = hid_t(-1)
 const H5T_INTEGER      = hid_t(0)
 const H5T_FLOAT        = hid_t(1)
 const H5T_TIME         = hid_t(2)  # not supported by HDF5 library
@@ -316,13 +317,29 @@ const H5T_ENUM         = hid_t(8)
 const H5T_VLEN         = hid_t(9)
 const H5T_ARRAY        = hid_t(10)
 
+# Byte orders (C enum H5T_order_t)
+const H5T_ORDER_ERROR = -1, # error
+const H5T_ORDER_LE    = 0,  # little endian
+const H5T_ORDER_BE    = 1,  # bit endian
+const H5T_ORDER_VAX   = 2,  # VAX mixed endian
+const H5T_ORDER_MIXED = 3,  # Compound type with mixed member orders
+const H5T_ORDER_NONE  = 4   # no particular order (strings, bits,..)
+
+# Floating-point normalization schemes (C enum H5T_norm_t)
+const H5T_NORM_ERROR   = -1, # error
+const H5T_NORM_IMPLIED = 0,  # msb of mantissa isn't stored, always 1
+const H5T_NORM_MSBSET  = 1,  # msb of mantissa is always 1
+const H5T_NORM_NONE    = 2   # not normalized
+
 # Character types
 const H5T_CSET_ASCII   = 0
 const H5T_CSET_UTF8    = 1
 
 # Sign types (C enum H5T_sign_t)
+const H5T_SGN_ERROR = Cint(-1) # error
 const H5T_SGN_NONE     = Cint(0)  # unsigned
 const H5T_SGN_2        = Cint(1)  # 2's complement
+const H5T_NSGN = Cint(2)        # sentinel: this must be last!
 
 # Search directions
 const H5T_DIR_ASCEND   = 1
