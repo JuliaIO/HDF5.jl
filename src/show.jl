@@ -68,6 +68,9 @@ function Base.show(io::IO, dtype::Datatype)
     if isvalid(dtype)
         API.h5t_committed(dtype) && print(io, name(dtype), " ")
         print(io, API.h5lt_dtype_to_text(dtype))
+        precision = Int(API.h5t_get_precision(dtype))
+        size = Int(API.h5t_get_size(dtype))
+        print(io, " ($size byte size with $precision bit precision)")
     else
         # Note that API.h5i_is_valid returns `false` on the built-in datatypes (e.g. API.H5T_NATIVE_INT),
         # apparently because they have refcounts of 0 yet are always valid. Just temporarily turn
