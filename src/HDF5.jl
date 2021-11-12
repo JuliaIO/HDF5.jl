@@ -864,8 +864,11 @@ copy_object(src_parent::Union{File,Group}, src_path::AbstractString, dst_parent:
 copy_object(src_obj::Object, dst_parent::Union{File,Group}, dst_path::AbstractString) = API.h5o_copy(checkvalid(src_obj), ".", checkvalid(dst_parent), dst_path, API.H5P_DEFAULT, _link_properties(dst_path))
 
 # Move links
-move_link(src::Union{File,Group}, src_name::AbstractString, dest::Union{File,Group}, dest_name::AbstractString=src_name, lapl::Properties=DEFAULT_PROPERTIES, lcpl::Properties=DEFAULT_PROPERTIES) = API.h5l_move(checkvalid(src), src_name, checkvalid(dest), dest_name, lcpl, lapl)
-move_link(parent::Union{File,Group}, src_name::AbstractString, dest_name::AbstractString, lapl::Properties=DEFAULT_PROPERTIES, lcpl::Properties=DEFAULT_PROPERTIES) = API.h5l_move(checkvalid(parent), src_name, parent, dest_name, lcpl, lapl)
+move_link(src::Union{File,Group}, src_name::AbstractString, dest::Union{File,Group}, dest_name::AbstractString=src_name, lapl::LinkAccessProperties = LinkAccessProperties(), lcpl::LinkCreateProperties = LinkCreateProperties()) =
+    API.h5l_move(checkvalid(src), src_name, checkvalid(dest), dest_name, lcpl, lapl)
+
+move_link(parent::Union{File,Group}, src_name::AbstractString, dest_name::AbstractString, lapl::LinkAccessProperties = LinkAccessProperties(), lcpl::LinkCreateProperties = LinkCreateProperties())  =
+    API.h5l_move(checkvalid(parent), src_name, parent, dest_name, lcpl, lapl)
 
 # Assign syntax: obj[path] = value
 # Creates a dataset unless obj is a dataset, in which case it creates an attribute
