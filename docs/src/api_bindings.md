@@ -247,6 +247,7 @@ h5i_is_valid
 - [`h5l_get_info`](@ref h5l_get_info)
 - [`h5l_get_name_by_idx`](@ref h5l_get_name_by_idx)
 - [`h5l_iterate`](@ref h5l_iterate)
+- [`h5l_move`](@ref h5l_move)
 ```@docs
 h5l_create_external
 h5l_create_hard
@@ -256,6 +257,7 @@ h5l_exists
 h5l_get_info
 h5l_get_name_by_idx
 h5l_iterate
+h5l_move
 ```
 
 ---

@@ -285,6 +285,19 @@ delete_object(fr, "deleteme")
 @test !haskey(fr, "deleteme")
 close(fr)
 
+# Test object move
+h5open(fn, "r+") do io
+  io["moveme"] = [1,2,3]
+  create_group(io, "moveto")
+end
+
+h5open(fn, "r+") do io
+  @test haskey(io, "moveme")
+  @test haskey(io, "moveto") && !haskey(io, "moveto/moveme")
+  move_link(io, "moveme", io["moveto"])
+  @test haskey(io, "moveto/moveme") && !haskey(io, "moveme")
+end
+
 # Test the h5read interface
 Wr = h5read(fn, "newgroup/W")
 @test Wr == W
