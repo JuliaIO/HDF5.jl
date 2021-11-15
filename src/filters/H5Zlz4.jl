@@ -33,14 +33,14 @@ const LZ4_AGGRESSION = Ref(1)
 
 
 # flags H5Z_FLAG_REVERSE or H5Z_FLAG_OPTIONAL
-# cd_nelmts number of elements in cd_values
-# cd_values 
+# cd_nelmts number of elements in cd_values (0 or 1)
+# cd_values the first optional element must be the blockSize
 # nbytes - number of valid bytes of data
 # buf_size - total size of buffer
 # buf - pointer to pointer of data
 function H5Z_filter_lz4(flags::Cuint, cd_nelmts::Csize_t,
                         cd_values::Ptr{Cuint}, nbytes::Csize_t,
-                        buf_size::Ptr{Csize_t}, buf::Ptr{Ptr{Cvoid}})
+                        buf_size::Ptr{Csize_t}, buf::Ptr{Ptr{Cvoid}})::Csize_t
 
     outBuf = C_NULL
     ret_value = Csize_t(0)
@@ -176,10 +176,10 @@ function H5Z_filter_lz4(flags::Cuint, cd_nelmts::Csize_t,
     end # (flags & API.H5Z_FLAG_REVERSE) != 0
 
     catch err
-        println("ERROR: ", err)
-        rethrow()
-        #println(stacktrace(catch_backtrace()))
+        #  "In the case of failure, the return value is 0 (zero) and all pointer arguments are left unchanged."
         ret_value = Csize_t(0)
+        @error "H5Zlz4.jl Non-Fatal ERROR: " err
+        display(stacktrace(catch_backtrace()))
     finally
         if outBuf != C_NULL
             Libc.free(outBuf)

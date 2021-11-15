@@ -26,7 +26,7 @@ const bzip2_name = "HDF5 bzip2 filter; see http://www.hdfgroup.org/services/cont
 
 function H5Z_filter_bzip2(flags::Cuint, cd_nelmts::Csize_t,
                         cd_values::Ptr{Cuint}, nbytes::Csize_t,
-                        buf_size::Ptr{Csize_t}, buf::Ptr{Ptr{Cvoid}})
+                        buf_size::Ptr{Csize_t}, buf::Ptr{Ptr{Cvoid}})::Csize_t
     outbuf = C_NULL
     outdatalen = Cuint(0)
 
@@ -125,11 +125,13 @@ function H5Z_filter_bzip2(flags::Cuint, cd_nelmts::Csize_t,
     unsafe_store!(buf_size, outbuflen)
 
     catch err
+        #  "In the case of failure, the return value is 0 (zero) and all pointer arguments are left unchanged."
+        outdatalen = Csize_t(0)
         if outbuf != C_NULL
             Libc.free(outbuf)
         end
-        rethrow(err)
-        outdatalen = Csize_t(0)
+        @error "H5Zbzip2.jl Non-Fatal ERROR: " err
+        display(stacktrace(catch_backtrace()))
     end # try - catch
 
     return Csize_t(outdatalen)
