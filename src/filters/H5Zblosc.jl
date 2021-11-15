@@ -5,7 +5,7 @@ using ..API
 import Blosc
 import ..Filters: FILTERS, Filter, filterid, register_filter, FilterPipeline
 import ..Filters: filterid, filtername, encoder_present, decoder_present
-import ..Filters: set_local_func, set_local_cfunc, can_apply_func, can_apply_cfunc, filter_func, filter_cfunc
+import ..Filters: set_local_func, set_local_cfunc, can_apply_func, can_apply_cfunc, filter_func, filter_cfunc, register_filter
 
 export H5Z_FILTER_BLOSC, blosc_filter, BloscFilter
 
@@ -158,6 +158,7 @@ filter_cfunc(::Type{BloscFilter}) = @cfunction(blosc_filter, Csize_t,
                                                  (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
                                                  Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
 register_filter(::Type{BloscFilter}) = register_blosc()
+register_filter(::BloscFilter) = register_blosc()
 
 function Base.show(io::IO, blosc::BloscFilter)
     print(io, BloscFilter,
@@ -176,5 +177,7 @@ function Base.push!(f::FilterPipeline, blosc::BloscFilter)
     return f
 end
 
+precompile(register_filter, (BloscFilter,))
+precompile(register_filter, (Type{BloscFilter},))
 
 end # module H5Zblosc
