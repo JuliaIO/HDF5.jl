@@ -281,7 +281,7 @@ end
 register_filter(::Type{F}) where {F<:Filter} = register_filter(F())
 
 include("builtin.jl")
-include("blosc.jl")
+include("H5Zblosc.jl")
 include("H5Zbzip2.jl")
 include("H5Zlz4.jl")
 include("H5Zzstd.jl")
@@ -291,10 +291,18 @@ import .H5Zbzip2: register_bzip2, Bzip2Filter
 import .H5Zlz4: register_lz4, Lz4Filter
 import .H5Zzstd: register_zstd, ZstdFilter
 
-const FILTERS_TO_REGISTER = [BloscFilter, Bzip2Filter, Lz4Filter, ZstdFilter]
+# const FILTERS_TO_REGISTER = [BloscFilter, Bzip2Filter, Lz4Filter, ZstdFilter]
 
 function register_filters()
-    register_filter.(FILTERS_TO_REGISTER)
+    # Simplified to optimize package loading
+    register_blosc()
+    register_bzip2()
+    register_lz4()
+    register_zstd()
+    # There are method inference issues with the below
+    # register_filter.(FILTERS_TO_REGISTER)
 end
+
+precompile(register_filters, ())
 
 end # module
