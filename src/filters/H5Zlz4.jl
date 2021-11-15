@@ -221,5 +221,9 @@ filter_cfunc(::Type{Lz4Filter}) = @cfunction(H5Z_filter_lz4, Csize_t,
                                              (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
                                              Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
 register_filter(::Type{Lz4Filter}) = register_lz4()
+register_filter(::Lz4Filter) = register_lz4()
+
+precompile(register_filter, (Lz4Filter,))
+precompile(register_filter, (Type{Lz4Filter},))
 
 end

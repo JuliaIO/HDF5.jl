@@ -123,5 +123,9 @@ filter_cfunc(::Type{ZstdFilter}) = @cfunction(H5Z_filter_zstd, Csize_t,
                                              (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
                                              Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
 register_filter(::Type{ZstdFilter}) = register_zstd()
+register_filter(::ZstdFilter) = register_zstd()
+
+precompile(register_filter, (ZstdFilter,))
+precompile(register_filter, (Type{ZstdFilter},))
 
 end # module H5Zzstd
