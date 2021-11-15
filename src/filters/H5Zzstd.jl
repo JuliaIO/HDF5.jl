@@ -22,10 +22,11 @@ const zstd_name = "Zstandard compression: http://www.zstd.net"
 
 export H5Z_filter_zstd, H5Z_FILTER_ZSTD, ZstdFilter 
 
-
+# cd_values First optional value is the compressor aggression
+#           Default is CodecZstd.LibZstd.ZSTD_CLEVEL_DEFAULT
 function H5Z_filter_zstd(flags::Cuint, cd_nelmts::Csize_t,
                         cd_values::Ptr{Cuint}, nbytes::Csize_t,
-                        buf_size::Ptr{Csize_t}, buf::Ptr{Ptr{Cvoid}})
+                        buf_size::Ptr{Csize_t}, buf::Ptr{Ptr{Cvoid}})::Csize_t
     inbuf = unsafe_load(buf)
     outbuf = C_NULL
     origSize = nbytes
@@ -75,17 +76,19 @@ function H5Z_filter_zstd(flags::Cuint, cd_nelmts::Csize_t,
         outbuf = C_NULL
         ret_value = compSize
     end
-    catch err
-        rethrow(err)
+    catch e
+        #  "In the case of failure, the return value is 0 (zero) and all pointer arguments are left unchanged."
+        ret_value = Csize_t(0)
+        @error "H5Zzstd Non-Fatal ERROR: " err
+        display(stacktrace(catch_backtrace()))
     finally
 
-    if outbuf != C_NULL
-        free(outbuf)
-    end
+        if outbuf != C_NULL
+            free(outbuf)
+        end
 
-    end
-    return ret_value
-
+    end # try catch finally
+    return Csize_t(ret_value)
 end
 
 function register_zstd()
