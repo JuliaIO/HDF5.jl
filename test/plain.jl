@@ -1,5 +1,6 @@
 using HDF5
 using CRC32c
+using Blosc
 using Test
 
 gatherf(dst_buf, dst_buf_bytes_used, op_data) = HDF5.API.herr_t(0)
