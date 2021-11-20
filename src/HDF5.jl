@@ -1600,8 +1600,6 @@ function __init__()
         ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
     end
 
-    Filters.register_filters()
-
     # use our own error handling machinery (i.e. turn off automatic error printing)
     API.h5e_set_auto(API.H5E_DEFAULT, C_NULL, C_NULL)
 
