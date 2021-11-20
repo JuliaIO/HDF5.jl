@@ -4,8 +4,8 @@ Originally licensed under Apache License Version 2.0
 See H5Zzstd_LICENSE.txt
 
 The following copyright and license applies to the Julia port itself.
-Copyright © 2021 Mark Kittisopikul, Howard Hughes Medical Institute
-Licensed under MIT License, see LICENSE
+Copyright © 2021 Mark Kittisopikul and Howard Hughes Medical Institute
+Licensed under MIT License, see LICENSE.txt
 =#
 module H5Zzstd
 
