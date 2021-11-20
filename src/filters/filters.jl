@@ -3,6 +3,7 @@ module Filters
 export Deflate, Shuffle, Fletcher32, Szip, NBit, ScaleOffset, BloscFilter, Bzip2Filter, Lz4Filter, ZstdFilter
 
 import ..HDF5: Properties, h5doc, API
+using Requires: @require
 
 """
     Filter
@@ -45,7 +46,7 @@ abstract type Filter end
 
 Maps filter id to filter type.
 """
-const FILTERS = Dict{API.H5Z_filter_t, Any}()
+const FILTERS = Dict{API.H5Z_filter_t, Type{<: Filter}}()
 
 """
     filterid(::F) where {F <: Filter}
@@ -280,27 +281,39 @@ function register_filter(filter::F) where F <: Filter
 end
 register_filter(::Type{F}) where {F<:Filter} = register_filter(F())
 
-include("builtin.jl")
-include("H5Zblosc.jl")
-include("H5Zbzip2.jl")
-include("H5Zlz4.jl")
-include("H5Zzstd.jl")
-
-import .H5Zblosc: register_blosc, BloscFilter
-import .H5Zbzip2: register_bzip2, Bzip2Filter
-import .H5Zlz4: register_lz4, Lz4Filter
-import .H5Zzstd: register_zstd, ZstdFilter
-
-# const FILTERS_TO_REGISTER = [BloscFilter, Bzip2Filter, Lz4Filter, ZstdFilter]
-
 function register_filters()
-    # Simplified to optimize package loading
-    register_blosc()
-    register_bzip2()
-    register_lz4()
-    register_zstd()
-    # There are method inference issues with the below
-    # register_filter.(FILTERS_TO_REGISTER)
+    # Load filter codec packages which should trigger Requires.jl
+    @eval begin
+        using Blosc
+        using CodecBzip2
+        using CodecLz4
+        using CodecZstd
+    end
+end
+
+include("builtin.jl")
+
+function __init__()
+    @require Blosc="a74b3585-a348-5f62-a45c-50e91977d574" @eval begin
+        include("H5Zblosc.jl")
+        import .H5Zblosc: register_blosc, BloscFilter
+        register_blosc()
+    end
+    @require CodecBzip2="523fee87-0ab8-5b00-afb7-3ecf72e48cfd" @eval begin
+        include("H5Zbzip2.jl")
+        import .H5Zbzip2: register_bzip2, Bzip2Filter
+        register_bzip2()
+    end
+    @require CodecLz4="5ba52731-8f18-5e0d-9241-30f10d1ec561" @eval begin
+        include("H5Zlz4.jl")
+        import .H5Zlz4: register_lz4, Lz4Filter
+        register_lz4()
+    end
+    @require CodecZstd="6b39b394-51ab-5f42-8807-6242bab2b4c2" @eval begin
+        include("H5Zzstd.jl")
+        import .H5Zzstd: register_zstd, ZstdFilter
+        register_zstd()
+    end
 end
 
 precompile(register_filters, ())
