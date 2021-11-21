@@ -1340,28 +1340,34 @@ function create_external_dataset(parent::Union{File,Group}, name::AbstractString
 end
 
 """
-    do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
+    do_write_chunk(dataset::Dataset, offset, chunk_bytes::AbstractArray, filter_mask=0)
 
 Write a raw chunk at a given offset.
+`chunk_bytes` is an AbstractArray that can be converted to a pointer, Ptr{Cvoid}.
 `offset` is a 1-based list of rank `ndims(dataset)` and must fall on a chunk boundary.
 """
-function do_write_chunk(dataset::Dataset, offset, chunk_bytes::Vector{UInt8}, filter_mask=0)
+function do_write_chunk(dataset::Dataset, offset, chunk_bytes::AbstractArray, filter_mask=UInt32(0))
     checkvalid(dataset)
     offs = collect(API.hsize_t, reverse(offset)) .- 1
     write_chunk(dataset, offs, chunk_bytes; filter_mask=UInt32(filter_mask))
 end
 
+precompile(do_write_chunk, (Dataset, Vector{Int}, Vector{UInt8}, UInt32))
+
 """
-    do_write_chunk(dataset::Dataset, index, chunk_bytes::Vector{UInt8}, filter_mask=0)
+    do_write_chunk(dataset::Dataset, index, chunk_bytes::AbstractArray, filter_mask=0)
 
 Write a raw chunk at a given linear index.
+`chunk_bytes` is an AbstractArray that can be converted to a pointer, Ptr{Cvoid}.
 `index` is 1-based and consecutive up to the number of chunks.
 """
-function do_write_chunk(dataset::Dataset, index::Integer, chunk_bytes::Vector{UInt8}, filter_mask=0)
+function do_write_chunk(dataset::Dataset, index::Integer, chunk_bytes::AbstractArray, filter_mask=UInt32(0))
     checkvalid(dataset)
     index -= 1
     write_chunk(dataset, index, chunk_bytes; filter_mask=UInt32(filter_mask))
 end
+
+precompile(do_write_chunk, (Dataset, Int, Vector{UInt8}, UInt32))
 
 """
     do_read_chunk(dataset::Dataset, offset)
@@ -1412,8 +1418,14 @@ function Base.axes(cs::ChunkStorage{IndexCartesian})
     ntuple(i -> 1:chunk[i]:extent[i], length(extent))
 end
 
-function Base.setindex!(chunk_storage::ChunkStorage{IndexCartesian}, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer...)
+# Filter flags provided
+function Base.setindex!(chunk_storage::ChunkStorage{IndexCartesian}, v::Tuple{<:Integer,AbstractArray}, index::Integer...)
     do_write_chunk(chunk_storage.dataset, index, v[2], v[1])
+end
+
+# Filter flags will default to 0
+function Base.setindex!(chunk_storage::ChunkStorage{IndexCartesian}, v::AbstractArray, index::Integer...)
+    do_write_chunk(chunk_storage.dataset, index, v)
 end
 
 function Base.getindex(chunk_storage::ChunkStorage{IndexCartesian}, index::Integer...)
@@ -1426,9 +1438,16 @@ ChunkStorage{IndexLinear}(dataset) = ChunkStorage{IndexLinear,1}(dataset)
 Base.size(cs::ChunkStorage{IndexLinear})   = (get_num_chunks(cs.dataset),)
 Base.length(cs::ChunkStorage{IndexLinear}) =  get_num_chunks(cs.dataset)
 
-function Base.setindex!(chunk_storage::ChunkStorage{IndexLinear}, v::Tuple{<:Integer,Vector{UInt8}}, index::Integer)
+function Base.setindex!(chunk_storage::ChunkStorage{IndexLinear}, v::Tuple{<:Integer,AbstractArray}, index::Integer)
     do_write_chunk(chunk_storage.dataset, index, v[2], v[1])
 end
+precompile(Base.setindex!, (ChunkStorage{IndexLinear,1}, Tuple{Int, Vector{UInt8}}, Int))
+
+# Filter flags will default to 0
+function Base.setindex!(chunk_storage::ChunkStorage{IndexLinear}, v::AbstractArray, index::Integer)
+    do_write_chunk(chunk_storage.dataset, index, v)
+end
+precompile(Base.setindex!, (ChunkStorage{IndexLinear,1}, Vector{UInt8}, Int))
 
 function Base.getindex(chunk_storage::ChunkStorage{IndexLinear}, index::Integer)
     do_read_chunk(chunk_storage.dataset, index)

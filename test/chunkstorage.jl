@@ -128,6 +128,37 @@ h5open(fn, "r") do f
 
 end
 
+h5open(fn, "w") do f
+    d = create_dataset(f, "dataset", datatype(Int64), dataspace(4, 6), chunk=(2, 3))
+    raw = HDF5.ChunkStorage(d)
+    data = permutedims(reshape(1:24, 2, 2, 3, 2), (1,3,2,4))
+    ci = CartesianIndices(raw)
+    for ind in eachindex(ci)
+        raw[ci[ind]] = data[:,:,ind]
+    end
+end
+
+@test h5open(fn, "r") do f
+    f["dataset"][:,:]
+end == reshape(1:24, 4, 6)
+
+# Test direct write chunk writing via linear indexing, using views and without filter flag
+h5open(fn, "w") do f
+    d = create_dataset(f, "dataset", datatype(Int64), dataspace(4, 6), chunk=(2, 3))
+    raw = HDF5.ChunkStorage{IndexLinear}(d)
+    data = permutedims(reshape(1:24, 2, 2, 3, 2), (1,3,2,4))
+    chunks = Iterators.partition(data, 6)
+    i = 1
+    for c in chunks
+        raw[i] = c
+        i += 1
+    end
+end
+
+@test h5open(fn, "r") do f
+    f["dataset"][:,:]
+end == reshape(1:24, 4, 6)
+
 rm(fn)
 
 end # testset "Raw Chunk I/O"
