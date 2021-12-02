@@ -1,11 +1,9 @@
 #=
 Derived from https://github.com/aparamon/HDF5Plugin-Zstandard, zstd_h5plugin.c
-Originally licensed under Apache License Version 2.0
-See H5Zzstd_LICENSE.txt
+Licensed under Apache License Version 2.0, see licenses/H5Zzstd_LICENSE.txt
 
-The following copyright and license applies to the Julia port itself.
-Copyright © 2021 Mark Kittisopikul and Howard Hughes Medical Institute
-Licensed under MIT License, see LICENSE.txt
+The following license applies to the Julia port.
+Copyright (c) 2021 Mark Kittisopikul and Howard Hughes Medical Institute. License MIT, see LICENSE.txt
 =#
 module H5Zzstd
 
