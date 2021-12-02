@@ -1,7 +1,6 @@
 using HDF5
 using HDF5.Filters
 using Test
-import HDF5.API: H5Z_FILTER_DEFLATE, H5Z_FILTER_SHUFFLE
 import Blosc, CodecLz4, CodecBzip2, CodecZstd
 
 @testset "filter" begin
