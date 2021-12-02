@@ -1,12 +1,14 @@
-# The code below has been ported to Julia from the original C source:
-# https://github.com/nexusformat/HDF5-External-Filter-Plugins/blob/master/BZIP2/src/H5Zbzip2.c
-# The filter function  H5Z_filter_bzip2 was adopted from:
-# PyTables http://www.pytables.org.
-# The plugin can be used with the HDF5 library version 1.8.11+ to read HDF5 datasets compressed with bzip2 created by PyTables.
-# License: licenses/H5Zbzip2_LICENSE.txt
+#=
+The code below has been ported to Julia from the original C source:
+https://github.com/nexusformat/HDF5-External-Filter-Plugins/blob/master/BZIP2/src/H5Zbzip2.c
+The filter function  H5Z_filter_bzip2 was adopted from:
+PyTables http://www.pytables.org.
+The plugin can be used with the HDF5 library version 1.8.11+ to read HDF5 datasets compressed with bzip2 created by PyTables.
+License: licenses/H5Zbzip2_LICENSE.txt
 
 The following license applies to the Julia port.
 Copyright (c) 2021 Mark Kittisopikul and Howard Hughes Medical Institute. License MIT, see LICENSE.txt
+=#
 module H5Zbzip2
 
 using ..API
