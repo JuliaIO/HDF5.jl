@@ -1,11 +1,10 @@
 module H5Zblosc
 # port of https://github.com/Blosc/c-blosc/blob/3a668dcc9f61ad22b5c0a0ab45fe8dad387277fd/hdf5/blosc_filter.c (copyright 2010 Francesc Alted, license: MIT/expat)
 
-using ..API
 import Blosc
-import ..Filters: FILTERS, Filter, filterid, register_filter, FilterPipeline
-import ..Filters: filterid, filtername, encoder_present, decoder_present
-import ..Filters: set_local_func, set_local_cfunc, can_apply_func, can_apply_cfunc, filter_func, filter_cfunc, register_filter
+using HDF5.API
+import HDF5.Filters: Filter, FilterPipeline, filterid, register_filter, filterid, filtername
+import HDF5.Filters: set_local_func, set_local_cfunc, filter_func, filter_cfunc, register_filter
 
 export H5Z_FILTER_BLOSC, blosc_filter, BloscFilter
 
@@ -109,19 +108,6 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
     return Csize_t(0)
 end
 
-
-# register the Blosc filter function with HDF5
-function register_blosc()
-    c_blosc_set_local = @cfunction(blosc_set_local, API.herr_t, (API.hid_t,API.hid_t,API.hid_t))
-    c_blosc_filter = @cfunction(blosc_filter, Csize_t,
-                                (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
-                                 Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
-    API.h5z_register(API.H5Z_class_t(API.H5Z_CLASS_T_VERS, H5Z_FILTER_BLOSC, 1, 1, pointer(blosc_name), C_NULL, c_blosc_set_local, c_blosc_filter))
-    FILTERS[H5Z_FILTER_BLOSC] = BloscFilter
-    return nothing
-end
-
-
 """
     BloscFilter(;level=5, shuffle=true, compressor="blosclz")
 
@@ -157,8 +143,6 @@ filter_func(::Type{BloscFilter}) = blosc_filter
 filter_cfunc(::Type{BloscFilter}) = @cfunction(blosc_filter, Csize_t,
                                                  (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
                                                  Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
-register_filter(::Type{BloscFilter}) = register_blosc()
-register_filter(::BloscFilter) = register_blosc()
 
 function Base.show(io::IO, blosc::BloscFilter)
     print(io, BloscFilter,

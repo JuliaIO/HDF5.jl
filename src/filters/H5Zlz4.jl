@@ -11,11 +11,9 @@ Copyright (c) 2021 Mark Kittisopikul and Howard Hughes Medical Institute. Licens
 =#
 module H5Zlz4
 
-using ..API
 using CodecLz4
-import ..Filters: FILTERS, Filter, filterid, register_filter, FilterPipeline
-import ..Filters: filterid, filtername, encoder_present, decoder_present
-import ..Filters: set_local_func, set_local_cfunc, can_apply_func, can_apply_cfunc, filter_func, filter_cfunc
+using HDF5.API
+import HDF5.Filters: Filter, filterid, register_filter, filterid, filtername, filter_func, filter_cfunc
 
 
 
@@ -186,25 +184,6 @@ function H5Z_filter_lz4(flags::Cuint, cd_nelmts::Csize_t,
     return Csize_t(ret_value)
 end
 
-function register_lz4(; aggression = 1)
-    LZ4_AGGRESSION[] = aggression
-    c_lz4_filter = @cfunction(H5Z_filter_lz4, Csize_t,
-                              (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
-                               Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
-    API.h5z_register(API.H5Z_class_t(
-        API.H5Z_CLASS_T_VERS,
-        H5Z_FILTER_LZ4,
-        1,
-        1,
-        pointer(lz4_name),
-        C_NULL,
-        C_NULL,
-        c_lz4_filter
-    ))
-    FILTERS[H5Z_FILTER_LZ4] = Lz4Filter
-    return nothing
-end
-
 # Filters Module
 
 struct Lz4Filter <: Filter
@@ -218,8 +197,6 @@ filter_func(::Type{Lz4Filter}) = H5Z_filter_lz4
 filter_cfunc(::Type{Lz4Filter}) = @cfunction(H5Z_filter_lz4, Csize_t,
                                              (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
                                              Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
-register_filter(::Type{Lz4Filter}) = register_lz4()
-register_filter(::Lz4Filter) = register_lz4()
 
 precompile(register_filter, (Lz4Filter,))
 precompile(register_filter, (Type{Lz4Filter},))
