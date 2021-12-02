@@ -250,36 +250,13 @@ end
 
 # Generic implementation of register_filter
 """
+    register_filter(::Type{F}) where F <: Filter
     register_filter(filter::F) where F <: Filter
 
 Register the filter with the HDF5 library via API.h5z_register.
 Also add F to the FILTERS dictionary.
 """
-function register_filter(filter::F) where F <: Filter
-    id = filterid(filter)
-    encoder = encoder_present(filter)
-    decoder = decoder_present(filter)
-    name = filtername(filter)
-    can_apply = can_apply_cfunc(filter)
-    set_local = set_local_cfunc(filter)
-    func = filter_cfunc(filter)
-    GC.@preserve name begin
-        API.h5z_register(API.H5Z_class_t(
-            API.H5Z_CLASS_T_VERS,
-            id,
-            encoder,
-            decoder,
-            pointer(name),
-            can_apply,
-            set_local,
-            func
-        ))
-    end
-    # Should this be the filter instance rather than the type?
-    FILTERS[id] = F
-    return nothing
-end
-register_filter(::Type{F}) where {F<:Filter} = register_filter(F())
+function register_filter() end
 
 function register_filters()
     # Load filter codec packages which should trigger Requires.jl
