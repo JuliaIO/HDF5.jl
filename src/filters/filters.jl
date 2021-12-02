@@ -16,6 +16,7 @@ See the Extended Help for information on implementing a new filter.
 ## Filter interface
 
 The Filter interface can be implemented upon either the Filter subtype or an instance.
+Implementing the interface on a Filter subtype is recommended.
 The instance methods default to calling the same method on the type.
 
 See API.h5z_register for details.
@@ -91,14 +92,14 @@ filtername(::Type{F}) where {F<:Filter} = "Unnamed Filter"
 """
     can_apply_func(::F) where {F<:Filter}
 
-Return a function indicating whether the filter can be applied or `nothing` is no function exists.
+Return a function indicating whether the filter can be applied or `nothing` if no function exists.
 The function signature is `func(dcpl_id::API.hid_t, type_id::API.hid_t, space_id::API.hid_t)`.
 See `API.h5z_register`
 """
 can_apply_func(::F) where {F<:Filter} = can_apply_func(F)
 can_apply_func(::Type{F}) where {F<:Filter} = nothing
-function can_apply_cfunc(f::F) where {F<:Filter}
-    func = can_apply_func(f)
+function can_apply_cfunc(::Type{F}) where {F<:Filter}
+    func = can_apply_func(F)
     if func === nothing
         return C_NULL
     else
@@ -115,8 +116,8 @@ See `API.h5z_register`
 """
 set_local_func(::F) where {F<:Filter} = set_local_func(F)
 set_local_func(::Type{F}) where {F<:Filter} = nothing
-function set_local_cfunc(f::F) where {F<:Filter}
-    func = set_local_func(f)
+function set_local_cfunc(::Type{F}) where {F<:Filter}
+    func = set_local_func(F)
     if func === nothing
         return C_NULL
     else
@@ -134,8 +135,8 @@ See `API.h5z_register`
 """
 filter_func(::F) where {F<:Filter} = filter_func(F)
 filter_func(::Type{F}) where {F<:Filter} = nothing
-function filter_cfunc(f::F) where {F<:Filter}
-    func = filter_func(f)
+function filter_cfunc(::Type{F}) where {F<:Filter}
+    func = filter_func(F)
     if func === nothing
         error("Filter function for $f must be defined via `filter_func`.")
     end
@@ -256,7 +257,31 @@ end
 Register the filter with the HDF5 library via API.h5z_register.
 Also add F to the FILTERS dictionary.
 """
-function register_filter() end
+function register_filter(::Type{F}) where F <: Filter
+    id = filterid(F)
+    encoder = encoder_present(F)
+    decoder = decoder_present(F)
+    name = filtername(F)
+    can_apply = can_apply_cfunc(F)
+    set_local = set_local_cfunc(F)
+    func = filter_cfunc(F)
+    GC.@preserve name begin
+        API.h5z_register(API.H5Z_class_t(
+            API.H5Z_CLASS_T_VERS,
+            id,
+            encoder,
+            decoder,
+            pointer(name),
+            can_apply,
+            set_local,
+            func
+        ))
+    end
+    FILTERS[id] = F
+    return nothing
+end
+register_filter(::F) where {F<:Filter} = register_filter(F)
+
 
 function register_filters()
     # Load filter codec packages which should trigger Requires.jl
@@ -273,23 +298,23 @@ include("builtin.jl")
 function __init__()
     @require Blosc="a74b3585-a348-5f62-a45c-50e91977d574" @eval begin
         include("H5Zblosc.jl")
-        import .H5Zblosc: register_blosc, BloscFilter
-        register_blosc()
+        import .H5Zblosc: BloscFilter
+        register_filter(BloscFilter)
     end
     @require CodecBzip2="523fee87-0ab8-5b00-afb7-3ecf72e48cfd" @eval begin
         include("H5Zbzip2.jl")
-        import .H5Zbzip2: register_bzip2, Bzip2Filter
-        register_bzip2()
+        import .H5Zbzip2: Bzip2Filter
+        register_filter(Bzip2Filter)
     end
     @require CodecLz4="5ba52731-8f18-5e0d-9241-30f10d1ec561" @eval begin
         include("H5Zlz4.jl")
-        import .H5Zlz4: register_lz4, Lz4Filter
-        register_lz4()
+        import .H5Zlz4: Lz4Filter
+        register_filter(Lz4Filter)
     end
     @require CodecZstd="6b39b394-51ab-5f42-8807-6242bab2b4c2" @eval begin
         include("H5Zzstd.jl")
-        import .H5Zzstd: register_zstd, ZstdFilter
-        register_zstd()
+        import .H5Zzstd: ZstdFilter
+        register_filter(ZstdFilter)
     end
 end
 

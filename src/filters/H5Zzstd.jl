@@ -7,12 +7,10 @@ Copyright (c) 2021 Mark Kittisopikul and Howard Hughes Medical Institute. Licens
 =#
 module H5Zzstd
 
-using ..API
 using CodecZstd
 import CodecZstd.LibZstd
-import ..Filters: FILTERS, Filter, filterid, register_filter, FilterPipeline
-import ..Filters: filterid, filtername, encoder_present, decoder_present
-import ..Filters: set_local_func, set_local_cfunc, can_apply_func, can_apply_cfunc, filter_func, filter_cfunc
+using HDF5.API
+import HDF5.Filters: Filter, filterid, register_filter, filterid, filtername, filter_func, filter_cfunc
 
 
 const H5Z_FILTER_ZSTD = API.H5Z_filter_t(32015)
@@ -89,24 +87,6 @@ function H5Z_filter_zstd(flags::Cuint, cd_nelmts::Csize_t,
     return Csize_t(ret_value)
 end
 
-function register_zstd()
-    c_zstd_filter = @cfunction(H5Z_filter_zstd, Csize_t,
-                              (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
-                               Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
-    API.h5z_register(API.H5Z_class_t(
-        API.H5Z_CLASS_T_VERS,
-        H5Z_FILTER_ZSTD,
-        1,
-        1,
-        pointer(zstd_name),
-        C_NULL,
-        C_NULL,
-        c_zstd_filter
-    ))
-    FILTERS[H5Z_FILTER_ZSTD] = ZstdFilter
-    return nothing
-end
-
 # Filters Module
 
 struct ZstdFilter <: Filter
@@ -120,8 +100,6 @@ filter_func(::Type{ZstdFilter}) = H5Z_filter_zstd
 filter_cfunc(::Type{ZstdFilter}) = @cfunction(H5Z_filter_zstd, Csize_t,
                                              (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
                                              Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
-register_filter(::Type{ZstdFilter}) = register_zstd()
-register_filter(::ZstdFilter) = register_zstd()
 
 precompile(register_filter, (ZstdFilter,))
 precompile(register_filter, (Type{ZstdFilter},))
