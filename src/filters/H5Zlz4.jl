@@ -4,12 +4,10 @@ https://github.com/HDFGroup/hdf5_plugins/blob/master/LZ4/src/H5Zlz4.c
 https://github.com/nexusformat/HDF5-External-Filter-Plugins/blob/master/LZ4/src/H5Zlz4.c
 https://github.com/silx-kit/hdf5plugin/blob/main/src/LZ4/H5Zlz4.c
 
-H5Zlz4 is originally a copyright of HDF Group.
-See "LZ4 filter plugin license" in H5Zlz4_LICENSE.txt
+H5Zlz4 is originally a copyright of HDF Group. License: licenses/H5Zlz4_LICENSE.txt
 
-The following copyright and license applies to the Julia port itself.
-Copyright © 2021 Mark Kittisopikul and Howard Hughes Medical Institute
-Licensed under MIT License, see LICENSE.txt
+The following license applies to the Julia port.
+Copyright (c) 2021 Mark Kittisopikul and Howard Hughes Medical Institute. License MIT, see LICENSE.txt
 =#
 module H5Zlz4
 
