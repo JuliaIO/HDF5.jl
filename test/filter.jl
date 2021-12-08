@@ -1,7 +1,7 @@
 using HDF5
 using HDF5.Filters
 using Test
-import Blosc, CodecLz4, CodecBzip2, CodecZstd
+using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
 
 @testset "filter" begin
 
@@ -37,10 +37,10 @@ write(dsfiltshufdef, data)
 # Test compression filters
 
 compressionFilters = Dict(
-    "blosc" => Filters.BloscFilter,
-    "bzip2" => Filters.Bzip2Filter,
-    "lz4" => Filters.Lz4Filter,
-    "zstd" => Filters.ZstdFilter
+    "blosc" => BloscFilter,
+    "bzip2" => Bzip2Filter,
+    "lz4" => Lz4Filter,
+    "zstd" => ZstdFilter
 )
 
 for (name, filter) in compressionFilters

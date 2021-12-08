@@ -407,8 +407,6 @@ set_deflate!(p::Properties, val::Bool) = val && push!(Filters.FilterPipeline(p),
 set_deflate!(p::Properties, level::Integer) = push!(Filters.FilterPipeline(p), Filters.Deflate(level=level))
 set_shuffle!(p::Properties, val::Bool) = val && push!(Filters.FilterPipeline(p), Filters.Shuffle())
 set_fletcher32!(p::Properties, val::Bool) = val && push!(Filters.FilterPipeline(p), Filters.Fletcher32())
-set_blosc!(p::Properties, val::Bool) = val && push!(Filters.FilterPipeline(p), Filters.BloscFilter())
-set_blosc!(p::Properties, level::Integer) = push!(Filters.FilterPipeline(p), Filters.BloscFilter(level=level))
 
 
 class_propertynames(::Type{DatasetCreateProperties}) = (
