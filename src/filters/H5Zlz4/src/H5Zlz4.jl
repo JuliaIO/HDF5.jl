@@ -54,7 +54,7 @@ function H5Z_filter_lz4(flags::Cuint, cd_nelmts::Csize_t,
         origSize = ntoh(unsafe_load(Ptr{UInt64}(rpos)))
         rpos += 8 # advance the pointer
         
-        # Next read the next four bytes from teh buffer as a big endian UInt32
+        # Next read the next four bytes from the buffer as a big endian UInt32
         # This is the blocksize
         #i32Buf[] = rpos
         blockSize = ntoh(unsafe_load(Ptr{UInt32}(rpos)))
@@ -73,7 +73,7 @@ function H5Z_filter_lz4(flags::Cuint, cd_nelmts::Csize_t,
         # Start with the first blockSize
         while decompSize < origSize
             # compressedBlockSize = UInt32(0)
-            if origSize - decompSize < blockSize # the lsat block can be smaller than block size
+            if origSize - decompSize < blockSize # the last block can be smaller than block size
                 blockSize = origSize - decompSize
             end
 
