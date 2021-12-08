@@ -1,0 +1,12 @@
+name = "H5Zblosc"
+uuid = "c8ec2601-a99c-407f-b158-e79c03c2f5f7"
+version = "0.16.0"
+
+[deps]
+Blosc = "a74b3585-a348-5f62-a45c-50e91977d574"
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+
+[compat]
+HDF5 = "0.16"
+Blosc = "0.7.1"
+julia = "1.3"

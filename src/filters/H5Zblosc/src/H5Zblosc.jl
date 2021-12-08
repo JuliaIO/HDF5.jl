@@ -161,7 +161,8 @@ function Base.push!(f::FilterPipeline, blosc::BloscFilter)
     return f
 end
 
-precompile(register_filter, (BloscFilter,))
-precompile(register_filter, (Type{BloscFilter},))
+function __init__()
+    register_filter(BloscFilter)
+end
 
 end # module H5Zblosc

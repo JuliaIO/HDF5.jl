@@ -6,10 +6,9 @@ This module contains utilities for evaluating and debugging HDF5 Filters.
 module FilterTestUtils
 
 import HDF5.API
-import Blosc, CodecLz4, CodecZstd, CodecBzip2
-import HDF5.Filters.H5Zlz4: H5Z_filter_lz4
-import HDF5.Filters.H5Zzstd: H5Z_filter_zstd
-import HDF5.Filters.H5Zbzip2: H5Z_filter_bzip2
+import H5Zlz4: H5Z_filter_lz4
+import H5Zzstd: H5Z_filter_zstd
+import H5Zbzip2: H5Z_filter_bzip2
 using Test
 
 export test_filter

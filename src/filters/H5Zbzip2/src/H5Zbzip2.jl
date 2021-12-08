@@ -179,7 +179,8 @@ filter_cfunc(::Type{Bzip2Filter}) = @cfunction(H5Z_filter_bzip2, Csize_t,
                                                (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
                                                Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
 
-precompile(register_filter, (Bzip2Filter,))
-precompile(register_filter, (Type{Bzip2Filter},))
+function __init__()
+    register_filter(Bzip2Filter)
+end
 
 end # module H5Zbzip2

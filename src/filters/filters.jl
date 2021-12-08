@@ -308,26 +308,15 @@ end
 
 include("builtin.jl")
 
-function __init__()
-    @require Blosc="a74b3585-a348-5f62-a45c-50e91977d574" @eval begin
-        include("H5Zblosc.jl")
-        import .H5Zblosc: BloscFilter
-        register_filter(BloscFilter)
-    end
-    @require CodecBzip2="523fee87-0ab8-5b00-afb7-3ecf72e48cfd" @eval begin
-        include("H5Zbzip2.jl")
-        import .H5Zbzip2: Bzip2Filter
-        register_filter(Bzip2Filter)
-    end
-    @require CodecLz4="5ba52731-8f18-5e0d-9241-30f10d1ec561" @eval begin
-        include("H5Zlz4.jl")
-        import .H5Zlz4: Lz4Filter
-        register_filter(Lz4Filter)
-    end
-    @require CodecZstd="6b39b394-51ab-5f42-8807-6242bab2b4c2" @eval begin
-        include("H5Zzstd.jl")
-        import .H5Zzstd: ZstdFilter
-        register_filter(ZstdFilter)
+macro dev_embedded_filters()
+    quote
+        @eval begin
+            using Pkg
+            Pkg.develop(path=joinpath(dirname(pathof(HDF5)), "filters", "H5Zblosc"))
+            Pkg.develop(path=joinpath(dirname(pathof(HDF5)), "filters", "H5Zbzip2"))
+            Pkg.develop(path=joinpath(dirname(pathof(HDF5)), "filters", "H5Zlz4"))
+            Pkg.develop(path=joinpath(dirname(pathof(HDF5)), "filters", "H5Zzstd"))
+        end
     end
 end
 
