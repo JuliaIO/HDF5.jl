@@ -15,9 +15,7 @@ See the Extended Help for information on implementing a new filter.
 
 ## Filter interface
 
-The Filter interface can be implemented upon either the Filter subtype or an instance.
-Implementing the interface on a Filter subtype is recommended.
-The instance methods default to calling the same method on the type.
+The Filter interface is implemented upon the Filter subtype.
 
 See API.h5z_register for details.
 
@@ -50,54 +48,60 @@ Maps filter id to filter type.
 const FILTERS = Dict{API.H5Z_filter_t, Type{<: Filter}}()
 
 """
-    filterid(::F) where {F <: Filter}
     filterid(F) where {F <: Filter}
 
 
 The internal filter id of a filter of type `F`.
 """
-filterid(::F) where {F<:Filter} = filterid(F)
+filterid
 
 """
-    encoder_present(::F) where {F<:Filter}
+    encoder_present(::Type{F}) where {F<:Filter}
 
 Can the filter have an encode or compress the data?
 Defaults to true.
 Returns a Bool. See `API.h5z_register`.
 """
-encoder_present(::F) where {F<:Filter} = encoder_present(F)
 encoder_present(::Type{F}) where {F<:Filter} = true
 
 """
-    decoder_present(::F) where {F<:Filter}
+    decoder_present(::Type{F}) where {F<:Filter}
 
 Can the filter decode or decompress the data?
 Defaults to true.
 Returns a Bool.
 See `API.h5z_register`
 """
-decoder_present(::F) where {F<:Filter} = decoder_present(F)
 decoder_present(::Type{F}) where {F<:Filter} = true
 
 """
-    filtername(::F) where {F<:Filter}
+    filtername(::Type{F}) where {F<:Filter}
 
 What is the name of a filter?
 Defaults to "Unnamed Filter"
 Returns a String describing the filter. See `API.h5z_register`
 """
-filtername(::F) where {F<:Filter} = filtername(F)
 filtername(::Type{F}) where {F<:Filter} = "Unnamed Filter"
 
 """
-    can_apply_func(::F) where {F<:Filter}
+    can_apply_func(::Type{F}) where {F<:Filter}
 
 Return a function indicating whether the filter can be applied or `nothing` if no function exists.
 The function signature is `func(dcpl_id::API.hid_t, type_id::API.hid_t, space_id::API.hid_t)`.
 See `API.h5z_register`
 """
-can_apply_func(::F) where {F<:Filter} = can_apply_func(F)
 can_apply_func(::Type{F}) where {F<:Filter} = nothing
+
+"""
+    can_apply_cfunc(::Type{F}) where {F<:Filter}
+
+Return a C function pointer for the can apply function.
+By default, this will return the result of using `@cfunction` on the function
+specified by `can_apply_func(F)` or `C_NULL` if `nothing`.
+
+Overriding this will allow `@cfunction` to return a `Ptr{Nothing}` rather
+than a `CFunction`` closure which may not work on all systems.
+"""
 function can_apply_cfunc(::Type{F}) where {F<:Filter}
     func = can_apply_func(F)
     if func === nothing
@@ -108,14 +112,24 @@ function can_apply_cfunc(::Type{F}) where {F<:Filter}
 end
 
 """
-    set_local_func(::F) where {F<:Filter}
+    set_local_func(::Type{F}) where {F<:Filter}
 
 Return a function that sets dataset specific parameters or `nothing` if no function exists.
 The function signature is `func(dcpl_id::API.hid_t, type_id::API.hid_t, space_id::API.hid_t)`.
 See `API.h5z_register`
 """
-set_local_func(::F) where {F<:Filter} = set_local_func(F)
 set_local_func(::Type{F}) where {F<:Filter} = nothing
+
+"""
+    set_local_cfunc(::Type{F}) where {F<:Filter}
+
+Return a C function pointer for the set local function.
+By default, this will return the result of using `@cfunction` on the function
+specified by `set_local_func(F)` or `C_NULL` if `nothing`.
+
+Overriding this will allow `@cfunction` to return a `Ptr{Nothing}` rather
+than a `CFunction`` closure which may not work on all systems.
+"""
 function set_local_cfunc(::Type{F}) where {F<:Filter}
     func = set_local_func(F)
     if func === nothing
@@ -127,14 +141,24 @@ end
 
 
 """
-    filter_func(::F) where {F<:Filter}
+    filter_func(::Type{F}) where {F<:Filter}
 
 Returns a function that performs the actual filtering.
 
 See `API.h5z_register`
 """
-filter_func(::F) where {F<:Filter} = filter_func(F)
 filter_func(::Type{F}) where {F<:Filter} = nothing
+
+"""
+    filter_cfunc(::Type{F}) where {F<:Filter}
+
+Return a C function pointer for the filter function.
+By default, this will return the result of using `@cfunction` on the function
+specified by `filter_func(F)` or will throw an error if `nothing`.
+
+Overriding this will allow `@cfunction` to return a `Ptr{Nothing}` rather
+than a `CFunction`` closure which may not work on all systems.
+"""
 function filter_cfunc(::Type{F}) where {F<:Filter}
     func = filter_func(F)
     if func === nothing
@@ -145,6 +169,38 @@ function filter_cfunc(::Type{F}) where {F<:Filter}
                                Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
     return c_filter_func
 end
+
+# Generic implementation of register_filter
+"""
+    register_filter(::Type{F}) where F <: Filter
+
+Register the filter with the HDF5 library via API.h5z_register.
+Also add F to the FILTERS dictionary.
+"""
+function register_filter(::Type{F}) where F <: Filter
+    id = filterid(F)
+    encoder = encoder_present(F)
+    decoder = decoder_present(F)
+    name = filtername(F)
+    can_apply = can_apply_cfunc(F)
+    set_local = set_local_cfunc(F)
+    func = filter_cfunc(F)
+    GC.@preserve name begin
+        API.h5z_register(API.H5Z_class_t(
+            API.H5Z_CLASS_T_VERS,
+            id,
+            encoder,
+            decoder,
+            pointer(name),
+            can_apply,
+            set_local,
+            func
+        ))
+    end
+    FILTERS[id] = F
+    return nothing
+end
+
 
 struct UnknownFilter <: Filter
     filter_id::API.H5Z_filter_t
@@ -249,49 +305,6 @@ function Base.push!(p::FilterPipeline, f::UnknownFilter)
     end
 end
 
-# Generic implementation of register_filter
-"""
-    register_filter(::Type{F}) where F <: Filter
-    register_filter(filter::F) where F <: Filter
-
-Register the filter with the HDF5 library via API.h5z_register.
-Also add F to the FILTERS dictionary.
-"""
-function register_filter(::Type{F}) where F <: Filter
-    id = filterid(F)
-    encoder = encoder_present(F)
-    decoder = decoder_present(F)
-    name = filtername(F)
-    can_apply = can_apply_cfunc(F)
-    set_local = set_local_cfunc(F)
-    func = filter_cfunc(F)
-    GC.@preserve name begin
-        API.h5z_register(API.H5Z_class_t(
-            API.H5Z_CLASS_T_VERS,
-            id,
-            encoder,
-            decoder,
-            pointer(name),
-            can_apply,
-            set_local,
-            func
-        ))
-    end
-    FILTERS[id] = F
-    return nothing
-end
-register_filter(::F) where {F<:Filter} = register_filter(F)
-
-
-function register_filters()
-    # Load filter codec packages which should trigger Requires.jl
-    @eval begin
-        using Blosc
-        using CodecBzip2
-        using CodecLz4
-        using CodecZstd
-    end
-end
 
 include("builtin.jl")
 
@@ -317,7 +330,5 @@ function __init__()
         register_filter(ZstdFilter)
     end
 end
-
-precompile(register_filters, ())
 
 end # module
