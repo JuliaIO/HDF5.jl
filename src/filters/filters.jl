@@ -312,10 +312,10 @@ macro dev_embedded_filters()
     quote
         @eval begin
             using Pkg
-            Pkg.develop(path=joinpath(dirname(pathof(HDF5)), "filters", "H5Zblosc"))
-            Pkg.develop(path=joinpath(dirname(pathof(HDF5)), "filters", "H5Zbzip2"))
-            Pkg.develop(path=joinpath(dirname(pathof(HDF5)), "filters", "H5Zlz4"))
-            Pkg.develop(path=joinpath(dirname(pathof(HDF5)), "filters", "H5Zzstd"))
+            Pkg.develop(PackageSpec(; path=joinpath(dirname(pathof(HDF5)), "filters", "H5Zblosc")))
+            Pkg.develop(PackageSpec(; path=joinpath(dirname(pathof(HDF5)), "filters", "H5Zbzip2")))
+            Pkg.develop(PackageSpec(; path=joinpath(dirname(pathof(HDF5)), "filters", "H5Zlz4")))
+            Pkg.develop(PackageSpec(; path=joinpath(dirname(pathof(HDF5)), "filters", "H5Zzstd")))
         end
     end
 end
