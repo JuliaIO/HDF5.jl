@@ -137,32 +137,63 @@ end # function H5Z_filter_bzip2
 
 # Need stdcall for 32-bit Windows?
 function BZ2_bzBuffToBuffCompress(dest, destLen, source, sourceLen, blockSize100k, verbosity, workFactor)
-    return ccall(
-        (:BZ2_bzBuffToBuffCompress, libbzip2),
-        Cint,
-        (Ptr{Cchar}, Ptr{Cuint}, Ptr{Cchar}, Cuint, Cint, Cint, Cint),
-        dest,
-        destLen,
-        source,
-        sourceLen,
-        blockSize100k,
-        verbosity,
-        workFactor
-    )
+    @static if CodecBzip2.WIN32
+        return ccall(
+            ("BZ2_bzBuffToBuffCompress@28", libbzip2),
+            stdcall,
+            Cint,
+            (Ptr{Cchar}, Ptr{Cuint}, Ptr{Cchar}, Cuint, Cint, Cint, Cint),
+            dest,
+            destLen,
+            source,
+            sourceLen,
+            blockSize100k,
+            verbosity,
+            workFactor
+        )
+    else
+        return ccall(
+            (:BZ2_bzBuffToBuffCompress, libbzip2),
+            Cint,
+            (Ptr{Cchar}, Ptr{Cuint}, Ptr{Cchar}, Cuint, Cint, Cint, Cint),
+            dest,
+            destLen,
+            source,
+            sourceLen,
+            blockSize100k,
+            verbosity,
+            workFactor
+        )
+    end
 end
 
 function BZ2_bzBuffToBuffDecompress(dest, destLen, source, sourceLen, small, verbosity)
-    return ccall(
-        (:BZ2_bzBuffToBuffDecompress, libbzip2),
-        Cint,
-        (Ptr{Cchar}, Ptr{Cuint}, Ptr{Cchar}, Cuint, Cint, Cint),
-        dest,
-        destLen,
-        source,
-        sourceLen,
-        small,
-        verbosity
-    )
+    @static if CodecBzip2.WIN32
+        return ccall(
+            ("BZ2_bzBuffToBuffDecompress@24", libbzip2),
+            stdcall,
+            Cint,
+            (Ptr{Cchar}, Ptr{Cuint}, Ptr{Cchar}, Cuint, Cint, Cint),
+            dest,
+            destLen,
+            source,
+            sourceLen,
+            small,
+            verbosity
+        )
+    else
+        return ccall(
+            (:BZ2_bzBuffToBuffDecompress, libbzip2),
+            Cint,
+            (Ptr{Cchar}, Ptr{Cuint}, Ptr{Cchar}, Cuint, Cint, Cint),
+            dest,
+            destLen,
+            source,
+            sourceLen,
+            small,
+            verbosity
+        )
+    end
 end
 
 # Filters Module
