@@ -198,6 +198,7 @@ function register_filter(::Type{F}) where F <: Filter
         ))
     end
     FILTERS[id] = F
+    @info "Registering filter" F
     return nothing
 end
 
