@@ -45,6 +45,7 @@ include("filter.jl")
 include("chunkstorage.jl")
 @debug "fileio"
 include("fileio.jl")
+@debug "filter test utils"
 include("filters/FilterTestUtils.jl")
 
 using MPI

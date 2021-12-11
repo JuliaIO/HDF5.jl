@@ -36,7 +36,7 @@ function test_filter_compress!(filter_func, flags::Cuint, cd_values::Vector{Cuin
             Base.unsafe_convert(Ptr{Csize_t}, buf_size),
             Base.unsafe_convert(Ptr{Ptr{Cvoid}}, buf)
         )
-        @info "Compression:" ret_code buf_size[]
+        @debug "Compression:" ret_code buf_size[]
         if ret_code <= 0
             error("Test compression failed: $ret_code.")
         end
@@ -57,7 +57,7 @@ function test_filter_decompress!(filter_func, flags::Cuint, cd_values::Vector{Cu
             Base.unsafe_convert(Ptr{Csize_t},buf_size),
             Base.unsafe_convert(Ptr{Ptr{Cvoid}}, buf)
         )
-        @info "Decompression:" ret_code buf_size[]
+        @debug "Decompression:" ret_code buf_size[]
     end
     return ret_code
 end
@@ -75,14 +75,14 @@ function test_filter(filter_func; cd_values::Vector{Cuint} = Cuint[], data = one
         if nbytes_decompressed > 0
             # ret_code is the number of bytes out
             round_trip_data = unsafe_wrap(Array,Ptr{UInt8}(buf[]), nbytes_decompressed)
-            @info "Is the data the same after a roundtrip?" data == round_trip_data
+            @debug "Is the data the same after a roundtrip?" data == round_trip_data
         end
     catch err
         rethrow(err)
     finally
         test_filter_cleanup!(buf)
     end
-    @info "Compression Ratio" nbytes_compressed / nbytes_decompressed
+    @debug "Compression Ratio" nbytes_compressed / nbytes_decompressed
     return nbytes_compressed, nbytes_decompressed
 end
 
