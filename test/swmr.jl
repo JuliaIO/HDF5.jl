@@ -118,7 +118,7 @@ end
 rm(fname) # cleanup file created by swmr tests
 
 if nprocs() > 1
-    rmprocs(procs)
+#    rmprocs(procs)
 end
 
 end # testset swmr
