@@ -20,22 +20,26 @@ close(target_file)
 # test both an HDF5.File and an HDF5.Group for first argument
 HDF5.create_external(source_file, "ext_link", target_file.filename, "target_group")
 HDF5.create_external(agroup, "ext_link", target_file.filename, "target_group")
+close(agroup)
 # write some things via the external link
 new_group = create_group(source_file["ext_link"], "new_group")
 new_group["abc"] = "abc"
 new_group["1"] = 1
 new_group["1.1"] = 1.1
+close(new_group)
 
 # read things from target_group via exernal link created with HDF5File argument
 group = source_file["ext_link"]
 @test read(group["abc"]) == "abc"
 @test read(group["1"]) == 1
 @test read(group["1.1"]) == 1.1
+close(group)
 # read things from target_group via the external link created with HDF5.Group argument
 groupalt = source_file["agroup/ext_link"]
 @test read(groupalt["abc"]) == "abc"
 @test read(groupalt["1"]) == 1
 @test read(groupalt["1.1"]) == 1.1
+close(groupalt)
 close(source_file)
 
 ##### tests that should be included but don't work
@@ -50,5 +54,6 @@ close(source_file)
 
 rm(fn1)
 # rm(fn2)
+@debug "external tests did not delete" fn2
 
 end # testset external

@@ -5,7 +5,9 @@ using Test
 using Distributed
 
 if nprocs() == 1
-    addprocs(1)
+    procs = addprocs(1)
+else
+    procs = Int64[]
 end
 @everywhere using HDF5
 
@@ -114,4 +116,9 @@ end
 end
 
 rm(fname) # cleanup file created by swmr tests
+
+if nprocs() > 1
+    rmprocs(procs)
+end
+
 end # testset swmr

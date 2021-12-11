@@ -12,7 +12,6 @@ function scatterf(src_buf, src_buf_bytes_used, op_data)
     A = [1,2,3,4]
     unsafe_store!(src_buf, pointer(A))
     unsafe_store!(src_buf_bytes_used, sizeof(A))
-    @debug "op_data: " opdata
     return HDF5.API.herr_t(0)
 end
 scatterf_bad(src_buf, src_buf_bytes_used, op_data) = HDF5.API.herr_t(-1)
@@ -20,7 +19,6 @@ function scatterf_data(src_buf, src_buf_bytes_used, op_data)
     A = [1,2,3,4]
     unsafe_store!(src_buf, pointer(A))
     unsafe_store!(src_buf_bytes_used, sizeof(A))
-    @debug "op_data: " opdata
     return HDF5.API.herr_t((op_data == 9)-1)
 end
 
