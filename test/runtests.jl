@@ -9,7 +9,7 @@ HDF5.Filters.@dev_embedded_filters
 # To debug HDF5.jl tests, uncomment the next line
 # ENV["JULIA_DEBUG"] = "Main"
 
-@testset verbose=true "HDF5.jl" begin
+@testset "HDF5.jl" begin
 
 @debug "plain"
 include("plain.jl")
