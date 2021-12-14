@@ -54,6 +54,5 @@ close(source_file)
 
 rm(fn1)
 # rm(fn2)
-@debug "external tests did not delete" fn2
 
 end # testset external
