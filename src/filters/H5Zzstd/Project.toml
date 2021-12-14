@@ -1,6 +1,6 @@
 name = "H5Zzstd"
 uuid = "f6f2d980-1ec6-471c-a70d-0270e22f1103"
-version = "0.16.0"
+version = "0.1.0"
 
 [deps]
 CodecZstd = "6b39b394-51ab-5f42-8807-6242bab2b4c2"

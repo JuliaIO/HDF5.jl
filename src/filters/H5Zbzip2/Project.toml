@@ -1,6 +1,6 @@
 name = "H5Zbzip2"
 uuid = "094576f2-1e46-4c84-8e32-c46c042eaaa2"
-version = "0.16.0"
+version = "0.1.0"
 
 [deps]
 CodecBzip2 = "523fee87-0ab8-5b00-afb7-3ecf72e48cfd"

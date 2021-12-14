@@ -1,6 +1,6 @@
 name = "H5Zblosc"
 uuid = "c8ec2601-a99c-407f-b158-e79c03c2f5f7"
-version = "0.16.0"
+version = "0.1.0"
 
 [deps]
 Blosc = "a74b3585-a348-5f62-a45c-50e91977d574"
