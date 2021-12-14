@@ -5,7 +5,7 @@ using Pkg
 @info "libhdf5 v$(HDF5.API.h5_get_libversion())"
 
 @testset verbose=True "HDF5.jl" begin
-    
+
 include("plain.jl")
 include("compound.jl")
 include("custom.jl")
