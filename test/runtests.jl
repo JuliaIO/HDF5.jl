@@ -7,7 +7,7 @@ HDF5.Filters.@dev_embedded_filters
 @info "libhdf5 v$(HDF5.API.h5_get_libversion())"
 
 # To debug HDF5.jl tests, uncomment the next line
-# ENV["JULIA_DEBUG"] = "Main"
+ENV["JULIA_DEBUG"] = "Main"
 
 #@testset "HDF5.jl" begin
 
