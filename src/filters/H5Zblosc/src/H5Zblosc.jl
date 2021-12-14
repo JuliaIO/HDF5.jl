@@ -92,15 +92,12 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
         # cases since other filters in the pipeline can modify the buffer
         # size.
         in = unsafe_load(buf)
+        # See https://github.com/JuliaLang/julia/issues/43402
+        # Resolved in https://github.com/JuliaLang/julia/pull/43408
         outbuf_size, cbytes, blocksize = Blosc.cbuffer_sizes(in)
-        # We need to preserve the output of cbuffer_sizes under Julia 1.8 (as of 2021/12/11)
-        # Otherwise their Refs get freed and the buffer becomes corrupted
-        # If this fails, consider copying `in` or wrapping that array.
-        GC.@preserve outbuf_size cbytes blocksize begin
-            outbuf = Libc.malloc(outbuf_size)
-            outbuf == C_NULL && return Csize_t(0)
-            status = Blosc.blosc_decompress(in, outbuf, outbuf_size)
-        end
+        outbuf = Libc.malloc(outbuf_size)
+        outbuf == C_NULL && return Csize_t(0)
+        status = Blosc.blosc_decompress(in, outbuf, outbuf_size)
         status <= 0 && (Libc.free(outbuf); return Csize_t(0))
     end
 
