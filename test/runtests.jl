@@ -30,4 +30,7 @@ if HDF5.has_parallel()
     include("mpio.jl")
 end
 
+# Clean up after all resources
+HDF5.API.h5_close()
+
 end
