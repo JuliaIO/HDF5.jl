@@ -202,6 +202,7 @@ contiguously.
 A = rand(100,100)
 g1["A", chunk=(5,5), compress=3] = A
 g2["A", chunk=(5,5), shuffle=(), deflate=3] = A
+using H5Zblosc # load in Blosc
 g3["A", chunk=(5,5), blosc=3] = A
 ```
 

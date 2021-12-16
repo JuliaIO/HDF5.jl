@@ -1,6 +1,7 @@
 module Filters
 
-export Deflate, Shuffle, Fletcher32, Szip, NBit, ScaleOffset, BloscFilter, Bzip2Filter, Lz4Filter, ZstdFilter
+# builtin filters
+export Deflate, Shuffle, Fletcher32, Szip, NBit, ScaleOffset
 
 import ..HDF5: Properties, h5doc, API
 
