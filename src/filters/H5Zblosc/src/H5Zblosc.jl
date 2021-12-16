@@ -3,10 +3,11 @@ module H5Zblosc
 
 import Blosc
 using HDF5.API
-import HDF5.Filters: Filter, FilterPipeline, filterid, register_filter, filterid, filtername
-import HDF5.Filters: set_local_func, set_local_cfunc, filter_func, filter_cfunc, register_filter
+import HDF5.Filters: Filter, FilterPipeline
+import HDF5.Filters: filterid, register_filter, filtername, filter_func, filter_cfunc, set_local_func, set_local_cfunc
 
 export H5Z_FILTER_BLOSC, blosc_filter, BloscFilter
+
 
 const H5Z_FILTER_BLOSC = API.H5Z_filter_t(32001) # Filter ID registered with the HDF Group for Blosc
 const FILTER_BLOSC_VERSION = 2

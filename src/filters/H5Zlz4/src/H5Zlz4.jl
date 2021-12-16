@@ -13,8 +13,7 @@ module H5Zlz4
 
 using CodecLz4
 using HDF5.API
-import HDF5.Filters: Filter, filterid, register_filter, filterid, filtername, filter_func, filter_cfunc
-
+import HDF5.Filters: Filter, filterid, register_filter, filtername, filter_func, filter_cfunc
 
 
 export H5Z_FILTER_LZ4, H5Z_filter_lz4, Lz4Filter
@@ -53,7 +52,7 @@ function H5Z_filter_lz4(flags::Cuint, cd_nelmts::Csize_t,
         # This is the original size of the buffer
         origSize = ntoh(unsafe_load(Ptr{UInt64}(rpos)))
         rpos += 8 # advance the pointer
-        
+
         # Next read the next four bytes from the buffer as a big endian UInt32
         # This is the blocksize
         #i32Buf[] = rpos
@@ -62,7 +61,7 @@ function H5Z_filter_lz4(flags::Cuint, cd_nelmts::Csize_t,
         if blockSize > origSize
             blockSize = origSize
         end
-        
+
         # malloc a byte buffer of origSize
         # outBuf = Vector{UInt8}(undef, origSize)
         @debug "OrigSize" origSize
@@ -190,7 +189,7 @@ struct Lz4Filter <: Filter
     blockSize::Cuint
 end
 Lz4Filter() = Lz4Filter(DEFAULT_BLOCK_SIZE)
- 
+
 filterid(::Type{Lz4Filter}) = H5Z_FILTER_LZ4
 filtername(::Type{Lz4Filter}) = lz4_name
 filter_func(::Type{Lz4Filter}) = H5Z_filter_lz4

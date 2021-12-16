@@ -14,7 +14,7 @@ module H5Zbzip2
 using CodecBzip2
 import CodecBzip2: libbzip2
 using HDF5.API
-import HDF5.Filters: Filter, filterid, register_filter, filterid, filtername, filter_func, filter_cfunc
+import HDF5.Filters: Filter, filterid, register_filter, filtername, filter_func, filter_cfunc
 
 export H5Z_FILTER_BZIP2, H5Z_filter_bzip2, Bzip2Filter
 
@@ -103,7 +103,7 @@ function H5Z_filter_bzip2(flags::Cuint, cd_nelmts::Csize_t,
         # Prepare the output buffer
         outbuflen = nbytes + nbytes ÷ 100 + 600 # worse case (bzip2 docs)
         outbuf = Libc.malloc(outbuflen)
-        @debug "Allocated" outbuflen outbuf 
+        @debug "Allocated" outbuflen outbuf
         if outbuf == C_NULL
             error("H5Zbzip2: Memory allocation failed for bzip2 compression")
         end
@@ -202,7 +202,7 @@ struct Bzip2Filter <: Filter
     blockSize100k::Cuint
 end
 Bzip2Filter() = Bzip2Filter(9)
- 
+
 filterid(::Type{Bzip2Filter}) = H5Z_FILTER_BZIP2
 filtername(::Type{Bzip2Filter}) = bzip2_name
 filter_func(::Type{Bzip2Filter}) = H5Z_filter_bzip2

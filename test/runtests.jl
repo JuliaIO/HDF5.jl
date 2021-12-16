@@ -2,7 +2,11 @@ using HDF5
 using Test
 using Pkg
 
-HDF5.Filters.@dev_embedded_filters
+filter_path = joinpath(dirname(pathof(HDF5)), "filters")
+Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zblosc")))
+Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zbzip2")))
+Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zlz4")))
+Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zzstd")))
 
 @info "libhdf5 v$(HDF5.API.h5_get_libversion())"
 
