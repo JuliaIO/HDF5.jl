@@ -1,8 +1,15 @@
+module H5Zblosc
 # port of https://github.com/Blosc/c-blosc/blob/3a668dcc9f61ad22b5c0a0ab45fe8dad387277fd/hdf5/blosc_filter.c (copyright 2010 Francesc Alted, license: MIT/expat)
 
 import Blosc
+using HDF5.API
+import HDF5.Filters: Filter, FilterPipeline
+import HDF5.Filters: filterid, register_filter, filtername, filter_func, filter_cfunc, set_local_func, set_local_cfunc
 
-const FILTER_BLOSC = API.H5Z_filter_t(32001) # Filter ID registered with the HDF Group for Blosc
+export H5Z_FILTER_BLOSC, blosc_filter, BloscFilter
+
+
+const H5Z_FILTER_BLOSC = API.H5Z_filter_t(32001) # Filter ID registered with the HDF Group for Blosc
 const FILTER_BLOSC_VERSION = 2
 const blosc_name = "blosc"
 
@@ -12,7 +19,7 @@ function blosc_set_local(dcpl::API.hid_t, htype::API.hid_t, space::API.hid_t)
     blosc_nelements = Ref{Csize_t}(length(blosc_values))
     blosc_chunkdims = Vector{API.hsize_t}(undef,32)
 
-    API.h5p_get_filter_by_id(dcpl, FILTER_BLOSC, blosc_flags, blosc_nelements, blosc_values, 0, C_NULL, C_NULL)
+    API.h5p_get_filter_by_id(dcpl, H5Z_FILTER_BLOSC, blosc_flags, blosc_nelements, blosc_values, 0, C_NULL, C_NULL)
     flags = blosc_flags[]
 
     nelements = max(blosc_nelements[], 4) # First 4 slots reserved
@@ -45,7 +52,7 @@ function blosc_set_local(dcpl::API.hid_t, htype::API.hid_t, space::API.hid_t)
     blosc_values[3] = basetypesize
     blosc_values[4] = chunksize * htypesize # size of the chunk
 
-    API.h5p_modify_filter(dcpl, FILTER_BLOSC, flags, nelements, blosc_values)
+    API.h5p_modify_filter(dcpl, H5Z_FILTER_BLOSC, flags, nelements, blosc_values)
 
     return API.herr_t(1)
 end
@@ -85,10 +92,13 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
         # uncompressed chunk size but it should not be used in a general
         # cases since other filters in the pipeline can modify the buffer
         # size.
-        outbuf_size, cbytes, blocksize = Blosc.cbuffer_sizes(unsafe_load(buf))
+        in = unsafe_load(buf)
+        # See https://github.com/JuliaLang/julia/issues/43402
+        # Resolved in https://github.com/JuliaLang/julia/pull/43408
+        outbuf_size, cbytes, blocksize = Blosc.cbuffer_sizes(in)
         outbuf = Libc.malloc(outbuf_size)
         outbuf == C_NULL && return Csize_t(0)
-        status = Blosc.blosc_decompress(unsafe_load(buf), outbuf, outbuf_size)
+        status = Blosc.blosc_decompress(in, outbuf, outbuf_size)
         status <= 0 && (Libc.free(outbuf); return Csize_t(0))
     end
 
@@ -101,19 +111,6 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
     Libc.free(outbuf)
     return Csize_t(0)
 end
-
-
-# register the Blosc filter function with HDF5
-function register_blosc()
-    c_blosc_set_local = @cfunction(blosc_set_local, API.herr_t, (API.hid_t,API.hid_t,API.hid_t))
-    c_blosc_filter = @cfunction(blosc_filter, Csize_t,
-                                (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
-                                 Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
-    API.h5z_register(API.H5Z_class_t(API.H5Z_CLASS_T_VERS, FILTER_BLOSC, 1, 1, pointer(blosc_name), C_NULL, c_blosc_set_local, c_blosc_filter))
-
-    return nothing
-end
-
 
 """
     BloscFilter(;level=5, shuffle=true, compressor="blosclz")
@@ -142,6 +139,15 @@ function BloscFilter(;level=5, shuffle=true, compressor="blosclz")
     BloscFilter(0,0,0,0,level,shuffle,compcode)
 end
 
+filterid(::Type{BloscFilter}) = H5Z_FILTER_BLOSC
+filtername(::Type{BloscFilter}) = blosc_name
+set_local_func(::Type{BloscFilter}) = blosc_set_local
+set_local_cfunc(::Type{BloscFilter}) = @cfunction(blosc_set_local, API.herr_t, (API.hid_t,API.hid_t,API.hid_t))
+filter_func(::Type{BloscFilter}) = blosc_filter
+filter_cfunc(::Type{BloscFilter}) = @cfunction(blosc_filter, Csize_t,
+                                                 (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
+                                                 Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
+
 function Base.show(io::IO, blosc::BloscFilter)
     print(io, BloscFilter,
           "(level=", Int(blosc.level),
@@ -149,9 +155,6 @@ function Base.show(io::IO, blosc::BloscFilter)
           ",compressor=", Blosc.compname(blosc.compcode),
           ")")
 end
-
-filterid(::Type{BloscFilter}) = FILTER_BLOSC
-FILTERS[FILTER_BLOSC] = BloscFilter
 
 function Base.push!(f::FilterPipeline, blosc::BloscFilter)
     0 <= blosc.level <= 9 || throw(ArgumentError("blosc compression $(blosc.level) not in [0,9]"))
@@ -161,3 +164,9 @@ function Base.push!(f::FilterPipeline, blosc::BloscFilter)
     end
     return f
 end
+
+function __init__()
+    register_filter(BloscFilter)
+end
+
+end # module H5Zblosc

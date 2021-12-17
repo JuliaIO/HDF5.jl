@@ -1,10 +1,9 @@
 using HDF5
+using HDF5.Filters
 using Test
+using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
 
 @testset "filter" begin
-
-H5Z_FILTER_DEFLATE = 1
-H5Z_FILTER_SHUFFLE = 2
 
 # Create a new file
 fn = tempname()
@@ -28,28 +27,59 @@ dsfiltdef = create_dataset(f, "filtdef", datatype(data), dataspace(data),
 dsfiltshufdef = create_dataset(f, "filtshufdef", datatype(data), dataspace(data),
                                chunk=(100, 100), filters=[Filters.Shuffle(), Filters.Deflate(3)])
 
+
 # Write data
 write(dsdeflate, data)
 write(dsshufdef, data)
 write(dsfiltdef, data)
 write(dsfiltshufdef, data)
 
+# Test compression filters
+
+compressionFilters = Dict(
+    "blosc" => BloscFilter,
+    "bzip2" => Bzip2Filter,
+    "lz4" => Lz4Filter,
+    "zstd" => ZstdFilter
+)
+
+for (name, filter) in compressionFilters
+
+    ds = create_dataset(
+        f, name, datatype(data), dataspace(data),
+        chunk=(100,100), filters=filter()
+    )
+    write(ds, data)
+
+    ds = create_dataset(
+        f, "shuffle+"*name, datatype(data), dataspace(data),
+        chunk=(100,100), filters=[Filters.Shuffle(), filter()]
+    )
+    write(ds, data)
+
+end
+
+
 # Close and re-open file for reading
 close(f)
 f = h5open(fn)
 
-# Read dataseta
-datadeflate = f["deflate"][]
-datashufdef = f["shufdef"][]
-datafiltdef = f["filtdef"][]
-datafiltshufdef = f["filtshufdef"][]
+# Read datasets and test for equality
+for name in keys(f)
+    ds = f[name]
+    @testset "$name" begin
+        @debug "Filter Dataset" HDF5.name(ds)
+        @test ds[] == data
+        filters = HDF5.get_create_properties(ds).filters
+        if startswith(name, "shuffle+")
+            @test filters[1] isa Shuffle
+            @test filters[2] isa compressionFilters[name[9:end]]
+        elseif haskey(compressionFilters, name)
+            @test filters[1] isa compressionFilters[name]
+        end
+    end
+end
 
 close(f)
-
-# Test for equality
-@test datadeflate == data
-@test datashufdef == data
-@test datafiltdef == data
-@test datafiltshufdef == data
 
 end # @testset "filter"
