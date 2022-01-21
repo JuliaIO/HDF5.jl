@@ -158,14 +158,13 @@ end
 
 Helper method to write chunks via 0-based offsets `offset` as a `Tuple`.
 """
-function write_chunk(dataset_id, offset, buf::AbstractArray; dxpl_id = API.H5P_DEFAULT, filter_mask=UInt32(0))
-    @debug "Writing HDF5 dataset chunk using $(typeof(buf))."
+function write_chunk(dataset_id, offset, buf::AbstractArray; dxpl_id = API.H5P_DEFAULT, filter_mask = 0)
     # Borrowed from write_dataset stride detection
     stride(buf, 1) == 1 || throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
     API.h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, sizeof(buf), buf)
 end
 
-function write_chunk(dataset_id, offset, buf::Union{DenseArray,Base.FastContiguousSubArray}; dxpl_id = API.H5P_DEFAULT, filter_mask=UInt32(0))
+function write_chunk(dataset_id, offset, buf::Union{DenseArray,Base.FastContiguousSubArray}; dxpl_id = API.H5P_DEFAULT, filter_mask = 0)
     # We can bypass the need to check stride with Array and FastContiguousSubArray
     API.h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, sizeof(buf), buf)
 end
@@ -175,13 +174,13 @@ end
 
 Helper method to write chunks via 0-based integer `index`.
 """
-function write_chunk(dataset_id, index::Integer, buf::AbstractArray; dxpl_id = API.H5P_DEFAULT, filter_mask = UInt32(0))
+function write_chunk(dataset_id, index::Integer, buf::AbstractArray; dxpl_id = API.H5P_DEFAULT, filter_mask = 0)
     offset = [reverse(get_chunk_offset(dataset_id, index))...]
     write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
 end
 
 # Avoid ambiguous method with offset based versions
-function write_chunk(dataset_id, index::Integer, buf::Union{DenseArray,Base.FastContiguousSubArray}; dxpl_id = API.H5P_DEFAULT, filter_mask=UInt32(0))
+function write_chunk(dataset_id, index::Integer, buf::Union{DenseArray,Base.FastContiguousSubArray}; dxpl_id = API.H5P_DEFAULT, filter_mask = 0)
     # We can bypass the need to check stride with Array and FastContiguousSubArray
     offset = [reverse(get_chunk_offset(dataset_id, index))...]
     write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
