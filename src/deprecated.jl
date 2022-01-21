@@ -26,7 +26,7 @@ for name in names(API; all=true)
     end
 end
 
-
+### Changed in PR #847
 import Base: getindex, setindex!
 @deprecate getindex(p::Properties, name::Symbol) Base.getproperty(p, name)
 @deprecate setindex!(p::Properties, val, name::Symbol) Base.setproperty!(p, name, val)
@@ -64,4 +64,3 @@ function set_shuffle!(p::Properties, ::Tuple{})
     depwarn("`shuffle=()` option is deprecated, use `shuffle=true`", :set_shuffle!)
     set_shuffle!(p, true)
 end
-
