@@ -422,6 +422,7 @@ class_propertynames(::Type{DatasetCreateProperties}) = (
     :shuffle,
     # deprecated
     :compress,
+    :filter
     )
 
 
@@ -431,6 +432,8 @@ function class_getproperty(::Type{DatasetCreateProperties}, p::Properties, name:
     #name === :external    ? API.h5p_get_external(p) :
     name === :filters     ? get_filters(p) :
     name === :layout      ? get_layout(p) :
+    # deprecated
+    name === :filter      ? (depwarn("`filter` property name is deprecated, use `filters` instead",:class_getproperty); get_filters(p)) :
     class_getproperty(superclass(DatasetCreateProperties), p, name)
 end
 function class_setproperty!(::Type{DatasetCreateProperties}, p::Properties, name::Symbol, val)
@@ -445,6 +448,7 @@ function class_setproperty!(::Type{DatasetCreateProperties}, p::Properties, name
     name === :fletcher32  ? set_fletcher32!(p, val) :
     name === :shuffle     ? set_shuffle!(p, val) :
     # deprecated
+    name === :filter      ? (depwarn("`filter=$val` keyword option is deprecated, use `filters=$val` instead",:class_setproperty!); set_filters!(p, val)) :
     name === :compress    ? (depwarn("`compress=$val` keyword option is deprecated, use `deflate=$val` instead",:class_setproperty!); set_deflate!(p, val)) :
     class_setproperty!(superclass(DatasetCreateProperties), p, name, val)
 end
