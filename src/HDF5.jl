@@ -1346,13 +1346,11 @@ Write a raw chunk at a given offset.
 `chunk_bytes` is an AbstractArray that can be converted to a pointer, Ptr{Cvoid}.
 `offset` is a 1-based list of rank `ndims(dataset)` and must fall on a chunk boundary.
 """
-function do_write_chunk(dataset::Dataset, offset, chunk_bytes::AbstractArray, filter_mask=UInt32(0))
+function do_write_chunk(dataset::Dataset, offset, chunk_bytes::AbstractArray, filter_mask=0)
     checkvalid(dataset)
     offs = collect(API.hsize_t, reverse(offset)) .- 1
     write_chunk(dataset, offs, chunk_bytes; filter_mask=UInt32(filter_mask))
 end
-
-precompile(do_write_chunk, (Dataset, Vector{Int}, Vector{UInt8}, UInt32))
 
 """
     do_write_chunk(dataset::Dataset, index, chunk_bytes::AbstractArray, filter_mask=0)
@@ -1366,8 +1364,6 @@ function do_write_chunk(dataset::Dataset, index::Integer, chunk_bytes::AbstractA
     index -= 1
     write_chunk(dataset, index, chunk_bytes; filter_mask=UInt32(filter_mask))
 end
-
-precompile(do_write_chunk, (Dataset, Int, Vector{UInt8}, UInt32))
 
 """
     do_read_chunk(dataset::Dataset, offset)
@@ -1441,13 +1437,11 @@ Base.length(cs::ChunkStorage{IndexLinear}) =  get_num_chunks(cs.dataset)
 function Base.setindex!(chunk_storage::ChunkStorage{IndexLinear}, v::Tuple{<:Integer,AbstractArray}, index::Integer)
     do_write_chunk(chunk_storage.dataset, index, v[2], v[1])
 end
-precompile(Base.setindex!, (ChunkStorage{IndexLinear,1}, Tuple{Int, Vector{UInt8}}, Int))
 
 # Filter flags will default to 0
 function Base.setindex!(chunk_storage::ChunkStorage{IndexLinear}, v::AbstractArray, index::Integer)
     do_write_chunk(chunk_storage.dataset, index, v)
 end
-precompile(Base.setindex!, (ChunkStorage{IndexLinear,1}, Vector{UInt8}, Int))
 
 function Base.getindex(chunk_storage::ChunkStorage{IndexLinear}, index::Integer)
     do_read_chunk(chunk_storage.dataset, index)
