@@ -9,6 +9,6 @@ See the files indicated below for the copyright notices and the licenses of the 
 software from which individual submodules are derived.
 
 ## Filter Plugins
-* [H5Zbzip2](src/filters/H5Zbzip2/src/H5Zbzip2.jl): See [src/filters/H5Zbzip2/THIRDPARTY.txt](src/filters/H5Zbzip2/THIRDPARTY.txt)
-* [H5Zlz4](src/filters/H5Zlz4/src/H5Zlz4.jl): See [src/filters/H5Zlz4/THIRDPARTY.txt](src/filters/H5Zlz4/THIRDPARTY.txt)
-* [H5Zzstd](src/filters/H5Zzstd/src/H5Zzstd.jl): See [src/filters/H5Zzstd/THIRDPARTY.txt](src/filters/H5Zzstd/THIRDPARTY.txt)
+* [H5Zbzip2](filters/H5Zbzip2/src/H5Zbzip2.jl): See [filters/H5Zbzip2/THIRDPARTY.txt](filters/H5Zbzip2/THIRDPARTY.txt)
+* [H5Zlz4](filters/H5Zlz4/src/H5Zlz4.jl): See [filters/H5Zlz4/THIRDPARTY.txt](filters/H5Zlz4/THIRDPARTY.txt)
+* [H5Zzstd](filters/H5Zzstd/src/H5Zzstd.jl): See [filters/H5Zzstd/THIRDPARTY.txt](filters/H5Zzstd/THIRDPARTY.txt)
