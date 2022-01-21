@@ -1,7 +1,7 @@
 using HDF5
 using Test
 using Pkg
-filter_path = joinpath(dirname(pathof(HDF5)), "filters")
+filter_path = joinpath(dirname(pathof(HDF5)), "..", "filters")
 Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zblosc")))
 Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zbzip2")))
 Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zlz4")))
