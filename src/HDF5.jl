@@ -1448,7 +1448,6 @@ function Base.getindex(chunk_storage::ChunkStorage{IndexLinear}, index::Integer)
 end
 
 # TODO: Move to show.jl. May need to include show.jl after this line.
-@static if VERSION < v"1.7"
 # ChunkStorage axes may be StepRanges, but this is not available until v"1.6.0"
 # no method matching CartesianIndices(::Tuple{StepRange{Int64,Int64},UnitRange{Int64}}) until v"1.6.0"
 
@@ -1460,7 +1459,6 @@ function Base.show(io::IO, cs::ChunkStorage{IndexCartesian,N}) where N
 end
 Base.show(io::IO, ::MIME{Symbol("text/plain")}, cs::ChunkStorage{IndexCartesian,N}) where {N} = show(io, cs)
 
-end
 
 
 
