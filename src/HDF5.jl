@@ -1359,7 +1359,7 @@ Write a raw chunk at a given linear index.
 `chunk_bytes` is an AbstractArray that can be converted to a pointer, Ptr{Cvoid}.
 `index` is 1-based and consecutive up to the number of chunks.
 """
-function do_write_chunk(dataset::Dataset, index::Integer, chunk_bytes::AbstractArray, filter_mask=UInt32(0))
+function do_write_chunk(dataset::Dataset, index::Integer, chunk_bytes::AbstractArray, filter_mask=0)
     checkvalid(dataset)
     index -= 1
     write_chunk(dataset, index, chunk_bytes; filter_mask=UInt32(filter_mask))
