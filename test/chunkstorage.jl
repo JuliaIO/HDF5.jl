@@ -128,19 +128,24 @@ h5open(fn, "r") do f
 
 end
 
-h5open(fn, "w") do f
-    d = create_dataset(f, "dataset", datatype(Int64), dataspace(4, 6), chunk=(2, 3))
-    raw = HDF5.ChunkStorage(d)
-    data = permutedims(reshape(1:24, 2, 2, 3, 2), (1,3,2,4))
-    ci = CartesianIndices(raw)
-    for ind in eachindex(ci)
-        raw[ci[ind]] = data[:,:,ind]
-    end
-end
+@static if VERSION >= v"1.6"
+    # CartesianIndices does not accept StepRange
 
-@test h5open(fn, "r") do f
-    f["dataset"][:,:]
-end == reshape(1:24, 4, 6)
+    h5open(fn, "w") do f
+        d = create_dataset(f, "dataset", datatype(Int64), dataspace(4, 6), chunk=(2, 3))
+        raw = HDF5.ChunkStorage(d)
+        data = permutedims(reshape(1:24, 2, 2, 3, 2), (1,3,2,4))
+        ci = CartesianIndices(raw)
+        for ind in eachindex(ci)
+            raw[ci[ind]] = data[:,:,ind]
+        end
+    end
+
+    @test h5open(fn, "r") do f
+        f["dataset"][:,:]
+    end == reshape(1:24, 4, 6)
+
+end
 
 # Test direct write chunk writing via linear indexing, using views and without filter flag
 h5open(fn, "w") do f
