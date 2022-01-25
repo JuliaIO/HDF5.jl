@@ -42,7 +42,7 @@ function set_driver!(p::Properties, ::POSIX)
 end
 
 function __init__()
-    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" @eval include("mpio.jl")
+    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" include("mpio.jl")
 end
 
 end # module
