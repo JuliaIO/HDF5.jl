@@ -132,7 +132,7 @@ end
     # CartesianIndices does not accept StepRange
 
     h5open(fn, "w") do f
-        d = create_dataset(f, "dataset", datatype(Int64), dataspace(4, 6), chunk=(2, 3))
+        d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 6), chunk=(2, 3))
         raw = HDF5.ChunkStorage(d)
         data = permutedims(reshape(1:24, 2, 2, 3, 2), (1,3,2,4))
         ci = CartesianIndices(raw)
