@@ -1,3 +1,7 @@
+# HISTORY
+
+Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
+
 ## v0.16.1
 
 * Minor bug fix to the test suite to ensure package testing passes
