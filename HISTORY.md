@@ -13,25 +13,32 @@
 - Revamed `Properties` internal interface (non-user facing)
 
 ## v0.15.6
+
 * Add `FileIO` integration
 
 ## v0.15.5
+
 * Add the ability to use `attributes` for HDF5 datatypes
 
 ## v0.15.4
+
 * Minor imporovement to an internal `ccall` wrapper
 
 ## v0.15.3
+
 * Additional documentation on row/column ordering differences
 * Improve iteration in order to support certain architectures, where the existing callbacks were failing.
 
 ## v0.15.2
+
 * Fix `show` for `Attribute` printing
 
 ## v0.15.1
+
 * Fix build system settings when using system provided HDF5 binaries
 
 ## v0.15.0
+
 * Support reading of opaque data recursively
 * Add support for a subset of libhdf5 table methods
 * Improved error handling
@@ -39,6 +46,7 @@
 * Improved iteration protocol performance through the use of callbacks
 
 ## v0.14.2
+
 * Fix performance of reading long string
 * Add additional `Dataspace` methods
 
