@@ -9,12 +9,12 @@ Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases)
 ## v0.16.0
 
 * Adds HDF5 support for ARM M1
-* Revamped filters interface with a more flexible interface allowing easy external filter hooks
-* New filter packages including H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
+* Revamped filter interface with the flexiblility to allow specification of a filter pipeline and external filter hooks
+* New filter compression methods defined by external packaged: `H5Zblosc`, `H5Zlz4`, `H5Zbzip2`, `H5Zzstd`
 * `filter` property name renamed to `filters`
 * Generalized chunking API to accept `AbstractArray`
 - New `move_link` method, which effectively renames an object
-- Revamed `Properties` internal interface (non-user facing)
+- Revamed internal `Properties` interface (non-user facing)
 
 ## v0.15.6
 
@@ -51,7 +51,7 @@ Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases)
 
 ## v0.14.2
 
-* Fix performance of reading long string
+* Fix performance of reading long strings
 * Add additional `Dataspace` methods
 
 ## v0.14.2
