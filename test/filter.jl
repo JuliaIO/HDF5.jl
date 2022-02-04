@@ -59,6 +59,11 @@ for (name, filter) in compressionFilters
 
 end
 
+ds = create_dataset(
+    f, "blosc_bitshuffle", datatype(data), dataspace(data),
+    chunk=(100,100), filters=BloscFilter(shuffle=H5Zblosc.BITSHUFFLE)
+)
+write(ds, data)
 
 # Close and re-open file for reading
 close(f)
@@ -74,7 +79,8 @@ for name in keys(f)
         if startswith(name, "shuffle+")
             @test filters[1] isa Shuffle
             @test filters[2] isa compressionFilters[name[9:end]]
-        elseif haskey(compressionFilters, name)
+        elseif haskey(compressionFilters, name) || name == "blosc_bitshuffle"
+            name = replace(name, r"_.*"=>"")
             @test filters[1] isa compressionFilters[name]
         end
     end
