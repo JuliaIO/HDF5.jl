@@ -430,7 +430,7 @@ class_propertynames(::Type{DatasetCreateProperties}) = (
 function class_getproperty(::Type{DatasetCreateProperties}, p::Properties, name::Symbol)
     name === :alloc_time  ? get_alloc_time(p) :
     name === :chunk       ? get_chunk(p) :
-    #name === :external    ? API.h5p_get_external(p) :
+    name === :external    ? API.h5p_get_external(p) :
     name === :filters     ? get_filters(p) :
     name === :layout      ? get_layout(p) :
     # deprecated

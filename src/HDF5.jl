@@ -710,6 +710,8 @@ end
 datatype(dset::Dataset) = Datatype(API.h5d_get_type(checkvalid(dset)), file(dset))
 # Get the datatype of an attribute
 datatype(dset::Attribute) = Datatype(API.h5a_get_type(checkvalid(dset)), file(dset))
+# The datatype of a Datatype is the Datatype
+datatype(dt::Datatype) = dt
 
 Base.sizeof(dtype::Datatype) = Int(API.h5t_get_size(dtype))
 
@@ -717,6 +719,8 @@ Base.sizeof(dtype::Datatype) = Int(API.h5t_get_size(dtype))
 dataspace(dset::Dataset) = Dataspace(API.h5d_get_space(checkvalid(dset)))
 # Get the dataspace of an attribute
 dataspace(attr::Attribute) = Dataspace(API.h5a_get_space(checkvalid(attr)))
+# The dataspace of a Dataspace is just the dataspace
+dataspace(ds::Dataspace) = ds
 
 # Create a dataspace from in-memory types
 dataspace(x::Union{T, Complex{T}}) where {T<:ScalarType} = Dataspace(API.h5s_create(API.H5S_SCALAR))
@@ -1332,11 +1336,26 @@ function hyperslab(dset::Dataset, I::Union{AbstractRange{Int},Int}...)
     return hyperslab(dspace, I...)
 end
 
-# Link to bytes in an external file
-# If you need to link to multiple segments, use low-level interface
+"""
+    create_external_dataset(parent, name, filepath, dtype, dspace, offset = 0)
+
+Create a external dataset with data in an external file.
+* `parent` - File or Group
+* `name` - Name of the Dataset
+* `filepath` - File path to where the data is tored
+* `dtype` - Datatype, Type, or value where `datatype` is applicable
+* `offset` - Offset, in bytes, from the beginning of the file to the location in the file where the data starts.
+
+Use `API.h5p_set_external` to link to multiple segments.
+
+See also [`API.h5p_set_external`](@ref)
+"""
 function create_external_dataset(parent::Union{File,Group}, name::AbstractString, filepath::AbstractString, t, sz::Dims, offset::Integer=0)
+    create_external_dataset(parent, name, filepath, datatype(t), dataspace(sz), offset)
+end
+function create_external_dataset(parent::Union{File,Group}, name::AbstractString, filepath::AbstractString, dtype::Datatype, dspace::Dataspace, offset::Integer=0)
     checkvalid(parent)
-    create_dataset(parent, name, datatype(t), dataspace(sz); external=(filepath, offset, prod(sz)*sizeof(t)))
+    create_dataset(parent, name, dtype, dspace; external=(filepath, offset, length(dspace)*sizeof(dtype)))
 end
 
 """

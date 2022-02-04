@@ -9,6 +9,7 @@ const hid_t    = Int64
 const hsize_t  = UInt64
 const hssize_t = Int64
 const htri_t   = Cint   # pseudo-boolean (negative if error)
+const off_t    = Int
 
 const H5Z_filter_t = Cint
 

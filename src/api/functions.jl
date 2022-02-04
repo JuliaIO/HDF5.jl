@@ -1262,6 +1262,28 @@ function h5p_get_dxpl_mpio(dxpl_id, xfer_mode)
 end
 
 """
+    h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Pget_external`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_EXTERNAL).
+"""
+function h5p_get_external(plist, idx, name_size, name, offset, size)
+    var"#status#" = ccall((:H5Pget_external, libhdf5), herr_t, (hid_t, Cuint, Csize_t, Ptr{Cuchar}, Ptr{off_t}, Ptr{hsize_t}), plist, idx, name_size, name, offset, size)
+    var"#status#" < 0 && @h5error("Error getting external file properties")
+    return nothing
+end
+
+"""
+    h5p_get_external_count(plist::hid_t) -> Int
+
+See `libhdf5` documentation for [`H5Pget_external_count`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_EXTERNAL_COUNT).
+"""
+function h5p_get_external_count(plist)
+    var"#status#" = ccall((:H5Pget_external_count, libhdf5), Cint, (hid_t,), plist)
+    var"#status#" < 0 && @h5error("Error getting external count")
+    return Int(var"#status#")
+end
+
+"""
     h5p_get_fapl_mpio32(fapl_id::hid_t, comm::Ptr{Hmpih32}, info::Ptr{Hmpih32})
 
 See `libhdf5` documentation for [`H5Pget_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MPIO32).
@@ -1493,12 +1515,12 @@ function h5p_set_dxpl_mpio(dxpl_id, xfer_mode)
 end
 
 """
-    h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::Int, size::Csize_t)
+    h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::off_t, size::Csize_t)
 
 See `libhdf5` documentation for [`H5Pset_external`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_EXTERNAL).
 """
 function h5p_set_external(plist_id, name, offset, size)
-    var"#status#" = ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Int, Csize_t), plist_id, name, offset, size)
+    var"#status#" = ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Ptr{UInt8}, off_t, Csize_t), plist_id, name, offset, size)
     var"#status#" < 0 && @h5error("Error setting external property")
     return nothing
 end
