@@ -16,7 +16,7 @@ package provides an interface to the HDF5 library for the Julia language.
 
 ### Changelog
 
-Please see [HISTORY.md](HISTORY.md). Most changes have deprecation warnings and thus may not be listed in the changelog.
+Please see [HISTORY.md](HISTORY.md) and the [release notes](https://github.com/JuliaIO/HDF5.jl/releases). Most changes have deprecation warnings and may not be listed in the [HISTORY.md](HISTORY.md) file.
 
 ### Installation
 
