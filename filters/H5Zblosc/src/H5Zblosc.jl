@@ -8,6 +8,8 @@ import HDF5.Filters: filterid, register_filter, filtername, filter_func, filter_
 
 export H5Z_FILTER_BLOSC, blosc_filter, BloscFilter
 
+# Import Blosc shuffle constants
+import Blosc: NOSHUFFLE, SHUFFLE, BITSHUFFLE
 
 const H5Z_FILTER_BLOSC = API.H5Z_filter_t(32001) # Filter ID registered with the HDF Group for Blosc
 const FILTER_BLOSC_VERSION = 2
@@ -65,7 +67,7 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
     # Compression level:
     clevel = cd_nelmts >= 5 ? unsafe_load(cd_values, 5) : Cuint(5)
     # Do shuffle:
-    doshuffle = cd_nelmts >= 6 ? unsafe_load(cd_values, 6) != 0 : true
+    doshuffle = cd_nelmts >= 6 ? unsafe_load(cd_values, 6) : SHUFFLE
 
     if (flags & API.H5Z_FLAG_REVERSE) == 0 # compressing
         # Allocate an output buffer exactly as long as the input data; if
@@ -134,7 +136,8 @@ struct BloscFilter <: Filter
     compcode::Cuint
 end
 
-function BloscFilter(;level=5, shuffle=true, compressor="blosclz")
+function BloscFilter(;level=5, shuffle=SHUFFLE, compressor="blosclz")
+    Blosc.isvalidshuffle(shuffle) || throw(ArgumentError("invalid blosc shuffle $shuffle"))
     compcode = Blosc.compcode(compressor)
     BloscFilter(0,0,0,0,level,shuffle,compcode)
 end
@@ -151,13 +154,17 @@ filter_cfunc(::Type{BloscFilter}) = @cfunction(blosc_filter, Csize_t,
 function Base.show(io::IO, blosc::BloscFilter)
     print(io, BloscFilter,
           "(level=", Int(blosc.level),
-          ",shuffle=", blosc.shuffle!=0,
+          ",shuffle=", blosc.shuffle==NOSHUFFLE  ? "NOSHUFFLE"  :
+                       blosc.shuffle==SHUFFLE    ? "SHUFFLE"    :
+                       blosc.shuffle==BITSHUFFLE ? "BITSHUFFLE" :
+                       "UNKNOWN",
           ",compressor=", Blosc.compname(blosc.compcode),
           ")")
 end
 
 function Base.push!(f::FilterPipeline, blosc::BloscFilter)
     0 <= blosc.level <= 9 || throw(ArgumentError("blosc compression $(blosc.level) not in [0,9]"))
+    Blosc.isvalidshuffle(blosc.shuffle) || throw(ArgumentError("invalid blosc shuffle $(blosc.shuffle)"))
     ref = Ref(blosc)
     GC.@preserve ref begin
         API.h5p_set_filter(f.plist, filterid(BloscFilter), API.H5Z_FLAG_OPTIONAL, div(sizeof(BloscFilter), sizeof(Cuint)), pointer_from_objref(ref))
