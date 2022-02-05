@@ -8,33 +8,16 @@ CurrentModule = HDF5
 ```
 
 These can be set by passing a filter or vector of filters as a `filters` property to
-[`DatasetCreateProperties`](@ref).
-
-## Filter Interface
+[`DatasetCreateProperties`](@ref) or via the `filters` keyword argument of [`create_dataset`](@ref).
 
 ```@meta
 CurrentModule = HDF5.Filters
 ```
 
-The filter interface is used to describe filters and obtain information on them.
+## Example
 
 ```@docs
 Filters
-Filter
-FilterPipeline
-UnknownFilter
-FILTERS
-filterid
-encoder_present
-decoder_present
-filtername
-can_apply_func
-can_apply_cfunc
-set_local_func
-set_local_cfunc
-filter_func
-filter_cfunc
-register_filter
 ```
 
 ## Built-in Filters
@@ -47,6 +30,7 @@ Fletcher32
 Szip
 NBit
 ScaleOffset
+UnknownFilter
 ```
 
 ## External Filter Packages
@@ -103,10 +87,36 @@ ZstdFilter
 
 ## Other External Filters
 
-Additional filters can be dynamically loaded by the HDF5 library. See the links below for more information.
+Additional filters can be dynamically loaded by the HDF5 library. See [External Links](@ref) below for more information.
 
-### External Links
+## Filter Interface
+
+```@meta
+CurrentModule = HDF5.Filters
+```
+
+The filter interface is used to describe filters and obtain information on them.
+
+```@docs
+Filter
+FilterPipeline
+FILTERS
+filterid
+encoder_present
+decoder_present
+filtername
+can_apply_func
+can_apply_cfunc
+set_local_func
+set_local_cfunc
+filter_func
+filter_cfunc
+register_filter
+```
+
+## External Links
 
 * A [list of registered filter plugins](https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins) can be found on the HDF Group website.
 * [See the HDF5 Documentation of HDF5 Filter Plugins for details.](https://portal.hdfgroup.org/display/support/HDF5+Filter+Plugins)
 * The source code for many external plugins have been collected in the [HDFGroup hdf5_plugins repository](https://github.com/HDFGroup/hdf5_plugins).
+* [Compiled binaries of dynamically downloaded plugins](https://portal.hdfgroup.org/display/support/Downloads) by downloaded from HDF5 Group.
