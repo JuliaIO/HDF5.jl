@@ -259,6 +259,9 @@ struct UnknownFilter <: Filter
     name::String
     config::Cuint
 end
+function UnknownFilter(filter_id, flags, data::Integer...)
+    UnknownFilter(filter_id, flags, Cuint[data...], "Unknown Filter with id $filter_id", 0)
+end
 filterid(filter::UnknownFilter) = filter.filter_id
 filtername(filter::UnknownFilter) = filter.name
 filtername(::Type{UnknownFilter}) = "Unknown Filter"
@@ -336,7 +339,7 @@ function Base.delete!(filters::FilterPipeline, ::Type{F}) where {F<:Filter}
     API.h5p_remove_filter(filters.plist, filterid(F))
     return filters
 end
-function Base.append!(filters::FilterPipeline, extra)
+function Base.append!(filters::FilterPipeline, extra::Union{AbstractVector{<:Filter}, NTuple{N, Filter} where N})
     for filter in extra
         push!(filters, filter)
     end

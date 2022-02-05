@@ -88,4 +88,24 @@ end
 
 close(f)
 
+# Issue #896 and https://github.com/JuliaIO/HDF5.jl/issues/285#issuecomment-1002243321
+# Create an UnknownFilter from a Tuple
+h5open(fn, "w") do f
+    data = rand(UInt8, 512, 16, 512)
+    # Tuple of integers should become an Unknown Filter
+    ds, dt = create_dataset(f, "data", data, chunk=(256,1,256), filter=(H5Z_FILTER_BZIP2, 0))
+    # Tuple of Filters should get pushed into the pipeline one by one
+    dsfiltshufdef = create_dataset(f, "filtshufdef", datatype(data), dataspace(data),
+                               chunk=(128, 4, 128), filters=(Filters.Shuffle(), Filters.Deflate(3)))
+    write(ds, data)
+    close(ds)
+    write(dsfiltshufdef, data)
+    close(dsfiltshufdef)
+end
+
+h5open(fn, "r") do f
+    @test f["data"][] == data
+    @test f["filtshufdef"][] == data
+end
+
 end # @testset "filter"
