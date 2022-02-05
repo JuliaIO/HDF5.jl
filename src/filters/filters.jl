@@ -1,3 +1,48 @@
+"""
+HDF5.Filters
+
+This module contains the interface for using filters in HDF5.jl.
+
+# Example Usage
+```julia
+using HDF5
+using HDF5.Filters
+
+# Create a new file
+fn = tempname()
+
+# Create test data
+data = rand(1000, 1000)
+
+# Open temp file for writing
+f = h5open(fn, "w") 
+
+# Create datasets
+dsdeflate = create_dataset(f, "deflate", datatype(data), dataspace(data),
+                           chunk=(100, 100), deflate=3)
+
+dsshufdef = create_dataset(f, "shufdef", datatype(data), dataspace(data),
+                           chunk=(100, 100), shuffle=true, deflate=3)
+
+dsfiltdef = create_dataset(f, "filtdef", datatype(data), dataspace(data),
+                           chunk=(100, 100), filters=Filters.Deflate(3))
+
+dsfiltshufdef = create_dataset(f, "filtshufdef", datatype(data), dataspace(data),
+                               chunk=(100, 100), filters=[Filters.Shuffle(), Filters.Deflate(3)])
+
+# Write data
+write(dsdeflate, data)
+write(dsshufdef, data)
+write(dsfiltdef, data)
+write(dsfiltshufdef, data)
+
+close(f)
+```
+
+## Additonal Examples
+
+See [test/filter.jl](https://github.com/JuliaIO/HDF5.jl/blob/master/test/filter.jl) for further examples.
+"""
 module Filters
 
 # builtin filters
@@ -18,7 +63,7 @@ See the Extended Help for information on implementing a new filter.
 
 The Filter interface is implemented upon the Filter subtype.
 
-See API.h5z_register for details.
+See [`API.h5z_register`](@ref) for details.
 
 ### Required Methods to Implement
 * `filterid` - registered filter ID
@@ -61,7 +106,7 @@ filterid
 
 Can the filter have an encode or compress the data?
 Defaults to true.
-Returns a Bool. See `API.h5z_register`.
+Returns a Bool. See [`API.h5z_register`](@ref).
 """
 encoder_present(::Type{F}) where {F<:Filter} = true
 
@@ -71,7 +116,7 @@ encoder_present(::Type{F}) where {F<:Filter} = true
 Can the filter decode or decompress the data?
 Defaults to true.
 Returns a Bool.
-See `API.h5z_register`
+See [`API.h5z_register`](@ref)
 """
 decoder_present(::Type{F}) where {F<:Filter} = true
 
@@ -80,7 +125,7 @@ decoder_present(::Type{F}) where {F<:Filter} = true
 
 What is the name of a filter?
 Defaults to "Unnamed Filter"
-Returns a String describing the filter. See `API.h5z_register`
+Returns a String describing the filter. See [`API.h5z_register`](@ref)
 """
 filtername(::Type{F}) where {F<:Filter} = "Unnamed Filter"
 
@@ -89,7 +134,7 @@ filtername(::Type{F}) where {F<:Filter} = "Unnamed Filter"
 
 Return a function indicating whether the filter can be applied or `nothing` if no function exists.
 The function signature is `func(dcpl_id::API.hid_t, type_id::API.hid_t, space_id::API.hid_t)`.
-See `API.h5z_register`
+See [`API.h5z_register`](@ref)
 """
 can_apply_func(::Type{F}) where {F<:Filter} = nothing
 
@@ -117,7 +162,7 @@ end
 
 Return a function that sets dataset specific parameters or `nothing` if no function exists.
 The function signature is `func(dcpl_id::API.hid_t, type_id::API.hid_t, space_id::API.hid_t)`.
-See `API.h5z_register`
+See [`API.h5z_register`](@ref).
 """
 set_local_func(::Type{F}) where {F<:Filter} = nothing
 
@@ -146,7 +191,7 @@ end
 
 Returns a function that performs the actual filtering.
 
-See `API.h5z_register`
+See [`API.h5z_register`](@ref)
 """
 filter_func(::Type{F}) where {F<:Filter} = nothing
 
@@ -175,7 +220,7 @@ end
 """
     register_filter(::Type{F}) where F <: Filter
 
-Register the filter with the HDF5 library via API.h5z_register.
+Register the filter with the HDF5 library via [`API.h5z_register`](@ref).
 Also add F to the FILTERS dictionary.
 """
 function register_filter(::Type{F}) where F <: Filter
@@ -202,7 +247,11 @@ function register_filter(::Type{F}) where F <: Filter
     return nothing
 end
 
+"""
+    UnknownFilter(filter_id::API.H5Z_filter_t, flags::Cuint, data::Vector{Cuint}, name::String, config::Cuint)
 
+An unknown filter.
+"""
 struct UnknownFilter <: Filter
     filter_id::API.H5Z_filter_t
     flags::Cuint

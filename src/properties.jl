@@ -363,7 +363,7 @@ Properties used when creating a new `Dataset`. Inherits from
 The following options are shortcuts for the various filters, and are set-only.
 They will be appended to the filter pipeline in the order in which they appear
 
-- `blosc = true | level`: set the [`Filters.BloscFilter`](@ref) compression
+- `blosc = true | level`: set the [`H5Zblosc.BloscFilter`](@ref) compression
   filter; argument can be either `true`, or the compression level.
 
 - `deflate = true | level`: set the [`Filters.Deflate`](@ref) compression
@@ -623,6 +623,13 @@ superclass(::Type{GroupAccessProperties}) = LinkAccessProperties
 @propertyclass DatatypeAccessProperties API.H5P_DATATYPE_ACCESS
 superclass(::Type{DatatypeAccessProperties}) = LinkAccessProperties
 
+"""
+    DatasetAccessProperties(; kws...)
+
+Properties that control access to data in external, virtual, and chunked datasets.
+
+See [Dataset Access Properties](https://portal.hdfgroup.org/display/HDF5/Dataset+Access+Properties)
+"""
 @propertyclass DatasetAccessProperties API.H5P_DATASET_ACCESS
 superclass(::Type{DatasetAccessProperties}) = LinkAccessProperties
 

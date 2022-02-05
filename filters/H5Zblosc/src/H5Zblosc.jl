@@ -5,6 +5,7 @@ import Blosc
 using HDF5.API
 import HDF5.Filters: Filter, FilterPipeline
 import HDF5.Filters: filterid, register_filter, filtername, filter_func, filter_cfunc, set_local_func, set_local_cfunc
+import HDF5.Filters.Shuffle
 
 export H5Z_FILTER_BLOSC, blosc_filter, BloscFilter
 
@@ -124,7 +125,9 @@ The Blosc compression filter, using [Blosc.jl](https://github.com/JuliaIO/Blosc.
  - `compressor`: the compression algorithm. Call `Blosc.compressors()` for the available compressors.
 
 # External links
-- [What Is Blosc?](https://www.blosc.org/pages/blosc-in-depth/)
+* [What Is Blosc?](https://www.blosc.org/pages/blosc-in-depth/)
+* [Blosc HDF5 Filter ID 32001](https://portal.hdfgroup.org/display/support/Filters#Filters-32001)
+* [Blosc HDF5 Plugin Repository (C code)](https://github.com/Blosc/hdf5-blosc)
 """
 struct BloscFilter <: Filter
     blosc_version::Cuint

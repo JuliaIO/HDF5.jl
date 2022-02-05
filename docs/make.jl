@@ -1,5 +1,9 @@
 using Documenter
 using HDF5
+using H5Zblosc
+using H5Zbzip2
+using H5Zlz4
+using H5Zzstd
 using MPI  # needed to generate docs for parallel HDF5 API
 
 # Used in index.md to filter the autodocs list
@@ -17,7 +21,7 @@ not_low_level_api(::typeof(HDF5.API.h5t_get_tag)) = false
 
 makedocs(;
     sitename="HDF5.jl",
-    modules=[HDF5],
+    modules=[HDF5, H5Zblosc, H5Zbzip2, H5Zlz4, H5Zzstd],
     authors="Mustafa Mohamad <mus-m@outlook.com> and contributors",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
@@ -28,7 +32,9 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Interface" => [
+            "dataset.md",
             "properties.md",
+            "filters.md"
         ],
         "Low-level library bindings" => "api_bindings.md",
     ],

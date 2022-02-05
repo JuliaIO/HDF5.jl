@@ -556,6 +556,29 @@ function create_group(parent::Union{File,Group}, path::AbstractString,
 end
 
 # Setting dset creation properties with name/value pairs
+"""
+    create_dataset(parent, path, datatype, dataspace; properties...)
+
+# Arguments
+* `parent` - `File` or `Group`
+* `path` - String describing the path of the dataset within the HDF5 file
+* `datatype` - `Datatype` or `Type` or the dataset
+* `dataspace` - `Dataspace` or `Dims` of the dataset
+* `properties` - keyword name-value pairs set properties of the dataset
+
+# Keywords
+
+There are many keyword properties that can be set. Below are a few select keywords.
+* `chunk` - `Dims` describing the size of a chunk. Needed to apply filters.
+* `filters` - `AbstractVector{<: Filters.Filter}` describing the order of the filters to apply to the data. See [`Filters`](@ref)
+* `external` - `Tuple{AbstractString, Intger, Integer}` `(filepath, offset, filesize)` External dataset file location, data offset, and file size. See [`API.h5p_set_external`](@ref).
+
+See also
+* [`H5P`](@ref H5P)
+* [`DatasetCreateProperties`](@ref)
+* [`DatasetTransferProperties`](@ref)
+* [`DatasetAccessProperties`](@ref)
+"""
 function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace; pv...)
     haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
     dcpl = DatasetCreateProperties()
