@@ -96,7 +96,7 @@ for (mod, desc, urltail) in (
     apidocs *= """
         ---
 
-        ## [`$mod`](https://portal.hdfgroup.org/display/HDF5/$urltail) — $desc
+        ## [[`$mod`](https://portal.hdfgroup.org/display/HDF5/$urltail) — $desc](@id $mod)
         $index
         ```@docs
         $funcs

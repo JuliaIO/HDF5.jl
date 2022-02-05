@@ -22,7 +22,7 @@ documented here.
 
 ---
 
-## [`H5`](https://portal.hdfgroup.org/display/HDF5/Library) — General Library Functions
+## [[`H5`](https://portal.hdfgroup.org/display/HDF5/Library) — General Library Functions](@id H5)
 - [`h5_close`](@ref h5_close)
 - [`h5_dont_atexit`](@ref h5_dont_atexit)
 - [`h5_free_memory`](@ref h5_free_memory)
@@ -44,7 +44,7 @@ h5_set_free_list_limits
 
 ---
 
-## [`H5A`](https://portal.hdfgroup.org/display/HDF5/Attributes) — Attribute Interface
+## [[`H5A`](https://portal.hdfgroup.org/display/HDF5/Attributes) — Attribute Interface](@id H5A)
 - [`h5a_close`](@ref h5a_close)
 - [`h5a_create`](@ref h5a_create)
 - [`h5a_create_by_name`](@ref h5a_create_by_name)
@@ -84,7 +84,7 @@ h5a_write
 
 ---
 
-## [`H5D`](https://portal.hdfgroup.org/display/HDF5/Datasets) — Dataset Interface
+## [[`H5D`](https://portal.hdfgroup.org/display/HDF5/Datasets) — Dataset Interface](@id H5D)
 - [`h5d_close`](@ref h5d_close)
 - [`h5d_create`](@ref h5d_create)
 - [`h5d_extend`](@ref h5d_extend)
@@ -146,7 +146,7 @@ h5d_write_chunk
 
 ---
 
-## [`H5E`](https://portal.hdfgroup.org/display/HDF5/Error+Handling) — Error Interface
+## [[`H5E`](https://portal.hdfgroup.org/display/HDF5/Error+Handling) — Error Interface](@id H5E)
 - [`h5e_close_stack`](@ref h5e_close_stack)
 - [`h5e_get_auto`](@ref h5e_get_auto)
 - [`h5e_get_current_stack`](@ref h5e_get_current_stack)
@@ -166,7 +166,7 @@ h5e_walk
 
 ---
 
-## [`H5F`](https://portal.hdfgroup.org/display/HDF5/Files) — File Interface
+## [[`H5F`](https://portal.hdfgroup.org/display/HDF5/Files) — File Interface](@id H5F)
 - [`h5f_close`](@ref h5f_close)
 - [`h5f_create`](@ref h5f_create)
 - [`h5f_flush`](@ref h5f_flush)
@@ -198,7 +198,7 @@ h5f_start_swmr_write
 
 ---
 
-## [`H5G`](https://portal.hdfgroup.org/display/HDF5/Groups) — Group Interface
+## [[`H5G`](https://portal.hdfgroup.org/display/HDF5/Groups) — Group Interface](@id H5G)
 - [`h5g_close`](@ref h5g_close)
 - [`h5g_create`](@ref h5g_create)
 - [`h5g_get_create_plist`](@ref h5g_get_create_plist)
@@ -218,7 +218,7 @@ h5g_open
 
 ---
 
-## [`H5I`](https://portal.hdfgroup.org/display/HDF5/Identifiers) — Identifier Interface
+## [[`H5I`](https://portal.hdfgroup.org/display/HDF5/Identifiers) — Identifier Interface](@id H5I)
 - [`h5i_dec_ref`](@ref h5i_dec_ref)
 - [`h5i_get_file_id`](@ref h5i_get_file_id)
 - [`h5i_get_name`](@ref h5i_get_name)
@@ -238,7 +238,7 @@ h5i_is_valid
 
 ---
 
-## [`H5L`](https://portal.hdfgroup.org/display/HDF5/Links) — Link Interface
+## [[`H5L`](https://portal.hdfgroup.org/display/HDF5/Links) — Link Interface](@id H5L)
 - [`h5l_create_external`](@ref h5l_create_external)
 - [`h5l_create_hard`](@ref h5l_create_hard)
 - [`h5l_create_soft`](@ref h5l_create_soft)
@@ -262,7 +262,7 @@ h5l_move
 
 ---
 
-## [`H5O`](https://portal.hdfgroup.org/display/HDF5/Objects) — Object Interface
+## [[`H5O`](https://portal.hdfgroup.org/display/HDF5/Objects) — Object Interface](@id H5O)
 - [`h5o_close`](@ref h5o_close)
 - [`h5o_copy`](@ref h5o_copy)
 - [`h5o_get_info`](@ref h5o_get_info)
@@ -280,7 +280,7 @@ h5o_open_by_idx
 
 ---
 
-## [`H5P`](https://portal.hdfgroup.org/display/HDF5/Property+Lists) — Property Interface
+## [[`H5P`](https://portal.hdfgroup.org/display/HDF5/Property+Lists) — Property Interface](@id H5P)
 - [`h5p_close`](@ref h5p_close)
 - [`h5p_create`](@ref h5p_create)
 - [`h5p_get_alignment`](@ref h5p_get_alignment)
@@ -384,7 +384,7 @@ h5p_set_virtual
 
 ---
 
-## [`H5R`](https://portal.hdfgroup.org/display/HDF5/References) — Reference Interface
+## [[`H5R`](https://portal.hdfgroup.org/display/HDF5/References) — Reference Interface](@id H5R)
 - [`h5r_create`](@ref h5r_create)
 - [`h5r_dereference`](@ref h5r_dereference)
 - [`h5r_get_obj_type`](@ref h5r_get_obj_type)
@@ -398,7 +398,7 @@ h5r_get_region
 
 ---
 
-## [`H5S`](https://portal.hdfgroup.org/display/HDF5/Dataspaces) — Dataspace Interface
+## [[`H5S`](https://portal.hdfgroup.org/display/HDF5/Dataspaces) — Dataspace Interface](@id H5S)
 - [`h5s_close`](@ref h5s_close)
 - [`h5s_combine_select`](@ref h5s_combine_select)
 - [`h5s_copy`](@ref h5s_copy)
@@ -438,7 +438,7 @@ h5s_set_extent_simple
 
 ---
 
-## [`H5T`](https://portal.hdfgroup.org/display/HDF5/Datatypes) — Datatype Interface
+## [[`H5T`](https://portal.hdfgroup.org/display/HDF5/Datatypes) — Datatype Interface](@id H5T)
 - [`h5t_array_create`](@ref h5t_array_create)
 - [`h5t_close`](@ref h5t_close)
 - [`h5t_commit`](@ref h5t_commit)
@@ -520,7 +520,7 @@ h5t_vlen_create
 
 ---
 
-## [`H5Z`](https://portal.hdfgroup.org/display/HDF5/Filters) — Filter Interface
+## [[`H5Z`](https://portal.hdfgroup.org/display/HDF5/Filters) — Filter Interface](@id H5Z)
 - [`h5z_register`](@ref h5z_register)
 ```@docs
 h5z_register
@@ -528,7 +528,7 @@ h5z_register
 
 ---
 
-## [`H5DO`](https://portal.hdfgroup.org/display/HDF5/Optimizations) — Optimized Functions Interface
+## [[`H5DO`](https://portal.hdfgroup.org/display/HDF5/Optimizations) — Optimized Functions Interface](@id H5DO)
 - [`h5do_append`](@ref h5do_append)
 - [`h5do_write_chunk`](@ref h5do_write_chunk)
 ```@docs
@@ -538,7 +538,7 @@ h5do_write_chunk
 
 ---
 
-## [`H5DS`](https://portal.hdfgroup.org/display/HDF5/Dimension+Scales) — Dimension Scale Interface
+## [[`H5DS`](https://portal.hdfgroup.org/display/HDF5/Dimension+Scales) — Dimension Scale Interface](@id H5DS)
 - [`h5ds_attach_scale`](@ref h5ds_attach_scale)
 - [`h5ds_detach_scale`](@ref h5ds_detach_scale)
 - [`h5ds_get_label`](@ref h5ds_get_label)
@@ -562,7 +562,7 @@ h5ds_set_scale
 
 ---
 
-## [`H5LT`](https://portal.hdfgroup.org/display/HDF5/Lite) — Lite Interface
+## [[`H5LT`](https://portal.hdfgroup.org/display/HDF5/Lite) — Lite Interface](@id H5LT)
 - [`h5lt_dtype_to_text`](@ref h5lt_dtype_to_text)
 ```@docs
 h5lt_dtype_to_text
@@ -570,7 +570,7 @@ h5lt_dtype_to_text
 
 ---
 
-## [`H5TB`](https://portal.hdfgroup.org/display/HDF5/Tables) — Table Interface
+## [[`H5TB`](https://portal.hdfgroup.org/display/HDF5/Tables) — Table Interface](@id H5TB)
 - [`h5tb_append_records`](@ref h5tb_append_records)
 - [`h5tb_get_field_info`](@ref h5tb_get_field_info)
 - [`h5tb_get_table_info`](@ref h5tb_get_table_info)
