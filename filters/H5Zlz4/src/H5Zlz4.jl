@@ -185,6 +185,15 @@ end
 
 # Filters Module
 
+"""
+    Lz4Filter(blockSize)
+
+Apply LZ4 compression. `blockSize` is the main argument. The filter id is $H5Z_FILTER_LZ4.
+
+# External Links
+* [LZ4 HDF5 Filter ID 32004](https://portal.hdfgroup.org/display/support/Filters#Filters-32004)
+* [LZ4 HDF5 Plugin Repository (C code)](https://github.com/nexusformat/HDF5-External-Filter-Plugins/tree/master/LZ4)
+"""
 struct Lz4Filter <: Filter
     blockSize::Cuint
 end

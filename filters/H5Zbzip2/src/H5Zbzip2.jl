@@ -198,6 +198,15 @@ end
 
 # Filters Module
 
+"""
+    Bzip2Filter(blockSize100k)
+
+Apply Bzip2 compression. The filter id is $H5Z_FILTER_BZIP2.
+
+# External Links
+* [BZIP2 HDF5 Filter ID 307](https://portal.hdfgroup.org/display/support/Filters#Filters-307)
+* [PyTables Repository (C code)](https://github.com/PyTables/PyTables)
+"""
 struct Bzip2Filter <: Filter
     blockSize100k::Cuint
 end
