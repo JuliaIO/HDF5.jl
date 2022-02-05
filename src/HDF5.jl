@@ -573,7 +573,11 @@ There are many keyword properties that can be set. Below are a few select keywor
 * `filters` - `AbstractVector{<: Filters.Filter}` describing the order of the filters to apply to the data. See [`Filters`](@ref)
 * `external` - `Tuple{AbstractString, Intger, Integer}` `(filepath, offset, filesize)` External dataset file location, data offset, and file size. See [`API.h5p_set_external`](@ref).
 
-See also [`H5P`](@ref H5P).
+See also
+* [`H5P`](@ref H5P)
+* [`DatasetCreateProperties`](@ref)
+* [`DatasetTransferProperties`](@ref)
+* [`DatasetAccessProperties`](@ref)
 """
 function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace; pv...)
     haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))

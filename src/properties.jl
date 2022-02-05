@@ -623,6 +623,13 @@ superclass(::Type{GroupAccessProperties}) = LinkAccessProperties
 @propertyclass DatatypeAccessProperties API.H5P_DATATYPE_ACCESS
 superclass(::Type{DatatypeAccessProperties}) = LinkAccessProperties
 
+"""
+    DatasetAccessProperties(; kws...)
+
+Properties that control access to data in external, virtual, and chunked datasets.
+
+See [Dataset Access Properties](https://portal.hdfgroup.org/display/HDF5/Dataset+Access+Properties)
+"""
 @propertyclass DatasetAccessProperties API.H5P_DATASET_ACCESS
 superclass(::Type{DatasetAccessProperties}) = LinkAccessProperties
 

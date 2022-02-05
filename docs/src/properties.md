@@ -21,6 +21,7 @@ FileAccessProperties
 FileCreateProperties
 GroupCreateProperties
 DatasetCreateProperties
+DatasetAccessProperties
 DatasetTransferProperties
 LinkCreateProperties
 ObjectCreateProperties
