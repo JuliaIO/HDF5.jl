@@ -210,6 +210,10 @@ struct UnknownFilter <: Filter
     name::String
     config::Cuint
 end
+function UnknownFilter(filter_id, flags, data::Integer...)
+    UnknownFilter(filter_id, flags, Cuint[data...], "Unknown Filter with id $filter_id", 0)
+end
+UnknownFilter(t::Tuple) = UnknownFilter(t...)
 filterid(filter::UnknownFilter) = filter.filter_id
 filtername(filter::UnknownFilter) = filter.name
 filtername(::Type{UnknownFilter}) = "Unknown Filter"
@@ -293,6 +297,9 @@ function Base.append!(filters::FilterPipeline, extra)
     end
     return filters
 end
+function Base.append!(filters::FilterPipeline, extra::Tuple)
+    push!(filters, extra)
+end
 function Base.push!(p::FilterPipeline, f::F) where F <: Filter
     ref = Ref(f)
     GC.@preserve ref begin
@@ -304,6 +311,9 @@ function Base.push!(p::FilterPipeline, f::UnknownFilter)
     GC.@preserve f begin
         API.h5p_set_filter(p.plist, f.filter_id, f.flags, length(f.data), pointer(f.data))
     end
+end
+function Base.push!(p::FilterPipeline, f::Tuple)
+    push!(p, UnknownFilter(f))
 end
 
 include("builtin.jl")
