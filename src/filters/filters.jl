@@ -248,7 +248,7 @@ function register_filter(::Type{F}) where F <: Filter
 end
 
 """
-    UnknownFilter(filter_id::API.H5Z_filter_t, flags::Cuint, data::Vector{Cuint}, name::STring, config::Cuint)
+    UnknownFilter(filter_id::API.H5Z_filter_t, flags::Cuint, data::Vector{Cuint}, name::String, config::Cuint)
 
 An unknown filter.
 """
