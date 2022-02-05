@@ -2,6 +2,11 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.16.2
+
+* Minimum Blosc.jl version has been updated
+* Support for the  BITSHUFFLE option with the Blosc filter
+
 ## v0.16.1
 
 * Minor bug fix to the test suite to ensure package tests pass
