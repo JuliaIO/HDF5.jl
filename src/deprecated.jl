@@ -53,13 +53,6 @@ function set_shuffle!(p::Properties, ::Tuple{})
     set_shuffle!(p, true)
 end
 
-### Changed in PR #902
-import Base: append!, push!
-import .Filters: UnknownFilter
-@deprecate append!(filters::Filters.FilterPipeline, extra::NTuple{N, Integer}) where N append!(filters, [UnknownFilter(extra...)])
-@deprecate push!(p::Filters.FilterPipeline, f::NTuple{N, Integer}) where N push!(p, UnknownFilter(f...))
-@deprecate UnknownFilter(t::Tuple) UnknownFilter(t...)
-
 # see src/properties.jl for the following deprecated keywords
 # :compress
 # :fapl_mpio
@@ -68,3 +61,10 @@ import .Filters: UnknownFilter
 ### Changed in PR #887
 # see src/properties.jl for the following deprecated keyword
 # :filter
+
+### Changed in PR #902
+import Base: append!, push!
+import .Filters: UnknownFilter
+@deprecate append!(filters::Filters.FilterPipeline, extra::NTuple{N, Integer}) where N append!(filters, [UnknownFilter(extra...)])
+@deprecate push!(p::Filters.FilterPipeline, f::NTuple{N, Integer}) where N push!(p, UnknownFilter(f...))
+@deprecate UnknownFilter(t::Tuple) UnknownFilter(t...)
