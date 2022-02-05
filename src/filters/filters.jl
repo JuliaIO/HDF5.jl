@@ -213,7 +213,6 @@ end
 function UnknownFilter(filter_id, flags, data::Integer...)
     UnknownFilter(filter_id, flags, Cuint[data...], "Unknown Filter with id $filter_id", 0)
 end
-UnknownFilter(t::Tuple) = UnknownFilter(t...)
 filterid(filter::UnknownFilter) = filter.filter_id
 filtername(filter::UnknownFilter) = filter.name
 filtername(::Type{UnknownFilter}) = "Unknown Filter"
@@ -297,9 +296,6 @@ function Base.append!(filters::FilterPipeline, extra::Union{AbstractVector{<:Fil
     end
     return filters
 end
-function Base.append!(filters::FilterPipeline, extra::NTuple{N, Integer}) where N
-    push!(filters, extra)
-end
 function Base.push!(p::FilterPipeline, f::F) where F <: Filter
     ref = Ref(f)
     GC.@preserve ref begin
@@ -312,9 +308,14 @@ function Base.push!(p::FilterPipeline, f::UnknownFilter)
         API.h5p_set_filter(p.plist, f.filter_id, f.flags, length(f.data), pointer(f.data))
     end
 end
-function Base.push!(p::FilterPipeline, f::Tuple)
-    push!(p, UnknownFilter(f))
-end
+
+# Fix Issue #896
+import Base: append!, push!
+
+@deprecate append!(filters::FilterPipeline, extra::NTuple{N, Integer}) where N append!(filters, [UnknownFilter(extra...)])
+@deprecate push!(p::FilterPipeline, f::NTuple{N, Integer}) where N push!(p, UnknownFilter(f...))
+@deprecate UnknownFilter(t::Tuple) UnknownFilter(t...)
+# End Fix Issue #896
 
 include("builtin.jl")
 
