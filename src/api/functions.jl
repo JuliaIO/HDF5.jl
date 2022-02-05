@@ -1262,6 +1262,17 @@ function h5p_get_dxpl_mpio(dxpl_id, xfer_mode)
 end
 
 """
+    h5p_get_efile_prefix(dapl_id::hid_t, prefix::Ptr{UInt8}, size::Csize_t) -> Cssize_t
+
+See `libhdf5` documentation for [`H5Pget_efile_prefix`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_EFILE_PREFIX).
+"""
+function h5p_get_efile_prefix(dapl_id, prefix, size)
+    var"#status#" = ccall((:H5Pget_efile_prefix, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Csize_t), dapl_id, prefix, size)
+    var"#status#" < 0 && @h5error("Error getting external file prefix")
+    return var"#status#"
+end
+
+"""
     h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{hsize_t})
 
 See `libhdf5` documentation for [`H5Pget_external`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_EXTERNAL).
@@ -1522,6 +1533,17 @@ See `libhdf5` documentation for [`H5Pset_external`](https://portal.hdfgroup.org/
 function h5p_set_external(plist_id, name, offset, size)
     var"#status#" = ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Ptr{UInt8}, off_t, Csize_t), plist_id, name, offset, size)
     var"#status#" < 0 && @h5error("Error setting external property")
+    return nothing
+end
+
+"""
+    h5p_set_efile_prefix(plist_id::hid_t, prefix::Ptr{UInt8})
+
+See `libhdf5` documentation for [`H5Pset_efile_prefix`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_EFILE_PREFIX).
+"""
+function h5p_set_efile_prefix(plist_id, prefix)
+    var"#status#" = ccall((:H5Pset_efile_prefix, libhdf5), herr_t, (hid_t, Ptr{UInt8}), plist_id, prefix)
+    var"#status#" < 0 && @h5error("Error setting external file prefix")
     return nothing
 end
 

@@ -292,6 +292,7 @@ h5o_open_by_idx
 - [`h5p_get_driver`](@ref h5p_get_driver)
 - [`h5p_get_driver_info`](@ref h5p_get_driver_info)
 - [`h5p_get_dxpl_mpio`](@ref h5p_get_dxpl_mpio)
+- [`h5p_get_efile_prefix`](@ref h5p_get_efile_prefix)
 - [`h5p_get_external`](@ref h5p_get_external)
 - [`h5p_get_external_count`](@ref h5p_get_external_count)
 - [`h5p_get_fapl_mpio32`](@ref h5p_get_fapl_mpio32)
@@ -315,6 +316,7 @@ h5o_open_by_idx
 - [`h5p_set_create_intermediate_group`](@ref h5p_set_create_intermediate_group)
 - [`h5p_set_deflate`](@ref h5p_set_deflate)
 - [`h5p_set_dxpl_mpio`](@ref h5p_set_dxpl_mpio)
+- [`h5p_set_efile_prefix`](@ref h5p_set_efile_prefix)
 - [`h5p_set_external`](@ref h5p_set_external)
 - [`h5p_set_fapl_mpio32`](@ref h5p_set_fapl_mpio32)
 - [`h5p_set_fapl_mpio64`](@ref h5p_set_fapl_mpio64)
@@ -344,6 +346,7 @@ h5p_get_create_intermediate_group
 h5p_get_driver
 h5p_get_driver_info
 h5p_get_dxpl_mpio
+h5p_get_efile_prefix
 h5p_get_external
 h5p_get_external_count
 h5p_get_fapl_mpio32
@@ -367,6 +370,7 @@ h5p_set_chunk_cache
 h5p_set_create_intermediate_group
 h5p_set_deflate
 h5p_set_dxpl_mpio
+h5p_set_efile_prefix
 h5p_set_external
 h5p_set_fapl_mpio32
 h5p_set_fapl_mpio64

@@ -626,6 +626,19 @@ superclass(::Type{DatatypeAccessProperties}) = LinkAccessProperties
 @propertyclass DatasetAccessProperties API.H5P_DATASET_ACCESS
 superclass(::Type{DatasetAccessProperties}) = LinkAccessProperties
 
+class_propertynames(::Type{DatasetAccessProperties}) = (
+    :efile_prefix,
+)
+
+function class_getproperty(::Type{DatasetAccessProperties}, p::Properties, name::Symbol)
+    name === :efile_prefix ? API.h5p_get_efile_prefix(p) :
+    class_getproperty(superclass(DatasetAccessProperties), p, name)
+end
+function class_setproperty!(::Type{DatasetAccessProperties}, p::Properties, name::Symbol, val)
+    name === :efile_prefix ? API.h5p_set_efile_prefix(p, val) :
+    class_setproperty!(superclass(DatasetAccessProperties), p, name, val)
+end
+
 @propertyclass AttributeAccessProperties API.H5P_ATTRIBUTE_ACCESS
 superclass(::Type{AttributeAccessProperties}) = LinkAccessProperties
 
