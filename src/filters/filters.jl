@@ -291,13 +291,13 @@ function Base.delete!(filters::FilterPipeline, ::Type{F}) where {F<:Filter}
     API.h5p_remove_filter(filters.plist, filterid(F))
     return filters
 end
-function Base.append!(filters::FilterPipeline, extra)
+function Base.append!(filters::FilterPipeline, extra::Union{AbstractVector{<:Filter}, NTuple{N, Filter} where N})
     for filter in extra
         push!(filters, filter)
     end
     return filters
 end
-function Base.append!(filters::FilterPipeline, extra::Tuple)
+function Base.append!(filters::FilterPipeline, extra::NTuple{N, Integer}) where N
     push!(filters, extra)
 end
 function Base.push!(p::FilterPipeline, f::F) where F <: Filter
