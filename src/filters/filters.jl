@@ -46,7 +46,7 @@ See [test/filter.jl](https://github.com/JuliaIO/HDF5.jl/blob/master/test/filter.
 module Filters
 
 # builtin filters
-export Deflate, Shuffle, Fletcher32, Szip, NBit, ScaleOffset
+export Deflate, Shuffle, Fletcher32, Szip, NBit, ScaleOffset, ExternalFilter
 
 import ..HDF5: Properties, h5doc, API
 
@@ -249,8 +249,28 @@ end
 
 """
     UnknownFilter(filter_id::API.H5Z_filter_t, flags::Cuint, data::Vector{Cuint}, name::String, config::Cuint)
+    UnknownFilter(filter_id, flags, data::Integer...)
+    UnknownFilter(filter_id, data::AbstractVector{<:Integer} = Cuint[])
 
-An unknown filter.
+An unknown filter. This is used to encode filters in the pipeline that are not known to HDF5.jl.
+
+# Fields / Arguments
+* `filter_id` - (required) `Integer`` filter identifer.
+* `flags` -     (optional) bit vector describing general properties of the filter. Defaults to [`API.H5Z_FLAG_MANDATORY`](@ref)
+* `data` -      (optional) auxillary data for the filter. See [`cd_values`](@ref API.h5p_set_filter). Defaults to `Cuint[]`
+* `name` -      (optional) `String` describing the name of the filter. Defaults to "Unknown Filter with id [filter_id]"
+* `config` -    (optional) bit vector representing information about the filter regarding whether it is able to encode data, decode data, neither, or both. Defaults to `0`.
+
+# See also:
+* [`API.h5p_set_filter`](@ref)
+* [`H5Z_GET_FILTER_INFO`](https://portal.hdfgroup.org/display/HDF5/H5Z_GET_FILTER_INFO).
+* [Registered Filter Plugins](https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins)
+`flags` bits
+* [`API.H5Z_FLAG_OPTIONAL`](@ref)
+* [`API.H5Z_FLAG_MANDATORY`](@ref)
+`config` bits 
+* [`API.H5Z_FILTER_CONFIG_ENCODE_ENABLED`](@ref)
+* [`API.H5Z_FILTER_CONFIG_DECODE_ENABLED`](@ref)
 """
 struct UnknownFilter <: Filter
     filter_id::API.H5Z_filter_t
@@ -259,14 +279,27 @@ struct UnknownFilter <: Filter
     name::String
     config::Cuint
 end
+function UnknownFilter(filter_id, flags, data::AbstractVector{<:Integer})
+    UnknownFilter(filter_id, flags, Cuint.(data), "Unknown Filter with id $filter_id", 0)
+end
 function UnknownFilter(filter_id, flags, data::Integer...)
-    UnknownFilter(filter_id, flags, Cuint[data...], "Unknown Filter with id $filter_id", 0)
+    UnknownFilter(filter_id, flags, Cuint[data...])
+end
+function UnknownFilter(filter_id, data::AbstractVector{<:Integer} = Cuint[])
+    UnknownFilter(filter_id, API.H5Z_FLAG_MANDATORY, data)
 end
 filterid(filter::UnknownFilter) = filter.filter_id
 filtername(filter::UnknownFilter) = filter.name
 filtername(::Type{UnknownFilter}) = "Unknown Filter"
 encoder_present(::Type{UnknownFilter}) = false
 decoder_present(::Type{UnknownFilter}) = false
+
+"""
+    ExternalFilter
+
+Exported alias of [`UnknownFilter`](@ref)
+"""
+const ExternalFilter = UnknownFilter
 
 """
     FilterPipeline(plist::DatasetCreateProperties)
