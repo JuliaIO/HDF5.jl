@@ -303,7 +303,7 @@ function Base.getindex(f::FilterPipeline, ::Type{UnknownFilter}, i::Integer, cd_
     namebuf = Array{UInt8}(undef, 256)
     config = Ref{Cuint}()
     id = API.h5p_get_filter(f.plist, i-1, flags, cd_nelmts, cd_values, length(namebuf), namebuf, config)
-    if cd_nelmts[] < length(cd_values)
+    if cd_nelmts[] > length(cd_values)
         resize!(cd_values, cd_nelmts[])
         return getindex(f, UnknownFilter, i, cd_values)
     end
