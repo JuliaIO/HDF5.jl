@@ -108,4 +108,17 @@ h5open(fn, "r") do f
     @test f["filtshufdef"][] == data
 end
 
+# Filter Pipeline test for UnknownFilter
+FILTERS_backup = copy(HDF5.Filters.FILTERS)
+empty!(HDF5.Filters.FILTERS)
+h5open(fn, "w") do f
+    data = collect(1:128)
+    filter = UnknownFilter(H5Z_FILTER_LZ4, 0, Cuint[0, 2, 4, 6, 8, 10], "Unknown LZ4", 0)
+    ds, dt = create_dataset(f, "data", data, chunk=(32,), filter=filter)
+    dcpl = HDF5.get_create_properties(ds)
+    pipeline = HDF5.Filters.FilterPipeline(dcpl)
+    @test pipeline[1].data == filter.data
+end
+merge!(HDF5.Filters.FILTERS, FILTERS_backup)
+
 end # @testset "filter"
