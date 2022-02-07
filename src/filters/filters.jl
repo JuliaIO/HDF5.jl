@@ -208,7 +208,7 @@ than a `CFunction`` closure which may not work on all systems.
 function filter_cfunc(::Type{F}) where {F<:Filter}
     func = filter_func(F)
     if func === nothing
-        error("Filter function for $f must be defined via `filter_func`.")
+        error("Filter function for $F must be defined via `filter_func`.")
     end
     c_filter_func = @cfunction($func, Csize_t,
                                (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
@@ -389,6 +389,7 @@ function Base.push!(p::FilterPipeline, f::UnknownFilter)
     GC.@preserve f begin
         API.h5p_set_filter(p.plist, f.filter_id, f.flags, length(f.data), pointer(f.data))
     end
+    return p
 end
 
 include("builtin.jl")
