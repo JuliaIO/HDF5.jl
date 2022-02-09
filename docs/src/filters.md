@@ -123,6 +123,40 @@ end
 
 ### Creating a new Filter type
 
+Examining the [bitshuffle filter source code](https://github.com/kiyo-masui/bitshuffle/blob/0aee87e142c71407aa097c660727f2621c71c493/src/bshuf_h5filter.c#L47-L64) we see that three additional data components get prepended to the options. These are
+1. The major version
+2. The minor version
+3. The element size in bytes of the type via `H5Tget_size`.
+
+```julia
+import HDF5.Filters: FILTERS, Filter, FilterPipeline, filterid
+using HDF5.API
+
+const H5Z_BSHUF_ID = API.H5Z_filter_t(32008)
+struct BitShuffleFilter <: HDF5.Filters.Filter
+    major::Cuint
+    minor::Cuint
+    elem_size::Cuint
+    block_size::Cuint
+    compression::Cuint
+    BitShuffleFilter(block_size, compression) = new(0, 0, 0, block_size, compression)
+end
+# filterid is the only required method of the filter interface
+# since we are using an externally registered filter
+filterid(::Type{BitShuffleFilter}) = H5Z_BSHUF_ID
+FILTERS[H5Z_BSHUF_ID] = BitShuffleFilter
+
+function Base.push!(p::FilterPipeline, f::BitShuffleFilter)
+    ref = Ref(f)
+    GC.@preserve ref begin
+        API.h5p_set_filter(p.plist, H5Z_BSHUF_ID, API.H5Z_FLAG_OPTIONAL, 2, pointer_from_objref(ref) + sizeof(Cuint)*3)
+    end
+    return p
+end
+```
+
+Because the first three elements are not provided directly via `h5p_set_filter`, we also needed to implement a custom `Base.push!` into the `FilterPipeline`.
+
 ## Filter Interface
 
 ```@meta
