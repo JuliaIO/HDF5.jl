@@ -3,6 +3,8 @@ using HDF5.Filters
 using Test
 using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
 
+using HDF5.Filters: UnknownFilter
+
 @testset "filter" begin
 
 # Create a new file
