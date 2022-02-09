@@ -42,6 +42,9 @@ h5doc(name) = "[`$name`](https://portal.hdfgroup.org/display/HDF5/$(name))"
 
 include("api/api.jl")
 include("properties.jl")
+@static if Sys.iswindows()
+    include("windows.jl")
+end
 
 ### Generic H5DataStore interface ###
 
@@ -1627,12 +1630,17 @@ For the second condition to be true, MPI.jl must be imported before HDF5.jl.
 has_parallel() = HAS_PARALLEL[]
 
 function __init__()
-    API.check_deps()
-
     # disable file locking as that can cause problems with mmap'ing
     if !haskey(ENV, "HDF5_USE_FILE_LOCKING")
         ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
     end
+
+    # This must be called before using HDF5
+    @static if Sys.iswindows()
+        win_sync_hdf5_env()
+    end
+
+    API.check_deps()
 
     # use our own error handling machinery (i.e. turn off automatic error printing)
     API.h5e_set_auto(API.H5E_DEFAULT, C_NULL, C_NULL)
