@@ -185,3 +185,7 @@ function write_chunk(dataset_id, index::Integer, buf::Union{DenseArray,Base.Fast
     offset = [reverse(get_chunk_offset(dataset_id, index))...]
     write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
 end
+
+# Accept a Filter subtype as an argument
+API.h5z_get_filter_info(::Type{F}) where F <: Filters.Filter = API.h5z_get_filter_info(Filters.filterid(F))
+API.h5z_filter_avail(::Type{F}) where F <: Filters.Filter = API.h5z_filter_avail(Filters.filterid(F))

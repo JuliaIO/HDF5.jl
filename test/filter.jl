@@ -123,4 +123,20 @@ h5open(fn, "w") do f
 end
 merge!(HDF5.Filters.FILTERS, FILTERS_backup)
 
+@test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_DEFLATE)
+@test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_FLETCHER32)
+@test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_NBIT)
+@test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SCALEOFFSET)
+@test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SHUFFLE)
+@test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
+@test HDF5.API.h5z_filter_avail(H5Z_FILTER_BZIP2)
+@test HDF5.API.h5z_filter_avail(H5Z_FILTER_LZ4)
+@test HDF5.API.h5z_filter_avail(H5Z_FILTER_ZSTD)
+@test HDF5.API.h5z_filter_avail(H5Z_FILTER_BLOSC)
+HDF5.API.h5z_unregister(H5Z_FILTER_LZ4)
+HDF5.Filters.register_filter(H5Zlz4.Lz4Filter)
+@test HDF5.API.h5z_filter_avail(H5Z_FILTER_LZ4)
+@test HDF5.API.h5z_get_filter_info(H5Z_FILTER_LZ4) == 3
+@test HDF5.API.h5z_get_filter_info(Lz4Filter) == 3
+
 end # @testset "filter"

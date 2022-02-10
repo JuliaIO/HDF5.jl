@@ -402,6 +402,30 @@ function h5p_get_class_name(pcid)
 end
 
 ###
+### Plugin Interface
+###
+
+function h5pl_get_loading_state()
+    plugin_control_mask = Ref{Cuint}()
+    h5pl_get_loading_state(plugin_control_mask)
+    plugin_control_mask[]
+end
+
+function h5pl_get(index = 0)
+    buf_size = Csize_t(1024)
+    path_buf = Vector{Cchar}(undef, buf_size)
+    h5pl_get(index, path_buf, buf_size)
+    unsafe_string(pointer(path_buf))
+end
+
+function h5pl_size()
+    num_paths = Ref{Cuint}()
+    h5pl_size(num_paths)
+    num_paths[]
+end
+
+
+###
 ### Reference Interface
 ###
 
@@ -540,6 +564,11 @@ end
 ### Filter Interface
 ###
 
+function h5z_get_filter_info(filter::H5Z_filter_t)
+    ref = Ref{Cuint}()
+    h5z_get_filter_info(filter, ref)
+    ref[]
+end
 
 
 ###
