@@ -564,7 +564,7 @@ end
 ### Filter Interface
 ###
 
-function h5z_get_filter_info(filter::H5Z_filter_t)
+function h5z_get_filter_info(filter)
     ref = Ref{Cuint}()
     h5z_get_filter_info(filter, ref)
     ref[]

@@ -135,8 +135,11 @@ merge!(HDF5.Filters.FILTERS, FILTERS_backup)
 @test HDF5.API.h5z_filter_avail(H5Z_FILTER_BLOSC)
 HDF5.API.h5z_unregister(H5Z_FILTER_LZ4)
 HDF5.Filters.register_filter(H5Zlz4.Lz4Filter)
-@test HDF5.API.h5z_filter_avail(H5Z_FILTER_LZ4)
-@test HDF5.API.h5z_get_filter_info(H5Z_FILTER_LZ4) == 3
-@test HDF5.API.h5z_get_filter_info(Lz4Filter) == 3
+@test HDF5.is_filter_available(H5Z_FILTER_LZ4)
+@test HDF5.is_filter_available(Lz4Filter)
+@test HDF5.can_filter_encode(H5Z_FILTER_LZ4)
+@test HDF5.can_filter_decode(H5Z_FILTER_LZ4)
+@test HDF5.can_filter_encode(Lz4Filter)
+@test HDF5.can_filter_decode(Lz4Filter)
 
 end # @testset "filter"
