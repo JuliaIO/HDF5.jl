@@ -128,7 +128,12 @@ merge!(HDF5.Filters.FILTERS, FILTERS_backup)
 @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_NBIT)
 @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SCALEOFFSET)
 @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SHUFFLE)
-@test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
+@static if Sys.iswindows()
+    @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
+else
+    # These are missing in the macOS and Linux JLLs
+    @test_broken HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
+end
 @test HDF5.API.h5z_filter_avail(H5Z_FILTER_BZIP2)
 @test HDF5.API.h5z_filter_avail(H5Z_FILTER_LZ4)
 @test HDF5.API.h5z_filter_avail(H5Z_FILTER_ZSTD)
