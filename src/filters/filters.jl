@@ -272,8 +272,10 @@ decoder_present(::Type{UnknownFilter}) = false
     ExternalFilter
 
 External filter type. Alias for `UnkownFilter` (see related documentation).
-Intended to support arbitrary, unregistered, external filters. Allows the creation of new filters using
-internal/proprietary filters without subtyping `HDF5.Filters.Filter` (the recommended approach). 
+Intended to support arbitrary, unregistered, external filters. Allows the
+quick creation of filters using internal/proprietary filters without subtyping
+`HDF5.Filters.Filter`.
+Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`.
 """
 const ExternalFilter = UnknownFilter
 
