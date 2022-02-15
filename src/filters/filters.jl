@@ -269,6 +269,17 @@ encoder_present(::Type{UnknownFilter}) = false
 decoder_present(::Type{UnknownFilter}) = false
 
 """
+    ExternalFilter
+
+External filter type. Alias for `UnkownFilter` (see related documentation).
+Intended to support arbitrary, unregistered, external filters. Allows the
+quick creation of filters using internal/proprietary filters without subtyping
+`HDF5.Filters.Filter`.
+Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`.
+"""
+const ExternalFilter = UnknownFilter
+
+"""
     FilterPipeline(plist::DatasetCreateProperties)
 
 The filter pipeline associated with `plist`. Acts like a `AbstractVector{Filter}`,
