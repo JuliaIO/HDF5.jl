@@ -1213,6 +1213,12 @@ end
 
 fn_external = GenericString(tempname())
 dset = HDF5.create_external_dataset(hfile, "ext", fn_external, Int, (10,20))
+dcpl = HDF5.get_create_properties(dset)
+@test HDF5.API.h5p_get_external_count(dcpl) == 1
+ext_prop = HDF5.API.h5p_get_external(dcpl)
+@test ext_prop.name == fn_external
+@test ext_prop.offset == 0
+@test ext_prop.size == 10*20*sizeof(Int)
 
 close(hfile)
 

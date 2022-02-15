@@ -297,7 +297,11 @@ decoder_present(::Type{UnknownFilter}) = false
 """
     ExternalFilter
 
-Exported alias of [`UnknownFilter`](@ref)
+External filter type. Alias for `UnkownFilter` (see related documentation).
+Intended to support arbitrary, unregistered, external filters. Allows the
+quick creation of filters using internal/proprietary filters without subtyping
+`HDF5.Filters.Filter`.
+Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`.
 """
 const ExternalFilter = UnknownFilter
 
@@ -336,7 +340,7 @@ function Base.getindex(f::FilterPipeline, ::Type{UnknownFilter}, i::Integer, cd_
     namebuf = Array{UInt8}(undef, 256)
     config = Ref{Cuint}()
     id = API.h5p_get_filter(f.plist, i-1, flags, cd_nelmts, cd_values, length(namebuf), namebuf, config)
-    if cd_nelmts[] < length(cd_values)
+    if cd_nelmts[] > length(cd_values)
         resize!(cd_values, cd_nelmts[])
         return getindex(f, UnknownFilter, i, cd_values)
     end
@@ -392,6 +396,12 @@ function Base.push!(p::FilterPipeline, f::UnknownFilter)
     return p
 end
 
+# Convert a Filter to an Integer subtype using filterid
+function Base.convert(::Type{I}, ::Type{F}) where {I <: Integer, F <: Filter}
+    Base.convert(I, filterid(F))
+end
+
 include("builtin.jl")
+include("filters_midlevel.jl")
 
 end # module

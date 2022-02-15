@@ -1262,6 +1262,39 @@ function h5p_get_dxpl_mpio(dxpl_id, xfer_mode)
 end
 
 """
+    h5p_get_efile_prefix(dapl_id::hid_t, prefix::Ptr{UInt8}, size::Csize_t) -> Cssize_t
+
+See `libhdf5` documentation for [`H5Pget_efile_prefix`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_EFILE_PREFIX).
+"""
+function h5p_get_efile_prefix(dapl_id, prefix, size)
+    var"#status#" = ccall((:H5Pget_efile_prefix, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Csize_t), dapl_id, prefix, size)
+    var"#status#" < 0 && @h5error("Error getting external file prefix")
+    return var"#status#"
+end
+
+"""
+    h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Pget_external`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_EXTERNAL).
+"""
+function h5p_get_external(plist, idx, name_size, name, offset, size)
+    var"#status#" = ccall((:H5Pget_external, libhdf5), herr_t, (hid_t, Cuint, Csize_t, Ptr{Cuchar}, Ptr{off_t}, Ptr{hsize_t}), plist, idx, name_size, name, offset, size)
+    var"#status#" < 0 && @h5error("Error getting external file properties")
+    return nothing
+end
+
+"""
+    h5p_get_external_count(plist::hid_t) -> Int
+
+See `libhdf5` documentation for [`H5Pget_external_count`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_EXTERNAL_COUNT).
+"""
+function h5p_get_external_count(plist)
+    var"#status#" = ccall((:H5Pget_external_count, libhdf5), Cint, (hid_t,), plist)
+    var"#status#" < 0 && @h5error("Error getting external count")
+    return Int(var"#status#")
+end
+
+"""
     h5p_get_fapl_mpio32(fapl_id::hid_t, comm::Ptr{Hmpih32}, info::Ptr{Hmpih32})
 
 See `libhdf5` documentation for [`H5Pget_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MPIO32).
@@ -1493,13 +1526,24 @@ function h5p_set_dxpl_mpio(dxpl_id, xfer_mode)
 end
 
 """
-    h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::Int, size::Csize_t)
+    h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::off_t, size::Csize_t)
 
 See `libhdf5` documentation for [`H5Pset_external`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_EXTERNAL).
 """
 function h5p_set_external(plist_id, name, offset, size)
-    var"#status#" = ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Int, Csize_t), plist_id, name, offset, size)
+    var"#status#" = ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Ptr{UInt8}, off_t, Csize_t), plist_id, name, offset, size)
     var"#status#" < 0 && @h5error("Error setting external property")
+    return nothing
+end
+
+"""
+    h5p_set_efile_prefix(plist_id::hid_t, prefix::Ptr{UInt8})
+
+See `libhdf5` documentation for [`H5Pset_efile_prefix`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_EFILE_PREFIX).
+"""
+function h5p_set_efile_prefix(plist_id, prefix)
+    var"#status#" = ccall((:H5Pset_efile_prefix, libhdf5), herr_t, (hid_t, Ptr{UInt8}), plist_id, prefix)
+    var"#status#" < 0 && @h5error("Error setting external file prefix")
     return nothing
 end
 
@@ -1676,6 +1720,105 @@ See `libhdf5` documentation for [`H5Pset_virtual`](https://portal.hdfgroup.org/d
 function h5p_set_virtual(dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
     var"#status#" = ccall((:H5Pset_virtual, libhdf5), herr_t, (hid_t, hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t), dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
     var"#status#" < 0 && @h5error("Error setting virtual")
+    return nothing
+end
+
+"""
+    h5pl_set_loading_state(plugin_control_mask::Cuint)
+
+See `libhdf5` documentation for [`H5PLset_loading_state`](https://portal.hdfgroup.org/display/HDF5/H5PL_SET_LOADING_STATE).
+"""
+function h5pl_set_loading_state(plugin_control_mask)
+    var"#status#" = ccall((:H5PLset_loading_state, libhdf5), herr_t, (Cuint,), plugin_control_mask)
+    var"#status#" < 0 && @h5error("Error setting plugin loading state")
+    return nothing
+end
+
+"""
+    h5pl_get_loading_state(plugin_control_mask::Ptr{Cuint})
+
+See `libhdf5` documentation for [`H5PLget_loading_state`](https://portal.hdfgroup.org/display/HDF5/H5PL_GET_LOADING_STATE).
+"""
+function h5pl_get_loading_state(plugin_control_mask)
+    var"#status#" = ccall((:H5PLget_loading_state, libhdf5), herr_t, (Ptr{Cuint},), plugin_control_mask)
+    var"#status#" < 0 && @h5error("Error getting plugin loading state")
+    return nothing
+end
+
+"""
+    h5pl_append(search_path::Ptr{Cchar})
+
+See `libhdf5` documentation for [`H5PLappend`](https://portal.hdfgroup.org/display/HDF5/H5PL_APPEND).
+"""
+function h5pl_append(search_path)
+    var"#status#" = ccall((:H5PLappend, libhdf5), herr_t, (Ptr{Cchar},), search_path)
+    var"#status#" < 0 && @h5error("Error appending plugin path")
+    return nothing
+end
+
+"""
+    h5pl_prepend(search_path::Ptr{Cchar})
+
+See `libhdf5` documentation for [`H5PLprepend`](https://portal.hdfgroup.org/display/HDF5/H5PL_PREPEND).
+"""
+function h5pl_prepend(search_path)
+    var"#status#" = ccall((:H5PLprepend, libhdf5), herr_t, (Ptr{Cchar},), search_path)
+    var"#status#" < 0 && @h5error("Error prepending plugin path")
+    return nothing
+end
+
+"""
+    h5pl_replace(search_path::Ptr{Cchar}, index::Cuint)
+
+See `libhdf5` documentation for [`H5PLreplace`](https://portal.hdfgroup.org/display/HDF5/H5PL_REPLACE).
+"""
+function h5pl_replace(search_path, index)
+    var"#status#" = ccall((:H5PLreplace, libhdf5), herr_t, (Ptr{Cchar}, Cuint), search_path, index)
+    var"#status#" < 0 && @h5error("Error replacing plugin path")
+    return nothing
+end
+
+"""
+    h5pl_insert(search_path::Ptr{Cchar}, index::Cuint)
+
+See `libhdf5` documentation for [`H5PLinsert`](https://portal.hdfgroup.org/display/HDF5/H5PL_INSERT).
+"""
+function h5pl_insert(search_path, index)
+    var"#status#" = ccall((:H5PLinsert, libhdf5), herr_t, (Ptr{Cchar}, Cuint), search_path, index)
+    var"#status#" < 0 && @h5error("Error inserting plugin path")
+    return nothing
+end
+
+"""
+    h5pl_remove(index::Cuint)
+
+See `libhdf5` documentation for [`H5PLremove`](https://portal.hdfgroup.org/display/HDF5/H5PL_REMOVE).
+"""
+function h5pl_remove(index)
+    var"#status#" = ccall((:H5PLremove, libhdf5), herr_t, (Cuint,), index)
+    var"#status#" < 0 && @h5error("Error removing plugin path")
+    return nothing
+end
+
+"""
+    h5pl_get(index::Cuint, path_buf::Ptr{Cchar}, buf_size::Csize_t) -> Cssize_t
+
+See `libhdf5` documentation for [`H5PLget`](https://portal.hdfgroup.org/display/HDF5/H5PL_GET).
+"""
+function h5pl_get(index, path_buf, buf_size)
+    var"#status#" = ccall((:H5PLget, libhdf5), Cssize_t, (Cuint, Ptr{Cchar}, Csize_t), index, path_buf, buf_size)
+    var"#status#" < 0 && @h5error("Error getting plugin path")
+    return var"#status#"
+end
+
+"""
+    h5pl_size(num_paths::Ptr{Cuint})
+
+See `libhdf5` documentation for [`H5PLsize`](https://portal.hdfgroup.org/display/HDF5/H5PL_SIZE).
+"""
+function h5pl_size(num_paths)
+    var"#status#" = ccall((:H5PLsize, libhdf5), herr_t, (Ptr{Cuint},), num_paths)
+    var"#status#" < 0 && @h5error("Error in getting number of plugins paths")
     return nothing
 end
 
@@ -2525,6 +2668,39 @@ See `libhdf5` documentation for [`H5Zregister`](https://portal.hdfgroup.org/disp
 function h5z_register(filter_class)
     var"#status#" = ccall((:H5Zregister, libhdf5), herr_t, (Ref{H5Z_class_t},), filter_class)
     var"#status#" < 0 && @h5error("Unable to register new filter")
+    return nothing
+end
+
+"""
+    h5z_unregister(id::H5Z_filter_t)
+
+See `libhdf5` documentation for [`H5Zunregister`](https://portal.hdfgroup.org/display/HDF5/H5Z_UNREGISTER).
+"""
+function h5z_unregister(id)
+    var"#status#" = ccall((:H5Zunregister, libhdf5), herr_t, (H5Z_filter_t,), id)
+    var"#status#" < 0 && @h5error("Unable to unregister filter")
+    return nothing
+end
+
+"""
+    h5z_filter_avail(id::H5Z_filter_t) -> Bool
+
+See `libhdf5` documentation for [`H5Zfilter_avail`](https://portal.hdfgroup.org/display/HDF5/H5Z_FILTER_AVAIL).
+"""
+function h5z_filter_avail(id)
+    var"#status#" = ccall((:H5Zfilter_avail, libhdf5), htri_t, (H5Z_filter_t,), id)
+    var"#status#" < 0 && @h5error("Unable to get check filter availability")
+    return var"#status#" > 0
+end
+
+"""
+    h5z_get_filter_info(filter::H5Z_filter_t, filter_config_flags::Ptr{Cuint})
+
+See `libhdf5` documentation for [`H5Zget_filter_info`](https://portal.hdfgroup.org/display/HDF5/H5Z_GET_FILTER_INFO).
+"""
+function h5z_get_filter_info(filter, filter_config_flags)
+    var"#status#" = ccall((:H5Zget_filter_info, libhdf5), herr_t, (H5Z_filter_t, Ptr{Cuint}), filter, filter_config_flags)
+    var"#status#" < 0 && @h5error("Error getting filter information")
     return nothing
 end
 

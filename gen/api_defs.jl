@@ -179,6 +179,9 @@
 @bind h5p_get_driver(plist_id::hid_t)::hid_t "Error getting driver identifier"
 @bind h5p_get_driver_info(plist_id::hid_t)::Ptr{Cvoid} "Error getting driver info"
 @bind h5p_get_dxpl_mpio(dxpl_id::hid_t, xfer_mode::Ptr{Cint})::herr_t "Error getting MPIO transfer mode"
+@bind h5p_get_efile_prefix(dapl_id::hid_t, prefix::Ptr{UInt8}, size::Csize_t)::Cssize_t "Error getting external file prefix"
+@bind h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{hsize_t})::herr_t "Error getting external file properties"
+@bind h5p_get_external_count(plist::hid_t)::Cint "Error getting external count"
 @bind h5p_get_fapl_mpio32(fapl_id::hid_t, comm::Ptr{Hmpih32}, info::Ptr{Hmpih32})::herr_t "Error getting MPIO properties"
 @bind h5p_get_fapl_mpio64(fapl_id::hid_t, comm::Ptr{Hmpih64}, info::Ptr{Hmpih64})::herr_t "Error getting MPIO properties"
 @bind h5p_get_fclose_degree(fapl_id::hid_t, fc_degree::Ref{Cint})::herr_t "Error getting close degree"
@@ -200,7 +203,8 @@
 @bind h5p_set_create_intermediate_group(plist_id::hid_t, setting::Cuint)::herr_t "Error setting create intermediate group"
 @bind h5p_set_deflate(plist_id::hid_t, setting::Cuint)::herr_t "Error setting compression method and level (deflate)"
 @bind h5p_set_dxpl_mpio(dxpl_id::hid_t, xfer_mode::Cint)::herr_t "Error setting MPIO transfer mode"
-@bind h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::Int, size::Csize_t)::herr_t "Error setting external property"
+@bind h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::off_t, size::Csize_t)::herr_t "Error setting external property"
+@bind h5p_set_efile_prefix(plist_id::hid_t, prefix::Ptr{UInt8})::herr_t "Error setting external file prefix"
 @bind h5p_set_fapl_mpio32(fapl_id::hid_t, comm::Hmpih32, info::Hmpih32)::herr_t "Error setting MPIO properties"
 @bind h5p_set_fapl_mpio64(fapl_id::hid_t, comm::Hmpih64, info::Hmpih64)::herr_t "Error setting MPIO properties"
 @bind h5p_set_fapl_sec2(fapl_id::hid_t)::herr_t "Error setting Sec2 properties"
@@ -217,6 +221,20 @@
 @bind h5p_set_szip(plist_id::hid_t, options_mask::Cuint, pixels_per_block::Cuint)::herr_t "Error enabling szip filter"
 @bind h5p_set_userblock(plist_id::hid_t, len::hsize_t)::herr_t "Error setting userblock"
 @bind h5p_set_virtual(dcpl_id::hid_t, vspace_id::hid_t, src_file_name::Ptr{UInt8}, src_dset_name::Ptr{UInt8}, src_space_id::hid_t)::herr_t "Error setting virtual"
+
+###
+### Plugin Interface
+###
+
+@bind h5pl_set_loading_state(plugin_control_mask::Cuint)::herr_t "Error setting plugin loading state"
+@bind h5pl_get_loading_state(plugin_control_mask::Ptr{Cuint})::herr_t "Error getting plugin loading state"
+@bind h5pl_append(search_path::Ptr{Cchar})::herr_t "Error appending plugin path"
+@bind h5pl_prepend(search_path::Ptr{Cchar})::herr_t "Error prepending plugin path"
+@bind h5pl_replace(search_path::Ptr{Cchar}, index::Cuint)::herr_t "Error replacing plugin path"
+@bind h5pl_insert(search_path::Ptr{Cchar}, index::Cuint)::herr_t "Error inserting plugin path"
+@bind h5pl_remove(index::Cuint)::herr_t "Error removing plugin path"
+@bind h5pl_get(index::Cuint, path_buf::Ptr{Cchar}, buf_size::Csize_t)::Cssize_t "Error getting plugin path"
+@bind h5pl_size(num_paths::Ptr{Cuint})::herr_t "Error in getting number of plugins paths"
 
 ###
 ### Reference Interface
@@ -340,7 +358,9 @@
 ###
 
 @bind h5z_register(filter_class::Ref{H5Z_class_t})::herr_t "Unable to register new filter"
-
+@bind h5z_unregister(id::H5Z_filter_t)::herr_t "Unable to unregister filter"
+@bind h5z_filter_avail(id::H5Z_filter_t)::htri_t "Unable to get check filter availability"
+@bind h5z_get_filter_info(filter::H5Z_filter_t, filter_config_flags::Ptr{Cuint})::herr_t "Error getting filter information"
 
 ###
 ### File driver interface

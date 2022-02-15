@@ -430,7 +430,7 @@ class_propertynames(::Type{DatasetCreateProperties}) = (
 function class_getproperty(::Type{DatasetCreateProperties}, p::Properties, name::Symbol)
     name === :alloc_time  ? get_alloc_time(p) :
     name === :chunk       ? get_chunk(p) :
-    #name === :external    ? API.h5p_get_external(p) :
+    name === :external    ? API.h5p_get_external(p) :
     name === :filters     ? get_filters(p) :
     name === :layout      ? get_layout(p) :
     # deprecated
@@ -632,6 +632,19 @@ See [Dataset Access Properties](https://portal.hdfgroup.org/display/HDF5/Dataset
 """
 @propertyclass DatasetAccessProperties API.H5P_DATASET_ACCESS
 superclass(::Type{DatasetAccessProperties}) = LinkAccessProperties
+
+class_propertynames(::Type{DatasetAccessProperties}) = (
+    :efile_prefix,
+)
+
+function class_getproperty(::Type{DatasetAccessProperties}, p::Properties, name::Symbol)
+    name === :efile_prefix ? API.h5p_get_efile_prefix(p) :
+    class_getproperty(superclass(DatasetAccessProperties), p, name)
+end
+function class_setproperty!(::Type{DatasetAccessProperties}, p::Properties, name::Symbol, val)
+    name === :efile_prefix ? API.h5p_set_efile_prefix(p, val) :
+    class_setproperty!(superclass(DatasetAccessProperties), p, name, val)
+end
 
 @propertyclass AttributeAccessProperties API.H5P_ATTRIBUTE_ACCESS
 superclass(::Type{AttributeAccessProperties}) = LinkAccessProperties
