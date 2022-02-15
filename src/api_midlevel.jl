@@ -185,33 +185,3 @@ function write_chunk(dataset_id, index::Integer, buf::Union{DenseArray,Base.Fast
     offset = [reverse(get_chunk_offset(dataset_id, index))...]
     write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
 end
-
-"""
-    is_filter_available(filter_or_id)
-
-Given a subtype of `Filters.Filter` or the filter ID number as an integer,
-return `true` if the filter is available and `false` otherwise.
-"""
-is_filter_available(filter_or_id) = API.h5z_filter_avail(filter_or_id)
-
-"""
-    can_filter_encode(filter_or_id)
-
-Given a subtype of `Filters.Filter` or the filter ID number as an integer,
-return `true` if the filter can encode or compress data.
-"""
-function can_filter_encode(filter_or_id)
-    info = API.h5z_get_filter_info(filter_or_id)
-    return info & API.H5Z_FILTER_CONFIG_ENCODE_ENABLED != 0
-end
-
-"""
-    can_filter_decode(filter_or_id)
-
-Given a subtype of `Filters.Filter` or the filter ID number as an integer,
-return `true` if the filter can decode or decompress data.
-"""
-function can_filter_decode(filter_or_id)
-    info = API.h5z_get_filter_info(filter_or_id)
-    return info & API.H5Z_FILTER_CONFIG_DECODE_ENABLED != 0
-end

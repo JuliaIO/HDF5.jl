@@ -3,7 +3,7 @@ using HDF5.Filters
 using Test
 using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
 
-using HDF5.Filters: UnknownFilter
+using HDF5.Filters: UnknownFilter, isavailable, isencoderenabled, isdecoderenabled
 
 @testset "filter" begin
 
@@ -140,11 +140,11 @@ end
 @test HDF5.API.h5z_filter_avail(H5Z_FILTER_BLOSC)
 HDF5.API.h5z_unregister(H5Z_FILTER_LZ4)
 HDF5.Filters.register_filter(H5Zlz4.Lz4Filter)
-@test HDF5.is_filter_available(H5Z_FILTER_LZ4)
-@test HDF5.is_filter_available(Lz4Filter)
-@test HDF5.can_filter_encode(H5Z_FILTER_LZ4)
-@test HDF5.can_filter_decode(H5Z_FILTER_LZ4)
-@test HDF5.can_filter_encode(Lz4Filter)
-@test HDF5.can_filter_decode(Lz4Filter)
+@test isavailable(H5Z_FILTER_LZ4)
+@test isavailable(Lz4Filter)
+@test isencoderenabled(H5Z_FILTER_LZ4)
+@test isdecoderenabled(H5Z_FILTER_LZ4)
+@test isencoderenabled(Lz4Filter)
+@test isdecoderenabled(Lz4Filter)
 
 end # @testset "filter"

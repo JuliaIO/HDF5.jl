@@ -364,5 +364,6 @@ function Base.convert(::Type{I}, ::Type{F}) where {I <: Integer, F <: Filter}
 end
 
 include("builtin.jl")
+include("filters_midlevel.jl")
 
 end # module
