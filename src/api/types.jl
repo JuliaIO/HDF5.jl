@@ -258,6 +258,12 @@ const H5P_OBJECT_COPY      = _read_const(:H5P_CLS_OBJECT_COPY_ID_g)
 const H5P_LINK_CREATE      = _read_const(:H5P_CLS_LINK_CREATE_ID_g)
 const H5P_LINK_ACCESS      = _read_const(:H5P_CLS_LINK_ACCESS_ID_g)
 
+# Plugin constants, H5PL_type_t
+const H5PL_TYPE_ERROR = -1
+const H5PL_TYPE_FILTER = 0
+const H5PL_TYPE_VOL = 1
+const H5PL_TYPE_NONE = 2
+
 # Reference constants
 const H5R_OBJECT         = 0
 const H5R_DATASET_REGION = 1
@@ -377,3 +383,6 @@ const H5Z_FILTER_SCALEOFFSET = H5Z_filter_t(6)
 const H5_SZIP_EC_OPTION_MASK = Cuint(4)
 const H5_SZIP_NN_OPTION_MASK = Cuint(32)
 const H5_SZIP_MAX_PIXELS_PER_BLOCK = Cuint(32)
+
+const H5Z_FILTER_CONFIG_ENCODE_ENABLED = 0x0001
+const H5Z_FILTER_CONFIG_DECODE_ENABLED = 0x0002

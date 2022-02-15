@@ -3,7 +3,7 @@ using HDF5.Filters
 using Test
 using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
 
-using HDF5.Filters: UnknownFilter
+using HDF5.Filters: UnknownFilter, isavailable, isencoderenabled, isdecoderenabled
 
 @testset "filter" begin
 
@@ -122,5 +122,29 @@ h5open(fn, "w") do f
     @test pipeline[1].data == filter.data
 end
 merge!(HDF5.Filters.FILTERS, FILTERS_backup)
+
+@test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_DEFLATE)
+@test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_FLETCHER32)
+@test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_NBIT)
+@test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SCALEOFFSET)
+@test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SHUFFLE)
+@static if Sys.iswindows() || VERSION ≤ v"1.6"
+    @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
+else
+    # These are missing in the macOS and Linux JLLs
+    @test_broken HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
+end
+@test HDF5.API.h5z_filter_avail(H5Z_FILTER_BZIP2)
+@test HDF5.API.h5z_filter_avail(H5Z_FILTER_LZ4)
+@test HDF5.API.h5z_filter_avail(H5Z_FILTER_ZSTD)
+@test HDF5.API.h5z_filter_avail(H5Z_FILTER_BLOSC)
+HDF5.API.h5z_unregister(H5Z_FILTER_LZ4)
+HDF5.Filters.register_filter(H5Zlz4.Lz4Filter)
+@test isavailable(H5Z_FILTER_LZ4)
+@test isavailable(Lz4Filter)
+@test isencoderenabled(H5Z_FILTER_LZ4)
+@test isdecoderenabled(H5Z_FILTER_LZ4)
+@test isencoderenabled(Lz4Filter)
+@test isdecoderenabled(Lz4Filter)
 
 end # @testset "filter"

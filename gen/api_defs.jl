@@ -219,6 +219,20 @@
 @bind h5p_set_virtual(dcpl_id::hid_t, vspace_id::hid_t, src_file_name::Ptr{UInt8}, src_dset_name::Ptr{UInt8}, src_space_id::hid_t)::herr_t "Error setting virtual"
 
 ###
+### Plugin Interface
+###
+
+@bind h5pl_set_loading_state(plugin_control_mask::Cuint)::herr_t "Error setting plugin loading state"
+@bind h5pl_get_loading_state(plugin_control_mask::Ptr{Cuint})::herr_t "Error getting plugin loading state"
+@bind h5pl_append(search_path::Ptr{Cchar})::herr_t "Error appending plugin path"
+@bind h5pl_prepend(search_path::Ptr{Cchar})::herr_t "Error prepending plugin path"
+@bind h5pl_replace(search_path::Ptr{Cchar}, index::Cuint)::herr_t "Error replacing plugin path"
+@bind h5pl_insert(search_path::Ptr{Cchar}, index::Cuint)::herr_t "Error inserting plugin path"
+@bind h5pl_remove(index::Cuint)::herr_t "Error removing plugin path"
+@bind h5pl_get(index::Cuint, path_buf::Ptr{Cchar}, buf_size::Csize_t)::Cssize_t "Error getting plugin path"
+@bind h5pl_size(num_paths::Ptr{Cuint})::herr_t "Error in getting number of plugins paths"
+
+###
 ### Reference Interface
 ###
 
@@ -340,7 +354,9 @@
 ###
 
 @bind h5z_register(filter_class::Ref{H5Z_class_t})::herr_t "Unable to register new filter"
-
+@bind h5z_unregister(id::H5Z_filter_t)::herr_t "Unable to unregister filter"
+@bind h5z_filter_avail(id::H5Z_filter_t)::htri_t "Unable to get check filter availability"
+@bind h5z_get_filter_info(filter::H5Z_filter_t, filter_config_flags::Ptr{Cuint})::herr_t "Error getting filter information"
 
 ###
 ### File driver interface

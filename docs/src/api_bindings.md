@@ -280,6 +280,30 @@ h5o_open_by_idx
 
 ---
 
+## [[`H5PL`](https://portal.hdfgroup.org/display/HDF5/Plugins) — Plugin Interface](@id H5PL)
+- [`h5pl_append`](@ref h5pl_append)
+- [`h5pl_get`](@ref h5pl_get)
+- [`h5pl_get_loading_state`](@ref h5pl_get_loading_state)
+- [`h5pl_insert`](@ref h5pl_insert)
+- [`h5pl_prepend`](@ref h5pl_prepend)
+- [`h5pl_remove`](@ref h5pl_remove)
+- [`h5pl_replace`](@ref h5pl_replace)
+- [`h5pl_set_loading_state`](@ref h5pl_set_loading_state)
+- [`h5pl_size`](@ref h5pl_size)
+```@docs
+h5pl_append
+h5pl_get
+h5pl_get_loading_state
+h5pl_insert
+h5pl_prepend
+h5pl_remove
+h5pl_replace
+h5pl_set_loading_state
+h5pl_size
+```
+
+---
+
 ## [[`H5P`](https://portal.hdfgroup.org/display/HDF5/Property+Lists) — Property Interface](@id H5P)
 - [`h5p_close`](@ref h5p_close)
 - [`h5p_create`](@ref h5p_create)
@@ -521,9 +545,15 @@ h5t_vlen_create
 ---
 
 ## [[`H5Z`](https://portal.hdfgroup.org/display/HDF5/Filters) — Filter Interface](@id H5Z)
+- [`h5z_filter_avail`](@ref h5z_filter_avail)
+- [`h5z_get_filter_info`](@ref h5z_get_filter_info)
 - [`h5z_register`](@ref h5z_register)
+- [`h5z_unregister`](@ref h5z_unregister)
 ```@docs
+h5z_filter_avail
+h5z_get_filter_info
 h5z_register
+h5z_unregister
 ```
 
 ---

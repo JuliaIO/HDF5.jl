@@ -358,6 +358,12 @@ function Base.push!(p::FilterPipeline, f::UnknownFilter)
     end
 end
 
+# Convert a Filter to an Integer subtype using filterid
+function Base.convert(::Type{I}, ::Type{F}) where {I <: Integer, F <: Filter}
+    Base.convert(I, filterid(F))
+end
+
 include("builtin.jl")
+include("filters_midlevel.jl")
 
 end # module

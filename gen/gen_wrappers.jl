@@ -79,6 +79,7 @@ for (mod, desc, urltail) in (
     ("H5I", "Identifier Interface", "Identifiers"),
     ("H5L", "Link Interface", "Links"),
     ("H5O", "Object Interface", "Objects"),
+    ("H5PL","Plugin Interface", "Plugins"),
     ("H5P", "Property Interface", "Property+Lists"),
     ("H5R", "Reference Interface", "References"),
     ("H5S", "Dataspace Interface", "Dataspaces"),
