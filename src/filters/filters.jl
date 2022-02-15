@@ -248,6 +248,15 @@ function register_filter(::Type{F}) where F <: Filter
 end
 
 """
+    ExternalFilter
+
+External filter type. Alias for `UnkownFilter` (see related documentation).
+Intended to support arbitrary, unregistered, external filters. Allows the creation of new filters using
+internal/proprietary filters without subtyping `HDF5.Filters.Filter` (the recommended approach). 
+"""
+const ExternalFilter = UnknownFilter
+
+"""
     UnknownFilter(filter_id::API.H5Z_filter_t, flags::Cuint, data::Vector{Cuint}, name::String, config::Cuint)
 
 An unknown filter.
