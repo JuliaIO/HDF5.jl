@@ -352,6 +352,28 @@ function h5p_get_dxpl_mpio(dxpl_id)
     return xfer_mode[]
 end
 
+function h5p_get_efile_prefix(plist)
+    prefix_size = Csize_t(1024)
+    prefix = zeros(UInt8, prefix_size)
+    prefix_size = h5p_get_efile_prefix(plist, prefix, prefix_size)
+    return unsafe_string(pointer(prefix), prefix_size) 
+end
+
+function h5p_get_external(plist, idx = 0)
+    name_size = Csize_t(1024)
+    name = zeros(UInt8, name_size)
+    offset = Ref{off_t}(0)
+    sz = Ref{hsize_t}(0)
+    h5p_get_external(plist, idx, name_size, name, offset, sz)
+    # name may not be null terminated according to H5P_GET_EXTERNAL documentation
+    nul_idx =  findfirst(==(0x00), name)
+    name_size = nul_idx === nothing ? name_size : nul_idx-1
+    @static if Sys.iswindows() && sizeof(Int) == 4
+        sz[] &= 0xffffffff
+    end
+    return (name = unsafe_string(pointer(name), name_size), offset = offset[], size = sz[])
+end
+
 function h5p_get_fclose_degree(fapl_id)
     out = Ref{Cint}()
     h5p_get_fclose_degree(fapl_id, out)

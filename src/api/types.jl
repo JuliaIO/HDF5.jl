@@ -9,6 +9,11 @@ const hid_t    = Int64
 const hsize_t  = UInt64
 const hssize_t = Int64
 const htri_t   = Cint   # pseudo-boolean (negative if error)
+@static if Sys.iswindows()
+    const off_t = Int64
+else
+    const off_t = Int
+end
 
 const H5Z_filter_t = Cint
 
