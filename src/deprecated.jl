@@ -64,7 +64,7 @@ end
 
 ### Changed in PR #902
 import Base: append!, push!
-import .Filters: UnknownFilter
-@deprecate append!(filters::Filters.FilterPipeline, extra::NTuple{N, Integer}) where N append!(filters, [UnknownFilter(extra...)])
-@deprecate push!(p::Filters.FilterPipeline, f::NTuple{N, Integer}) where N push!(p, UnknownFilter(f...))
-@deprecate UnknownFilter(t::Tuple) UnknownFilter(t...) false
+import .Filters: ExternalFilter
+@deprecate append!(filters::Filters.FilterPipeline, extra::NTuple{N, Integer}) where N append!(filters, [ExternalFilter(extra...)])
+@deprecate push!(p::Filters.FilterPipeline, f::NTuple{N, Integer}) where N push!(p, ExternalFilter(f...))
+@deprecate ExternalFilter(t::Tuple) ExternalFilter(t...) false

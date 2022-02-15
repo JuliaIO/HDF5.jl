@@ -30,6 +30,7 @@ Fletcher32
 Szip
 NBit
 ScaleOffset
+ExternalFilter
 UnknownFilter
 ```
 
@@ -89,14 +90,14 @@ ZstdFilter
 
 Additional filters can be dynamically loaded by the HDF5 library. See [External Links](@ref) below for more information.
 
-### Using an UnknownFilter (aka ExternalFilter)
+### Using an ExternalFilter
 
-[`UnknownFilter`](@ref) can be used to insert a dynamically loaded filter into the [`FilterPipeline`](@ref) in an ad-hoc fashion.
+[`ExternalFilter`](@ref) can be used to insert a dynamically loaded filter into the [`FilterPipeline`](@ref) in an ad-hoc fashion.
 
 #### Example for `bitshuffle`
 
 If we do not have a defined subtype of [`Filter`](@ref) for the [bitshuffle filter](https://github.com/kiyo-masui/bitshuffle/blob/master/src/bshuf_h5filter.h)
-we can create an `UnknownFilter`. From the header file or list of registered plugins, we see that the bitshuffle filter has an id of `32008`.
+we can create an `ExternalFilter`. From the header file or list of registered plugins, we see that the bitshuffle filter has an id of `32008`.
 
 Furthermore, the header describes two options:
 1. `block_size` (optional). Default is `0`.

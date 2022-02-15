@@ -248,9 +248,9 @@ function register_filter(::Type{F}) where F <: Filter
 end
 
 """
-    UnknownFilter(filter_id::API.H5Z_filter_t, flags::Cuint, data::Vector{Cuint}, name::String, config::Cuint)
-    UnknownFilter(filter_id, flags, data::Integer...)
-    UnknownFilter(filter_id, data::AbstractVector{<:Integer} = Cuint[])
+    ExternalFilter(filter_id::API.H5Z_filter_t, flags::Cuint, data::Vector{Cuint}, name::String, config::Cuint)
+    ExternalFilter(filter_id, flags, data::Integer...)
+    ExternalFilter(filter_id, data::AbstractVector{<:Integer} = Cuint[])
 
 An unknown filter. This is used to encode filters in the pipeline that are not known to HDF5.jl.
 
@@ -272,38 +272,38 @@ An unknown filter. This is used to encode filters in the pipeline that are not k
 * [`API.H5Z_FILTER_CONFIG_ENCODE_ENABLED`](@ref)
 * [`API.H5Z_FILTER_CONFIG_DECODE_ENABLED`](@ref)
 """
-struct UnknownFilter <: Filter
+struct ExternalFilter <: Filter
     filter_id::API.H5Z_filter_t
     flags::Cuint
     data::Vector{Cuint}
     name::String
     config::Cuint
 end
-function UnknownFilter(filter_id, flags, data::AbstractVector{<:Integer})
-    UnknownFilter(filter_id, flags, Cuint.(data), "Unknown Filter with id $filter_id", 0)
+function ExternalFilter(filter_id, flags, data::AbstractVector{<:Integer})
+    ExternalFilter(filter_id, flags, Cuint.(data), "Unknown Filter with id $filter_id", 0)
 end
-function UnknownFilter(filter_id, flags, data::Integer...)
-    UnknownFilter(filter_id, flags, Cuint[data...])
+function ExternalFilter(filter_id, flags, data::Integer...)
+    ExternalFilter(filter_id, flags, Cuint[data...])
 end
-function UnknownFilter(filter_id, data::AbstractVector{<:Integer} = Cuint[])
-    UnknownFilter(filter_id, API.H5Z_FLAG_MANDATORY, data)
+function ExternalFilter(filter_id, data::AbstractVector{<:Integer} = Cuint[])
+    ExternalFilter(filter_id, API.H5Z_FLAG_MANDATORY, data)
 end
-filterid(filter::UnknownFilter) = filter.filter_id
-filtername(filter::UnknownFilter) = filter.name
-filtername(::Type{UnknownFilter}) = "Unknown Filter"
-encoder_present(::Type{UnknownFilter}) = false
-decoder_present(::Type{UnknownFilter}) = false
+filterid(filter::ExternalFilter) = filter.filter_id
+filtername(filter::ExternalFilter) = filter.name
+filtername(::Type{ExternalFilter}) = "Unknown Filter"
+encoder_present(::Type{ExternalFilter}) = false
+decoder_present(::Type{ExternalFilter}) = false
 
 """
-    ExternalFilter
+    UnknownFilter
 
-External filter type. Alias for `UnkownFilter` (see related documentation).
+Unknown filter type. Alias for [`ExternalFilter`](@ref) (see related documentation).
 Intended to support arbitrary, unregistered, external filters. Allows the
 quick creation of filters using internal/proprietary filters without subtyping
 `HDF5.Filters.Filter`.
 Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`.
 """
-const ExternalFilter = UnknownFilter
+const Unknown = ExternalFilter
 
 """
     FilterPipeline(plist::DatasetCreateProperties)
@@ -330,11 +330,11 @@ Base.size(f::FilterPipeline) = (length(f),)
 
 function Base.getindex(f::FilterPipeline, i::Integer)
     id = API.h5p_get_filter(f.plist, i-1, C_NULL, C_NULL, C_NULL, 0, C_NULL, C_NULL)
-    F = get(FILTERS, id, UnknownFilter)
+    F = get(FILTERS, id, ExternalFilter)
     return getindex(f, F, i)
 end
 
-function Base.getindex(f::FilterPipeline, ::Type{UnknownFilter}, i::Integer, cd_values::Vector{Cuint} = Cuint[])
+function Base.getindex(f::FilterPipeline, ::Type{ExternalFilter}, i::Integer, cd_values::Vector{Cuint} = Cuint[])
     flags = Ref{Cuint}()
     cd_nelmts = Ref{Csize_t}(length(cd_values))
     namebuf = Array{UInt8}(undef, 256)
@@ -342,11 +342,11 @@ function Base.getindex(f::FilterPipeline, ::Type{UnknownFilter}, i::Integer, cd_
     id = API.h5p_get_filter(f.plist, i-1, flags, cd_nelmts, cd_values, length(namebuf), namebuf, config)
     if cd_nelmts[] > length(cd_values)
         resize!(cd_values, cd_nelmts[])
-        return getindex(f, UnknownFilter, i, cd_values)
+        return getindex(f, ExternalFilter, i, cd_values)
     end
     resize!(namebuf, findfirst(isequal(0), namebuf)-1)
     resize!(cd_values, cd_nelmts[])
-    return UnknownFilter(id, flags[], cd_values, String(namebuf), config[])
+    return ExternalFilter(id, flags[], cd_values, String(namebuf), config[])
 end
 
 function Base.getindex(f::FilterPipeline, ::Type{F}, i::Integer) where {F<:Filter}
@@ -389,7 +389,7 @@ function Base.push!(p::FilterPipeline, f::F) where F <: Filter
     end
     return p
 end
-function Base.push!(p::FilterPipeline, f::UnknownFilter)
+function Base.push!(p::FilterPipeline, f::ExternalFilter)
     GC.@preserve f begin
         API.h5p_set_filter(p.plist, f.filter_id, f.flags, length(f.data), pointer(f.data))
     end
