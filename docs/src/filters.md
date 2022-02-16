@@ -31,7 +31,6 @@ Szip
 NBit
 ScaleOffset
 ExternalFilter
-UnknownFilter
 ```
 
 ## External Filter Packages
