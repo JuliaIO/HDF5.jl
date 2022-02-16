@@ -303,7 +303,7 @@ quick creation of filters using internal/proprietary filters without subtyping
 `HDF5.Filters.Filter`.
 Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`.
 """
-const Unknown = ExternalFilter
+const UnknownFilter = ExternalFilter
 
 """
     FilterPipeline(plist::DatasetCreateProperties)
