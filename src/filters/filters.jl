@@ -252,7 +252,10 @@ end
     ExternalFilter(filter_id, flags, data::Integer...)
     ExternalFilter(filter_id, data::AbstractVector{<:Integer} = Cuint[])
 
-An unknown filter. This is used to encode filters in the pipeline that are not known to HDF5.jl.
+Intended to support arbitrary, unregistered, external filters. Allows the
+quick creation of filters using internal/proprietary filters without subtyping
+`HDF5.Filters.Filter`.
+Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`.
 
 # Fields / Arguments
 * `filter_id` - (required) `Integer`` filter identifer.
@@ -298,10 +301,6 @@ decoder_present(::Type{ExternalFilter}) = false
     UnknownFilter
 
 Unknown filter type. Alias for [`ExternalFilter`](@ref) (see related documentation).
-Intended to support arbitrary, unregistered, external filters. Allows the
-quick creation of filters using internal/proprietary filters without subtyping
-`HDF5.Filters.Filter`.
-Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`.
 """
 const UnknownFilter = ExternalFilter
 
