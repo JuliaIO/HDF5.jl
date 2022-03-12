@@ -423,6 +423,18 @@ function h5p_get_class_name(pcid)
     return s
 end
 
+function h5p_get_attr_creation_order(p)
+    attr = Ref{UInt32}()
+    h5p_get_attr_creation_order(p, attr)
+    return attr[]
+end
+
+function h5p_get_link_creation_order(p)
+    link = Ref{UInt32}()
+    h5p_get_link_creation_order(p, link)
+    return link[]
+end
+
 ###
 ### Plugin Interface
 ###

@@ -253,13 +253,7 @@ function class_setproperty!(::Type{ObjectCreateProperties}, p::Properties, name:
     class_setproperty!(superclass(ObjectCreateProperties), p, name, val)
 end
 
-function get_track_order(p::Properties)
-    attr = Ref{UInt32}()
-    API.h5p_get_attr_creation_order(p, attr)
-    link = Ref{UInt32}()
-    API.h5p_get_link_creation_order(p, link)
-    attr[] != 0 && link[] != 0
-end
+get_track_order(p::Properties) = API.h5p_get_link_creation_order(p) != 0 && API.h5p_get_attr_creation_order(p) != 0
 
 function set_track_order(p::Properties, val::Bool)
     crt_order_flags = val ? (HDF5.API.H5P_CRT_ORDER_TRACKED | HDF5.API.H5P_CRT_ORDER_INDEXED) : 0
