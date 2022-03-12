@@ -47,7 +47,7 @@ let fn = tempname() * ".h5"
     write(g, "f", 4)
   end
 
-  dat = load(fn; track_order=true, dict=OrderedDict())
+  dat = load(fn; dict=OrderedDict())  # `track_order` is inferred from `OrderedDict`
 
   @test all(keys(dat) .== ["b", "a", "G/z", "G/f"])
 end
@@ -55,7 +55,7 @@ end
 let fn = tempname() * ".h5"
   save(fn, OrderedDict("b"=>1, "a"=>2, "G/z"=>3, "G/f"=>4); track_order=true)
 
-  dat = load(fn; track_order=true, dict=OrderedDict())
+  dat = load(fn; dict=OrderedDict())
 
   @test all(keys(dat) .== ["b", "a", "G/z", "G/f"])
 end
