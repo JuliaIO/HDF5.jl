@@ -3,8 +3,7 @@ import .OrderedCollections: OrderedDict
 
 function loadtodict!(d::AbstractDict, g::Union{File,Group}, prefix::String="")
     for k in keys(g)
-        v = g[k]
-        if v isa Group
+        if (v = g[k]) isa Group
             loadtodict!(d, v, prefix * k * "/")
         else
             d[prefix * k] = read(g, k)
@@ -24,8 +23,8 @@ end
 _restore_track_order(restore, prev) = (restore && (IDX_TYPE[] = prev); nothing)
 
 # load with just a filename returns a flat dictionary containing all the variables
-function fileio_load(f::FileIO.File{FileIO.format"HDF5"}; _kwargs...)
-    kwargs = Dict{Symbol,Any}(_kwargs)  # mutate `_kwargs`
+function fileio_load(f::FileIO.File{FileIO.format"HDF5"}; kwargs...)
+    kwargs = Dict{Symbol,Any}(kwargs)  # mutate `kwargs`
     d = pop!(kwargs, :dict, Dict{String,Any}())
 
     # infer `track_order` from Dict type
@@ -60,11 +59,13 @@ end
 
 # save all the key-value pairs in the dict as top-level variables
 function fileio_save(f::FileIO.File{FileIO.format"HDF5"}, dict::AbstractDict; kwargs...)
+    if (track_order = isa(dict, OrderedDict))
+        kwargs = Dict{Symbol,Any}(kwargs)
+        get!(kwargs, :track_order, track_order)
+    end
     h5open(FileIO.filename(f), "w"; kwargs...) do file
         for (k, v) in dict
-            if !isa(k, AbstractString)
-                throw(ArgumentError("keys must be strings (the names of variables), got $k"))
-            end
+            isa(k, AbstractString) || throw(ArgumentError("keys must be strings (the names of variables), got $k"))
             write(file, String(k), v)
         end
     end

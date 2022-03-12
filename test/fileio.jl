@@ -53,7 +53,7 @@ let fn = tempname() * ".h5"
 end
 
 let fn = tempname() * ".h5"
-  save(fn, OrderedDict("b"=>1, "a"=>2, "G/z"=>3, "G/f"=>4); track_order=true)
+  save(fn, OrderedDict("b"=>1, "a"=>2, "G/z"=>3, "G/f"=>4))
 
   dat = load(fn; dict=OrderedDict())
 
