@@ -157,6 +157,18 @@ g["mydataset"] = rand(3,5)
 write(g, "mydataset", rand(3,5))
 ```
 
+One can use the high level interface `load` and `save` from `FileIO`, where an optional `OrderedDict` can be passed.
+```julia
+using OrderedCollections, FileIO
+# write
+d = OrderedDict("z"=>1, "a"=>2)
+save("track_order.h5", d; track_order=true)
+# read
+dat = load("track_order.h5"; track_order=true, dict=OrderedDict())
+@show keys(dat)
+# 
+```
+
 ## Passing parameters
 
 It is often required to pass parameters to specific routines, which are collected

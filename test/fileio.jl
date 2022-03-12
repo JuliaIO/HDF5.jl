@@ -48,17 +48,8 @@ h5open(fn, "w"; track_order=true) do io
   write(g, "f", 4)
 end
 
-
-idx_type = HDF5.IDX_TYPE[]  # save
-HDF5.IDX_TYPE[] = HDF5.API.H5_INDEX_CRT_ORDER
-
 # read
-d = OrderedDict()
-h5open(fn, "r"; track_order=true) do io
-  HDF5.loadtodict!(d, io)
-end
+dat = load(fn; track_order=true, dict=OrderedDict())
 
-@test all(keys(d) .== ["b", "a", "G/z", "G/f"])
-
-HDF5.IDX_TYPE[] = idx_type  # restore
+@test all(keys(dat) .== ["b", "a", "G/z", "G/f"])
 end
