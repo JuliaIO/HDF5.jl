@@ -16,7 +16,7 @@ close(hfile);
 data = Dict("A" => 1.0, "B"=> [1,2,3], "G/A"=>collect(-3:4), "G1/G2/A"=>"hello")
 @test load(fn) == data
 @test load(fn, "A") == 1.0
-@test load(fn, "A","B") == (1.0, [1,2,3])
+@test load(fn, "A", "B") == (1.0, [1,2,3])
 @test load(fn, "G/A") == collect(-3:4)
 
 rm(fn)

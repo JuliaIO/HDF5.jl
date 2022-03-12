@@ -157,16 +157,17 @@ g["mydataset"] = rand(3,5)
 write(g, "mydataset", rand(3,5))
 ```
 
-One can use the high level interface `load` and `save` from `FileIO`, where an optional `OrderedDict` can be passed.
+One can use the high level interface `load` and `save` from `FileIO`, where an optional `OrderedDict` can be passed (`track_order` inferred). Note that using `track_ordering=true` or passing an `OrderedDict` is a promise that the read file has been created with the appropriate ordering flags.
+
 ```julia
-using OrderedCollections, FileIO
-# write
-d = OrderedDict("z"=>1, "a"=>2)
-save("track_order.h5", d; track_order=true)
-# read
-dat = load("track_order.h5"; track_order=true, dict=OrderedDict())
-@show keys(dat)
-# 
+julia> using OrderedCollections, FileIO
+julia> save("track_order.h5", OrderedDict("z"=>1, "a"=>2, "g/f"=>3, "g/b"=>4))
+julia> load("track_order.h5"; dict=OrderedDict())
+OrderedDict{Any, Any} with 4 entries:
+  "z"   => 1
+  "a"   => 2
+  "g/f" => 3
+  "g/b" => 4
 ```
 
 ## Passing parameters
