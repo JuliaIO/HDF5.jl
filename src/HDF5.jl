@@ -43,6 +43,9 @@ h5doc(name) = "[`$name`](https://portal.hdfgroup.org/display/HDF5/$(name))"
 include("api/api.jl")
 include("properties.jl")
 
+const IDX_TYPE = Ref(API.H5_INDEX_NAME)
+const ORDER = Ref(API.H5_ITER_INC)
+
 ### Generic H5DataStore interface ###
 
 # Common methods that could be applicable to any interface for reading/writing variables from a file, e.g. HDF5, JLD, or MAT files.
@@ -272,7 +275,7 @@ end
 
 """
     function h5open(f::Function, args...; swmr=false, pv...)
-
+-
 Apply the function f to the result of `h5open(args...;kwargs...)` and close the resulting
 `HDF5.File` upon completion. For example with a `do` block:
 
@@ -550,8 +553,11 @@ end
 
 function create_group(parent::Union{File,Group}, path::AbstractString,
                   lcpl::LinkCreateProperties=_link_properties(path),
-                  gcpl::GroupCreateProperties=GroupCreateProperties())
+                  gcpl::GroupCreateProperties=GroupCreateProperties();
+                  pv...)
     haskey(parent, path) && error("cannot create group: object \"", path, "\" already exists at ", name(parent))
+    pv = setproperties!(gcpl; pv...)
+    isempty(pv) || error("invalid keyword options $pv")
     Group(API.h5g_create(parent, path, lcpl, gcpl, API.H5P_DEFAULT), file(parent))
 end
 
@@ -686,7 +692,7 @@ name(attr::Attribute) = API.h5a_get_name(attr)
 function Base.keys(x::Union{Group,File})
     checkvalid(x)
     children = sizehint!(String[], length(x))
-    API.h5l_iterate(x, API.H5_INDEX_NAME, API.H5_ITER_INC) do _, name, _
+    API.h5l_iterate(x, IDX_TYPE[], ORDER[]) do _, name, _
         push!(children, unsafe_string(name))
         return API.herr_t(0)
     end
@@ -696,7 +702,7 @@ end
 function Base.keys(x::Attributes)
     checkvalid(x.parent)
     children = sizehint!(String[], length(x))
-    API.h5a_iterate(x.parent, API.H5_INDEX_NAME, API.H5_ITER_INC) do _, attr_name, _
+    API.h5a_iterate(x.parent, IDX_TYPE[], ORDER[]) do _, attr_name, _
         push!(children, unsafe_string(attr_name))
         return API.herr_t(0)
     end
@@ -708,7 +714,7 @@ function Base.iterate(parent::Union{File,Group}, iter = (1,nothing))
     n, prev_obj = iter
     prev_obj ≢ nothing && close(prev_obj)
     n > length(parent) && return nothing
-    obj = h5object(API.h5o_open_by_idx(checkvalid(parent), ".", API.H5_INDEX_NAME, API.H5_ITER_INC, n-1, API.H5P_DEFAULT), parent)
+    obj = h5object(API.h5o_open_by_idx(checkvalid(parent), ".", IDX_TYPE[], ORDER[], n-1, API.H5P_DEFAULT), parent)
     return (obj, (n+1,obj))
 end
 

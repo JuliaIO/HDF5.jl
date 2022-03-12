@@ -1,6 +1,6 @@
 import .FileIO
 
-function loadtodict!(d::Dict, g::Union{File,Group}, prefix::String="")
+function loadtodict!(d::AbstractDict, g::Union{File,Group}, prefix::String="")
     for k in keys(g)
         v = g[k]
         if v isa Group

@@ -208,7 +208,7 @@ function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,At
 
     if attributes && !isa(obj, Attribute)
         obj′ = obj isa Attributes ? obj.parent : obj
-        API.h5a_iterate(obj′, API.H5_INDEX_NAME, API.H5_ITER_INC) do _, cname, _
+        API.h5a_iterate(obj′, IDX_TYPE[], ORDER[]) do _, cname, _
             depth_check() && return API.herr_t(1)
 
             name = unsafe_string(cname)
@@ -221,7 +221,7 @@ function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,At
 
     typeof(obj) <: Union{File, Group} || return nothing
 
-    API.h5l_iterate(obj, API.H5_INDEX_NAME, API.H5_ITER_INC) do loc_id, cname, _
+    API.h5l_iterate(obj, IDX_TYPE[], ORDER[]) do loc_id, cname, _
         depth_check() && return API.herr_t(1)
 
         name = unsafe_string(cname)
