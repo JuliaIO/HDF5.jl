@@ -33,23 +33,31 @@ rm(fn)
 end
 
 @testset "track order" begin
-fn = tempname() * ".h5"
 
-# write
-h5open(fn, "w"; track_order=true) do io
-  fcpl = HDF5.get_create_properties(io)
-  @test fcpl.track_order
-  io["b"] = 1
-  io["a"] = 2
-  g = create_group(io, "G"; track_order=true)
-  gcpl = HDF5.get_create_properties(io["G"])
-  @test gcpl.track_order
-  write(g, "z", 3)
-  write(g, "f", 4)
+let fn = tempname() * ".h5"
+  h5open(fn, "w"; track_order=true) do io
+    fcpl = HDF5.get_create_properties(io)
+    @test fcpl.track_order
+    io["b"] = 1
+    io["a"] = 2
+    g = create_group(io, "G"; track_order=true)
+    gcpl = HDF5.get_create_properties(io["G"])
+    @test gcpl.track_order
+    write(g, "z", 3)
+    write(g, "f", 4)
+  end
+
+  dat = load(fn; track_order=true, dict=OrderedDict())
+
+  @test all(keys(dat) .== ["b", "a", "G/z", "G/f"])
 end
 
-# read
-dat = load(fn; track_order=true, dict=OrderedDict())
+let fn = tempname() * ".h5"
+  save(fn, OrderedDict("b"=>1, "a"=>2, "G/z"=>3, "G/f"=>4); track_order=true)
 
-@test all(keys(dat) .== ["b", "a", "G/z", "G/f"])
+  dat = load(fn; track_order=true, dict=OrderedDict())
+
+  @test all(keys(dat) .== ["b", "a", "G/z", "G/f"])
+end
+
 end
