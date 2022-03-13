@@ -309,6 +309,7 @@ h5pl_size
 - [`h5p_create`](@ref h5p_create)
 - [`h5p_get_alignment`](@ref h5p_get_alignment)
 - [`h5p_get_alloc_time`](@ref h5p_get_alloc_time)
+- [`h5p_get_attr_creation_order`](@ref h5p_get_attr_creation_order)
 - [`h5p_get_char_encoding`](@ref h5p_get_char_encoding)
 - [`h5p_get_chunk`](@ref h5p_get_chunk)
 - [`h5p_get_class_name`](@ref h5p_get_class_name)
@@ -326,6 +327,7 @@ h5pl_size
 - [`h5p_get_filter_by_id`](@ref h5p_get_filter_by_id)
 - [`h5p_get_layout`](@ref h5p_get_layout)
 - [`h5p_get_libver_bounds`](@ref h5p_get_libver_bounds)
+- [`h5p_get_link_creation_order`](@ref h5p_get_link_creation_order)
 - [`h5p_get_local_heap_size_hint`](@ref h5p_get_local_heap_size_hint)
 - [`h5p_get_nfilters`](@ref h5p_get_nfilters)
 - [`h5p_get_obj_track_times`](@ref h5p_get_obj_track_times)
@@ -334,6 +336,7 @@ h5pl_size
 - [`h5p_remove_filter`](@ref h5p_remove_filter)
 - [`h5p_set_alignment`](@ref h5p_set_alignment)
 - [`h5p_set_alloc_time`](@ref h5p_set_alloc_time)
+- [`h5p_set_attr_creation_order`](@ref h5p_set_attr_creation_order)
 - [`h5p_set_char_encoding`](@ref h5p_set_char_encoding)
 - [`h5p_set_chunk`](@ref h5p_set_chunk)
 - [`h5p_set_chunk_cache`](@ref h5p_set_chunk_cache)
@@ -350,6 +353,7 @@ h5pl_size
 - [`h5p_set_fletcher32`](@ref h5p_set_fletcher32)
 - [`h5p_set_layout`](@ref h5p_set_layout)
 - [`h5p_set_libver_bounds`](@ref h5p_set_libver_bounds)
+- [`h5p_set_link_creation_order`](@ref h5p_set_link_creation_order)
 - [`h5p_set_local_heap_size_hint`](@ref h5p_set_local_heap_size_hint)
 - [`h5p_set_nbit`](@ref h5p_set_nbit)
 - [`h5p_set_obj_track_times`](@ref h5p_set_obj_track_times)
@@ -363,6 +367,7 @@ h5p_close
 h5p_create
 h5p_get_alignment
 h5p_get_alloc_time
+h5p_get_attr_creation_order
 h5p_get_char_encoding
 h5p_get_chunk
 h5p_get_class_name
@@ -380,6 +385,7 @@ h5p_get_filter
 h5p_get_filter_by_id
 h5p_get_layout
 h5p_get_libver_bounds
+h5p_get_link_creation_order
 h5p_get_local_heap_size_hint
 h5p_get_nfilters
 h5p_get_obj_track_times
@@ -388,6 +394,7 @@ h5p_modify_filter
 h5p_remove_filter
 h5p_set_alignment
 h5p_set_alloc_time
+h5p_set_attr_creation_order
 h5p_set_char_encoding
 h5p_set_chunk
 h5p_set_chunk_cache
@@ -404,6 +411,7 @@ h5p_set_filter
 h5p_set_fletcher32
 h5p_set_layout
 h5p_set_libver_bounds
+h5p_set_link_creation_order
 h5p_set_local_heap_size_hint
 h5p_set_nbit
 h5p_set_obj_track_times

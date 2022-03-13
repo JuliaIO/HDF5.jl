@@ -1400,7 +1400,7 @@ See `libhdf5` documentation for [`H5Pget_obj_track_times`](https://portal.hdfgro
 """
 function h5p_get_obj_track_times(plist_id, track_times)
     var"#status#" = ccall((:H5Pget_obj_track_times, libhdf5), herr_t, (hid_t, Ref{UInt8}), plist_id, track_times)
-    var"#status#" < 0 && @h5error("Error setting object time tracking")
+    var"#status#" < 0 && @h5error("Error getting object time tracking")
     return nothing
 end
 
@@ -1416,24 +1416,24 @@ function h5p_get_userblock(plist_id, len)
 end
 
 """
-    h5p_modify_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})
+    h5p_get_attr_creation_order(plist_id::hid_t, crt_order_flags::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pmodify_filter`](https://portal.hdfgroup.org/display/HDF5/H5P_MODIFY_FILTER).
+See `libhdf5` documentation for [`H5Pget_attr_creation_order`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_ATTR_CREATION_ORDER).
 """
-function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
-    var"#status#" = ccall((:H5Pmodify_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
-    var"#status#" < 0 && @h5error("Error modifying filter")
+function h5p_get_attr_creation_order(plist_id, crt_order_flags)
+    var"#status#" = ccall((:H5Pget_attr_creation_order, libhdf5), herr_t, (hid_t, Ptr{Cuint}), plist_id, crt_order_flags)
+    var"#status#" < 0 && @h5error("Error getting attribute creation order")
     return nothing
 end
 
 """
-    h5p_remove_filter(plist_id::hid_t, filter_id::H5Z_filter_t)
+    h5p_get_link_creation_order(plist_id::hid_t, crt_order_flags::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Premove_filter`](https://portal.hdfgroup.org/display/HDF5/H5P_REMOVE_FILTER).
+See `libhdf5` documentation for [`H5Pget_link_creation_order`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_LINK_CREATION_ORDER).
 """
-function h5p_remove_filter(plist_id, filter_id)
-    var"#status#" = ccall((:H5Premove_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t), plist_id, filter_id)
-    var"#status#" < 0 && @h5error("Error removing filter")
+function h5p_get_link_creation_order(plist_id, crt_order_flags)
+    var"#status#" = ccall((:H5Pget_link_creation_order, libhdf5), herr_t, (hid_t, Ptr{Cuint}), plist_id, crt_order_flags)
+    var"#status#" < 0 && @h5error("Error getting link creation order")
     return nothing
 end
 
@@ -1720,6 +1720,50 @@ See `libhdf5` documentation for [`H5Pset_virtual`](https://portal.hdfgroup.org/d
 function h5p_set_virtual(dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
     var"#status#" = ccall((:H5Pset_virtual, libhdf5), herr_t, (hid_t, hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t), dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
     var"#status#" < 0 && @h5error("Error setting virtual")
+    return nothing
+end
+
+"""
+    h5p_set_attr_creation_order(plist_id::hid_t, crt_order_flags::Cuint)
+
+See `libhdf5` documentation for [`H5Pset_attr_creation_order`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ATTR_CREATION_ORDER).
+"""
+function h5p_set_attr_creation_order(plist_id, crt_order_flags)
+    var"#status#" = ccall((:H5Pset_attr_creation_order, libhdf5), herr_t, (hid_t, Cuint), plist_id, crt_order_flags)
+    var"#status#" < 0 && @h5error("Error setting attribute creation order")
+    return nothing
+end
+
+"""
+    h5p_set_link_creation_order(plist_id::hid_t, crt_order_flags::Cuint)
+
+See `libhdf5` documentation for [`H5Pset_link_creation_order`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_LINK_CREATION_ORDER).
+"""
+function h5p_set_link_creation_order(plist_id, crt_order_flags)
+    var"#status#" = ccall((:H5Pset_link_creation_order, libhdf5), herr_t, (hid_t, Cuint), plist_id, crt_order_flags)
+    var"#status#" < 0 && @h5error("Error setting link creation order")
+    return nothing
+end
+
+"""
+    h5p_modify_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})
+
+See `libhdf5` documentation for [`H5Pmodify_filter`](https://portal.hdfgroup.org/display/HDF5/H5P_MODIFY_FILTER).
+"""
+function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
+    var"#status#" = ccall((:H5Pmodify_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
+    var"#status#" < 0 && @h5error("Error modifying filter")
+    return nothing
+end
+
+"""
+    h5p_remove_filter(plist_id::hid_t, filter_id::H5Z_filter_t)
+
+See `libhdf5` documentation for [`H5Premove_filter`](https://portal.hdfgroup.org/display/HDF5/H5P_REMOVE_FILTER).
+"""
+function h5p_remove_filter(plist_id, filter_id)
+    var"#status#" = ccall((:H5Premove_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t), plist_id, filter_id)
+    var"#status#" < 0 && @h5error("Error removing filter")
     return nothing
 end
 

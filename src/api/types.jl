@@ -269,6 +269,9 @@ const H5PL_TYPE_FILTER = 0
 const H5PL_TYPE_VOL = 1
 const H5PL_TYPE_NONE = 2
 
+const H5P_CRT_ORDER_TRACKED = 1
+const H5P_CRT_ORDER_INDEXED = 2
+
 # Reference constants
 const H5R_OBJECT         = 0
 const H5R_DATASET_REGION = 1

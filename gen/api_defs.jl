@@ -169,6 +169,7 @@
 ### Property Interface
 ###
 
+# get
 @bind h5p_close(id::hid_t)::herr_t "Error closing property list"
 @bind h5p_create(cls_id::hid_t)::hid_t "Error creating property list"
 @bind h5p_get_alignment(fapl_id::hid_t, threshold::Ref{hsize_t}, alignment::Ref{hsize_t})::herr_t "Error getting alignment"
@@ -191,10 +192,12 @@
 @bind h5p_get_libver_bounds(fapl_id::hid_t, low::Ref{Cint}, high::Ref{Cint})::herr_t "Error getting library version bounds"
 @bind h5p_get_local_heap_size_hint(plist_id::hid_t, size_hint::Ref{Csize_t})::herr_t "Error getting local heap size hint"
 @bind h5p_get_nfilters(plist_id::hid_t)::Cint "Error getting nfilters"
-@bind h5p_get_obj_track_times(plist_id::hid_t, track_times::Ref{UInt8})::herr_t "Error setting object time tracking"
+@bind h5p_get_obj_track_times(plist_id::hid_t, track_times::Ref{UInt8})::herr_t "Error getting object time tracking"
 @bind h5p_get_userblock(plist_id::hid_t, len::Ptr{hsize_t})::herr_t "Error getting userblock"
-@bind h5p_modify_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})::herr_t "Error modifying filter"
-@bind h5p_remove_filter(plist_id::hid_t, filter_id::H5Z_filter_t)::herr_t "Error removing filter"
+@bind h5p_get_attr_creation_order(plist_id::hid_t, crt_order_flags::Ptr{Cuint})::herr_t "Error getting attribute creation order"
+@bind h5p_get_link_creation_order(plist_id::hid_t, crt_order_flags::Ptr{Cuint})::herr_t "Error getting link creation order"
+
+# set
 @bind h5p_set_alignment(plist_id::hid_t, threshold::hsize_t, alignment::hsize_t)::herr_t "Error setting alignment"
 @bind h5p_set_alloc_time(plist_id::hid_t, alloc_time::Cint)::herr_t "Error setting allocation timing"
 @bind h5p_set_char_encoding(plist_id::hid_t, encoding::Cint)::herr_t "Error setting char encoding"
@@ -221,6 +224,12 @@
 @bind h5p_set_szip(plist_id::hid_t, options_mask::Cuint, pixels_per_block::Cuint)::herr_t "Error enabling szip filter"
 @bind h5p_set_userblock(plist_id::hid_t, len::hsize_t)::herr_t "Error setting userblock"
 @bind h5p_set_virtual(dcpl_id::hid_t, vspace_id::hid_t, src_file_name::Ptr{UInt8}, src_dset_name::Ptr{UInt8}, src_space_id::hid_t)::herr_t "Error setting virtual"
+@bind h5p_set_attr_creation_order(plist_id::hid_t, crt_order_flags::Cuint)::herr_t "Error setting attribute creation order"
+@bind h5p_set_link_creation_order(plist_id::hid_t, crt_order_flags::Cuint)::herr_t "Error setting link creation order"
+
+# others
+@bind h5p_modify_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})::herr_t "Error modifying filter"
+@bind h5p_remove_filter(plist_id::hid_t, filter_id::H5Z_filter_t)::herr_t "Error removing filter"
 
 ###
 ### Plugin Interface

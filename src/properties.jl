@@ -253,6 +253,15 @@ function class_setproperty!(::Type{ObjectCreateProperties}, p::Properties, name:
     class_setproperty!(superclass(ObjectCreateProperties), p, name, val)
 end
 
+get_track_order(p::Properties) = API.h5p_get_link_creation_order(p) != 0 && API.h5p_get_attr_creation_order(p) != 0
+
+function set_track_order(p::Properties, val::Bool)
+    crt_order_flags = val ? (HDF5.API.H5P_CRT_ORDER_TRACKED | HDF5.API.H5P_CRT_ORDER_INDEXED) : 0
+    API.h5p_set_link_creation_order(p, crt_order_flags)
+    API.h5p_set_attr_creation_order(p, crt_order_flags)
+    nothing
+end
+
 """
     GroupCreateProperties(;kws...)
 
@@ -261,20 +270,23 @@ Properties used when creating a new `Group`. Inherits from
 
 - `local_heap_size_hint :: Integer`: the anticipated maximum local heap size in
   bytes. See $(h5doc("H5P_SET_LOCAL_HEAP_SIZE_HINT")).
-
+- `track_order :: Bool`: tracks the group creation order.
 """
 @propertyclass GroupCreateProperties API.H5P_GROUP_CREATE
 superclass(::Type{GroupCreateProperties}) = ObjectCreateProperties
 
 class_propertynames(::Type{GroupCreateProperties}) = (
     :local_heap_size_hint,
+    :track_order,
     )
 function class_getproperty(::Type{GroupCreateProperties}, p::Properties, name::Symbol)
     name === :local_heap_size_hint ? API.h5p_get_local_heap_size_hint(p) :
+    name === :track_order ? get_track_order(p) :
     class_getproperty(superclass(GroupCreateProperties), p, name)
 end
 function class_setproperty!(::Type{GroupCreateProperties}, p::Properties, name::Symbol, val)
     name === :local_heap_size_hint ? API.h5p_set_local_heap_size_hint(p, val) :
+    name === :track_order ? set_track_order(p, val) :
     class_setproperty!(superclass(GroupCreateProperties), p, name, val)
 end
 
@@ -287,7 +299,7 @@ Properties used when creating a new `File`. Inherits from
 - `userblock :: Integer`: user block size in bytes. The default user block size
   is 0; it may be set to any power of 2 equal to 512 or greater (512, 1024,
   2048, etc.). See $(h5doc("H5P_SET_USERBLOCK")).
-
+- `track_order :: Bool`: tracks the file creation order.
 """
 @propertyclass FileCreateProperties API.H5P_FILE_CREATE
 superclass(::Type{FileCreateProperties}) = ObjectCreateProperties
@@ -295,13 +307,16 @@ superclass(::Type{FileCreateProperties}) = ObjectCreateProperties
 
 class_propertynames(::Type{FileCreateProperties}) = (
     :userblock,
+    :track_order,
     )
 function class_getproperty(::Type{FileCreateProperties}, p::Properties, name::Symbol)
     name === :userblock   ? API.h5p_get_userblock(p) :
+    name === :track_order ? get_track_order(p) :
     class_getproperty(superclass(FileCreateProperties), p, name)
 end
 function class_setproperty!(::Type{FileCreateProperties}, p::Properties, name::Symbol, val)
     name === :userblock   ? API.h5p_set_userblock(p, val) :
+    name === :track_order ? set_track_order(p, val) : 
     class_setproperty!(superclass(FileCreateProperties), p, name, val)
 end
 
