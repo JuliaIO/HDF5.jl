@@ -157,7 +157,7 @@ g["mydataset"] = rand(3,5)
 write(g, "mydataset", rand(3,5))
 ```
 
-One can use the high level interface `load` and `save` from `FileIO`, where an optional `OrderedDict` can be passed (`track_order` inferred). Note that using `track_ordering=true` or passing an `OrderedDict` is a promise that the read file has been created with the appropriate ordering flags.
+One can use the high level interface `load` and `save` from `FileIO`, where an optional `OrderedDict` can be passed (`track_order` inferred). Note that using `track_order=true` or passing an `OrderedDict` is a promise that the read file has been created with the appropriate ordering flags.
 
 ```julia
 julia> using OrderedCollections, FileIO
