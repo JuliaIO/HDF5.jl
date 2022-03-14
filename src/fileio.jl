@@ -12,7 +12,7 @@ function loadtodict!(d::AbstractDict, g::Union{File,Group}, prefix::String="")
     return d
 end
 
-_change_iteration_order(kwargs) = if get(kwargs, :track_order, false)
+_change_iteration_order(track_order::Bool) = if track_order
     prev = IDX_TYPE[]
     IDX_TYPE[] = HDF5.API.H5_INDEX_CRT_ORDER  # index (iterate) on creation order
     true, prev
@@ -20,21 +20,20 @@ else
     false, nothing
 end
 
-_restore_iteration_order(restore, prev) = (restore && (IDX_TYPE[] = prev); nothing)
+_restore_iteration_order(restore::Bool, prev) = (restore && (IDX_TYPE[] = prev); nothing)
+
+_infer_track_order(track_order::Union{Nothing,Bool}, dict::AbstractDict) =
+    track_order === nothing ? isa(dict, OrderedDict) : track_order
 
 # load with just a filename returns a flat dictionary containing all the variables
-function fileio_load(f::FileIO.File{FileIO.format"HDF5"}; kwargs...)
-    kwargs = Dict{Symbol,Any}(kwargs)  # mutate `kwargs`
-    d = pop!(kwargs, :dict, Dict{String,Any}())
-
-    # infer `track_order` from Dict type
-    if (track_order = isa(d, OrderedDict))
-        get!(kwargs, :track_order, track_order)
-    end
-
-    saved = _change_iteration_order(kwargs)
-    out = h5open(FileIO.filename(f), "r"; kwargs...) do file
-        loadtodict!(d, file)
+function fileio_load(
+    f::FileIO.File{FileIO.format"HDF5"};
+    dict=Dict{String,Any}(), track_order::Union{Nothing,Bool}=nothing, kwargs...
+)
+    track_order = _infer_track_order(track_order, dict)
+    saved = _change_iteration_order(track_order)
+    out = h5open(FileIO.filename(f), "r"; track_order=track_order, kwargs...) do file
+        loadtodict!(dict, file)
     end
     _restore_iteration_order(saved...)
     out
@@ -54,12 +53,11 @@ function fileio_load(f::FileIO.File{FileIO.format"HDF5"}, varnames::AbstractStri
 end
 
 # save all the key-value pairs in the dict as top-level variables
-function fileio_save(f::FileIO.File{FileIO.format"HDF5"}, dict::AbstractDict; kwargs...)
-    if (track_order = isa(dict, OrderedDict))
-        kwargs = Dict{Symbol,Any}(kwargs)
-        get!(kwargs, :track_order, track_order)
-    end
-    h5open(FileIO.filename(f), "w"; kwargs...) do file
+function fileio_save(
+    f::FileIO.File{FileIO.format"HDF5"}, dict::AbstractDict;
+    track_order::Union{Nothing,Bool}=nothing, kwargs...
+)
+    h5open(FileIO.filename(f), "w"; track_order=_infer_track_order(track_order, dict), kwargs...) do file
         for (k, v) in dict
             isa(k, AbstractString) || throw(ArgumentError("keys must be strings (the names of variables), got $k"))
             write(file, String(k), v)
