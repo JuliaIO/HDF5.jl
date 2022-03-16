@@ -259,7 +259,7 @@ Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`.
 
 # Fields / Arguments
 * `filter_id` - (required) `Integer`` filter identifer.
-* `flags` -     (optional) bit vector describing general properties of the filter. Defaults to [`API.H5Z_FLAG_MANDATORY`](@ref)
+* `flags` -     (optional) bit vector describing general properties of the filter. Defaults to `API.H5Z_FLAG_MANDATORY`
 * `data` -      (optional) auxillary data for the filter. See [`cd_values`](@ref API.h5p_set_filter). Defaults to `Cuint[]`
 * `name` -      (optional) `String` describing the name of the filter. Defaults to "Unknown Filter with id [filter_id]"
 * `config` -    (optional) bit vector representing information about the filter regarding whether it is able to encode data, decode data, neither, or both. Defaults to `0`.
@@ -269,11 +269,11 @@ Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`.
 * [`H5Z_GET_FILTER_INFO`](https://portal.hdfgroup.org/display/HDF5/H5Z_GET_FILTER_INFO).
 * [Registered Filter Plugins](https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins)
 `flags` bits
-* [`API.H5Z_FLAG_OPTIONAL`](@ref)
-* [`API.H5Z_FLAG_MANDATORY`](@ref)
+* `API.H5Z_FLAG_OPTIONAL`
+* `API.H5Z_FLAG_MANDATORY`
 `config` bits 
-* [`API.H5Z_FILTER_CONFIG_ENCODE_ENABLED`](@ref)
-* [`API.H5Z_FILTER_CONFIG_DECODE_ENABLED`](@ref)
+* `API.H5Z_FILTER_CONFIG_ENCODE_ENABLED`
+* `API.H5Z_FILTER_CONFIG_DECODE_ENABLED`
 """
 struct ExternalFilter <: Filter
     filter_id::API.H5Z_filter_t
