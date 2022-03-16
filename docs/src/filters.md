@@ -30,7 +30,7 @@ Fletcher32
 Szip
 NBit
 ScaleOffset
-UnknownFilter
+ExternalFilter
 ```
 
 ## External Filter Packages
@@ -88,6 +88,78 @@ ZstdFilter
 ## Other External Filters
 
 Additional filters can be dynamically loaded by the HDF5 library. See [External Links](@ref) below for more information.
+
+### Using an ExternalFilter
+
+```@meta
+CurrentModule = HDF5.Filters
+```
+
+[`ExternalFilter`](@ref) can be used to insert a dynamically loaded filter into the [`FilterPipeline`](@ref) in an ad-hoc fashion.
+
+#### Example for `bitshuffle`
+
+If we do not have a defined subtype of [`Filter`](@ref) for the [bitshuffle filter](https://github.com/kiyo-masui/bitshuffle/blob/master/src/bshuf_h5filter.h)
+we can create an `ExternalFilter`. From the header file or list of registered plugins, we see that the bitshuffle filter has an id of `32008`.
+
+Furthermore, the header describes two options:
+1. `block_size` (optional). Default is `0`.
+2. `compression` - This can be `0` or `BSHUF_H5_COMPRESS_LZ4` (`2` as defined in the C header)
+
+```julia
+using HDF5.Filters
+
+bitshuf = ExternalFilter(32008, Cuint[0, 0])
+bitshuf_comp = ExternalFilter(32008, Cuint[0, 2])
+
+data_A = rand(0:31, 1024)
+data_B = rand(32:63, 1024)
+
+filename, _ = mktemp()
+h5open(filename, "w") do h5f
+    # Indexing style
+    h5f["ex_data_A", chunk=(32,), filters=bitshuf] = data_A
+    # Procedural style
+    d, dt = create_dataset(h5f, "ex_data_B", data_B, chunk=(32,), filters=[bitshuf_comp])
+    write(d, data_B)
+end
+```
+
+### Creating a new Filter type
+
+Examining the [bitshuffle filter source code](https://github.com/kiyo-masui/bitshuffle/blob/0aee87e142c71407aa097c660727f2621c71c493/src/bshuf_h5filter.c#L47-L64) we see that three additional data components get prepended to the options. These are
+1. The major version
+2. The minor version
+3. The element size in bytes of the type via `H5Tget_size`.
+
+```julia
+import HDF5.Filters: FILTERS, Filter, FilterPipeline, filterid
+using HDF5.API
+
+const H5Z_BSHUF_ID = API.H5Z_filter_t(32008)
+struct BitShuffleFilter <: HDF5.Filters.Filter
+    major::Cuint
+    minor::Cuint
+    elem_size::Cuint
+    block_size::Cuint
+    compression::Cuint
+    BitShuffleFilter(block_size, compression) = new(0, 0, 0, block_size, compression)
+end
+# filterid is the only required method of the filter interface
+# since we are using an externally registered filter
+filterid(::Type{BitShuffleFilter}) = H5Z_BSHUF_ID
+FILTERS[H5Z_BSHUF_ID] = BitShuffleFilter
+
+function Base.push!(p::FilterPipeline, f::BitShuffleFilter)
+    ref = Ref(f)
+    GC.@preserve ref begin
+        API.h5p_set_filter(p.plist, H5Z_BSHUF_ID, API.H5Z_FLAG_OPTIONAL, 2, pointer_from_objref(ref) + sizeof(Cuint)*3)
+    end
+    return p
+end
+```
+
+Because the first three elements are not provided directly via `h5p_set_filter`, we also needed to implement a custom `Base.push!` into the `FilterPipeline`.
 
 ## Filter Interface
 
