@@ -2,6 +2,12 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.16.3
+
+* `track_order` support in `write` and `read`, integration with FileIO and `OrderedDict`'s automatic detection
+* `ExternalFilter` addition as the public interface and new documentation 
+* External dataset support
+
 ## v0.16.2
 
 * Minimum Blosc.jl version has been updated
