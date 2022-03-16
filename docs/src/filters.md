@@ -91,6 +91,10 @@ Additional filters can be dynamically loaded by the HDF5 library. See [External 
 
 ### Using an ExternalFilter
 
+```@meta
+CurrentModule = HDF5.Filters
+```
+
 [`ExternalFilter`](@ref) can be used to insert a dynamically loaded filter into the [`FilterPipeline`](@ref) in an ad-hoc fashion.
 
 #### Example for `bitshuffle`
