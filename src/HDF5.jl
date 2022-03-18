@@ -592,9 +592,9 @@ function create_dataset(
     path::AbstractString,
     dtype::Datatype,
     dspace::Dataspace;
-    dcpl = DatasetCreateProperties(),
-    dxpl = DatasetTransferProperties(),
-    dapl = DatasetAccessProperties(),
+    dcpl::DatasetCreateProperties = DatasetCreateProperties(),
+    dxpl::DatasetTransferProperties = DatasetTransferProperties(),
+    dapl::DatasetAccessProperties = DatasetAccessProperties(),
     pv...
 )
     haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
