@@ -590,7 +590,7 @@ See also
 """
 function create_dataset(
     parent::Union{File,Group},
-    path::Union{AbstractString, Nothing},
+    path::Union{AbstractString,Nothing},
     dtype::Datatype,
     dspace::Dataspace;
     dcpl::DatasetCreateProperties = DatasetCreateProperties(),
@@ -601,16 +601,16 @@ function create_dataset(
     path !== nothing && haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
     pv = setproperties!(dcpl,dxpl,dapl; pv...)
     isempty(pv) || error("invalid keyword options")
-    if path isa Nothing
+    if path === nothing
         ds = API.h5d_create_anon(parent, dtype, dspace, dcpl, dapl)
     else
         ds = API.h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl)
     end
     Dataset(ds, file(parent), dxpl)
 end
-create_dataset(parent::Union{File,Group}, path::Union{AbstractString, Nothing}, dtype::Datatype, dspace_dims::Dims; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
-create_dataset(parent::Union{File,Group}, path::Union{AbstractString, Nothing}, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
-create_dataset(parent::Union{File,Group}, path::Union{AbstractString, Nothing}, dtype::Type, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
+create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Datatype, dspace_dims::Dims; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
+create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
+create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Type, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
 
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 create_datatype(class_id, sz) = Datatype(API.h5t_create(class_id, sz))
@@ -651,7 +651,7 @@ move_link(parent::Union{File,Group}, src_name::AbstractString, dest_name::Abstra
 Base.setindex!(dset::Dataset, val, name::AbstractString) = write_attribute(dset, name, val)
 Base.setindex!(x::Attributes, val, name::AbstractString) = write_attribute(x.parent, name, val)
 # Create a dataset with properties: obj[path, prop = val, ...] = val
-function Base.setindex!(parent::Union{File,Group}, val, path::Union{AbstractString, Nothing}; pv...)
+function Base.setindex!(parent::Union{File,Group}, val, path::Union{AbstractString,Nothing}; pv...)
     need_chunks = any(k in keys(chunked_props) for k in keys(pv))
     have_chunks = any(k == :chunk for k in keys(pv))
 
@@ -1176,7 +1176,7 @@ function readmmap(obj::Dataset)
 end
 
 # Generic write
-function Base.write(parent::Union{File,Group}, name1::Union{AbstractString, Nothing}, val1, name2::Union{AbstractString, Nothing}, val2, nameval...) # FIXME: remove?
+function Base.write(parent::Union{File,Group}, name1::Union{AbstractString,Nothing}, val1, name2::Union{AbstractString, Nothing}, val2, nameval...) # FIXME: remove?
     if !iseven(length(nameval))
         error("name, value arguments must come in pairs")
     end
@@ -1197,7 +1197,7 @@ end
 # Create datasets and attributes with "native" types, but don't write the data.
 # The return syntax is: dset, dtype = create_dataset(parent, name, data; properties...)
 
-function create_dataset(parent::Union{File,Group}, name::Union{AbstractString, Nothing}, data; pv...)
+function create_dataset(parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data; pv...)
     dtype = datatype(data)
     dspace = dataspace(data)
     obj = try
@@ -1219,7 +1219,7 @@ function create_attribute(parent::Union{File,Object}, name::AbstractString, data
 end
 
 # Create and write, closing the objects upon exit
-function write_dataset(parent::Union{File,Group}, name::Union{AbstractString, Nothing}, data; pv...)
+function write_dataset(parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data; pv...)
     obj, dtype = create_dataset(parent, name, data; pv...)
     try
         write_dataset(obj, dtype, data)
@@ -1568,7 +1568,7 @@ function write_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, 
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
     API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
 end
-function write_dataset(dataset::Dataset, memtype::Datatype, str::Union{AbstractString, Nothing}, xfer::DatasetTransferProperties=dataset.xfer)
+function write_dataset(dataset::Dataset, memtype::Datatype, str::Union{AbstractString,Nothing}, xfer::DatasetTransferProperties=dataset.xfer)
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
         # unsafe_convert(Cstring, strbuf) is responsible for enforcing the no-'\0' policy,
