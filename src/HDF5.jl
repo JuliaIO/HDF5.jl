@@ -1568,7 +1568,7 @@ function write_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, 
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
     API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
 end
-function write_dataset(dataset::Dataset, memtype::Datatype, str::AbstractString, xfer::DatasetTransferProperties=dataset.xfer)
+function write_dataset(dataset::Dataset, memtype::Datatype, str::Union{AbstractString, Nothing}, xfer::DatasetTransferProperties=dataset.xfer)
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
         # unsafe_convert(Cstring, strbuf) is responsible for enforcing the no-'\0' policy,
