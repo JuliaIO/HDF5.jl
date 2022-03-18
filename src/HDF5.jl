@@ -579,17 +579,25 @@ There are many keyword properties that can be set. Below are a few select keywor
 * `filters` - `AbstractVector{<: Filters.Filter}` describing the order of the filters to apply to the data. See [`Filters`](@ref)
 * `external` - `Tuple{AbstractString, Intger, Integer}` `(filepath, offset, filesize)` External dataset file location, data offset, and file size. See [`API.h5p_set_external`](@ref).
 
+Additionally, the initial create, transfer, and access properties can be provided as a keyword:
+* `dcpl` - [`DatasetCreateProperties`](@ref)
+* `dxpl` - [`DatasetTransferProperties`](@ref)
+* `dapl` - [`DatasetAccessProperties`](@ref)
+
 See also
 * [`H5P`](@ref H5P)
-* [`DatasetCreateProperties`](@ref)
-* [`DatasetTransferProperties`](@ref)
-* [`DatasetAccessProperties`](@ref)
 """
-function create_dataset(parent::Union{File,Group}, path::AbstractString, dtype::Datatype, dspace::Dataspace; pv...)
+function create_dataset(
+    parent::Union{File,Group},
+    path::AbstractString,
+    dtype::Datatype,
+    dspace::Dataspace;
+    dcpl = DatasetCreateProperties(),
+    dxpl = DatasetTransferProperties(),
+    dapl = DatasetAccessProperties(),
+    pv...
+)
     haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
-    dcpl = DatasetCreateProperties()
-    dxpl = DatasetTransferProperties()
-    dapl = DatasetAccessProperties()
     pv = setproperties!(dcpl,dxpl,dapl; pv...)
     isempty(pv) || error("invalid keyword options")
     Dataset(API.h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl), file(parent), dxpl)
