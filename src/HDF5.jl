@@ -598,10 +598,10 @@ function create_dataset(
     dapl::DatasetAccessProperties = DatasetAccessProperties(),
     pv...
 )
-    path !== nothing && haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
+    !isnothing(path) && haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
     pv = setproperties!(dcpl,dxpl,dapl; pv...)
     isempty(pv) || error("invalid keyword options")
-    if path === nothing
+    if isnothing(path)
         ds = API.h5d_create_anon(parent, dtype, dspace, dcpl, dapl)
     else
         ds = API.h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl)
@@ -1176,7 +1176,7 @@ function readmmap(obj::Dataset)
 end
 
 # Generic write
-function Base.write(parent::Union{File,Group}, name1::Union{AbstractString,Nothing}, val1, name2::Union{AbstractString, Nothing}, val2, nameval...) # FIXME: remove?
+function Base.write(parent::Union{File,Group}, name1::Union{AbstractString,Nothing}, val1, name2::Union{AbstractString,Nothing}, val2, nameval...) # FIXME: remove?
     if !iseven(length(nameval))
         error("name, value arguments must come in pairs")
     end
