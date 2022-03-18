@@ -87,6 +87,7 @@ h5a_write
 ## [[`H5D`](https://portal.hdfgroup.org/display/HDF5/Datasets) — Dataset Interface](@id H5D)
 - [`h5d_close`](@ref h5d_close)
 - [`h5d_create`](@ref h5d_create)
+- [`h5d_create_anon`](@ref h5d_create_anon)
 - [`h5d_extend`](@ref h5d_extend)
 - [`h5d_fill`](@ref h5d_fill)
 - [`h5d_flush`](@ref h5d_flush)
@@ -116,6 +117,7 @@ h5a_write
 ```@docs
 h5d_close
 h5d_create
+h5d_create_anon
 h5d_extend
 h5d_fill
 h5d_flush

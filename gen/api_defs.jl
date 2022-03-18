@@ -56,6 +56,7 @@
 
 @bind h5d_close(dataset_id::hid_t)::herr_t "Error closing dataset"
 @bind h5d_create2(loc_id::hid_t, pathname::Ptr{UInt8}, dtype_id::hid_t, space_id::hid_t, lcpl_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)::hid_t string("Error creating dataset ", h5i_get_name(loc_id), "/", pathname)
+@bind h5d_create_anon(loc_id::hid_t, type_id::hid_t, space_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)::hid_t "Error in creating anonymous dataset"
 @bind h5d_extend(dataset_id::hid_t, size::Ptr{hsize_t})::herr_t "Error extending dataset" # deprecated in favor of h5d_set_extent
 @bind h5d_fill(fill::Ptr{Cvoid}, fill_type_id::hid_t, buf::Ptr{Cvoid}, buf_type_id::hid_t, space_id::hid_t)::herr_t "Error filling dataset"
 @bind h5d_flush(dataset_id::hid_t)::herr_t "Error flushing dataset"

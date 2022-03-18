@@ -308,6 +308,17 @@ function h5d_create(loc_id, pathname, dtype_id, space_id, lcpl_id, dcpl_id, dapl
 end
 
 """
+    h5d_create_anon(loc_id::hid_t, type_id::hid_t, space_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t) -> hid_t
+
+See `libhdf5` documentation for [`H5Dcreate_anon`](https://portal.hdfgroup.org/display/HDF5/H5D_CREATE_ANON).
+"""
+function h5d_create_anon(loc_id, type_id, space_id, dcpl_id, dapl_id)
+    var"#status#" = ccall((:H5Dcreate_anon, libhdf5), hid_t, (hid_t, hid_t, hid_t, hid_t, hid_t), loc_id, type_id, space_id, dcpl_id, dapl_id)
+    var"#status#" < 0 && @h5error("Error in creating anonymous dataset")
+    return var"#status#"
+end
+
+"""
     h5d_extend(dataset_id::hid_t, size::Ptr{hsize_t})
 
 See `libhdf5` documentation for [`H5Dextend`](https://portal.hdfgroup.org/display/HDF5/H5D_EXTEND).
