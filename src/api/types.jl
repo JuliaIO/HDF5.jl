@@ -336,10 +336,10 @@ const H5T_CSET_ASCII   = 0
 const H5T_CSET_UTF8    = 1
 
 # Sign types (C enum H5T_sign_t)
-const H5T_SGN_ERROR = Cint(-1) # error
+const H5T_SGN_ERROR    = Cint(-1) # error
 const H5T_SGN_NONE     = Cint(0)  # unsigned
 const H5T_SGN_2        = Cint(1)  # 2's complement
-const H5T_NSGN = Cint(2)        # sentinel: this must be last!
+const H5T_NSGN         = Cint(2)        # sentinel: this must be last!
 
 # Search directions
 const H5T_DIR_ASCEND   = 1
