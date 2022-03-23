@@ -26,15 +26,15 @@ end
     io = IOBuffer()
     show(io, DT)
     str = String(take!(io))
-    @test contains(str, "undefined integer")
-    @test contains(str, "size: 3 bytes")
-    @test contains(str, "precision: 12 bits")
-    @test contains(str, "offset: 12 bits")
-    @test contains(str, "order: little endian byte order")
+    @test match(r"undefined integer", str) !== nothing
+    @test match(r"size: 3 bytes", str) !== nothing
+    @test match(r"precision: 12 bits", str) !== nothing
+    @test match(r"offset: 12 bits", str) !== nothing
+    @test match(r"order: little endian byte order", str) !== nothing
 
     HDF5.API.h5t_set_order(DT, HDF5.API.H5T_ORDER_BE)
     @test HDF5.API.h5t_get_order(DT) == HDF5.API.H5T_ORDER_BE
     show(io, DT)
     str = String(take!(io))
-    @test contains(str, "order: big endian byte order")
+    @test match(r"order: big endian byte order", str) !== nothing
 end
