@@ -130,6 +130,26 @@ abstract  type Hmpih end
 primitive type Hmpih32 <: Hmpih 32 end # MPICH C/Fortran, OpenMPI Fortran: 32 bit handles
 primitive type Hmpih64 <: Hmpih 64 end # OpenMPI C: pointers (mostly 64 bit)
 
+# HDFS Drivers
+struct H5FD_hdfs_fapl_t
+    version::Int32
+    namenode_name::NTuple{129, Cchar}
+    namenode_port::Int32
+    user_name::NTuple{129, Cchar}
+    kerberos_ticket_cache::NTuple{129, Cchar}
+    stream_buffer_size::Int32
+end
+
+struct H5FD_splitter_vfd_config_t
+    magic::Int32
+    version::Cuint
+    rw_fapl_id::hid_t
+    wo_fapl_id::hid_t
+    wo_path::NTuple{4097, Cchar}
+    log_file_path::NTuple{4097, Cchar}
+    ignore_wo_errs::hbool_t
+end
+
 # Private function to extract exported global library constants.
 # Need to call H5open to ensure library is initalized before reading these constants.
 # Although these are runtime initalized constants, in practice their values are stable, so
@@ -411,3 +431,17 @@ const H5_SZIP_MAX_PIXELS_PER_BLOCK = Cuint(32)
 
 const H5Z_FILTER_CONFIG_ENCODE_ENABLED = 0x0001
 const H5Z_FILTER_CONFIG_DECODE_ENABLED = 0x0002
+
+@enum H5F_mem_t::Int32 begin
+    H5FD_MEM_NOLIST = -1
+    H5FD_MEM_DEFAULT = 0
+    H5FD_MEM_SUPER = 1
+    H5FD_MEM_BTREE = 2
+    H5FD_MEM_DRAW = 3
+    H5FD_MEM_GHEAP = 4
+    H5FD_MEM_LHEAP = 5
+    H5FD_MEM_OHDR = 6
+    H5FD_MEM_NTYPES = 7
+end
+
+const H5FD_mem_t = H5F_mem_t

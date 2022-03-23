@@ -20,6 +20,50 @@ end
 
 abstract type Driver end
 
+"""
+    Core([increment::Csize_t, backing_store::Cuint, [write_tracking::Cuint, page_size::Csize_t]])
+
+`increment`: specifies the increment by which allocated memory is to be increased each time more memory is required.
+`backing_store`: Boolean flag indicating whether to write the file contents to disk when the file is closed
+`write_tracking`: Boolean flag indicating whether write tracking is enabled
+`page_size`: Size, in bytes, of write aggregation pages
+
+Defaults:
+* increment: 8192
+* backing_store: false
+* write_tracking: false
+* page_size 524288
+"""
+struct Core <: Driver
+    increment::Csize_t
+    backing_store::Cuint #Bool
+    write_tracking::Cuint #Bool
+    page_size::Csize_t
+end
+Core() = Core(8192, true, false, 524288)
+Core(increment, backing_store) = Core(increment, backing_store, false, 524288)
+
+DRIVERS[API.h5fd_core_init()] = Core
+
+function get_driver(p::Properties, ::Type{Core})
+    r_increment = Ref{Csize_t}(0)
+    r_backing_store = Ref{Cuint}(0)
+    r_write_tracking = Ref{Cuint}(0)
+    r_page_size = Ref{Csize_t}(0)
+    API.h5p_get_fapl_core(p, r_increment, r_backing_store)
+    API.h5p_get_core_write_tracking(p, r_write_tracking, r_page_size)
+    return Core(
+        r_increment[],
+        r_backing_store[],
+        r_write_tracking[],
+        r_page_size[]
+    )
+end
+
+function set_driver!(p::Properties, driver::Core)
+    API.h5p_set_fapl_core(p, driver.increment, driver.backing_store)
+    API.h5p_set_core_write_tracking(p, driver.write_tracking, driver.page_size)
+end
 
 """
     POSIX()
