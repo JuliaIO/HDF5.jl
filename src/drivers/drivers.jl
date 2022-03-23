@@ -63,6 +63,7 @@ end
 function set_driver!(p::Properties, driver::Core)
     API.h5p_set_fapl_core(p, driver.increment, driver.backing_store)
     API.h5p_set_core_write_tracking(p, driver.write_tracking, driver.page_size)
+    return nothing
 end
 
 """
