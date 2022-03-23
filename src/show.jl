@@ -63,11 +63,31 @@ function Base.show(io::IO, attr::Attributes)
     print(io, "Attributes of ", attr.parent)
 end
 
+const ENDIAN_DICT  = Dict(
+    API.H5T_ORDER_LE    => "little endian byte order",
+    API.H5T_ORDER_BE    => "big endian byte order",
+    API.H5T_ORDER_VAX   => "vax mixed endian byte order",
+    API.H5T_ORDER_MIXED => "mixed endian byte order",
+    API.H5T_ORDER_NONE  => "no particular byte order",
+)
+
+
 function Base.show(io::IO, dtype::Datatype)
     print(io, "HDF5.Datatype: ")
     if isvalid(dtype)
         API.h5t_committed(dtype) && print(io, name(dtype), " ")
-        print(io, API.h5lt_dtype_to_text(dtype))
+        buffer = IOBuffer(; sizehint = 18)
+        print(buffer, API.h5lt_dtype_to_text(dtype))
+        str = String(take!(buffer))
+        if str == "undefined integer"
+            println(io, str)
+            println(io, "         size: ", API.h5t_get_size(dtype), " bytes")
+            println(io, "    precision: ", API.h5t_get_precision(dtype), " bits")
+            println(io, "       offset: ", API.h5t_get_offset(dtype), " bits")
+            print(io,   "        order: ", ENDIAN_DICT[API.h5t_get_order(dtype)])
+        else
+            print(io, str)
+        end
     else
         # Note that API.h5i_is_valid returns `false` on the built-in datatypes (e.g. API.H5T_NATIVE_INT),
         # apparently because they have refcounts of 0 yet are always valid. Just temporarily turn
