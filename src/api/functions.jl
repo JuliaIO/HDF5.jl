@@ -1328,6 +1328,28 @@ function h5p_get_fclose_degree(fapl_id, fc_degree)
 end
 
 """
+    h5p_get_fill_time(plist_id::hid_t, fill_time::Ptr{H5D_fill_time_t})
+
+See `libhdf5` documentation for [`H5Pget_fill_time`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILL_TIME).
+"""
+function h5p_get_fill_time(plist_id, fill_time)
+    var"#status#" = ccall((:H5Pget_fill_time, libhdf5), herr_t, (hid_t, Ptr{H5D_fill_time_t}), plist_id, fill_time)
+    var"#status#" < 0 && @h5error("Error in h5p_get_fill_time (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_fill_value(plist_id::hid_t, type_id::hid_t, value::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Pget_fill_value`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILL_VALUE).
+"""
+function h5p_get_fill_value(plist_id, type_id, value)
+    var"#status#" = ccall((:H5Pget_fill_value, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cvoid}), plist_id, type_id, value)
+    var"#status#" < 0 && @h5error("Error in h5p_get_fill_value (not annotated)")
+    return nothing
+end
+
+"""
     h5p_get_filter(plist_id::hid_t, idx::Cuint, flags::Ptr{Cuint}, cd_nemlts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{Cchar}, filter_config::Ptr{Cuint}) -> H5Z_filter_t
 
 See `libhdf5` documentation for [`H5Pget_filter2`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILTER2).
@@ -1544,6 +1566,28 @@ See `libhdf5` documentation for [`H5Pset_efile_prefix`](https://portal.hdfgroup.
 function h5p_set_efile_prefix(plist_id, prefix)
     var"#status#" = ccall((:H5Pset_efile_prefix, libhdf5), herr_t, (hid_t, Ptr{UInt8}), plist_id, prefix)
     var"#status#" < 0 && @h5error("Error setting external file prefix")
+    return nothing
+end
+
+"""
+    h5p_set_fill_time(plist_id::hid_t, fill_time::H5D_fill_time_t)
+
+See `libhdf5` documentation for [`H5Pset_fill_time`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILL_TIME).
+"""
+function h5p_set_fill_time(plist_id, fill_time)
+    var"#status#" = ccall((:H5Pset_fill_time, libhdf5), herr_t, (hid_t, H5D_fill_time_t), plist_id, fill_time)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fill_time (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_fill_value(plist_id::hid_t, type_id::hid_t, value::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Pset_fill_value`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILL_VALUE).
+"""
+function h5p_set_fill_value(plist_id, type_id, value)
+    var"#status#" = ccall((:H5Pset_fill_value, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cvoid}), plist_id, type_id, value)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fill_value (not annotated)")
     return nothing
 end
 

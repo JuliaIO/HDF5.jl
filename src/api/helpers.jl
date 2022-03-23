@@ -380,6 +380,12 @@ function h5p_get_fclose_degree(fapl_id)
     return out[]
 end
 
+function h5p_get_fill_time(plist_id)
+    out = Ref{H5D_fill_time_t}()
+    h5p_get_fill_time(plist_id, out)
+    return out[]
+end
+
 function h5p_get_libver_bounds(plist_id)
     low = Ref{Cint}()
     high = Ref{Cint}()

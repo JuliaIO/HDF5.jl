@@ -14,6 +14,8 @@ h5open(fn, "w";
     d = create_dataset(g, "dataset", datatype(Int), dataspace((500,500)),
                  alloc_time = HDF5.API.H5D_ALLOC_TIME_EARLY,
                  chunk = (5, 10),
+                 fill_value = 1,
+                 fill_time = :never,
                  obj_track_times = false)
     attributes(d)["metadata"] = "test"
 
@@ -52,6 +54,8 @@ h5open(fn, "w";
     @test dcpl.chunk == (5, 10)
     @test dcpl.layout == :chunked
     @test !dcpl.obj_track_times
+    @test dcpl.fill_time == :never
+    @test dcpl.fill_value == 1.0
 
     @test acpl.char_encoding == :utf8
 

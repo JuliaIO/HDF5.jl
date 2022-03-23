@@ -347,6 +347,11 @@ Properties used when creating a new `Dataset`. Inherits from
 
   See $(h5doc("H5P_SET_ALLOC_TIME")).
 
+- `fill_time`: the timing of when the dataset should be filled; one of:
+   - `:alloc`: Fill when allocated
+   - `:never`: Never fill
+   - `:ifset`: Fill if a value is set
+
 - `chunk`: a tuple containing the size of the chunks to store each dimension.
   See $(h5doc("H5P_SET_CHUNK")) (note that this uses Julia's column-major
   ordering).
@@ -411,6 +416,12 @@ set_chunk!(p::Properties, dims) = API.h5p_set_chunk(p, length(dims), API.hsize_t
     :chunked    => API.H5D_CHUNKED,
     :virtual    => API.H5D_VIRTUAL)
 
+# See https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILL_TIME
+@enum_property(fill_time,
+    :alloc => API.H5D_FILL_TIME_ALLOC,
+    :never => API.H5D_FILL_TIME_NEVER,
+    :ifset => API.H5D_FILL_TIME_IFSET
+)
 
 # filters getters/setters
 get_filters(p::Properties) = Filters.FilterPipeline(p)
@@ -427,6 +438,8 @@ set_blosc!(p::Properties, val) = error("The Blosc filter now requires the H5Zblo
 
 class_propertynames(::Type{DatasetCreateProperties}) = (
     :alloc_time,
+    :fill_time,
+    :fill_value,
     :chunk,
     :external,
     :filters,
@@ -444,6 +457,8 @@ class_propertynames(::Type{DatasetCreateProperties}) = (
 
 function class_getproperty(::Type{DatasetCreateProperties}, p::Properties, name::Symbol)
     name === :alloc_time  ? get_alloc_time(p) :
+    name === :fill_time   ? get_fill_time(p) :
+    name === :fill_value  ? get_fill_value(p) :
     name === :chunk       ? get_chunk(p) :
     name === :external    ? API.h5p_get_external(p) :
     name === :filters     ? get_filters(p) :
@@ -454,6 +469,8 @@ function class_getproperty(::Type{DatasetCreateProperties}, p::Properties, name:
 end
 function class_setproperty!(::Type{DatasetCreateProperties}, p::Properties, name::Symbol, val)
     name === :alloc_time  ? set_alloc_time!(p, val) :
+    name === :fill_time   ? set_fill_time!(p, val) :
+    name === :fill_value  ? set_fill_value!(p, val) :
     name === :chunk       ? set_chunk!(p, val) :
     name === :external    ? API.h5p_set_external(p, val...) :
     name === :filters     ? set_filters!(p, val) :
