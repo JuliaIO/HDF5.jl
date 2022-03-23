@@ -56,6 +56,7 @@
 
 @bind h5d_close(dataset_id::hid_t)::herr_t "Error closing dataset"
 @bind h5d_create2(loc_id::hid_t, pathname::Ptr{UInt8}, dtype_id::hid_t, space_id::hid_t, lcpl_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)::hid_t string("Error creating dataset ", h5i_get_name(loc_id), "/", pathname)
+@bind h5d_create_anon(loc_id::hid_t, type_id::hid_t, space_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)::hid_t "Error in creating anonymous dataset"
 @bind h5d_extend(dataset_id::hid_t, size::Ptr{hsize_t})::herr_t "Error extending dataset" # deprecated in favor of h5d_set_extent
 @bind h5d_fill(fill::Ptr{Cvoid}, fill_type_id::hid_t, buf::Ptr{Cvoid}, buf_type_id::hid_t, space_id::hid_t)::herr_t "Error filling dataset"
 @bind h5d_flush(dataset_id::hid_t)::herr_t "Error flushing dataset"
@@ -288,10 +289,19 @@
 @bind h5t_close(dtype_id::hid_t)::herr_t "Error closing datatype"
 @bind h5t_committed(dtype_id::hid_t)::htri_t "Error determining whether datatype is committed"
 @bind h5t_commit2(loc_id::hid_t, name::Ptr{UInt8}, dtype_id::hid_t, lcpl_id::hid_t, tcpl_id::hid_t, tapl_id::hid_t)::herr_t "Error committing type"
+# @bind h5t_commit_anon
+# @bind h5t_compiler_conv
 @bind h5t_copy(dtype_id::hid_t)::hid_t "Error copying datatype"
 @bind h5t_create(class_id::Cint, sz::Csize_t)::hid_t string("Error creating datatype of id ", class_id)
+# @bind h5t_decode
+# @bind h5t_detect_class
+# @bind h5t_encode
+# @bind h5t_enum_create
 @bind h5t_enum_insert(dtype_id::hid_t, name::Cstring, value::Ptr{Cvoid})::herr_t string("Error adding ", name, " to enum datatype")
+# @bind h5t_enum_nameof
+# @bind h5t_enum_valueof
 @bind h5t_equal(dtype_id1::hid_t, dtype_id2::hid_t)::htri_t "Error checking datatype equality"
+# @bind ht5_find
 @bind h5t_get_array_dims2(dtype_id::hid_t, dims::Ptr{hsize_t})::Cint "Error getting dimensions of array"
 @bind h5t_get_array_ndims(dtype_id::hid_t)::Cint "Error getting ndims of array"
 @bind h5t_get_class(dtype_id::hid_t)::Cint "Error getting class"
@@ -300,28 +310,45 @@
 @bind h5t_get_fields(dtype_id::hid_t, spos::Ref{Csize_t}, epos::Ref{Csize_t}, esize::Ref{Csize_t}, mpos::Ref{Csize_t}, msize::Ref{Csize_t})::herr_t "Error getting datatype floating point bit positions"
 @bind h5t_get_member_class(dtype_id::hid_t, index::Cuint)::Cint string("Error getting class of compound datatype member #", index)
 @bind h5t_get_member_index(dtype_id::hid_t, membername::Ptr{UInt8})::Cint string("Error getting index of compound datatype member \"", membername, "\"")
+# @bind h5t_get_member_name(dtype_id::hid_t, index::Cuint)::Cstring string("Error getting name of compound datatype member #", index) # See below
 @bind h5t_get_member_offset(dtype_id::hid_t, index::Cuint)::Csize_t "Error getting offset of compound datatype #$(index)"
 @bind h5t_get_member_type(dtype_id::hid_t, index::Cuint)::hid_t string("Error getting type of compound datatype member #", index)
+# @bind h5t_get_member_value
 @bind h5t_get_native_type(dtype_id::hid_t, direction::Cint)::hid_t "Error getting native type"
 @bind h5t_get_nmembers(dtype_id::hid_t)::Cint "Error getting the number of members"
+# @bind h5t_get_norm
+@bind h5t_get_offset(dtype_id::hid_t)::Cint "Error getting offset"
+@bind h5t_get_order(dtype_id::hid_t)::Cint "Error getting order"
+# @bind h5t_get_pad(dtype_id::hid_t, lsb::Ptr{H5T_pad_t}, msb::Ptr{H5T_pad_t})::herr_t "Error getting pad"
+@bind h5t_get_precision(dtype_id::hid_t)::Csize_t "Error getting precision"
 @bind h5t_get_sign(dtype_id::hid_t)::Cint "Error getting sign"
 @bind h5t_get_size(dtype_id::hid_t)::Csize_t "Error getting type size"
 @bind h5t_get_strpad(dtype_id::hid_t)::Cint "Error getting string padding"
 @bind h5t_get_super(dtype_id::hid_t)::hid_t "Error getting super type"
+# @bind h5t_get_tag(type_id::hid_t)::Cstring "Error getting datatype opaque tag" # See below
 @bind h5t_insert(dtype_id::hid_t, fieldname::Ptr{UInt8}, offset::Csize_t, field_id::hid_t)::herr_t string("Error adding field ", fieldname, " to compound datatype")
 @bind h5t_is_variable_str(type_id::hid_t)::htri_t "Error determining whether string is of variable length"
 @bind h5t_lock(type_id::hid_t)::herr_t "Error locking type"
 @bind h5t_open2(loc_id::hid_t, name::Ptr{UInt8}, tapl_id::hid_t)::hid_t string("Error opening type ", h5i_get_name(loc_id), "/", name)
+# @bind h5t_pack
+# @bind h5t_reclaim
+# @bind h5t_refresh
+# @bind h5t_register
 @bind h5t_set_cset(dtype_id::hid_t, cset::Cint)::herr_t "Error setting character set in datatype"
 @bind h5t_set_ebias(dtype_id::hid_t, ebias::Csize_t)::herr_t "Error setting datatype floating point exponent bias"
 @bind h5t_set_fields(dtype_id::hid_t, spos::Csize_t, epos::Csize_t, esize::Csize_t, mpos::Csize_t, msize::Csize_t)::herr_t "Error setting datatype floating point bit positions"
+# @bind h5t_set_inpad(dtype_id::hid_t, inpad::H5T_pad_t)::herr_t "Error setting inpad"
+# @bind h5t_set_norm(dtype_id::hid_t, norm::H5T_norm_t)::herr_t "Error setting mantissa"
+@bind h5t_set_offset(dtype_id::hid_t, offset::Csize_t)::herr_t "Error setting offset"
+@bind h5t_set_order(dtype_id::hid_t, order::Cint)::herr_t "Error setting order"
 @bind h5t_set_precision(dtype_id::hid_t, sz::Csize_t)::herr_t "Error setting precision of datatype"
 @bind h5t_set_size(dtype_id::hid_t, sz::Csize_t)::herr_t "Error setting size of datatype"
 @bind h5t_set_strpad(dtype_id::hid_t, sz::Cint)::herr_t "Error setting size of datatype"
 @bind h5t_set_tag(dtype_id::hid_t, tag::Cstring)::herr_t "Error setting opaque tag"
+# @bind h5t_unregister
 @bind h5t_vlen_create(base_type_id::hid_t)::hid_t "Error creating vlen type"
 # The following are not automatically wrapped since they have requirements about freeing
-# the memory that is returned from the calls.
+# the memory that is returned from the calls. They are implemented via api_helpers.jl
 #@bind h5t_get_member_name(dtype_id::hid_t, index::Cuint)::Cstring string("Error getting name of compound datatype member #", index)
 #@bind h5t_get_tag(type_id::hid_t)::Cstring "Error getting datatype opaque tag"
 

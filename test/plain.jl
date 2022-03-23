@@ -36,6 +36,8 @@ f["compressedempty", shuffle=true, deflate=4] = Int64[]
 # compression of zero-dimensional array (pull request #445)
 f["compressed_zerodim", shuffle=true, deflate=4] = fill(Int32(42), ())
 f["bloscempty", blosc=4] = Int64[]
+# test creation of an anonymouse dataset
+f[nothing] = 5
 # Create arrays of different types
 A = randn(3, 5)
 write(f, "Afloat64", convert(Matrix{Float64}, A))
@@ -86,6 +88,7 @@ write_attribute(f["int_vlen"], "vlen_attr", vleni)
 # Empty arrays
 empty = UInt32[]
 write(f, "empty", empty)
+write(f, nothing, empty)
 # Empty strings
 empty_string = ""
 write(f, "empty_string", empty_string)
@@ -133,6 +136,8 @@ Xslab = randn(20, 20, 5)
 for i = 1:5
     dset[:,:,i] = Xslab[:,:,i]
 end
+dset = create_dataset(f, nothing, datatype(Float64), dataspace(20, 20, 5), chunk=(5, 5, 1))
+dset[:, :, :] = 3.0
 # More complex hyperslab and assignment with "incorrect" types (issue #34)
 d = create_dataset(f, "slab2", datatype(Float64), ((10, 20), (100, 200)), chunk=(1, 1))
 d[:,:] = 5

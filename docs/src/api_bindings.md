@@ -87,6 +87,7 @@ h5a_write
 ## [[`H5D`](https://portal.hdfgroup.org/display/HDF5/Datasets) — Dataset Interface](@id H5D)
 - [`h5d_close`](@ref h5d_close)
 - [`h5d_create`](@ref h5d_create)
+- [`h5d_create_anon`](@ref h5d_create_anon)
 - [`h5d_extend`](@ref h5d_extend)
 - [`h5d_fill`](@ref h5d_fill)
 - [`h5d_flush`](@ref h5d_flush)
@@ -116,6 +117,7 @@ h5a_write
 ```@docs
 h5d_close
 h5d_create
+h5d_create_anon
 h5d_extend
 h5d_fill
 h5d_flush
@@ -508,6 +510,9 @@ h5s_set_extent_simple
 - [`h5t_get_member_type`](@ref h5t_get_member_type)
 - [`h5t_get_native_type`](@ref h5t_get_native_type)
 - [`h5t_get_nmembers`](@ref h5t_get_nmembers)
+- [`h5t_get_offset`](@ref h5t_get_offset)
+- [`h5t_get_order`](@ref h5t_get_order)
+- [`h5t_get_precision`](@ref h5t_get_precision)
 - [`h5t_get_sign`](@ref h5t_get_sign)
 - [`h5t_get_size`](@ref h5t_get_size)
 - [`h5t_get_strpad`](@ref h5t_get_strpad)
@@ -520,6 +525,8 @@ h5s_set_extent_simple
 - [`h5t_set_cset`](@ref h5t_set_cset)
 - [`h5t_set_ebias`](@ref h5t_set_ebias)
 - [`h5t_set_fields`](@ref h5t_set_fields)
+- [`h5t_set_offset`](@ref h5t_set_offset)
+- [`h5t_set_order`](@ref h5t_set_order)
 - [`h5t_set_precision`](@ref h5t_set_precision)
 - [`h5t_set_size`](@ref h5t_set_size)
 - [`h5t_set_strpad`](@ref h5t_set_strpad)
@@ -547,6 +554,9 @@ h5t_get_member_offset
 h5t_get_member_type
 h5t_get_native_type
 h5t_get_nmembers
+h5t_get_offset
+h5t_get_order
+h5t_get_precision
 h5t_get_sign
 h5t_get_size
 h5t_get_strpad
@@ -559,6 +569,8 @@ h5t_open
 h5t_set_cset
 h5t_set_ebias
 h5t_set_fields
+h5t_set_offset
+h5t_set_order
 h5t_set_precision
 h5t_set_size
 h5t_set_strpad

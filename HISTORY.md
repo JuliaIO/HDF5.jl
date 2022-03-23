@@ -2,6 +2,11 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.16.4
+
+* Anonymous dataset support
+* Allow property lists to be passed into `create_dataset`
+
 ## v0.16.3
 
 * `track_order` support in `write` and `read`, integration with FileIO and `OrderedDict`'s automatic detection

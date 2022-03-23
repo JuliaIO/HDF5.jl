@@ -308,6 +308,17 @@ function h5d_create(loc_id, pathname, dtype_id, space_id, lcpl_id, dcpl_id, dapl
 end
 
 """
+    h5d_create_anon(loc_id::hid_t, type_id::hid_t, space_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t) -> hid_t
+
+See `libhdf5` documentation for [`H5Dcreate_anon`](https://portal.hdfgroup.org/display/HDF5/H5D_CREATE_ANON).
+"""
+function h5d_create_anon(loc_id, type_id, space_id, dcpl_id, dapl_id)
+    var"#status#" = ccall((:H5Dcreate_anon, libhdf5), hid_t, (hid_t, hid_t, hid_t, hid_t, hid_t), loc_id, type_id, space_id, dcpl_id, dapl_id)
+    var"#status#" < 0 && @h5error("Error in creating anonymous dataset")
+    return var"#status#"
+end
+
+"""
     h5d_extend(dataset_id::hid_t, size::Ptr{hsize_t})
 
 See `libhdf5` documentation for [`H5Dextend`](https://portal.hdfgroup.org/display/HDF5/H5D_EXTEND).
@@ -2364,6 +2375,39 @@ function h5t_get_nmembers(dtype_id)
 end
 
 """
+    h5t_get_offset(dtype_id::hid_t) -> Int
+
+See `libhdf5` documentation for [`H5Tget_offset`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_OFFSET).
+"""
+function h5t_get_offset(dtype_id)
+    var"#status#" = ccall((:H5Tget_offset, libhdf5), Cint, (hid_t,), dtype_id)
+    var"#status#" < 0 && @h5error("Error getting offset")
+    return Int(var"#status#")
+end
+
+"""
+    h5t_get_order(dtype_id::hid_t) -> Int
+
+See `libhdf5` documentation for [`H5Tget_order`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_ORDER).
+"""
+function h5t_get_order(dtype_id)
+    var"#status#" = ccall((:H5Tget_order, libhdf5), Cint, (hid_t,), dtype_id)
+    var"#status#" < 0 && @h5error("Error getting order")
+    return Int(var"#status#")
+end
+
+"""
+    h5t_get_precision(dtype_id::hid_t) -> Csize_t
+
+See `libhdf5` documentation for [`H5Tget_precision`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_PRECISION).
+"""
+function h5t_get_precision(dtype_id)
+    var"#status#" = ccall((:H5Tget_precision, libhdf5), Csize_t, (hid_t,), dtype_id)
+    @h5error "Error getting precision"
+    return var"#status#"
+end
+
+"""
     h5t_get_sign(dtype_id::hid_t) -> Int
 
 See `libhdf5` documentation for [`H5Tget_sign`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_SIGN).
@@ -2481,6 +2525,28 @@ See `libhdf5` documentation for [`H5Tset_fields`](https://portal.hdfgroup.org/di
 function h5t_set_fields(dtype_id, spos, epos, esize, mpos, msize)
     var"#status#" = ccall((:H5Tset_fields, libhdf5), herr_t, (hid_t, Csize_t, Csize_t, Csize_t, Csize_t, Csize_t), dtype_id, spos, epos, esize, mpos, msize)
     var"#status#" < 0 && @h5error("Error setting datatype floating point bit positions")
+    return nothing
+end
+
+"""
+    h5t_set_offset(dtype_id::hid_t, offset::Csize_t)
+
+See `libhdf5` documentation for [`H5Tset_offset`](https://portal.hdfgroup.org/display/HDF5/H5T_SET_OFFSET).
+"""
+function h5t_set_offset(dtype_id, offset)
+    var"#status#" = ccall((:H5Tset_offset, libhdf5), herr_t, (hid_t, Csize_t), dtype_id, offset)
+    var"#status#" < 0 && @h5error("Error setting offset")
+    return nothing
+end
+
+"""
+    h5t_set_order(dtype_id::hid_t, order::Cint)
+
+See `libhdf5` documentation for [`H5Tset_order`](https://portal.hdfgroup.org/display/HDF5/H5T_SET_ORDER).
+"""
+function h5t_set_order(dtype_id, order)
+    var"#status#" = ccall((:H5Tset_order, libhdf5), herr_t, (hid_t, Cint), dtype_id, order)
+    var"#status#" < 0 && @h5error("Error setting order")
     return nothing
 end
 

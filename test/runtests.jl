@@ -24,6 +24,8 @@ include("custom.jl")
 include("reference.jl")
 @debug "dataspace"
 include("dataspace.jl")
+@debug "datatype"
+include("datatype.jl")
 @debug "hyperslab"
 include("hyperslab.jl")
 @debug "readremote"
