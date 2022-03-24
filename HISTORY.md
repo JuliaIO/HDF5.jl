@@ -2,6 +2,12 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.16.6
+
+* Core driver API support
+* Addition of `fill_time` and `fill_value` dataset properties
+* Add type order precision API methods
+
 ## v0.16.4
 
 * Anonymous dataset support
