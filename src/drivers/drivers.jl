@@ -22,17 +22,14 @@ abstract type Driver end
 
 """
     Core([increment::Csize_t, backing_store::Cuint, [write_tracking::Cuint, page_size::Csize_t]])
+    Core(; increment::Csize_t = 8192, backing_store::Cuint = true, write_tracking::Cuint = false, page_size::Csize_t = 524288)
 
-`increment`: specifies the increment by which allocated memory is to be increased each time more memory is required.
-`backing_store`: Boolean flag indicating whether to write the file contents to disk when the file is closed
-`write_tracking`: Boolean flag indicating whether write tracking is enabled
-`page_size`: Size, in bytes, of write aggregation pages
+# Arguments
 
-Defaults:
-* increment: 8192
-* backing_store: false
-* write_tracking: false
-* page_size 524288
+* `increment`: specifies the increment by which allocated memory is to be increased each time more memory is required. (default: 8192)
+* `backing_store`: Boolean flag indicating whether to write the file contents to disk when the file is closed. (default: false)
+* `write_tracking`: Boolean flag indicating whether write tracking is enabled. (default: false)
+* `page_size`: Size, in bytes, of write aggregation pages. (default: 524288)
 """
 struct Core <: Driver
     increment::Csize_t
@@ -40,8 +37,13 @@ struct Core <: Driver
     write_tracking::Cuint #Bool
     page_size::Csize_t
 end
-Core() = Core(8192, true, false, 524288)
 Core(increment, backing_store) = Core(increment, backing_store, false, 524288)
+Core(;
+    increment = 8192,
+    backing_store = true,
+    write_tracking = false,
+    page_size = 524288
+) = Core(increment, backing_store, write_tracking, page_size)
 
 DRIVERS[API.h5fd_core_init()] = Core
 
