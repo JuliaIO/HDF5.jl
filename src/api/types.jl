@@ -432,6 +432,14 @@ const H5_SZIP_MAX_PIXELS_PER_BLOCK = Cuint(32)
 const H5Z_FILTER_CONFIG_ENCODE_ENABLED = 0x0001
 const H5Z_FILTER_CONFIG_DECODE_ENABLED = 0x0002
 
+# fill time
+@enum H5D_fill_time_t::Int32 begin
+    H5D_FILL_TIME_ERROR = -1
+    H5D_FILL_TIME_ALLOC = 0
+    H5D_FILL_TIME_NEVER = 1
+    H5D_FILL_TIME_IFSET = 2
+end
+
 @enum H5F_mem_t::Int32 begin
     H5FD_MEM_NOLIST = -1
     H5FD_MEM_DEFAULT = 0

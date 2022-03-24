@@ -193,6 +193,8 @@
 @bind h5p_get_fapl_mpio32(fapl_id::hid_t, comm::Ptr{Hmpih32}, info::Ptr{Hmpih32})::herr_t "Error getting MPIO properties"
 @bind h5p_get_fapl_mpio64(fapl_id::hid_t, comm::Ptr{Hmpih64}, info::Ptr{Hmpih64})::herr_t "Error getting MPIO properties"
 @bind h5p_get_fclose_degree(fapl_id::hid_t, fc_degree::Ref{Cint})::herr_t "Error getting close degree"
+@bind h5p_get_fill_time(plist_id::hid_t, fill_time::Ptr{H5D_fill_time_t})::herr_t "Error in h5p_get_fill_time (not annotated)"
+@bind h5p_get_fill_value(plist_id::hid_t, type_id::hid_t, value::Ptr{Cvoid})::herr_t "Error in h5p_get_fill_value (not annotated)"
 @bind h5p_get_filter2(plist_id::hid_t, idx::Cuint, flags::Ptr{Cuint}, cd_nemlts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{Cchar}, filter_config::Ptr{Cuint})::H5Z_filter_t "Error getting filter"
 @bind h5p_get_filter_by_id2(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Ref{Cuint}, cd_nelmts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{UInt8}, filter_config::Ptr{Cuint})::herr_t "Error getting filter ID"
 @bind h5p_get_layout(plist_id::hid_t)::Cint string("Error getting layout")
@@ -216,6 +218,8 @@
 @bind h5p_set_dxpl_mpio(dxpl_id::hid_t, xfer_mode::Cint)::herr_t "Error setting MPIO transfer mode"
 @bind h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::off_t, size::Csize_t)::herr_t "Error setting external property"
 @bind h5p_set_efile_prefix(plist_id::hid_t, prefix::Ptr{UInt8})::herr_t "Error setting external file prefix"
+@bind h5p_set_fill_time(plist_id::hid_t, fill_time::H5D_fill_time_t)::herr_t "Error in h5p_set_fill_time (not annotated)"
+@bind h5p_set_fill_value(plist_id::hid_t, type_id::hid_t, value::Ptr{Cvoid})::herr_t "Error in h5p_set_fill_value (not annotated)"
 @bind h5p_set_fapl_core(fapl_id::hid_t, increment::Csize_t, backing_store::hbool_t)::herr_t "Error in h5p_set_fapl_core (not annotated)"
 @bind h5p_set_fapl_family(fapl_id::hid_t, memb_size::hsize_t, memb_fapl_id::hid_t)::herr_t "Error in h5p_set_fapl_family (not annotated)"
 @bind h5p_set_fapl_hdfs(fapl_id::hid_t, fa::Ptr{H5FD_hdfs_fapl_t})::herr_t "Error in h5p_set_fapl_hdfs (not annotated)"

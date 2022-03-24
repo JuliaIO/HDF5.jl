@@ -185,3 +185,17 @@ function write_chunk(dataset_id, index::Integer, buf::Union{DenseArray,Base.Fast
     offset = [reverse(get_chunk_offset(dataset_id, index))...]
     write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
 end
+
+function get_fill_value(plist_id, ::Type{T}) where T
+    value = Ref{T}()
+    API.h5p_get_fill_value(plist_id, datatype(T), value)
+    return value[]
+end
+
+get_fill_value(plist_id) = get_fill_value(plist_id, Float64)
+
+function set_fill_value!(plist_id, value)
+    ref_value = Ref(value)
+    API.h5p_set_fill_value(plist_id, datatype(value), ref_value)
+    return plist_id
+end
