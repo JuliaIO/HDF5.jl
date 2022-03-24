@@ -1229,6 +1229,17 @@ function h5p_get_chunk(plist_id, n_dims, dims)
 end
 
 """
+    h5p_get_core_write_tracking(fapl_id::hid_t, is_enabled::Ptr{hbool_t}, page_size::Ptr{Csize_t})
+
+See `libhdf5` documentation for [`H5Pget_core_write_tracking`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CORE_WRITE_TRACKING).
+"""
+function h5p_get_core_write_tracking(fapl_id, is_enabled, page_size)
+    var"#status#" = ccall((:H5Pget_core_write_tracking, libhdf5), herr_t, (hid_t, Ptr{hbool_t}, Ptr{Csize_t}), fapl_id, is_enabled, page_size)
+    var"#status#" < 0 && @h5error("Error in h5p_get_core_write_tracking (not annotated)")
+    return nothing
+end
+
+"""
     h5p_get_create_intermediate_group(lcpl_id::hid_t, crt_intermed_group::Ref{Cuint})
 
 See `libhdf5` documentation for [`H5Pget_create_intermediate_group`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CREATE_INTERMEDIATE_GROUP).
@@ -1303,6 +1314,61 @@ function h5p_get_external_count(plist)
     var"#status#" = ccall((:H5Pget_external_count, libhdf5), Cint, (hid_t,), plist)
     var"#status#" < 0 && @h5error("Error getting external count")
     return Int(var"#status#")
+end
+
+"""
+    h5p_get_fapl_core(fapl_id::hid_t, increment::Ptr{Csize_t}, backing_store::Ptr{hbool_t})
+
+See `libhdf5` documentation for [`H5Pget_fapl_core`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_CORE).
+"""
+function h5p_get_fapl_core(fapl_id, increment, backing_store)
+    var"#status#" = ccall((:H5Pget_fapl_core, libhdf5), herr_t, (hid_t, Ptr{Csize_t}, Ptr{hbool_t}), fapl_id, increment, backing_store)
+    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_core (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_fapl_family(fapl_id::hid_t, memb_size::Ptr{hsize_t}, memb_fapl_id::Ptr{hid_t})
+
+See `libhdf5` documentation for [`H5Pget_fapl_family`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_FAMILY).
+"""
+function h5p_get_fapl_family(fapl_id, memb_size, memb_fapl_id)
+    var"#status#" = ccall((:H5Pget_fapl_family, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{hid_t}), fapl_id, memb_size, memb_fapl_id)
+    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_family (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_fapl_hdfs(fapl_id::hid_t, fa_out::Ptr{H5FD_hdfs_fapl_t})
+
+See `libhdf5` documentation for [`H5Pget_fapl_hdfs`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_HDFS).
+"""
+function h5p_get_fapl_hdfs(fapl_id, fa_out)
+    var"#status#" = ccall((:H5Pget_fapl_hdfs, libhdf5), herr_t, (hid_t, Ptr{H5FD_hdfs_fapl_t}), fapl_id, fa_out)
+    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_hdfs (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_fapl_multi(fapl_id::hid_t, memb_map::Ptr{H5FD_mem_t}, memb_fapl::Ptr{hid_t}, memb_name::Ptr{Ptr{Cchar}}, memb_addr::Ptr{haddr_t}, relax::Ptr{hbool_t})
+
+See `libhdf5` documentation for [`H5Pget_fapl_multi`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MULTI).
+"""
+function h5p_get_fapl_multi(fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
+    var"#status#" = ccall((:H5Pget_fapl_multi, libhdf5), herr_t, (hid_t, Ptr{H5FD_mem_t}, Ptr{hid_t}, Ptr{Ptr{Cchar}}, Ptr{haddr_t}, Ptr{hbool_t}), fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
+    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_multi (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_fapl_splitter(fapl_id::hid_t, config_ptr::Ptr{H5FD_splitter_vfd_config_t})
+
+See `libhdf5` documentation for [`H5Pget_fapl_splitter`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_SPLITTER).
+"""
+function h5p_get_fapl_splitter(fapl_id, config_ptr)
+    var"#status#" = ccall((:H5Pget_fapl_splitter, libhdf5), herr_t, (hid_t, Ptr{H5FD_splitter_vfd_config_t}), fapl_id, config_ptr)
+    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_splitter (not annotated)")
+    return nothing
 end
 
 """
@@ -1526,6 +1592,17 @@ function h5p_set_chunk_cache(dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
 end
 
 """
+    h5p_set_core_write_tracking(fapl_id::hid_t, is_enabled::hbool_t, page_size::Csize_t)
+
+See `libhdf5` documentation for [`H5Pset_core_write_tracking`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_CORE_WRITE_TRACKING).
+"""
+function h5p_set_core_write_tracking(fapl_id, is_enabled, page_size)
+    var"#status#" = ccall((:H5Pset_core_write_tracking, libhdf5), herr_t, (hid_t, hbool_t, Csize_t), fapl_id, is_enabled, page_size)
+    var"#status#" < 0 && @h5error("Error in h5p_set_core_write_tracking (not annotated)")
+    return nothing
+end
+
+"""
     h5p_set_create_intermediate_group(plist_id::hid_t, setting::Cuint)
 
 See `libhdf5` documentation for [`H5Pset_create_intermediate_group`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_CREATE_INTERMEDIATE_GROUP).
@@ -1592,6 +1669,17 @@ function h5p_set_fill_time(plist_id, fill_time)
 end
 
 """
+    h5p_set_fapl_core(fapl_id::hid_t, increment::Csize_t, backing_store::hbool_t)
+
+See `libhdf5` documentation for [`H5Pset_fapl_core`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_CORE).
+"""
+function h5p_set_fapl_core(fapl_id, increment, backing_store)
+    var"#status#" = ccall((:H5Pset_fapl_core, libhdf5), herr_t, (hid_t, Csize_t, hbool_t), fapl_id, increment, backing_store)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_core (not annotated)")
+    return nothing
+end
+
+"""
     h5p_set_fill_value(plist_id::hid_t, type_id::hid_t, value::Ptr{Cvoid})
 
 See `libhdf5` documentation for [`H5Pset_fill_value`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILL_VALUE).
@@ -1599,6 +1687,39 @@ See `libhdf5` documentation for [`H5Pset_fill_value`](https://portal.hdfgroup.or
 function h5p_set_fill_value(plist_id, type_id, value)
     var"#status#" = ccall((:H5Pset_fill_value, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cvoid}), plist_id, type_id, value)
     var"#status#" < 0 && @h5error("Error in h5p_set_fill_value (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_fapl_family(fapl_id::hid_t, memb_size::hsize_t, memb_fapl_id::hid_t)
+
+See `libhdf5` documentation for [`H5Pset_fapl_family`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_FAMILY).
+"""
+function h5p_set_fapl_family(fapl_id, memb_size, memb_fapl_id)
+    var"#status#" = ccall((:H5Pset_fapl_family, libhdf5), herr_t, (hid_t, hsize_t, hid_t), fapl_id, memb_size, memb_fapl_id)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_family (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_fapl_hdfs(fapl_id::hid_t, fa::Ptr{H5FD_hdfs_fapl_t})
+
+See `libhdf5` documentation for [`H5Pset_fapl_hdfs`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_HDFS).
+"""
+function h5p_set_fapl_hdfs(fapl_id, fa)
+    var"#status#" = ccall((:H5Pset_fapl_hdfs, libhdf5), herr_t, (hid_t, Ptr{H5FD_hdfs_fapl_t}), fapl_id, fa)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_hdfs (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_fapl_log(fapl_id::hid_t, logfile::Ptr{Cchar}, flags::Culonglong, buf_size::Csize_t)
+
+See `libhdf5` documentation for [`H5Pset_fapl_log`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_LOG).
+"""
+function h5p_set_fapl_log(fapl_id, logfile, flags, buf_size)
+    var"#status#" = ccall((:H5Pset_fapl_log, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Culonglong, Csize_t), fapl_id, logfile, flags, buf_size)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_log (not annotated)")
     return nothing
 end
 
@@ -1625,6 +1746,17 @@ function h5p_set_fapl_mpio64(fapl_id, comm, info)
 end
 
 """
+    h5p_set_fapl_multi(fapl_id::hid_t, memb_map::Ptr{H5FD_mem_t}, memb_fapl::Ptr{hid_t}, memb_name::Ptr{Ptr{Cchar}}, memb_addr::Ptr{haddr_t}, relax::hbool_t)
+
+See `libhdf5` documentation for [`H5Pset_fapl_multi`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MULTI).
+"""
+function h5p_set_fapl_multi(fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
+    var"#status#" = ccall((:H5Pset_fapl_multi, libhdf5), herr_t, (hid_t, Ptr{H5FD_mem_t}, Ptr{hid_t}, Ptr{Ptr{Cchar}}, Ptr{haddr_t}, hbool_t), fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_multi (not annotated)")
+    return nothing
+end
+
+"""
     h5p_set_fapl_sec2(fapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Pset_fapl_sec2`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_SEC2).
@@ -1632,6 +1764,39 @@ See `libhdf5` documentation for [`H5Pset_fapl_sec2`](https://portal.hdfgroup.org
 function h5p_set_fapl_sec2(fapl_id)
     var"#status#" = ccall((:H5Pset_fapl_sec2, libhdf5), herr_t, (hid_t,), fapl_id)
     var"#status#" < 0 && @h5error("Error setting Sec2 properties")
+    return nothing
+end
+
+"""
+    h5p_set_fapl_split(fapl::hid_t, meta_ext::Ptr{Cchar}, meta_plist_id::hid_t, raw_ext::Ptr{Cchar}, raw_plist_id::hid_t)
+
+See `libhdf5` documentation for [`H5Pset_fapl_split`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_SPLIT).
+"""
+function h5p_set_fapl_split(fapl, meta_ext, meta_plist_id, raw_ext, raw_plist_id)
+    var"#status#" = ccall((:H5Pset_fapl_split, libhdf5), herr_t, (hid_t, Ptr{Cchar}, hid_t, Ptr{Cchar}, hid_t), fapl, meta_ext, meta_plist_id, raw_ext, raw_plist_id)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_split (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_fapl_splitter(fapl_id::hid_t, config_ptr::Ptr{H5FD_splitter_vfd_config_t})
+
+See `libhdf5` documentation for [`H5Pset_fapl_splitter`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_SPLITTER).
+"""
+function h5p_set_fapl_splitter(fapl_id, config_ptr)
+    var"#status#" = ccall((:H5Pset_fapl_splitter, libhdf5), herr_t, (hid_t, Ptr{H5FD_splitter_vfd_config_t}), fapl_id, config_ptr)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_splitter (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_fapl_windows(fapl_id::hid_t)
+
+See `libhdf5` documentation for [`H5Pset_fapl_windows`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_WINDOWS).
+"""
+function h5p_set_fapl_windows(fapl_id)
+    var"#status#" = ccall((:H5Pset_fapl_windows, libhdf5), herr_t, (hid_t,), fapl_id)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_windows (not annotated)")
     return nothing
 end
 
