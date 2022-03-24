@@ -315,6 +315,7 @@ h5pl_size
 - [`h5p_get_char_encoding`](@ref h5p_get_char_encoding)
 - [`h5p_get_chunk`](@ref h5p_get_chunk)
 - [`h5p_get_class_name`](@ref h5p_get_class_name)
+- [`h5p_get_core_write_tracking`](@ref h5p_get_core_write_tracking)
 - [`h5p_get_create_intermediate_group`](@ref h5p_get_create_intermediate_group)
 - [`h5p_get_driver`](@ref h5p_get_driver)
 - [`h5p_get_driver_info`](@ref h5p_get_driver_info)
@@ -322,8 +323,13 @@ h5pl_size
 - [`h5p_get_efile_prefix`](@ref h5p_get_efile_prefix)
 - [`h5p_get_external`](@ref h5p_get_external)
 - [`h5p_get_external_count`](@ref h5p_get_external_count)
+- [`h5p_get_fapl_core`](@ref h5p_get_fapl_core)
+- [`h5p_get_fapl_family`](@ref h5p_get_fapl_family)
+- [`h5p_get_fapl_hdfs`](@ref h5p_get_fapl_hdfs)
 - [`h5p_get_fapl_mpio32`](@ref h5p_get_fapl_mpio32)
 - [`h5p_get_fapl_mpio64`](@ref h5p_get_fapl_mpio64)
+- [`h5p_get_fapl_multi`](@ref h5p_get_fapl_multi)
+- [`h5p_get_fapl_splitter`](@ref h5p_get_fapl_splitter)
 - [`h5p_get_fclose_degree`](@ref h5p_get_fclose_degree)
 - [`h5p_get_filter`](@ref h5p_get_filter)
 - [`h5p_get_filter_by_id`](@ref h5p_get_filter_by_id)
@@ -342,14 +348,23 @@ h5pl_size
 - [`h5p_set_char_encoding`](@ref h5p_set_char_encoding)
 - [`h5p_set_chunk`](@ref h5p_set_chunk)
 - [`h5p_set_chunk_cache`](@ref h5p_set_chunk_cache)
+- [`h5p_set_core_write_tracking`](@ref h5p_set_core_write_tracking)
 - [`h5p_set_create_intermediate_group`](@ref h5p_set_create_intermediate_group)
 - [`h5p_set_deflate`](@ref h5p_set_deflate)
 - [`h5p_set_dxpl_mpio`](@ref h5p_set_dxpl_mpio)
 - [`h5p_set_efile_prefix`](@ref h5p_set_efile_prefix)
 - [`h5p_set_external`](@ref h5p_set_external)
+- [`h5p_set_fapl_core`](@ref h5p_set_fapl_core)
+- [`h5p_set_fapl_family`](@ref h5p_set_fapl_family)
+- [`h5p_set_fapl_hdfs`](@ref h5p_set_fapl_hdfs)
+- [`h5p_set_fapl_log`](@ref h5p_set_fapl_log)
 - [`h5p_set_fapl_mpio32`](@ref h5p_set_fapl_mpio32)
 - [`h5p_set_fapl_mpio64`](@ref h5p_set_fapl_mpio64)
+- [`h5p_set_fapl_multi`](@ref h5p_set_fapl_multi)
 - [`h5p_set_fapl_sec2`](@ref h5p_set_fapl_sec2)
+- [`h5p_set_fapl_split`](@ref h5p_set_fapl_split)
+- [`h5p_set_fapl_splitter`](@ref h5p_set_fapl_splitter)
+- [`h5p_set_fapl_windows`](@ref h5p_set_fapl_windows)
 - [`h5p_set_fclose_degree`](@ref h5p_set_fclose_degree)
 - [`h5p_set_filter`](@ref h5p_set_filter)
 - [`h5p_set_fletcher32`](@ref h5p_set_fletcher32)
@@ -373,6 +388,7 @@ h5p_get_attr_creation_order
 h5p_get_char_encoding
 h5p_get_chunk
 h5p_get_class_name
+h5p_get_core_write_tracking
 h5p_get_create_intermediate_group
 h5p_get_driver
 h5p_get_driver_info
@@ -380,8 +396,13 @@ h5p_get_dxpl_mpio
 h5p_get_efile_prefix
 h5p_get_external
 h5p_get_external_count
+h5p_get_fapl_core
+h5p_get_fapl_family
+h5p_get_fapl_hdfs
 h5p_get_fapl_mpio32
 h5p_get_fapl_mpio64
+h5p_get_fapl_multi
+h5p_get_fapl_splitter
 h5p_get_fclose_degree
 h5p_get_filter
 h5p_get_filter_by_id
@@ -400,14 +421,23 @@ h5p_set_attr_creation_order
 h5p_set_char_encoding
 h5p_set_chunk
 h5p_set_chunk_cache
+h5p_set_core_write_tracking
 h5p_set_create_intermediate_group
 h5p_set_deflate
 h5p_set_dxpl_mpio
 h5p_set_efile_prefix
 h5p_set_external
+h5p_set_fapl_core
+h5p_set_fapl_family
+h5p_set_fapl_hdfs
+h5p_set_fapl_log
 h5p_set_fapl_mpio32
 h5p_set_fapl_mpio64
+h5p_set_fapl_multi
 h5p_set_fapl_sec2
+h5p_set_fapl_split
+h5p_set_fapl_splitter
+h5p_set_fapl_windows
 h5p_set_fclose_degree
 h5p_set_filter
 h5p_set_fletcher32
