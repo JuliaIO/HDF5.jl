@@ -224,6 +224,35 @@ function h5f_get_vfd_handle(file_id, fapl)
     return file_handle[]
 end
 
+function h5f_get_free_sections(file_id, type)
+    nsects = h5f_get_free_sections(file_id, type, 0, C_NULL)
+    return h5f_get_free_sections(file_id, type, nsects)
+end
+
+function h5f_get_free_sections(file_id, type, nsects)
+    sect_info = Vector{H5F_sect_info_t}(undef, nsects)
+    return h5f_get_free_sections!(file_id, type, sect_info)
+end
+
+function h5f_get_free_sections!(file_id, type, sect_info::Vector{H5F_sect_info_t})
+    h5f_get_free_sections(file_id, type, length(sect_info), sect_info)
+    return sect_info
+end
+
+function h5p_get_file_space_strategy(plist_id)
+    strategy = Ref{H5F_fspace_strategy_t}()
+    persist = Ref{hbool_t}()
+    threshold = Ref{hsize_t}()
+    h5p_get_file_space_strategy(plist_id)
+    return (strategy = strategy[], persist = persist[], threshold = threshold[])
+end
+
+function h5p_get_file_space_page_size(plist_id)
+    fsp_size = Ref{hsize_t}()
+    h5p_get_file_space_page_size(plist_id, fsp_size)
+    return fsp_size[]
+end
+
 ###
 ### Group Interface
 ###
