@@ -741,6 +741,28 @@ function h5f_get_create_plist(file_id)
 end
 
 """
+    h5f_get_free_sections(file_id::hid_t, type::H5F_mem_t, nsects::Csize_t, sect_info::Ptr{H5F_sect_info_t}) -> Cssize_t
+
+See `libhdf5` documentation for [`H5Fget_free_sections`](https://portal.hdfgroup.org/display/HDF5/H5F_GET_FREE_SECTIONS).
+"""
+function h5f_get_free_sections(file_id, type, nsects, sect_info)
+    var"#status#" = ccall((:H5Fget_free_sections, libhdf5), Cssize_t, (hid_t, H5F_mem_t, Csize_t, Ptr{H5F_sect_info_t}), file_id, type, nsects, sect_info)
+    var"#status#" < 0 && @h5error("Error in h5f_get_free_sections (not annotated)")
+    return var"#status#"
+end
+
+"""
+    h5f_get_freespace(file_id::hid_t) -> hssize_t
+
+See `libhdf5` documentation for [`H5Fget_freespace`](https://portal.hdfgroup.org/display/HDF5/H5F_GET_FREESPACE).
+"""
+function h5f_get_freespace(file_id)
+    var"#status#" = ccall((:H5Fget_freespace, libhdf5), hssize_t, (hid_t,), file_id)
+    var"#status#" < 0 && @h5error("Error in h5f_get_freespace (not annotated)")
+    return var"#status#"
+end
+
+"""
     h5f_get_intent(file_id::hid_t, intent::Ptr{Cuint})
 
 See `libhdf5` documentation for [`H5Fget_intent`](https://portal.hdfgroup.org/display/HDF5/H5F_GET_INTENT).
@@ -1394,6 +1416,28 @@ function h5p_get_fapl_mpio64(fapl_id, comm, info)
 end
 
 """
+    h5p_get_file_space_strategy(plist_id::hid_t, strategy::Ptr{H5F_fspace_strategy_t}, persist::Ptr{hbool_t}, threshold::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Pget_file_space_strategy`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILE_SPACE_STRATEGY).
+"""
+function h5p_get_file_space_strategy(plist_id, strategy, persist, threshold)
+    var"#status#" = ccall((:H5Pget_file_space_strategy, libhdf5), herr_t, (hid_t, Ptr{H5F_fspace_strategy_t}, Ptr{hbool_t}, Ptr{hsize_t}), plist_id, strategy, persist, threshold)
+    var"#status#" < 0 && @h5error("Error in h5p_get_file_space_strategy (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_file_space_page_size(plist_id::hid_t, fsp_size::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Pget_file_space_page_size`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILE_SPACE_PAGE_SIZE).
+"""
+function h5p_get_file_space_page_size(plist_id, fsp_size)
+    var"#status#" = ccall((:H5Pget_file_space_page_size, libhdf5), herr_t, (hid_t, Ptr{hsize_t}), plist_id, fsp_size)
+    var"#status#" < 0 && @h5error("Error in h5p_get_file_space_page_size (not annotated)")
+    return nothing
+end
+
+"""
     h5p_get_fclose_degree(fapl_id::hid_t, fc_degree::Ref{Cint})
 
 See `libhdf5` documentation for [`H5Pget_fclose_degree`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FCLOSE_DEGREE).
@@ -1658,17 +1702,6 @@ function h5p_set_efile_prefix(plist_id, prefix)
 end
 
 """
-    h5p_set_fill_time(plist_id::hid_t, fill_time::H5D_fill_time_t)
-
-See `libhdf5` documentation for [`H5Pset_fill_time`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILL_TIME).
-"""
-function h5p_set_fill_time(plist_id, fill_time)
-    var"#status#" = ccall((:H5Pset_fill_time, libhdf5), herr_t, (hid_t, H5D_fill_time_t), plist_id, fill_time)
-    var"#status#" < 0 && @h5error("Error in h5p_set_fill_time (not annotated)")
-    return nothing
-end
-
-"""
     h5p_set_fapl_core(fapl_id::hid_t, increment::Csize_t, backing_store::hbool_t)
 
 See `libhdf5` documentation for [`H5Pset_fapl_core`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_CORE).
@@ -1676,17 +1709,6 @@ See `libhdf5` documentation for [`H5Pset_fapl_core`](https://portal.hdfgroup.org
 function h5p_set_fapl_core(fapl_id, increment, backing_store)
     var"#status#" = ccall((:H5Pset_fapl_core, libhdf5), herr_t, (hid_t, Csize_t, hbool_t), fapl_id, increment, backing_store)
     var"#status#" < 0 && @h5error("Error in h5p_set_fapl_core (not annotated)")
-    return nothing
-end
-
-"""
-    h5p_set_fill_value(plist_id::hid_t, type_id::hid_t, value::Ptr{Cvoid})
-
-See `libhdf5` documentation for [`H5Pset_fill_value`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILL_VALUE).
-"""
-function h5p_set_fill_value(plist_id, type_id, value)
-    var"#status#" = ccall((:H5Pset_fill_value, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cvoid}), plist_id, type_id, value)
-    var"#status#" < 0 && @h5error("Error in h5p_set_fill_value (not annotated)")
     return nothing
 end
 
@@ -1808,6 +1830,50 @@ See `libhdf5` documentation for [`H5Pset_fclose_degree`](https://portal.hdfgroup
 function h5p_set_fclose_degree(plist_id, fc_degree)
     var"#status#" = ccall((:H5Pset_fclose_degree, libhdf5), herr_t, (hid_t, Cint), plist_id, fc_degree)
     var"#status#" < 0 && @h5error("Error setting close degree")
+    return nothing
+end
+
+"""
+    h5p_set_file_space_strategy(plist_id::hid_t, strategy::H5F_fspace_strategy_t, persist::hbool_t, threshold::hsize_t)
+
+See `libhdf5` documentation for [`H5Pset_file_space_strategy`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILE_SPACE_STRATEGY).
+"""
+function h5p_set_file_space_strategy(plist_id, strategy, persist, threshold)
+    var"#status#" = ccall((:H5Pset_file_space_strategy, libhdf5), herr_t, (hid_t, H5F_fspace_strategy_t, hbool_t, hsize_t), plist_id, strategy, persist, threshold)
+    var"#status#" < 0 && @h5error("Error in h5p_set_file_space_strategy (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_file_space_page_size(plist_id::hid_t, fsp_size::hsize_t)
+
+See `libhdf5` documentation for [`H5Pset_file_space_page_size`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILE_SPACE_PAGE_SIZE).
+"""
+function h5p_set_file_space_page_size(plist_id, fsp_size)
+    var"#status#" = ccall((:H5Pset_file_space_page_size, libhdf5), herr_t, (hid_t, hsize_t), plist_id, fsp_size)
+    var"#status#" < 0 && @h5error("Error in h5p_set_file_space_page_size (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_fill_time(plist_id::hid_t, fill_time::H5D_fill_time_t)
+
+See `libhdf5` documentation for [`H5Pset_fill_time`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILL_TIME).
+"""
+function h5p_set_fill_time(plist_id, fill_time)
+    var"#status#" = ccall((:H5Pset_fill_time, libhdf5), herr_t, (hid_t, H5D_fill_time_t), plist_id, fill_time)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fill_time (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_fill_value(plist_id::hid_t, type_id::hid_t, value::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Pset_fill_value`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILL_VALUE).
+"""
+function h5p_set_fill_value(plist_id, type_id, value)
+    var"#status#" = ccall((:H5Pset_fill_value, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cvoid}), plist_id, type_id, value)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fill_value (not annotated)")
     return nothing
 end
 
