@@ -353,10 +353,11 @@ function h5p_get_dxpl_mpio(dxpl_id)
 end
 
 function h5p_get_efile_prefix(plist)
-    prefix_size = Csize_t(1024)
-    prefix = zeros(UInt8, prefix_size)
-    prefix_size = h5p_get_efile_prefix(plist, prefix, prefix_size)
-    return unsafe_string(pointer(prefix), prefix_size) 
+    efile_len = h5p_get_efile_prefix(plist, C_NULL, 0)
+    buffer = Base.StringVector(efile_len)
+    prefix_size = h5p_get_efile_prefix(plist, buffer, efile_len+1)
+    resize!(buffer, efile_len)
+    return String(buffer)
 end
 
 function h5p_get_external(plist, idx = 0)
