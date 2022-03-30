@@ -241,7 +241,7 @@ end
 
 function h5p_get_file_space_strategy(plist_id)
     strategy = Ref{H5F_fspace_strategy_t}()
-    persist = Ref{hbool_t}()
+    persist = Ref{hbool_t}(0)
     threshold = Ref{hsize_t}()
     h5p_get_file_space_strategy(plist_id, strategy, persist, threshold)
     return (strategy = strategy[], persist = persist[], threshold = threshold[])
@@ -251,6 +251,20 @@ function h5p_get_file_space_page_size(plist_id)
     fsp_size = Ref{hsize_t}()
     h5p_get_file_space_page_size(plist_id, fsp_size)
     return fsp_size[]
+end
+
+function h5p_set_file_space_strategy(plist_id; strategy = nothing, persist = nothing, threshold = nothing)
+    current = h5p_get_file_space_strategy(plist_id)
+    params = (
+        strategy = isnothing(strategy) ? current[:strategy] : strategy,
+        persist = isnothing(persist) ? current[:persist] : persist,
+        threshold = isnothing(threshold) ? current[:threshold] : threshold
+    )
+    return h5p_set_file_space_strategy(plist_id, params)
+end
+
+function h5p_set_file_space_strategy(plist_id, params::NamedTuple{(:strategy, :persist, :threshold)})
+    return h5p_set_file_space_strategy(plist_id, Tuple(params)...)
 end
 
 ###
