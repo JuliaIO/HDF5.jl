@@ -243,7 +243,7 @@ function h5p_get_file_space_strategy(plist_id)
     strategy = Ref{H5F_fspace_strategy_t}()
     persist = Ref{hbool_t}()
     threshold = Ref{hsize_t}()
-    h5p_get_file_space_strategy(plist_id)
+    h5p_get_file_space_strategy(plist_id, strategy, persist, threshold)
     return (strategy = strategy[], persist = persist[], threshold = threshold[])
 end
 
