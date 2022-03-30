@@ -231,11 +231,7 @@ end
 
 function h5f_get_free_sections(file_id, type, nsects)
     sect_info = Vector{H5F_sect_info_t}(undef, nsects)
-    return h5f_get_free_sections!(file_id, type, sect_info)
-end
-
-function h5f_get_free_sections!(file_id, type, sect_info::Vector{H5F_sect_info_t})
-    h5f_get_free_sections(file_id, type, length(sect_info), sect_info)
+    h5f_get_free_sections(file_id, type, nsects, sect_info)
     return sect_info
 end
 
