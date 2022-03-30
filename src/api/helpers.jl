@@ -255,16 +255,10 @@ end
 
 function h5p_set_file_space_strategy(plist_id; strategy = nothing, persist = nothing, threshold = nothing)
     current = h5p_get_file_space_strategy(plist_id)
-    params = (
-        strategy = isnothing(strategy) ? current[:strategy] : strategy,
-        persist = isnothing(persist) ? current[:persist] : persist,
-        threshold = isnothing(threshold) ? current[:threshold] : threshold
-    )
-    return h5p_set_file_space_strategy(plist_id, params)
-end
-
-function h5p_set_file_space_strategy(plist_id, params::NamedTuple{(:strategy, :persist, :threshold)})
-    return h5p_set_file_space_strategy(plist_id, Tuple(params)...)
+    strategy = isnothing(strategy) ? current[:strategy] : strategy
+    persist = isnothing(persist) ? current[:persist] : persist
+    threshold = isnothing(threshold) ? current[:threshold] : threshold
+    return h5p_set_file_space_strategy(plist_id, strategy, persist, threshold)
 end
 
 ###
