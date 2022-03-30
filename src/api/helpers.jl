@@ -226,7 +226,11 @@ end
 
 function h5f_get_free_sections(file_id, type)
     nsects = h5f_get_free_sections(file_id, type, 0, C_NULL)
-    return h5f_get_free_sections(file_id, type, nsects)
+    if nsects > 0
+        return h5f_get_free_sections(file_id, type, nsects)
+    else
+        return H5F_sect_info_t[]
+    end
 end
 
 function h5f_get_free_sections(file_id, type, nsects)
