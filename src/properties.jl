@@ -310,7 +310,8 @@ class_propertynames(::Type{FileCreateProperties}) = (
     :track_order,
     :strategy,
     :persist,
-    :threshold
+    :threshold,
+    :file_space_page_size
     )
 
 const FSPACE_STRATEGY_SYMBOLS = Dict(
@@ -339,6 +340,7 @@ function class_getproperty(::Type{FileCreateProperties}, p::Properties, name::Sy
     name === :strategy    ? get_strategy(p) :
     name === :persist     ? API.h5p_get_file_space_strategy(p)[:persist] :
     name === :threshold   ? API.h5p_get_file_space_strategy(p)[:threshold] :
+    name === :file_space_page_size ? API.h5p_get_file_space_page_size(p) :
     class_getproperty(superclass(FileCreateProperties), p, name)
 end
 function class_setproperty!(::Type{FileCreateProperties}, p::Properties, name::Symbol, val)
@@ -347,6 +349,7 @@ function class_setproperty!(::Type{FileCreateProperties}, p::Properties, name::S
     name === :strategy ? set_strategy!(p, val) :
     name === :persist ? API.h5p_set_file_space_strategy(p, persist = val) :
     name === :threshold ? API.h5p_set_file_space_strategy(p, threshold = val) :
+    name === :file_space_page_size ? API.h5p_set_file_space_page_size(p, val) :
     class_setproperty!(superclass(FileCreateProperties), p, name, val)
 end
 

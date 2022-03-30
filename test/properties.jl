@@ -10,7 +10,8 @@ h5open(fn, "w";
        libver_bounds = (:earliest, :latest),
        strategy = :fsm_aggr,
        persist = 1,
-       threshold = 2
+       threshold = 2,
+       file_space_page_size = 0x800
       ) do hfile
     # generic
     g = create_group(hfile, "group")
@@ -40,7 +41,7 @@ h5open(fn, "w";
     # Retrieving property values:
     @test fcpl.userblock == 1024
     @test fcpl.obj_track_times
-    #HDF5.API.h5p_set_file_space_strategy(fcpl, HDF5.API.h5p_get_file_space_strategy(fcpl)...)
+    @test fcpl.file_space_page_size == 0x800
     @test fcpl.strategy == :fsm_aggr
     @test fcpl.persist == 1
     @test fcpl.threshold == 2
