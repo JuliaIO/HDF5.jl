@@ -185,7 +185,7 @@
 @bind h5p_get_driver_info(plist_id::hid_t)::Ptr{Cvoid} "Error getting driver info"
 @bind h5p_get_dxpl_mpio(dxpl_id::hid_t, xfer_mode::Ptr{Cint})::herr_t "Error getting MPIO transfer mode"
 @bind h5p_get_efile_prefix(dapl_id::hid_t, prefix::Ptr{UInt8}, size::Csize_t)::Cssize_t "Error getting external file prefix"
-@bind h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{hsize_t})::herr_t "Error getting external file properties"
+@bind h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{UInt})::herr_t "Error getting external file properties" # `size` argument type mismatch due to library error in win32, see PR #926
 @bind h5p_get_external_count(plist::hid_t)::Cint "Error getting external count"
 @bind h5p_get_fapl_core(fapl_id::hid_t, increment::Ptr{Csize_t}, backing_store::Ptr{hbool_t})::herr_t "Error in h5p_get_fapl_core (not annotated)"
 @bind h5p_get_fapl_family(fapl_id::hid_t, memb_size::Ptr{hsize_t}, memb_fapl_id::Ptr{hid_t})::herr_t "Error in h5p_get_fapl_family (not annotated)"

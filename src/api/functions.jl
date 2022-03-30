@@ -1317,12 +1317,12 @@ function h5p_get_efile_prefix(dapl_id, prefix, size)
 end
 
 """
-    h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{hsize_t})
+    h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{UInt})
 
 See `libhdf5` documentation for [`H5Pget_external`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_EXTERNAL).
 """
 function h5p_get_external(plist, idx, name_size, name, offset, size)
-    var"#status#" = ccall((:H5Pget_external, libhdf5), herr_t, (hid_t, Cuint, Csize_t, Ptr{Cuchar}, Ptr{off_t}, Ptr{hsize_t}), plist, idx, name_size, name, offset, size)
+    var"#status#" = ccall((:H5Pget_external, libhdf5), herr_t, (hid_t, Cuint, Csize_t, Ptr{Cuchar}, Ptr{off_t}, Ptr{UInt}), plist, idx, name_size, name, offset, size)
     var"#status#" < 0 && @h5error("Error getting external file properties")
     return nothing
 end
