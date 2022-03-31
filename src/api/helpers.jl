@@ -356,7 +356,6 @@ function h5p_get_efile_prefix(plist)
     efile_len = h5p_get_efile_prefix(plist, C_NULL, 0)
     buffer = StringVector(efile_len)
     prefix_size = h5p_get_efile_prefix(plist, buffer, efile_len+1)
-    resize!(buffer, efile_len)
     return String(buffer)
 end
 

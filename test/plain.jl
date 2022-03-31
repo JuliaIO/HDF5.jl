@@ -1224,7 +1224,9 @@ ext_prop = HDF5.API.h5p_get_external(dcpl)
 @test ext_prop.name == fn_external
 @test ext_prop.offset == 0
 @test ext_prop.size == 10*20*sizeof(Int)
-
+dapl = HDF5.get_access_properties(dset)
+dapl.efile_prefix = "efile_test"
+@test HDF5.h5p_get_efile_prefix(dapl) == "efile_test"
 close(hfile)
 
 end
