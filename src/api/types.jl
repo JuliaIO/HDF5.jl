@@ -453,3 +453,25 @@ end
 end
 
 const H5FD_mem_t = H5F_mem_t
+
+struct H5F_sect_info_t
+    addr::haddr_t
+    size::hsize_t
+end
+
+@enum H5F_fspace_strategy_t::UInt32 begin
+    H5F_FSPACE_STRATEGY_FSM_AGGR = 0
+    H5F_FSPACE_STRATEGY_PAGE = 1
+    H5F_FSPACE_STRATEGY_AGGR = 2
+    H5F_FSPACE_STRATEGY_NONE = 3
+    H5F_FSPACE_STRATEGY_NTYPES = 4
+end
+
+@enum H5F_file_space_type_t::UInt32 begin
+    H5F_FILE_SPACE_DEFAULT = 0
+    H5F_FILE_SPACE_ALL_PERSIST = 1
+    H5F_FILE_SPACE_ALL = 2
+    H5F_FILE_SPACE_AGGR_VFD = 3
+    H5F_FILE_SPACE_VFD = 4
+    H5F_FILE_SPACE_NTYPES = 5
+end

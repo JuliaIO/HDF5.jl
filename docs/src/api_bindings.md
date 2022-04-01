@@ -174,6 +174,8 @@ h5e_walk
 - [`h5f_flush`](@ref h5f_flush)
 - [`h5f_get_access_plist`](@ref h5f_get_access_plist)
 - [`h5f_get_create_plist`](@ref h5f_get_create_plist)
+- [`h5f_get_free_sections`](@ref h5f_get_free_sections)
+- [`h5f_get_freespace`](@ref h5f_get_freespace)
 - [`h5f_get_intent`](@ref h5f_get_intent)
 - [`h5f_get_name`](@ref h5f_get_name)
 - [`h5f_get_obj_count`](@ref h5f_get_obj_count)
@@ -188,6 +190,8 @@ h5f_create
 h5f_flush
 h5f_get_access_plist
 h5f_get_create_plist
+h5f_get_free_sections
+h5f_get_freespace
 h5f_get_intent
 h5f_get_name
 h5f_get_obj_count
@@ -331,6 +335,8 @@ h5pl_size
 - [`h5p_get_fapl_multi`](@ref h5p_get_fapl_multi)
 - [`h5p_get_fapl_splitter`](@ref h5p_get_fapl_splitter)
 - [`h5p_get_fclose_degree`](@ref h5p_get_fclose_degree)
+- [`h5p_get_file_space_page_size`](@ref h5p_get_file_space_page_size)
+- [`h5p_get_file_space_strategy`](@ref h5p_get_file_space_strategy)
 - [`h5p_get_fill_time`](@ref h5p_get_fill_time)
 - [`h5p_get_fill_value`](@ref h5p_get_fill_value)
 - [`h5p_get_filter`](@ref h5p_get_filter)
@@ -368,6 +374,8 @@ h5pl_size
 - [`h5p_set_fapl_splitter`](@ref h5p_set_fapl_splitter)
 - [`h5p_set_fapl_windows`](@ref h5p_set_fapl_windows)
 - [`h5p_set_fclose_degree`](@ref h5p_set_fclose_degree)
+- [`h5p_set_file_space_page_size`](@ref h5p_set_file_space_page_size)
+- [`h5p_set_file_space_strategy`](@ref h5p_set_file_space_strategy)
 - [`h5p_set_fill_time`](@ref h5p_set_fill_time)
 - [`h5p_set_fill_value`](@ref h5p_set_fill_value)
 - [`h5p_set_filter`](@ref h5p_set_filter)
@@ -408,6 +416,8 @@ h5p_get_fapl_mpio64
 h5p_get_fapl_multi
 h5p_get_fapl_splitter
 h5p_get_fclose_degree
+h5p_get_file_space_page_size
+h5p_get_file_space_strategy
 h5p_get_fill_time
 h5p_get_fill_value
 h5p_get_filter
@@ -445,6 +455,8 @@ h5p_set_fapl_split
 h5p_set_fapl_splitter
 h5p_set_fapl_windows
 h5p_set_fclose_degree
+h5p_set_file_space_page_size
+h5p_set_file_space_strategy
 h5p_set_fill_time
 h5p_set_fill_value
 h5p_set_filter

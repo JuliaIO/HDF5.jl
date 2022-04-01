@@ -308,15 +308,48 @@ superclass(::Type{FileCreateProperties}) = ObjectCreateProperties
 class_propertynames(::Type{FileCreateProperties}) = (
     :userblock,
     :track_order,
+    :strategy,
+    :persist,
+    :threshold,
+    :file_space_page_size
     )
+
+const FSPACE_STRATEGY_SYMBOLS = Dict(
+    :fsm_aggr => API.H5F_FSPACE_STRATEGY_FSM_AGGR,
+    :page => API.H5F_FSPACE_STRATEGY_PAGE,
+    :aggr => API.H5F_FSPACE_STRATEGY_AGGR,
+    :none => API.H5F_FSPACE_STRATEGY_NONE,
+    :ntypes => API.H5F_FSPACE_STRATEGY_NTYPES
+)
+
+set_strategy!(p::FileCreateProperties, val) = API.h5p_set_file_space_strategy(p, strategy = val)
+set_strategy!(p::FileCreateProperties, val::Symbol) = API.h5p_set_file_space_strategy(p, strategy = FSPACE_STRATEGY_SYMBOLS[val])
+function get_strategy(p::FileCreateProperties)
+    strategy = API.h5p_get_file_space_strategy(p)[:strategy]
+    for (k, v) in FSPACE_STRATEGY_SYMBOLS
+        if v == strategy
+            return k
+        end
+    end
+    return :unknown
+end
+
 function class_getproperty(::Type{FileCreateProperties}, p::Properties, name::Symbol)
     name === :userblock   ? API.h5p_get_userblock(p) :
     name === :track_order ? get_track_order(p) :
+    name === :strategy    ? get_strategy(p) :
+    name === :persist     ? API.h5p_get_file_space_strategy(p)[:persist] :
+    name === :threshold   ? API.h5p_get_file_space_strategy(p)[:threshold] :
+    name === :file_space_page_size ? API.h5p_get_file_space_page_size(p) :
     class_getproperty(superclass(FileCreateProperties), p, name)
 end
 function class_setproperty!(::Type{FileCreateProperties}, p::Properties, name::Symbol, val)
     name === :userblock   ? API.h5p_set_userblock(p, val) :
     name === :track_order ? set_track_order(p, val) : 
+    name === :strategy ? set_strategy!(p, val) :
+    name === :persist ? API.h5p_set_file_space_strategy(p, persist = val) :
+    name === :threshold ? API.h5p_set_file_space_strategy(p, threshold = val) :
+    name === :file_space_page_size ? API.h5p_set_file_space_page_size(p, val) :
     class_setproperty!(superclass(FileCreateProperties), p, name, val)
 end
 

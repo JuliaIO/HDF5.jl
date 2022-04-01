@@ -224,6 +224,49 @@ function h5f_get_vfd_handle(file_id, fapl)
     return file_handle[]
 end
 
+"""
+    h5f_get_free_sections(file_id, type, [sect_info::AbstractVector{H5F_sect_info_t}])::AbstractVector{H5F_sect_info_t}
+
+Return an `AbstractVector` of the free section information. If `sect_info` is not provided a new `Vector` will be allocated and returned.
+If `sect_info` is provided, a view, a `SubArray`, will be returned.
+"""
+function h5f_get_free_sections(file_id, type)
+    nsects = h5f_get_free_sections(file_id, type, 0, C_NULL)
+    sect_info = Vector{H5F_sect_info_t}(undef, nsects)
+    if nsects > 0
+        h5f_get_free_sections(file_id, type, nsects, sect_info)
+    end
+    return sect_info
+end
+
+function h5f_get_free_sections(file_id, type, sect_info::AbstractVector{H5F_sect_info_t})
+    nsects = length(sect_info)
+    nsects = h5f_get_free_sections(file_id, type, nsects, sect_info)
+    return @view(sect_info[1:nsects])
+end
+
+function h5p_get_file_space_strategy(plist_id)
+    strategy = Ref{H5F_fspace_strategy_t}()
+    persist = Ref{hbool_t}(0)
+    threshold = Ref{hsize_t}()
+    h5p_get_file_space_strategy(plist_id, strategy, persist, threshold)
+    return (strategy = strategy[], persist = persist[], threshold = threshold[])
+end
+
+function h5p_get_file_space_page_size(plist_id)
+    fsp_size = Ref{hsize_t}()
+    h5p_get_file_space_page_size(plist_id, fsp_size)
+    return fsp_size[]
+end
+
+function h5p_set_file_space_strategy(plist_id; strategy = nothing, persist = nothing, threshold = nothing)
+    current = h5p_get_file_space_strategy(plist_id)
+    strategy = isnothing(strategy) ? current[:strategy] : strategy
+    persist = isnothing(persist) ? current[:persist] : persist
+    threshold = isnothing(threshold) ? current[:threshold] : threshold
+    return h5p_set_file_space_strategy(plist_id, strategy, persist, threshold)
+end
+
 ###
 ### Group Interface
 ###

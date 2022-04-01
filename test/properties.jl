@@ -8,6 +8,10 @@ h5open(fn, "w";
        userblock = 1024,
        alignment = (0, sizeof(Int)),
        libver_bounds = (:earliest, :latest),
+       strategy = :fsm_aggr,
+       persist = 1,
+       threshold = 2,
+       file_space_page_size = 0x800
       ) do hfile
     # generic
     g = create_group(hfile, "group")
@@ -37,6 +41,10 @@ h5open(fn, "w";
     # Retrieving property values:
     @test fcpl.userblock == 1024
     @test fcpl.obj_track_times
+    @test fcpl.file_space_page_size == 0x800
+    @test fcpl.strategy == :fsm_aggr
+    @test fcpl.persist == 1
+    @test fcpl.threshold == 2
 
     @test fapl.alignment == (0, sizeof(Int))
     @test fapl.driver == Drivers.POSIX()
