@@ -224,19 +224,25 @@ function h5f_get_vfd_handle(file_id, fapl)
     return file_handle[]
 end
 
+"""
+    h5f_get_free_sections(file_id, type, [sect_info::AbstractVector{H5F_sect_info_t}])::AbstractVector{H5F_sect_info_t}
+
+Return an `AbstractVector` of the free section information. If `sect_info` is not provided a new `Vector` will be allocated and returned.
+If `sect_info` is provided, a view, a `SubArray`, will be returned.
+"""
 function h5f_get_free_sections(file_id, type)
     nsects = h5f_get_free_sections(file_id, type, 0, C_NULL)
+    sect_info = Vector{H5F_sect_info_t}(undef, nsects)
     if nsects > 0
-        return h5f_get_free_sections(file_id, type, nsects)
-    else
-        return H5F_sect_info_t[]
+        h5f_get_free_sections(file_id, type, nsects, sect_info)
     end
+    return sect_info
 end
 
-function h5f_get_free_sections(file_id, type, nsects)
-    sect_info = Vector{H5F_sect_info_t}(undef, nsects)
-    h5f_get_free_sections(file_id, type, nsects, sect_info)
-    return sect_info
+function h5f_get_free_sections(file_id, type, sect_info::AbstractVector{H5F_sect_info_t})
+    nsects = length(sect_info)
+    nsects = h5f_get_free_sections(file_id, type, nsects, sect_info)
+    return @view(sect_info[1:nsects])
 end
 
 function h5p_get_file_space_strategy(plist_id)
