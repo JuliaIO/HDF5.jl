@@ -2,6 +2,10 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.16.6
+
+* Add filespace management API calls
+
 ## v0.16.5
 
 * Core driver API support
