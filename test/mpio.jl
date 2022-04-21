@@ -14,6 +14,10 @@ myrank = MPI.Comm_rank(comm)
 
 @test HDF5.has_parallel()
 
+# Check that serial drivers are still there after loading MPI (#928)
+@test Drivers.Core ∈ values(Drivers.DRIVERS)
+@test Drivers.POSIX ∈ values(Drivers.DRIVERS)
+
 let fileprop = HDF5.FileAccessProperties()
     fileprop.driver = HDF5.Drivers.MPIO(comm, info)
     driver = fileprop.driver
