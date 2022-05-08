@@ -423,6 +423,17 @@ Wr = h5read(fn, "newgroup/W")
 close(f)
 rm(fn)
 
+# Test dataspace convenience versions of create_dataset
+try
+    h5open(fn, "w") do f
+        create_dataset(f, "test", Int, (128, 32))
+        create_dataset(f, "test2", Float64, 128, 64)
+        @test size(f["test"])  == (128, 32)
+        @test size(f["test2"]) == (128, 64)
+    end
+finally
+    rm(fn)
+end
 
 @testset "h5d_fill" begin
     val = 5
