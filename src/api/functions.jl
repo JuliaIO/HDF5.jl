@@ -1240,6 +1240,17 @@ function h5p_get_append_flush(dapl_id, dims, boundary, func, udata)
 end
 
 """
+    h5p_get_attr_creation_order(plist_id::hid_t, crt_order_flags::Ptr{Cuint})
+
+See `libhdf5` documentation for [`H5Pget_attr_creation_order`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_ATTR_CREATION_ORDER).
+"""
+function h5p_get_attr_creation_order(plist_id, crt_order_flags)
+    var"#status#" = ccall((:H5Pget_attr_creation_order, libhdf5), herr_t, (hid_t, Ptr{Cuint}), plist_id, crt_order_flags)
+    var"#status#" < 0 && @h5error("Error getting attribute creation order")
+    return nothing
+end
+
+"""
     h5p_get_btree_ratios(plist_id::hid_t, left::Ptr{Cdouble}, middle::Ptr{Cdouble}, right::Ptr{Cdouble})
 
 See `libhdf5` documentation for [`H5Pget_btree_ratios`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_BTREE_RATIOS).
@@ -1774,7 +1785,7 @@ See `libhdf5` documentation for [`H5Pget_link_creation_order`](https://portal.hd
 """
 function h5p_get_link_creation_order(plist_id, crt_order_flags)
     var"#status#" = ccall((:H5Pget_link_creation_order, libhdf5), herr_t, (hid_t, Ptr{Cuint}), plist_id, crt_order_flags)
-    var"#status#" < 0 && @h5error("Error in h5p_get_link_creation_order (not annotated)")
+    var"#status#" < 0 && @h5error("Error getting link creation order")
     return nothing
 end
 
@@ -2109,28 +2120,6 @@ function h5p_get_userblock(plist_id, len)
 end
 
 """
-    h5p_get_attr_creation_order(plist_id::hid_t, crt_order_flags::Ptr{Cuint})
-
-See `libhdf5` documentation for [`H5Pget_attr_creation_order`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_ATTR_CREATION_ORDER).
-"""
-function h5p_get_attr_creation_order(plist_id, crt_order_flags)
-    var"#status#" = ccall((:H5Pget_attr_creation_order, libhdf5), herr_t, (hid_t, Ptr{Cuint}), plist_id, crt_order_flags)
-    var"#status#" < 0 && @h5error("Error getting attribute creation order")
-    return nothing
-end
-
-"""
-    h5p_get_link_creation_order(plist_id::hid_t, crt_order_flags::Ptr{Cuint})
-
-See `libhdf5` documentation for [`H5Pget_link_creation_order`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_LINK_CREATION_ORDER).
-"""
-function h5p_get_link_creation_order(plist_id, crt_order_flags)
-    var"#status#" = ccall((:H5Pget_link_creation_order, libhdf5), herr_t, (hid_t, Ptr{Cuint}), plist_id, crt_order_flags)
-    var"#status#" < 0 && @h5error("Error getting link creation order")
-    return nothing
-end
-
-"""
     h5p_set_alignment(plist_id::hid_t, threshold::hsize_t, alignment::hsize_t)
 
 See `libhdf5` documentation for [`H5Pset_alignment`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALIGNMENT).
@@ -2149,6 +2138,17 @@ See `libhdf5` documentation for [`H5Pset_alloc_time`](https://portal.hdfgroup.or
 function h5p_set_alloc_time(plist_id, alloc_time)
     var"#status#" = ccall((:H5Pset_alloc_time, libhdf5), herr_t, (hid_t, Cint), plist_id, alloc_time)
     var"#status#" < 0 && @h5error("Error setting allocation timing")
+    return nothing
+end
+
+"""
+    h5p_set_attr_creation_order(plist_id::hid_t, crt_order_flags::Cuint)
+
+See `libhdf5` documentation for [`H5Pset_attr_creation_order`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ATTR_CREATION_ORDER).
+"""
+function h5p_set_attr_creation_order(plist_id, crt_order_flags)
+    var"#status#" = ccall((:H5Pset_attr_creation_order, libhdf5), herr_t, (hid_t, Cuint), plist_id, crt_order_flags)
+    var"#status#" < 0 && @h5error("Error setting attribute creation order")
     return nothing
 end
 
@@ -2742,7 +2742,7 @@ See `libhdf5` documentation for [`H5Pset_link_creation_order`](https://portal.hd
 """
 function h5p_set_link_creation_order(plist_id, crt_order_flags)
     var"#status#" = ccall((:H5Pset_link_creation_order, libhdf5), herr_t, (hid_t, Cuint), plist_id, crt_order_flags)
-    var"#status#" < 0 && @h5error("Error in h5p_set_link_creation_order (not annotated)")
+    var"#status#" < 0 && @h5error("Error setting link creation order")
     return nothing
 end
 
@@ -3062,28 +3062,6 @@ See `libhdf5` documentation for [`H5Pset_vlen_mem_manager`](https://portal.hdfgr
 function h5p_set_vlen_mem_manager(plist_id, alloc_func, alloc_info, free_func, free_info)
     var"#status#" = ccall((:H5Pset_vlen_mem_manager, libhdf5), herr_t, (hid_t, H5MM_allocate_t, Ptr{Cvoid}, H5MM_free_t, Ptr{Cvoid}), plist_id, alloc_func, alloc_info, free_func, free_info)
     var"#status#" < 0 && @h5error("Error in h5p_set_vlen_mem_manager (not annotated)")
-    return nothing
-end
-
-"""
-    h5p_set_attr_creation_order(plist_id::hid_t, crt_order_flags::Cuint)
-
-See `libhdf5` documentation for [`H5Pset_attr_creation_order`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ATTR_CREATION_ORDER).
-"""
-function h5p_set_attr_creation_order(plist_id, crt_order_flags)
-    var"#status#" = ccall((:H5Pset_attr_creation_order, libhdf5), herr_t, (hid_t, Cuint), plist_id, crt_order_flags)
-    var"#status#" < 0 && @h5error("Error setting attribute creation order")
-    return nothing
-end
-
-"""
-    h5p_set_link_creation_order(plist_id::hid_t, crt_order_flags::Cuint)
-
-See `libhdf5` documentation for [`H5Pset_link_creation_order`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_LINK_CREATION_ORDER).
-"""
-function h5p_set_link_creation_order(plist_id, crt_order_flags)
-    var"#status#" = ccall((:H5Pset_link_creation_order, libhdf5), herr_t, (hid_t, Cuint), plist_id, crt_order_flags)
-    var"#status#" < 0 && @h5error("Error setting link creation order")
     return nothing
 end
 

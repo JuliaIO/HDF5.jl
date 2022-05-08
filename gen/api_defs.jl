@@ -264,6 +264,7 @@
 # set
 @bind h5p_set_alignment(plist_id::hid_t, threshold::hsize_t, alignment::hsize_t)::herr_t "Error setting alignment"
 @bind h5p_set_alloc_time(plist_id::hid_t, alloc_time::Cint)::herr_t "Error setting allocation timing"
+@bind h5p_set_attr_creation_order(plist_id::hid_t, crt_order_flags::Cuint)::herr_t "Error setting attribute creation order"
 @bind h5p_set_append_flush(dapl_id::hid_t, ndims::Cuint, boundary::Ptr{hsize_t}, func::H5D_append_cb_t, udata::Ptr{Cvoid})::herr_t "Error in h5p_set_append_flush (not annotated)"
 @bind h5p_set_btree_ratios(plist_id::hid_t, left::Cdouble, middle::Cdouble, right::Cdouble)::herr_t "Error in h5p_set_btree_ratios (not annotated)"
 @bind h5p_set_buffer(plist_id::hid_t, size::Csize_t, tconv::Ptr{Cvoid}, bkg::Ptr{Cvoid})::herr_t "Error in h5p_set_buffer (not annotated)"
@@ -317,7 +318,7 @@
 @bind h5p_set_hyper_vector_size(plist_id::hid_t, size::Csize_t)::herr_t "Error in h5p_set_hyper_vector_size (not annotated)"
 @bind h5p_set_layout(plist_id::hid_t, setting::Cint)::herr_t "Error setting layout"
 @bind h5p_set_libver_bounds(fapl_id::hid_t, low::Cint, high::Cint)::herr_t "Error setting library version bounds"
-@bind h5p_set_link_creation_order(plist_id::hid_t, crt_order_flags::Cuint)::herr_t "Error in h5p_set_link_creation_order (not annotated)"
+@bind h5p_set_link_creation_order(plist_id::hid_t, crt_order_flags::Cuint)::herr_t "Error setting link creation order"
 @bind h5p_set_link_phase_change(plist_id::hid_t, max_compact::Cuint, min_dense::Cuint)::herr_t "Error in h5p_set_link_phase_change (not annotated)"
 @bind h5p_set_local_heap_size_hint(plist_id::hid_t, size_hint::Csize_t)::herr_t "Error setting local heap size hint"
 @bind h5p_set_meta_block_size(fapl_id::hid_t, size::hsize_t)::herr_t "Error in h5p_set_meta_block_size (not annotated)"
@@ -347,8 +348,6 @@
 @bind h5p_set_virtual_printf_gap(dapl_id::hid_t, gap_size::hsize_t)::herr_t "Error in h5p_set_virtual_printf_gap (not annotated)"
 @bind h5p_set_virtual_view(dapl_id::hid_t, view::H5D_vds_view_t)::herr_t "Error in h5p_set_virtual_view (not annotated)"
 @bind h5p_set_vlen_mem_manager(plist_id::hid_t, alloc_func::H5MM_allocate_t, alloc_info::Ptr{Cvoid}, free_func::H5MM_free_t, free_info::Ptr{Cvoid})::herr_t "Error in h5p_set_vlen_mem_manager (not annotated)"
-@bind h5p_set_attr_creation_order(plist_id::hid_t, crt_order_flags::Cuint)::herr_t "Error setting attribute creation order"
-@bind h5p_set_link_creation_order(plist_id::hid_t, crt_order_flags::Cuint)::herr_t "Error setting link creation order"
 
 # others
 @bind h5p_add_merge_committed_dtype_path(plist_id::hid_t, path::Ptr{Cchar})::herr_t "Error in h5p_add_merge_committed_dtype_path (not annotated)"
