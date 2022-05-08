@@ -657,6 +657,7 @@ class_propertynames(::Type{FileAccessProperties}) = (
     :fapl_mpio,
     :fclose_degree,
     :libver_bounds,
+    :meta_block_size,
     )
 
 function class_getproperty(::Type{FileAccessProperties}, p::Properties, name::Symbol)
@@ -665,6 +666,7 @@ function class_getproperty(::Type{FileAccessProperties}, p::Properties, name::Sy
     name === :driver_info   ? API.h5p_get_driver_info(p) : # get only
     name === :fclose_degree ? get_fclose_degree(p) :
     name === :libver_bounds ? get_libver_bounds(p) :
+    name === :meta_block_size ? API.h5p_get_meta_block_size(p) :
     # deprecated
     name === :fapl_mpio     ? (depwarn("The `fapl_mpio` property is deprecated, use `driver=HDF5.Drivers.MPIO(...)` instead.", :fapl_mpio); drv = get_driver(p, MPIO); (drv.comm, drv.info)) :
     class_getproperty(superclass(FileAccessProperties), p, name)
@@ -674,6 +676,7 @@ function class_setproperty!(::Type{FileAccessProperties}, p::Properties, name::S
     name === :driver        ? Drivers.set_driver!(p, val) :
     name === :fclose_degree ? set_fclose_degree!(p, val) :
     name === :libver_bounds ? set_libver_bounds!(p, val) :
+    name === :meta_block_size ? API.h5p_set_meta_block_size(p, val) :
     # deprecated
     name === :fapl_mpio     ? (depwarn("The `fapl_mpio` property is deprecated, use `driver=HDF5.Drivers.MPIO(...)` instead.", :fapl_mpio); p.driver = Drivers.MPIO(val...)) :
     class_setproperty!(superclass(FileAccessProperties), p, name, val)

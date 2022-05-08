@@ -8,6 +8,7 @@ h5open(fn, "w";
        userblock = 1024,
        alignment = (0, sizeof(Int)),
        libver_bounds = (:earliest, :latest),
+       meta_block_size = 1024,
        strategy = :fsm_aggr,
        persist = 1,
        threshold = 2,
@@ -51,6 +52,7 @@ h5open(fn, "w";
     @test_throws HDF5.API.H5Error fapl.driver_info
     @test fapl.fclose_degree == :strong
     @test fapl.libver_bounds == (:earliest, Base.thisminor(HDF5.libversion))
+    @test fapl.meta_block_size == 1024
 
     @test gcpl.local_heap_size_hint == 0
     @test gcpl.obj_track_times
