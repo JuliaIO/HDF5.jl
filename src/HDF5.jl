@@ -611,6 +611,8 @@ end
 create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Datatype, dspace_dims::Dims; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
 create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
 create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Type, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
+create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Type, dspace_dims::Dims; pv...) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
+create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Type, dspace_dims::Int...; pv...) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
 
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 create_datatype(class_id, sz) = Datatype(API.h5t_create(class_id, sz))
