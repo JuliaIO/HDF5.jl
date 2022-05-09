@@ -5,6 +5,31 @@ const depsfile = joinpath(@__DIR__, "deps.jl")
 libpath = get(ENV, "JULIA_HDF5_PATH",
                 get(ENV, "JULIA_HDF5_LIBRARY_PATH", nothing)) # legacy env variable for compatibility
 
+# We avoid calling Libdl.find_library to avoid possible segfault when calling
+# dlclose (#929).
+# The only difference with Libdl.find_library is that we allow custom dlopen
+# flags via the `flags` argument.
+function find_library_alt(libnames, extrapaths=String[]; flags = RTLD_LAZY)
+    for lib in libnames
+        for path in extrapaths
+            l = joinpath(path, lib)
+            p = dlopen(l, flags; throw_error=false)
+            if p !== nothing
+                dlclose(p)
+                return l
+            end
+        end
+        p = dlopen(lib, flags; throw_error=false)
+        if p !== nothing
+            dlclose(p)
+            return lib
+        end
+    end
+    return ""
+end
+
+##
+
 new_contents = if libpath === nothing
     # By default, use HDF5_jll
     """
@@ -16,8 +41,11 @@ new_contents = if libpath === nothing
 else
     @info "using system HDF5"
 
-    libhdf5 = find_library("libhdf5", [libpath, joinpath(libpath, "lib"), joinpath(libpath, "lib64")])
-    libhdf5_hl = find_library("libhdf5_hl", [libpath, joinpath(libpath, "lib"), joinpath(libpath, "lib64")])
+    libpaths = [libpath, joinpath(libpath, "lib"), joinpath(libpath, "lib64")]
+    flags = RTLD_LAZY | RTLD_NODELETE  # RTLD_NODELETE may be needed to avoid segfault (#929)
+
+    libhdf5 = find_library_alt(["libhdf5"], libpaths; flags = flags)
+    libhdf5_hl = find_library_alt(["libhdf5_hl"], libpaths; flags = flags)
 
     isempty(libhdf5) && error("libhdf5 could not be found")
     isempty(libhdf5_hl) && error("libhdf5_hl could not be found")
