@@ -454,6 +454,16 @@ end
 
 const H5FD_mem_t = H5F_mem_t
 
+struct H5FD_file_image_callbacks_t
+    image_malloc::Ptr{Cvoid}
+    image_memcpy::Ptr{Cvoid}
+    image_realloc::Ptr{Cvoid}
+    image_free::Ptr{Cvoid}
+    udata_copy::Ptr{Cvoid}
+    udata_free::Ptr{Cvoid}
+    udata::Ptr{Cvoid}
+end
+
 struct H5F_sect_info_t
     addr::haddr_t
     size::hsize_t
@@ -474,4 +484,120 @@ end
     H5F_FILE_SPACE_AGGR_VFD = 3
     H5F_FILE_SPACE_VFD = 4
     H5F_FILE_SPACE_NTYPES = 5
+end
+
+@enum H5Z_EDC_t::Int32 begin
+    H5Z_ERROR_EDC = -1
+    H5Z_DISABLE_EDC = 0
+    H5Z_ENABLE_EDC = 1
+    H5Z_NO_EDC = 2
+end
+
+
+# Callbacks
+# typedef herr_t ( * H5P_prp_cb1_t ) ( const char * name , size_t size , void * value )
+const H5P_prp_cb1_t = Ptr{Cvoid}
+const H5P_prp_copy_func_t = H5P_prp_cb1_t
+# typedef int ( * H5P_prp_compare_func_t ) ( const void * value1 , const void * value2 , size_t size )
+const H5P_prp_compare_func_t = Ptr{Cvoid}
+const H5P_prp_close_func_t = H5P_prp_cb1_t
+const H5P_prp_create_func_t = H5P_prp_cb1_t
+const H5P_prp_cb2_t = Ptr{Cvoid}
+const H5P_prp_set_func_t = H5P_prp_cb2_t
+const H5P_prp_get_func_t = H5P_prp_cb2_t
+const H5P_prp_delete_func_t = H5P_prp_cb2_t
+const H5D_append_cb_t = Ptr{Cvoid}
+const H5L_elink_traverse_t = Ptr{Cvoid}
+# typedef herr_t ( * H5F_flush_cb_t ) ( hid_t object_id , void * udata )
+const H5F_flush_cb_t = Ptr{Cvoid}
+# typedef H5O_mcdt_search_ret_t ( * H5O_mcdt_search_cb_t ) ( void * op_data )
+const H5O_mcdt_search_cb_t = Ptr{Cvoid}
+# typedef herr_t ( * H5T_conv_t ) ( hid_t src_id , hid_t dst_id , H5T_cdata_t * cdata , size_t nelmts , size_t buf_stride , size_t bkg_stride , void * buf , void * bkg , hid_t dset_xfer_plist )
+const H5T_conv_t = Ptr{Cvoid}
+# typedef H5T_conv_ret_t ( * H5T_conv_except_func_t ) ( H5T_conv_except_t except_type , hid_t src_id , hid_t dst_id , void * src_buf , void * dst_buf , void * user_data )
+const H5T_conv_except_func_t = Ptr{Cvoid}
+# typedef herr_t ( * H5M_iterate_t ) ( hid_t map_id , const void * key , void * op_data )
+const H5M_iterate_t = Ptr{Cvoid}
+# typedef void * ( * H5MM_allocate_t ) ( size_t size , void * alloc_info )
+const H5MM_allocate_t = Ptr{Cvoid}
+# typedef void ( * H5MM_free_t ) ( void * mem , void * free_info )
+const H5MM_free_t = Ptr{Cvoid}
+# typedef H5Z_cb_return_t ( * H5Z_filter_func_t ) ( H5Z_filter_t filter , void * buf , size_t buf_size , void * op_data )
+const H5Z_filter_func_t = Ptr{Cvoid}
+
+struct H5Z_cb_t
+    func::H5Z_filter_func_t
+    op_data::Ptr{Cvoid}
+end
+
+
+@enum H5C_cache_incr_mode::UInt32 begin
+    H5C_incr__off = 0
+    H5C_incr__threshold = 1
+end
+
+@enum H5C_cache_flash_incr_mode::UInt32 begin
+    H5C_flash_incr__off = 0
+    H5C_flash_incr__add_space = 1
+end
+
+@enum H5C_cache_decr_mode::UInt32 begin
+    H5C_decr__off = 0
+    H5C_decr__threshold = 1
+    H5C_decr__age_out = 2
+    H5C_decr__age_out_with_threshold = 3
+end
+
+
+struct H5AC_cache_config_t
+    version::Cint
+    rpt_fcn_enabled::hbool_t
+    open_trace_file::hbool_t
+    close_trace_file::hbool_t
+    trace_file_name::NTuple{1025, Cchar}
+    evictions_enabled::hbool_t
+    set_initial_size::hbool_t
+    initial_size::Csize_t
+    min_clean_fraction::Cdouble
+    max_size::Csize_t
+    min_size::Csize_t
+    epoch_length::Clong
+    incr_mode::H5C_cache_incr_mode
+    lower_hr_threshold::Cdouble
+    increment::Cdouble
+    apply_max_increment::hbool_t
+    max_increment::Csize_t
+    flash_incr_mode::H5C_cache_flash_incr_mode
+    flash_multiple::Cdouble
+    flash_threshold::Cdouble
+    decr_mode::H5C_cache_decr_mode
+    upper_hr_threshold::Cdouble
+    decrement::Cdouble
+    apply_max_decrement::hbool_t
+    max_decrement::Csize_t
+    epochs_before_eviction::Cint
+    apply_empty_reserve::hbool_t
+    empty_reserve::Cdouble
+    dirty_bytes_threshold::Csize_t
+    metadata_write_strategy::Cint
+end
+
+struct H5AC_cache_image_config_t
+    version::Cint
+    generate_image::hbool_t
+    save_resize_status::hbool_t
+    entry_ageout::Cint
+end
+
+@enum H5D_vds_view_t::Int32 begin
+    H5D_VDS_ERROR = -1
+    H5D_VDS_FIRST_MISSING = 0
+    H5D_VDS_LAST_AVAILABLE = 1
+end
+
+@enum H5D_fill_value_t::Int32 begin
+    H5D_FILL_VALUE_ERROR = -1
+    H5D_FILL_VALUE_UNDEFINED = 0
+    H5D_FILL_VALUE_DEFAULT = 1
+    H5D_FILL_VALUE_USER_DEFINED = 2
 end
