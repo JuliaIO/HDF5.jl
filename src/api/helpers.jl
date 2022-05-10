@@ -418,6 +418,9 @@ function h5p_get_external(plist, idx = 0)
             break
         end
     end
+    @static if Sys.iswindows() && sizeof(Int) == 4
+        sz[] &= 0xffffffff
+    end
     return (name = String(name), offset = offset[], size = sz[])
 end
 
