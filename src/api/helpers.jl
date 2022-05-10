@@ -404,7 +404,7 @@ end
 
 function h5p_get_external(plist, idx = 0)
     offset = Ref{off_t}(0)
-    sz = Ref{UInt}(0)
+    sz = Ref{hsize_t}(0)
     name_size = 64
     name = Base.StringVector(name_size)
     while true
