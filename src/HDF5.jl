@@ -230,6 +230,13 @@ Open or create an HDF5 file where `mode` is one of:
 
 Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for "w" and
 "r+", or SWMR read access for "r".
+
+Properties can be specified as keywords for [`FileAccessProperties`](@ref) and [`FileCreateProperties`](@ref).
+
+Also the keywords `fapl` and `fcpl` can be used to provide default instances of these property lists. Property
+lists passed in via keyword will be closed. This is useful to set properties not currently defined by HDF5.jl.
+
+Note that `h5open` uses `fclose_degree = :strong` by default, but this can be overriden by the `fapl` keyword.
 """
 function h5open(filename::AbstractString, mode::AbstractString, fapl::FileAccessProperties, fcpl::FileCreateProperties=FileCreateProperties(); swmr::Bool = false)
     rd, wr, cr, tr, ff =
@@ -260,16 +267,22 @@ function h5open(filename::AbstractString, mode::AbstractString, fapl::FileAccess
 end
 
 
-function h5open(filename::AbstractString, mode::AbstractString = "r"; swmr::Bool = false, pv...)
+function h5open(filename::AbstractString, mode::AbstractString = "r";
+    swmr::Bool = false,
     # With garbage collection, the other modes don't make sense
-    fapl = FileAccessProperties(; fclose_degree = :strong)
-    fcpl = FileCreateProperties()
-    pv = setproperties!(fapl, fcpl; pv...)
-    isempty(pv) || error("invalid keyword options $pv")
-    file = h5open(filename, mode, fapl, fcpl; swmr=swmr)
-    close(fapl)
-    close(fcpl)
-    return file
+    fapl = FileAccessProperties(; fclose_degree = :strong),
+    fcpl = FileCreateProperties(),
+    pv...
+)
+    try
+        pv = setproperties!(fapl, fcpl; pv...)
+        isempty(pv) || error("invalid keyword options $pv")
+        file = h5open(filename, mode, fapl, fcpl; swmr=swmr)
+        return file
+    finally
+        close(fapl)
+        close(fcpl)
+    end
 end
 
 
@@ -611,6 +624,8 @@ end
 create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Datatype, dspace_dims::Dims; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
 create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
 create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Type, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
+create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Type, dspace_dims::Dims; pv...) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
+create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Type, dspace_dims::Int...; pv...) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
 
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 create_datatype(class_id, sz) = Datatype(API.h5t_create(class_id, sz))

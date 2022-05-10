@@ -423,6 +423,17 @@ Wr = h5read(fn, "newgroup/W")
 close(f)
 rm(fn)
 
+# Test dataspace convenience versions of create_dataset
+try
+    h5open(fn, "w") do f
+        create_dataset(f, "test", Int, (128, 32))
+        create_dataset(f, "test2", Float64, 128, 64)
+        @test size(f["test"])  == (128, 32)
+        @test size(f["test2"]) == (128, 64)
+    end
+finally
+    rm(fn)
+end
 
 @testset "h5d_fill" begin
     val = 5
@@ -1226,7 +1237,7 @@ ext_prop = HDF5.API.h5p_get_external(dcpl)
 @test ext_prop.size == 10*20*sizeof(Int)
 dapl = HDF5.get_access_properties(dset)
 dapl.efile_prefix = "efile_test"
-@test HDF5.h5p_get_efile_prefix(dapl) == "efile_test"
+@test HDF5.API.h5p_get_efile_prefix(dapl) == "efile_test"
 close(hfile)
 
 end

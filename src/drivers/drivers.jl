@@ -45,8 +45,6 @@ Core(;
     page_size = 524288
 ) = Core(increment, backing_store, write_tracking, page_size)
 
-DRIVERS[API.h5fd_core_init()] = Core
-
 function get_driver(p::Properties, ::Type{Core})
     r_increment = Ref{Csize_t}(0)
     r_backing_store = Ref{Cuint}(0)
@@ -78,8 +76,6 @@ buffering. This driver is POSIX-compliant and is the default file driver for all
 struct POSIX <: Driver
 end
 
-DRIVERS[API.h5fd_sec2_init()] = POSIX
-
 function get_driver(p::Properties, ::Type{POSIX})
     POSIX()
 end
@@ -89,6 +85,8 @@ function set_driver!(p::Properties, ::POSIX)
 end
 
 function __init__()
+    DRIVERS[API.h5fd_core_init()] = Core
+    DRIVERS[API.h5fd_sec2_init()] = POSIX
     @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" include("mpio.jl")
 end
 

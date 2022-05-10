@@ -2,6 +2,17 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.16.8
+
+* Fix issue related to seg fault when loading with MPI
+* Add `create_dataset` convenience forms for dataspace
+* Add `meta_block_size` property to H5P and add additional H5P coverage
+* Add fapl and fcpl as keywords for h5open
+
+## v0.16.7
+
+* Fix issue related to serial driver loading when MPI is called
+
 ## v0.16.6
 
 * Add filespace management API calls

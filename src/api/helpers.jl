@@ -446,6 +446,12 @@ function h5p_get_local_heap_size_hint(plist_id)
     return size_hint[]
 end
 
+function h5p_get_meta_block_size(fapl_id)
+    sz = Ref{hsize_t}(0)
+    h5p_get_meta_block_size(fapl_id, sz)
+    return sz[]
+end
+
 function h5p_get_obj_track_times(plist_id)
     track_times = Ref{UInt8}()
     h5p_get_obj_track_times(plist_id, track_times)
