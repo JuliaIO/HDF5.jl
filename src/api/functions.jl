@@ -2769,13 +2769,13 @@ function h5p_set_local_heap_size_hint(plist_id, size_hint)
 end
 
 """
-    h5p_set_meta_block_size(fapl_id::hid_t, size::hsize_t)
+    h5p_set_mcdt_search_cb(plist_id::hid_t, func::H5O_mcdt_search_cb_t, op_data::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset_meta_block_size`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE).
+See `libhdf5` documentation for [`H5Pset_mcdt_search_cb`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_MCDT_SEARCH_CB).
 """
-function h5p_set_meta_block_size(fapl_id, size)
-    var"#status#" = ccall((:H5Pset_meta_block_size, libhdf5), herr_t, (hid_t, hsize_t), fapl_id, size)
-    var"#status#" < 0 && @h5error("Error in h5p_set_meta_block_size (not annotated)")
+function h5p_set_mcdt_search_cb(plist_id, func, op_data)
+    var"#status#" = ccall((:H5Pset_mcdt_search_cb, libhdf5), herr_t, (hid_t, H5O_mcdt_search_cb_t, Ptr{Cvoid}), plist_id, func, op_data)
+    var"#status#" < 0 && @h5error("Error in h5p_set_mcdt_search_cb (not annotated)")
     return nothing
 end
 
@@ -2809,17 +2809,6 @@ See `libhdf5` documentation for [`H5Pset_mdc_log_options`](https://portal.hdfgro
 function h5p_set_mdc_log_options(plist_id, is_enabled, location, start_on_access)
     var"#status#" = ccall((:H5Pset_mdc_log_options, libhdf5), herr_t, (hid_t, hbool_t, Ptr{Cchar}, hbool_t), plist_id, is_enabled, location, start_on_access)
     var"#status#" < 0 && @h5error("Error in h5p_set_mdc_log_options (not annotated)")
-    return nothing
-end
-
-"""
-    h5p_set_mcdt_search_cb(plist_id::hid_t, func::H5O_mcdt_search_cb_t, op_data::Ptr{Cvoid})
-
-See `libhdf5` documentation for [`H5Pset_mcdt_search_cb`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_MCDT_SEARCH_CB).
-"""
-function h5p_set_mcdt_search_cb(plist_id, func, op_data)
-    var"#status#" = ccall((:H5Pset_mcdt_search_cb, libhdf5), herr_t, (hid_t, H5O_mcdt_search_cb_t, Ptr{Cvoid}), plist_id, func, op_data)
-    var"#status#" < 0 && @h5error("Error in h5p_set_mcdt_search_cb (not annotated)")
     return nothing
 end
 
