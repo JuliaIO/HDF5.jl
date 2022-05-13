@@ -50,6 +50,8 @@ include("filter.jl")
 include("chunkstorage.jl")
 @debug "fileio"
 include("fileio.jl")
+@debug "views"
+include("views.jl")
 @debug "filter test utils"
 include("filters/FilterTestUtils.jl")
 
