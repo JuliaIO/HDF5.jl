@@ -2,6 +2,11 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.16.9
+
+* Resize buffer in h5p_get_external if no null is found
+* Fix duplicate h5p_set_meta_block_size
+
 ## v0.16.8
 
 * Fix issue related to seg fault when loading with MPI
