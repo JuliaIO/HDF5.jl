@@ -62,6 +62,8 @@ end
 
 end # @testset track_order
 
+@static if HDF5.API.h5_get_libversion() >= v"1.10.5"
+
 @testset "h5f_get_dset_no_attrs_hint" begin
   fn = tempname()
   threshold = 300
@@ -88,3 +90,5 @@ end # @testset track_order
   end
   @test filesize(fn) > threshold + 1
 end
+
+end # @static if HDF5.API.h5_get_libversion() >= v"1.10.5"
