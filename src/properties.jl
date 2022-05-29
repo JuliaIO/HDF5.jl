@@ -497,7 +497,11 @@ function class_getproperty(::Type{DatasetCreateProperties}, p::Properties, name:
     name === :external    ? API.h5p_get_external(p) :
     name === :filters     ? get_filters(p) :
     name === :layout      ? get_layout(p) :
-    name === :no_attrs_hint ? API.h5p_get_dset_no_attrs_hint(p) :
+    name === :no_attrs_hint ?
+        @static(API.h5_get_libversion() < v"1.10.5" ?
+            false :
+            API.h5p_get_dset_no_attrs_hint(p)
+        ) :
     # deprecated
     name === :filter      ? (depwarn("`filter` property name is deprecated, use `filters` instead",:class_getproperty); get_filters(p)) :
     class_getproperty(superclass(DatasetCreateProperties), p, name)
@@ -510,7 +514,11 @@ function class_setproperty!(::Type{DatasetCreateProperties}, p::Properties, name
     name === :external    ? API.h5p_set_external(p, val...) :
     name === :filters     ? set_filters!(p, val) :
     name === :layout      ? set_layout!(p, val) :
-    name === :no_attrs_hint ? API.h5p_set_dset_no_attrs_hint(p, val) :
+    name === :no_attrs_hint ?
+        @static(API.h5_get_libversion() < v"1.10.5" ?
+            error("no_attrs_hint is only valid for HDF5 library versions 1.10.5 or greater") :
+            API.h5p_set_dset_no_attrs_hint(p, val)
+        ) :
     # set-only for convenience
     name === :blosc       ? set_blosc!(p, val) :
     name === :deflate     ? set_deflate!(p, val) :

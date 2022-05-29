@@ -16,13 +16,18 @@ h5open(fn, "w";
       ) do hfile
     # generic
     g = create_group(hfile, "group")
-    d = create_dataset(g, "dataset", datatype(Int), dataspace((500,500)),
+    if HDF5.API.h5_get_libversion() >= v"1.10.5"
+      kwargs = (:no_attrs_hint => true,)
+    else
+      kwargs = ()
+    end
+    d = create_dataset(g, "dataset", datatype(Int), dataspace((500,50));
                  alloc_time = HDF5.API.H5D_ALLOC_TIME_EARLY,
                  chunk = (5, 10),
                  fill_value = 1,
                  fill_time = :never,
                  obj_track_times = false,
-                 no_attrs_hint = true)
+                 kwargs...)
     attributes(d)["metadata"] = "test"
 
     flush(hfile)
@@ -67,7 +72,9 @@ h5open(fn, "w";
     @test !dcpl.obj_track_times
     @test dcpl.fill_time == :never
     @test dcpl.fill_value == 1.0
-    @test dcpl.no_attrs_hint == true
+    if HDF5.API.h5_get_libversion() >= v"1.10.5"
+      @test dcpl.no_attrs_hint == true
+    end
 
     @test acpl.char_encoding == :utf8
 
