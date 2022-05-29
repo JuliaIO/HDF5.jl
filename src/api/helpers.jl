@@ -24,10 +24,10 @@ end
 ###
 ### HDF5 File Interface
 ###
-function h5f_get_dset_no_attrs_hint(file_id)::hbool_t
+function h5f_get_dset_no_attrs_hint(file_id)::Bool
     minimize = Ref{hbool_t}(false)
     h5f_get_dset_no_attrs_hint(file_id, minimize)
-    return minimize[] > 0
+    return minimize[]
 end
 
 ###
