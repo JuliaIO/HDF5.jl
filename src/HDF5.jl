@@ -934,8 +934,6 @@ end
 # This infers the Julia type from the HDF5.Datatype. Specific file formats should provide their own read(dset).
 const DatasetOrAttribute = Union{Dataset,Attribute}
 
-include("views.jl")
-
 function Base.read(obj::DatasetOrAttribute)
     dtype = datatype(obj)
     T = get_jl_type(dtype)
@@ -985,7 +983,6 @@ end
 
 """
     copyto!(output_buffer::AbstractArray{T}, obj::Union{DatasetOrAttribute}) where T
-    copyto!(output_buffer::AbstractArray{T}, @view(obj::Union{DatasetOrAttribute}, I...))
 
 Copy [part of] a HDF5 dataset or attribute to a preallocated output buffer.
 The output buffer must be convertible to a pointer and have a contiguous layout.

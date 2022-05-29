@@ -1,10 +1,9 @@
 using HDF5
 using Test
 
-@testset "views and non-allocating methods" begin
+@testset "non-allocating methods" begin
     fn = tempname()
 
-    @info "view.jl" fn
     data = rand(UInt16, 16, 16)
 
     h5open(fn, "w") do h5f
@@ -19,7 +18,8 @@ using Test
         read!(h5f["data"], buffer)
         @test isequal(buffer, data)
 
-        v = @view(h5f["data"][1:4, 1:4])
+        # Consider making this a view later
+        v = h5f["data"][1:4, 1:4]
 
         buffer = similar(v)
         @test size(buffer) == (4,4)
