@@ -21,7 +21,8 @@ h5open(fn, "w";
                  chunk = (5, 10),
                  fill_value = 1,
                  fill_time = :never,
-                 obj_track_times = false)
+                 obj_track_times = false,
+                 no_attrs_hint = true)
     attributes(d)["metadata"] = "test"
 
     flush(hfile)
@@ -66,6 +67,7 @@ h5open(fn, "w";
     @test !dcpl.obj_track_times
     @test dcpl.fill_time == :never
     @test dcpl.fill_value == 1.0
+    @test dcpl.no_attrs_hint == true
 
     @test acpl.char_encoding == :utf8
 

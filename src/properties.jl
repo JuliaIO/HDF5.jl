@@ -477,6 +477,7 @@ class_propertynames(::Type{DatasetCreateProperties}) = (
     :external,
     :filters,
     :layout,
+    :no_attrs_hint,
     # convenience
     :blosc,
     :deflate,
@@ -496,6 +497,7 @@ function class_getproperty(::Type{DatasetCreateProperties}, p::Properties, name:
     name === :external    ? API.h5p_get_external(p) :
     name === :filters     ? get_filters(p) :
     name === :layout      ? get_layout(p) :
+    name === :no_attrs_hint ? API.h5p_get_dset_no_attrs_hint(p) :
     # deprecated
     name === :filter      ? (depwarn("`filter` property name is deprecated, use `filters` instead",:class_getproperty); get_filters(p)) :
     class_getproperty(superclass(DatasetCreateProperties), p, name)
@@ -508,6 +510,7 @@ function class_setproperty!(::Type{DatasetCreateProperties}, p::Properties, name
     name === :external    ? API.h5p_set_external(p, val...) :
     name === :filters     ? set_filters!(p, val) :
     name === :layout      ? set_layout!(p, val) :
+    name === :no_attrs_hint ? API.h5p_set_dset_no_attrs_hint(p, val) :
     # set-only for convenience
     name === :blosc       ? set_blosc!(p, val) :
     name === :deflate     ? set_deflate!(p, val) :
@@ -620,6 +623,7 @@ Properties used when accessing files.
 
 # getter/setter for libver_bounds
 libver_bound_to_enum(val::Integer) = val
+libver_bound_to_enum(val::API.H5F_libver_t) = val
 function libver_bound_to_enum(val::VersionNumber)
     val >= v"1.12"   ? API.H5F_LIBVER_V112 :
     val >= v"1.10"   ? API.H5F_LIBVER_V110 :
@@ -631,13 +635,14 @@ function libver_bound_to_enum(val::Symbol)
     val == :latest   ? libver_bound_to_enum(libversion) :
     throw(ArgumentError("Invalid libver_bound $val."))
 end
-function libver_bound_from_enum(enum)
+function libver_bound_from_enum(enum::API.H5F_libver_t)
     enum == API.H5F_LIBVER_EARLIEST ? :earliest :
     enum == API.H5F_LIBVER_V18      ? v"1.8" :
     enum == API.H5F_LIBVER_V110     ? v"1.10" :
     enum == API.H5F_LIBVER_V112     ? v"1.12" :
     error("Unknown libver_bound value $enum")
 end
+libver_bound_from_enum(enum) = libver_bound_from_enum(API.H5F_libver_t(enum))
 function get_libver_bounds(p::Properties)
     low, high = API.h5p_get_libver_bounds(p)
     return libver_bound_from_enum(low), libver_bound_from_enum(high)

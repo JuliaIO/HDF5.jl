@@ -60,4 +60,31 @@ let fn = tempname() * ".h5"
   @test all(keys(dat) .== ["b", "a", "G/z", "G/f"])
 end
 
+end # @testset track_order
+
+@testset "h5f_get_dset_no_attrs_hint" begin
+  fn = tempname()
+  threshold = 300
+  h5open(
+    fn, "w";
+    libver_bounds = :latest,
+    meta_block_size = threshold
+  ) do f
+    HDF5.API.h5f_set_dset_no_attrs_hint(f, true)
+    f["test"] = 0x1
+    # We expect that with the hint, the offset will actually be 300
+    @test HDF5.API.h5d_get_offset(f["test"]) == threshold
+  end
+  @test filesize(fn) == threshold + 1
+  h5open(
+    fn, "w";
+    libver_bounds = :latest,
+    meta_block_size = threshold
+  ) do f
+    HDF5.API.h5f_set_dset_no_attrs_hint(f, false)
+    f["test"] = 0x1
+    # We expect that with the hint, the offset will actually be 300
+    @test HDF5.API.h5d_get_offset(f["test"]) > threshold
+  end
+  @test filesize(fn) > threshold + 1
 end
