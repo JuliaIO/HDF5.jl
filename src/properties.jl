@@ -412,6 +412,11 @@ Properties used when creating a new `Dataset`. Inherits from
 
   See $(h5doc("H5P_SET_LAYOUT")).
 
+- `no_attrs_hint`: Minimize the space for dataset metadata by hinting that no
+   attributes will be added if set to `true`. Attributes can still be added but
+   may exist elsewhere within the file.
+   See $(h5doc("H5P_SET_DSET_NO_ATTRS_HINT")).
+
 
 The following options are shortcuts for the various filters, and are set-only.
 They will be appended to the filter pipeline in the order in which they appear
