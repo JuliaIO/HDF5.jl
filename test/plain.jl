@@ -1,6 +1,26 @@
 using HDF5
 using CRC32c
+using H5Zblosc
 using Test
+
+gatherf(dst_buf, dst_buf_bytes_used, op_data) = HDF5.API.herr_t(0)
+gatherf_bad(dst_buf, dst_buf_bytes_used, op_data) = HDF5.API.herr_t(-1)
+gatherf_data(dst_buf, dst_buf_bytes_used, op_data) = HDF5.API.herr_t((op_data == 9)-1)
+
+
+function scatterf(src_buf, src_buf_bytes_used, op_data)
+    A = [1,2,3,4]
+    unsafe_store!(src_buf, pointer(A))
+    unsafe_store!(src_buf_bytes_used, sizeof(A))
+    return HDF5.API.herr_t(0)
+end
+scatterf_bad(src_buf, src_buf_bytes_used, op_data) = HDF5.API.herr_t(-1)
+function scatterf_data(src_buf, src_buf_bytes_used, op_data)
+    A = [1,2,3,4]
+    unsafe_store!(src_buf, pointer(A))
+    unsafe_store!(src_buf_bytes_used, sizeof(A))
+    return HDF5.API.herr_t((op_data == 9)-1)
+end
 
 @testset "plain" begin
 
@@ -12,10 +32,12 @@ f = h5open(fn, "w")
 f["Float64"] = 3.2
 f["Int16"] = Int16(4)
 # compression of empty array (issue #246)
-f["compressedempty", shuffle=(), compress=4] = Int64[]
+f["compressedempty", shuffle=true, deflate=4] = Int64[]
 # compression of zero-dimensional array (pull request #445)
-f["compressed_zerodim", shuffle=(), compress=4] = fill(Int32(42), ())
+f["compressed_zerodim", shuffle=true, deflate=4] = fill(Int32(42), ())
 f["bloscempty", blosc=4] = Int64[]
+# test creation of an anonymouse dataset
+f[nothing] = 5
 # Create arrays of different types
 A = randn(3, 5)
 write(f, "Afloat64", convert(Matrix{Float64}, A))
@@ -41,13 +63,13 @@ write(f, "salut", salut)
 write(f, "ucode", ucode)
 # Manually write a variable-length string (issue #187)
 let
-    dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
-    HDF5.h5t_set_size(dtype.id, HDF5.H5T_VARIABLE)
-    HDF5.h5t_set_cset(dtype.id, HDF5.cset(typeof(salut)))
-    dspace = HDF5.dataspace(salut)
-    dset = HDF5.d_create(f, "salut-vlen", dtype, dspace)
+    dtype = HDF5.Datatype(HDF5.API.h5t_copy(HDF5.API.H5T_C_S1))
+    HDF5.API.h5t_set_size(dtype, HDF5.API.H5T_VARIABLE)
+    HDF5.API.h5t_set_cset(dtype, HDF5.cset(typeof(salut)))
+    dspace = dataspace(salut)
+    dset = create_dataset(f, "salut-vlen", dtype, dspace)
     GC.@preserve salut begin
-        HDF5.h5d_write(dset, dtype, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(salut)])
+        HDF5.API.h5d_write(dset, dtype, HDF5.API.H5S_ALL, HDF5.API.H5S_ALL, HDF5.API.H5P_DEFAULT, [pointer(salut)])
     end
 end
 # Arrays of strings
@@ -57,10 +79,16 @@ salut_2d = ["Hi" "there"; "Salut" "friend"]
 write(f, "salut_2d", salut_2d)
 # Arrays of strings as vlen
 vlen = HDF5.VLen(salut_split)
-d_write(f, "salut_vlen", vlen)
+write_dataset(f, "salut_vlen", vlen)
+# Arrays of scalars as vlen
+vlen_int = [[3], [1], [4]]
+vleni = HDF5.VLen(vlen_int)
+write_dataset(f, "int_vlen", vleni)
+write_attribute(f["int_vlen"], "vlen_attr", vleni)
 # Empty arrays
 empty = UInt32[]
 write(f, "empty", empty)
+write(f, nothing, empty)
 # Empty strings
 empty_string = ""
 write(f, "empty_string", empty_string)
@@ -70,45 +98,52 @@ write(f, "empty_string_array", empty_string_array)
 # Array of empty string
 empty_array_of_strings = [""]
 write(f, "empty_array_of_strings", empty_array_of_strings)
-# Attributes
+# attributes
 species = [["N", "C"]; ["A", "B"]]
-attrs(f)["species"] = species
+attributes(f)["species"] = species
+@test read(attributes(f)["species"]) == species
+@test attributes(f)["species"][] == species
 C∞ = 42
-attrs(f)["C∞"] = C∞
+attributes(f)["C∞"] = C∞
 dset = f["salut"]
 @test !isempty(dset)
 label = "This is a string"
-attrs(dset)["typeinfo"] = label
+attributes(dset)["typeinfo"] = label
+@test read(attributes(dset)["typeinfo"]) == label
+@test attributes(dset)["typeinfo"][] == label
+@test dset["typeinfo"][] == label
 close(dset)
 # Scalar reference values in attributes
-attrs(f)["ref_test"] = HDF5.Reference(f, "empty_array_of_strings")
-@test read(attrs(f)["ref_test"]) === HDF5.Reference(f, "empty_array_of_strings")
+attributes(f)["ref_test"] = HDF5.Reference(f, "empty_array_of_strings")
+@test read(attributes(f)["ref_test"]) === HDF5.Reference(f, "empty_array_of_strings")
 # Group
-g = g_create(f, "mygroup")
+g = create_group(f, "mygroup")
 # Test dataset with compression
 R = rand(1:20, 20, 40);
-g["CompressedA", chunk=(5, 6), shuffle=(), compress=9] = R
-g["BloscA", chunk=(5, 6), shuffle=(), blosc=9] = R
+g["CompressedA", chunk=(5, 6), shuffle=true, deflate=9] = R
+g["BloscA", chunk=(5, 6), shuffle=true, blosc=9] = R
 close(g)
 # Copy group containing dataset
-o_copy(f, "mygroup", f, "mygroup2")
+copy_object(f, "mygroup", f, "mygroup2")
 # Copy dataset
-g = g_create(f, "mygroup3")
-o_copy(f["mygroup/CompressedA"], g, "CompressedA")
-o_copy(f["mygroup/BloscA"], g, "BloscA")
+g = create_group(f, "mygroup3")
+copy_object(f["mygroup/CompressedA"], g, "CompressedA")
+copy_object(f["mygroup/BloscA"], g, "BloscA")
 close(g)
 # Writing hyperslabs
-dset = d_create(f, "slab", datatype(Float64), dataspace(20, 20, 5), chunk=(5, 5, 1))
+dset = create_dataset(f, "slab", datatype(Float64), dataspace(20, 20, 5), chunk=(5, 5, 1))
 Xslab = randn(20, 20, 5)
 for i = 1:5
     dset[:,:,i] = Xslab[:,:,i]
 end
+dset = create_dataset(f, nothing, datatype(Float64), dataspace(20, 20, 5), chunk=(5, 5, 1))
+dset[:, :, :] = 3.0
 # More complex hyperslab and assignment with "incorrect" types (issue #34)
-d = d_create(f, "slab2", datatype(Float64), ((10, 20), (100, 200)), chunk=(1, 1))
+d = create_dataset(f, "slab2", datatype(Float64), ((10, 20), (100, 200)), chunk=(1, 1))
 d[:,:] = 5
 d[1,1] = 4
 # 1d indexing
-d = d_create(f, "slab3", datatype(Int), ((10,), (-1,)), chunk=(5,))
+d = create_dataset(f, "slab3", datatype(Int), ((10,), (-1,)), chunk=(5,))
 @test d[:] == zeros(Int, 10)
 d[3:5] = 3:5
 # Create a dataset designed to be deleted
@@ -178,7 +213,13 @@ salut_splitr = read(fr, "salut_split")
 salut_2dr = read(fr, "salut_2d")
 @test salut_2d == salut_2dr
 salut_vlenr = read(fr, "salut_vlen")
+@test HDF5.vlen_get_buf_size(fr["salut_vlen"]) == 7
+@test HDF5.API.h5d_get_access_plist(fr["salut-vlen"]) != 0
 #@test salut_vlenr == salut_split
+vlen_intr = read(fr, "int_vlen")
+@test vlen_intr == vlen_int
+vlen_attrr = read(fr["int_vlen"]["vlen_attr"])
+@test vlen_attrr == vlen_int
 Rr = read(fr, "mygroup/CompressedA")
 @test Rr == R
 Rr2 = read(fr, "mygroup2/CompressedA")
@@ -192,11 +233,11 @@ Rr5 = read(fr, "mygroup2/BloscA")
 Rr6 = read(fr, "mygroup3/BloscA")
 @test Rr6 == R
 dset = fr["mygroup/CompressedA"]
-@test get_chunk(dset) == (5, 6)
-@test name(dset) == "/mygroup/CompressedA"
+@test HDF5.get_chunk(dset) == (5, 6)
+@test HDF5.name(dset) == "/mygroup/CompressedA"
 dset2 = fr["mygroup/BloscA"]
-@test get_chunk(dset2) == (5, 6)
-@test name(dset2) == "/mygroup/BloscA"
+@test HDF5.get_chunk(dset2) == (5, 6)
+@test HDF5.name(dset2) == "/mygroup/BloscA"
 Xslabr = read(fr, "slab")
 @test Xslabr == Xslab
 Xslabr = h5read(fn, "slab", (:, :, :))  # issue #87
@@ -215,10 +256,10 @@ empty_string_arrayr = read(fr, "empty_string_array")
 @test empty_string_arrayr == empty_string_array
 empty_array_of_stringsr = read(fr, "empty_array_of_strings")
 @test empty_array_of_stringsr == empty_array_of_strings
-@test a_read(fr, "species") == species
-@test a_read(fr, "C∞") == C∞
+@test read_attribute(fr, "species") == species
+@test read_attribute(fr, "C∞") == C∞
 dset = fr["salut"]
-@test a_read(dset, "typeinfo") == label
+@test read_attribute(dset, "typeinfo") == label
 close(dset)
 # Test ref-based reading
 Aref = fr["Afloat64"]
@@ -228,22 +269,14 @@ Asub = Aref[sel...]
 close(Aref)
 # Test iteration, name, and parent
 for obj in fr
-    @test filename(obj) == fn
-    n = name(obj)
+    @test HDF5.filename(obj) == fn
+    n = HDF5.name(obj)
     p = parent(obj)
 end
 # Test reading multiple vars at once
 z = read(fr, "Float64", "Int16")
 @test z == (3.2, 4)
 @test typeof(z) == Tuple{Float64,Int16}
-# Test function syntax
-read(fr, "Float64") do x
-    @test x == 3.2
-end
-read(fr, "Float64", "Int16") do x, y
-    @test x == 3.2
-    @test y == 4
-end
 # Test reading entire file at once
 z = read(fr)
 @test z["Float64"] == 3.2
@@ -252,9 +285,22 @@ close(fr)
 # Test object deletion
 fr = h5open(fn, "r+")
 @test haskey(fr, "deleteme")
-o_delete(fr, "deleteme")
+delete_object(fr, "deleteme")
 @test !haskey(fr, "deleteme")
 close(fr)
+
+# Test object move
+h5open(fn, "r+") do io
+  io["moveme"] = [1,2,3]
+  create_group(io, "moveto")
+end
+
+h5open(fn, "r+") do io
+  @test haskey(io, "moveme")
+  @test haskey(io, "moveto") && !haskey(io, "moveto/moveme")
+  move_link(io, "moveme", io["moveto"])
+  @test haskey(io, "moveto/moveme") && !haskey(io, "moveme")
+end
 
 # Test the h5read interface
 Wr = h5read(fn, "newgroup/W")
@@ -273,19 +319,19 @@ A = rand(3, 3)'
 @test !haskey(hid, "A")
 @test_throws ArgumentError write(hid, "A", A)
 @test !haskey(hid, "A")
-dset = d_create(hid, "attr", datatype(Int), dataspace(0))
-@test !haskey(attrs(dset), "attr")
+dset = create_dataset(hid, "attr", datatype(Int), dataspace(0))
+@test !haskey(attributes(dset), "attr")
 # broken test - writing attributes does not check that the stride is correct
 @test_skip @test_throws ArgumentError write(dset, "attr", A)
-@test !haskey(attrs(dset), "attr")
+@test !haskey(attributes(dset), "attr")
 close(hid)
 
 # more do syntax
 h5open(fn, "w") do fid
-    g_create(fid, "mygroup") do g
-        write(g, "x", 3.2)
-    end
+    g = create_group(fid, "mygroup")
+    write(g, "x", 3.2)
 end
+
 fid = h5open(fn, "r")
 @test keys(fid) == ["mygroup"]
 g = fid["mygroup"]
@@ -300,9 +346,8 @@ outfile = joinpath(tmpdir, "test.h5")
 
 # create a new file
 h5rewrite(outfile) do fid
-    g_create(fid, "mygroup") do g
-        write(g, "x", 3.3)
-    end
+    g = create_group(fid, "mygroup")
+    write(g, "x", 3.3)
 end
 @test length(readdir(tmpdir)) == 1
 h5open(outfile, "r") do fid
@@ -312,9 +357,8 @@ end
 
 # fail to overwrite
 @test_throws ErrorException h5rewrite(outfile) do fid
-    g_create(fid, "mygroup") do g
-        write(g, "oops", 3.3)
-    end
+    g = create_group(fid, "mygroup")
+    write(g, "oops", 3.3)
     error("failed")
 end
 @test length(readdir(tmpdir)) == 1
@@ -325,9 +369,8 @@ end
 
 # overwrite
 h5rewrite(outfile) do fid
-    g_create(fid, "mygroup") do g
-        write(g, "y", 3.3)
-    end
+    g = create_group(fid, "mygroup")
+    write(g, "y", 3.3)
 end
 @test length(readdir(tmpdir)) == 1
 h5open(outfile, "r") do fid
@@ -345,24 +388,20 @@ d = h5read(joinpath(test_files, "compound.h5"), "/data")
 fn = tempname()
 fd = h5open(fn, "w")
 fd["level_0"] = [1,2,3]
-grp = g_create(fd, "mygroup")
+grp = create_group(fd, "mygroup")
 fd["mygroup/level_1"] = [4, 5]
-grp2 = g_create(grp, "deep_group")
+grp2 = create_group(grp, "deep_group")
 fd["mygroup/deep_group/level_2"] = [6.0, 7.0]
-datasets = get_datasets(fd)
-@test sort(map(name, datasets)) ==  sort(["/level_0", "/mygroup/deep_group/level_2", "/mygroup/level_1"])
+datasets = HDF5.get_datasets(fd)
+@test sort(map(HDF5.name, datasets)) ==  sort(["/level_0", "/mygroup/deep_group/level_2", "/mygroup/level_1"])
 close(fd)
 rm(fn)
 
 # File creation and access property lists
-cpl = p_create(HDF5.H5P_FILE_CREATE)
-cpl[:userblock] = 1024
-apl = p_create(HDF5.H5P_FILE_ACCESS)
-apl[:libver_bounds] = (HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)
-h5open(fn, false, true, true, true, false, cpl, apl) do fid
-    write(fid, "intarray", [1, 2, 3])
-end
-h5open(fn, "r", libver_bounds=(HDF5.H5F_LIBVER_EARLIEST, HDF5.H5F_LIBVER_LATEST)) do fid
+fid = h5open(fn, "w", userblock=1024, libver_bounds=(HDF5.API.H5F_LIBVER_EARLIEST, HDF5.API.H5F_LIBVER_LATEST))
+write(fid, "intarray", [1, 2, 3])
+close(fid)
+h5open(fn, "r", libver_bounds=(HDF5.API.H5F_LIBVER_EARLIEST, HDF5.API.H5F_LIBVER_LATEST)) do fid
     intarray = read(fid, "intarray")
     @test intarray == [1, 2, 3]
 end
@@ -384,33 +423,77 @@ Wr = h5read(fn, "newgroup/W")
 close(f)
 rm(fn)
 
-if !isempty(HDF5.libhdf5_hl)
-    # Test direct chunk writing
+# Test dataspace convenience versions of create_dataset
+try
     h5open(fn, "w") do f
-      d = d_create(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
-      raw = HDF5.ChunkStorage(d)
-      raw[1,1] = 0, collect(reinterpret(UInt8, [1,2,5,6]))
-      raw[3,1] = 0, collect(reinterpret(UInt8, [3,4,7,8]))
-      raw[1,3] = 0, collect(reinterpret(UInt8, [9,10,13,14]))
-      raw[3,3] = 0, collect(reinterpret(UInt8, [11,12,15,16]))
+        create_dataset(f, "test", Int, (128, 32))
+        create_dataset(f, "test2", Float64, 128, 64)
+        @test size(f["test"])  == (128, 32)
+        @test size(f["test2"]) == (128, 64)
     end
+finally
+    rm(fn)
+end
 
-    @test h5open(fn, "r") do f
-      vec(f["dataset"][:,:])
-    end == collect(1:16)
+@testset "h5d_fill" begin
+    val = 5
+    h5open(fn, "w") do f
+        d = create_dataset(f, "dataset", datatype(Int), dataspace(6, 6), chunk=(2, 3))
+        buf = Array{Int,2}(undef,(6,6))
+        dtype = datatype(Int)
+        HDF5.API.h5d_fill(Ref(val), dtype, buf, datatype(Int), dataspace(d))
+        @test all(buf .== 5)
+        HDF5.API.h5d_write(d, dtype, HDF5.API.H5S_ALL, HDF5.API.H5S_ALL, HDF5.API.H5P_DEFAULT, buf)
+    end
+    h5open(fn, "r") do f
+        @test all( f["dataset"][:,:] .== 5 )
+    end
+    rm(fn)
+end # testset "Test h5d_fill
 
-    close(f)
+@testset "h5d_gather" begin
+    src_buf = rand(Int, (4,4) )
+    dst_buf = Array{Int,2}(undef,(4,4))
+    h5open(fn ,"w") do f
+        d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
+        @test HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf), dst_buf, C_NULL, C_NULL) |> isnothing
+        @test src_buf == dst_buf
+        gatherf_ptr = @cfunction(gatherf, HDF5.API.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
+        @test HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_ptr, C_NULL) |> isnothing
+        gatherf_bad_ptr = @cfunction(gatherf_bad, HDF5.API.herr_t, (Ptr{Nothing}, Csize_t, Ptr{Nothing}))
+        @test_throws HDF5.API.H5Error HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_bad_ptr, C_NULL)
+        gatherf_data_ptr = @cfunction(gatherf_data, HDF5.API.herr_t, (Ptr{Nothing}, Csize_t, Ref{Int}))
+        @test HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, Ref(9)) |> isnothing
+        @test_throws HDF5.API.H5Error HDF5.API.h5d_gather(dataspace(d), src_buf, datatype(Int), sizeof(dst_buf)÷2, dst_buf, gatherf_data_ptr, 10)
+    end
+    rm(fn)
+end
+
+
+
+
+@testset "h5d_scatter" begin
+    h5open(fn, "w") do f
+        dst_buf = Array{Int,2}(undef,(4,4))
+        d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4), chunk=(2, 2))
+        scatterf_ptr = @cfunction(scatterf, HDF5.API.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
+        @test HDF5.API.h5d_scatter(scatterf_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf) |> isnothing
+        scatterf_bad_ptr = @cfunction(scatterf_bad, HDF5.API.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing}))
+        @test_throws HDF5.API.H5Error HDF5.API.h5d_scatter(scatterf_bad_ptr, C_NULL, datatype(Int), dataspace(d), dst_buf)
+        scatterf_data_ptr = @cfunction(scatterf_data, HDF5.API.herr_t, (Ptr{Ptr{Int}}, Ptr{Csize_t}, Ref{Int}))
+        @test HDF5.API.h5d_scatter(scatterf_data_ptr, Ref(9), datatype(Int), dataspace(d), dst_buf) |> isnothing
+    end
     rm(fn)
 end
 
 # Test that switching time tracking off results in identical files
 fn1 = tempname(); fn2 = tempname()
 h5open(fn1, "w") do f
-    f["x", track_times=false] = [1, 2, 3]
+    f["x", obj_track_times=false] = [1, 2, 3]
 end
 sleep(1)
 h5open(fn2, "w") do f
-    f["x", track_times=false] = [1, 2, 3]
+    f["x", obj_track_times=false] = [1, 2, 3]
 end
 @test open(crc32c, fn1) == open(crc32c, fn2)
 rm(fn1); rm(fn2)
@@ -424,13 +507,13 @@ end # testset plain
   f = h5open(fn, "w")
 
   f["ComplexF64"] = 1.0 + 2.0im
-  attrs(f["ComplexF64"])["ComplexInt64"] = 1im
+  attributes(f["ComplexF64"])["ComplexInt64"] = 1im
 
   Acmplx = rand(ComplexF64, 3, 5)
   write(f, "Acmplx64", convert(Matrix{ComplexF64}, Acmplx))
   write(f, "Acmplx32", convert(Matrix{ComplexF32}, Acmplx))
 
-  dset = d_create(f, "Acmplx64_hyperslab", datatype(Complex{Float64}), dataspace(Acmplx))
+  dset = create_dataset(f, "Acmplx64_hyperslab", datatype(Complex{Float64}), dataspace(Acmplx))
   for i in 1:size(Acmplx, 2)
     dset[:, i] = Acmplx[:,i]
   end
@@ -446,7 +529,7 @@ end # testset plain
   fr = h5open(fn)
   z = read(fr, "ComplexF64")
   @test z == 1.0 + 2.0im && isa(z, ComplexF64)
-  z_attrs = attrs(fr["ComplexF64"])
+  z_attrs = attributes(fr["ComplexF64"])
   @test read(z_attrs["ComplexInt64"]) == 1im
 
   Acmplx32 = read(fr, "Acmplx32")
@@ -626,8 +709,8 @@ end # empty and 0-size arrays
 fn = tempname()
 hfile = h5open(fn, "w")
 
-dtype_varstring = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_C_S1))
-HDF5.h5t_set_size(dtype_varstring, HDF5.H5T_VARIABLE)
+dtype_varstring = HDF5.Datatype(HDF5.API.h5t_copy(HDF5.API.H5T_C_S1))
+HDF5.API.h5t_set_size(dtype_varstring, HDF5.API.H5T_VARIABLE)
 
 write(hfile, "uint8_array", UInt8[(1:8)...])
 write(hfile, "bool_scalar", true)
@@ -635,9 +718,9 @@ write(hfile, "bool_scalar", true)
 fixstring = "fix"
 varstring = "var"
 write(hfile, "fixed_string", fixstring)
-vardset = d_create(hfile, "variable_string", dtype_varstring, dataspace(varstring))
+vardset = create_dataset(hfile, "variable_string", dtype_varstring, dataspace(varstring))
 GC.@preserve varstring begin
-    HDF5.h5d_write(vardset, dtype_varstring, HDF5.H5S_ALL, HDF5.H5S_ALL, HDF5.H5P_DEFAULT, [pointer(varstring)])
+    HDF5.API.h5d_write(vardset, dtype_varstring, HDF5.API.H5S_ALL, HDF5.API.H5S_ALL, HDF5.API.H5P_DEFAULT, [pointer(varstring)])
 end
 flush(hfile)
 close(dtype_varstring)
@@ -687,59 +770,289 @@ fn = tempname()
 
 # First create data objects and sure they print useful outputs
 
-hfile = h5open(fn, "w")
-@test sprint(show, hfile) == "HDF5 data file: $fn"
+hfile = h5open(fn, "w", swmr = true)
+@test sprint(show, hfile) == "HDF5.File: (read-write, swmr) $fn"
 
-group = g_create(hfile, "group")
-@test sprint(show, group) == "HDF5 group: /group (file: $fn)"
+group = create_group(hfile, "group")
+@test sprint(show, group) == "HDF5.Group: /group (file: $fn)"
 
-dset = d_create(group, "dset", datatype(Int), dataspace((1,)))
-@test sprint(show, dset) == "HDF5 dataset: /group/dset (file: $fn xfer_mode: 0)"
+dset = create_dataset(group, "dset", datatype(Int), dataspace((1,)))
+@test sprint(show, dset) == "HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
 
-meta = a_create(dset, "meta", datatype(Bool), dataspace((1,)))
-@test sprint(show, meta) == "HDF5 attribute: meta"
+meta = create_attribute(dset, "meta", datatype(Bool), dataspace((1,)))
+@test sprint(show, meta) == "HDF5.Attribute: meta"
 
-prop = p_create(HDF5.H5P_DATASET_CREATE)
-@test sprint(show, prop) == "HDF5 property: dataset create class"
+dsetattrs = attributes(dset)
+@test sprint(show, dsetattrs) == "Attributes of HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
 
-dtype = HDF5.Datatype(HDF5.h5t_copy(HDF5.H5T_IEEE_F64LE))
-@test sprint(show, dtype) == "HDF5 datatype: H5T_IEEE_F64LE"
+prop = HDF5.init!(HDF5.LinkCreateProperties())
+@test sprint(show, prop) == """
+HDF5.LinkCreateProperties(
+  create_intermediate_group = false,
+  char_encoding   = :ascii,
+)"""
 
-dspace = dataspace((1,))
-@test occursin(r"^HDF5.Dataspace\(\d+\)", sprint(show, dspace))
+prop = HDF5.DatasetCreateProperties()
+@test sprint(show, prop) == "HDF5.DatasetCreateProperties()"
+
+dtype = HDF5.Datatype(HDF5.API.h5t_copy(HDF5.API.H5T_IEEE_F64LE))
+@test sprint(show, dtype) == "HDF5.Datatype: H5T_IEEE_F64LE"
+commit_datatype(hfile, "type", dtype)
+@test sprint(show, dtype) == "HDF5.Datatype: /type H5T_IEEE_F64LE"
+
+dtypemeta = create_attribute(dtype, "dtypemeta", datatype(Bool), dataspace((1,)))
+@test sprint(show, dtypemeta) == "HDF5.Attribute: dtypemeta"
+
+dtypeattrs = attributes(dtype)
+@test sprint(show, dtypeattrs) == "Attributes of HDF5.Datatype: /type H5T_IEEE_F64LE"
+
+dspace_null = HDF5.Dataspace(HDF5.API.h5s_create(HDF5.API.H5S_NULL))
+dspace_scal = HDF5.Dataspace(HDF5.API.h5s_create(HDF5.API.H5S_SCALAR))
+dspace_norm = dataspace((100, 4))
+dspace_maxd = dataspace((100, 4), max_dims = (256, 4))
+dspace_slab = HDF5.hyperslab(dataspace((100, 4)), 1:20:100, 1:4)
+if HDF5.libversion ≥ v"1.10.7"
+dspace_irrg = HDF5.Dataspace(HDF5.API.h5s_combine_select(
+        HDF5.API.h5s_copy(dspace_slab), HDF5.API.H5S_SELECT_OR,
+        HDF5.hyperslab(dataspace((100, 4)), 2, 2)))
+@test sprint(show, dspace_irrg) == "HDF5.Dataspace: (100, 4) [irregular selection]"
+end
+@test sprint(show, dspace_null) == "HDF5.Dataspace: H5S_NULL"
+@test sprint(show, dspace_scal) == "HDF5.Dataspace: H5S_SCALAR"
+@test sprint(show, dspace_norm) == "HDF5.Dataspace: (100, 4)"
+@test sprint(show, dspace_maxd) == "HDF5.Dataspace: (100, 4) / (256, 4)"
+@test sprint(show, dspace_slab) == "HDF5.Dataspace: (1:20:81, 1:4) / (1:100, 1:4)"
 
 # Now test printing after closing each object
 
-close(dspace)
-@test sprint(show, dspace) == "HDF5.Dataspace(-1)"
+close(dspace_null)
+@test sprint(show, dspace_null) == "HDF5.Dataspace: (invalid)"
 
 close(dtype)
-@test sprint(show, dtype) == "HDF5 datatype: (invalid)"
+@test sprint(show, dtype) == "HDF5.Datatype: (invalid)"
 
 close(prop)
-@test sprint(show, prop) == "HDF5 property (invalid)"
+@test sprint(show, prop) == "HDF5.DatasetCreateProperties: (invalid)"
 
 close(meta)
-@test sprint(show, meta) == "HDF5 attribute (invalid)"
+@test sprint(show, meta) == "HDF5.Attribute: (invalid)"
+
+close(dtypemeta)
+@test sprint(show, dtypemeta) == "HDF5.Attribute: (invalid)"
 
 close(dset)
-@test sprint(show, dset) == "HDF5 dataset (invalid)"
+@test sprint(show, dset) == "HDF5.Dataset: (invalid)"
+@test sprint(show, dsetattrs) == "Attributes of HDF5.Dataset: (invalid)"
 
 close(group)
-@test sprint(show, group) == "HDF5 group (invalid)"
+@test sprint(show, group) == "HDF5.Group: (invalid)"
 
 close(hfile)
-@test sprint(show, hfile) == "HDF5 data file (closed): $fn"
+@test sprint(show, hfile) == "HDF5.File: (closed) $fn"
+
+# Go back and check different access modes for file printing
+hfile = h5open(fn, "r+", swmr = true)
+@test sprint(show, hfile) == "HDF5.File: (read-write, swmr) $fn"
+close(hfile)
+hfile = h5open(fn, "r", swmr = true)
+@test sprint(show, hfile) == "HDF5.File: (read-only, swmr) $fn"
+close(hfile)
+hfile = h5open(fn, "r")
+@test sprint(show, hfile) == "HDF5.File: (read-only) $fn"
+close(hfile)
+hfile = h5open(fn, "cw")
+@test sprint(show, hfile) == "HDF5.File: (read-write) $fn"
+close(hfile)
 
 rm(fn)
+
+# Make an interesting file tree
+hfile = h5open(fn, "w")
+# file level
+hfile["version"] = 1.0
+attributes(hfile)["creator"] = "HDF5.jl"
+# group level
+create_group(hfile, "inner")
+attributes(hfile["inner"])["dirty"] = true
+# dataset level
+hfile["inner/data"] = collect(-5:5)
+attributes(hfile["inner/data"])["mode"] = 1
+# non-trivial committed datatype
+# TODO: print more datatype information
+tmeta = HDF5.Datatype(HDF5.API.h5t_create(HDF5.API.H5T_COMPOUND, sizeof(Int) + sizeof(Float64)))
+HDF5.API.h5t_insert(tmeta, "scale", 0, HDF5.hdf5_type_id(Int))
+HDF5.API.h5t_insert(tmeta, "bias", sizeof(Int), HDF5.hdf5_type_id(Float64))
+tstr = datatype("fixed")
+t = HDF5.Datatype(HDF5.API.h5t_create(HDF5.API.H5T_COMPOUND, sizeof(tmeta) + sizeof(tstr)))
+HDF5.API.h5t_insert(t, "meta", 0, tmeta)
+HDF5.API.h5t_insert(t, "type", sizeof(tmeta), tstr)
+commit_datatype(hfile, "dtype", t)
+
+buf = IOBuffer()
+iobuf = IOContext(buf, :limit => true, :module => Main)
+show3(io::IO, x) = show(IOContext(io, iobuf), MIME"text/plain"(), x)
+
+HDF5.show_tree(iobuf, hfile)
+msg = String(take!(buf))
+@test occursin(r"""
+🗂️ HDF5.File: .*$
+├─ 🏷️ creator
+├─ 📄 dtype
+├─ 📂 inner
+│  ├─ 🏷️ dirty
+│  └─ 🔢 data
+│     └─ 🏷️ mode
+└─ 🔢 version"""m, msg)
+@test sprint(show3, hfile) == msg
+
+HDF5.show_tree(iobuf, hfile, attributes = false)
+@test occursin(r"""
+🗂️ HDF5.File: .*$
+├─ 📄 dtype
+├─ 📂 inner
+│  └─ 🔢 data
+└─ 🔢 version"""m, String(take!(buf)))
+
+HDF5.show_tree(iobuf, attributes(hfile))
+msg = String(take!(buf))
+@test occursin(r"""
+🗂️ Attributes of HDF5.File: .*$
+└─ 🏷️ creator"""m, msg)
+@test sprint(show3, attributes(hfile)) == msg
+
+HDF5.show_tree(iobuf, hfile["inner"])
+msg = String(take!(buf))
+@test occursin(r"""
+📂 HDF5.Group: /inner .*$
+├─ 🏷️ dirty
+└─ 🔢 data
+   └─ 🏷️ mode"""m, msg)
+@test sprint(show3, hfile["inner"]) == msg
+
+HDF5.show_tree(iobuf, hfile["inner"], attributes = false)
+@test occursin(r"""
+📂 HDF5.Group: /inner .*$
+└─ 🔢 data"""m, String(take!(buf)))
+
+HDF5.show_tree(iobuf, hfile["inner/data"])
+msg = String(take!(buf))
+@test occursin(r"""
+🔢 HDF5.Dataset: /inner/data .*$
+└─ 🏷️ mode"""m, msg)
+# xfer_mode changes between printings, so need regex again
+@test occursin(r"""
+🔢 HDF5.Dataset: /inner/data .*$
+└─ 🏷️ mode"""m, sprint(show3, hfile["inner/data"]))
+
+HDF5.show_tree(iobuf, hfile["inner/data"], attributes = false)
+@test occursin(r"""
+🔢 HDF5.Dataset: /inner/data .*$"""m, String(take!(buf)))
+
+HDF5.show_tree(iobuf, hfile["dtype"])
+@test occursin(r"""
+📄 HDF5.Datatype: /dtype""", String(take!(buf)))
+
+HDF5.show_tree(iobuf, hfile["inner/data"]["mode"], attributes = true)
+@test occursin(r"""
+🏷️ HDF5.Attribute: mode""", String(take!(buf)))
+
+# configurable options
+
+# no emoji icons
+HDF5.SHOW_TREE_ICONS[] = false
+@test occursin(r"""
+\[F\] HDF5.File: .*$
+├─ \[A\] creator
+├─ \[T\] dtype
+├─ \[G\] inner
+│  ├─ \[A\] dirty
+│  └─ \[D\] data
+│     └─ \[A\] mode
+└─ \[D\] version"""m, sprint(show3, hfile))
+HDF5.SHOW_TREE_ICONS[] = true
+
+# no tree printing
+show(IOContext(iobuf, :compact => true), MIME"text/plain"(), hfile)
+msg = String(take!(buf))
+@test msg == sprint(show, hfile)
+
+close(hfile)
+
+# Now test the print-limiting heuristics for large/complex datasets
+
+# group with a large number of children; tests child entry truncation heuristic
+h5open(fn, "w") do hfile
+    dt, ds = datatype(Int), dataspace(())
+    opts = Iterators.product('A':'Z', 1:9)
+    for ii in opts
+        create_dataset(hfile, string(ii...), dt, ds)
+    end
+
+    def = HDF5.SHOW_TREE_MAX_CHILDREN[]
+    HDF5.SHOW_TREE_MAX_CHILDREN[] = 5
+
+    HDF5.show_tree(iobuf, hfile)
+    msg = String(take!(buf))
+    @test occursin(r"""
+🗂️ HDF5.File: .*$
+├─ 🔢 A1
+├─ 🔢 A2
+├─ 🔢 A3
+├─ 🔢 A4
+├─ 🔢 A5
+└─ \(229 more children\)"""m, msg)
+    @test sprint(show3, hfile) == msg
+
+    HDF5.SHOW_TREE_MAX_CHILDREN[] = def
+
+    # IOContext can halt limiting
+    HDF5.show_tree(IOContext(iobuf, :limit => false), hfile)
+    @test countlines(seekstart(buf)) == length(opts) + 1
+    truncate(buf, 0)
+end
+
+# deeply nested set of elements; test that the tree is truncated
+h5open(fn, "w") do hfile
+    p = HDF5.root(hfile)::HDF5.Group
+    opts = 'A':'Z'
+    for ii in opts
+        p = create_group(p, string(ii))
+    end
+
+    def = HDF5.SHOW_TREE_MAX_DEPTH[]
+    HDF5.SHOW_TREE_MAX_DEPTH[] = 5
+
+    HDF5.show_tree(iobuf, hfile)
+    msg = String(take!(buf))
+    @test occursin(r"""
+🗂️ HDF5.File: .*$
+└─ 📂 A
+   └─ 📂 B
+      └─ 📂 C
+         └─ 📂 D
+            └─ 📂 E
+               └─ \(1 child\)"""m, msg)
+    @test sprint(show3, hfile) == msg
+
+    HDF5.SHOW_TREE_MAX_DEPTH[] = def
+
+    # IOContext can halt limiting
+    HDF5.show_tree(IOContext(iobuf, :limit => false), hfile)
+    @test countlines(seekstart(buf)) == length(opts) + 1
+    truncate(buf, 0)
+end
+
+rm(fn)
+
 end # show tests
 
 @testset "split1" begin
 
-@test HDF5.split1("a") == ("a", nothing)
+@test HDF5.split1("/") == ("/", "")
+@test HDF5.split1("a") == ("a", "")
 @test HDF5.split1("/a/b/c") == ("/", "a/b/c")
 @test HDF5.split1("a/b/c") == ("a", "b/c")
-@test HDF5.split1(GenericString("a")) == ("a", nothing)
+@test HDF5.split1(GenericString("a")) == ("a", "")
 @test HDF5.split1(GenericString("/a/b/c")) == ("/", "a/b/c")
 @test HDF5.split1(GenericString("a/b/c")) == ("a", "b/c")
 
@@ -769,38 +1082,42 @@ end # split1 tests
 fn = tempname()
 hfile = h5open(fn, "w")
 
-group1 = g_create(hfile, "group1")
-group2 = g_create(group1, "group2")
+group1 = create_group(hfile, "group1")
+group2 = create_group(group1, "group2")
 
+@test haskey(hfile, "/")
 @test haskey(hfile, GenericString("group1"))
 @test !haskey(hfile, GenericString("groupna"))
 @test haskey(hfile, "group1/group2")
 @test !haskey(hfile, "group1/groupna")
+@test_throws KeyError hfile["nothing"]
 
-dset1 = d_create(hfile, "dset1", datatype(Int), dataspace((1,)))
-dset2 = d_create(group1, "dset2", datatype(Int), dataspace((1,)))
+dset1 = create_dataset(hfile, "dset1", datatype(Int), dataspace((1,)))
+dset2 = create_dataset(group1, "dset2", datatype(Int), dataspace((1,)))
 
 @test haskey(hfile, "dset1")
 @test !haskey(hfile, "dsetna")
 @test haskey(hfile, "group1/dset2")
 @test !haskey(hfile, "group1/dsetna")
 
-meta1 = a_create(dset1, "meta1", datatype(Bool), dataspace((1,)))
+meta1 = create_attribute(dset1, "meta1", datatype(Bool), dataspace((1,)))
 @test haskey(dset1, "meta1")
 @test !haskey(dset1, "metana")
+@test_throws KeyError dset1["nothing"]
 
 
-attribs = attrs(hfile)
+attribs = attributes(hfile)
 attribs["test1"] = true
 attribs["test2"] = "foo"
 
-haskey(attribs, "test1")
-haskey(attribs, "test2")
-!haskey(attribs, "testna")
+@test haskey(attribs, "test1")
+@test haskey(attribs, "test2")
+@test !haskey(attribs, "testna")
+@test_throws KeyError attribs["nothing"]
 
-attribs = attrs(dset2)
+attribs = attributes(dset2)
 attribs["attr"] = "foo"
-haskey(attribs, GenericString("attr"))
+@test haskey(attribs, GenericString("attr"))
 
 close(hfile)
 rm(fn)
@@ -815,60 +1132,64 @@ close(hfile)
 hfile = h5open(fn); close(hfile)
 hfile = h5open(fn, "w")
 
-@test_nowarn g_create(hfile, GenericString("group1"))
-@test_nowarn d_create(hfile, GenericString("dset1"), datatype(Int), dataspace((1,)))
-@test_nowarn d_create(hfile, GenericString("dset2"), 1)
+@test_nowarn create_group(hfile, GenericString("group1"))
+@test_nowarn create_dataset(hfile, GenericString("dset1"), datatype(Int), dataspace((1,)))
+@test_nowarn create_dataset(hfile, GenericString("dset2"), 1)
 
 @test_nowarn hfile[GenericString("group1")]
 @test_nowarn hfile[GenericString("dset1")]
 
 
 dset1 = hfile["dset1"]
-@test_nowarn a_create(dset1, GenericString("meta1"), datatype(Bool), dataspace((1,)))
-@test_nowarn a_create(dset1, GenericString("meta2"), 1)
+@test_nowarn create_attribute(dset1, GenericString("meta1"), datatype(Bool), dataspace((1,)))
+@test_nowarn create_attribute(dset1, GenericString("meta2"), 1)
 @test_nowarn dset1[GenericString("meta1")]
 @test_nowarn dset1[GenericString("x")] = 2
 
 array_of_strings = ["test",]
 write(hfile, "array_of_strings", array_of_strings)
-@test_nowarn attrs(hfile)[GenericString("ref_test")] = HDF5.Reference(hfile, GenericString("array_of_strings"))
-@test read(attrs(hfile)[GenericString("ref_test")]) === HDF5.Reference(hfile, "array_of_strings")
+@test_nowarn attributes(hfile)[GenericString("ref_test")] = HDF5.Reference(hfile, GenericString("array_of_strings"))
+@test read(attributes(hfile)[GenericString("ref_test")]) === HDF5.Reference(hfile, "array_of_strings")
 
 hfile[GenericString("test")] = 17.2
-@test_nowarn o_delete(hfile, GenericString("test"))
-@test_nowarn a_delete(dset1, GenericString("meta1"))
+@test_nowarn delete_object(hfile, GenericString("test"))
+@test_nowarn delete_attribute(dset1, GenericString("meta1"))
 
 # transient types
-memtype_id = HDF5.h5t_copy(HDF5.H5T_NATIVE_DOUBLE)
+memtype_id = HDF5.API.h5t_copy(HDF5.API.H5T_NATIVE_DOUBLE)
 dt = HDF5.Datatype(memtype_id)
-@test !HDF5.h5t_committed(dt)
-t_commit(hfile, GenericString("dt"), dt)
-@test HDF5.h5t_committed(dt)
+@test !HDF5.API.h5t_committed(dt)
+commit_datatype(hfile, GenericString("dt"), dt)
+@test HDF5.API.h5t_committed(dt)
 
 dt = datatype(Int)
 ds = dataspace(0)
-d = d_create(hfile, GenericString("d"), dt, ds)
-g = g_create(hfile, GenericString("g"))
-a = a_create(hfile, GenericString("a"), dt, ds)
+d = create_dataset(hfile, GenericString("d"), dt, ds)
+g = create_group(hfile, GenericString("g"))
+a = create_attribute(hfile, GenericString("a"), dt, ds)
 
 for obj in (d, g)
-   @test_nowarn a_write(obj, GenericString("a"), 1)
-   @test_nowarn a_read(obj, GenericString("a"))
+   @test_nowarn write_attribute(obj, GenericString("a"), 1)
+   @test_nowarn read_attribute(obj, GenericString("a"))
    @test_nowarn write(obj, GenericString("aa"), 1)
-   @test_nowarn attrs(obj)["attr1"] = GenericString("b")
+   @test_nowarn attributes(obj)["attr1"] = GenericString("b")
 end
 @test_nowarn write(d, "attr2", GenericString("c"))
-@test_nowarn d_write(g, GenericString("ag"), GenericString("gg"))
-@test_nowarn d_write(g, GenericString("ag_array"), [GenericString("a1"), GenericString("a2")])
+@test_nowarn write_dataset(g, GenericString("ag"), GenericString("gg"))
+@test_nowarn write_dataset(g, GenericString("ag_array"), [GenericString("a1"), GenericString("a2")])
+
+genstrs = GenericString["fee", "fi", "foo"]
+@test_nowarn write_attribute(d, GenericString("myattr"), genstrs)
+@test genstrs == read(d["myattr"])
 
 for obj in (hfile,)
-    @test_nowarn d_open(obj, GenericString("d"))
-    @test_nowarn d_write(obj, GenericString("dd"), 1)
-    @test_nowarn d_read(obj, GenericString("dd"))
+    @test_nowarn open_dataset(obj, GenericString("d"))
+    @test_nowarn write_dataset(obj, GenericString("dd"), 1)
+    @test_nowarn read_dataset(obj, GenericString("dd"))
     @test_nowarn read(obj, GenericString("dd"))
     @test_nowarn read(obj, GenericString("dd")=>Int)
 end
-read(attrs(hfile), GenericString("a"))
+read(attributes(hfile), GenericString("a"))
 
 write(hfile, GenericString("ASD"), GenericString("Aa"))
 write(g, GenericString("ASD"), GenericString("Aa"))
@@ -878,10 +1199,10 @@ write(g, GenericString("ASD1"), [GenericString("Aa")])
 @test_nowarn write(hfile, GenericString("a1"), rand(2,2), GenericString("a2"), rand(2,2))
 
 # copy methods
-d1 = d_create(hfile, GenericString("d1"), dt, ds)
+d1 = create_dataset(hfile, GenericString("d1"), dt, ds)
 d1["x"] = 32
-@test_nowarn o_copy(hfile, GenericString("d1"), hfile, GenericString("d1copy1"))
-@test_nowarn o_copy(d1, hfile, GenericString("d1copy2"))
+@test_nowarn copy_object(hfile, GenericString("d1"), hfile, GenericString("d1copy1"))
+@test_nowarn copy_object(d1, hfile, GenericString("d1copy2"))
 
 fn = GenericString(tempname())
 A = Matrix(reshape(1:120, 15, 8))
@@ -894,14 +1215,12 @@ A = Matrix(reshape(1:120, 15, 8))
 
 
 @test_nowarn h5rewrite(fn) do fid
-    g_create(fid, "mygroup") do g
-        write(g, "x", 3.3)
-    end
+    g = create_group(fid, "mygroup")
+    write(g, "x", 3.3)
 end
 @test_nowarn h5rewrite(fn) do fid
-    g_create(fid, "mygroup") do g
-        write(g, "y", 3.3)
-    end
+    g = create_group(fid, "mygroup")
+    write(g, "y", 3.3)
 end
 
 @test_nowarn h5write(fn, "W", [1 2; 3 4])
@@ -909,10 +1228,179 @@ end
 @test_nowarn h5readattr(fn, GenericString("W"))
 
 fn_external = GenericString(tempname())
-dset = d_create_external(hfile, "ext", fn_external, Int, (10,20))
+dset = HDF5.create_external_dataset(hfile, "ext", fn_external, Int, (10,20))
+dcpl = HDF5.get_create_properties(dset)
+@test HDF5.API.h5p_get_external_count(dcpl) == 1
+ext_prop = HDF5.API.h5p_get_external(dcpl)
+@test ext_prop.name == fn_external
+@test ext_prop.offset == 0
+@test ext_prop.size == 10*20*sizeof(Int)
+dapl = HDF5.get_access_properties(dset)
+dapl.efile_prefix = "efile_test"
+@test HDF5.API.h5p_get_efile_prefix(dapl) == "efile_test"
+close(hfile)
 
 end
 
-# length for FixedString
-fix = HDF5.FixedString{4,0}((b"test"...,))
-@test length(fix) == 4
+@testset "opaque data" begin
+    mktemp() do path, io
+        close(io)
+        fid = h5open(path, "w")
+
+        num   = 1
+        olen  = 4
+        otype = HDF5.Datatype(HDF5.API.h5t_create(HDF5.API.H5T_OPAQUE, olen))
+        HDF5.API.h5t_set_tag(otype, "opaque test")
+
+        # scalar
+        dat0 = rand(UInt8, olen)
+        create_dataset(fid, "scalar", otype, dataspace(()))
+        write_dataset(fid["scalar"], otype, dat0)
+        # vector
+        dat1 = [rand(UInt8, olen) for _ in 1:4]
+        buf1 = reduce(vcat, dat1)
+        create_dataset(fid, "vector", otype, dataspace(dat1))
+        write_dataset(fid["vector"], otype, buf1)
+        # matrix
+        dat2 = [rand(UInt8, olen) for _ in 1:4, _ in 1:2]
+        buf2 = reduce(vcat, dat2)
+        create_dataset(fid, "matrix", otype, dataspace(dat2))
+        write_dataset(fid["matrix"], otype, buf2)
+
+        # opaque data within a compound data type
+        ctype = HDF5.Datatype(HDF5.API.h5t_create(HDF5.API.H5T_COMPOUND, sizeof(num) + sizeof(otype)))
+        HDF5.API.h5t_insert(ctype, "v", 0, datatype(num))
+        HDF5.API.h5t_insert(ctype, "d", sizeof(num), otype)
+        cdat = vcat(reinterpret(UInt8, [num]), dat0)
+        create_dataset(fid, "compound", ctype, dataspace(()))
+        write_dataset(fid["compound"], ctype, cdat)
+
+        opaque0 = read(fid["scalar"])
+        @test opaque0.tag == "opaque test"
+        @test opaque0.data == dat0
+        opaque1 = read(fid["vector"])
+        @test opaque1.tag == "opaque test"
+        @test opaque1.data == dat1
+        opaque2 = read(fid["matrix"])
+        @test opaque2.tag == "opaque test"
+        @test opaque2.data == dat2
+
+        # Note: opaque tag is lost
+        compound = read(fid["compound"])
+        @test compound == (v = num, d = dat0)
+
+        close(fid)
+    end
+end
+
+@testset "FixedStrings and FixedArrays" begin
+    # properties for FixedString
+    fix = HDF5.FixedString{4,0}((b"test"...,))
+    @test length(typeof(fix)) == 4
+    @test length(fix) == 4
+    @test HDF5.pad(typeof(fix)) == 0
+    @test HDF5.pad(fix) == 0
+    # issue #742, large fixed strings are readable
+    mktemp() do path, io
+        close(io)
+        num = Int64(9)
+        ref = join('a':'z') ^ 1000
+        fid = h5open(path, "w")
+        # long string serialized as FixedString
+        fid["longstring"] = ref
+
+        # compound datatype containing a FixedString
+        compound_dtype = HDF5.Datatype(HDF5.API.h5t_create(HDF5.API.H5T_COMPOUND, sizeof(num) + sizeof(ref)))
+        HDF5.API.h5t_insert(compound_dtype, "n", 0, datatype(num))
+        HDF5.API.h5t_insert(compound_dtype, "a", sizeof(num), datatype(ref))
+        c = create_dataset(fid, "compoundlongstring", compound_dtype, dataspace(()))
+        # normally this is done with a `struct name{N}; n::Int64; a::NTuple{N,Char}; end`,
+        # but we need to not actually instantiate the `NTuple`.
+        buf = IOBuffer()
+        write(buf, num, ref)
+        @assert position(buf) == sizeof(compound_dtype)
+        write_dataset(c, compound_dtype, take!(buf))
+
+
+        # Test reading without stalling
+        d = fid["longstring"]
+        T = HDF5.get_jl_type(d)
+        @test T <: HDF5.FixedString
+        @test length(T) == length(ref)
+        @test read(d) == ref
+
+        T = HDF5.get_jl_type(c)
+        @test T <: NamedTuple
+        @test fieldnames(T) == (:n, :a)
+        @test read(c) == (n = num, a = ref)
+
+        close(fid)
+    end
+
+    fix = HDF5.FixedArray{Float64,(2,2),4}((1, 2, 3, 4))
+    @test size(typeof(fix)) == (2, 2)
+    @test size(fix) == (2, 2)
+    @test eltype(typeof(fix)) == Float64
+    @test eltype(fix) == Float64
+    # large fixed arrays are readable
+    mktemp() do path, io
+        close(io)
+        ref = rand(Float64, 3000)
+        t = HDF5.Datatype(HDF5.API.h5t_array_create(datatype(Float64), ndims(ref), collect(size(ref))))
+        scalarspace = dataspace(())
+
+        fid = h5open(path, "w")
+        d = create_dataset(fid, "longnums", t, scalarspace)
+        write_dataset(d, t, ref)
+
+        T = HDF5.get_jl_type(d)
+        @test T <: HDF5.FixedArray
+        @test size(T) == size(ref)
+        @test eltype(T) == eltype(ref)
+        @test read(d) == ref
+
+        close(fid)
+    end
+end
+
+@testset "Object Exists" begin
+
+hfile = h5open(tempname(), "w")
+g1 = create_group(hfile, "group1")
+@test_throws ErrorException create_group(hfile, "group1")
+create_group(g1, "group1a")
+@test_throws ErrorException create_group(hfile, "/group1/group1a")
+@test_throws ErrorException create_group(g1, "group1a")
+
+create_dataset(hfile, "dset1", 1)
+create_dataset(hfile, "/group1/dset1", 1)
+
+@test_throws ErrorException create_dataset(hfile, "dset1", 1)
+@test_throws ErrorException create_dataset(hfile, "group1", 1)
+@test_throws ErrorException create_dataset(g1, "dset1", 1)
+
+close(hfile)
+
+end
+
+@testset "HDF5 existance" begin
+
+fn1 = tempname()
+fn2 = tempname()
+
+open(fn1, "w") do f
+    write(f, "Hello text file")
+end
+
+@test !HDF5.ishdf5(fn1) # check that a non-hdf5 file retuns false
+@test !HDF5.ishdf5(fn2) # checks that a file that does not exist returns false
+
+@test_throws ErrorException h5write(fn1, "x", 1) # non hdf5 file throws
+h5write(fn2, "x", 1)
+
+@test HDF5.ishdf5(fn2)
+
+rm(fn1)
+rm(fn2)
+
+end

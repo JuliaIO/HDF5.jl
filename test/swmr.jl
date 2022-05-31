@@ -5,7 +5,9 @@ using Test
 using Distributed
 
 if nprocs() == 1
-    addprocs(1)
+    procs = addprocs(1)
+else
+    procs = Int64[]
 end
 @everywhere using HDF5
 
@@ -26,19 +28,19 @@ end
 
 @testset "h5d_oappend" begin
     h5open(fname, "w") do h5
-        g = g_create(h5, "shoe")
-        d = d_create(g, "bar", datatype(Float64), ((1,), (-1,)), chunk=(100,))
+        g = create_group(h5, "shoe")
+        d = create_dataset(g, "bar", datatype(Float64), ((1,), (-1,)), chunk=(100,))
         dxpl_id = HDF5.get_create_properties(d)
         v = [1.0, 2.0]
-        memtype = datatype(Float64).id
-        # @test HDF5.h5d_oappend(d.id, dxpl_id, 0, length(v), memtype, v)
+        memtype = datatype(Float64)
+        # @test HDF5.h5d_oappend(d, dxpl_id, 0, length(v), memtype, v)
     end
 end
 
 function dataset_write(d, ch_written, ch_read)
     for i = 1:10
         @assert take!(ch_read) == true
-        set_dims!(d, (i*10,))
+        HDF5.set_extent_dims(d, (i*10,))
         inds::UnitRange{Int} = (1:10) .+ (i - 1) * 10
         d[inds] = inds
         flush(d) # flush the dataset
@@ -89,14 +91,14 @@ end
 
 # create datasets and attributes before staring swmr writing
 function prep_h5_file(h5)
-    d = d_create(h5, "foo", datatype(Int), ((1,), (100,)), chunk=(1,))
-    attrs(h5)["bar"] = "bar"
-    g = g_create(h5, "group")
+    d = create_dataset(h5, "foo", datatype(Int), ((1,), (100,)), chunk=(1,))
+    attributes(h5)["bar"] = "bar"
+    g = create_group(h5, "group")
 end
 
 @testset "create by libver, then start_swmr_write" begin
     #test this h5open method with keyword arg
-    h5open(fname, "w", libver_bounds=(HDF5.H5F_LIBVER_LATEST, HDF5.H5F_LIBVER_LATEST), swmr=false) do h5
+    h5open(fname, "w", libver_bounds=(:latest, :latest), swmr=false) do h5
         prep_h5_file(h5)
         HDF5.start_swmr_write(h5) # after creating datasets
         remote_test(h5)
@@ -114,4 +116,9 @@ end
 end
 
 rm(fname) # cleanup file created by swmr tests
+
+if nprocs() > 1
+    rmprocs(procs)
+end
+
 end # testset swmr

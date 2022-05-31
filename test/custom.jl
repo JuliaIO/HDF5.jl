@@ -8,9 +8,9 @@ struct Simple
 end
 
 function datatype(::Type{Simple})
-    dtype = HDF5.h5t_create(HDF5.H5T_COMPOUND, sizeof(Simple))
-    HDF5.h5t_insert(dtype, "a", fieldoffset(Simple, 1), datatype(Float64))
-    HDF5.h5t_insert(dtype, "b", fieldoffset(Simple, 2), datatype(Int))
+    dtype = HDF5.API.h5t_create(HDF5.API.H5T_COMPOUND, sizeof(Simple))
+    HDF5.API.h5t_insert(dtype, "a", fieldoffset(Simple, 1), datatype(Float64))
+    HDF5.API.h5t_insert(dtype, "b", fieldoffset(Simple, 2), datatype(Int))
     HDF5.Datatype(dtype)
 end
 
@@ -22,8 +22,8 @@ end
     h5open(fn, "w") do h5f
         dtype = datatype(Simple)
         dspace = dataspace(v)
-        dset = HDF5.h5d_create(h5f.id, "data", dtype.id, dspace.id)
-        HDF5.h5d_write(dset, dtype.id, v)
+        dset = create_dataset(h5f, "data", dtype, dspace)
+        write_dataset(dset, dtype, v)
     end
 
     h5open(fn, "r") do h5f

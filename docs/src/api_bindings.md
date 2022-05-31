@@ -2,6 +2,10 @@
 <!-- This file is auto-generated and should not be manually editted. To update, run the
 gen/gen_wrappers.jl script -->
 ```
+```@meta
+CurrentModule = HDF5.API
+```
+
 # Low-level library bindings
 
 At the lowest level, `HDF5.jl` operates by calling the public API of the HDF5 shared
@@ -10,267 +14,942 @@ This page documents the function names and nominal C argument types of the API w
 have bindings in this package.
 Note that in many cases, high-level data types are valid arguments through automatic
 `ccall` conversions.
-For instance, `HDF5Datatype` objects will be automatically converted to their `hid_t` ID
+For instance, `HDF5.Datatype` objects will be automatically converted to their `hid_t` ID
 by Julia's `cconvert`+`unsafe_convert` `ccall` rules.
 
 There are additional helper wrappers (often for out-argument functions) which are not
 documented here.
 
-## [`H5`](https://portal.hdfgroup.org/display/HDF5/Library) — General Library Functions
-```julia
-h5_close()
-h5_dont_atexit()
-h5_free_memory(buf::Ptr{Cvoid})
-h5_garbage_collect()
-h5_get_libversion(majnum::Ref{Cuint}, minnum::Ref{Cuint}, relnum::Ref{Cuint})
-h5_is_library_threadsafe(is_ts::Ref{Cuint})
-h5_open()
-h5_set_free_list_limits(reg_global_lim::Cint, reg_list_lim::Cint, arr_global_lim::Cint, arr_list_lim::Cint, blk_global_lim::Cint, blk_list_lim::Cint)
+---
+
+## [[`H5`](https://portal.hdfgroup.org/display/HDF5/Library) — General Library Functions](@id H5)
+- [`h5_close`](@ref h5_close)
+- [`h5_dont_atexit`](@ref h5_dont_atexit)
+- [`h5_free_memory`](@ref h5_free_memory)
+- [`h5_garbage_collect`](@ref h5_garbage_collect)
+- [`h5_get_libversion`](@ref h5_get_libversion)
+- [`h5_is_library_threadsafe`](@ref h5_is_library_threadsafe)
+- [`h5_open`](@ref h5_open)
+- [`h5_set_free_list_limits`](@ref h5_set_free_list_limits)
+```@docs
+h5_close
+h5_dont_atexit
+h5_free_memory
+h5_garbage_collect
+h5_get_libversion
+h5_is_library_threadsafe
+h5_open
+h5_set_free_list_limits
 ```
 
-## [`H5A`](https://portal.hdfgroup.org/display/HDF5/Attributes) — Attribute Interface
-```julia
-h5a_close(id::hid_t)
-h5a_create(loc_id::hid_t, pathname::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t)
-h5a_create_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t, lapl_id::hid_t)
-h5a_delete(loc_id::hid_t, attr_name::Ptr{UInt8})
-h5a_delete_by_idx(loc_id::hid_t, obj_name::Ptr{UInt8}, idx_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)
-h5a_delete_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, lapl_id::hid_t)
-h5a_exists(obj_id::hid_t, attr_name::Ptr{UInt8})
-h5a_exists_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, lapl_id::hid_t)
-h5a_get_create_plist(attr_id::hid_t)
-h5a_get_name(attr_id::hid_t, buf_size::Csize_t, buf::Ptr{UInt8})
-h5a_get_name_by_idx(loc_id::hid_t, obj_name::Cstring, index_type::Cint, order::Cint, idx::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)
-h5a_get_space(attr_id::hid_t)
-h5a_get_type(attr_id::hid_t)
-h5a_open(obj_id::hid_t, pathname::Ptr{UInt8}, aapl_id::hid_t)
-h5a_read(attr_id::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})
-h5a_write(attr_hid::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})
+---
+
+## [[`H5A`](https://portal.hdfgroup.org/display/HDF5/Attributes) — Attribute Interface](@id H5A)
+- [`h5a_close`](@ref h5a_close)
+- [`h5a_create`](@ref h5a_create)
+- [`h5a_create_by_name`](@ref h5a_create_by_name)
+- [`h5a_delete`](@ref h5a_delete)
+- [`h5a_delete_by_idx`](@ref h5a_delete_by_idx)
+- [`h5a_delete_by_name`](@ref h5a_delete_by_name)
+- [`h5a_exists`](@ref h5a_exists)
+- [`h5a_exists_by_name`](@ref h5a_exists_by_name)
+- [`h5a_get_create_plist`](@ref h5a_get_create_plist)
+- [`h5a_get_name`](@ref h5a_get_name)
+- [`h5a_get_name_by_idx`](@ref h5a_get_name_by_idx)
+- [`h5a_get_space`](@ref h5a_get_space)
+- [`h5a_get_type`](@ref h5a_get_type)
+- [`h5a_iterate`](@ref h5a_iterate)
+- [`h5a_open`](@ref h5a_open)
+- [`h5a_read`](@ref h5a_read)
+- [`h5a_write`](@ref h5a_write)
+```@docs
+h5a_close
+h5a_create
+h5a_create_by_name
+h5a_delete
+h5a_delete_by_idx
+h5a_delete_by_name
+h5a_exists
+h5a_exists_by_name
+h5a_get_create_plist
+h5a_get_name
+h5a_get_name_by_idx
+h5a_get_space
+h5a_get_type
+h5a_iterate
+h5a_open
+h5a_read
+h5a_write
 ```
 
-## [`H5D`](https://portal.hdfgroup.org/display/HDF5/Datasets) — Dataset Interface
-```julia
-h5d_close(dataset_id::hid_t)
-h5d_create(loc_id::hid_t, pathname::Ptr{UInt8}, dtype_id::hid_t, space_id::hid_t, lcpl_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)
-h5d_flush(dataset_id::hid_t)
-h5d_get_access_plist(dataset_id::hid_t)
-h5d_get_create_plist(dataset_id::hid_t)
-h5d_get_offset(dataset_id::hid_t)
-h5d_get_space(dataset_id::hid_t)
-h5d_get_type(dataset_id::hid_t)
-h5d_open(loc_id::hid_t, pathname::Ptr{UInt8}, dapl_id::hid_t)
-h5d_read(dataset_id::hid_t, mem_type_id::hid_t, mem_space_id::hid_t, file_space_id::hid_t, xfer_plist_id::hid_t, buf::Ptr{Cvoid})
-h5d_refresh(dataset_id::hid_t)
-h5d_set_extent(dataset_id::hid_t, new_dims::Ptr{hsize_t})
-h5d_vlen_get_buf_size(dset_id::hid_t, type_id::hid_t, space_id::hid_t, buf::Ptr{hsize_t})
-h5d_vlen_reclaim(type_id::hid_t, space_id::hid_t, plist_id::hid_t, buf::Ptr{Cvoid})
-h5d_write(dataset_id::hid_t, mem_type_id::hid_t, mem_space_id::hid_t, file_space_id::hid_t, xfer_plist_id::hid_t, buf::Ptr{Cvoid})
+---
+
+## [[`H5D`](https://portal.hdfgroup.org/display/HDF5/Datasets) — Dataset Interface](@id H5D)
+- [`h5d_close`](@ref h5d_close)
+- [`h5d_create`](@ref h5d_create)
+- [`h5d_create_anon`](@ref h5d_create_anon)
+- [`h5d_extend`](@ref h5d_extend)
+- [`h5d_fill`](@ref h5d_fill)
+- [`h5d_flush`](@ref h5d_flush)
+- [`h5d_gather`](@ref h5d_gather)
+- [`h5d_get_access_plist`](@ref h5d_get_access_plist)
+- [`h5d_get_chunk_info`](@ref h5d_get_chunk_info)
+- [`h5d_get_chunk_info_by_coord`](@ref h5d_get_chunk_info_by_coord)
+- [`h5d_get_chunk_storage_size`](@ref h5d_get_chunk_storage_size)
+- [`h5d_get_create_plist`](@ref h5d_get_create_plist)
+- [`h5d_get_num_chunks`](@ref h5d_get_num_chunks)
+- [`h5d_get_offset`](@ref h5d_get_offset)
+- [`h5d_get_space`](@ref h5d_get_space)
+- [`h5d_get_space_status`](@ref h5d_get_space_status)
+- [`h5d_get_storage_size`](@ref h5d_get_storage_size)
+- [`h5d_get_type`](@ref h5d_get_type)
+- [`h5d_iterate`](@ref h5d_iterate)
+- [`h5d_open`](@ref h5d_open)
+- [`h5d_read`](@ref h5d_read)
+- [`h5d_read_chunk`](@ref h5d_read_chunk)
+- [`h5d_refresh`](@ref h5d_refresh)
+- [`h5d_scatter`](@ref h5d_scatter)
+- [`h5d_set_extent`](@ref h5d_set_extent)
+- [`h5d_vlen_get_buf_size`](@ref h5d_vlen_get_buf_size)
+- [`h5d_vlen_reclaim`](@ref h5d_vlen_reclaim)
+- [`h5d_write`](@ref h5d_write)
+- [`h5d_write_chunk`](@ref h5d_write_chunk)
+```@docs
+h5d_close
+h5d_create
+h5d_create_anon
+h5d_extend
+h5d_fill
+h5d_flush
+h5d_gather
+h5d_get_access_plist
+h5d_get_chunk_info
+h5d_get_chunk_info_by_coord
+h5d_get_chunk_storage_size
+h5d_get_create_plist
+h5d_get_num_chunks
+h5d_get_offset
+h5d_get_space
+h5d_get_space_status
+h5d_get_storage_size
+h5d_get_type
+h5d_iterate
+h5d_open
+h5d_read
+h5d_read_chunk
+h5d_refresh
+h5d_scatter
+h5d_set_extent
+h5d_vlen_get_buf_size
+h5d_vlen_reclaim
+h5d_write
+h5d_write_chunk
 ```
 
-## [`H5E`](https://portal.hdfgroup.org/display/HDF5/Error+Handling) — Error Interface
-```julia
-h5e_get_auto(estack_id::hid_t, func::Ref{Ptr{Cvoid}}, client_data::Ref{Ptr{Cvoid}})
-h5e_set_auto(estack_id::hid_t, func::Ptr{Cvoid}, client_data::Ptr{Cvoid})
+---
+
+## [[`H5E`](https://portal.hdfgroup.org/display/HDF5/Error+Handling) — Error Interface](@id H5E)
+- [`h5e_close_stack`](@ref h5e_close_stack)
+- [`h5e_get_auto`](@ref h5e_get_auto)
+- [`h5e_get_current_stack`](@ref h5e_get_current_stack)
+- [`h5e_get_msg`](@ref h5e_get_msg)
+- [`h5e_get_num`](@ref h5e_get_num)
+- [`h5e_set_auto`](@ref h5e_set_auto)
+- [`h5e_walk`](@ref h5e_walk)
+```@docs
+h5e_close_stack
+h5e_get_auto
+h5e_get_current_stack
+h5e_get_msg
+h5e_get_num
+h5e_set_auto
+h5e_walk
 ```
 
-## [`H5F`](https://portal.hdfgroup.org/display/HDF5/Files) — File Interface
-```julia
-h5f_close(file_id::hid_t)
-h5f_create(pathname::Ptr{UInt8}, flags::Cuint, fcpl_id::hid_t, fapl_id::hid_t)
-h5f_flush(object_id::hid_t, scope::Cint)
-h5f_get_access_plist(file_id::hid_t)
-h5f_get_create_plist(file_id::hid_t)
-h5f_get_intent(file_id::hid_t, intent::Ptr{Cuint})
-h5f_get_name(obj_id::hid_t, buf::Ptr{UInt8}, buf_size::Csize_t)
-h5f_get_obj_count(file_id::hid_t, types::Cuint)
-h5f_get_obj_ids(file_id::hid_t, types::Cuint, max_objs::Csize_t, obj_id_list::Ptr{hid_t})
-h5f_get_vfd_handle(file_id::hid_t, fapl_id::hid_t, file_handle::Ref{Ptr{Cvoid}})
-h5f_is_hdf5(pathname::Cstring)
-h5f_open(pathname::Cstring, flags::Cuint, fapl_id::hid_t)
-h5f_start_swmr_write(id::hid_t)
+---
+
+## [[`H5F`](https://portal.hdfgroup.org/display/HDF5/Files) — File Interface](@id H5F)
+- [`h5f_clear_elink_file_cache`](@ref h5f_clear_elink_file_cache)
+- [`h5f_close`](@ref h5f_close)
+- [`h5f_create`](@ref h5f_create)
+- [`h5f_delete`](@ref h5f_delete)
+- [`h5f_flush`](@ref h5f_flush)
+- [`h5f_format_convert`](@ref h5f_format_convert)
+- [`h5f_get_access_plist`](@ref h5f_get_access_plist)
+- [`h5f_get_create_plist`](@ref h5f_get_create_plist)
+- [`h5f_get_dset_no_attrs_hint`](@ref h5f_get_dset_no_attrs_hint)
+- [`h5f_get_eoa`](@ref h5f_get_eoa)
+- [`h5f_get_file_image`](@ref h5f_get_file_image)
+- [`h5f_get_fileno`](@ref h5f_get_fileno)
+- [`h5f_get_filesize`](@ref h5f_get_filesize)
+- [`h5f_get_free_sections`](@ref h5f_get_free_sections)
+- [`h5f_get_freespace`](@ref h5f_get_freespace)
+- [`h5f_get_info`](@ref h5f_get_info)
+- [`h5f_get_intent`](@ref h5f_get_intent)
+- [`h5f_get_mdc_config`](@ref h5f_get_mdc_config)
+- [`h5f_get_mdc_hit_rate`](@ref h5f_get_mdc_hit_rate)
+- [`h5f_get_mdc_image_info`](@ref h5f_get_mdc_image_info)
+- [`h5f_get_mdc_logging_status`](@ref h5f_get_mdc_logging_status)
+- [`h5f_get_mdc_size`](@ref h5f_get_mdc_size)
+- [`h5f_get_metadata_read_retry_info`](@ref h5f_get_metadata_read_retry_info)
+- [`h5f_get_mpi_atomicity`](@ref h5f_get_mpi_atomicity)
+- [`h5f_get_name`](@ref h5f_get_name)
+- [`h5f_get_obj_count`](@ref h5f_get_obj_count)
+- [`h5f_get_obj_ids`](@ref h5f_get_obj_ids)
+- [`h5f_get_page_buffering_stats`](@ref h5f_get_page_buffering_stats)
+- [`h5f_get_vfd_handle`](@ref h5f_get_vfd_handle)
+- [`h5f_increment_filesize`](@ref h5f_increment_filesize)
+- [`h5f_is_accessible`](@ref h5f_is_accessible)
+- [`h5f_is_hdf5`](@ref h5f_is_hdf5)
+- [`h5f_mount`](@ref h5f_mount)
+- [`h5f_open`](@ref h5f_open)
+- [`h5f_reopen`](@ref h5f_reopen)
+- [`h5f_reset_mdc_hit_rate_stats`](@ref h5f_reset_mdc_hit_rate_stats)
+- [`h5f_reset_page_buffering_stats`](@ref h5f_reset_page_buffering_stats)
+- [`h5f_set_dset_no_attrs_hint`](@ref h5f_set_dset_no_attrs_hint)
+- [`h5f_set_libver_bounds`](@ref h5f_set_libver_bounds)
+- [`h5f_set_mdc_config`](@ref h5f_set_mdc_config)
+- [`h5f_set_mpi_atomicity`](@ref h5f_set_mpi_atomicity)
+- [`h5f_start_mdc_logging`](@ref h5f_start_mdc_logging)
+- [`h5f_start_swmr_write`](@ref h5f_start_swmr_write)
+- [`h5f_stop_mdc_logging`](@ref h5f_stop_mdc_logging)
+- [`h5f_unmount`](@ref h5f_unmount)
+```@docs
+h5f_clear_elink_file_cache
+h5f_close
+h5f_create
+h5f_delete
+h5f_flush
+h5f_format_convert
+h5f_get_access_plist
+h5f_get_create_plist
+h5f_get_dset_no_attrs_hint
+h5f_get_eoa
+h5f_get_file_image
+h5f_get_fileno
+h5f_get_filesize
+h5f_get_free_sections
+h5f_get_freespace
+h5f_get_info
+h5f_get_intent
+h5f_get_mdc_config
+h5f_get_mdc_hit_rate
+h5f_get_mdc_image_info
+h5f_get_mdc_logging_status
+h5f_get_mdc_size
+h5f_get_metadata_read_retry_info
+h5f_get_mpi_atomicity
+h5f_get_name
+h5f_get_obj_count
+h5f_get_obj_ids
+h5f_get_page_buffering_stats
+h5f_get_vfd_handle
+h5f_increment_filesize
+h5f_is_accessible
+h5f_is_hdf5
+h5f_mount
+h5f_open
+h5f_reopen
+h5f_reset_mdc_hit_rate_stats
+h5f_reset_page_buffering_stats
+h5f_set_dset_no_attrs_hint
+h5f_set_libver_bounds
+h5f_set_mdc_config
+h5f_set_mpi_atomicity
+h5f_start_mdc_logging
+h5f_start_swmr_write
+h5f_stop_mdc_logging
+h5f_unmount
 ```
 
-## [`H5G`](https://portal.hdfgroup.org/display/HDF5/Groups) — Group Interface
-```julia
-h5g_close(group_id::hid_t)
-h5g_create(loc_id::hid_t, pathname::Ptr{UInt8}, lcpl_id::hid_t, gcpl_id::hid_t, gapl_id::hid_t)
-h5g_get_create_plist(group_id::hid_t)
-h5g_get_info(group_id::hid_t, buf::Ptr{H5G_info_t})
-h5g_get_num_objs(loc_id::hid_t, num_obj::Ptr{hsize_t})
-h5g_get_objname_by_idx(loc_id::hid_t, idx::hsize_t, pathname::Ptr{UInt8}, size::Csize_t)
-h5g_open(loc_id::hid_t, pathname::Ptr{UInt8}, gapl_id::hid_t)
+---
+
+## [[`H5G`](https://portal.hdfgroup.org/display/HDF5/Groups) — Group Interface](@id H5G)
+- [`h5g_close`](@ref h5g_close)
+- [`h5g_create`](@ref h5g_create)
+- [`h5g_get_create_plist`](@ref h5g_get_create_plist)
+- [`h5g_get_info`](@ref h5g_get_info)
+- [`h5g_get_num_objs`](@ref h5g_get_num_objs)
+- [`h5g_get_objname_by_idx`](@ref h5g_get_objname_by_idx)
+- [`h5g_open`](@ref h5g_open)
+```@docs
+h5g_close
+h5g_create
+h5g_get_create_plist
+h5g_get_info
+h5g_get_num_objs
+h5g_get_objname_by_idx
+h5g_open
 ```
 
-## [`H5I`](https://portal.hdfgroup.org/display/HDF5/Identifiers) — Identifier Interface
-```julia
-h5i_dec_ref(obj_id::hid_t)
-h5i_get_file_id(obj_id::hid_t)
-h5i_get_name(obj_id::hid_t, buf::Ptr{UInt8}, buf_size::Csize_t)
-h5i_get_ref(obj_id::hid_t)
-h5i_get_type(obj_id::hid_t)
-h5i_inc_ref(obj_id::hid_t)
-h5i_is_valid(obj_id::hid_t)
+---
+
+## [[`H5I`](https://portal.hdfgroup.org/display/HDF5/Identifiers) — Identifier Interface](@id H5I)
+- [`h5i_dec_ref`](@ref h5i_dec_ref)
+- [`h5i_get_file_id`](@ref h5i_get_file_id)
+- [`h5i_get_name`](@ref h5i_get_name)
+- [`h5i_get_ref`](@ref h5i_get_ref)
+- [`h5i_get_type`](@ref h5i_get_type)
+- [`h5i_inc_ref`](@ref h5i_inc_ref)
+- [`h5i_is_valid`](@ref h5i_is_valid)
+```@docs
+h5i_dec_ref
+h5i_get_file_id
+h5i_get_name
+h5i_get_ref
+h5i_get_type
+h5i_inc_ref
+h5i_is_valid
 ```
 
-## [`H5L`](https://portal.hdfgroup.org/display/HDF5/Links) — Link Interface
-```julia
-h5l_create_external(target_file_name::Ptr{UInt8}, target_obj_name::Ptr{UInt8}, link_loc_id::hid_t, link_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)
-h5l_create_hard(obj_loc_id::hid_t, obj_name::Ptr{UInt8}, link_loc_id::hid_t, link_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)
-h5l_create_soft(target_path::Ptr{UInt8}, link_loc_id::hid_t, link_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)
-h5l_delete(obj_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)
-h5l_exists(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)
-h5l_get_info(link_loc_id::hid_t, link_name::Ptr{UInt8}, link_buf::Ptr{H5L_info_t}, lapl_id::hid_t)
-h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)
+---
+
+## [[`H5L`](https://portal.hdfgroup.org/display/HDF5/Links) — Link Interface](@id H5L)
+- [`h5l_create_external`](@ref h5l_create_external)
+- [`h5l_create_hard`](@ref h5l_create_hard)
+- [`h5l_create_soft`](@ref h5l_create_soft)
+- [`h5l_delete`](@ref h5l_delete)
+- [`h5l_exists`](@ref h5l_exists)
+- [`h5l_get_info`](@ref h5l_get_info)
+- [`h5l_get_name_by_idx`](@ref h5l_get_name_by_idx)
+- [`h5l_iterate`](@ref h5l_iterate)
+- [`h5l_move`](@ref h5l_move)
+```@docs
+h5l_create_external
+h5l_create_hard
+h5l_create_soft
+h5l_delete
+h5l_exists
+h5l_get_info
+h5l_get_name_by_idx
+h5l_iterate
+h5l_move
 ```
 
-## [`H5O`](https://portal.hdfgroup.org/display/HDF5/Objects) — Object Interface
-```julia
-h5o_close(object_id::hid_t)
-h5o_copy(src_loc_id::hid_t, src_name::Ptr{UInt8}, dst_loc_id::hid_t, dst_name::Ptr{UInt8}, ocpypl_id::hid_t, lcpl_id::hid_t)
-h5o_get_info(object_id::hid_t, buf::Ptr{H5O_info_t})
-h5o_open(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)
-h5o_open_by_addr(loc_id::hid_t, addr::haddr_t)
-h5o_open_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)
+---
+
+## [[`H5O`](https://portal.hdfgroup.org/display/HDF5/Objects) — Object Interface](@id H5O)
+- [`h5o_close`](@ref h5o_close)
+- [`h5o_copy`](@ref h5o_copy)
+- [`h5o_get_info`](@ref h5o_get_info)
+- [`h5o_open`](@ref h5o_open)
+- [`h5o_open_by_addr`](@ref h5o_open_by_addr)
+- [`h5o_open_by_idx`](@ref h5o_open_by_idx)
+```@docs
+h5o_close
+h5o_copy
+h5o_get_info
+h5o_open
+h5o_open_by_addr
+h5o_open_by_idx
 ```
 
-## [`H5P`](https://portal.hdfgroup.org/display/HDF5/Property+Lists) — Property Interface
-```julia
-h5p_close(id::hid_t)
-h5p_create(cls_id::hid_t)
-h5p_get_alignment(fapl_id::hid_t, threshold::Ref{hsize_t}, alignment::Ref{hsize_t})
-h5p_get_alloc_time(plist_id::hid_t, alloc_time::Ptr{Cint})
-h5p_get_char_encoding(plist_id::hid_t, encoding::Ref{Cint})
-h5p_get_chunk(plist_id::hid_t, n_dims::Cint, dims::Ptr{hsize_t})
-h5p_get_class_name(pcid::hid_t)
-h5p_get_create_intermediate_group(lcpl_id::hid_t, crt_intermed_group::Ref{Cuint})
-h5p_get_driver(plist_id::hid_t)
-h5p_get_driver_info(plist_id::hid_t)
-h5p_get_dxpl_mpio(dxpl_id::hid_t, xfer_mode::Ptr{Cint})
-h5p_get_fapl_mpio32(fapl_id::hid_t, comm::Ptr{Hmpih32}, info::Ptr{Hmpih32})
-h5p_get_fapl_mpio64(fapl_id::hid_t, comm::Ptr{Hmpih64}, info::Ptr{Hmpih64})
-h5p_get_fclose_degree(fapl_id::hid_t, fc_degree::Ref{Cint})
-h5p_get_filter_by_id(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Ref{Cuint}, cd_nelmts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{UInt8}, filter_config::Ptr{Cuint})
-h5p_get_layout(plist_id::hid_t)
-h5p_get_libver_bounds(fapl_id::hid_t, low::Ref{Cint}, high::Ref{Cint})
-h5p_get_local_heap_size_hint(plist_id::hid_t, size_hint::Ref{Csize_t})
-h5p_get_obj_track_times(plist_id::hid_t, track_times::Ref{UInt8})
-h5p_get_userblock(plist_id::hid_t, len::Ptr{hsize_t})
-h5p_modify_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})
-h5p_set_alignment(plist_id::hid_t, threshold::hsize_t, alignment::hsize_t)
-h5p_set_alloc_time(plist_id::hid_t, alloc_time::Cint)
-h5p_set_char_encoding(plist_id::hid_t, encoding::Cint)
-h5p_set_chunk(plist_id::hid_t, ndims::Cint, dims::Ptr{hsize_t})
-h5p_set_chunk_cache(dapl_id::hid_t, rdcc_nslots::Csize_t, rdcc_nbytes::Csize_t, rdcc_w0::Cdouble)
-h5p_set_create_intermediate_group(plist_id::hid_t, setting::Cuint)
-h5p_set_deflate(plist_id::hid_t, setting::Cuint)
-h5p_set_dxpl_mpio(dxpl_id::hid_t, xfer_mode::Cint)
-h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::Int, size::Csize_t)
-h5p_set_fapl_mpio32(fapl_id::hid_t, comm::Hmpih32, info::Hmpih32)
-h5p_set_fapl_mpio64(fapl_id::hid_t, comm::Hmpih64, info::Hmpih64)
-h5p_set_fclose_degree(plist_id::hid_t, fc_degree::Cint)
-h5p_set_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})
-h5p_set_layout(plist_id::hid_t, setting::Cint)
-h5p_set_libver_bounds(fapl_id::hid_t, low::Cint, high::Cint)
-h5p_set_local_heap_size_hint(plist_id::hid_t, size_hint::Csize_t)
-h5p_set_obj_track_times(plist_id::hid_t, track_times::UInt8)
-h5p_set_shuffle(plist_id::hid_t)
-h5p_set_userblock(plist_id::hid_t, len::hsize_t)
-h5p_set_virtual(dcpl_id::hid_t, vspace_id::hid_t, src_file_name::Ptr{UInt8}, src_dset_name::Ptr{UInt8}, src_space_id::hid_t)
+---
+
+## [[`H5PL`](https://portal.hdfgroup.org/display/HDF5/Plugins) — Plugin Interface](@id H5PL)
+- [`h5pl_append`](@ref h5pl_append)
+- [`h5pl_get`](@ref h5pl_get)
+- [`h5pl_get_loading_state`](@ref h5pl_get_loading_state)
+- [`h5pl_insert`](@ref h5pl_insert)
+- [`h5pl_prepend`](@ref h5pl_prepend)
+- [`h5pl_remove`](@ref h5pl_remove)
+- [`h5pl_replace`](@ref h5pl_replace)
+- [`h5pl_set_loading_state`](@ref h5pl_set_loading_state)
+- [`h5pl_size`](@ref h5pl_size)
+```@docs
+h5pl_append
+h5pl_get
+h5pl_get_loading_state
+h5pl_insert
+h5pl_prepend
+h5pl_remove
+h5pl_replace
+h5pl_set_loading_state
+h5pl_size
 ```
 
-## [`H5R`](https://portal.hdfgroup.org/display/HDF5/References) — Reference Interface
-```julia
-h5r_create(ref::Ptr{Cvoid}, loc_id::hid_t, pathname::Ptr{UInt8}, ref_type::Cint, space_id::hid_t)
-h5r_dereference(obj_id::hid_t, oapl_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid})
-h5r_get_obj_type(loc_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid}, obj_type::Ptr{Cint})
-h5r_get_region(loc_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid})
+---
+
+## [[`H5P`](https://portal.hdfgroup.org/display/HDF5/Property+Lists) — Property Interface](@id H5P)
+- [`h5p_add_merge_committed_dtype_path`](@ref h5p_add_merge_committed_dtype_path)
+- [`h5p_close`](@ref h5p_close)
+- [`h5p_create`](@ref h5p_create)
+- [`h5p_encode`](@ref h5p_encode)
+- [`h5p_fill_value_defined`](@ref h5p_fill_value_defined)
+- [`h5p_free_merge_committed_dtype_paths`](@ref h5p_free_merge_committed_dtype_paths)
+- [`h5p_get_alignment`](@ref h5p_get_alignment)
+- [`h5p_get_alloc_time`](@ref h5p_get_alloc_time)
+- [`h5p_get_append_flush`](@ref h5p_get_append_flush)
+- [`h5p_get_attr_creation_order`](@ref h5p_get_attr_creation_order)
+- [`h5p_get_btree_ratios`](@ref h5p_get_btree_ratios)
+- [`h5p_get_buffer`](@ref h5p_get_buffer)
+- [`h5p_get_cache`](@ref h5p_get_cache)
+- [`h5p_get_char_encoding`](@ref h5p_get_char_encoding)
+- [`h5p_get_chunk`](@ref h5p_get_chunk)
+- [`h5p_get_chunk_cache`](@ref h5p_get_chunk_cache)
+- [`h5p_get_chunk_opts`](@ref h5p_get_chunk_opts)
+- [`h5p_get_class_name`](@ref h5p_get_class_name)
+- [`h5p_get_copy_object`](@ref h5p_get_copy_object)
+- [`h5p_get_core_write_tracking`](@ref h5p_get_core_write_tracking)
+- [`h5p_get_create_intermediate_group`](@ref h5p_get_create_intermediate_group)
+- [`h5p_get_data_transform`](@ref h5p_get_data_transform)
+- [`h5p_get_driver`](@ref h5p_get_driver)
+- [`h5p_get_driver_info`](@ref h5p_get_driver_info)
+- [`h5p_get_dset_no_attrs_hint`](@ref h5p_get_dset_no_attrs_hint)
+- [`h5p_get_dxpl_mpio`](@ref h5p_get_dxpl_mpio)
+- [`h5p_get_edc_check`](@ref h5p_get_edc_check)
+- [`h5p_get_efile_prefix`](@ref h5p_get_efile_prefix)
+- [`h5p_get_elink_acc_flags`](@ref h5p_get_elink_acc_flags)
+- [`h5p_get_elink_cb`](@ref h5p_get_elink_cb)
+- [`h5p_get_elink_fapl`](@ref h5p_get_elink_fapl)
+- [`h5p_get_elink_file_cache_size`](@ref h5p_get_elink_file_cache_size)
+- [`h5p_get_elink_prefix`](@ref h5p_get_elink_prefix)
+- [`h5p_get_est_link_info`](@ref h5p_get_est_link_info)
+- [`h5p_get_evict_on_close`](@ref h5p_get_evict_on_close)
+- [`h5p_get_external`](@ref h5p_get_external)
+- [`h5p_get_external_count`](@ref h5p_get_external_count)
+- [`h5p_get_family_offset`](@ref h5p_get_family_offset)
+- [`h5p_get_fapl_core`](@ref h5p_get_fapl_core)
+- [`h5p_get_fapl_family`](@ref h5p_get_fapl_family)
+- [`h5p_get_fapl_hdfs`](@ref h5p_get_fapl_hdfs)
+- [`h5p_get_fapl_mpio32`](@ref h5p_get_fapl_mpio32)
+- [`h5p_get_fapl_mpio64`](@ref h5p_get_fapl_mpio64)
+- [`h5p_get_fapl_multi`](@ref h5p_get_fapl_multi)
+- [`h5p_get_fapl_splitter`](@ref h5p_get_fapl_splitter)
+- [`h5p_get_fclose_degree`](@ref h5p_get_fclose_degree)
+- [`h5p_get_file_image`](@ref h5p_get_file_image)
+- [`h5p_get_file_image_callbacks`](@ref h5p_get_file_image_callbacks)
+- [`h5p_get_file_locking`](@ref h5p_get_file_locking)
+- [`h5p_get_file_space_page_size`](@ref h5p_get_file_space_page_size)
+- [`h5p_get_file_space_strategy`](@ref h5p_get_file_space_strategy)
+- [`h5p_get_fill_time`](@ref h5p_get_fill_time)
+- [`h5p_get_fill_value`](@ref h5p_get_fill_value)
+- [`h5p_get_filter`](@ref h5p_get_filter)
+- [`h5p_get_filter_by_id`](@ref h5p_get_filter_by_id)
+- [`h5p_get_gc_references`](@ref h5p_get_gc_references)
+- [`h5p_get_hyper_vector_size`](@ref h5p_get_hyper_vector_size)
+- [`h5p_get_layout`](@ref h5p_get_layout)
+- [`h5p_get_libver_bounds`](@ref h5p_get_libver_bounds)
+- [`h5p_get_link_creation_order`](@ref h5p_get_link_creation_order)
+- [`h5p_get_link_phase_change`](@ref h5p_get_link_phase_change)
+- [`h5p_get_local_heap_size_hint`](@ref h5p_get_local_heap_size_hint)
+- [`h5p_get_mcdt_search_cb`](@ref h5p_get_mcdt_search_cb)
+- [`h5p_get_mdc_config`](@ref h5p_get_mdc_config)
+- [`h5p_get_mdc_image_config`](@ref h5p_get_mdc_image_config)
+- [`h5p_get_meta_block_size`](@ref h5p_get_meta_block_size)
+- [`h5p_get_metadata_read_attempts`](@ref h5p_get_metadata_read_attempts)
+- [`h5p_get_multi_type`](@ref h5p_get_multi_type)
+- [`h5p_get_nfilters`](@ref h5p_get_nfilters)
+- [`h5p_get_nlinks`](@ref h5p_get_nlinks)
+- [`h5p_get_obj_track_times`](@ref h5p_get_obj_track_times)
+- [`h5p_get_object_flush_cb`](@ref h5p_get_object_flush_cb)
+- [`h5p_get_page_buffer_size`](@ref h5p_get_page_buffer_size)
+- [`h5p_get_preserve`](@ref h5p_get_preserve)
+- [`h5p_get_sieve_buf_size`](@ref h5p_get_sieve_buf_size)
+- [`h5p_get_small_data_block_size`](@ref h5p_get_small_data_block_size)
+- [`h5p_get_type_conv_cb`](@ref h5p_get_type_conv_cb)
+- [`h5p_get_userblock`](@ref h5p_get_userblock)
+- [`h5p_get_version`](@ref h5p_get_version)
+- [`h5p_get_virtual_count`](@ref h5p_get_virtual_count)
+- [`h5p_get_virtual_dsetname`](@ref h5p_get_virtual_dsetname)
+- [`h5p_get_virtual_filename`](@ref h5p_get_virtual_filename)
+- [`h5p_get_virtual_prefix`](@ref h5p_get_virtual_prefix)
+- [`h5p_get_virtual_printf_gap`](@ref h5p_get_virtual_printf_gap)
+- [`h5p_get_virtual_srcspace`](@ref h5p_get_virtual_srcspace)
+- [`h5p_get_virtual_view`](@ref h5p_get_virtual_view)
+- [`h5p_get_virtual_vspace`](@ref h5p_get_virtual_vspace)
+- [`h5p_get_vlen_mem_manager`](@ref h5p_get_vlen_mem_manager)
+- [`h5p_get_vol_id`](@ref h5p_get_vol_id)
+- [`h5p_get_vol_info`](@ref h5p_get_vol_info)
+- [`h5p_insert`](@ref h5p_insert)
+- [`h5p_modify_filter`](@ref h5p_modify_filter)
+- [`h5p_register`](@ref h5p_register)
+- [`h5p_remove_filter`](@ref h5p_remove_filter)
+- [`h5p_set_alignment`](@ref h5p_set_alignment)
+- [`h5p_set_alloc_time`](@ref h5p_set_alloc_time)
+- [`h5p_set_append_flush`](@ref h5p_set_append_flush)
+- [`h5p_set_attr_creation_order`](@ref h5p_set_attr_creation_order)
+- [`h5p_set_btree_ratios`](@ref h5p_set_btree_ratios)
+- [`h5p_set_buffer`](@ref h5p_set_buffer)
+- [`h5p_set_char_encoding`](@ref h5p_set_char_encoding)
+- [`h5p_set_chunk`](@ref h5p_set_chunk)
+- [`h5p_set_chunk_cache`](@ref h5p_set_chunk_cache)
+- [`h5p_set_chunk_opts`](@ref h5p_set_chunk_opts)
+- [`h5p_set_copy_object`](@ref h5p_set_copy_object)
+- [`h5p_set_core_write_tracking`](@ref h5p_set_core_write_tracking)
+- [`h5p_set_create_intermediate_group`](@ref h5p_set_create_intermediate_group)
+- [`h5p_set_data_transform`](@ref h5p_set_data_transform)
+- [`h5p_set_deflate`](@ref h5p_set_deflate)
+- [`h5p_set_driver`](@ref h5p_set_driver)
+- [`h5p_set_dset_no_attrs_hint`](@ref h5p_set_dset_no_attrs_hint)
+- [`h5p_set_dxpl_mpio`](@ref h5p_set_dxpl_mpio)
+- [`h5p_set_edc_check`](@ref h5p_set_edc_check)
+- [`h5p_set_efile_prefix`](@ref h5p_set_efile_prefix)
+- [`h5p_set_elink_acc_flags`](@ref h5p_set_elink_acc_flags)
+- [`h5p_set_elink_cb`](@ref h5p_set_elink_cb)
+- [`h5p_set_elink_fapl`](@ref h5p_set_elink_fapl)
+- [`h5p_set_elink_file_cache_size`](@ref h5p_set_elink_file_cache_size)
+- [`h5p_set_elink_prefix`](@ref h5p_set_elink_prefix)
+- [`h5p_set_est_link_info`](@ref h5p_set_est_link_info)
+- [`h5p_set_evict_on_close`](@ref h5p_set_evict_on_close)
+- [`h5p_set_external`](@ref h5p_set_external)
+- [`h5p_set_family_offset`](@ref h5p_set_family_offset)
+- [`h5p_set_fapl_core`](@ref h5p_set_fapl_core)
+- [`h5p_set_fapl_family`](@ref h5p_set_fapl_family)
+- [`h5p_set_fapl_hdfs`](@ref h5p_set_fapl_hdfs)
+- [`h5p_set_fapl_log`](@ref h5p_set_fapl_log)
+- [`h5p_set_fapl_mpio32`](@ref h5p_set_fapl_mpio32)
+- [`h5p_set_fapl_mpio64`](@ref h5p_set_fapl_mpio64)
+- [`h5p_set_fapl_multi`](@ref h5p_set_fapl_multi)
+- [`h5p_set_fapl_sec2`](@ref h5p_set_fapl_sec2)
+- [`h5p_set_fapl_split`](@ref h5p_set_fapl_split)
+- [`h5p_set_fapl_splitter`](@ref h5p_set_fapl_splitter)
+- [`h5p_set_fapl_windows`](@ref h5p_set_fapl_windows)
+- [`h5p_set_fclose_degree`](@ref h5p_set_fclose_degree)
+- [`h5p_set_file_image`](@ref h5p_set_file_image)
+- [`h5p_set_file_image_callbacks`](@ref h5p_set_file_image_callbacks)
+- [`h5p_set_file_locking`](@ref h5p_set_file_locking)
+- [`h5p_set_file_space_page_size`](@ref h5p_set_file_space_page_size)
+- [`h5p_set_file_space_strategy`](@ref h5p_set_file_space_strategy)
+- [`h5p_set_fill_time`](@ref h5p_set_fill_time)
+- [`h5p_set_fill_value`](@ref h5p_set_fill_value)
+- [`h5p_set_filter`](@ref h5p_set_filter)
+- [`h5p_set_filter_callback`](@ref h5p_set_filter_callback)
+- [`h5p_set_fletcher32`](@ref h5p_set_fletcher32)
+- [`h5p_set_gc_references`](@ref h5p_set_gc_references)
+- [`h5p_set_hyper_vector_size`](@ref h5p_set_hyper_vector_size)
+- [`h5p_set_layout`](@ref h5p_set_layout)
+- [`h5p_set_libver_bounds`](@ref h5p_set_libver_bounds)
+- [`h5p_set_link_creation_order`](@ref h5p_set_link_creation_order)
+- [`h5p_set_link_phase_change`](@ref h5p_set_link_phase_change)
+- [`h5p_set_local_heap_size_hint`](@ref h5p_set_local_heap_size_hint)
+- [`h5p_set_mcdt_search_cb`](@ref h5p_set_mcdt_search_cb)
+- [`h5p_set_mdc_config`](@ref h5p_set_mdc_config)
+- [`h5p_set_mdc_image_config`](@ref h5p_set_mdc_image_config)
+- [`h5p_set_mdc_log_options`](@ref h5p_set_mdc_log_options)
+- [`h5p_set_meta_block_size`](@ref h5p_set_meta_block_size)
+- [`h5p_set_metadata_read_attempts`](@ref h5p_set_metadata_read_attempts)
+- [`h5p_set_multi_type`](@ref h5p_set_multi_type)
+- [`h5p_set_nbit`](@ref h5p_set_nbit)
+- [`h5p_set_nlinks`](@ref h5p_set_nlinks)
+- [`h5p_set_obj_track_times`](@ref h5p_set_obj_track_times)
+- [`h5p_set_object_flush_cb`](@ref h5p_set_object_flush_cb)
+- [`h5p_set_page_buffer_size`](@ref h5p_set_page_buffer_size)
+- [`h5p_set_preserve`](@ref h5p_set_preserve)
+- [`h5p_set_scaleoffset`](@ref h5p_set_scaleoffset)
+- [`h5p_set_shuffle`](@ref h5p_set_shuffle)
+- [`h5p_set_sieve_buf_size`](@ref h5p_set_sieve_buf_size)
+- [`h5p_set_small_data_block_size`](@ref h5p_set_small_data_block_size)
+- [`h5p_set_szip`](@ref h5p_set_szip)
+- [`h5p_set_type_conv_cb`](@ref h5p_set_type_conv_cb)
+- [`h5p_set_userblock`](@ref h5p_set_userblock)
+- [`h5p_set_virtual`](@ref h5p_set_virtual)
+- [`h5p_set_virtual_prefix`](@ref h5p_set_virtual_prefix)
+- [`h5p_set_virtual_printf_gap`](@ref h5p_set_virtual_printf_gap)
+- [`h5p_set_virtual_view`](@ref h5p_set_virtual_view)
+- [`h5p_set_vlen_mem_manager`](@ref h5p_set_vlen_mem_manager)
+- [`h5p_set_vol`](@ref h5p_set_vol)
+```@docs
+h5p_add_merge_committed_dtype_path
+h5p_close
+h5p_create
+h5p_encode
+h5p_fill_value_defined
+h5p_free_merge_committed_dtype_paths
+h5p_get_alignment
+h5p_get_alloc_time
+h5p_get_append_flush
+h5p_get_attr_creation_order
+h5p_get_btree_ratios
+h5p_get_buffer
+h5p_get_cache
+h5p_get_char_encoding
+h5p_get_chunk
+h5p_get_chunk_cache
+h5p_get_chunk_opts
+h5p_get_class_name
+h5p_get_copy_object
+h5p_get_core_write_tracking
+h5p_get_create_intermediate_group
+h5p_get_data_transform
+h5p_get_driver
+h5p_get_driver_info
+h5p_get_dset_no_attrs_hint
+h5p_get_dxpl_mpio
+h5p_get_edc_check
+h5p_get_efile_prefix
+h5p_get_elink_acc_flags
+h5p_get_elink_cb
+h5p_get_elink_fapl
+h5p_get_elink_file_cache_size
+h5p_get_elink_prefix
+h5p_get_est_link_info
+h5p_get_evict_on_close
+h5p_get_external
+h5p_get_external_count
+h5p_get_family_offset
+h5p_get_fapl_core
+h5p_get_fapl_family
+h5p_get_fapl_hdfs
+h5p_get_fapl_mpio32
+h5p_get_fapl_mpio64
+h5p_get_fapl_multi
+h5p_get_fapl_splitter
+h5p_get_fclose_degree
+h5p_get_file_image
+h5p_get_file_image_callbacks
+h5p_get_file_locking
+h5p_get_file_space_page_size
+h5p_get_file_space_strategy
+h5p_get_fill_time
+h5p_get_fill_value
+h5p_get_filter
+h5p_get_filter_by_id
+h5p_get_gc_references
+h5p_get_hyper_vector_size
+h5p_get_layout
+h5p_get_libver_bounds
+h5p_get_link_creation_order
+h5p_get_link_phase_change
+h5p_get_local_heap_size_hint
+h5p_get_mcdt_search_cb
+h5p_get_mdc_config
+h5p_get_mdc_image_config
+h5p_get_meta_block_size
+h5p_get_metadata_read_attempts
+h5p_get_multi_type
+h5p_get_nfilters
+h5p_get_nlinks
+h5p_get_obj_track_times
+h5p_get_object_flush_cb
+h5p_get_page_buffer_size
+h5p_get_preserve
+h5p_get_sieve_buf_size
+h5p_get_small_data_block_size
+h5p_get_type_conv_cb
+h5p_get_userblock
+h5p_get_version
+h5p_get_virtual_count
+h5p_get_virtual_dsetname
+h5p_get_virtual_filename
+h5p_get_virtual_prefix
+h5p_get_virtual_printf_gap
+h5p_get_virtual_srcspace
+h5p_get_virtual_view
+h5p_get_virtual_vspace
+h5p_get_vlen_mem_manager
+h5p_get_vol_id
+h5p_get_vol_info
+h5p_insert
+h5p_modify_filter
+h5p_register
+h5p_remove_filter
+h5p_set_alignment
+h5p_set_alloc_time
+h5p_set_append_flush
+h5p_set_attr_creation_order
+h5p_set_btree_ratios
+h5p_set_buffer
+h5p_set_char_encoding
+h5p_set_chunk
+h5p_set_chunk_cache
+h5p_set_chunk_opts
+h5p_set_copy_object
+h5p_set_core_write_tracking
+h5p_set_create_intermediate_group
+h5p_set_data_transform
+h5p_set_deflate
+h5p_set_driver
+h5p_set_dset_no_attrs_hint
+h5p_set_dxpl_mpio
+h5p_set_edc_check
+h5p_set_efile_prefix
+h5p_set_elink_acc_flags
+h5p_set_elink_cb
+h5p_set_elink_fapl
+h5p_set_elink_file_cache_size
+h5p_set_elink_prefix
+h5p_set_est_link_info
+h5p_set_evict_on_close
+h5p_set_external
+h5p_set_family_offset
+h5p_set_fapl_core
+h5p_set_fapl_family
+h5p_set_fapl_hdfs
+h5p_set_fapl_log
+h5p_set_fapl_mpio32
+h5p_set_fapl_mpio64
+h5p_set_fapl_multi
+h5p_set_fapl_sec2
+h5p_set_fapl_split
+h5p_set_fapl_splitter
+h5p_set_fapl_windows
+h5p_set_fclose_degree
+h5p_set_file_image
+h5p_set_file_image_callbacks
+h5p_set_file_locking
+h5p_set_file_space_page_size
+h5p_set_file_space_strategy
+h5p_set_fill_time
+h5p_set_fill_value
+h5p_set_filter
+h5p_set_filter_callback
+h5p_set_fletcher32
+h5p_set_gc_references
+h5p_set_hyper_vector_size
+h5p_set_layout
+h5p_set_libver_bounds
+h5p_set_link_creation_order
+h5p_set_link_phase_change
+h5p_set_local_heap_size_hint
+h5p_set_mcdt_search_cb
+h5p_set_mdc_config
+h5p_set_mdc_image_config
+h5p_set_mdc_log_options
+h5p_set_meta_block_size
+h5p_set_metadata_read_attempts
+h5p_set_multi_type
+h5p_set_nbit
+h5p_set_nlinks
+h5p_set_obj_track_times
+h5p_set_object_flush_cb
+h5p_set_page_buffer_size
+h5p_set_preserve
+h5p_set_scaleoffset
+h5p_set_shuffle
+h5p_set_sieve_buf_size
+h5p_set_small_data_block_size
+h5p_set_szip
+h5p_set_type_conv_cb
+h5p_set_userblock
+h5p_set_virtual
+h5p_set_virtual_prefix
+h5p_set_virtual_printf_gap
+h5p_set_virtual_view
+h5p_set_vlen_mem_manager
+h5p_set_vol
 ```
 
-## [`H5S`](https://portal.hdfgroup.org/display/HDF5/Dataspaces) — Dataspace Interface
-```julia
-h5s_close(space_id::hid_t)
-h5s_copy(space_id::hid_t)
-h5s_create(class::Cint)
-h5s_create_simple(rank::Cint, current_dims::Ptr{hsize_t}, maximum_dims::Ptr{hsize_t})
-h5s_get_simple_extent_dims(space_id::hid_t, dims::Ptr{hsize_t}, maxdims::Ptr{hsize_t})
-h5s_get_simple_extent_ndims(space_id::hid_t)
-h5s_get_simple_extent_type(space_id::hid_t)
-h5s_is_simple(space_id::hid_t)
-h5s_select_hyperslab(dspace_id::hid_t, seloper::Cint, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})
+---
+
+## [[`H5R`](https://portal.hdfgroup.org/display/HDF5/References) — Reference Interface](@id H5R)
+- [`h5r_create`](@ref h5r_create)
+- [`h5r_dereference`](@ref h5r_dereference)
+- [`h5r_get_obj_type`](@ref h5r_get_obj_type)
+- [`h5r_get_region`](@ref h5r_get_region)
+```@docs
+h5r_create
+h5r_dereference
+h5r_get_obj_type
+h5r_get_region
 ```
 
-## [`H5T`](https://portal.hdfgroup.org/display/HDF5/Datatypes) — Datatype Interface
-```julia
-h5t_array_create(basetype_id::hid_t, ndims::Cuint, sz::Ptr{hsize_t})
-h5t_close(dtype_id::hid_t)
-h5t_commit(loc_id::hid_t, name::Ptr{UInt8}, dtype_id::hid_t, lcpl_id::hid_t, tcpl_id::hid_t, tapl_id::hid_t)
-h5t_committed(dtype_id::hid_t)
-h5t_copy(dtype_id::hid_t)
-h5t_create(class_id::Cint, sz::Csize_t)
-h5t_equal(dtype_id1::hid_t, dtype_id2::hid_t)
-h5t_get_array_dims(dtype_id::hid_t, dims::Ptr{hsize_t})
-h5t_get_array_ndims(dtype_id::hid_t)
-h5t_get_class(dtype_id::hid_t)
-h5t_get_cset(dtype_id::hid_t)
-h5t_get_ebias(dtype_id::hid_t)
-h5t_get_fields(dtype_id::hid_t, spos::Ref{Csize_t}, epos::Ref{Csize_t}, esize::Ref{Csize_t}, mpos::Ref{Csize_t}, msize::Ref{Csize_t})
-h5t_get_member_class(dtype_id::hid_t, index::Cuint)
-h5t_get_member_index(dtype_id::hid_t, membername::Ptr{UInt8})
-h5t_get_member_name(type_id::hid_t, index::Cuint)
-h5t_get_member_offset(dtype_id::hid_t, index::Cuint)
-h5t_get_member_type(dtype_id::hid_t, index::Cuint)
-h5t_get_native_type(dtype_id::hid_t, direction::Cint)
-h5t_get_nmembers(dtype_id::hid_t)
-h5t_get_sign(dtype_id::hid_t)
-h5t_get_size(dtype_id::hid_t)
-h5t_get_strpad(dtype_id::hid_t)
-h5t_get_super(dtype_id::hid_t)
-h5t_get_tag(type_id::hid_t)
-h5t_insert(dtype_id::hid_t, fieldname::Ptr{UInt8}, offset::Csize_t, field_id::hid_t)
-h5t_is_variable_str(type_id::hid_t)
-h5t_lock(type_id::hid_t)
-h5t_open(loc_id::hid_t, name::Ptr{UInt8}, tapl_id::hid_t)
-h5t_set_cset(dtype_id::hid_t, cset::Cint)
-h5t_set_ebias(dtype_id::hid_t, ebias::Csize_t)
-h5t_set_fields(dtype_id::hid_t, spos::Csize_t, epos::Csize_t, esize::Csize_t, mpos::Csize_t, msize::Csize_t)
-h5t_set_precision(dtype_id::hid_t, sz::Csize_t)
-h5t_set_size(dtype_id::hid_t, sz::Csize_t)
-h5t_set_strpad(dtype_id::hid_t, sz::Cint)
-h5t_vlen_create(base_type_id::hid_t)
+---
+
+## [[`H5S`](https://portal.hdfgroup.org/display/HDF5/Dataspaces) — Dataspace Interface](@id H5S)
+- [`h5s_close`](@ref h5s_close)
+- [`h5s_combine_select`](@ref h5s_combine_select)
+- [`h5s_copy`](@ref h5s_copy)
+- [`h5s_create`](@ref h5s_create)
+- [`h5s_create_simple`](@ref h5s_create_simple)
+- [`h5s_extent_equal`](@ref h5s_extent_equal)
+- [`h5s_get_regular_hyperslab`](@ref h5s_get_regular_hyperslab)
+- [`h5s_get_select_hyper_nblocks`](@ref h5s_get_select_hyper_nblocks)
+- [`h5s_get_select_npoints`](@ref h5s_get_select_npoints)
+- [`h5s_get_select_type`](@ref h5s_get_select_type)
+- [`h5s_get_simple_extent_dims`](@ref h5s_get_simple_extent_dims)
+- [`h5s_get_simple_extent_ndims`](@ref h5s_get_simple_extent_ndims)
+- [`h5s_get_simple_extent_type`](@ref h5s_get_simple_extent_type)
+- [`h5s_is_regular_hyperslab`](@ref h5s_is_regular_hyperslab)
+- [`h5s_is_simple`](@ref h5s_is_simple)
+- [`h5s_select_hyperslab`](@ref h5s_select_hyperslab)
+- [`h5s_set_extent_simple`](@ref h5s_set_extent_simple)
+```@docs
+h5s_close
+h5s_combine_select
+h5s_copy
+h5s_create
+h5s_create_simple
+h5s_extent_equal
+h5s_get_regular_hyperslab
+h5s_get_select_hyper_nblocks
+h5s_get_select_npoints
+h5s_get_select_type
+h5s_get_simple_extent_dims
+h5s_get_simple_extent_ndims
+h5s_get_simple_extent_type
+h5s_is_regular_hyperslab
+h5s_is_simple
+h5s_select_hyperslab
+h5s_set_extent_simple
 ```
 
-## [`H5Z`](https://portal.hdfgroup.org/display/HDF5/Filters) — Filter Interface
-```julia
-h5z_register(filter_class::Ref{H5Z_class_t})
+---
+
+## [[`H5T`](https://portal.hdfgroup.org/display/HDF5/Datatypes) — Datatype Interface](@id H5T)
+- [`h5t_array_create`](@ref h5t_array_create)
+- [`h5t_close`](@ref h5t_close)
+- [`h5t_commit`](@ref h5t_commit)
+- [`h5t_committed`](@ref h5t_committed)
+- [`h5t_copy`](@ref h5t_copy)
+- [`h5t_create`](@ref h5t_create)
+- [`h5t_enum_insert`](@ref h5t_enum_insert)
+- [`h5t_equal`](@ref h5t_equal)
+- [`h5t_get_array_dims`](@ref h5t_get_array_dims)
+- [`h5t_get_array_ndims`](@ref h5t_get_array_ndims)
+- [`h5t_get_class`](@ref h5t_get_class)
+- [`h5t_get_cset`](@ref h5t_get_cset)
+- [`h5t_get_ebias`](@ref h5t_get_ebias)
+- [`h5t_get_fields`](@ref h5t_get_fields)
+- [`h5t_get_member_class`](@ref h5t_get_member_class)
+- [`h5t_get_member_index`](@ref h5t_get_member_index)
+- [`h5t_get_member_name`](@ref h5t_get_member_name)
+- [`h5t_get_member_offset`](@ref h5t_get_member_offset)
+- [`h5t_get_member_type`](@ref h5t_get_member_type)
+- [`h5t_get_native_type`](@ref h5t_get_native_type)
+- [`h5t_get_nmembers`](@ref h5t_get_nmembers)
+- [`h5t_get_offset`](@ref h5t_get_offset)
+- [`h5t_get_order`](@ref h5t_get_order)
+- [`h5t_get_precision`](@ref h5t_get_precision)
+- [`h5t_get_sign`](@ref h5t_get_sign)
+- [`h5t_get_size`](@ref h5t_get_size)
+- [`h5t_get_strpad`](@ref h5t_get_strpad)
+- [`h5t_get_super`](@ref h5t_get_super)
+- [`h5t_get_tag`](@ref h5t_get_tag)
+- [`h5t_insert`](@ref h5t_insert)
+- [`h5t_is_variable_str`](@ref h5t_is_variable_str)
+- [`h5t_lock`](@ref h5t_lock)
+- [`h5t_open`](@ref h5t_open)
+- [`h5t_set_cset`](@ref h5t_set_cset)
+- [`h5t_set_ebias`](@ref h5t_set_ebias)
+- [`h5t_set_fields`](@ref h5t_set_fields)
+- [`h5t_set_offset`](@ref h5t_set_offset)
+- [`h5t_set_order`](@ref h5t_set_order)
+- [`h5t_set_precision`](@ref h5t_set_precision)
+- [`h5t_set_size`](@ref h5t_set_size)
+- [`h5t_set_strpad`](@ref h5t_set_strpad)
+- [`h5t_set_tag`](@ref h5t_set_tag)
+- [`h5t_vlen_create`](@ref h5t_vlen_create)
+```@docs
+h5t_array_create
+h5t_close
+h5t_commit
+h5t_committed
+h5t_copy
+h5t_create
+h5t_enum_insert
+h5t_equal
+h5t_get_array_dims
+h5t_get_array_ndims
+h5t_get_class
+h5t_get_cset
+h5t_get_ebias
+h5t_get_fields
+h5t_get_member_class
+h5t_get_member_index
+h5t_get_member_name
+h5t_get_member_offset
+h5t_get_member_type
+h5t_get_native_type
+h5t_get_nmembers
+h5t_get_offset
+h5t_get_order
+h5t_get_precision
+h5t_get_sign
+h5t_get_size
+h5t_get_strpad
+h5t_get_super
+h5t_get_tag
+h5t_insert
+h5t_is_variable_str
+h5t_lock
+h5t_open
+h5t_set_cset
+h5t_set_ebias
+h5t_set_fields
+h5t_set_offset
+h5t_set_order
+h5t_set_precision
+h5t_set_size
+h5t_set_strpad
+h5t_set_tag
+h5t_vlen_create
 ```
 
-## [`H5DO`](https://portal.hdfgroup.org/display/HDF5/Optimizations) — Optimized Functions Interface
-```julia
-h5do_append(dset_id::hid_t, dxpl_id::hid_t, index::Cuint, num_elem::hsize_t, memtype::hid_t, buffer::Ptr{Cvoid})
-h5do_write_chunk(dset_id::hid_t, dxpl_id::hid_t, filter_mask::Int32, offset::Ptr{hsize_t}, bufsize::Csize_t, buf::Ptr{Cvoid})
+---
+
+## [[`H5Z`](https://portal.hdfgroup.org/display/HDF5/Filters) — Filter Interface](@id H5Z)
+- [`h5z_filter_avail`](@ref h5z_filter_avail)
+- [`h5z_get_filter_info`](@ref h5z_get_filter_info)
+- [`h5z_register`](@ref h5z_register)
+- [`h5z_unregister`](@ref h5z_unregister)
+```@docs
+h5z_filter_avail
+h5z_get_filter_info
+h5z_register
+h5z_unregister
 ```
 
-## [`H5DS`](https://portal.hdfgroup.org/display/HDF5/Dimension+Scales) — Dimension Scale Interface
-```julia
-h5ds_attach_scale(did::hid_t, dsid::hid_t, idx::Cuint)
-h5ds_detach_scale(did::hid_t, dsid::hid_t, idx::Cuint)
-h5ds_get_label(did::hid_t, idx::Cuint, label::Ptr{UInt8}, size::hsize_t)
-h5ds_get_num_scales(did::hid_t, idx::Cuint)
-h5ds_get_scale_name(did::hid_t, name::Ptr{UInt8}, size::Csize_t)
-h5ds_is_attached(did::hid_t, dsid::hid_t, idx::Cuint)
-h5ds_is_scale(did::hid_t)
-h5ds_set_label(did::hid_t, idx::Cuint, label::Ref{UInt8})
-h5ds_set_scale(dsid::hid_t, dimname::Ptr{UInt8})
+---
+
+## [[`H5DO`](https://portal.hdfgroup.org/display/HDF5/Optimizations) — Optimized Functions Interface](@id H5DO)
+- [`h5do_append`](@ref h5do_append)
+- [`h5do_write_chunk`](@ref h5do_write_chunk)
+```@docs
+h5do_append
+h5do_write_chunk
 ```
 
-## [`H5LT`](https://portal.hdfgroup.org/display/HDF5/Lite) — Lite Interface
-```julia
-h5lt_dtype_to_text(datatype::hid_t, str::Ptr{UInt8}, lang_type::Cint, len::Ref{Csize_t})
+---
+
+## [[`H5DS`](https://portal.hdfgroup.org/display/HDF5/Dimension+Scales) — Dimension Scale Interface](@id H5DS)
+- [`h5ds_attach_scale`](@ref h5ds_attach_scale)
+- [`h5ds_detach_scale`](@ref h5ds_detach_scale)
+- [`h5ds_get_label`](@ref h5ds_get_label)
+- [`h5ds_get_num_scales`](@ref h5ds_get_num_scales)
+- [`h5ds_get_scale_name`](@ref h5ds_get_scale_name)
+- [`h5ds_is_attached`](@ref h5ds_is_attached)
+- [`h5ds_is_scale`](@ref h5ds_is_scale)
+- [`h5ds_set_label`](@ref h5ds_set_label)
+- [`h5ds_set_scale`](@ref h5ds_set_scale)
+```@docs
+h5ds_attach_scale
+h5ds_detach_scale
+h5ds_get_label
+h5ds_get_num_scales
+h5ds_get_scale_name
+h5ds_is_attached
+h5ds_is_scale
+h5ds_set_label
+h5ds_set_scale
 ```
 
-## [`H5TB`](https://portal.hdfgroup.org/display/HDF5/Tables) — Table Interface
-```julia
-h5tb_get_field_info(loc_id::hid_t, table_name::Ptr{UInt8}, field_names::Ptr{Ptr{UInt8}}, field_sizes::Ptr{UInt8}, field_offsets::Ptr{UInt8}, type_size::Ptr{UInt8})
+---
+
+## [[`H5LT`](https://portal.hdfgroup.org/display/HDF5/Lite) — Lite Interface](@id H5LT)
+- [`h5lt_dtype_to_text`](@ref h5lt_dtype_to_text)
+```@docs
+h5lt_dtype_to_text
+```
+
+---
+
+## [[`H5TB`](https://portal.hdfgroup.org/display/HDF5/Tables) — Table Interface](@id H5TB)
+- [`h5tb_append_records`](@ref h5tb_append_records)
+- [`h5tb_get_field_info`](@ref h5tb_get_field_info)
+- [`h5tb_get_table_info`](@ref h5tb_get_table_info)
+- [`h5tb_make_table`](@ref h5tb_make_table)
+- [`h5tb_read_records`](@ref h5tb_read_records)
+- [`h5tb_read_table`](@ref h5tb_read_table)
+- [`h5tb_write_records`](@ref h5tb_write_records)
+```@docs
+h5tb_append_records
+h5tb_get_field_info
+h5tb_get_table_info
+h5tb_make_table
+h5tb_read_records
+h5tb_read_table
+h5tb_write_records
 ```
 
 

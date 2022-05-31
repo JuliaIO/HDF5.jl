@@ -1,10 +1,12 @@
-name: Register Package
+name: RegisterAction
 on:
   workflow_dispatch:
     inputs:
       version:
         description: Version to register or component to bump
         required: true
+      subdir:
+        description: Subdirectory containing the package to register
 jobs:
   register:
     runs-on: ubuntu-latest
