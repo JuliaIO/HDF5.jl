@@ -87,7 +87,7 @@ end # @testset track_order
     HDF5.API.h5f_set_dset_no_attrs_hint(f, false)
     @test !HDF5.API.h5f_get_dset_no_attrs_hint(f)
     f["test"] = 0x1
-    # We expect that with the hint, the offset will actually be 300
+    # We expect that with the hint, the offset will be greater than 300
     @test HDF5.API.h5d_get_offset(f["test"]) > threshold
   end
   @test filesize(fn) > threshold + 1
