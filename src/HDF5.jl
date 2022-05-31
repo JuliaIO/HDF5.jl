@@ -171,24 +171,8 @@ Base.:(==)(dspace1::Dataspace, dspace2::Dataspace) = API.h5s_extent_equal(checkv
 Base.hash(dspace::Dataspace, h::UInt) = hash(dspace.id, hash(Dataspace, h))
 Base.copy(dspace::Dataspace) = Dataspace(API.h5s_copy(checkvalid(dspace)))
 
-mutable struct Attribute
-    id::API.hid_t
-    file::File
-
-    function Attribute(id, file)
-        dset = new(id, file)
-        finalizer(close, dset)
-        dset
-    end
-end
-Base.cconvert(::Type{API.hid_t}, attr::Attribute) = attr.id
-
-struct Attributes
-    parent::Union{File,Object}
-end
-attributes(p::Union{File,Object}) = Attributes(p)
-
 include("typeconversions.jl")
+include("attributes.jl")
 include("show.jl")
 
 # heuristic chunk layout (return empty array to disable chunking)
@@ -374,38 +358,10 @@ function h5read(filename, name::AbstractString, indices::Tuple{Vararg{Union{Abst
     dat
 end
 
-function h5writeattr(filename, name::AbstractString, data::Dict)
-    file = h5open(filename, "r+")
-    try
-        obj = file[name]
-        attrs = attributes(obj)
-        for x in keys(data)
-            attrs[x] = data[x]
-        end
-        close(obj)
-    finally
-        close(file)
-    end
-end
-
-function h5readattr(filename, name::AbstractString)
-    local dat
-    file = h5open(filename,"r")
-    try
-        obj = file[name]
-        a = attributes(obj)
-        dat = Dict(x => read(a[x]) for x in keys(a))
-        close(obj)
-    finally
-        close(file)
-    end
-    dat
-end
 
 # Ensure that objects haven't been closed
 Base.isvalid(obj::Union{File,Datatype,Dataspace}) = obj.id != -1 && API.h5i_is_valid(obj)
 Base.isvalid(obj::Union{Group,Dataset,Attribute}) = obj.id != -1 && obj.file.id != -1 && API.h5i_is_valid(obj)
-Base.isvalid(obj::Attributes) = isvalid(obj.parent)
 checkvalid(obj) = isvalid(obj) ? obj : error("File or object has been closed")
 
 # Close functions
@@ -435,16 +391,6 @@ function Base.close(obj::Union{Group,Dataset})
     if obj.id != -1
         if obj.file.id != -1 && isvalid(obj)
             API.h5o_close(obj)
-        end
-        obj.id = -1
-    end
-    nothing
-end
-
-function Base.close(obj::Attribute)
-    if obj.id != -1
-        if obj.file.id != -1 && isvalid(obj)
-            API.h5a_close(obj)
         end
         obj.id = -1
     end
@@ -503,8 +449,6 @@ open_dataset(parent::Union{File,Group}, name::AbstractString,
     Dataset(API.h5d_open(checkvalid(parent), name, dapl), file(parent), dxpl)
 open_datatype(parent::Union{File,Group}, name::AbstractString, tapl::DatatypeAccessProperties=DatatypeAccessProperties()) =
     Datatype(API.h5t_open(checkvalid(parent), name, tapl), file(parent))
-open_attribute(parent::Union{File,Object}, name::AbstractString, aapl::AttributeAccessProperties=AttributeAccessProperties()) =
-    Attribute(API.h5a_open(checkvalid(parent), name, aapl), file(parent))
 # Object (group, named datatype, or dataset) open
 function h5object(obj_id::API.hid_t, parent)
     obj_type = API.h5i_get_type(obj_id)
@@ -524,14 +468,6 @@ end
 root(h5file::File) = open_group(h5file, "/")
 root(obj::Union{Group,Dataset}) = open_group(file(obj), "/")
 
-function Base.getindex(dset::Dataset, name::AbstractString)
-    haskey(dset, name) || throw(KeyError(name))
-    open_attribute(dset, name)
-end
-function Base.getindex(x::Attributes, name::AbstractString)
-    haskey(x, name) || throw(KeyError(name))
-    open_attribute(x.parent, name)
-end
 function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     haskey(parent, path) || throw(KeyError(path))
     # Faster than below if defaults are OK
@@ -639,13 +575,8 @@ function commit_datatype(parent::Union{File,Group}, path::AbstractString, dtype:
     return dtype
 end
 
-function create_attribute(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace)
-    attrid = API.h5a_create(checkvalid(parent), name, dtype, dspace, _attr_properties(name), API.H5P_DEFAULT)
-    return Attribute(attrid, file(parent))
-end
 
 # Delete objects
-delete_attribute(parent::Union{File,Object}, path::AbstractString) = API.h5a_delete(checkvalid(parent), path)
 delete_object(parent::Union{File,Group}, path::AbstractString, lapl::LinkAccessProperties=LinkAccessProperties()) =
     API.h5l_delete(checkvalid(parent), path, lapl)
 delete_object(obj::Object) = delete_object(parent(obj), ascii(split(name(obj),"/")[end])) # FIXME: remove ascii?
@@ -662,9 +593,6 @@ move_link(parent::Union{File,Group}, src_name::AbstractString, dest_name::Abstra
     API.h5l_move(checkvalid(parent), src_name, parent, dest_name, lcpl, lapl)
 
 # Assign syntax: obj[path] = value
-# Creates a dataset unless obj is a dataset, in which case it creates an attribute
-Base.setindex!(dset::Dataset, val, name::AbstractString) = write_attribute(dset, name, val)
-Base.setindex!(x::Attributes, val, name::AbstractString) = write_attribute(x.parent, name, val)
 # Create a dataset with properties: obj[path, prop = val, ...] = val
 function Base.setindex!(parent::Union{File,Group}, val, path::Union{AbstractString,Nothing}; pv...)
     need_chunks = any(k in keys(chunked_props) for k in keys(pv))
@@ -701,7 +629,6 @@ function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::Link
     end
     return exists
 end
-Base.haskey(attr::Attributes, path::AbstractString) = API.h5a_exists(checkvalid(attr.parent), path)
 Base.haskey(dset::Union{Dataset,Datatype}, path::AbstractString) = API.h5a_exists(checkvalid(dset), path)
 
 # Querying items in the file
@@ -709,7 +636,6 @@ group_info(obj::Union{Group,File}) = API.h5g_get_info(checkvalid(obj))
 object_info(obj::Union{File,Object}) = API.h5o_get_info(checkvalid(obj))
 
 Base.length(obj::Union{Group,File}) = Int(API.h5g_get_num_objs(checkvalid(obj)))
-Base.length(x::Attributes) = Int(object_info(x.parent).num_attrs)
 
 Base.isempty(x::Union{Group,File}) = length(x) == 0
 Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
@@ -717,7 +643,6 @@ Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
 # filename and name
 filename(obj::Union{File,Group,Dataset,Attribute,Datatype}) = API.h5f_get_name(checkvalid(obj))
 name(obj::Union{File,Group,Dataset,Datatype}) = API.h5i_get_name(checkvalid(obj))
-name(attr::Attribute) = API.h5a_get_name(attr)
 function Base.keys(x::Union{Group,File})
     checkvalid(x)
     children = sizehint!(String[], length(x))
@@ -728,15 +653,6 @@ function Base.keys(x::Union{Group,File})
     return children
 end
 
-function Base.keys(x::Attributes)
-    checkvalid(x.parent)
-    children = sizehint!(String[], length(x))
-    API.h5a_iterate(x.parent, IDX_TYPE[], ORDER[]) do _, attr_name, _
-        push!(children, unsafe_string(attr_name))
-        return API.herr_t(0)
-    end
-    return children
-end
 
 # iteration by objects
 function Base.iterate(parent::Union{File,Group}, iter = (1,nothing))
@@ -766,8 +682,6 @@ end
 
 # Get the datatype of a dataset
 datatype(dset::Dataset) = Datatype(API.h5d_get_type(checkvalid(dset)), file(dset))
-# Get the datatype of an attribute
-datatype(dset::Attribute) = Datatype(API.h5a_get_type(checkvalid(dset)), file(dset))
 # The datatype of a Datatype is the Datatype
 datatype(dt::Datatype) = dt
 
@@ -775,8 +689,6 @@ Base.sizeof(dtype::Datatype) = Int(API.h5t_get_size(dtype))
 
 # Get the dataspace of a dataset
 dataspace(dset::Dataset) = Dataspace(API.h5d_get_space(checkvalid(dset)))
-# Get the dataspace of an attribute
-dataspace(attr::Attribute) = Dataspace(API.h5a_get_space(checkvalid(attr)))
 # The dataspace of a Dataspace is just the dataspace
 dataspace(ds::Dataspace) = ds
 
@@ -893,27 +805,6 @@ function read_dataset(parent::Union{File,Group}, name::AbstractString)
     ret
 end
 
-"""
-    read_attribute(parent::Union{File,Group,Dataset,Datatype}, name::AbstractString)
-
-Read the value of the named attribute on the parent object.
-
-# Example
-```julia-repl
-julia> HDF5.read_attribute(g, "time")
-2.45
-```
-"""
-function read_attribute(parent::Union{File,Group,Dataset,Datatype}, name::AbstractString)
-    local ret
-    obj = open_attribute(parent, name)
-    try
-        ret = read(obj)
-    finally
-        close(obj)
-    end
-    ret
-end
 
 function Base.read(parent::Union{File,Group}, name::AbstractString; pv...)
     obj = getindex(parent, name; pv...)
@@ -1089,7 +980,6 @@ end
 Base.getindex(parent::Union{File,Group}, r::Reference) = _deref(parent, r)
 Base.getindex(parent::Dataset, r::Reference) = _deref(parent, r) # defined separately to resolve ambiguity
 
-Base.read(attr::Attributes, name::AbstractString) = read_attribute(attr.parent, name)
 
 function iscompact(obj::Dataset)
     prop = API.h5d_get_create_plist(checkvalid(obj))
@@ -1222,16 +1112,6 @@ function create_dataset(parent::Union{File,Group}, name::Union{AbstractString,No
     end
     return obj, dtype
 end
-function create_attribute(parent::Union{File,Object}, name::AbstractString, data; pv...)
-    dtype = datatype(data)
-    dspace = dataspace(data)
-    obj = try
-        create_attribute(parent, name, dtype, dspace; pv...)
-    finally
-        close(dspace)
-    end
-    return obj, dtype
-end
 
 # Create and write, closing the objects upon exit
 function write_dataset(parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data; pv...)
@@ -1247,29 +1127,8 @@ function write_dataset(parent::Union{File,Group}, name::Union{AbstractString,Not
     end
     nothing
 end
-function write_attribute(parent::Union{File,Object}, name::AbstractString, data; pv...)
-    obj, dtype = create_attribute(parent, name, data; pv...)
-    try
-        write_attribute(obj, dtype, data)
-    catch exc
-        delete_attribute(parent, name)
-        rethrow(exc)
-    finally
-        close(obj)
-        close(dtype)
-    end
-    nothing
-end
 
 # Write to already-created objects
-function Base.write(obj::Attribute, x)
-    dtype = datatype(x)
-    try
-        write_attribute(obj, dtype, x)
-    finally
-        close(dtype)
-    end
-end
 function Base.write(obj::Dataset, x)
     dtype = datatype(x)
     try
@@ -1281,8 +1140,6 @@ end
 
 # For plain files and groups, let "write(obj, name, val; properties...)" mean "write_dataset"
 Base.write(parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data; pv...) = write_dataset(parent, name, data; pv...)
-# For datasets, "write(dset, name, val; properties...)" means "write_attribute"
-Base.write(parent::Dataset, name::AbstractString, data; pv...) = write_attribute(parent, name, data; pv...)
 
 
 # Indexing
@@ -1549,30 +1406,12 @@ include("api_midlevel.jl")
 
 
 # default behavior
-read_attribute(attr::Attribute, memtype::Datatype, buf) = API.h5a_read(attr, memtype, buf)
-write_attribute(attr::Attribute, memtype::Datatype, x) = API.h5a_write(attr, memtype, x)
 read_dataset(dset::Dataset, memtype::Datatype, buf, xfer::DatasetTransferProperties=dset.xfer) =
     API.h5d_read(dset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
 write_dataset(dset::Dataset, memtype::Datatype, x, xfer::DatasetTransferProperties=dset.xfer) =
     API.h5d_write(dset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, x)
 
 # type-specific behaviors
-function write_attribute(attr::Attribute, memtype::Datatype, str::AbstractString)
-    strbuf = Base.cconvert(Cstring, str)
-    GC.@preserve strbuf begin
-        buf = Base.unsafe_convert(Ptr{UInt8}, strbuf)
-        API.h5a_write(attr, memtype, buf)
-    end
-end
-function write_attribute(attr::Attribute, memtype::Datatype, x::T) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
-    tmp = Ref{T}(x)
-    API.h5a_write(attr, memtype, tmp)
-end
-function write_attribute(attr::Attribute, memtype::Datatype, strs::Array{<:AbstractString})
-    p = Ref{Cstring}(strs)
-    API.h5a_write(attr, memtype, p)
-end
-write_attribute(attr::Attribute, memtype::Datatype, ::EmptyArray) = nothing
 
 function read_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::DatasetTransferProperties=dataset.xfer)
     stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))

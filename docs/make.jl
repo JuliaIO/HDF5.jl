@@ -33,6 +33,7 @@ makedocs(;
         "Home" => "index.md",
         "Interface" => [
             "dataset.md",
+            "attributes.md",
             "properties.md",
             "filters.md"
         ],
