@@ -212,10 +212,14 @@ const H5F_ACC_SWMR_WRITE = 0x0020
 const H5F_ACC_SWMR_READ  = 0x0040
 
 # Library versions
-const H5F_LIBVER_EARLIEST = 0
-const H5F_LIBVER_V18      = 1
-const H5F_LIBVER_V110     = 2
-const H5F_LIBVER_V112     = 3
+@enum H5F_libver_t::Int32 begin
+    H5F_LIBVER_ERROR =   -1
+    H5F_LIBVER_EARLIEST = 0
+    H5F_LIBVER_V18 =      1
+    H5F_LIBVER_V110 =     2
+    H5F_LIBVER_V112 =     3
+    H5F_LIBVER_NBOUNDS =  4
+end
 # H5F_LIBVER_LATEST defined in helpers.jl
 
 # object types
@@ -600,4 +604,33 @@ end
     H5D_FILL_VALUE_UNDEFINED = 0
     H5D_FILL_VALUE_DEFAULT = 1
     H5D_FILL_VALUE_USER_DEFINED = 2
+end
+
+struct H5F_info2_super
+    version::Cuint
+    super_size::hsize_t
+    super_ext_size::hsize_t
+end
+
+struct H5F_info2_free
+    version::Cuint
+    meta_size::hsize_t
+    tot_space::hsize_t
+end
+
+struct H5F_info2_sohm
+    version::Cuint
+    hdr_size::hsize_t
+    msgs_info::H5_ih_info_t
+end
+
+struct H5F_info2_t
+    super::H5F_info2_super
+    free::H5F_info2_free
+    sohm::H5F_info2_sohm
+end
+
+struct H5F_retry_info_t
+    nbins::Cuint
+    retries::NTuple{21, Ptr{UInt32}}
 end

@@ -22,6 +22,15 @@ function h5_is_library_threadsafe()
 end
 
 ###
+### HDF5 File Interface
+###
+function h5f_get_dset_no_attrs_hint(file_id)::Bool
+    minimize = Ref{hbool_t}(false)
+    h5f_get_dset_no_attrs_hint(file_id, minimize)
+    return minimize[]
+end
+
+###
 ### Attribute Interface
 ###
 
@@ -495,6 +504,12 @@ function h5p_get_link_creation_order(p)
     link = Ref{UInt32}()
     h5p_get_link_creation_order(p, link)
     return link[]
+end
+
+function h5p_get_dset_no_attrs_hint(dcpl)::hbool_t
+    minimize = Ref{hbool_t}(false)
+    h5p_get_dset_no_attrs_hint(dcpl, minimize)
+    return minimize[] > 0
 end
 
 ###

@@ -169,37 +169,97 @@ h5e_walk
 ---
 
 ## [[`H5F`](https://portal.hdfgroup.org/display/HDF5/Files) — File Interface](@id H5F)
+- [`h5f_clear_elink_file_cache`](@ref h5f_clear_elink_file_cache)
 - [`h5f_close`](@ref h5f_close)
 - [`h5f_create`](@ref h5f_create)
+- [`h5f_delete`](@ref h5f_delete)
 - [`h5f_flush`](@ref h5f_flush)
+- [`h5f_format_convert`](@ref h5f_format_convert)
 - [`h5f_get_access_plist`](@ref h5f_get_access_plist)
 - [`h5f_get_create_plist`](@ref h5f_get_create_plist)
+- [`h5f_get_dset_no_attrs_hint`](@ref h5f_get_dset_no_attrs_hint)
+- [`h5f_get_eoa`](@ref h5f_get_eoa)
+- [`h5f_get_file_image`](@ref h5f_get_file_image)
+- [`h5f_get_fileno`](@ref h5f_get_fileno)
+- [`h5f_get_filesize`](@ref h5f_get_filesize)
 - [`h5f_get_free_sections`](@ref h5f_get_free_sections)
 - [`h5f_get_freespace`](@ref h5f_get_freespace)
+- [`h5f_get_info`](@ref h5f_get_info)
 - [`h5f_get_intent`](@ref h5f_get_intent)
+- [`h5f_get_mdc_config`](@ref h5f_get_mdc_config)
+- [`h5f_get_mdc_hit_rate`](@ref h5f_get_mdc_hit_rate)
+- [`h5f_get_mdc_image_info`](@ref h5f_get_mdc_image_info)
+- [`h5f_get_mdc_logging_status`](@ref h5f_get_mdc_logging_status)
+- [`h5f_get_mdc_size`](@ref h5f_get_mdc_size)
+- [`h5f_get_metadata_read_retry_info`](@ref h5f_get_metadata_read_retry_info)
+- [`h5f_get_mpi_atomicity`](@ref h5f_get_mpi_atomicity)
 - [`h5f_get_name`](@ref h5f_get_name)
 - [`h5f_get_obj_count`](@ref h5f_get_obj_count)
 - [`h5f_get_obj_ids`](@ref h5f_get_obj_ids)
+- [`h5f_get_page_buffering_stats`](@ref h5f_get_page_buffering_stats)
 - [`h5f_get_vfd_handle`](@ref h5f_get_vfd_handle)
+- [`h5f_increment_filesize`](@ref h5f_increment_filesize)
+- [`h5f_is_accessible`](@ref h5f_is_accessible)
 - [`h5f_is_hdf5`](@ref h5f_is_hdf5)
+- [`h5f_mount`](@ref h5f_mount)
 - [`h5f_open`](@ref h5f_open)
+- [`h5f_reopen`](@ref h5f_reopen)
+- [`h5f_reset_mdc_hit_rate_stats`](@ref h5f_reset_mdc_hit_rate_stats)
+- [`h5f_reset_page_buffering_stats`](@ref h5f_reset_page_buffering_stats)
+- [`h5f_set_dset_no_attrs_hint`](@ref h5f_set_dset_no_attrs_hint)
+- [`h5f_set_libver_bounds`](@ref h5f_set_libver_bounds)
+- [`h5f_set_mdc_config`](@ref h5f_set_mdc_config)
+- [`h5f_set_mpi_atomicity`](@ref h5f_set_mpi_atomicity)
+- [`h5f_start_mdc_logging`](@ref h5f_start_mdc_logging)
 - [`h5f_start_swmr_write`](@ref h5f_start_swmr_write)
+- [`h5f_stop_mdc_logging`](@ref h5f_stop_mdc_logging)
+- [`h5f_unmount`](@ref h5f_unmount)
 ```@docs
+h5f_clear_elink_file_cache
 h5f_close
 h5f_create
+h5f_delete
 h5f_flush
+h5f_format_convert
 h5f_get_access_plist
 h5f_get_create_plist
+h5f_get_dset_no_attrs_hint
+h5f_get_eoa
+h5f_get_file_image
+h5f_get_fileno
+h5f_get_filesize
 h5f_get_free_sections
 h5f_get_freespace
+h5f_get_info
 h5f_get_intent
+h5f_get_mdc_config
+h5f_get_mdc_hit_rate
+h5f_get_mdc_image_info
+h5f_get_mdc_logging_status
+h5f_get_mdc_size
+h5f_get_metadata_read_retry_info
+h5f_get_mpi_atomicity
 h5f_get_name
 h5f_get_obj_count
 h5f_get_obj_ids
+h5f_get_page_buffering_stats
 h5f_get_vfd_handle
+h5f_increment_filesize
+h5f_is_accessible
 h5f_is_hdf5
+h5f_mount
 h5f_open
+h5f_reopen
+h5f_reset_mdc_hit_rate_stats
+h5f_reset_page_buffering_stats
+h5f_set_dset_no_attrs_hint
+h5f_set_libver_bounds
+h5f_set_mdc_config
+h5f_set_mpi_atomicity
+h5f_start_mdc_logging
 h5f_start_swmr_write
+h5f_stop_mdc_logging
+h5f_unmount
 ```
 
 ---
