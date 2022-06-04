@@ -60,7 +60,9 @@ h5_set_free_list_limits
 - [`h5a_get_type`](@ref h5a_get_type)
 - [`h5a_iterate`](@ref h5a_iterate)
 - [`h5a_open`](@ref h5a_open)
+- [`h5a_open_by_idx`](@ref h5a_open_by_idx)
 - [`h5a_read`](@ref h5a_read)
+- [`h5a_rename`](@ref h5a_rename)
 - [`h5a_write`](@ref h5a_write)
 ```@docs
 h5a_close
@@ -78,7 +80,9 @@ h5a_get_space
 h5a_get_type
 h5a_iterate
 h5a_open
+h5a_open_by_idx
 h5a_read
+h5a_rename
 h5a_write
 ```
 

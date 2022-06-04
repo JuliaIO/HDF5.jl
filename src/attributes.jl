@@ -1,3 +1,5 @@
+# mid-level API
+
 """
     HDF5.Attribute
 
@@ -77,7 +79,6 @@ Open the [`Attribute`](@ref) named `name` on the object `parent`.
 open_attribute(parent::Union{File,Object}, name::AbstractString, aapl::AttributeAccessProperties=AttributeAccessProperties()) =
     Attribute(API.h5a_open(checkvalid(parent), name, aapl), file(parent))
 
-
 """
     create_attribute(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, space::Dataspace)
     create_attribute(parent::Union{File,Object}, name::AbstractString, data)
@@ -102,24 +103,25 @@ function create_attribute(parent::Union{File,Object}, name::AbstractString, dtyp
     return Attribute(attrid, file(parent))
 end
 
-
+# generic method
+write_attribute(attr::Attribute, memtype::Datatype, x) = API.h5a_write(attr, memtype, x)
+# specific methods
 function write_attribute(attr::Attribute, memtype::Datatype, str::AbstractString)
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
         buf = Base.unsafe_convert(Ptr{UInt8}, strbuf)
-        API.h5a_write(attr, memtype, buf)
+        write_attribute(attr, memtype, buf)
     end
 end
 function write_attribute(attr::Attribute, memtype::Datatype, x::T) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
-    API.h5a_write(attr, memtype, tmp)
+    write_attribute(attr, memtype, tmp)
 end
 function write_attribute(attr::Attribute, memtype::Datatype, strs::Array{<:AbstractString})
     p = Ref{Cstring}(strs)
-    API.h5a_write(attr, memtype, p)
+    write_attribute(attr, memtype, p)
 end
 write_attribute(attr::Attribute, memtype::Datatype, ::EmptyArray) = nothing
-write_attribute(attr::Attribute, memtype::Datatype, x) = API.h5a_write(attr, memtype, x)
 
 """
     write_attribute(parent::Union{File,Object}, name::AbstractString, data)
@@ -127,19 +129,26 @@ write_attribute(attr::Attribute, memtype::Datatype, x) = API.h5a_write(attr, mem
 Write `data` as an [`Attribute`](@ref) named `name` on the object `parent`.
 """
 function write_attribute(parent::Union{File,Object}, name::AbstractString, data; pv...)
-    obj, dtype = create_attribute(parent, name, data; pv...)
+    attr, dtype = create_attribute(parent, name, data; pv...)
     try
-        write_attribute(obj, dtype, data)
+        write_attribute(attr, dtype, data)
     catch exc
         delete_attribute(parent, name)
         rethrow(exc)
     finally
-        close(obj)
+        close(attr)
         close(dtype)
     end
     nothing
 end
 
+"""
+    rename_attribute(parent::Union{File,Object}, oldname::AbstractString, newname::AbstractString)
+
+Rename the [`Attribute`](@ref) of the object `parent` named `oldname` to `newname`.
+"""
+rename_attribute(parent::Union{File,Object}, oldname::AbstractString, newname::AbstractString) =
+    API.h5a_rename(checkvalid(parent), oldname, newname)
 
 """
     delete_attribute(parent::Union{File,Object}, name::AbstractString)
@@ -186,6 +195,84 @@ function h5readattr(filename, name::AbstractString)
     end
     dat
 end
+
+
+struct AttributeDict <: AbstractDict{String,Any}
+    parent::Object
+end
+
+"""
+    attrs(object::Union{File,Group,Dataset,Datatype})
+
+The attributes dictionary of `object`. Returns an `AttributeDict`, a `Dict`-like
+object for accessing the attributes of `object`.
+
+```julia
+attrs(object)["name"] = value  # create/overwrite an attribute
+attr = attrs(object)["name"]   # read an attribute
+delete!(attrs(object), "name") # delete an attribute
+keys(attrs(object))            # list the attribute names
+```
+"""
+function attrs(parent::Object)
+    return AttributeDict(parent)
+end
+attrs(file::File) = attrs(open_group(file, "."))
+
+Base.haskey(attrdict::AttributeDict, path::AbstractString) = API.h5a_exists(checkvalid(attrdict.parent), path)
+Base.length(attrdict::AttributeDict) = Int(object_info(attrdict.parent).num_attrs)
+
+function Base.getindex(x::AttributeDict, name::AbstractString)
+    haskey(x, name) || throw(KeyError(name))
+    read_attribute(x.parent, name)
+end
+function Base.get(x::AttributeDict, name::AbstractString, default)
+    haskey(x, name) || return default
+    read_attribute(x.parent, name)
+end
+function Base.setindex!(attrdict::AttributeDict, val, name::AbstractString)
+    if haskey(attrdict, name)
+        # in case of an error, we write first to a temporary, then rename
+        _name = tempname()
+        try
+            write_attribute(attrdict.parent, _name, val)
+            delete_attribute(attrdict.parent, name)
+            rename_attribute(attrdict.parent, _name, name)
+        finally
+            haskey(attrdict, _name) && delete_attribute(attrdict.parent, _name)
+        end
+    else
+        write_attribute(attrdict.parent, name, val)
+    end
+end
+Base.delete!(attrdict::AttributeDict, path::AbstractString) = delete_attribute(attrdict.parent, path)
+
+function Base.keys(attrdict::AttributeDict)
+    # faster than iteratively calling h5a_get_name_by_idx
+    checkvalid(attrdict.parent)
+    keyvec = sizehint!(String[], length(attrdict))
+    API.h5a_iterate(attrdict.parent, IDX_TYPE[], ORDER[]) do _, attr_name, _
+        push!(keyvec, unsafe_string(attr_name))
+        return false
+    end
+    return keyvec
+end
+
+function Base.iterate(attrdict::AttributeDict)
+    # constuct key vector, then iterate
+    # faster than calling h5a_open_by_idx
+    iterate(attrdict, (keys(attrdict), 1))
+end
+function Base.iterate(attrdict::AttributeDict, (keyvec, n))
+    iter = iterate(keyvec, n)
+    if isnothing(iter)
+        return iter
+    end
+    key, nn = iter
+    return (key => attrdict[key]), (keyvec, nn)
+end
+
+
 
 
 struct Attributes

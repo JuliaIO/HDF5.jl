@@ -100,22 +100,19 @@ empty_array_of_strings = [""]
 write(f, "empty_array_of_strings", empty_array_of_strings)
 # attributes
 species = [["N", "C"]; ["A", "B"]]
-attributes(f)["species"] = species
-@test read(attributes(f)["species"]) == species
-@test attributes(f)["species"][] == species
+attrs(f)["species"] = species
+@test attrs(f)["species"] == species
 C∞ = 42
-attributes(f)["C∞"] = C∞
+attrs(f)["C∞"] = C∞
 dset = f["salut"]
 @test !isempty(dset)
 label = "This is a string"
-attributes(dset)["typeinfo"] = label
-@test read(attributes(dset)["typeinfo"]) == label
-@test attributes(dset)["typeinfo"][] == label
-@test dset["typeinfo"][] == label
+attrs(dset)["typeinfo"] = label
+@test attrs(dset)["typeinfo"] == label
 close(dset)
 # Scalar reference values in attributes
-attributes(f)["ref_test"] = HDF5.Reference(f, "empty_array_of_strings")
-@test read(attributes(f)["ref_test"]) === HDF5.Reference(f, "empty_array_of_strings")
+attrs(f)["ref_test"] = HDF5.Reference(f, "empty_array_of_strings")
+@test attrs(f)["ref_test"] === HDF5.Reference(f, "empty_array_of_strings")
 # Group
 g = create_group(f, "mygroup")
 # Test dataset with compression
@@ -320,10 +317,10 @@ A = rand(3, 3)'
 @test_throws ArgumentError write(hid, "A", A)
 @test !haskey(hid, "A")
 dset = create_dataset(hid, "attr", datatype(Int), dataspace(0))
-@test !haskey(attributes(dset), "attr")
+@test !haskey(attrs(dset), "attr")
 # broken test - writing attributes does not check that the stride is correct
 @test_skip @test_throws ArgumentError write(dset, "attr", A)
-@test !haskey(attributes(dset), "attr")
+@test !haskey(attrs(dset), "attr")
 close(hid)
 
 # more do syntax
@@ -507,7 +504,7 @@ end # testset plain
   f = h5open(fn, "w")
 
   f["ComplexF64"] = 1.0 + 2.0im
-  attributes(f["ComplexF64"])["ComplexInt64"] = 1im
+  attrs(f["ComplexF64"])["ComplexInt64"] = 1im
 
   Acmplx = rand(ComplexF64, 3, 5)
   write(f, "Acmplx64", convert(Matrix{ComplexF64}, Acmplx))
@@ -529,8 +526,8 @@ end # testset plain
   fr = h5open(fn)
   z = read(fr, "ComplexF64")
   @test z == 1.0 + 2.0im && isa(z, ComplexF64)
-  z_attrs = attributes(fr["ComplexF64"])
-  @test read(z_attrs["ComplexInt64"]) == 1im
+  z_attrs = attrs(fr["ComplexF64"])
+  @test z_attrs["ComplexInt64"] == 1im
 
   Acmplx32 = read(fr, "Acmplx32")
   @test convert(Matrix{ComplexF32}, Acmplx) == Acmplx32
@@ -782,8 +779,8 @@ dset = create_dataset(group, "dset", datatype(Int), dataspace((1,)))
 meta = create_attribute(dset, "meta", datatype(Bool), dataspace((1,)))
 @test sprint(show, meta) == "HDF5.Attribute: meta"
 
-dsetattrs = attributes(dset)
-@test sprint(show, dsetattrs) == "Attributes of HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
+dsetattrs = attrs(dset)
+@test sprint(show, dsetattrs) == "AttributeDict of HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0) with 1 attribute"
 
 prop = HDF5.init!(HDF5.LinkCreateProperties())
 @test sprint(show, prop) == """
@@ -803,8 +800,8 @@ commit_datatype(hfile, "type", dtype)
 dtypemeta = create_attribute(dtype, "dtypemeta", datatype(Bool), dataspace((1,)))
 @test sprint(show, dtypemeta) == "HDF5.Attribute: dtypemeta"
 
-dtypeattrs = attributes(dtype)
-@test sprint(show, dtypeattrs) == "Attributes of HDF5.Datatype: /type H5T_IEEE_F64LE"
+dtypeattrs = attrs(dtype)
+@test sprint(show, dtypeattrs) == "AttributeDict of HDF5.Datatype: /type H5T_IEEE_F64LE with 1 attribute"
 
 dspace_null = HDF5.Dataspace(HDF5.API.h5s_create(HDF5.API.H5S_NULL))
 dspace_scal = HDF5.Dataspace(HDF5.API.h5s_create(HDF5.API.H5S_SCALAR))
@@ -842,7 +839,7 @@ close(dtypemeta)
 
 close(dset)
 @test sprint(show, dset) == "HDF5.Dataset: (invalid)"
-@test sprint(show, dsetattrs) == "Attributes of HDF5.Dataset: (invalid)"
+@test sprint(show, dsetattrs) == "AttributeDict of HDF5.Dataset: (invalid)"
 
 close(group)
 @test sprint(show, group) == "HDF5.Group: (invalid)"
@@ -870,13 +867,13 @@ rm(fn)
 hfile = h5open(fn, "w")
 # file level
 hfile["version"] = 1.0
-attributes(hfile)["creator"] = "HDF5.jl"
+attrs(hfile)["creator"] = "HDF5.jl"
 # group level
 create_group(hfile, "inner")
-attributes(hfile["inner"])["dirty"] = true
+attrs(hfile["inner"])["dirty"] = true
 # dataset level
 hfile["inner/data"] = collect(-5:5)
-attributes(hfile["inner/data"])["mode"] = 1
+attrs(hfile["inner/data"])["mode"] = 1
 # non-trivial committed datatype
 # TODO: print more datatype information
 tmeta = HDF5.Datatype(HDF5.API.h5t_create(HDF5.API.H5T_COMPOUND, sizeof(Int) + sizeof(Float64)))
@@ -912,13 +909,6 @@ HDF5.show_tree(iobuf, hfile, attributes = false)
 ├─ 📂 inner
 │  └─ 🔢 data
 └─ 🔢 version"""m, String(take!(buf)))
-
-HDF5.show_tree(iobuf, attributes(hfile))
-msg = String(take!(buf))
-@test occursin(r"""
-🗂️ Attributes of HDF5.File: .*$
-└─ 🏷️ creator"""m, msg)
-@test sprint(show3, attributes(hfile)) == msg
 
 HDF5.show_tree(iobuf, hfile["inner"])
 msg = String(take!(buf))
@@ -1106,7 +1096,7 @@ meta1 = create_attribute(dset1, "meta1", datatype(Bool), dataspace((1,)))
 @test_throws KeyError dset1["nothing"]
 
 
-attribs = attributes(hfile)
+attribs = attrs(hfile)
 attribs["test1"] = true
 attribs["test2"] = "foo"
 
@@ -1115,7 +1105,7 @@ attribs["test2"] = "foo"
 @test !haskey(attribs, "testna")
 @test_throws KeyError attribs["nothing"]
 
-attribs = attributes(dset2)
+attribs = attrs(dset2)
 attribs["attr"] = "foo"
 @test haskey(attribs, GenericString("attr"))
 
@@ -1148,8 +1138,8 @@ dset1 = hfile["dset1"]
 
 array_of_strings = ["test",]
 write(hfile, "array_of_strings", array_of_strings)
-@test_nowarn attributes(hfile)[GenericString("ref_test")] = HDF5.Reference(hfile, GenericString("array_of_strings"))
-@test read(attributes(hfile)[GenericString("ref_test")]) === HDF5.Reference(hfile, "array_of_strings")
+@test_nowarn attrs(hfile)[GenericString("ref_test")] = HDF5.Reference(hfile, GenericString("array_of_strings"))
+@test attrs(hfile)[GenericString("ref_test")] === HDF5.Reference(hfile, "array_of_strings")
 
 hfile[GenericString("test")] = 17.2
 @test_nowarn delete_object(hfile, GenericString("test"))
@@ -1172,7 +1162,7 @@ for obj in (d, g)
    @test_nowarn write_attribute(obj, GenericString("a"), 1)
    @test_nowarn read_attribute(obj, GenericString("a"))
    @test_nowarn write(obj, GenericString("aa"), 1)
-   @test_nowarn attributes(obj)["attr1"] = GenericString("b")
+   @test_nowarn attrs(obj)["attr1"] = GenericString("b")
 end
 @test_nowarn write(d, "attr2", GenericString("c"))
 @test_nowarn write_dataset(g, GenericString("ag"), GenericString("gg"))
@@ -1189,7 +1179,7 @@ for obj in (hfile,)
     @test_nowarn read(obj, GenericString("dd"))
     @test_nowarn read(obj, GenericString("dd")=>Int)
 end
-read(attributes(hfile), GenericString("a"))
+@test_nowarn attrs(hfile)[GenericString("a")]
 
 write(hfile, GenericString("ASD"), GenericString("Aa"))
 write(g, GenericString("ASD"), GenericString("Aa"))

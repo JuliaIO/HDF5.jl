@@ -28,6 +28,8 @@ include("dataspace.jl")
 include("datatype.jl")
 @debug "hyperslab"
 include("hyperslab.jl")
+@debug "attributes"
+include("attributes.jl")
 @debug "readremote"
 include("readremote.jl")
 @debug "extend_test"

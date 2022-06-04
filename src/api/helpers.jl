@@ -53,7 +53,11 @@ end
 # `@cfunction` with `$f`.
 # This helper translates between the two preferred forms for each respective language.
 function h5a_iterate_helper(loc_id::hid_t, attr_name::Ptr{Cchar}, ainfo::Ptr{H5A_info_t}, @nospecialize(f::Any))::herr_t
-    return f(loc_id, attr_name, ainfo)
+    try
+        return herr_t(f(loc_id, attr_name, ainfo))
+    catch e
+        return herr_t(-1)
+    end
 end
 
 """
