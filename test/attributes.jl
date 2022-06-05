@@ -35,3 +35,6 @@ attrs(f)["b"] = "a string"
 delete!(attrs(f), "a")
 @test length(attrs(f)) == 1
 @test sort(keys(attrs(f))) == ["b"]
+
+@test_throws KeyError attrs(f)["a"]
+@test isnothing(get(attrs(f), "a", nothing))

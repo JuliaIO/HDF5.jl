@@ -215,7 +215,7 @@ salut_vlenr = read(fr, "salut_vlen")
 #@test salut_vlenr == salut_split
 vlen_intr = read(fr, "int_vlen")
 @test vlen_intr == vlen_int
-vlen_attrr = read(fr["int_vlen"]["vlen_attr"])
+vlen_attrr = read_attribute(fr["int_vlen"], "vlen_attr")
 @test vlen_attrr == vlen_int
 Rr = read(fr, "mygroup/CompressedA")
 @test Rr == R
@@ -653,16 +653,16 @@ dzeromat2 = hfile["zeromat2"]
 @test read(dzerodim) == 1.0π
 
 # Similar tests for writing to attributes
-write(dempty, "attr", HDF5.EmptyArray{Float64}())
-write(dzerodim, "attr", fill(1.0ℯ))
-write(dzerovec, "attr", zeros(Int64, 0))
-write(dzeromat, "attr", zeros(Int64, 0, 0))
-write(dzeromat2, "attr", zeros(Int64, 0, 1))
-aempty = dempty["attr"]
-azerodim = dzerodim["attr"]
-azerovec = dzerovec["attr"]
-azeromat = dzeromat["attr"]
-azeromat2 = dzeromat2["attr"]
+write_attribute(dempty, "attr", HDF5.EmptyArray{Float64}())
+write_attribute(dzerodim, "attr", fill(1.0ℯ))
+write_attribute(dzerovec, "attr", zeros(Int64, 0))
+write_attribute(dzeromat, "attr", zeros(Int64, 0, 0))
+write_attribute(dzeromat2, "attr", zeros(Int64, 0, 1))
+aempty = open_attribute(dempty, "attr")
+azerodim = open_attribute(dzerodim, "attr")
+azerovec = open_attribute(dzerovec, "attr")
+azeromat = open_attribute(dzeromat, "attr")
+azeromat2 = open_attribute(dzeromat2, "attr")
 # Test that eltype is preserved (especially for EmptyArray)
 @test eltype(aempty) == Float64
 @test eltype(azerodim) == Float64
@@ -942,7 +942,7 @@ HDF5.show_tree(iobuf, hfile["dtype"])
 @test occursin(r"""
 📄 HDF5.Datatype: /dtype""", String(take!(buf)))
 
-HDF5.show_tree(iobuf, hfile["inner/data"]["mode"], attributes = true)
+HDF5.show_tree(iobuf, open_attribute(hfile["inner/data"],"mode"), attributes = true)
 @test occursin(r"""
 🏷️ HDF5.Attribute: mode""", String(take!(buf)))
 
@@ -1093,7 +1093,7 @@ dset2 = create_dataset(group1, "dset2", datatype(Int), dataspace((1,)))
 meta1 = create_attribute(dset1, "meta1", datatype(Bool), dataspace((1,)))
 @test haskey(dset1, "meta1")
 @test !haskey(dset1, "metana")
-@test_throws KeyError dset1["nothing"]
+@test_throws KeyError attrs(dset1)["nothing"]
 
 
 attribs = attrs(hfile)
@@ -1133,8 +1133,8 @@ hfile = h5open(fn, "w")
 dset1 = hfile["dset1"]
 @test_nowarn create_attribute(dset1, GenericString("meta1"), datatype(Bool), dataspace((1,)))
 @test_nowarn create_attribute(dset1, GenericString("meta2"), 1)
-@test_nowarn dset1[GenericString("meta1")]
-@test_nowarn dset1[GenericString("x")] = 2
+@test_nowarn attrs(dset1)[GenericString("meta1")]
+@test_nowarn attrs(dset1)[GenericString("x")] = 2
 
 array_of_strings = ["test",]
 write(hfile, "array_of_strings", array_of_strings)
@@ -1161,16 +1161,15 @@ a = create_attribute(hfile, GenericString("a"), dt, ds)
 for obj in (d, g)
    @test_nowarn write_attribute(obj, GenericString("a"), 1)
    @test_nowarn read_attribute(obj, GenericString("a"))
-   @test_nowarn write(obj, GenericString("aa"), 1)
    @test_nowarn attrs(obj)["attr1"] = GenericString("b")
 end
-@test_nowarn write(d, "attr2", GenericString("c"))
+@test_nowarn write_attribute(d, "attr2", GenericString("c"))
 @test_nowarn write_dataset(g, GenericString("ag"), GenericString("gg"))
 @test_nowarn write_dataset(g, GenericString("ag_array"), [GenericString("a1"), GenericString("a2")])
 
 genstrs = GenericString["fee", "fi", "foo"]
 @test_nowarn write_attribute(d, GenericString("myattr"), genstrs)
-@test genstrs == read(d["myattr"])
+@test genstrs == attrs(d)["myattr"]
 
 for obj in (hfile,)
     @test_nowarn open_dataset(obj, GenericString("d"))
@@ -1190,7 +1189,7 @@ write(g, GenericString("ASD1"), [GenericString("Aa")])
 
 # copy methods
 d1 = create_dataset(hfile, GenericString("d1"), dt, ds)
-d1["x"] = 32
+attrs(d1)["x"] = 32
 @test_nowarn copy_object(hfile, GenericString("d1"), hfile, GenericString("d1copy1"))
 @test_nowarn copy_object(d1, hfile, GenericString("d1copy2"))
 

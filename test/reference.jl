@@ -15,7 +15,7 @@ using Random, Test, HDF5
     g = create_group(f, "sub")
     g["group_ref"] = HDF5.Reference(f, "group_data")
     # reference attached to dataset
-    f["data"]["attr_ref"] = HDF5.Reference(f, "attr_data")
+    attrs(f["data"])["attr_ref"] = HDF5.Reference(f, "attr_data")
 
     close(f)
 
@@ -29,7 +29,7 @@ using Random, Test, HDF5
     @test gref isa HDF5.Reference
     @test data == read(f["sub"][gref])
     # read back dataset-attached reference
-    aref = read(f["data"]["attr_ref"])
+    aref = attrs(f["data"])["attr_ref"]
     @test aref isa HDF5.Reference
     @test data == read(f["data"][aref])
 
