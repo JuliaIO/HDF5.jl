@@ -957,19 +957,6 @@ function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where T
     return val
 end
 
-"""
-    read!(obj::DatasetOrAttribute, output_buffer::AbstractArray{T} [, I...]) where T
-
-Read [part of] a dataset or attribute into a preallocated output buffer.
-The output buffer must be convertible to a pointer and have a contiguous layout.
-"""
-function Base.read!(obj::DatasetOrAttribute, buf::AbstractArray{T}, I...) where T
-    dtype = datatype(obj)
-    val = generic_read!(buf, obj, dtype, T, I...)
-    close(dtype)
-    return val
-end
-
 # `Type{String}` does not have a definite size, so the generic_read does not accept
 # it even though it will return a `String`. This explicit overload allows that usage.
 function Base.read(obj::DatasetOrAttribute, ::Type{String}, I...)
@@ -988,7 +975,14 @@ Copy [part of] a HDF5 dataset or attribute to a preallocated output buffer.
 The output buffer must be convertible to a pointer and have a contiguous layout.
 """
 function Base.copyto!(output_buffer::AbstractArray{T}, obj::DatasetOrAttribute, I...) where T
-    return Base.read!(obj, output_buffer, I...)
+    dtype = datatype(obj)
+    val = nothing
+    try
+        val = generic_read!(output_buffer, obj, dtype, T, I...)
+    finally
+        close(dtype)
+    end
+    return val
 end
 
 # Special handling for reading OPAQUE datasets and attributes
@@ -1025,51 +1019,14 @@ function generic_read(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T}, I.
 end
 function _generic_read(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T},
     buf::Union{AbstractMatrix{UInt8}, AbstractArray{T}, Nothing}, I...) where T
-    !isconcretetype(T) && error("type $T is not concrete")
-    !isempty(I) && obj isa Attribute && error("HDF5 attributes do not support hyperslab selections")
 
-    memtype = Datatype(API.h5t_get_native_type(filetype))  # padded layout in memory
+    sz, scalar, dspace = _size_of_buffer(obj, I)
+    memtype = _memtype(filetype, T)
 
-    if sizeof(T) != sizeof(memtype)
-        error("""
-              Type size mismatch
-              sizeof($T) = $(sizeof(T))
-              sizeof($memtype) = $(sizeof(memtype))
-              """)
-    end
-
-    dspace = dataspace(obj)
-    stype = API.h5s_get_simple_extent_type(dspace)
-    stype == API.H5S_NULL && return EmptyArray{T}()
-
-    if !isempty(I)
-        indices = Base.to_indices(obj, I)
-        dspace = hyperslab(dspace, indices...)
-    end
-
-    scalar = false
-    if stype == API.H5S_SCALAR
-        sz = (1,)
-        scalar = true
-    elseif isempty(I)
-        sz = size(dspace)
-    else
-        sz = map(length, filter(i -> !isa(i, Int), indices))
-        if isempty(sz)
-            sz = (1,)
-            scalar = true
-        end
-    end
+    isempty(sz) && return EmptyArray{T}()
 
     if isnothing(buf)
-        if do_normalize(T)
-            # The entire dataset is read into in a buffer matrix where the first dimension at
-            # any stage of normalization is the bytes for a single element of type `T`, and
-            # the second dimension of the matrix runs through all elements.
-            buf = Matrix{UInt8}(undef, sizeof(T), prod(sz))
-        else
-            buf = Array{T}(undef, sz...)
-        end
+        buf = _normalized_buffer(T, sz)
     else
         sizeof(buf) != prod(sz)*sizeof(T) &&
             error("Provided array buffer of size, $(size(buf)), and element type, $(eltype(buf)), does not match the dataset of size, $sz, and type, $T")
@@ -1104,38 +1061,81 @@ end
 
 
 """
-    similar(obj::DatasetOrAttribute, [::Type{T}], [I::Integer...])
+    similar(obj::DatasetOrAttribute, [::Type{T}], [dims::Integer...]; normalize = true)
 
 Return a `Array{T}` or `Matrix{UInt8}` to that can contain [part of] the dataset.
 """
-function Base.similar(obj::DatasetOrAttribute, I::Integer...)
-    dtype = datatype(obj)
-    T = get_jl_type(dtype)
-    val = similar(obj, dtype, T, I...)
-    close(dtype)
-    return val
+function Base.similar(
+    obj::DatasetOrAttribute,
+    ::Type{T},
+    dims::Integer...;
+    normalize::Bool = true
+) where T
+    filetype = datatype(obj)
+    try
+        return similar(obj, filetype, T, dims...)
+    finally
+        close(filetype)
+    end
 end
 
-function Base.similar(obj::DatasetOrAttribute, ::Type{T}, I::Integer...) where T
-    dtype = datatype(obj)
-    val = similar(obj, dtype, T, I...)
-    close(dtype)
-    return val
+# Base.similar without specifying the Julia type
+function Base.similar(obj::DatasetOrAttribute, dims::Integer...; normalize::Bool = true)
+    filetype = datatype(obj)
+    try
+        T = get_jl_type(filetype)
+        return similar(obj, filetype, T, dims...)
+    finally
+        close(filetype)
+    end
 end
 
+# Opaque types
 function Base.similar(obj::DatasetOrAttribute, filetype::Datatype, ::Type{Opaque})
     sz  = size(obj)
     return Matrix{UInt8}(undef, sizeof(filetype), prod(sz))
 end
 
-# Duplicated from generic_read. TODO: Deduplicate
-function Base.similar(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T}, I::Integer...) where T
+# Undocumented Base.similar signature allowing filetype to be specified
+function Base.similar(
+    obj::DatasetOrAttribute,
+    filetype::Datatype,
+    ::Type{T},
+    dims::Integer...;
+    normalize::Bool = true
+) where T
+    # We are reusing code that expect indices
+    I = Base.OneTo.(dims)
+    sz, scalar, dspace = _size_of_buffer(obj, I)
+    memtype = _memtype(filetype, T)
+    try
+        buf = _normalized_buffer(T, sz)
+
+        if normalize && do_normalize(T)
+            buf = reshape(normalize_types(T, buf), sz...)
+        end
+        
+        return buf
+    finally
+        close(dspace)
+        close(memtype)
+    end
+end
+
+# Utilities used in Base.similar implementation
+
+#=
+    _memtype(filetype::Datatype, T)
+
+This is a utility function originall from generic_read.
+It gets the native memory type for the system based on filetype, and checks
+if the size matches.
+=#
+@inline function _memtype(filetype::Datatype, ::Type{T}) where T
     !isconcretetype(T) && error("type $T is not concrete")
-    !isempty(I) && obj isa Attribute && error("HDF5 attributes do not support hyperslab selections")
 
-    I = Base.OneTo.(I)
-
-    memtype = Datatype(API.h5t_get_native_type(filetype))  # padded layout in memory
+    # padded layout in memory
+    memtype = Datatype(API.h5t_get_native_type(filetype))
 
     if sizeof(T) != sizeof(memtype)
         error("""
@@ -1145,11 +1145,37 @@ function Base.similar(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T}, I:
               """)
     end
 
-    dspace = dataspace(obj)
-    stype = API.h5s_get_simple_extent_type(dspace)
-    stype == API.H5S_NULL && return EmptyArray{T}()
+    return memtype
+end
 
-    if !isempty(I)
+#=
+    _size_of_buffer(obj::DatasetOrAttribute, [I::Tuple, dspace::Dataspace])
+
+This is a utility function originally from generic_read, but factored out.
+The primary purpose is to determine the size and shape of the buffer to
+create in order to hold the contents of a Dataset or Attribute.
+
+# Arguments
+* obj - A Dataset or Attribute
+* I - (optional) indices, defaults to ()
+* dspace - (optional) dataspace, defaults to dataspace(obj).
+           This argument will be consumed by hyperslab and returned.
+
+# Returns
+* `sz` the size of the selection
+* `scalar`, which is true if the value should be read as a scalar.
+* `dspace`, hyper
+=#
+@inline function _size_of_buffer(
+    obj::DatasetOrAttribute,
+    I::Tuple = (),
+    dspace::Dataspace = dataspace(obj)
+)
+   !isempty(I) && obj isa Attribute && error("HDF5 attributes do not support hyperslab selections")
+
+    stype = API.h5s_get_simple_extent_type(dspace)
+
+    if !isempty(I) && stype != API.H5S_NULL
         indices = Base.to_indices(obj, I)
         dspace = hyperslab(dspace, indices...)
     end
@@ -1158,29 +1184,40 @@ function Base.similar(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T}, I:
     if stype == API.H5S_SCALAR
         sz = (1,)
         scalar = true
+    elseif stype == API.H5S_NULL
+        sz = ()
+        # scalar = false
     elseif isempty(I)
         sz = size(dspace)
+        # scalar = false
     else
+        # Determine the size by the length of non-Int indices
         sz = map(length, filter(i -> !isa(i, Int), indices))
         if isempty(sz)
+            # All indices are Int, so this is scalar
             sz = (1,)
             scalar = true
         end
     end
 
+    return sz, scalar, dspace
+end
+
+#=
+    _normalized_buffer(T, sz)
+
+Return a Matrix{UInt8} for a normalized type or `Array{T}` for a regular type.
+See `do_normalize` in typeconversions.jl.
+=#
+@inline function _normalized_buffer(::Type{T}, sz::NTuple{N, Int}) where {T, N}
     if do_normalize(T)
         # The entire dataset is read into in a buffer matrix where the first dimension at
         # any stage of normalization is the bytes for a single element of type `T`, and
         # the second dimension of the matrix runs through all elements.
         buf = Matrix{UInt8}(undef, sizeof(T), prod(sz))
-        buf = reshape(normalize_types(T, buf), sz...)
     else
         buf = Array{T}(undef, sz...)
     end
-
-
-    close(memtype)
-    close(dspace)
 
     return buf
 end
@@ -1426,17 +1463,8 @@ function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where T
     end
 
     filetype = datatype(dset)
-    memtype = Datatype(API.h5t_get_native_type(filetype))  # padded layout in memory
+    memtype = _memtype(filetype, eltype(X))
     close(filetype)
-
-    elT = eltype(X)
-    if sizeof(elT) != sizeof(memtype)
-        error("""
-              Type size mismatch
-              sizeof($elT) = $(sizeof(elT))
-              sizeof($memtype) = $(sizeof(memtype))
-              """)
-    end
 
     dspace = dataspace(dset)
     stype = API.h5s_get_simple_extent_type(dspace)

@@ -15,9 +15,6 @@ using Test
         copyto!(buffer, h5f["data"])
         @test isequal(buffer, data)
 
-        read!(h5f["data"], buffer)
-        @test isequal(buffer, data)
-
         # Consider making this a view later
         v = h5f["data"][1:4, 1:4]
 
@@ -26,13 +23,10 @@ using Test
         copyto!(buffer, v)
         @test isequal(buffer, @view(data[1:4, 1:4]))
 
-        buffer .= 1
-        read!(h5f["data"], buffer, 1:4, 1:4)
-        @test isequal(buffer, @view(data[1:4, 1:4]))
-
         @test size(similar(h5f["data"], Int16)) == size(h5f["data"])
         @test size(similar(h5f["data"], 5,6)) == (5, 6)
         @test size(similar(h5f["data"], Int16, 8,7)) == (8,7)
+        @test_broken size(similar(h5f["data"], Int8, 8,7)) == (8,7)
     end
 
     rm(fn)
