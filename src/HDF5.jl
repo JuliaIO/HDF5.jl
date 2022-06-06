@@ -1064,6 +1064,8 @@ end
     similar(obj::DatasetOrAttribute, [::Type{T}], [dims::Integer...]; normalize = true)
 
 Return a `Array{T}` or `Matrix{UInt8}` to that can contain [part of] the dataset.
+
+The `normalize` keyword will normalize the buffer for string and array datatypes.
 """
 function Base.similar(
     obj::DatasetOrAttribute,
@@ -1073,7 +1075,7 @@ function Base.similar(
 ) where T
     filetype = datatype(obj)
     try
-        return similar(obj, filetype, T, dims...)
+        return similar(obj, filetype, T, dims...; normalize)
     finally
         close(filetype)
     end
@@ -1084,7 +1086,7 @@ function Base.similar(obj::DatasetOrAttribute, dims::Integer...; normalize::Bool
     filetype = datatype(obj)
     try
         T = get_jl_type(filetype)
-        return similar(obj, filetype, T, dims...)
+        return similar(obj, filetype, T, dims...; normalize)
     finally
         close(filetype)
     end

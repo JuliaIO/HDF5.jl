@@ -26,6 +26,7 @@ using Test
         @test size(similar(h5f["data"], Int16)) == size(h5f["data"])
         @test size(similar(h5f["data"], 5,6)) == (5, 6)
         @test size(similar(h5f["data"], Int16, 8,7)) == (8,7)
+        @test size(similar(h5f["data"], Int16, 8,7; normalize = false)) == (8,7)
         @test_broken size(similar(h5f["data"], Int8, 8,7)) == (8,7)
     end
 
