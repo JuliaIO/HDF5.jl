@@ -4,6 +4,7 @@
 
 ```@docs
 attrs
+attributes
 ```
 
 ## Mid-level Interface
@@ -15,6 +16,7 @@ create_attribute
 read_attribute
 write_attribute
 delete_attribute
+rename_attribute
 ```
 
 ## Convenience interface

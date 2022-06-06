@@ -58,7 +58,7 @@ for i = 1:10
     d = file["d"]
     ds = dataspace(d)
     g = file["g"]
-    a = open_attribute(file, "a")
+    a = attributes(file)["a"]
     @gcvalid dt ds d g a
     close(file)
 end

@@ -268,7 +268,47 @@ function Base.iterate(attrdict::AttributeDict, (keyvec, n))
     return (key => attrdict[key]), (keyvec, nn)
 end
 
-# deprecated, but retain definition as type is used in show.jl
+
+
+
 struct Attributes
     parent::Union{File,Object}
 end
+
+"""
+    attributes(object::Union{File,Object})
+
+The attributes of a file or object: this returns an `Attributes` object, which
+is `Dict`-like object for accessing the attributes of `object`: `getindex` will
+return an [`Attribute`](@ref) object, and `setindex!` will call [`write_attribute`](@ref).
+"""
+attributes(p::Union{File,Object}) = Attributes(p)
+
+Base.isvalid(obj::Attributes) = isvalid(obj.parent)
+
+function Base.getindex(x::Attributes, name::AbstractString)
+    haskey(x, name) || throw(KeyError(name))
+    open_attribute(x.parent, name)
+end
+Base.setindex!(x::Attributes, val, name::AbstractString) = write_attribute(x.parent, name, val)
+Base.haskey(attr::Attributes, path::AbstractString) = API.h5a_exists(checkvalid(attr.parent), path)
+Base.length(x::Attributes) = Int(object_info(x.parent).num_attrs)
+
+function Base.keys(x::Attributes)
+    checkvalid(x.parent)
+    children = sizehint!(String[], length(x))
+    API.h5a_iterate(x.parent, IDX_TYPE[], ORDER[]) do _, attr_name, _
+        push!(children, unsafe_string(attr_name))
+        return API.herr_t(0)
+    end
+    return children
+end
+Base.read(attr::Attributes, name::AbstractString) = read_attribute(attr.parent, name)
+
+# Dataset methods which act like attributes
+Base.write(parent::Dataset, name::AbstractString, data; pv...) = write_attribute(parent, name, data; pv...)
+function Base.getindex(dset::Dataset, name::AbstractString)
+    haskey(dset, name) || throw(KeyError(name))
+    open_attribute(dset, name)
+end
+Base.setindex!(dset::Dataset, val, name::AbstractString) = write_attribute(dset, name, val)

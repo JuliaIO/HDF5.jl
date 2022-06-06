@@ -15,7 +15,7 @@ for name in names(API; all=true)
 end
 
 ### Changed in PR #847
-import Base: getindex, setindex!, write
+import Base: getindex, setindex!
 @deprecate getindex(p::Properties, name::Symbol) Base.getproperty(p, name)
 @deprecate setindex!(p::Properties, val, name::Symbol) Base.setproperty!(p, name, val)
 
@@ -68,34 +68,3 @@ import .Filters: ExternalFilter
 @deprecate append!(filters::Filters.FilterPipeline, extra::NTuple{N, Integer}) where N append!(filters, [ExternalFilter(extra...)])
 @deprecate push!(p::Filters.FilterPipeline, f::NTuple{N, Integer}) where N push!(p, ExternalFilter(f...))
 @deprecate ExternalFilter(t::Tuple) ExternalFilter(t...) false
-
-### Changed in PR #948
-function attributes(p::Union{File,Object})
-    Base.depwarn("`attributes(obj)` has been deprecated, use `attrs(obj)` instead.", :attributes)
-    Attributes(p)
-end
-Base.isvalid(obj::Attributes) = isvalid(obj.parent)
-
-function Base.getindex(x::Attributes, name::AbstractString)
-    haskey(x, name) || throw(KeyError(name))
-    open_attribute(x.parent, name)
-end
-Base.setindex!(x::Attributes, val, name::AbstractString) = write_attribute(x.parent, name, val)
-Base.haskey(attr::Attributes, path::AbstractString) = API.h5a_exists(checkvalid(attr.parent), path)
-Base.length(x::Attributes) = Int(object_info(x.parent).num_attrs)
-
-function Base.keys(x::Attributes)
-    checkvalid(x.parent)
-    children = sizehint!(String[], length(x))
-    API.h5a_iterate(x.parent, IDX_TYPE[], ORDER[]) do _, attr_name, _
-        push!(children, unsafe_string(attr_name))
-        return API.herr_t(0)
-    end
-    return children
-end
-Base.read(attr::Attributes, name::AbstractString) = read_attribute(attr.parent, name)
-
-# Dataset methods which act like attributes
-@deprecate write(parent::Dataset, name::AbstractString, data; pv...) write_attribute(parent, name, data; pv...)
-@deprecate getindex(dset::Dataset, name::AbstractString) open_attribute(dset, name)
-@deprecate setindex!(dset::Dataset, val, name::AbstractString) attrs(dset)[name] = val

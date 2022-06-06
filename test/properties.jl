@@ -28,7 +28,7 @@ h5open(fn, "w";
                  fill_time = :never,
                  obj_track_times = false,
                  kwargs...)
-    attrs(d)["metadata"] = "test"
+    attributes(d)["metadata"] = "test"
 
     flush(hfile)
 
@@ -36,7 +36,7 @@ h5open(fn, "w";
     fapl = HDF5.get_access_properties(hfile)
     gcpl = HDF5.get_create_properties(hfile["group"])
     dcpl = HDF5.get_create_properties(hfile["group/dataset"])
-    acpl = HDF5.get_create_properties(open_attribute(hfile["group/dataset"], "metadata"))
+    acpl = HDF5.get_create_properties(attributes(hfile["group/dataset"])["metadata"])
 
     # Retrievability of properties
     @test isvalid(fcpl)
