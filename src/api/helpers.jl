@@ -52,35 +52,52 @@ end
 # emulating it with the less desirable form of creating closure handles directly in
 # `@cfunction` with `$f`.
 # This helper translates between the two preferred forms for each respective language.
-function h5a_iterate_helper(loc_id::hid_t, attr_name::Ptr{Cchar}, ainfo::Ptr{H5A_info_t}, @nospecialize(f::Any))::herr_t
-    return f(loc_id, attr_name, ainfo)
+function h5a_iterate_helper(loc_id::hid_t, attr_name::Ptr{Cchar}, ainfo::Ptr{H5A_info_t}, @nospecialize(data::Any))::herr_t
+    f, err_ref = data
+    try
+        return herr_t(f(loc_id, attr_name, ainfo))
+    catch err
+        err_ref[] = err
+        return herr_t(-1)
+    end
 end
 
 """
     h5a_iterate(f, loc_id, idx_type, order, idx = 0) -> hsize_t
 
-Executes [`h5a_iterate`](@ref h5a_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
-with the user-provided callback function `f`, returning the index where iteration ends.
+Executes [`h5a_iterate`](@ref h5a_iterate(::hid_t, ::Cint, ::Cint,
+::Ptr{hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid})) with the user-provided callback
+function `f`, returning the index where iteration ends.
 
 The callback function must correspond to the signature
 ```
-    f(loc::HDF5.API.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.API.H5A_info_t}) -> HDF5.API.herr_t
+f(loc::HDF5.API.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.API.H5A_info_t}) -> Union{Bool, Integer}
 ```
-where a negative return value halts iteration abnormally, a positive value halts iteration
-successfully, and zero continues iteration.
+where a negative return value halts iteration abnormally (triggering an error),
+a `true` or a positive value halts iteration successfully, and `false` or zero
+continues iteration.
 
 # Examples
 ```julia-repl
 julia> HDF5.API.h5a_iterate(obj, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC) do loc, name, info
            println(unsafe_string(name))
-           return HDF5.API.herr_t(0)
+           return false
        end
 ```
 """
 function h5a_iterate(@nospecialize(f), obj_id, idx_type, order, idx = 0)
+    err_ref = Ref{Any}(nothing)
     idxref = Ref{hsize_t}(idx)
     fptr = @cfunction(h5a_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5A_info_t}, Any))
-    h5a_iterate(obj_id, idx_type, order, idxref, fptr, f)
+    try
+        h5a_iterate(obj_id, idx_type, order, idxref, fptr, (f, err_ref))
+    catch h5err
+        jlerr = err_ref[]
+        if !isnothing(jlerr)
+            rethrow(jlerr)
+        end
+        rethrow(h5err)
+    end
     return idxref[]
 end
 
@@ -193,13 +210,27 @@ end
 
 
 # See explanation for h5a_iterate above.
-function h5e_walk_helper(n::Cuint, err_desc::Ptr{H5E_error2_t}, @nospecialize(f::Any))::herr_t
-    f(n, err_desc)
-    return herr_t(0)
+function h5e_walk_helper(n::Cuint, err_desc::Ptr{H5E_error2_t}, @nospecialize(data::Any))::herr_t
+    f, err_ref = data
+    try
+        return herr_t(f(n, err_desc))
+    catch err
+        err_ref[] = err
+        return herr_t(-1)
+    end
 end
 function h5e_walk(f::Function, stack_id, direction)
+    err_ref = Ref{Any}(nothing)
     fptr = @cfunction(h5e_walk_helper, herr_t, (Cuint, Ptr{H5E_error2_t}, Any))
-    h5e_walk(stack_id, direction, fptr, f)
+    try
+        h5e_walk(stack_id, direction, fptr, (f, err_ref))
+    catch h5err
+        jlerr = err_ref[]
+        if !isnothing(jlerr)
+            rethrow(jlerr)
+        end
+        rethrow(h5err)
+    end
 end
 
 ###
@@ -321,21 +352,28 @@ function h5l_get_name_by_idx(loc_id, group_name, idx_type, order, idx, lapl_id)
 end
 
 # See explanation for h5a_iterate above.
-function h5l_iterate_helper(group::hid_t, name::Ptr{Cchar}, info::Ptr{H5L_info_t}, @nospecialize(f::Any))::herr_t
-    return f(group, name, info)
+function h5l_iterate_helper(group::hid_t, name::Ptr{Cchar}, info::Ptr{H5L_info_t}, @nospecialize(data::Any))::herr_t
+    f, err_ref = data
+    try
+        return herr_t(f(group, name, info))
+    catch err
+        err_ref[] = err
+        return herr_t(-1)
+    end
 end
 """
     h5l_iterate(f, group_id, idx_type, order, idx = 0) -> hsize_t
 
-Executes [`h5l_iterate`](@ref h5l_iterate(::hid_t, ::Cint, ::Cint, ::Ptr{hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid}))
-with the user-provided callback function `f`, returning the index where iteration ends.
+Executes [`h5l_iterate`](@ref h5l_iterate(::hid_t, ::Cint, ::Cint,
+::Ptr{hsize_t}, ::Ptr{Cvoid}, ::Ptr{Cvoid})) with the user-provided callback
+function `f`, returning the index where iteration ends.
 
 The callback function must correspond to the signature
 ```
-    f(group::HDF5.API.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.API.H5L_info_t}) -> HDF5.API.herr_t
+f(group::HDF5.API.hid_t, name::Ptr{Cchar}, info::Ptr{HDF5.API.H5L_info_t}) -> Union{Bool, Integer}
 ```
-where a negative return value halts iteration abnormally, a positive value halts iteration
-successfully, and zero continues iteration.
+where a negative return value halts iteration abnormally, `true` or a positive
+value halts iteration successfully, and `false` or zero continues iteration.
 
 # Examples
 ```julia-repl
@@ -346,9 +384,18 @@ julia> HDF5.API.h5l_iterate(hfile, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC)
 ```
 """
 function h5l_iterate(@nospecialize(f), group_id, idx_type, order, idx = 0)
+    err_ref = Ref{Any}(nothing)
     idxref = Ref{hsize_t}(idx)
     fptr = @cfunction(h5l_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5L_info_t}, Any))
-    h5l_iterate(group_id, idx_type, order, idxref, fptr, f)
+    try
+        h5l_iterate(group_id, idx_type, order, idxref, fptr, (f,err_ref))
+    catch h5err
+        jlerr = err_ref[]
+        if !isnothing(jlerr)
+            rethrow(jlerr)
+        end
+        rethrow(h5err)
+    end
     return idxref[]
 end
 
