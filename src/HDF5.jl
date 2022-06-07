@@ -1087,7 +1087,7 @@ function Base.similar(
 ) where T
     filetype = datatype(obj)
     try
-        return similar(obj, filetype, T, dims; normalize = normalize)
+        return similar(obj, filetype, T, dims; normalize=normalize)
     finally
         close(filetype)
     end
@@ -1097,14 +1097,14 @@ Base.similar(
     ::Type{T},
     dims::Integer...;
     normalize::Bool = true
-) where T = similar(obj, T, Int.(dims); normalize)
+) where T = similar(obj, T, Int.(dims); normalize=normalize)
 
 # Base.similar without specifying the Julia type
 function Base.similar(obj::DatasetOrAttribute, dims::Dims; normalize::Bool = true)
     filetype = datatype(obj)
     try
         T = get_jl_type(filetype)
-        return similar(obj, filetype, T, dims; normalize = normalize)
+        return similar(obj, filetype, T, dims; normalize=normalize)
     finally
         close(filetype)
     end
@@ -1113,7 +1113,7 @@ Base.similar(
     obj::DatasetOrAttribute,
     dims::Integer...;
     normalize::Bool = true
-) = similar(obj, Int.(dims); normalize)
+) = similar(obj, Int.(dims); normalize=normalize)
 
 # Opaque types
 function Base.similar(obj::DatasetOrAttribute, filetype::Datatype, ::Type{Opaque}; normalize::Bool  = true)
