@@ -1087,7 +1087,7 @@ function Base.similar(
 ) where T
     filetype = datatype(obj)
     try
-        return similar(obj, filetype, T, dims; normalize)
+        return similar(obj, filetype, T, dims; normalize = normalize)
     finally
         close(filetype)
     end
@@ -1104,7 +1104,7 @@ function Base.similar(obj::DatasetOrAttribute, dims::Dims; normalize::Bool = tru
     filetype = datatype(obj)
     try
         T = get_jl_type(filetype)
-        return similar(obj, filetype, T, dims; normalize)
+        return similar(obj, filetype, T, dims; normalize = normalize)
     finally
         close(filetype)
     end
@@ -1116,7 +1116,8 @@ Base.similar(
 ) = similar(obj, Int.(dims); normalize)
 
 # Opaque types
-function Base.similar(obj::DatasetOrAttribute, filetype::Datatype, ::Type{Opaque})
+function Base.similar(obj::DatasetOrAttribute, filetype::Datatype, ::Type{Opaque}; normalize::Bool  = true)
+    # normalize keyword for consistency, but it is ignored for Opaque
     sz  = size(obj)
     return Matrix{UInt8}(undef, sizeof(filetype), prod(sz))
 end
