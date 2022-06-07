@@ -1070,27 +1070,38 @@ The `normalize` keyword will normalize the buffer for string and array datatypes
 function Base.similar(
     obj::DatasetOrAttribute,
     ::Type{T},
-    dims::Integer...;
+    dims::Dims;
     normalize::Bool = true
 ) where T
     filetype = datatype(obj)
     try
-        return similar(obj, filetype, T, dims...; normalize)
+        return similar(obj, filetype, T, dims; normalize)
     finally
         close(filetype)
     end
 end
+Base.similar(
+    obj::DatasetOrAttribute,
+    ::Type{T},
+    dims::Integer...;
+    normalize::Bool = true
+) where T = similar(obj, T, Int.(dims); normalize)
 
 # Base.similar without specifying the Julia type
-function Base.similar(obj::DatasetOrAttribute, dims::Integer...; normalize::Bool = true)
+function Base.similar(obj::DatasetOrAttribute, dims::Dims; normalize::Bool = true)
     filetype = datatype(obj)
     try
         T = get_jl_type(filetype)
-        return similar(obj, filetype, T, dims...; normalize)
+        return similar(obj, filetype, T, dims; normalize)
     finally
         close(filetype)
     end
 end
+Base.similar(
+    obj::DatasetOrAttribute,
+    dims::Integer...;
+    normalize::Bool = true
+) = similar(obj, Int.(dims); normalize)
 
 # Opaque types
 function Base.similar(obj::DatasetOrAttribute, filetype::Datatype, ::Type{Opaque})
@@ -1103,7 +1114,7 @@ function Base.similar(
     obj::DatasetOrAttribute,
     filetype::Datatype,
     ::Type{T},
-    dims::Integer...;
+    dims::Dims;
     normalize::Bool = true
 ) where T
     # We are reusing code that expect indices
@@ -1114,7 +1125,7 @@ function Base.similar(
         buf = _normalized_buffer(T, sz)
 
         if normalize && do_normalize(T)
-            buf = reshape(normalize_types(T, buf), sz...)
+            buf = reshape(normalize_types(T, buf), sz)
         end
         
         return buf
@@ -1123,6 +1134,13 @@ function Base.similar(
         close(memtype)
     end
 end
+Base.similar(
+    obj::DatasetOrAttribute,
+    filetype::Datatype,
+    ::Type{T},
+    dims::Integer...;
+    normalize::Bool = true
+) where T = similar(obj, filetype, T, Int.(dims); normalize)
 
 # Utilities used in Base.similar implementation
 
