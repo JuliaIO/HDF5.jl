@@ -1021,41 +1021,53 @@ function _generic_read(obj::DatasetOrAttribute, filetype::Datatype, ::Type{T},
     buf::Union{AbstractMatrix{UInt8}, AbstractArray{T}, Nothing}, I...) where T
 
     sz, scalar, dspace = _size_of_buffer(obj, I)
-    memtype = _memtype(filetype, T)
 
-    isempty(sz) && return EmptyArray{T}()
-
-    if isnothing(buf)
-        buf = _normalized_buffer(T, sz)
-    else
-        sizeof(buf) != prod(sz)*sizeof(T) &&
-            error("Provided array buffer of size, $(size(buf)), and element type, $(eltype(buf)), does not match the dataset of size, $sz, and type, $T")
+    if isempty(sz)
+        close(dspace)
+        return EmptyArray{T}()
     end
+
+    try
+        if isnothing(buf)
+            buf = _normalized_buffer(T, sz)
+        else
+            sizeof(buf) != prod(sz)*sizeof(T) &&
+                error("Provided array buffer of size, $(size(buf)), and element type, $(eltype(buf)), does not match the dataset of size, $sz, and type, $T")
+        end
+    catch err
+        close(dspace)
+        rethrow(err)
+    end
+
+    memtype = _memtype(filetype, T)
     memspace = isempty(I) ? dspace : dataspace(sz)
 
-    if obj isa Dataset
-        API.h5d_read(obj, memtype, memspace, dspace, obj.xfer, buf)
-    else
-        API.h5a_read(obj, memtype, buf)
-    end
+    try
+        if obj isa Dataset
+            API.h5d_read(obj, memtype, memspace, dspace, obj.xfer, buf)
+        else
+            API.h5a_read(obj, memtype, buf)
+        end
 
-    if do_normalize(T)
-        out = reshape(normalize_types(T, buf), sz...)
-    else
-        out = buf
-    end
+        if do_normalize(T)
+            out = reshape(normalize_types(T, buf), sz...)
+        else
+            out = buf
+        end
 
-    xfer_id = obj isa Dataset ? obj.xfer.id : API.H5P_DEFAULT
-    do_reclaim(T) && API.h5d_vlen_reclaim(memtype, memspace, xfer_id, buf)
+        xfer_id = obj isa Dataset ? obj.xfer.id : API.H5P_DEFAULT
+        do_reclaim(T) && API.h5d_vlen_reclaim(memtype, memspace, xfer_id, buf)
 
-    close(memtype)
-    close(memspace)
-    close(dspace)
+        if scalar
+            return out[1]
+        else
+            return out
+        end
 
-    if scalar
-        return out[1]
-    else
-        return out
+    finally
+        close(memtype)
+        close(memspace)
+        close(dspace)
     end
 end
 
