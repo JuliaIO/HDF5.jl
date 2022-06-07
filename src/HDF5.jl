@@ -1153,7 +1153,7 @@ Base.similar(
     ::Type{T},
     dims::Integer...;
     normalize::Bool = true
-) where T = similar(obj, filetype, T, Int.(dims); normalize)
+) where T = similar(obj, filetype, T, Int.(dims); normalize=normalize)
 
 # Utilities used in Base.similar implementation
 
