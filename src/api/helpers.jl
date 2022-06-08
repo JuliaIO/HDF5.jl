@@ -421,7 +421,7 @@ end
 
 function h5p_set_efile_prefix(plist, sym::Symbol)
     sym === :origin ? h5p_set_efile_prefix(plist, raw"$ORIGIN") :
-    error("The only valid symbol for h5p_set_efile_prefix is :origin.")
+    throw(ArgumentError("The only valid `Symbol` argument for `h5p_set_efile_prefix` is `:origin`. Got `$sym`."))
 end
 
 function h5p_get_external(plist, idx = 0)
