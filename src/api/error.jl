@@ -51,10 +51,7 @@ function Base.showerror(io::IO, err::H5Error)
     print(io, "$(typeof(err)): ", err.msg)
     print(io, "\nlibhdf5 Stacktrace:")
     h5e_walk(err, H5E_WALK_UPWARD) do n, errptr
-        n += 1
-        if SHORT_ERROR[] && 1 < n < n_total
-            return nothing
-        end
+        n += 1 # 1-based indexing
         errval = unsafe_load(errptr)
         print(io, "\n", lpad("[$n] ", 4 + ndigits(n_total)))
         if errval.func_name != C_NULL
@@ -67,9 +64,13 @@ function Base.showerror(io::IO, err::H5Error)
         if errval.desc != C_NULL
             printstyled(io, "\n", " "^(4 + ndigits(n_total)), unsafe_string(errval.desc), color=:light_black)
         end
-        if SHORT_ERROR[] && n == 1 && n_total > 2
-            print(io, "\n", lpad("⋮", 2 + ndigits(n_total)))
+        if SHORT_ERROR[]
+            if n_total > 1
+                print(io, "\n", lpad("⋮", 2 + ndigits(n_total)))
+            end
+            return true # stop iterating
         end
+        return false
     end
     return nothing
 end

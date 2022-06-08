@@ -16,6 +16,8 @@ Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zzstd")))
 
 @debug "plain"
 include("plain.jl")
+@debug "api"
+include("api.jl")
 @debug "compound"
 include("compound.jl")
 @debug "custom"
