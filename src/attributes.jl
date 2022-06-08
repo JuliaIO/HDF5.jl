@@ -210,10 +210,11 @@ delete!(attrs(object), "name") # delete an attribute
 keys(attrs(object))            # list the attribute names
 ```
 """
-function attrs(parent::Object)
+AttributeDict(file::File) = AttributeDict(open_group(file, "."))
+
+function attrs(parent)
     return AttributeDict(parent)
 end
-attrs(file::File) = attrs(open_group(file, "."))
 
 Base.haskey(attrdict::AttributeDict, path::AbstractString) = API.h5a_exists(checkvalid(attrdict.parent), path)
 Base.length(attrdict::AttributeDict) = Int(object_info(attrdict.parent).num_attrs)
