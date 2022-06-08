@@ -110,13 +110,13 @@ function h5a_close(id)
 end
 
 """
-    h5a_create(loc_id::hid_t, pathname::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t) -> hid_t
+    h5a_create(loc_id::hid_t, attr_name::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Acreate2`](https://portal.hdfgroup.org/display/HDF5/H5A_CREATE2).
 """
-function h5a_create(loc_id, pathname, type_id, space_id, acpl_id, aapl_id)
-    var"#status#" = ccall((:H5Acreate2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t), loc_id, pathname, type_id, space_id, acpl_id, aapl_id)
-    var"#status#" < 0 && @h5error(string("Error creating attribute ", h5a_get_name(loc_id), "/", pathname))
+function h5a_create(loc_id, attr_name, type_id, space_id, acpl_id, aapl_id)
+    var"#status#" = ccall((:H5Acreate2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t), loc_id, attr_name, type_id, space_id, acpl_id, aapl_id)
+    var"#status#" < 0 && @h5error(string("Error creating attribute ", attr_name, " for object ", h5i_get_name(loc_id)))
     return var"#status#"
 end
 
@@ -253,13 +253,13 @@ function h5a_iterate(obj_id, idx_type, order, n, op, op_data)
 end
 
 """
-    h5a_open(obj_id::hid_t, pathname::Ptr{UInt8}, aapl_id::hid_t) -> hid_t
+    h5a_open(obj_id::hid_t, attr_name::Ptr{UInt8}, aapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Aopen`](https://portal.hdfgroup.org/display/HDF5/H5A_OPEN).
 """
-function h5a_open(obj_id, pathname, aapl_id)
-    var"#status#" = ccall((:H5Aopen, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), obj_id, pathname, aapl_id)
-    var"#status#" < 0 && @h5error(string("Error opening attribute ", h5i_get_name(obj_id), "/", pathname))
+function h5a_open(obj_id, attr_name, aapl_id)
+    var"#status#" = ccall((:H5Aopen, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), obj_id, attr_name, aapl_id)
+    var"#status#" < 0 && @h5error(string("Error opening attribute ", attr_name, " for object ", h5i_get_name(obj_id)))
     return var"#status#"
 end
 
