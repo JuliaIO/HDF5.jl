@@ -35,7 +35,7 @@
 ###
 
 @bind h5a_close(id::hid_t)::herr_t "Error closing attribute"
-@bind h5a_create2(loc_id::hid_t, pathname::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t)::hid_t string("Error creating attribute ", h5a_get_name(loc_id), "/", pathname)
+@bind h5a_create2(loc_id::hid_t, attr_name::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t)::hid_t string("Error creating attribute ", attr_name, " for object ", h5i_get_name(loc_id))
 @bind h5a_create_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t, lapl_id::hid_t)::hid_t string("Error creating attribute ", attr_name, " for object ", obj_name)
 @bind h5a_delete(loc_id::hid_t, attr_name::Ptr{UInt8})::herr_t string("Error deleting attribute ", attr_name)
 @bind h5a_delete_by_idx(loc_id::hid_t, obj_name::Ptr{UInt8}, idx_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::herr_t string("Error deleting attribute ", n, " from object ", obj_name)
@@ -48,7 +48,7 @@
 @bind h5a_get_space(attr_id::hid_t)::hid_t "Error getting attribute dataspace"
 @bind h5a_get_type(attr_id::hid_t)::hid_t "Error getting attribute type"
 @bind h5a_iterate2(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)::herr_t string("Error iterating attributes in object ", h5i_get_name(obj_id))
-@bind h5a_open(obj_id::hid_t, pathname::Ptr{UInt8}, aapl_id::hid_t)::hid_t string("Error opening attribute ", h5i_get_name(obj_id), "/", pathname)
+@bind h5a_open(obj_id::hid_t, attr_name::Ptr{UInt8}, aapl_id::hid_t)::hid_t string("Error opening attribute ", attr_name, " for object ", h5i_get_name(obj_id))
 @bind h5a_open_by_idx(obj_id::hid_t, pathname::Ptr{UInt8}, idx_type::Cint, order::Cint, n::hsize_t, aapl_id::hid_t, lapl_id::hid_t)::hid_t string("Error opening attribute ", n, " of ", h5i_get_name(obj_id), "/", pathname)
 @bind h5a_read(attr_id::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})::herr_t string("Error reading attribute ", h5a_get_name(attr_id))
 @bind h5a_rename(loc_id::hid_t, old_attr_name::Cstring, new_attr_name::Cstring)::herr_t string("Could not rename attribute")
