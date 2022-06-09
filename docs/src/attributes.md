@@ -1,18 +1,22 @@
 # Attributes
 
+## Dictionary interface
+
 ```@docs
-HDF5.Attribute
+attrs
 attributes
 ```
 
 ## Mid-level Interface
 
 ```@docs
+HDF5.Attribute
 open_attribute
 create_attribute
 read_attribute
 write_attribute
 delete_attribute
+rename_attribute
 ```
 
 ## Convenience interface

@@ -63,6 +63,16 @@ function Base.show(io::IO, attr::Attributes)
     print(io, "Attributes of ", attr.parent)
 end
 
+Base.show(io::IO, attrdict::AttributeDict) = summary(io, attrdict)
+function Base.summary(io::IO, attrdict::AttributeDict)
+    print(io, "AttributeDict of ", attrdict.parent)
+    if isvalid(attrdict.parent)
+        n = length(attrdict)
+        print(io, " with ", n, n == 1 ? " attribute" : " attributes")
+    end
+end
+
+
 const ENDIAN_DICT  = Dict(
     API.H5T_ORDER_LE    => "little endian byte order",
     API.H5T_ORDER_BE    => "big endian byte order",
@@ -189,9 +199,9 @@ _tree_head(io::IO, obj) = print(io, _tree_icon(obj), " ", obj)
 _tree_head(io::IO, obj::Datatype) = print(io, _tree_icon(obj), " HDF5.Datatype: ", name(obj))
 
 _tree_count(parent::Union{File,Group}, attributes::Bool) =
-    length(parent) + (attributes ? length(HDF5.attributes(parent)) : 0)
+    length(parent) + (attributes ? length(HDF5.attrs(parent)) : 0)
 _tree_count(parent::Dataset, attributes::Bool) =
-    attributes ? length(HDF5.attributes(parent)) : 0
+    attributes ? length(HDF5.attrs(parent)) : 0
 _tree_count(parent::Attributes, _::Bool) = length(parent)
 _tree_count(parent::Union{Attribute,Datatype}, _::Bool) = 0
 

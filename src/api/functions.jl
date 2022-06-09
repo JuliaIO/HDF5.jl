@@ -264,6 +264,17 @@ function h5a_open(obj_id, attr_name, aapl_id)
 end
 
 """
+    h5a_open_by_idx(obj_id::hid_t, pathname::Ptr{UInt8}, idx_type::Cint, order::Cint, n::hsize_t, aapl_id::hid_t, lapl_id::hid_t) -> hid_t
+
+See `libhdf5` documentation for [`H5Aopen_by_idx`](https://portal.hdfgroup.org/display/HDF5/H5A_OPEN_BY_IDX).
+"""
+function h5a_open_by_idx(obj_id, pathname, idx_type, order, n, aapl_id, lapl_id)
+    var"#status#" = ccall((:H5Aopen_by_idx, libhdf5), hid_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, hid_t, hid_t), obj_id, pathname, idx_type, order, n, aapl_id, lapl_id)
+    var"#status#" < 0 && @h5error(string("Error opening attribute ", n, " of ", h5i_get_name(obj_id), "/", pathname))
+    return var"#status#"
+end
+
+"""
     h5a_read(attr_id::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})
 
 See `libhdf5` documentation for [`H5Aread`](https://portal.hdfgroup.org/display/HDF5/H5A_READ).
@@ -271,6 +282,17 @@ See `libhdf5` documentation for [`H5Aread`](https://portal.hdfgroup.org/display/
 function h5a_read(attr_id, mem_type_id, buf)
     var"#status#" = ccall((:H5Aread, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cvoid}), attr_id, mem_type_id, buf)
     var"#status#" < 0 && @h5error(string("Error reading attribute ", h5a_get_name(attr_id)))
+    return nothing
+end
+
+"""
+    h5a_rename(loc_id::hid_t, old_attr_name::Cstring, new_attr_name::Cstring)
+
+See `libhdf5` documentation for [`H5Arename`](https://portal.hdfgroup.org/display/HDF5/H5A_RENAME).
+"""
+function h5a_rename(loc_id, old_attr_name, new_attr_name)
+    var"#status#" = ccall((:H5Arename, libhdf5), herr_t, (hid_t, Cstring, Cstring), loc_id, old_attr_name, new_attr_name)
+    var"#status#" < 0 && @h5error(string("Could not rename attribute"))
     return nothing
 end
 
