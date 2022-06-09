@@ -1,48 +1,74 @@
 using HDF5, Test
 
+function test_attrs(o::Union{HDF5.File, HDF5.Object})
+
+    @test attrs(o) isa HDF5.AttributeDict
+
+    attrs(o)["a"] = 1
+    @test haskey(attrs(o), "a")
+    @test attrs(o)["a"] == 1
+
+    attrs(o)["b"] = [2,3]
+    @test attrs(o)["b"] == [2,3]
+    @test haskey(attrs(o), "a")
+    @test length(attrs(o)) == 2
+    @test sort(keys(attrs(o))) == ["a", "b"]
+
+    @test !haskey(attrs(o), "c")
+
+    # overwrite: same type
+    attrs(o)["a"] = 4
+    @test attrs(o)["a"] == 4
+    @test get(attrs(o), "a", nothing) == 4
+    @test length(attrs(o)) == 2
+    @test sort(keys(attrs(o))) == ["a", "b"]
+
+    # overwrite: different size
+    attrs(o)["b"] = [4,5,6]
+    @test attrs(o)["b"] == [4,5,6]
+    @test length(attrs(o)) == 2
+    @test sort(keys(attrs(o))) == ["a", "b"]
+
+    # overwrite: different type
+    attrs(o)["b"] = "a string"
+    @test attrs(o)["b"] == "a string"
+    @test length(attrs(o)) == 2
+    @test sort(keys(attrs(o))) == ["a", "b"]
+
+    # delete a key
+    delete!(attrs(o), "a")
+    @test !haskey(attrs(o), "a")
+    @test length(attrs(o)) == 1
+    @test sort(keys(attrs(o))) == ["b"]
+
+    @test_throws KeyError attrs(o)["a"]
+    @test isnothing(get(attrs(o), "a", nothing))
+
+end
+
+
 @testset "attrs interface" begin
     filename = tempname()
     f = h5open(filename, "w")
 
-    @test attrs(f) isa HDF5.AttributeDict
+    try
+        # Test attrs on a HDF5.File
+        test_attrs(f)
 
-    attrs(f)["a"] = 1
-    @test haskey(attrs(f), "a")
-    @test attrs(f)["a"] == 1
+        # Test attrs on a HDF5.Group
+        g = create_group(f, "group_foo")
+        test_attrs(g)
 
-    attrs(f)["b"] = [2,3]
-    @test attrs(f)["b"] == [2,3]
-    @test haskey(attrs(f), "a")
-    @test length(attrs(f)) == 2
-    @test sort(keys(attrs(f))) == ["a", "b"]
+        # Test attrs on a HDF5.Dataset
+        d = create_dataset(g, "dataset_bar", Int, (32, 32))
+        test_attrs(d)
 
-    @test !haskey(attrs(f), "c")
-
-    # overwrite: same type
-    attrs(f)["a"] = 4
-    @test attrs(f)["a"] == 4
-    @test get(attrs(f), "a", nothing) == 4
-    @test length(attrs(f)) == 2
-    @test sort(keys(attrs(f))) == ["a", "b"]
-
-    # overwrite: different size
-    attrs(f)["b"] = [4,5,6]
-    @test attrs(f)["b"] == [4,5,6]
-    @test length(attrs(f)) == 2
-    @test sort(keys(attrs(f))) == ["a", "b"]
-
-    # overwrite: different type
-    attrs(f)["b"] = "a string"
-    @test attrs(f)["b"] == "a string"
-    @test length(attrs(f)) == 2
-    @test sort(keys(attrs(f))) == ["a", "b"]
-
-    # delete a key
-    delete!(attrs(f), "a")
-    @test !haskey(attrs(f), "a")
-    @test length(attrs(f)) == 1
-    @test sort(keys(attrs(f))) == ["b"]
-
-    @test_throws KeyError attrs(f)["a"]
-    @test isnothing(get(attrs(f), "a", nothing))
+        # Test attrs on a HDF5.Datatype
+        t = commit_datatype(g, "datatype_int16",
+            HDF5.Datatype(HDF5.API.h5t_copy(HDF5.API.H5T_NATIVE_INT16))
+        )
+        test_attrs(t)
+    finally
+        close(f)
+    end
 end
