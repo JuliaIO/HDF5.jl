@@ -1,19 +1,5 @@
 ### Base HDF5 structs ###
 
-# High-level reference handler
-struct Reference
-  r::API.hobj_ref_t
-end
-Reference() = Reference(API.HOBJ_REF_T_NULL) # NULL reference to compare to
-Base.cconvert(::Type{Ptr{T}}, ref::Reference) where {T<:Union{Reference,API.hobj_ref_t,Cvoid}} = Ref(ref)
-Base.:(==)(a::Reference, b::Reference) = a.r == b.r
-Base.hash(x::Reference, h::UInt) = hash(x.r, h)
-
-function Reference(parent::Union{File,Group,Dataset}, name::AbstractString)
-  ref = Ref{API.hobj_ref_t}()
-  API.h5r_create(ref, checkvalid(parent), name, API.H5R_OBJECT, -1)
-  return Reference(ref[])
-end
 
 # Single character types
 # These are needed to safely handle VLEN objects
@@ -37,8 +23,6 @@ cset(::Type{<:AbstractString}) = API.H5T_CSET_UTF8
 cset(::Type{UTF8Char}) = API.H5T_CSET_UTF8
 cset(::Type{ASCIIChar}) = API.H5T_CSET_ASCII
 
-const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
-const ScalarType = Union{BitsType,Reference}
 
 # VLEN objects
 struct VLen{T}
@@ -65,57 +49,6 @@ function datatype(str::VLen{C}) where {C<:CharType}
     API.h5t_set_cset(type_id, cset(C))
     Datatype(API.h5t_vlen_create(type_id))
 end
-
-# Opaque types
-struct Opaque
-  data
-  tag::String
-end
-
-# An empty array type
-struct EmptyArray{T} <: AbstractArray{T,0} end
-# Required AbstractArray interface
-Base.size(::EmptyArray) = ()
-Base.IndexStyle(::Type{<:EmptyArray}) = IndexLinear()
-Base.getindex(::EmptyArray, ::Int) = error("cannot index an `EmptyArray`")
-Base.setindex!(::EmptyArray, v, ::Int) = error("cannot assign to an `EmptyArray`")
-# Optional interface
-Base.similar(::EmptyArray{T}) where {T} = EmptyArray{T}()
-Base.similar(::EmptyArray, ::Type{S}) where {S} = EmptyArray{S}()
-Base.similar(::EmptyArray, ::Type{S}, dims::Dims) where {S} = Array{S}(undef, dims)
-# Override behavior for 0-dimensional Array
-Base.length(::EmptyArray) = 0
-# Required to avoid indexing during printing
-Base.show(io::IO, E::EmptyArray) = print(io, typeof(E), "()")
-Base.show(io::IO, ::MIME"text/plain", E::EmptyArray) = show(io, E)
-# FIXME: Concatenation doesn't work for this type (it's treated as a length-1 array like
-# Base's 0-dimensional arrays), so just forceably abort.
-Base.cat_size(::EmptyArray) = error("concatenation of HDF5.EmptyArray is unsupported")
-Base.cat_size(::EmptyArray, d) = error("concatenation of HDF5.EmptyArray is unsupported")
-
-# Stub types to encode fixed-size arrays for API.H5T_ARRAY
-struct FixedArray{T,D,L}
-    data::NTuple{L,T}
-end
-Base.size(::Type{FixedArray{T,D,L}}) where {T,D,L} = D
-Base.size(x::FixedArray) = size(typeof(x))
-Base.eltype(::Type{FixedArray{T,D,L}}) where {T,D,L} = T
-Base.eltype(x::FixedArray) = eltype(typeof(x))
-
-struct FixedString{N,PAD}
-    data::NTuple{N,UInt8}
-end
-Base.length(::Type{FixedString{N,PAD}}) where {N,PAD} = N
-Base.length(str::FixedString) = length(typeof(str))
-pad(::Type{FixedString{N,PAD}}) where {N,PAD} = PAD
-pad(x::T) where {T<:FixedString} = pad(T)
-
-struct VariableArray{T}
-    len::Csize_t
-    p::Ptr{Cvoid}
-end
-Base.eltype(::Type{VariableArray{T}}) where T = T
-
 
 ## Conversion between Julia types and HDF5 atomic types
 hdf5_type_id(::Type{Bool})      = API.H5T_NATIVE_B8
