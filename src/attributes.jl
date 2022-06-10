@@ -269,6 +269,14 @@ function Base.iterate(attrdict::AttributeDict, (keyvec, n))
     return (key => attrdict[key]), (keyvec, nn)
 end
 
+function Base.Dict{Symbol,Any}(dict::AttributeDict)
+    Dict(Symbol.(keys(dict)) .=> values(dict))
+end
+
+function Base.NamedTuple(dict::AttributeDict)
+    NamedTuple(Dict{Symbol,Any}(dict))
+end
+Base.convert(::Type{NamedTuple}, dict::AttributeDict) = NamedTuple(dict)
 
 
 
@@ -313,3 +321,4 @@ function Base.getindex(dset::Dataset, name::AbstractString)
     open_attribute(dset, name)
 end
 Base.setindex!(dset::Dataset, val, name::AbstractString) = write_attribute(dset, name, val)
+
