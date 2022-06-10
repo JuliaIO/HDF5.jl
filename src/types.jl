@@ -20,6 +20,9 @@ function Base.read(f::H5DataStore)
     Dict(zip(vars, vals))
 end
 
+
+### Base HDF5 structs ###
+
 ## HDF5 uses a plain integer to refer to each file, group, or
 ## dataset. These are wrapped into special types in order to allow
 ## method dispatch.

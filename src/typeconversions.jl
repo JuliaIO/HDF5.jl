@@ -1,6 +1,3 @@
-### Base HDF5 structs ###
-
-
 # Single character types
 # These are needed to safely handle VLEN objects
 abstract type CharType <: AbstractString end
