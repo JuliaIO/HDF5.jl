@@ -55,6 +55,14 @@ end
         # Test attrs on a HDF5.File
         test_attrs(f)
 
+        symbol_dict = Dict{Symbol,Any}(attrs(f))
+        @test all(values(symbol_dict) .== values(attrs(f)))
+        @test all(keys(symbol_dict) .== Symbol.(keys(attrs(f))))
+
+        nt = convert(NamedTuple, attrs(f))
+        @test all(values(nt) .== values(attrs(f)))
+        @test all(keys(nt) .== Symbol.(keys(attrs(f))))
+
         # Test attrs on a HDF5.Group
         g = create_group(f, "group_foo")
         test_attrs(g)
