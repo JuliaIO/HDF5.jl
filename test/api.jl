@@ -32,7 +32,7 @@ using HDF5, Test
     @test names == ["a"]
 
     # HDF5 error
-    @test_throws HDF5.H5Error HDF5.API.h5a_iterate(f, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC) do loc, name, info
+    @test_throws HDF5.API.H5Error HDF5.API.h5a_iterate(f, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC) do loc, name, info
       return -1
     end
 
@@ -76,7 +76,7 @@ end
     @test names == ["a"]
 
     # HDF5 error
-    @test_throws HDF5.H5Error HDF5.API.h5l_iterate(f, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC) do loc, name, info
+    @test_throws HDF5.API.H5Error HDF5.API.h5l_iterate(f, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC) do loc, name, info
         return -1
     end
 
