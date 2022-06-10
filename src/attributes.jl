@@ -196,6 +196,7 @@ end
 struct AttributeDict <: AbstractDict{String,Any}
     parent::Object
 end
+AttributeDict(file::File) = AttributeDict(open_group(file, "."))
 
 """
     attrs(object::Union{File,Group,Dataset,Datatype})
@@ -210,8 +211,6 @@ delete!(attrs(object), "name") # delete an attribute
 keys(attrs(object))            # list the attribute names
 ```
 """
-AttributeDict(file::File) = AttributeDict(open_group(file, "."))
-
 function attrs(parent)
     return AttributeDict(parent)
 end
