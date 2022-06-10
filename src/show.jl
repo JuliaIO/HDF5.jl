@@ -63,9 +63,9 @@ function Base.show(io::IO, attr::Attributes)
     print(io, "Attributes of ", attr.parent)
 end
 
-Base.show(io::IO, attrdict::AttributeDict) = summary(io, attrdict)
-function Base.summary(io::IO, attrdict::AttributeDict)
-    print(io, "AttributeDict of ", attrdict.parent)
+Base.show(io::IO, attrdict::AttributeDict{Any}) = summary(io, attrdict)
+function Base.summary(io::IO, attrdict::AttributeDict{Any})
+    print(io, "AttributeDict{Any} of ", attrdict.parent)
     if isvalid(attrdict.parent)
         n = length(attrdict)
         print(io, " with ", n, n == 1 ? " attribute" : " attributes")

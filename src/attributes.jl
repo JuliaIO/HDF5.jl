@@ -193,14 +193,14 @@ function h5readattr(filename, name::AbstractString)
 end
 
 
-struct AttributeDict <: AbstractDict{String,Any}
+struct AttributeDict{T} <: AbstractDict{String,T}
     parent::Object
 end
 
 """
     attrs(object::Union{File,Group,Dataset,Datatype})
 
-The attributes dictionary of `object`. Returns an `AttributeDict`, a `Dict`-like
+The attributes dictionary of `object`. Returns an `AttributeDict{Any}`, a `Dict`-like
 object for accessing the attributes of `object`.
 
 ```julia
@@ -210,24 +210,23 @@ delete!(attrs(object), "name") # delete an attribute
 keys(attrs(object))            # list the attribute names
 ```
 """
-AttributeDict(file::File) = AttributeDict(open_group(file, "."))
+AttributeDict(parent) = AttributeDict{Any}(parent)
+AttributeDict{T}(file::File) where T = AttributeDict{T}(open_group(file, "."))
 
-function attrs(parent)
-    return AttributeDict(parent)
-end
+const attrs = AttributeDict
 
-Base.haskey(attrdict::AttributeDict, path::AbstractString) = API.h5a_exists(checkvalid(attrdict.parent), path)
-Base.length(attrdict::AttributeDict) = Int(object_info(attrdict.parent).num_attrs)
+Base.haskey(attrdict::AttributeDict{Any}, path::AbstractString) = API.h5a_exists(checkvalid(attrdict.parent), path)
+Base.length(attrdict::AttributeDict{Any}) = Int(object_info(attrdict.parent).num_attrs)
 
-function Base.getindex(x::AttributeDict, name::AbstractString)
+function Base.getindex(x::AttributeDict{Any}, name::AbstractString)
     haskey(x, name) || throw(KeyError(name))
     read_attribute(x.parent, name)
 end
-function Base.get(x::AttributeDict, name::AbstractString, default)
+function Base.get(x::AttributeDict{Any}, name::AbstractString, default)
     haskey(x, name) || return default
     read_attribute(x.parent, name)
 end
-function Base.setindex!(attrdict::AttributeDict, val, name::AbstractString)
+function Base.setindex!(attrdict::AttributeDict{Any}, val, name::AbstractString)
     if haskey(attrdict, name)
         # in case of an error, we write first to a temporary, then rename
         _name = tempname()
@@ -242,9 +241,9 @@ function Base.setindex!(attrdict::AttributeDict, val, name::AbstractString)
         write_attribute(attrdict.parent, name, val)
     end
 end
-Base.delete!(attrdict::AttributeDict, path::AbstractString) = delete_attribute(attrdict.parent, path)
+Base.delete!(attrdict::AttributeDict{Any}, path::AbstractString) = delete_attribute(attrdict.parent, path)
 
-function Base.keys(attrdict::AttributeDict)
+function Base.keys(attrdict::AttributeDict{Any})
     # faster than iteratively calling h5a_get_name_by_idx
     checkvalid(attrdict.parent)
     keyvec = sizehint!(String[], length(attrdict))
@@ -255,12 +254,12 @@ function Base.keys(attrdict::AttributeDict)
     return keyvec
 end
 
-function Base.iterate(attrdict::AttributeDict)
+function Base.iterate(attrdict::AttributeDict{Any})
     # constuct key vector, then iterate
     # faster than calling h5a_open_by_idx
     iterate(attrdict, (keys(attrdict), 1))
 end
-function Base.iterate(attrdict::AttributeDict, (keyvec, n))
+function Base.iterate(attrdict::AttributeDict{Any}, (keyvec, n))
     iter = iterate(keyvec, n)
     if isnothing(iter)
         return iter
@@ -269,6 +268,14 @@ function Base.iterate(attrdict::AttributeDict, (keyvec, n))
     return (key => attrdict[key]), (keyvec, nn)
 end
 
+function Base.Dict{Symbol,Any}(dict::AttributeDict{Any})
+    Dict(Symbol.(keys(dict)) .=> values(dict))
+end
+
+function Base.NamedTuple(dict::AttributeDict{Any})
+    NamedTuple(Dict{Symbol,Any}(dict))
+end
+Base.convert(::Type{NamedTuple}, dict::AttributeDict{Any}) = NamedTuple(dict)
 
 
 
