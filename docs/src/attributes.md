@@ -16,7 +16,7 @@ create_attribute
 read_attribute
 write_attribute
 delete_attribute
-rename_attribute
+HDF5.rename_attribute
 ```
 
 ## Convenience interface

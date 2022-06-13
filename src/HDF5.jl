@@ -12,7 +12,7 @@ import Mmap
 export
 @read, @write,
 h5open, h5read, h5write, h5rewrite, h5writeattr, h5readattr,
-create_attribute, open_attribute, read_attribute, write_attribute, delete_attribute, rename_attribute, attributes, attrs,
+create_attribute, open_attribute, read_attribute, write_attribute, delete_attribute, attributes, attrs,
 create_dataset, open_dataset, read_dataset, write_dataset,
 create_group, open_group,
 copy_object, open_object, delete_object, move_link,
