@@ -1,7 +1,7 @@
 # Dataspaces
 
 ```@docs
-Dataspace
+HDF5.Dataspace
 dataspace
-isnull
+HDF5.isnull
 ```
