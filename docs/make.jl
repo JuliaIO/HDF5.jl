@@ -32,6 +32,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Interface" => [
+            "dataspaces.md",
             "dataset.md",
             "attributes.md",
             "properties.md",
