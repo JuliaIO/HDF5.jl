@@ -714,21 +714,53 @@ superclass(::Type{DatatypeAccessProperties}) = LinkAccessProperties
 
 Properties that control access to data in external, virtual, and chunked datasets.
 
+- `chunk_cache`: Chunk cache parameters as (nslots, nbytes, w0).
+  Default: (521, 0x100000, 0.75)
+- `efile_prefix`: Path prefix for reading external files.
+  The default is the current working directory.
+  - `:origin`: alias for `raw"\$ORIGIN"` will make the external file relative to
+    the HDF5 file.
+- `virtual_prefix`: Path prefix for reading virtual datasets.
+- `virtual_printf_gap`: The maximum number of missing source files and/or
+   datasets with the printf-style names when getting the extent of an unlimited
+   virtual dataset
+- `virtual_view`: Influences whether the view of the virtual dataset includes
+  or excludes missing mapped elements
+  - `:first_missing`: includes all data before the first missing mapped data
+  - `:last_available`: includes all available mapped data
+
 See [Dataset Access Properties](https://portal.hdfgroup.org/display/HDF5/Dataset+Access+Properties)
 """
 @propertyclass DatasetAccessProperties API.H5P_DATASET_ACCESS
 superclass(::Type{DatasetAccessProperties}) = LinkAccessProperties
 
 class_propertynames(::Type{DatasetAccessProperties}) = (
+    :chunk_cache,
     :efile_prefix,
+    :virtual_prefix,
+    :virtual_printf_gap,
+    :virtual_view
+)
+
+@enum_property(virtual_view,
+    :first_missing  => API.H5D_VDS_FIRST_MISSING,
+    :last_available => API.H5D_VDS_LAST_AVAILABLE
 )
 
 function class_getproperty(::Type{DatasetAccessProperties}, p::Properties, name::Symbol)
+    name === :chunk_cache ? API.h5p_get_chunk_cache(p) :
     name === :efile_prefix ? API.h5p_get_efile_prefix(p) :
+    name === :virtual_prefix ? API.h5p_get_virtual_prefix(p) :
+    name === :virtual_printf_gap ? API.h5p_get_virtual_printf_gap(p) :
+    name === :virtual_view ? get_virtual_view(p) :
     class_getproperty(superclass(DatasetAccessProperties), p, name)
 end
 function class_setproperty!(::Type{DatasetAccessProperties}, p::Properties, name::Symbol, val)
+    name === :chunk_cache ? API.h5p_set_chunk_cache(p, val...) :
     name === :efile_prefix ? API.h5p_set_efile_prefix(p, val) :
+    name === :virtual_prefix ? API.h5p_set_virtual_prefix(p, val) :
+    name === :virtual_printf_gap ? API.h5p_set_virtual_printf_gap(p, val) :
+    name === :virtual_view ? set_virtual_view!(p, val) :
     class_setproperty!(superclass(DatasetAccessProperties), p, name, val)
 end
 

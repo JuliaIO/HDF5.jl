@@ -196,6 +196,8 @@ end
 struct AttributeDict{T} <: AbstractDict{String,T}
     parent::Object
 end
+AttributeDict(parent) = AttributeDict{Any}(parent)
+AttributeDict{T}(file::File) where T = AttributeDict{T}(open_group(file, "."))
 
 """
     attrs(object::Union{File,Group,Dataset,Datatype})
@@ -210,9 +212,6 @@ delete!(attrs(object), "name") # delete an attribute
 keys(attrs(object))            # list the attribute names
 ```
 """
-AttributeDict(parent) = AttributeDict{Any}(parent)
-AttributeDict{T}(file::File) where T = AttributeDict{T}(open_group(file, "."))
-
 const attrs = AttributeDict
 
 Base.haskey(attrdict::AttributeDict{Any}, path::AbstractString) = API.h5a_exists(checkvalid(attrdict.parent), path)
