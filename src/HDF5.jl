@@ -48,6 +48,7 @@ const ORDER = Ref(API.H5_ITER_INC)
 include("properties.jl")
 include("types.jl")
 include("typeconversions.jl")
+include("dataspaces.jl")
 include("datasets.jl")
 include("attributes.jl")
 include("readwrite.jl")
@@ -259,15 +260,6 @@ function Base.close(obj::Datatype)
     nothing
 end
 
-function Base.close(obj::Dataspace)
-    if obj.id != -1
-        if isvalid(obj)
-            API.h5s_close(obj)
-        end
-        obj.id = -1
-    end
-    nothing
-end
 
 """
     ishdf5(name::AbstractString)
@@ -479,99 +471,6 @@ datatype(dt::Datatype) = dt
 
 Base.sizeof(dtype::Datatype) = Int(API.h5t_get_size(dtype))
 
-# Get the dataspace of a dataset
-dataspace(dset::Dataset) = Dataspace(API.h5d_get_space(checkvalid(dset)))
-# The dataspace of a Dataspace is just the dataspace
-dataspace(ds::Dataspace) = ds
-
-# Create a dataspace from in-memory types
-dataspace(x::Union{T, Complex{T}}) where {T<:ScalarType} = Dataspace(API.h5s_create(API.H5S_SCALAR))
-dataspace(::AbstractString) = Dataspace(API.h5s_create(API.H5S_SCALAR))
-
-function _dataspace(sz::Dims{N}, max_dims::Union{Dims{N}, Tuple{}}=()) where N
-    dims = API.hsize_t[sz[i] for i in N:-1:1]
-    if isempty(max_dims)
-        maxd = dims
-    else
-        # This allows max_dims to be specified as -1 without triggering an overflow
-        # exception due to the signed -> unsigned conversion.
-        maxd = API.hsize_t[API.hssize_t(max_dims[i]) % API.hsize_t for i in N:-1:1]
-    end
-    return Dataspace(API.h5s_create_simple(length(dims), dims, maxd))
-end
-dataspace(A::AbstractArray{T,N}; max_dims::Union{Dims{N},Tuple{}} = ()) where {T,N} = _dataspace(size(A), max_dims)
-# special array types
-dataspace(v::VLen; max_dims::Union{Dims,Tuple{}}=()) = _dataspace(size(v.data), max_dims)
-dataspace(A::EmptyArray) = Dataspace(API.h5s_create(API.H5S_NULL))
-dataspace(n::Nothing) = Dataspace(API.h5s_create(API.H5S_NULL))
-# for giving sizes explicitly
-dataspace(sz::Dims{N}; max_dims::Union{Dims{N},Tuple{}}=()) where {N} = _dataspace(sz, max_dims)
-dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()) = _dataspace(tuple(sz1, sz2, sz3...), max_dims)
-
-
-function Base.ndims(obj::Union{Dataspace,Dataset,Attribute})
-    dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
-    ret = API.h5s_get_simple_extent_ndims(dspace)
-    obj isa Dataspace || close(dspace)
-    return ret
-end
-function Base.size(obj::Union{Dataspace,Dataset,Attribute})
-    dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
-    h5_dims = API.h5s_get_simple_extent_dims(dspace, nothing)
-    N = length(h5_dims)
-    ret = ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
-    obj isa Dataspace || close(dspace)
-    return ret
-end
-function Base.size(obj::Union{Dataspace,Dataset,Attribute}, d::Integer)
-    d > 0 || throw(ArgumentError("invalid dimension d; must be positive integer"))
-    N = ndims(obj)
-    d > N && return 1
-    dspace = obj isa Dataspace ? obj : dataspace(obj)
-    h5_dims = API.h5s_get_simple_extent_dims(dspace, nothing)
-    ret = @inbounds Int(h5_dims[N - d + 1])
-    obj isa Dataspace || close(dspace)
-    return ret
-end
-function Base.length(obj::Union{Dataspace,Dataset,Attribute})
-    isnull(obj) && return 0
-    dspace = obj isa Dataspace ? obj : dataspace(obj)
-    h5_dims = API.h5s_get_simple_extent_dims(dspace, nothing)
-    ret = Int(prod(h5_dims))
-    obj isa Dataspace || close(dspace)
-    return ret
-end
-Base.isempty(dspace::Union{Dataspace,Dataset,Attribute}) = length(dspace) == 0
-
-"""
-    isnull(dspace::Union{HDF5.Dataspace, HDF5.Dataset, HDF5.Attribute})
-
-Determines whether the given object has no size (consistent with the `API.H5S_NULL` dataspace).
-
-# Examples
-```julia-repl
-julia> HDF5.isnull(dataspace(HDF5.EmptyArray{Float64}()))
-true
-
-julia> HDF5.isnull(dataspace((0,)))
-false
-```
-"""
-function isnull(obj::Union{Dataspace,Dataset,Attribute})
-    dspace = obj isa Dataspace ? checkvalid(obj) : dataspace(obj)
-    ret = API.h5s_get_simple_extent_type(dspace) == API.H5S_NULL
-    obj isa Dataspace || close(dspace)
-    return ret
-end
-
-
-function get_regular_hyperslab(dspace::Dataspace)
-    start, stride, count, block = API.h5s_get_regular_hyperslab(dspace)
-    N = length(start)
-    @inline rev(v) = ntuple(i -> @inbounds(Int(v[N-i+1])), N)
-    return rev(start), rev(stride), rev(count), rev(block)
-end
-
 
 """
     start_swmr_write(h5::HDF5.File)
@@ -605,52 +504,6 @@ function _deref(parent, r::Reference)
 end
 Base.getindex(parent::Union{File,Group}, r::Reference) = _deref(parent, r)
 Base.getindex(parent::Dataset, r::Reference) = _deref(parent, r) # defined separately to resolve ambiguity
-
-function hyperslab(dspace::Dataspace, I::Union{AbstractRange{Int},Int}...)
-    local dsel_id
-    try
-        dims = size(dspace)
-        n_dims = length(dims)
-        if length(I) != n_dims
-            error("Wrong number of indices supplied, supplied length $(length(I)) but expected $(n_dims).")
-        end
-        dsel_id = API.h5s_copy(dspace)
-        dsel_start  = Vector{API.hsize_t}(undef,n_dims)
-        dsel_stride = Vector{API.hsize_t}(undef,n_dims)
-        dsel_count  = Vector{API.hsize_t}(undef,n_dims)
-        for k = 1:n_dims
-            index = I[n_dims-k+1]
-            if isa(index, Integer)
-                dsel_start[k] = index-1
-                dsel_stride[k] = 1
-                dsel_count[k] = 1
-            elseif isa(index, AbstractRange)
-                dsel_start[k] = first(index)-1
-                dsel_stride[k] = step(index)
-                dsel_count[k] = length(index)
-            else
-                error("index must be range or integer")
-            end
-            if dsel_start[k] < 0 || dsel_start[k]+(dsel_count[k]-1)*dsel_stride[k] >= dims[n_dims-k+1]
-                println(dsel_start)
-                println(dsel_stride)
-                println(dsel_count)
-                println(reverse(dims))
-                error("index out of range")
-            end
-        end
-        API.h5s_select_hyperslab(dsel_id, API.H5S_SELECT_SET, dsel_start, dsel_stride, dsel_count, C_NULL)
-    finally
-        close(dspace)
-    end
-    Dataspace(dsel_id)
-end
-
-function hyperslab(dset::Dataset, I::Union{AbstractRange{Int},Int}...)
-    dspace = dataspace(dset)
-    return hyperslab(dspace, I...)
-end
-
 
 # end of high-level interface
 
