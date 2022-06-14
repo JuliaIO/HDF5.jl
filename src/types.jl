@@ -47,7 +47,8 @@ mutable struct File <: H5DataStore
         f
     end
 end
-Base.cconvert(::Type{API.hid_t}, f::File) = f.id
+Base.cconvert(::Type{API.hid_t}, f::File) = f
+Base.unsafe_convert(::Type{API.hid_t}, f::File) = f.id
 
 mutable struct Group <: H5DataStore
     id::API.hid_t
@@ -59,7 +60,8 @@ mutable struct Group <: H5DataStore
         g
     end
 end
-Base.cconvert(::Type{API.hid_t}, g::Group) = g.id
+Base.cconvert(::Type{API.hid_t}, g::Group) = g
+Base.unsafe_convert(::Type{API.hid_t}, g::Group) = g.id
 
 mutable struct Dataset
     id::API.hid_t
@@ -72,7 +74,8 @@ mutable struct Dataset
         dset
     end
 end
-Base.cconvert(::Type{API.hid_t}, dset::Dataset) = dset.id
+Base.cconvert(::Type{API.hid_t}, dset::Dataset) = dset
+Base.unsafe_convert(::Type{API.hid_t}, dset::Dataset) = dset.id
 
 mutable struct Datatype
     id::API.hid_t
@@ -94,7 +97,8 @@ mutable struct Datatype
         nt
     end
 end
-Base.cconvert(::Type{API.hid_t}, dtype::Datatype) = dtype.id
+Base.cconvert(::Type{API.hid_t}, dtype::Datatype) = dtype
+Base.unsafe_convert(::Type{API.hid_t}, dtype::Datatype) = dtype.id
 Base.hash(dtype::Datatype, h::UInt) = hash(dtype.id, hash(Datatype, h))
 Base.:(==)(dt1::Datatype, dt2::Datatype) = API.h5t_equal(dt1, dt2)
 
@@ -107,7 +111,8 @@ mutable struct Dataspace
         dspace
     end
 end
-Base.cconvert(::Type{API.hid_t}, dspace::Dataspace) = dspace.id
+Base.cconvert(::Type{API.hid_t}, dspace::Dataspace) = dspace
+Base.unsafe_convert(::Type{API.hid_t}, dspace::Dataspace) = dspace.id
 Base.:(==)(dspace1::Dataspace, dspace2::Dataspace) = API.h5s_extent_equal(checkvalid(dspace1), checkvalid(dspace2))
 Base.hash(dspace::Dataspace, h::UInt) = hash(dspace.id, hash(Dataspace, h))
 Base.copy(dspace::Dataspace) = Dataspace(API.h5s_copy(checkvalid(dspace)))
