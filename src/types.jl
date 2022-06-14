@@ -113,11 +113,19 @@ mutable struct Dataspace
 end
 Base.cconvert(::Type{API.hid_t}, dspace::Dataspace) = dspace
 Base.unsafe_convert(::Type{API.hid_t}, dspace::Dataspace) = dspace.id
-Base.:(==)(dspace1::Dataspace, dspace2::Dataspace) = API.h5s_extent_equal(checkvalid(dspace1), checkvalid(dspace2))
-Base.hash(dspace::Dataspace, h::UInt) = hash(dspace.id, hash(Dataspace, h))
-Base.copy(dspace::Dataspace) = Dataspace(API.h5s_copy(checkvalid(dspace)))
 
-# Attribute defined in attributes.jl
+mutable struct Attribute
+    id::API.hid_t
+    file::File
+
+    function Attribute(id, file)
+        dset = new(id, file)
+        finalizer(close, dset)
+        dset
+    end
+end
+Base.cconvert(::Type{API.hid_t}, attr::Attribute) = attr
+Base.unsafe_convert(::Type{API.hid_t}, attr::Attribute) = attr.id
 
 # High-level reference handler
 struct Reference

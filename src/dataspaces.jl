@@ -13,17 +13,7 @@ The following functions have methods defined for `Dataspace` objects
 - `isempty`
 - [`isnull`](@ref)
 """
-mutable struct Dataspace
-    id::API.hid_t
-
-    function Dataspace(id)
-        dspace = new(id)
-        finalizer(close, dspace)
-        dspace
-    end
-end
-Base.cconvert(::Type{API.hid_t}, dspace::Dataspace) = dspace
-Base.unsafe_convert(::Type{API.hid_t}, dspace::Dataspace) = dspace.id
+Dataspace # defined in types.jl
 
 Base.:(==)(dspace1::Dataspace, dspace2::Dataspace) =
     API.h5s_extent_equal(checkvalid(dspace1), checkvalid(dspace2))
@@ -173,7 +163,7 @@ function hyperslab(dspace::Dataspace, I::Union{AbstractRange{Int},Int}...)
     return Dataspace(dsel_id)
 end
 
-# 
+# methods for Dataset/Attribute which operate on Dataspace
 function Base.ndims(obj::Union{Dataset,Attribute})
     dspace = dataspace(obj)
     try

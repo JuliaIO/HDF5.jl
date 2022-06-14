@@ -1,5 +1,3 @@
-# mid-level API
-
 """
     HDF5.Attribute
 
@@ -14,18 +12,8 @@ See also
 - [`write_attribute`](@ref)
 - [`delete_attribute`](@ref)
 """
-mutable struct Attribute
-    id::API.hid_t
-    file::File
+Attribute # defined in types.jl
 
-    function Attribute(id, file)
-        dset = new(id, file)
-        finalizer(close, dset)
-        dset
-    end
-end
-Base.cconvert(::Type{API.hid_t}, attr::Attribute) = attr
-Base.unsafe_convert(::Type{API.hid_t}, attr::Attribute) = attr.id
 function Base.close(obj::Attribute)
     if obj.id != -1
         if obj.file.id != -1 && isvalid(obj)
