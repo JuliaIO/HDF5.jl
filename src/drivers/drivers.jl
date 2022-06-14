@@ -85,8 +85,12 @@ function set_driver!(p::Properties, ::POSIX)
 end
 
 function __init__()
-    DRIVERS[API.h5fd_core_init()] = Core
-    DRIVERS[API.h5fd_sec2_init()] = POSIX
+    fapl = HDF5.FileAccessProperties(fclose_degree=:default)
+    API.h5p_set_fapl_core(fapl, 4096, false)
+    DRIVERS[API.h5p_get_driver(fapl)] = Core
+    API.h5p_set_fapl_sec2(fapl)
+    DRIVERS[API.h5p_get_driver(fapl)] = POSIX
+    close(fapl)
     @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" include("mpio.jl")
 end
 
