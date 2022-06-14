@@ -1,8 +1,11 @@
 # Dataset defined in types.jl
 
+# Get the dataspace of a dataset
+dataspace(dset::Dataset) = Dataspace(API.h5d_get_space(checkvalid(dset)))
+
 # Open Dataset
 
-open_dataset(parent::Union{File,Group}, 
+open_dataset(parent::Union{File,Group},
     name::AbstractString,
     dapl::DatasetAccessProperties=DatasetAccessProperties(),
     dxpl::DatasetTransferProperties=DatasetTransferProperties()

@@ -172,3 +172,62 @@ function hyperslab(dspace::Dataspace, I::Union{AbstractRange{Int},Int}...)
     API.h5s_select_hyperslab(dsel_id, API.H5S_SELECT_SET, dsel_start, dsel_stride, dsel_count, C_NULL)
     return Dataspace(dsel_id)
 end
+
+# 
+function Base.ndims(obj::Union{Dataset,Attribute})
+    dspace = dataspace(obj)
+    try
+        return Base.ndims(dspace)
+    finally
+        close(dspace)
+    end
+end
+function Base.size(obj::Union{Dataset,Attribute})
+    dspace = dataspace(obj)
+    try
+        return Base.size(dspace)
+    finally
+        close(dspace)
+    end
+end
+function Base.size(obj::Union{Dataset,Attribute}, d::Integer)
+    dspace = dataspace(obj)
+    try
+        return Base.size(dspace, d)
+    finally
+        close(dspace)
+    end
+end
+function Base.length(obj::Union{Dataset,Attribute})
+    dspace = dataspace(obj)
+    try
+        return Base.length(dspace)
+    finally
+        close(dspace)
+    end
+end
+function Base.isempty(obj::Union{Dataset,Attribute})
+    dspace = dataspace(obj)
+    try
+        return Base.isempty(dspace)
+    finally
+        close(dspace)
+    end
+end
+function isnull(obj::Union{Dataset,Attribute})
+    dspace = dataspace(obj)
+    try
+        return isnull(dspace)
+    finally
+        close(dspace)
+    end
+end
+
+function hyperslab(dset::Dataset, I::Union{AbstractRange{Int},Int}...)
+    dspace = dataspace(dset)
+    try
+        return hyperslab(dspace, I...)
+    finally
+        close(dspace)
+    end
+end
