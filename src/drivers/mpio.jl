@@ -53,6 +53,9 @@ function set_driver!(fapl::Properties, mpio::MPIO)
     GC.@preserve mpio begin
         API.h5p_set_fapl_mpio(fapl, mpi_to_h5(mpio.comm), mpi_to_h5(mpio.info))
     end
+
+    DRIVERS[API.h5p_get_driver(fapl)] = MPIO
+    return nothing
 end
 
 function get_driver(fapl::Properties, ::Type{MPIO})
