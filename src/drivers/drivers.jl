@@ -5,7 +5,7 @@ export POSIX
 import ..API
 import ..HDF5: HDF5, Properties, h5doc
 
-using Libdl: dllist, dlopen, dlsym
+using Libdl: dlopen, dlsym
 using Requires: @require
 
 
@@ -98,16 +98,9 @@ function __init__()
     DRIVERS[API.h5p_get_driver(fapl)] = POSIX
     close(fapl)
 
-    # Check whether the loaded HDF5 libraries were compiled with parallel support.
-    loaded_libs = filter(s->match(r"hdf5"i, s) !== nothing, dllist())
-    for libname in loaded_libs
-        has_mpio = dlopen(libname) do lib
-            dlsym(lib, :H5Pset_fapl_mpio; throw_error=false) !== nothing
-        end
-        if has_mpio
-            HDF5.HAS_PARALLEL[] = true
-            break
-        end
+    # Check whether the libhdf5 was compiled with parallel support.
+    HDF5.HAS_PARALLEL[] = dlopen(HDF5.API.libhdf5) do lib
+        dlsym(lib, :H5Pset_fapl_mpio; throw_error=false) !== nothing
     end
 
     @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" (HDF5.has_parallel() && include("mpio.jl"))
