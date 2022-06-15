@@ -96,7 +96,20 @@ function __init__()
     API.h5p_set_fapl_sec2(fapl)
     DRIVERS[API.h5p_get_driver(fapl)] = POSIX
     close(fapl)
-    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" include("mpio.jl")
+
+    # Check whether the loaded HDF5 libraries were compiled with parallel support.
+    loaded_libs = filter(contains(r"hdf5"i), Libc.Libdl.dllist())
+    for libname in loaded_libs
+        has_mpio = Libc.Libdl.dlopen(libname) do lib
+            Libc.Libdl.dlsym(lib, :H5Pset_fapl_mpio; throw_error=false) !== nothing
+        end
+        if has_mpio
+            HDF5.HAS_PARALLEL[] = true
+            break
+        end
+    end
+
+    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" (HDF5.has_parallel() && include("mpio.jl"))
 end
 
 end # module
