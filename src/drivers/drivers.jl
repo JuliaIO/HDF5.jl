@@ -85,6 +85,11 @@ function set_driver!(p::Properties, ::POSIX)
 end
 
 function __init__()
+    # disable file locking as that can cause problems with mmap'ing
+    if !haskey(ENV, "HDF5_USE_FILE_LOCKING")
+        ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
+    end
+
     fapl = HDF5.init!(HDF5.FileAccessProperties())
     API.h5p_set_fapl_core(fapl, 4096, false)
     DRIVERS[API.h5p_get_driver(fapl)] = Core
