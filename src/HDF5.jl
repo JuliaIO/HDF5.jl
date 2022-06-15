@@ -52,6 +52,7 @@ include("dataspaces.jl")
 include("datasets.jl")
 include("attributes.jl")
 include("readwrite.jl")
+include("references.jl")
 include("show.jl")
 
 ### High-level interface ###
@@ -496,14 +497,6 @@ function unpad(s::String, pad::Integer)::String
 end
 unpad(s, pad::Integer) = unpad(String(s), pad)
 
-# Dereference
-function _deref(parent, r::Reference)
-    r == Reference() && error("Reference is null")
-    obj_id = API.h5r_dereference(checkvalid(parent), API.H5P_DEFAULT, API.H5R_OBJECT, r)
-    h5object(obj_id, parent)
-end
-Base.getindex(parent::Union{File,Group}, r::Reference) = _deref(parent, r)
-Base.getindex(parent::Dataset, r::Reference) = _deref(parent, r) # defined separately to resolve ambiguity
 
 # end of high-level interface
 

@@ -131,16 +131,7 @@ Base.unsafe_convert(::Type{API.hid_t}, attr::Attribute) = attr.id
 struct Reference
   r::API.hobj_ref_t
 end
-Reference() = Reference(API.HOBJ_REF_T_NULL) # NULL reference to compare to
 Base.cconvert(::Type{Ptr{T}}, ref::Reference) where {T<:Union{Reference,API.hobj_ref_t,Cvoid}} = Ref(ref)
-Base.:(==)(a::Reference, b::Reference) = a.r == b.r
-Base.hash(x::Reference, h::UInt) = hash(x.r, h)
-
-function Reference(parent::Union{File,Group,Dataset}, name::AbstractString)
-  ref = Ref{API.hobj_ref_t}()
-  API.h5r_create(ref, checkvalid(parent), name, API.H5R_OBJECT, -1)
-  return Reference(ref[])
-end
 
 const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
 const ScalarType = Union{BitsType,Reference}
