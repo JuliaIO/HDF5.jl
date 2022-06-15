@@ -98,7 +98,7 @@ function __init__()
     close(fapl)
 
     # Check whether the loaded HDF5 libraries were compiled with parallel support.
-    loaded_libs = filter(contains(r"hdf5"i), Libc.Libdl.dllist())
+    loaded_libs = filter(s->match(r"hdf5"i, s) !== nothing, Libc.Libdl.dllist())
     for libname in loaded_libs
         has_mpio = Libc.Libdl.dlopen(libname) do lib
             Libc.Libdl.dlsym(lib, :H5Pset_fapl_mpio; throw_error=false) !== nothing
