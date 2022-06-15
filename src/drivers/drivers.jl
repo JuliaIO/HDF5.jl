@@ -85,7 +85,7 @@ function set_driver!(p::Properties, ::POSIX)
 end
 
 function __init__()
-    fapl = HDF5.FileAccessProperties(fclose_degree=:default)
+    fapl = HDF5.init!(HDF5.FileAccessProperties())
     API.h5p_set_fapl_core(fapl, 4096, false)
     DRIVERS[API.h5p_get_driver(fapl)] = Core
     API.h5p_set_fapl_sec2(fapl)
