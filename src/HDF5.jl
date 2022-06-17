@@ -48,6 +48,7 @@ const ORDER = Ref(API.H5_ITER_INC)
 include("properties.jl")
 include("types.jl")
 include("file.jl")
+include("groups.jl")
 include("typeconversions.jl")
 include("dataspaces.jl")
 include("datasets.jl")
@@ -145,12 +146,8 @@ function Base.close(obj::Datatype)
 end
 
 
-# Flush buffers
-Base.flush(f::Union{Object,Attribute,Datatype,File}, scope = API.H5F_SCOPE_GLOBAL) = API.h5f_flush(checkvalid(f), scope)
 
 # Open objects
-open_group(parent::Union{File,Group}, name::AbstractString, gapl::GroupAccessProperties=GroupAccessProperties()) =
-    Group(API.h5g_open(checkvalid(parent), name, gapl), file(parent))
 open_datatype(parent::Union{File,Group}, name::AbstractString, tapl::DatatypeAccessProperties=DatatypeAccessProperties()) =
     Datatype(API.h5t_open(checkvalid(parent), name, tapl), file(parent))
 
@@ -169,9 +166,6 @@ function gettype(parent, path::AbstractString)
     API.h5o_close(obj_id)
     return obj_type
 end
-# Get the root group
-root(h5file::File) = open_group(h5file, "/")
-root(obj::Union{Group,Dataset}) = open_group(file(obj), "/")
 
 function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     haskey(parent, path) || throw(KeyError(path))
@@ -193,27 +187,6 @@ function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     end
 end
 
-# Path manipulation
-function split1(path::AbstractString)
-    ind = findfirst('/', path)
-    isnothing(ind) && return path, ""
-    if ind == 1 # matches root group
-        return "/", path[2:end]
-    else
-        indm1, indp1 = prevind(path, ind), nextind(path, ind)
-        return path[1:indm1], path[indp1:end] # better to use begin:indm1, but only available on v1.5
-    end
-end
-
-function create_group(parent::Union{File,Group}, path::AbstractString,
-                  lcpl::LinkCreateProperties=_link_properties(path),
-                  gcpl::GroupCreateProperties=GroupCreateProperties();
-                  pv...)
-    haskey(parent, path) && error("cannot create group: object \"", path, "\" already exists at ", name(parent))
-    pv = setproperties!(gcpl; pv...)
-    isempty(pv) || error("invalid keyword options $pv")
-    Group(API.h5g_create(parent, path, lcpl, gcpl, API.H5P_DEFAULT), file(parent))
-end
 
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 create_datatype(class_id, sz) = Datatype(API.h5t_create(class_id, sz))
@@ -227,22 +200,9 @@ function commit_datatype(parent::Union{File,Group}, path::AbstractString, dtype:
     return dtype
 end
 
-
-# Delete objects
-delete_object(parent::Union{File,Group}, path::AbstractString, lapl::LinkAccessProperties=LinkAccessProperties()) =
-    API.h5l_delete(checkvalid(parent), path, lapl)
-delete_object(obj::Object) = delete_object(parent(obj), ascii(split(name(obj),"/")[end])) # FIXME: remove ascii?
-
 # Copy objects
 copy_object(src_parent::Union{File,Group}, src_path::AbstractString, dst_parent::Union{File,Group}, dst_path::AbstractString) = API.h5o_copy(checkvalid(src_parent), src_path, checkvalid(dst_parent), dst_path, API.H5P_DEFAULT, _link_properties(dst_path))
 copy_object(src_obj::Object, dst_parent::Union{File,Group}, dst_path::AbstractString) = API.h5o_copy(checkvalid(src_obj), ".", checkvalid(dst_parent), dst_path, API.H5P_DEFAULT, _link_properties(dst_path))
-
-# Move links
-move_link(src::Union{File,Group}, src_name::AbstractString, dest::Union{File,Group}, dest_name::AbstractString=src_name, lapl::LinkAccessProperties = LinkAccessProperties(), lcpl::LinkCreateProperties = LinkCreateProperties()) =
-    API.h5l_move(checkvalid(src), src_name, checkvalid(dest), dest_name, lcpl, lapl)
-
-move_link(parent::Union{File,Group}, src_name::AbstractString, dest_name::AbstractString, lapl::LinkAccessProperties = LinkAccessProperties(), lcpl::LinkCreateProperties = LinkCreateProperties())  =
-    API.h5l_move(checkvalid(parent), src_name, parent, dest_name, lcpl, lapl)
 
 # Assign syntax: obj[path] = value
 # Create a dataset with properties: obj[path, prop = val, ...] = val
@@ -265,68 +225,11 @@ function Base.setindex!(parent::Union{File,Group}, val, path::Union{AbstractStri
 end
 
 # Check existence
-function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::LinkAccessProperties = LinkAccessProperties())
-    checkvalid(parent)
-    first, rest = split1(path)
-    if first == "/"
-        parent = root(parent)
-    elseif !API.h5l_exists(parent, first, lapl)
-        return false
-    end
-    exists = true
-    if !isempty(rest)
-        obj = parent[first]
-        exists = haskey(obj, rest, lapl)
-        close(obj)
-    end
-    return exists
-end
-Base.haskey(dset::Union{Dataset,Datatype}, path::AbstractString) = API.h5a_exists(checkvalid(dset), path)
 
 # Querying items in the file
-group_info(obj::Union{Group,File}) = API.h5g_get_info(checkvalid(obj))
 object_info(obj::Union{File,Object}) = API.h5o_get_info(checkvalid(obj))
 
-Base.length(obj::Union{Group,File}) = Int(API.h5g_get_num_objs(checkvalid(obj)))
-
-Base.isempty(x::Union{Group,File}) = length(x) == 0
 Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
-
-# filename and name
-name(obj::Union{File,Group,Dataset,Datatype}) = API.h5i_get_name(checkvalid(obj))
-function Base.keys(x::Union{Group,File})
-    checkvalid(x)
-    children = sizehint!(String[], length(x))
-    API.h5l_iterate(x, IDX_TYPE[], ORDER[]) do _, name, _
-        push!(children, unsafe_string(name))
-        return API.herr_t(0)
-    end
-    return children
-end
-
-
-# iteration by objects
-function Base.iterate(parent::Union{File,Group}, iter = (1,nothing))
-    n, prev_obj = iter
-    prev_obj ≢ nothing && close(prev_obj)
-    n > length(parent) && return nothing
-    obj = h5object(API.h5o_open_by_idx(checkvalid(parent), ".", IDX_TYPE[], ORDER[], n-1, API.H5P_DEFAULT), parent)
-    return (obj, (n+1,obj))
-end
-
-function Base.parent(obj::Union{File,Group,Dataset})
-    f = file(obj)
-    path = name(obj)
-    if length(path) == 1
-        return f
-    end
-    parentname = dirname(path)
-    if !isempty(parentname)
-        return open_object(f, dirname(path))
-    else
-        return root(f)
-    end
-end
 
 # The datatype of a Datatype is the Datatype
 datatype(dt::Datatype) = dt
@@ -374,17 +277,6 @@ get_create_properties(g::Group)     = GroupCreateProperties(API.h5g_get_create_p
 get_create_properties(f::File)      = FileCreateProperties(API.h5f_get_create_plist(f))
 get_create_properties(a::Attribute) = AttributeCreateProperties(API.h5a_get_create_plist(a))
 
-"""
-    create_external(source::Union{HDF5.File, HDF5.Group}, source_relpath, target_filename, target_path;
-                    lcpl_id=HDF5.API.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
-
-Create an external link such that `source[source_relpath]` points to `target_path` within the file
-with path `target_filename`; Calls `[H5Lcreate_external](https://www.hdfgroup.org/HDF5/doc/RM/RM_H5L.html#Link-CreateExternal)`.
-"""
-function create_external(source::Union{File,Group}, source_relpath, target_filename, target_path; lcpl_id=API.H5P_DEFAULT, lapl_id=API.H5P_DEFAULT)
-    API.h5l_create_external(target_filename, target_path, source, source_relpath, lcpl_id, lapl_id)
-    nothing
-end
 
 const HAS_PARALLEL = Ref(false)
 

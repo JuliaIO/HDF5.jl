@@ -300,3 +300,4 @@ function Base.getindex(dset::Dataset, name::AbstractString)
     open_attribute(dset, name)
 end
 Base.setindex!(dset::Dataset, val, name::AbstractString) = write_attribute(dset, name, val)
+Base.haskey(dset::Union{Dataset,Datatype}, path::AbstractString) = API.h5a_exists(checkvalid(dset), path)
