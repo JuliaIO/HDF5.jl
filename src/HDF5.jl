@@ -69,7 +69,7 @@ end
 
 function h5read(filename, name::AbstractString; pv...)
     local dat
-    fapl = FileAccessProperties(; fclose_degree = :strong)
+    fapl = FileAccessProperties()
     pv = setproperties!(fapl; pv...)
     file = h5open(filename, "r", fapl)
     try
@@ -84,7 +84,7 @@ end
 
 function h5read(filename, name_type_pair::Pair{<:AbstractString,DataType}; pv...)
     local dat
-    fapl = FileAccessProperties(; fclose_degree = :strong)
+    fapl = FileAccessProperties()
     pv = setproperties!(fapl; pv...)
     file = h5open(filename, "r", fapl)
     try
@@ -99,7 +99,7 @@ end
 
 function h5read(filename, name::AbstractString, indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}}; pv...)
     local dat
-    fapl = FileAccessProperties(; fclose_degree = :strong)
+    fapl = FileAccessProperties()
     pv = setproperties!(fapl; pv...)
     file = h5open(filename, "r", fapl)
     try
