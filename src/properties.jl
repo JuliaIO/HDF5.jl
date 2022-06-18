@@ -33,8 +33,11 @@ function (::Type{P})(;kwargs...) where {P <: Properties}
     end
     return obj
 end
+# Properties() do end
 function (::Type{P})(func::Function; kwargs...) where {P <: Properties}
     p = P(; kwargs...)
+    # Eagerly initialize when using do syntax
+    init!(p)
     func(p)
     close(p)
 end
@@ -229,6 +232,7 @@ end
 
 """
     ObjectCreateProperties(;kws...)
+    ObjectCreateProperties(f::Function; kws...)
 
 Properties used when creating a new object. Available options:
 
@@ -236,6 +240,8 @@ Properties used when creating a new object. Available options:
   object. If set to `true`, time data will be recorded. See
   $(h5doc("H5P_SET_OBJ_TRACK_TIMES")).
 
+A function argument passed via `do` will be given an initialized property list
+that will be closed.
 """
 @propertyclass ObjectCreateProperties API.H5P_OBJECT_CREATE
 
@@ -269,6 +275,7 @@ end
 
 """
     GroupCreateProperties(;kws...)
+    GroupCreateProperties(f::Function; kws...)
 
 Properties used when creating a new `Group`. Inherits from
 [`ObjectCreateProperties`](@ref), with additional options:
@@ -276,6 +283,9 @@ Properties used when creating a new `Group`. Inherits from
 - `local_heap_size_hint :: Integer`: the anticipated maximum local heap size in
   bytes. See $(h5doc("H5P_SET_LOCAL_HEAP_SIZE_HINT")).
 - `track_order :: Bool`: tracks the group creation order.
+
+A function argument passed via `do` will be given an initialized property list
+that will be closed.
 """
 @propertyclass GroupCreateProperties API.H5P_GROUP_CREATE
 superclass(::Type{GroupCreateProperties}) = ObjectCreateProperties
@@ -297,6 +307,7 @@ end
 
 """
     FileCreateProperties(;kws...)
+    FileCreateProperties(f::Function; kws...)
 
 Properties used when creating a new `File`. Inherits from
 [`ObjectCreateProperties`](@ref),  with additional properties:
@@ -305,6 +316,9 @@ Properties used when creating a new `File`. Inherits from
   is 0; it may be set to any power of 2 equal to 512 or greater (512, 1024,
   2048, etc.). See $(h5doc("H5P_SET_USERBLOCK")).
 - `track_order :: Bool`: tracks the file creation order.
+
+A function argument passed via `do` will be given an initialized property list
+that will be closed.
 """
 @propertyclass FileCreateProperties API.H5P_FILE_CREATE
 superclass(::Type{FileCreateProperties}) = ObjectCreateProperties
@@ -361,13 +375,17 @@ end
 
 """
     DatatypeCreateProperties(;kws...)
+    DatatypeCreateProperties(f::Function; kws...)
 
+A function argument passed via `do` will be given an initialized property list
+that will be closed.
 """
 @propertyclass DatatypeCreateProperties API.H5P_DATATYPE_CREATE
 superclass(::Type{DatatypeCreateProperties}) = ObjectCreateProperties
 
 """
     DatasetCreateProperties(;kws...)
+    DatasetCreateProperties(f::Function; kws...)
 
 Properties used when creating a new `Dataset`. Inherits from
 [`ObjectCreateProperties`](@ref), with additional properties:
@@ -436,6 +454,8 @@ They will be appended to the filter pipeline in the order in which they appear
 
 - `shuffle = true`: set the [`Filters.Shuffle`](@ref) filter.
 
+A function argument passed via `do` will be given an initialized property list
+that will be closed.
 """
 @propertyclass DatasetCreateProperties API.H5P_DATASET_CREATE
 superclass(::Type{DatasetCreateProperties}) = ObjectCreateProperties
@@ -542,7 +562,10 @@ end
 
 """
     StringCreateProperties(;kws...)
+    StringCreateProperties(f::Function; kws...)
 
+A function argument passed via `do` will be given an initialized property list
+that will be closed.
 """
 @propertyclass StringCreateProperties API.H5P_STRING_CREATE
 
@@ -565,6 +588,7 @@ end
 
 """
     LinkCreateProperties(;kws...)
+    LinkCreateProperties(f::Function; kws...)
 
 Properties used when creating links.
 
@@ -572,6 +596,9 @@ Properties used when creating links.
 
 - `create_intermediate_group :: Bool`: if `true`, will create missing
   intermediate groups.
+
+A function argument passed via `do` will be given an initialized property list
+that will be closed.
 """
 @propertyclass LinkCreateProperties API.H5P_LINK_CREATE
 superclass(::Type{LinkCreateProperties}) = StringCreateProperties
@@ -592,10 +619,14 @@ end
 
 """
     AttributeCreateProperties(;kws...)
+    AttributeCreateProperties(f::Function; kws...)
 
 Properties used when creating attributes.
 
 - `char_encoding`: the character enconding, either `:ascii` or `:utf8`.
+
+A function argument passed via `do` will be given an initialized property list
+that will be closed.
 """
 @propertyclass AttributeCreateProperties API.H5P_ATTRIBUTE_CREATE
 superclass(::Type{AttributeCreateProperties}) = StringCreateProperties
@@ -603,6 +634,7 @@ superclass(::Type{AttributeCreateProperties}) = StringCreateProperties
 
 """
     FileAccessProperties(;kws...)
+    FileAccessProperties(f::Function; kws...)
 
 Properties used when accessing files.
 
@@ -628,6 +660,8 @@ Properties used when accessing files.
   creating objects in the file. Values can be a `VersionNumber` for the hdf5
   library, `:earliest`, or `:latest` . See $(h5doc("H5P_SET_LIBVER_BOUNDS"))
 
+A function argument passed via `do` will be given an initialized property list
+that will be closed.
 """
 @propertyclass FileAccessProperties API.H5P_FILE_ACCESS
 
@@ -730,7 +764,8 @@ superclass(::Type{GroupAccessProperties}) = LinkAccessProperties
 superclass(::Type{DatatypeAccessProperties}) = LinkAccessProperties
 
 """
-    DatasetAccessProperties(; kws...)
+    DatasetAccessProperties(;kws...)
+    DatasetAccessProperties(f::Function; kws...)
 
 Properties that control access to data in external, virtual, and chunked datasets.
 
@@ -748,6 +783,10 @@ Properties that control access to data in external, virtual, and chunked dataset
   or excludes missing mapped elements
   - `:first_missing`: includes all data before the first missing mapped data
   - `:last_available`: includes all available mapped data
+
+
+A function argument passed via `do` will be given an initialized property list
+that will be closed.
 
 See [Dataset Access Properties](https://portal.hdfgroup.org/display/HDF5/Dataset+Access+Properties)
 """
@@ -789,12 +828,16 @@ superclass(::Type{AttributeAccessProperties}) = LinkAccessProperties
 
 """
     DatasetTransferProperties(;kws...)
+    DatasetTransferProperties(f::Function; kws...)
 
 Properties used when transferring data to/from datasets
 
 - `dxpl_mpio`: MPI transfer mode:
    - `:independent`: use independent I/O access (default),
    - `:collective`: use collective I/O access.
+
+A function argument passed via `do` will be given an initialized property list
+that will be closed.
 """
 @propertyclass DatasetTransferProperties API.H5P_DATASET_XFER
 
