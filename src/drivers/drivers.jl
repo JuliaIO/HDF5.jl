@@ -96,9 +96,7 @@ function __init__()
     end
 
     # Check whether the libhdf5 was compiled with parallel support.
-    HDF5.HAS_PARALLEL[] = dlopen(HDF5.API.libhdf5) do lib
-        dlsym(lib, :H5Pset_fapl_mpio; throw_error=false) !== nothing
-    end
+    HDF5.HAS_PARALLEL[] = API._has_symbol(:H5Pset_fapl_mpio)
 
     @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" (HDF5.has_parallel() && include("mpio.jl"))
 end

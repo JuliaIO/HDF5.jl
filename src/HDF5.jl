@@ -399,14 +399,8 @@ For the second condition to be true, MPI.jl must be imported before HDF5.jl.
 has_parallel() = HAS_PARALLEL[]
 
 function __init__()
-    API.check_deps()
-
-    # disable file locking as that can cause problems with mmap'ing
-    # file locking is disabled in HDF5.init!(::FileAccessPropertyList)
-
-    # use our own error handling machinery (i.e. turn off automatic error printing)
-    API.h5e_set_auto(API.H5E_DEFAULT, C_NULL, C_NULL)
-
+    # HDF5.API.__init__() is run first
+    #
     # initialize default properties
     ASCII_LINK_PROPERTIES.char_encoding = :ascii
     ASCII_LINK_PROPERTIES.create_intermediate_group = true

@@ -293,6 +293,22 @@ function h5p_get_file_locking(fapl)
             ignore_when_disabled = Bool(ignore_when_disabled[]))
 end
 
+# Check to see if h5p_set_file_locking should exist
+const _has_h5p_set_file_locking = _has_symbol(:H5Pset_file_locking)
+function has_h5p_set_file_locking()
+   return _has_h5p_set_file_locking
+   #=
+   h5_version = h5_get_libversion()
+   if (h5_version >= v"1.10" && h5_version < v"1.10.7") ||
+      (h5_version >= v"1.12" && h5_version < v"1.12.1") ||
+      (h5_version < v"1.10")
+      return false
+   else
+      return true
+   end
+   =#
+end
+
 function h5p_get_file_space_strategy(plist_id)
     strategy = Ref{H5F_fspace_strategy_t}()
     persist = Ref{hbool_t}(0)

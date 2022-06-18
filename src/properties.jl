@@ -636,7 +636,7 @@ function init!(fapl::FileAccessProperties)
     # Call default init! for Properties
     invoke(init!, Tuple{Properties}, fapl)
     # Disable file locking by default for mmap
-    @static if API.h5_get_libversion() >= v"1.10.7"
+    @static if API.has_h5p_set_file_locking()
         API.h5p_set_file_locking(fapl, false, true)
     end
     set_fclose_degree!(fapl, :strong)
