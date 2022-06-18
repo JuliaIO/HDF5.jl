@@ -190,6 +190,8 @@ function get_jl_type(obj)
   end
 end
 
+Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
+
 function get_mem_compatible_jl_type(obj_type::Datatype)
   class_id = API.h5t_get_class(obj_type)
   if class_id == API.H5T_STRING

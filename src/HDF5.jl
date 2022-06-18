@@ -49,6 +49,7 @@ include("properties.jl")
 include("types.jl")
 include("file.jl")
 include("groups.jl")
+include("datatypes.jl")
 include("typeconversions.jl")
 include("dataspaces.jl")
 include("datasets.jl")
@@ -135,21 +136,8 @@ function Base.close(obj::Union{Group,Dataset})
     nothing
 end
 
-function Base.close(obj::Datatype)
-    if obj.toclose && obj.id != -1
-        if (!isdefined(obj, :file) || obj.file.id != -1) && isvalid(obj)
-            API.h5o_close(obj)
-        end
-        obj.id = -1
-    end
-    nothing
-end
 
 
-
-# Open objects
-open_datatype(parent::Union{File,Group}, name::AbstractString, tapl::DatatypeAccessProperties=DatatypeAccessProperties()) =
-    Datatype(API.h5t_open(checkvalid(parent), name, tapl), file(parent))
 
 # Object (group, named datatype, or dataset) open
 function h5object(obj_id::API.hid_t, parent)
@@ -188,18 +176,6 @@ function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
 end
 
 
-# Note that H5Tcreate is very different; H5Tcommit is the analog of these others
-create_datatype(class_id, sz) = Datatype(API.h5t_create(class_id, sz))
-function commit_datatype(parent::Union{File,Group}, path::AbstractString, dtype::Datatype,
-                  lcpl::LinkCreateProperties=LinkCreateProperties(),
-                  tcpl::DatatypeCreateProperties=DatatypeCreateProperties(),
-                  tapl::DatatypeAccessProperties=DatatypeAccessProperties())
-    lcpl.char_encoding = cset(typeof(path))
-    API.h5t_commit(checkvalid(parent), path, dtype, lcpl, tcpl, tapl)
-    dtype.file = file(parent)
-    return dtype
-end
-
 # Copy objects
 copy_object(src_parent::Union{File,Group}, src_path::AbstractString, dst_parent::Union{File,Group}, dst_path::AbstractString) = API.h5o_copy(checkvalid(src_parent), src_path, checkvalid(dst_parent), dst_path, API.H5P_DEFAULT, _link_properties(dst_path))
 copy_object(src_obj::Object, dst_parent::Union{File,Group}, dst_path::AbstractString) = API.h5o_copy(checkvalid(src_obj), ".", checkvalid(dst_parent), dst_path, API.H5P_DEFAULT, _link_properties(dst_path))
@@ -228,13 +204,6 @@ end
 
 # Querying items in the file
 object_info(obj::Union{File,Object}) = API.h5o_get_info(checkvalid(obj))
-
-Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
-
-# The datatype of a Datatype is the Datatype
-datatype(dt::Datatype) = dt
-
-Base.sizeof(dtype::Datatype) = Int(API.h5t_get_size(dtype))
 
 
 
