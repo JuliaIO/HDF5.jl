@@ -49,7 +49,7 @@ end
 function h5open(filename::AbstractString, mode::AbstractString = "r";
     swmr::Bool = false,
     # With garbage collection, the other modes don't make sense
-    fapl = FileAccessProperties(),
+    fapl = FileAccessProperties(; fclose_degree = :strong),
     fcpl = FileCreateProperties(),
     pv...
 )
