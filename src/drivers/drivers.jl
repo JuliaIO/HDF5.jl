@@ -5,6 +5,7 @@ export POSIX
 import ..API
 import ..HDF5: HDF5, Properties, h5doc
 
+using Libdl: dlopen, dlsym
 using Requires: @require
 
 
@@ -85,9 +86,24 @@ function set_driver!(p::Properties, ::POSIX)
 end
 
 function __init__()
-    DRIVERS[API.h5fd_core_init()] = Core
-    DRIVERS[API.h5fd_sec2_init()] = POSIX
-    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" include("mpio.jl")
+    # disable file locking as that can cause problems with mmap'ing
+    if !haskey(ENV, "HDF5_USE_FILE_LOCKING")
+        ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
+    end
+
+    fapl = HDF5.init!(HDF5.FileAccessProperties())
+    API.h5p_set_fapl_core(fapl, 4096, false)
+    DRIVERS[API.h5p_get_driver(fapl)] = Core
+    API.h5p_set_fapl_sec2(fapl)
+    DRIVERS[API.h5p_get_driver(fapl)] = POSIX
+    close(fapl)
+
+    # Check whether the libhdf5 was compiled with parallel support.
+    HDF5.HAS_PARALLEL[] = dlopen(HDF5.API.libhdf5) do lib
+        dlsym(lib, :H5Pset_fapl_mpio; throw_error=false) !== nothing
+    end
+
+    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" (HDF5.has_parallel() && include("mpio.jl"))
 end
 
 end # module
