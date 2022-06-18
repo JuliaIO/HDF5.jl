@@ -33,6 +33,11 @@ function (::Type{P})(;kwargs...) where {P <: Properties}
     end
     return obj
 end
+function (::Type{P})(func::Function; kwargs...) where {P <: Properties}
+    p = P(; kwargs...)
+    func(p)
+    close(p)
+end
 
 function Base.getproperty(p::P, name::Symbol) where {P <: Properties}
     name === :id    ? getfield(p, :id) :
@@ -91,7 +96,7 @@ macro propertyclass(name, classid)
     expr = quote
         Core.@__doc__ mutable struct $name <: Properties
             id::API.hid_t
-            function $name(id)
+            function $name(id::API.hid_t)
                 obj = new(id)
                 finalizer(close, obj)
                 obj
@@ -626,6 +631,15 @@ Properties used when accessing files.
 """
 @propertyclass FileAccessProperties API.H5P_FILE_ACCESS
 
+# Defaults for FileAccessProperties
+function init!(fapl::FileAccessProperties)
+    # Call default init! for Properties
+    invoke(init!, Tuple{Properties}, fapl)
+    # Disable file locking by default for mmap
+    API.h5p_set_file_locking(fapl, false, true)
+    return fapl
+end
+
 @tuple_property(alignment)
 
 @enum_property(fclose_degree,
@@ -674,6 +688,7 @@ class_propertynames(::Type{FileAccessProperties}) = (
     :driver_info,
     :fapl_mpio,
     :fclose_degree,
+    :file_locking,
     :libver_bounds,
     :meta_block_size,
     )
@@ -683,6 +698,7 @@ function class_getproperty(::Type{FileAccessProperties}, p::Properties, name::Sy
     name === :driver        ? Drivers.get_driver(p) :
     name === :driver_info   ? API.h5p_get_driver_info(p) : # get only
     name === :fclose_degree ? get_fclose_degree(p) :
+    name === :file_locking  ? API.h5p_get_file_locking(p) :
     name === :libver_bounds ? get_libver_bounds(p) :
     name === :meta_block_size ? API.h5p_get_meta_block_size(p) :
     # deprecated
@@ -693,6 +709,7 @@ function class_setproperty!(::Type{FileAccessProperties}, p::Properties, name::S
     name === :alignment     ? set_alignment!(p, val) :
     name === :driver        ? Drivers.set_driver!(p, val) :
     name === :fclose_degree ? set_fclose_degree!(p, val) :
+    name === :file_locking  ? API.h5p_set_file_locking(p, val...) :
     name === :libver_bounds ? set_libver_bounds!(p, val) :
     name === :meta_block_size ? API.h5p_set_meta_block_size(p, val) :
     # deprecated

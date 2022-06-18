@@ -8,9 +8,6 @@ import ..HDF5: HDF5, Properties, h5doc
 using Libdl: dlopen, dlsym
 using Requires: @require
 
-
-const DRIVERS = Dict{API.hid_t, Any}()
-
 function get_driver(p::Properties)
     driver_id = API.h5p_get_driver(p)
     D = get(DRIVERS, driver_id) do
@@ -20,6 +17,8 @@ function get_driver(p::Properties)
 end
 
 abstract type Driver end
+
+const DRIVERS = Dict{API.hid_t, Type{<: Driver}}()
 
 """
     Core([increment::Csize_t, backing_store::Cuint, [write_tracking::Cuint, page_size::Csize_t]])
@@ -61,9 +60,11 @@ function get_driver(p::Properties, ::Type{Core})
     )
 end
 
-function set_driver!(p::Properties, driver::Core)
-    API.h5p_set_fapl_core(p, driver.increment, driver.backing_store)
-    API.h5p_set_core_write_tracking(p, driver.write_tracking, driver.page_size)
+function set_driver!(fapl::Properties, driver::Core)
+    HDF5.init!(fapl)
+    API.h5p_set_fapl_core(fapl, driver.increment, driver.backing_store)
+    API.h5p_set_core_write_tracking(fapl, driver.write_tracking, driver.page_size)
+    DRIVERS[API.h5p_get_driver(fapl)] = Core
     return nothing
 end
 
@@ -77,26 +78,22 @@ buffering. This driver is POSIX-compliant and is the default file driver for all
 struct POSIX <: Driver
 end
 
-function get_driver(p::Properties, ::Type{POSIX})
+function get_driver(fapl::Properties, ::Type{POSIX})
     POSIX()
 end
 
-function set_driver!(p::Properties, ::POSIX)
-    API.h5p_set_fapl_sec2(p)
+function set_driver!(fapl::Properties, ::POSIX)
+    HDF5.init!(fapl)
+    API.h5p_set_fapl_sec2(fapl)
+    DRIVERS[API.h5p_get_driver(fapl)] = POSIX
+    return nothing
 end
 
 function __init__()
-    # disable file locking as that can cause problems with mmap'ing
-    if !haskey(ENV, "HDF5_USE_FILE_LOCKING")
-        ENV["HDF5_USE_FILE_LOCKING"] = "FALSE"
+    # Initialize POSIX key in DRIVERS
+    HDF5.FileAccessProperties() do fapl
+        set_driver!(fapl, POSIX())
     end
-
-    fapl = HDF5.init!(HDF5.FileAccessProperties())
-    API.h5p_set_fapl_core(fapl, 4096, false)
-    DRIVERS[API.h5p_get_driver(fapl)] = Core
-    API.h5p_set_fapl_sec2(fapl)
-    DRIVERS[API.h5p_get_driver(fapl)] = POSIX
-    close(fapl)
 
     # Check whether the libhdf5 was compiled with parallel support.
     HDF5.HAS_PARALLEL[] = dlopen(HDF5.API.libhdf5) do lib

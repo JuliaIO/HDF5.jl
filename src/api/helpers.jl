@@ -285,6 +285,14 @@ function h5f_get_free_sections(file_id, type, sect_info::AbstractVector{H5F_sect
     return @view(sect_info[1:nsects])
 end
 
+function h5p_get_file_locking(fapl)
+    use_file_locking = Ref{API.hbool_t}(0)
+    ignore_when_disabled = Ref{API.hbool_t}(0)
+    h5p_get_file_locking(fapl, use_file_locking, ignore_when_disabled)
+    return (use_file_locking     = Bool(use_file_locking[]),
+            ignore_when_disabled = Bool(ignore_when_disabled[]))
+end
+
 function h5p_get_file_space_strategy(plist_id)
     strategy = Ref{H5F_fspace_strategy_t}()
     persist = Ref{hbool_t}(0)
