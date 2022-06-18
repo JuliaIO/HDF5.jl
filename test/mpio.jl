@@ -4,6 +4,10 @@ using Test
 
 @testset "mpio" begin
 
+HDF5.FileAccessProperties() do fapl
+    Drivers.set_driver!(fapl, Drivers.Core())
+end
+
 MPI.Init()
 
 info = MPI.Info()
