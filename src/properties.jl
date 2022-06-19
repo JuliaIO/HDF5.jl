@@ -33,13 +33,17 @@ function (::Type{P})(;kwargs...) where {P <: Properties}
     end
     return obj
 end
-# Properties() do end
+# Properties() do syntax
 function (::Type{P})(func::Function; kwargs...) where {P <: Properties}
     p = P(; kwargs...)
     # Eagerly initialize when using do syntax
+    # This allows for use low-level API calls
     init!(p)
-    func(p)
-    close(p)
+    try
+        func(p)
+    finally
+        close(p)
+    end
 end
 
 function Base.getproperty(p::P, name::Symbol) where {P <: Properties}
