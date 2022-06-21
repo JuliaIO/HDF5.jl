@@ -89,13 +89,7 @@ create_group(fid, "mygroup")
 We can write the `"mydataset"` by:
 
 ```@repl main
-fid["mydataset"] = rand()
-```
-
-Or
-
-```@repl main
-create_dataset(fid, "myvector", rand(10))
+fid["mydataset"] = rand(10)
 ```
 
 Writing to a dataset to a group is as simple as:
