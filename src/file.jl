@@ -147,3 +147,6 @@ See [SWMR documentation](https://portal.hdfgroup.org/display/HDF5/Single+Writer+
 """
 start_swmr_write(h5::File) = API.h5f_start_swmr_write(h5)
 
+# Flush buffers
+Base.flush(f::Union{Object,Attribute,Datatype,File}, scope = API.H5F_SCOPE_GLOBAL) = API.h5f_flush(checkvalid(f), scope)
+
