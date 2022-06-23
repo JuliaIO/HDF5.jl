@@ -1,3 +1,24 @@
+"""
+    create_group(parent, path[, lcpl, gcpl]; properties...)
+
+# Arguments
+* `parent` - `File` or `Group`
+* `path` - `String` describing the path of the group within the HDF5 file
+* `lcpl` - [`LinkCreateProperties`](@ref)
+* `gcpl` - [`GroupCreateProperties`](@ref)
+* `properties` - keyword name-value pairs set properties of the group
+
+# Keywords
+
+There are many keyword properties that can be set. Below are a few select keywords.
+* `track_order` - `Bool` tracks the group creation order. 
+        Currently this is only used with `FileIO` and `OrderedDict`.
+        Files created with `track_order = true` 
+        should create all subgroups with `track_order = true`.
+
+See also
+* [`H5P`](@ref H5P)
+"""
 function create_group(parent::Union{File,Group}, path::AbstractString,
                   lcpl::LinkCreateProperties=_link_properties(path),
                   gcpl::GroupCreateProperties=GroupCreateProperties();
