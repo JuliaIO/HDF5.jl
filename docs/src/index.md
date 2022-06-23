@@ -78,32 +78,41 @@ close(fid)
 
 Closing a file also closes any other open objects (e.g., datasets, groups) in that file. In general, you need to close an HDF5 file to "release" it for use by other applications.
 
-## Writing a group or dataset
+## Creating a group or dataset
 
-Groups can be created as follows:
+Groups can be created via the function [`create_group`](@ref)
 
 ```@repl main
 create_group(fid, "mygroup")
 ```
 
-We can write the `"mydataset"` by:
+We can write the `"mydataset"` by indexing into `fid`. This also happens to write data to the dataset.
 
 ```@repl main
-fid["mydataset"] = rand(10)
+fid["mydataset"] = rand()
 ```
 
-Writing to a dataset to a group is as simple as:
+Alternatively, we can call [`create_dataset`](@ref), which does not write data to the dataset. It merely creates the dataset.
+
+```@repl main
+create_dataset(fid, "myvector", Int, (10,))
+```
+
+Creating a dataset within a group is as simple as indexing into the group with the name of the dataset or calling [`create_dataset`](@ref) with the group as the first argument.
 
 ```@repl main
 g = fid["mygroup"]
 g["mydataset"] = "Hello World!"
+create_dataset(g, "myvector", Int, (10,))
 ```
 
-The `do` syntax is also supported, which will automatically take care of closing the file handle:
+The `do` syntax is also supported. The file, group, and dataset handles will automatically be closed after the `do` block terminates.
 
 ```@repl main
 h5open("example2.h5", "w") do fid
-    create_group(fid, "mygroup")
+    g = create_group(fid, "mygroup")
+    dset = create_dataset(g, "myvector", Float64, (10,))
+    write(dset,rand(10))
 end
 ```
 
@@ -441,12 +450,12 @@ These open the named group, dataset, attribute, and committed datatype, respecti
 New objects can be created in the following ways:
 
 ```julia
-g = create_group(parent, name[, lcpl, dcpl])
-dset = create_dataset(parent, name, data[, lcpl, dcpl, dapl])
+g = create_group(parent, name[, lcpl, gcpl]; properties...)
+dset = create_dataset(parent, name, data; properties...)
 attr = create_attribute(parent, name, data)
 ```
 
-creates groups, datasets, and attributes without writing any data to them. You can then use `write(obj, data)` to store the data. The optional property lists allow even more fine-grained control. This syntax uses `data` to infer the object's "HDF5.datatype" and "HDF5.dataspace"; for the most explicit control, `data` can be replaced with `dtype, dspace`, where `dtype` is an `HDF5.Datatype` and `dspace` is an `HDF5.Dataspace`.
+creates groups, datasets, and attributes without writing any data to them. You can then use `write(obj, data)` to store the data. The optional properties and property lists allow even more fine-grained control. This syntax uses `data` to infer the object's "HDF5.datatype" and "HDF5.dataspace"; for the most explicit control, `data` can be replaced with `dtype, dspace`, where `dtype` is an `HDF5.Datatype` and `dspace` is an `HDF5.Dataspace`.
 
 Analogously, to create committed data types, use
 
@@ -457,7 +466,7 @@ t = commit_datatype(parent, name, dtype[, lcpl, tcpl, tapl])
 You can create and write data in one step,
 
 ```julia
-write_dataset(parent, name, data[, lcpl, dcpl, dapl])
+write_dataset(parent, name, data; properties...)
 write_attribute(parent, name, data)
 ```
 
