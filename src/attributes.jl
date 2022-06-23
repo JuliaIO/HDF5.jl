@@ -1,5 +1,3 @@
-# mid-level API
-
 """
     HDF5.Attribute
 
@@ -14,18 +12,8 @@ See also
 - [`write_attribute`](@ref)
 - [`delete_attribute`](@ref)
 """
-mutable struct Attribute
-    id::API.hid_t
-    file::File
+Attribute # defined in types.jl
 
-    function Attribute(id, file)
-        dset = new(id, file)
-        finalizer(close, dset)
-        dset
-    end
-end
-Base.cconvert(::Type{API.hid_t}, attr::Attribute) = attr
-Base.unsafe_convert(::Type{API.hid_t}, attr::Attribute) = attr.id
 function Base.close(obj::Attribute)
     if obj.id != -1
         if obj.file.id != -1 && isvalid(obj)
@@ -196,6 +184,7 @@ end
 struct AttributeDict <: AbstractDict{String,Any}
     parent::Object
 end
+AttributeDict(file::File) = AttributeDict(open_group(file, "."))
 
 """
     attrs(object::Union{File,Group,Dataset,Datatype})
@@ -210,8 +199,6 @@ delete!(attrs(object), "name") # delete an attribute
 keys(attrs(object))            # list the attribute names
 ```
 """
-AttributeDict(file::File) = AttributeDict(open_group(file, "."))
-
 function attrs(parent)
     return AttributeDict(parent)
 end
@@ -321,4 +308,4 @@ function Base.getindex(dset::Dataset, name::AbstractString)
     open_attribute(dset, name)
 end
 Base.setindex!(dset::Dataset, val, name::AbstractString) = write_attribute(dset, name, val)
-
+Base.haskey(dset::Union{Dataset,Datatype}, path::AbstractString) = API.h5a_exists(checkvalid(dset), path)

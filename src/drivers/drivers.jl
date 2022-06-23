@@ -5,10 +5,8 @@ export POSIX
 import ..API
 import ..HDF5: HDF5, Properties, h5doc
 
+using Libdl: dlopen, dlsym
 using Requires: @require
-
-
-const DRIVERS = Dict{API.hid_t, Any}()
 
 function get_driver(p::Properties)
     driver_id = API.h5p_get_driver(p)
@@ -19,6 +17,8 @@ function get_driver(p::Properties)
 end
 
 abstract type Driver end
+
+const DRIVERS = Dict{API.hid_t, Type{<: Driver}}()
 
 """
     Core([increment::Csize_t, backing_store::Cuint, [write_tracking::Cuint, page_size::Csize_t]])
@@ -60,9 +60,11 @@ function get_driver(p::Properties, ::Type{Core})
     )
 end
 
-function set_driver!(p::Properties, driver::Core)
-    API.h5p_set_fapl_core(p, driver.increment, driver.backing_store)
-    API.h5p_set_core_write_tracking(p, driver.write_tracking, driver.page_size)
+function set_driver!(fapl::Properties, driver::Core)
+    HDF5.init!(fapl)
+    API.h5p_set_fapl_core(fapl, driver.increment, driver.backing_store)
+    API.h5p_set_core_write_tracking(fapl, driver.write_tracking, driver.page_size)
+    DRIVERS[API.h5p_get_driver(fapl)] = Core
     return nothing
 end
 
@@ -76,18 +78,27 @@ buffering. This driver is POSIX-compliant and is the default file driver for all
 struct POSIX <: Driver
 end
 
-function get_driver(p::Properties, ::Type{POSIX})
+function get_driver(fapl::Properties, ::Type{POSIX})
     POSIX()
 end
 
-function set_driver!(p::Properties, ::POSIX)
-    API.h5p_set_fapl_sec2(p)
+function set_driver!(fapl::Properties, ::POSIX)
+    HDF5.init!(fapl)
+    API.h5p_set_fapl_sec2(fapl)
+    DRIVERS[API.h5p_get_driver(fapl)] = POSIX
+    return nothing
 end
 
 function __init__()
-    DRIVERS[API.h5fd_core_init()] = Core
-    DRIVERS[API.h5fd_sec2_init()] = POSIX
-    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" include("mpio.jl")
+    # Initialize POSIX key in DRIVERS
+    HDF5.FileAccessProperties() do fapl
+        set_driver!(fapl, POSIX())
+    end
+
+    # Check whether the libhdf5 was compiled with parallel support.
+    HDF5.HAS_PARALLEL[] = API._has_symbol(:H5Pset_fapl_mpio)
+
+    @require MPI="da04e1cc-30fd-572f-bb4f-1f8673147195" (HDF5.has_parallel() && include("mpio.jl"))
 end
 
 end # module

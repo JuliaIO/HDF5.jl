@@ -27,6 +27,11 @@ h5open(fn, "w";
                  fill_value = 1,
                  fill_time = :never,
                  obj_track_times = false,
+                 chunk_cache = (522, 0x200000, 0.80),
+                 efile_prefix = :origin,
+                 virtual_prefix = "virtual",
+                 virtual_printf_gap = 2,
+                 virtual_view = :last_available,
                  kwargs...)
     attributes(d)["metadata"] = "test"
 
@@ -35,14 +40,16 @@ h5open(fn, "w";
     fcpl = HDF5.get_create_properties(hfile)
     fapl = HDF5.get_access_properties(hfile)
     gcpl = HDF5.get_create_properties(hfile["group"])
-    dcpl = HDF5.get_create_properties(hfile["group/dataset"])
-    acpl = HDF5.get_create_properties(attributes(hfile["group/dataset"])["metadata"])
+    dcpl = HDF5.get_create_properties(d)
+    dapl = HDF5.get_access_properties(d)
+    acpl = HDF5.get_create_properties(attributes(d)["metadata"])
 
     # Retrievability of properties
     @test isvalid(fcpl)
     @test isvalid(fapl)
     @test isvalid(gcpl)
     @test isvalid(dcpl)
+    @test isvalid(dapl)
     @test isvalid(acpl)
 
     # Retrieving property values:
@@ -75,6 +82,15 @@ h5open(fn, "w";
     if HDF5.API.h5_get_libversion() >= v"1.10.5"
       @test dcpl.no_attrs_hint == true
     end
+
+    @test dapl.chunk_cache.nslots == 522
+    @test dapl.chunk_cache.nbytes == 0x200000
+    @test dapl.chunk_cache.w0 == 0.8
+    @test dapl.efile_prefix == raw"$ORIGIN"
+    @test dapl.virtual_prefix == "virtual"
+    # We probably need to actually use a virtual dataset
+    @test_broken dapl.virtual_printf_gap == 2
+    @test_broken dapl.virtual_view == :last_available
 
     @test acpl.char_encoding == :utf8
 

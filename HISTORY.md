@@ -2,6 +2,14 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.16.10
+
+* New attribute dictionary interface
+* Additional `h5f` coverage 
+* Better error handling for iterators
+* Expande DatasetAccessProperties coverage
+* New `copyto!` and `similar` methods for Datasets 
+
 ## v0.16.9
 
 * Resize buffer in h5p_get_external if no null is found

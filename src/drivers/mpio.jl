@@ -42,13 +42,6 @@ end
  MPIO(comm::MPI.Comm; kwargs...) =
     MPIO(comm, MPI.Info(;kwargs...))
 
-# Check whether the HDF5 libraries were compiled with parallel support.
-try
-    DRIVERS[API.h5fd_mpio_init()] = MPIO
-    HDF5.HAS_PARALLEL[] = true
-catch e
-end
-
 function set_driver!(fapl::Properties, mpio::MPIO)
     HDF5.has_parallel() || error(
         "HDF5.jl has no parallel support." *
@@ -60,6 +53,9 @@ function set_driver!(fapl::Properties, mpio::MPIO)
     GC.@preserve mpio begin
         API.h5p_set_fapl_mpio(fapl, mpi_to_h5(mpio.comm), mpi_to_h5(mpio.info))
     end
+
+    DRIVERS[API.h5p_get_driver(fapl)] = MPIO
+    return nothing
 end
 
 function get_driver(fapl::Properties, ::Type{MPIO})

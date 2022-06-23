@@ -154,10 +154,10 @@ end
 # Need to call H5open to ensure library is initalized before reading these constants.
 # Although these are runtime initalized constants, in practice their values are stable, so
 # we can precompile for improved latency.
-let libhdf5handle = Ref(Libdl.dlopen(libhdf5))
-    ccall(Libdl.dlsym(libhdf5handle[], :H5open), herr_t, ())
-    global _read_const(sym::Symbol) = unsafe_load(cglobal(Libdl.dlsym(libhdf5handle[], sym), hid_t))
-end
+const libhdf5handle = Ref(Libdl.dlopen(libhdf5))
+ccall(Libdl.dlsym(libhdf5handle[], :H5open), herr_t, ())
+_read_const(sym::Symbol) = unsafe_load(cglobal(Libdl.dlsym(libhdf5handle[], sym), hid_t))
+_has_symbol(sym::Symbol) = Libdl.dlsym(libhdf5handle[], sym; throw_error=false) !== nothing
 
 # iteration order constants
 const H5_ITER_UNKNOWN = -1

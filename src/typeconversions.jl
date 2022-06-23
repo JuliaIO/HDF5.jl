@@ -1,20 +1,3 @@
-### Base HDF5 structs ###
-
-# High-level reference handler
-struct Reference
-  r::API.hobj_ref_t
-end
-Reference() = Reference(API.HOBJ_REF_T_NULL) # NULL reference to compare to
-Base.cconvert(::Type{Ptr{T}}, ref::Reference) where {T<:Union{Reference,API.hobj_ref_t,Cvoid}} = Ref(ref)
-Base.:(==)(a::Reference, b::Reference) = a.r == b.r
-Base.hash(x::Reference, h::UInt) = hash(x.r, h)
-
-function Reference(parent::Union{File,Group,Dataset}, name::AbstractString)
-  ref = Ref{API.hobj_ref_t}()
-  API.h5r_create(ref, checkvalid(parent), name, API.H5R_OBJECT, -1)
-  return Reference(ref[])
-end
-
 # Single character types
 # These are needed to safely handle VLEN objects
 abstract type CharType <: AbstractString end
@@ -37,8 +20,6 @@ cset(::Type{<:AbstractString}) = API.H5T_CSET_UTF8
 cset(::Type{UTF8Char}) = API.H5T_CSET_UTF8
 cset(::Type{ASCIIChar}) = API.H5T_CSET_ASCII
 
-const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
-const ScalarType = Union{BitsType,Reference}
 
 # VLEN objects
 struct VLen{T}
@@ -115,7 +96,6 @@ struct VariableArray{T}
     p::Ptr{Cvoid}
 end
 Base.eltype(::Type{VariableArray{T}}) where T = T
-
 
 ## Conversion between Julia types and HDF5 atomic types
 hdf5_type_id(::Type{Bool})      = API.H5T_NATIVE_B8
@@ -209,6 +189,8 @@ function get_jl_type(obj)
       close(dtype)
   end
 end
+
+Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
 
 function get_mem_compatible_jl_type(obj_type::Datatype)
   class_id = API.h5t_get_class(obj_type)

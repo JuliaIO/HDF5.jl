@@ -285,6 +285,30 @@ function h5f_get_free_sections(file_id, type, sect_info::AbstractVector{H5F_sect
     return @view(sect_info[1:nsects])
 end
 
+function h5p_get_file_locking(fapl)
+    use_file_locking = Ref{API.hbool_t}(0)
+    ignore_when_disabled = Ref{API.hbool_t}(0)
+    h5p_get_file_locking(fapl, use_file_locking, ignore_when_disabled)
+    return (use_file_locking     = Bool(use_file_locking[]),
+            ignore_when_disabled = Bool(ignore_when_disabled[]))
+end
+
+# Check to see if h5p_set_file_locking should exist
+const _has_h5p_set_file_locking = _has_symbol(:H5Pset_file_locking)
+function has_h5p_set_file_locking()
+   return _has_h5p_set_file_locking
+   #=
+   h5_version = h5_get_libversion()
+   if (h5_version >= v"1.10" && h5_version < v"1.10.7") ||
+      (h5_version >= v"1.12" && h5_version < v"1.12.1") ||
+      (h5_version < v"1.10")
+      return false
+   else
+      return true
+   end
+   =#
+end
+
 function h5p_get_file_space_strategy(plist_id)
     strategy = Ref{H5F_fspace_strategy_t}()
     persist = Ref{hbool_t}(0)
@@ -439,6 +463,14 @@ function h5p_get_chunk(plist_id)
     return dims, ndims
 end
 
+function h5p_get_chunk_cache(dapl_id)
+    nslots = Ref{Csize_t}()
+    nbytes = Ref{Csize_t}()
+    w0 = Ref{Cdouble}()
+    h5p_get_chunk_cache(dapl_id, nslots, nbytes, w0)
+    return (nslots = nslots[], nbytes = nbytes[], w0 = w0[])
+end
+
 function h5p_get_create_intermediate_group(plist_id)
     cig = Ref{Cuint}()
     h5p_get_create_intermediate_group(plist_id, cig)
@@ -456,6 +488,11 @@ function h5p_get_efile_prefix(plist)
     buffer = StringVector(efile_len)
     prefix_size = h5p_get_efile_prefix(plist, buffer, efile_len+1)
     return String(buffer)
+end
+
+function h5p_set_efile_prefix(plist, sym::Symbol)
+    sym === :origin ? h5p_set_efile_prefix(plist, raw"$ORIGIN") :
+    throw(ArgumentError("The only valid `Symbol` argument for `h5p_set_efile_prefix` is `:origin`. Got `$sym`."))
 end
 
 function h5p_get_external(plist, idx = 0)
@@ -521,6 +558,25 @@ function h5p_get_userblock(plist_id)
     len = Ref{hsize_t}()
     h5p_get_userblock(plist_id, len)
     return len[]
+end
+
+function h5p_get_virtual_prefix(dapl_id)
+    virtual_file_len = h5p_get_virtual_prefix(dapl_id, C_NULL, 0)
+    buffer = StringVector(virtual_file_len)
+    prefix_size = h5p_get_virtual_prefix(dapl_id, buffer, virtual_file_len+1)
+    return String(buffer)
+end
+
+function h5p_get_virtual_printf_gap(dapl_id)
+    gap = Ref{hsize_t}()
+    h5p_get_virtual_printf_gap(dapl_id, gap)
+    return gap[]
+end
+
+function h5p_get_virtual_view(dapl_id)
+    view = Ref{H5D_vds_view_t}()
+    h5p_get_virtual_view(dapl_id, view)
+    return view[]
 end
 
 # Note: The following function(s) implement direct ccalls because the binding generator
