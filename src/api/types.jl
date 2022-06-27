@@ -313,6 +313,14 @@ const H5L_TYPE_HARD    = 0
 const H5L_TYPE_SOFT    = 1
 const H5L_TYPE_EXTERNAL= 2
 
+# H5O_INFO constants
+const H5O_INFO_BASIC = Cuint(0x0001)
+const H5O_INFO_TIME = Cuint(0x0002)
+const H5O_INFO_NUM_ATTRS = Cuint(0x0004)
+const H5O_INFO_HDR = Cuint(0x0008)
+const H5O_INFO_META_SIZE = Cuint(0x0010)
+const H5O_INFO_ALL = H5O_INFO_BASIC | H5O_INFO_TIME | H5O_INFO_NUM_ATTRS | H5O_INFO_HDR | H5O_INFO_META_SIZE
+
 # Object constants
 # Moved to H5O_type_t enum
 #const H5O_TYPE_GROUP   = 0

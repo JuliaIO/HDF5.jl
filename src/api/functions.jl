@@ -1580,26 +1580,56 @@ function h5o_get_comment_by_name(loc_id, name, comment, bufsize, lapl_id)
     return var"#status#"
 end
 
-"""
-    h5o_get_info(object_id::hid_t, buf::Ptr{H5O_info1_t})
+@static if _libhdf5_build_ver < v"1.12.0"
+    @doc """
+        h5o_get_info(object_id::hid_t, buf::Ptr{H5O_info1_t})
 
-See `libhdf5` documentation for [`H5Oget_info1`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO1).
-"""
-function h5o_get_info(object_id, buf)
-    var"#status#" = ccall((:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info1_t}), object_id, buf)
-    var"#status#" < 0 && @h5error("Error getting object info")
-    return nothing
+    See `libhdf5` documentation for [`H5Oget_info1`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO1).
+    """
+    function h5o_get_info(object_id, buf)
+        var"#status#" = ccall((:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info1_t}), object_id, buf)
+        var"#status#" < 0 && @h5error("Error getting object info")
+        return nothing
+    end
 end
 
-"""
-    h5o_get_info_by_idx(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)
+@static if v"1.12.0" ≤ _libhdf5_build_ver
+    @doc """
+        h5o_get_info(loc_id::hid_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint)
 
-See `libhdf5` documentation for [`H5Oget_info_by_idx3`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO_BY_IDX3).
-"""
-function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
-    var"#status#" = ccall((:H5Oget_info_by_idx3, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_info2_t}, Cuint, hid_t), loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
-    var"#status#" < 0 && @h5error("Error in h5o_get_info_by_idx3 (not annotated)")
-    return nothing
+    See `libhdf5` documentation for [`H5Oget_info3`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO3).
+    """
+    function h5o_get_info(loc_id, oinfo, fields)
+        var"#status#" = ccall((:H5Oget_info3, libhdf5), herr_t, (hid_t, Ptr{H5O_info2_t}, Cuint), loc_id, oinfo, fields)
+        var"#status#" < 0 && @h5error("Error in h5o_get_info3 (not annotated)")
+        return nothing
+    end
+end
+
+@static if _libhdf5_build_ver < v"1.12.0"
+    @doc """
+        h5o_get_info_by_idx(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)
+
+    See `libhdf5` documentation for [`H5Oget_info_by_idx1`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO_BY_IDX1).
+    """
+    function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, lapl_id)
+        var"#status#" = ccall((:H5Oget_info_by_idx1, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_info1_t}, hid_t), loc_id, group_name, idx_type, order, n, oinfo, lapl_id)
+        var"#status#" < 0 && @h5error("Error in h5o_get_info_by_idx1 (not annotated)")
+        return nothing
+    end
+end
+
+@static if v"1.12.0" ≤ _libhdf5_build_ver
+    @doc """
+        h5o_get_info_by_idx(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)
+
+    See `libhdf5` documentation for [`H5Oget_info_by_idx3`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO_BY_IDX3).
+    """
+    function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
+        var"#status#" = ccall((:H5Oget_info_by_idx3, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_info2_t}, Cuint, hid_t), loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
+        var"#status#" < 0 && @h5error("Error in h5o_get_info_by_idx3 (not annotated)")
+        return nothing
+    end
 end
 
 """
@@ -1767,26 +1797,56 @@ function h5o_token_to_str(loc_id, token, token_str)
     return nothing
 end
 
-"""
-    h5o_visit(obj_id::hid_t, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint)
+@static if _libhdf5_build_ver < v"1.12.0"
+    @doc """
+        h5o_visit(obj_id::hid_t, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Ovisit3`](https://portal.hdfgroup.org/display/HDF5/H5O_VISIT3).
-"""
-function h5o_visit(obj_id, idx_type, order, op, op_data, fields)
-    var"#status#" = ccall((:H5Ovisit3, libhdf5), herr_t, (hid_t, H5_index_t, H5_iter_order_t, H5O_iterate2_t, Ptr{Cvoid}, Cuint), obj_id, idx_type, order, op, op_data, fields)
-    var"#status#" < 0 && @h5error("Error in h5o_visit3 (not annotated)")
-    return nothing
+    See `libhdf5` documentation for [`H5Ovisit1`](https://portal.hdfgroup.org/display/HDF5/H5O_VISIT1).
+    """
+    function h5o_visit(obj_id, idx_type, order, op, op_data)
+        var"#status#" = ccall((:H5Ovisit1, libhdf5), herr_t, (hid_t, H5_index_t, H5_iter_order_t, H5O_iterate1_t, Ptr{Cvoid}), obj_id, idx_type, order, op, op_data)
+        var"#status#" < 0 && @h5error("Error in h5o_visit1 (not annotated)")
+        return nothing
+    end
 end
 
-"""
-    h5o_visit_by_name(loc_id::hid_t, obj_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint, lapl_id::hid_t)
+@static if v"1.12.0" ≤ _libhdf5_build_ver
+    @doc """
+        h5o_visit(obj_id::hid_t, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint)
 
-See `libhdf5` documentation for [`H5Ovisit_by_name3`](https://portal.hdfgroup.org/display/HDF5/H5O_VISIT_BY_NAME3).
-"""
-function h5o_visit_by_name(loc_id, obj_name, idx_type, order, op, op_data, fields, lapl_id)
-    var"#status#" = ccall((:H5Ovisit_by_name3, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, H5O_iterate2_t, Ptr{Cvoid}, Cuint, hid_t), loc_id, obj_name, idx_type, order, op, op_data, fields, lapl_id)
-    var"#status#" < 0 && @h5error("Error in h5o_visit_by_name3 (not annotated)")
-    return nothing
+    See `libhdf5` documentation for [`H5Ovisit3`](https://portal.hdfgroup.org/display/HDF5/H5O_VISIT3).
+    """
+    function h5o_visit(obj_id, idx_type, order, op, op_data, fields)
+        var"#status#" = ccall((:H5Ovisit3, libhdf5), herr_t, (hid_t, H5_index_t, H5_iter_order_t, H5O_iterate2_t, Ptr{Cvoid}, Cuint), obj_id, idx_type, order, op, op_data, fields)
+        var"#status#" < 0 && @h5error("Error in h5o_visit3 (not annotated)")
+        return nothing
+    end
+end
+
+@static if _libhdf5_build_ver < v"1.12.0"
+    @doc """
+        h5o_visit_by_name(loc_id::hid_t, obj_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid}, lapl_id::hid_t)
+
+    See `libhdf5` documentation for [`H5Ovisit_by_name1`](https://portal.hdfgroup.org/display/HDF5/H5O_VISIT_BY_NAME1).
+    """
+    function h5o_visit_by_name(loc_id, obj_name, idx_type, order, op, op_data, lapl_id)
+        var"#status#" = ccall((:H5Ovisit_by_name1, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, H5O_iterate1_t, Ptr{Cvoid}, hid_t), loc_id, obj_name, idx_type, order, op, op_data, lapl_id)
+        var"#status#" < 0 && @h5error("Error in h5o_visit_by_name1 (not annotated)")
+        return nothing
+    end
+end
+
+@static if v"1.12.0" ≤ _libhdf5_build_ver
+    @doc """
+        h5o_visit_by_name(loc_id::hid_t, obj_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint, lapl_id::hid_t)
+
+    See `libhdf5` documentation for [`H5Ovisit_by_name3`](https://portal.hdfgroup.org/display/HDF5/H5O_VISIT_BY_NAME3).
+    """
+    function h5o_visit_by_name(loc_id, obj_name, idx_type, order, op, op_data, fields, lapl_id)
+        var"#status#" = ccall((:H5Ovisit_by_name3, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, H5O_iterate2_t, Ptr{Cvoid}, Cuint, hid_t), loc_id, obj_name, idx_type, order, op, op_data, fields, lapl_id)
+        var"#status#" < 0 && @h5error("Error in h5o_visit_by_name3 (not annotated)")
+        return nothing
+    end
 end
 
 """

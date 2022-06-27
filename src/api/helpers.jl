@@ -427,10 +427,22 @@ end
 ### Object Interface
 ###
 
+@static if _libhdf5_build_ver < v"1.12.0"
+
 function h5o_get_info(loc_id)
     oinfo = Ref{H5O_info1_t}()
     h5o_get_info(loc_id, oinfo)
     return oinfo[]
+end
+
+else
+
+function h5o_get_info(loc_id, fields=H5O_INFO_ALL)
+    oinfo = Ref{H5O_info2_t}()
+    h5o_get_info(loc_id, oinfo, fields)
+    return oinfo[]
+end
+
 end
 
 ###
