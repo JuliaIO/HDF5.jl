@@ -1471,6 +1471,17 @@ end
 end
 
 """
+    h5o_are_mdc_flushes_disabled(object_id::hid_t, are_disabled::Ptr{hbool_t})
+
+See `libhdf5` documentation for [`H5Oare_mdc_flushes_disabled`](https://portal.hdfgroup.org/display/HDF5/H5O_ARE_MDC_FLUSHES_DISABLED).
+"""
+function h5o_are_mdc_flushes_disabled(object_id, are_disabled)
+    var"#status#" = ccall((:H5Oare_mdc_flushes_disabled, libhdf5), herr_t, (hid_t, Ptr{hbool_t}), object_id, are_disabled)
+    var"#status#" < 0 && @h5error("Error in h5o_are_mdc_flushes_disabled (not annotated)")
+    return nothing
+end
+
+"""
     h5o_close(object_id::hid_t)
 
 See `libhdf5` documentation for [`H5Oclose`](https://portal.hdfgroup.org/display/HDF5/H5O_CLOSE).
@@ -1493,13 +1504,167 @@ function h5o_copy(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id
 end
 
 """
-    h5o_get_info(object_id::hid_t, buf::Ptr{H5O_info_t})
+    h5o_decr_refcount(object_id::hid_t)
+
+See `libhdf5` documentation for [`H5Odecr_refcount`](https://portal.hdfgroup.org/display/HDF5/H5O_DECR_REFCOUNT).
+"""
+function h5o_decr_refcount(object_id)
+    var"#status#" = ccall((:H5Odecr_refcount, libhdf5), herr_t, (hid_t,), object_id)
+    var"#status#" < 0 && @h5error("Error in h5o_decr_refcount (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_disable_mdc_flushes(object_id::hid_t)
+
+See `libhdf5` documentation for [`H5Odisable_mdc_flushes`](https://portal.hdfgroup.org/display/HDF5/H5O_DISABLE_MDC_FLUSHES).
+"""
+function h5o_disable_mdc_flushes(object_id)
+    var"#status#" = ccall((:H5Odisable_mdc_flushes, libhdf5), herr_t, (hid_t,), object_id)
+    var"#status#" < 0 && @h5error("Error in h5o_disable_mdc_flushes (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_enable_mdc_flushes(object_id::hid_t)
+
+See `libhdf5` documentation for [`H5Oenable_mdc_flushes`](https://portal.hdfgroup.org/display/HDF5/H5O_ENABLE_MDC_FLUSHES).
+"""
+function h5o_enable_mdc_flushes(object_id)
+    var"#status#" = ccall((:H5Oenable_mdc_flushes, libhdf5), herr_t, (hid_t,), object_id)
+    var"#status#" < 0 && @h5error("Error in h5o_enable_mdc_flushes (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_exists_by_name(loc_id::hid_t, name::Ptr{Cchar}, lapl_id::hid_t) -> Bool
+
+See `libhdf5` documentation for [`H5Oexists_by_name`](https://portal.hdfgroup.org/display/HDF5/H5O_EXISTS_BY_NAME).
+"""
+function h5o_exists_by_name(loc_id, name, lapl_id)
+    var"#status#" = ccall((:H5Oexists_by_name, libhdf5), htri_t, (hid_t, Ptr{Cchar}, hid_t), loc_id, name, lapl_id)
+    var"#status#" < 0 && @h5error("Error in h5o_exists_by_name (not annotated)")
+    return var"#status#" > 0
+end
+
+"""
+    h5o_flush(obj_id::hid_t)
+
+See `libhdf5` documentation for [`H5Oflush`](https://portal.hdfgroup.org/display/HDF5/H5O_FLUSH).
+"""
+function h5o_flush(obj_id)
+    var"#status#" = ccall((:H5Oflush, libhdf5), herr_t, (hid_t,), obj_id)
+    var"#status#" < 0 && @h5error("Error in h5o_flush (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_get_comment(obj_id::hid_t, comment::Ptr{Cchar}, bufsize::Csize_t) -> Cssize_t
+
+See `libhdf5` documentation for [`H5Oget_comment`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_COMMENT).
+"""
+function h5o_get_comment(obj_id, comment, bufsize)
+    var"#status#" = ccall((:H5Oget_comment, libhdf5), Cssize_t, (hid_t, Ptr{Cchar}, Csize_t), obj_id, comment, bufsize)
+    var"#status#" < 0 && @h5error("Error in h5o_get_comment (not annotated)")
+    return var"#status#"
+end
+
+"""
+    h5o_get_comment_by_name(loc_id::hid_t, name::Ptr{Cchar}, comment::Ptr{Cchar}, bufsize::Csize_t, lapl_id::hid_t) -> Cssize_t
+
+See `libhdf5` documentation for [`H5Oget_comment_by_name`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_COMMENT_BY_NAME).
+"""
+function h5o_get_comment_by_name(loc_id, name, comment, bufsize, lapl_id)
+    var"#status#" = ccall((:H5Oget_comment_by_name, libhdf5), Cssize_t, (hid_t, Ptr{Cchar}, Ptr{Cchar}, Csize_t, hid_t), loc_id, name, comment, bufsize, lapl_id)
+    var"#status#" < 0 && @h5error("Error in h5o_get_comment_by_name (not annotated)")
+    return var"#status#"
+end
+
+"""
+    h5o_get_info(object_id::hid_t, buf::Ptr{H5O_info1_t})
 
 See `libhdf5` documentation for [`H5Oget_info1`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO1).
 """
 function h5o_get_info(object_id, buf)
-    var"#status#" = ccall((:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info_t}), object_id, buf)
+    var"#status#" = ccall((:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info1_t}), object_id, buf)
     var"#status#" < 0 && @h5error("Error getting object info")
+    return nothing
+end
+
+"""
+    h5o_get_info_by_idx(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)
+
+See `libhdf5` documentation for [`H5Oget_info_by_idx3`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO_BY_IDX3).
+"""
+function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
+    var"#status#" = ccall((:H5Oget_info_by_idx3, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_info2_t}, Cuint, hid_t), loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
+    var"#status#" < 0 && @h5error("Error in h5o_get_info_by_idx3 (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_get_info_by_name(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)
+
+See `libhdf5` documentation for [`H5Oget_info_by_name3`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO_BY_NAME3).
+"""
+function h5o_get_info_by_name(loc_id, name, oinfo, fields, lapl_id)
+    var"#status#" = ccall((:H5Oget_info_by_name3, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{H5O_info2_t}, Cuint, hid_t), loc_id, name, oinfo, fields, lapl_id)
+    var"#status#" < 0 && @h5error("Error in h5o_get_info_by_name3 (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_get_native_info(loc_id::hid_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint)
+
+See `libhdf5` documentation for [`H5Oget_native_info`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_NATIVE_INFO).
+"""
+function h5o_get_native_info(loc_id, oinfo, fields)
+    var"#status#" = ccall((:H5Oget_native_info, libhdf5), herr_t, (hid_t, Ptr{H5O_native_info_t}, Cuint), loc_id, oinfo, fields)
+    var"#status#" < 0 && @h5error("Error in h5o_get_native_info (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_get_native_info_by_idx(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)
+
+See `libhdf5` documentation for [`H5Oget_native_info_by_idx`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_NATIVE_INFO_BY_IDX).
+"""
+function h5o_get_native_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
+    var"#status#" = ccall((:H5Oget_native_info_by_idx, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_native_info_t}, Cuint, hid_t), loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
+    var"#status#" < 0 && @h5error("Error in h5o_get_native_info_by_idx (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_get_native_info_by_name(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)
+
+See `libhdf5` documentation for [`H5Oget_native_info_by_name`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_NATIVE_INFO_BY_NAME).
+"""
+function h5o_get_native_info_by_name(loc_id, name, oinfo, fields, lapl_id)
+    var"#status#" = ccall((:H5Oget_native_info_by_name, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{H5O_native_info_t}, Cuint, hid_t), loc_id, name, oinfo, fields, lapl_id)
+    var"#status#" < 0 && @h5error("Error in h5o_get_native_info_by_name (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_incr_refcount(object_id::hid_t)
+
+See `libhdf5` documentation for [`H5Oincr_refcount`](https://portal.hdfgroup.org/display/HDF5/H5O_INCR_REFCOUNT).
+"""
+function h5o_incr_refcount(object_id)
+    var"#status#" = ccall((:H5Oincr_refcount, libhdf5), herr_t, (hid_t,), object_id)
+    var"#status#" < 0 && @h5error("Error in h5o_incr_refcount (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_link(obj_id::hid_t, new_loc_id::hid_t, new_name::Ptr{Cchar}, lcpl_id::hid_t, lapl_id::hid_t)
+
+See `libhdf5` documentation for [`H5Olink`](https://portal.hdfgroup.org/display/HDF5/H5O_LINK).
+"""
+function h5o_link(obj_id, new_loc_id, new_name, lcpl_id, lapl_id)
+    var"#status#" = ccall((:H5Olink, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cchar}, hid_t, hid_t), obj_id, new_loc_id, new_name, lcpl_id, lapl_id)
+    var"#status#" < 0 && @h5error("Error in h5o_link (not annotated)")
     return nothing
 end
 
@@ -1534,6 +1699,94 @@ function h5o_open_by_idx(loc_id, group_name, index_type, order, n, lapl_id)
     var"#status#" = ccall((:H5Oopen_by_idx, libhdf5), hid_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, hid_t), loc_id, group_name, index_type, order, n, lapl_id)
     var"#status#" < 0 && @h5error(string("Error opening object of index ", n))
     return var"#status#"
+end
+
+"""
+    h5o_refresh(oid::hid_t)
+
+See `libhdf5` documentation for [`H5Orefresh`](https://portal.hdfgroup.org/display/HDF5/H5O_REFRESH).
+"""
+function h5o_refresh(oid)
+    var"#status#" = ccall((:H5Orefresh, libhdf5), herr_t, (hid_t,), oid)
+    var"#status#" < 0 && @h5error("Error in h5o_refresh (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_set_comment(obj_id::hid_t, comment::Ptr{Cchar})
+
+See `libhdf5` documentation for [`H5Oset_comment`](https://portal.hdfgroup.org/display/HDF5/H5O_SET_COMMENT).
+"""
+function h5o_set_comment(obj_id, comment)
+    var"#status#" = ccall((:H5Oset_comment, libhdf5), herr_t, (hid_t, Ptr{Cchar}), obj_id, comment)
+    var"#status#" < 0 && @h5error("Error in h5o_set_comment (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_set_comment_by_name(loc_id::hid_t, name::Ptr{Cchar}, comment::Ptr{Cchar}, lapl_id::hid_t)
+
+See `libhdf5` documentation for [`H5Oset_comment_by_name`](https://portal.hdfgroup.org/display/HDF5/H5O_SET_COMMENT_BY_NAME).
+"""
+function h5o_set_comment_by_name(loc_id, name, comment, lapl_id)
+    var"#status#" = ccall((:H5Oset_comment_by_name, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{Cchar}, hid_t), loc_id, name, comment, lapl_id)
+    var"#status#" < 0 && @h5error("Error in h5o_set_comment_by_name (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_token_cmp(loc_id::hid_t, token1::Ptr{H5O_token_t}, token2::Ptr{H5O_token_t}, cmp_value::Ptr{Cint})
+
+See `libhdf5` documentation for [`H5Otoken_cmp`](https://portal.hdfgroup.org/display/HDF5/H5O_TOKEN_CMP).
+"""
+function h5o_token_cmp(loc_id, token1, token2, cmp_value)
+    var"#status#" = ccall((:H5Otoken_cmp, libhdf5), herr_t, (hid_t, Ptr{H5O_token_t}, Ptr{H5O_token_t}, Ptr{Cint}), loc_id, token1, token2, cmp_value)
+    var"#status#" < 0 && @h5error("Error in h5o_token_cmp (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_token_from_str(loc_id::hid_t, token_str::Ptr{Cchar}, token::Ptr{H5O_token_t})
+
+See `libhdf5` documentation for [`H5Otoken_from_str`](https://portal.hdfgroup.org/display/HDF5/H5O_TOKEN_FROM_STR).
+"""
+function h5o_token_from_str(loc_id, token_str, token)
+    var"#status#" = ccall((:H5Otoken_from_str, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{H5O_token_t}), loc_id, token_str, token)
+    var"#status#" < 0 && @h5error("Error in h5o_token_from_str (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_token_to_str(loc_id::hid_t, token::Ptr{H5O_token_t}, token_str::Ptr{Ptr{Cchar}})
+
+See `libhdf5` documentation for [`H5Otoken_to_str`](https://portal.hdfgroup.org/display/HDF5/H5O_TOKEN_TO_STR).
+"""
+function h5o_token_to_str(loc_id, token, token_str)
+    var"#status#" = ccall((:H5Otoken_to_str, libhdf5), herr_t, (hid_t, Ptr{H5O_token_t}, Ptr{Ptr{Cchar}}), loc_id, token, token_str)
+    var"#status#" < 0 && @h5error("Error in h5o_token_to_str (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_visit(obj_id::hid_t, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint)
+
+See `libhdf5` documentation for [`H5Ovisit3`](https://portal.hdfgroup.org/display/HDF5/H5O_VISIT3).
+"""
+function h5o_visit(obj_id, idx_type, order, op, op_data, fields)
+    var"#status#" = ccall((:H5Ovisit3, libhdf5), herr_t, (hid_t, H5_index_t, H5_iter_order_t, H5O_iterate2_t, Ptr{Cvoid}, Cuint), obj_id, idx_type, order, op, op_data, fields)
+    var"#status#" < 0 && @h5error("Error in h5o_visit3 (not annotated)")
+    return nothing
+end
+
+"""
+    h5o_visit_by_name(loc_id::hid_t, obj_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint, lapl_id::hid_t)
+
+See `libhdf5` documentation for [`H5Ovisit_by_name3`](https://portal.hdfgroup.org/display/HDF5/H5O_VISIT_BY_NAME3).
+"""
+function h5o_visit_by_name(loc_id, obj_name, idx_type, order, op, op_data, fields, lapl_id)
+    var"#status#" = ccall((:H5Ovisit_by_name3, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, H5O_iterate2_t, Ptr{Cvoid}, Cuint, hid_t), loc_id, obj_name, idx_type, order, op, op_data, fields, lapl_id)
+    var"#status#" < 0 && @h5error("Error in h5o_visit_by_name3 (not annotated)")
+    return nothing
 end
 
 """

@@ -333,19 +333,65 @@ h5l_move
 ---
 
 ## [[`H5O`](https://portal.hdfgroup.org/display/HDF5/Objects) — Object Interface](@id H5O)
+- [`h5o_are_mdc_flushes_disabled`](@ref h5o_are_mdc_flushes_disabled)
 - [`h5o_close`](@ref h5o_close)
 - [`h5o_copy`](@ref h5o_copy)
+- [`h5o_decr_refcount`](@ref h5o_decr_refcount)
+- [`h5o_disable_mdc_flushes`](@ref h5o_disable_mdc_flushes)
+- [`h5o_enable_mdc_flushes`](@ref h5o_enable_mdc_flushes)
+- [`h5o_exists_by_name`](@ref h5o_exists_by_name)
+- [`h5o_flush`](@ref h5o_flush)
+- [`h5o_get_comment`](@ref h5o_get_comment)
+- [`h5o_get_comment_by_name`](@ref h5o_get_comment_by_name)
 - [`h5o_get_info`](@ref h5o_get_info)
+- [`h5o_get_info_by_idx`](@ref h5o_get_info_by_idx)
+- [`h5o_get_info_by_name`](@ref h5o_get_info_by_name)
+- [`h5o_get_native_info`](@ref h5o_get_native_info)
+- [`h5o_get_native_info_by_idx`](@ref h5o_get_native_info_by_idx)
+- [`h5o_get_native_info_by_name`](@ref h5o_get_native_info_by_name)
+- [`h5o_incr_refcount`](@ref h5o_incr_refcount)
+- [`h5o_link`](@ref h5o_link)
 - [`h5o_open`](@ref h5o_open)
 - [`h5o_open_by_addr`](@ref h5o_open_by_addr)
 - [`h5o_open_by_idx`](@ref h5o_open_by_idx)
+- [`h5o_refresh`](@ref h5o_refresh)
+- [`h5o_set_comment`](@ref h5o_set_comment)
+- [`h5o_set_comment_by_name`](@ref h5o_set_comment_by_name)
+- [`h5o_token_cmp`](@ref h5o_token_cmp)
+- [`h5o_token_from_str`](@ref h5o_token_from_str)
+- [`h5o_token_to_str`](@ref h5o_token_to_str)
+- [`h5o_visit`](@ref h5o_visit)
+- [`h5o_visit_by_name`](@ref h5o_visit_by_name)
 ```@docs
+h5o_are_mdc_flushes_disabled
 h5o_close
 h5o_copy
+h5o_decr_refcount
+h5o_disable_mdc_flushes
+h5o_enable_mdc_flushes
+h5o_exists_by_name
+h5o_flush
+h5o_get_comment
+h5o_get_comment_by_name
 h5o_get_info
+h5o_get_info_by_idx
+h5o_get_info_by_name
+h5o_get_native_info
+h5o_get_native_info_by_idx
+h5o_get_native_info_by_name
+h5o_incr_refcount
+h5o_link
 h5o_open
 h5o_open_by_addr
 h5o_open_by_idx
+h5o_refresh
+h5o_set_comment
+h5o_set_comment_by_name
+h5o_token_cmp
+h5o_token_from_str
+h5o_token_to_str
+h5o_visit
+h5o_visit_by_name
 ```
 
 ---
