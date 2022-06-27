@@ -21,6 +21,21 @@ cset(::Type{UTF8Char}) = API.H5T_CSET_UTF8
 cset(::Type{ASCIIChar}) = API.H5T_CSET_ASCII
 
 
+function unpad(s::String, pad::Integer)::String
+    if pad == API.H5T_STR_NULLTERM # null-terminated
+        ind = findfirst(isequal('\0'), s)
+        isnothing(ind) ? s : s[1:prevind(s, ind)]
+    elseif pad == API.H5T_STR_NULLPAD # padded with nulls
+        rstrip(s, '\0')
+    elseif pad == API.H5T_STR_SPACEPAD # padded with spaces
+        rstrip(s, ' ')
+    else
+        error("Unrecognized string padding mode $pad")
+    end
+end
+unpad(s, pad::Integer) = unpad(String(s), pad)
+
+
 # VLEN objects
 struct VLen{T}
   data::Array
