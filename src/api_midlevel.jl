@@ -107,6 +107,8 @@ function get_chunk_length(dataset_id)
     return Int(API.h5t_get_size(type) * prod(chunk))
 end
 
+vlen_get_buf_size(dset::Dataset, dtype::Datatype, dspace::Dataspace) =
+    API.h5d_vlen_get_buf_size(dset, dtype, dspace)
 function vlen_get_buf_size(dataset_id)
     type = API.h5d_get_type(dataset_id)
     space = API.h5d_get_space(dataset_id)
