@@ -445,6 +445,26 @@ end
 
 end
 
+# Legacy h5o_get_info1 interface, for compat with pre-1.12.0
+# Used by deprecated object_info function
+"""
+    h5o_get_info1(object_id, [buf])
+
+Deprecated HDF5 function. Use [`h5o_get_info`](@ref) or [`h5o_get_native_info`](@ref) if possible.
+
+See `libhdf5` documentation for [`H5Oget_info1`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO1).
+"""
+function h5o_get_info1(object_id, buf)
+    var"#status#" = ccall((:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info_t}), object_id, buf)
+    var"#status#" < 0 && @h5error("Error getting object info")
+    return nothing
+end
+function h5o_get_info1(loc_id)
+    oinfo = Ref{H5O_info1_t}()
+    h5o_get_info1(loc_id, oinfo)
+    return oinfo[]
+end
+
 ###
 ### Property Interface
 ###

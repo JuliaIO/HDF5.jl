@@ -68,3 +68,9 @@ import .Filters: ExternalFilter
 @deprecate append!(filters::Filters.FilterPipeline, extra::NTuple{N, Integer}) where N append!(filters, [ExternalFilter(extra...)])
 @deprecate push!(p::Filters.FilterPipeline, f::NTuple{N, Integer}) where N push!(p, ExternalFilter(f...))
 @deprecate ExternalFilter(t::Tuple) ExternalFilter(t...) false
+
+### Changed in PR #979
+
+# Querying items in the file
+@deprecate object_info(obj::Union{File,Object}) API.h5o_get_info1(checkvalid(obj))
+
