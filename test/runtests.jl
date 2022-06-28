@@ -58,6 +58,8 @@ include("fileio.jl")
 include("nonallocating.jl")
 @debug "filter test utils"
 include("filters/FilterTestUtils.jl")
+@debug "objects"
+include("objects.jl")
 
 using MPI
 if HDF5.has_parallel()
