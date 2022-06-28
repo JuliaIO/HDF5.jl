@@ -76,14 +76,45 @@ end
 const H5O_iterate1_t = Ptr{Cvoid}
 const H5O_iterate2_t = Ptr{Cvoid}
 
-struct H5O_native_info_t
-    data::NTuple{96, UInt8}
+struct _H5O_hdr_info_t_space
+    total::hsize_t
+    meta::hsize_t
+    mesg::hsize_t
+    free::hsize_t
+end
+
+struct _H5O_hdr_info_t_mesg
+    present::UInt64
+    shared::UInt64
+end
+
+struct H5O_hdr_info_t
+    version::Cuint
+    nmesgs::Cuint
+    nchunks::Cuint
+    flags::Cuint
+    space::_H5O_hdr_info_t_space
+    mesg::_H5O_hdr_info_t_mesg
 end
 
 struct H5_ih_info_t
     index_size::hsize_t
     heap_size::hsize_t
 end
+
+struct _H5O_native_info_t_meta_size
+    obj::H5_ih_info_t
+    attr::H5_ih_info_t
+end
+
+struct H5O_native_info_t
+    hdr::H5O_hdr_info_t
+    meta_size::_H5O_native_info_t_meta_size
+end
+
+const H5O_NATIVE_INFO_HDR = 0x0008
+const H5O_NATIVE_INFO_META_SIZE = 0x0010
+const H5O_NATIVE_INFO_ALL = H5O_NATIVE_INFO_HDR | H5O_NATIVE_INFO_META_SIZE
 
 struct H5O_token_t
     __data::NTuple{16, UInt8}
@@ -125,6 +156,11 @@ struct H5O_info1_t # version 1 type H5O_info1_t
     #}
 end
 const H5O_info_t = H5O_info1_t
+
+# The field "otype" is originally "type"
+# Alias "otype" as "type" for compat with H5O_info2_t
+Base.getproperty(oinfo::H5O_info1_t, field::Symbol) =
+    field == :type ? getfield(oinfo, :otype) : getfield(oinfo, field)
 
 
 struct H5O_info2_t

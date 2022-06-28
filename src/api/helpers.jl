@@ -429,20 +429,86 @@ end
 
 @static if _libhdf5_build_ver < v"1.12.0"
 
-function h5o_get_info(loc_id)
-    oinfo = Ref{H5O_info1_t}()
-    h5o_get_info(loc_id, oinfo)
-    return oinfo[]
-end
+    # H5Oget_info1
+    function h5o_get_info(loc_id)
+        oinfo = Ref{H5O_info1_t}()
+        h5o_get_info(loc_id, oinfo)
+        return oinfo[]
+    end
 
-else
+    # H5Oget_info_by_name1
+    function h5o_get_info_by_name(loc_id, name, lapl=H5P_DEFAULT)
+        oinfo = Ref{H5O_info1_t}()
+        h5o_get_info_by_name(loc_id, name, oinfo, lapl)
+        return oinfo[]
+    end
 
-function h5o_get_info(loc_id, fields=H5O_INFO_ALL)
-    oinfo = Ref{H5O_info2_t}()
-    h5o_get_info(loc_id, oinfo, fields)
-    return oinfo[]
-end
+    # H5Oget_info_by_idx1
+    function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, lapl=H5P_DEFAULT)
+        oinfo = Ref{H5O_info1_t}()
+        h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, lapl)
+        return oinfo[]
+    end
 
+else # _libhdf5_build_ver >= v"1.12.0"
+
+    # H5Oget_info3
+    function h5o_get_info(loc_id, fields=H5O_INFO_ALL)
+        oinfo = Ref{H5O_info2_t}()
+        h5o_get_info(loc_id, oinfo, fields)
+        return oinfo[]
+    end
+
+    # H5Oget_info_by_name3
+    function h5o_get_info_by_name(loc_id, name, fields=H5O_INFO_ALL, lapl=H5P_DEFAULT)
+        oinfo = Ref{H5O_info2_t}()
+        h5o_get_info_by_name(loc_id, name, oinfo, fields, lapl)
+        return oinfo[]
+    end
+
+    # H5Oget_info_by_idx3
+    function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, fields=H5O_INFO_ALL, lapl=H5P_DEFAULT)
+        oinfo = Ref{H5O_info2_t}()
+        h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl)
+        return oinfo[]
+    end
+
+    function h5o_get_native_info(
+        loc_id,
+        fields=H5O_NATIVE_INFO_ALL
+    )
+        oinfo = Ref{H5O_native_info_t}()
+        h5o_get_native_info(loc_id, oinfo, fields)
+        return oinfo[]
+    end
+
+    function h5o_get_native_info_by_idx(
+        loc_id, group_name, idx_type, order, n,
+        fields=H5O_NATIVE_INFO_ALL,
+        lapl=H5P_DEFAULT
+    )
+        oinfo = Ref{H5O_native_info_t}()
+        h5o_get_native_info_by_idx(
+            loc_id, group_name, idx_type, order, n, oinfo, fields, lapl
+        )
+        return oinfo[]
+    end
+
+    function h5o_get_native_info_by_name(
+        loc_id, name,
+        fields=H5O_NATIVE_INFO_ALL,
+        lapl=H5P_DEFAULT
+    )
+        oinfo = Ref{H5O_native_info_t}()
+        h5o_get_native_info_by_name(loc_id, name, oinfo, fields, lapl)
+        return oinfo[]
+    end
+
+end # @static if _libhdf5_build_ver < v"1.12.0"
+
+# Add a default link access property list if not specified
+function h5o_exists_by_name(loc_id, name)
+    return h5o_exists_by_name(loc_id, name, H5P_DEFAULT)
 end
 
 # Legacy h5o_get_info1 interface, for compat with pre-1.12.0
