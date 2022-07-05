@@ -38,9 +38,10 @@ end
 mutable struct File <: H5DataStore
     id::API.hid_t
     filename::String
+    fcpl::FileCreateProperties
 
-    function File(id, filename, toclose::Bool=true)
-        f = new(id, filename)
+    function File(id, filename, fcpl::FileCreateProperties=FileCreateProperties(), toclose::Bool=true)
+        f = new(id, filename, fcpl)
         if toclose
             finalizer(close, f)
         end
@@ -53,9 +54,10 @@ Base.unsafe_convert(::Type{API.hid_t}, f::File) = f.id
 mutable struct Group <: H5DataStore
     id::API.hid_t
     file::File         # the parent file
+    gcpl::GroupCreateProperties
 
-    function Group(id, file)
-        g = new(id, file)
+    function Group(id, file, gcpl::GroupCreateProperties=GroupCreateProperties())
+        g = new(id, file, gcpl)
         finalizer(close, g)
         g
     end
@@ -138,3 +140,9 @@ const ScalarType = Union{BitsType,Reference}
 
 # Define an H5O Object type
 const Object = Union{Group,Dataset,Datatype}
+
+idx_type(obj::Union{File,Group}) = get_track_order(get_create_properties(obj)) ? API.H5_INDEX_CRT_ORDER : API.H5_INDEX_NAME
+idx_type(obj::Any) = API.H5_INDEX_NAME
+
+# TODO: implement alternative iteration order ?
+order(obj::Any) = API.H5_ITER_INC

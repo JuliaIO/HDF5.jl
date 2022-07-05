@@ -26,11 +26,11 @@ function create_group(parent::Union{File,Group}, path::AbstractString,
     haskey(parent, path) && error("cannot create group: object \"", path, "\" already exists at ", name(parent))
     pv = setproperties!(gcpl; pv...)
     isempty(pv) || error("invalid keyword options $pv")
-    Group(API.h5g_create(parent, path, lcpl, gcpl, API.H5P_DEFAULT), file(parent))
+    Group(API.h5g_create(parent, path, lcpl, gcpl, API.H5P_DEFAULT), file(parent), gcpl)
 end
 
 open_group(parent::Union{File,Group}, name::AbstractString, gapl::GroupAccessProperties=GroupAccessProperties()) =
-    Group(API.h5g_open(checkvalid(parent), name, gapl), file(parent))
+    Group(API.h5g_open(checkvalid(parent), name, gapl), file(parent), inherit_gcpl(parent))
 
 # Get the root group
 root(h5file::File) = open_group(h5file, "/")
@@ -48,7 +48,7 @@ function Base.iterate(parent::Union{File,Group}, iter = (1,nothing))
     n, prev_obj = iter
     prev_obj ≢ nothing && close(prev_obj)
     n > length(parent) && return nothing
-    obj = h5object(API.h5o_open_by_idx(checkvalid(parent), ".", IDX_TYPE[], ORDER[], n-1, API.H5P_DEFAULT), parent)
+    obj = h5object(API.h5o_open_by_idx(checkvalid(parent), ".", idx_type(parent), order(parent), n-1, API.H5P_DEFAULT), parent)
     return (obj, (n+1,obj))
 end
 
@@ -99,7 +99,7 @@ end
 function Base.keys(x::Union{Group,File})
     checkvalid(x)
     children = sizehint!(String[], length(x))
-    API.h5l_iterate(x, IDX_TYPE[], ORDER[]) do _, name, _
+    API.h5l_iterate(x, idx_type(x), order(x)) do _, name, _
         push!(children, unsafe_string(name))
         return API.herr_t(0)
     end

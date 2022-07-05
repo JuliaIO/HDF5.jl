@@ -42,7 +42,7 @@ function h5open(filename::AbstractString, mode::AbstractString, fapl::FileAccess
         end
         fid = API.h5f_open(filename, flag, fapl)
     end
-    return File(fid, filename)
+    File(fid, filename, fcpl)
 end
 
 
@@ -56,28 +56,27 @@ function h5open(filename::AbstractString, mode::AbstractString = "r";
     try
         pv = setproperties!(fapl, fcpl; pv...)
         isempty(pv) || error("invalid keyword options $pv")
-        file = h5open(filename, mode, fapl, fcpl; swmr=swmr)
-        return file
+        return h5open(filename, mode, fapl, fcpl; swmr=swmr)
     finally
         close(fapl)
-        close(fcpl)
+        # close(fcpl)  # FIXME: need to remain valid in read mode
     end
 end
 
-
 """
-    function h5open(f::Function, args...; swmr=false, pv...)
+    function h5open(f::Function, args...; pv...)
 
 Apply the function f to the result of `h5open(args...; kwargs...)` and close the resulting
-`HDF5.File` upon completion. For example with a `do` block:
+`HDF5.File` upon completion.
+For example with a `do` block:
 
     h5open("foo.h5","w") do h5
         h5["foo"]=[1,2,3]
     end
 
 """
-function h5open(f::Function, args...; swmr=false, pv...)
-    file = h5open(args...; swmr=swmr, pv...)
+function h5open(f::Function, args...; pv...)
+    file = h5open(args...; pv...)
     try
         f(file)
     finally
