@@ -42,9 +42,6 @@ h5doc(name) = "[`$name`](https://portal.hdfgroup.org/display/HDF5/$(name))"
 
 include("api/api.jl")
 
-const IDX_TYPE = Ref(API.H5_INDEX_NAME)
-const ORDER = Ref(API.H5_ITER_INC)
-
 include("properties.jl")
 include("types.jl")
 include("file.jl")
@@ -175,8 +172,8 @@ const libversion = API.h5_get_libversion()
 get_access_properties(d::Dataset)   = DatasetAccessProperties(API.h5d_get_access_plist(d))
 get_access_properties(f::File)      = FileAccessProperties(API.h5f_get_access_plist(f))
 get_create_properties(d::Dataset)   = DatasetCreateProperties(API.h5d_get_create_plist(d))
-get_create_properties(g::Group)     = GroupCreateProperties(API.h5g_get_create_plist(g))
-get_create_properties(f::File)      = FileCreateProperties(API.h5f_get_create_plist(f))
+get_create_properties(g::Group)     = isvalid(g.gcpl) ? g.gcpl : GroupCreateProperties(API.h5g_get_create_plist(g))
+get_create_properties(f::File)      = isvalid(f.fcpl) ? f.fcpl : FileCreateProperties(API.h5f_get_create_plist(f))
 get_create_properties(a::Attribute) = AttributeCreateProperties(API.h5a_get_create_plist(a))
 
 
