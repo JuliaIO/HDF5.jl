@@ -335,14 +335,21 @@ write_dataset(dset::Dataset, memtype::Datatype, x, xfer::DatasetTransferProperti
     API.h5d_write(dset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, x)
 
 # type-specific behaviors
-
+function _check_invalid(dataset::Dataset, buf::AbstractArray)
+    num_bytes_dset = sizeof(datatype(dataset)) * length(dataset)
+    num_bytes_buf = sizeof(eltype(buf)) * length(buf)
+    num_bytes_buf == num_bytes_dset || throw(ArgumentError(
+        "Invalid number of bytes: $(num_bytes_buf) != (num_bytes($(name(dataset))) = $num_bytes_dset)"
+    ))
+    stride(buf, 1) == 1 || throw(ArgumentError("Cannot read/write arrays with a different stride than `Array`"))
+end
 function read_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::DatasetTransferProperties=dataset.xfer)
-    stride(buf, 1) != 1 && throw(ArgumentError("Cannot read arrays with a different stride than `Array`"))
+    _check_invalid(dataset, buf)
     API.h5d_read(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
 end
 
 function write_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::DatasetTransferProperties=dataset.xfer)
-    stride(buf, 1) != 1 && throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
+    _check_invalid(dataset, buf)
     API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
 end
 function write_dataset(dataset::Dataset, memtype::Datatype, str::Union{AbstractString,Nothing}, xfer::DatasetTransferProperties=dataset.xfer)
