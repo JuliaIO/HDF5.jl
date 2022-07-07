@@ -1,7 +1,7 @@
 using HDF5
 using HDF5.Filters
 using Test
-using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
+using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd, H5Zbitshuffle
 
 using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenabled
 
@@ -42,7 +42,7 @@ compressionFilters = Dict(
     "blosc" => BloscFilter,
     "bzip2" => Bzip2Filter,
     "lz4" => Lz4Filter,
-    "zstd" => ZstdFilter
+    "zstd" => ZstdFilter,
 )
 
 for (name, filter) in compressionFilters
@@ -65,6 +65,26 @@ ds = create_dataset(
     f, "blosc_bitshuffle", datatype(data), dataspace(data),
     chunk=(100,100), filters=BloscFilter(shuffle=H5Zblosc.BITSHUFFLE)
 )
+write(ds, data)
+
+ds = create_dataset(
+    f, "bitshuffle_lz4", datatype(data), dataspace(data),
+    chunk=(100,100), filters=BitshuffleFilter(compressor="lz4")
+)
+write(ds, data)
+
+ds = create_dataset(
+    f, "bitshuffle_zstd", datatype(data), dataspace(data),
+    chunk=(100,100), filters=BitshuffleFilter(compressor="zstd",comp_level=5)
+)
+    
+write(ds, data)
+
+ds = create_dataset(
+    f, "bitshuffle_plain", datatype(data), dataspace(data),
+    chunk=(100,100), filters=BitshuffleFilter()
+)
+    
 write(ds, data)
 
 # Close and re-open file for reading

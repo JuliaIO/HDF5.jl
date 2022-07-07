@@ -6,6 +6,7 @@ Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zblosc")))
 Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zbzip2")))
 Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zlz4")))
 Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zzstd")))
+Pkg.develop(PackageSpec(path=joinpath(filter_path, "H5Zbitshuffle")))
 
 @info "libhdf5 v$(HDF5.API.h5_get_libversion())"
 

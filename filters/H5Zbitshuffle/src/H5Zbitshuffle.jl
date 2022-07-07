@@ -12,14 +12,61 @@ using bitshuffle_jll
 using HDF5.API
 import HDF5.Filters: Filter, filterid, register_filter, filtername, filter_func, filter_cfunc
 
-const H5Z_FILTER_BITSHUFFLE = API.H5Z_filter_t(32008)
+export BSHUF_H5_COMPRESS_LZ4, BSHUF_H5_COMPRESS_ZSTD
 
 # From bshuf_h5filter.h
 
 const BSHUF_H5_COMPRESS_LZ4 = 2
 const BSHUF_H5_COMPRESS_ZSTD = 3
+const BSHUF_H5_FILTER = 32008
+const H5Z_FILTER_BITSHUFFLE = API.H5Z_filter_t(BSHUF_H5_FILTER)
 
-const bitshuffle_name = "HDF5 bitshuffle filter; see http://www.hdfgroup.org/services/contributions.html"
+const BSHUF_VERSION_MAJOR = 0
+const BSHUF_VERSION_MINOR = 4
+const BSHUF_VERSION_POINT = 2
+
+const bitshuffle_name = "HDF5 bitshuffle filter; see https://github.com/kiyo-masui/bitshuffle"
+
+# Set filter arguments
+
+function bitshuffle_set_local(dcpl::API.hid_t, htype::API.hid_t, space::API.hid_t)
+
+    # Sanity check of provided values and set element size
+    
+    bs_flags = Ref{Cuint}()
+    bs_values = Vector{Cuint}(undef,8)
+    bs_nelements = Ref{Csize_t}(length(bs_values))
+    
+    r = API.h5p_get_filter_by_id(dcpl, H5Z_FILTER_BITSHUFFLE, bs_flags, bs_nelements,
+                                 bs_values, 0, NULL, NULL)
+    if r<0 return -1 end
+    
+    flags = bs_flags[]
+    nelements = max(bs_nelements[],3)
+
+    # set values
+    
+    bs_values[1] = BSHUF_VERSION_MAJOR
+    bs_values[2] = BSHUF_VERSION_MINOR
+    bs_values[3] = API.h5t_get_size(htype)
+
+    # check user-supplied values
+    
+    if nelements > 3
+        if bs_values[4] % 8 || bs_values[4] < 0 return API.herr_t(-1) end
+    end
+
+    if nelements > 4
+        if !(bs_values[5] in (0,BSHUF_H5_COMPRESS_LZ4,BSHUF_H5_COMPRESS_ZSTD))
+            return API.herr_t(-1)
+        end
+    end
+
+    r = API.h5p_modify_filter(dcpl, H5Z_FILTER_BITSHUFFLE, bs_flags, bs_nelements, bs_values)
+    if r < 0 return API.herr_t(-1) end
+    
+    return API.herr_t(1)
+end
 
 function H5Z_filter_bitshuffle(flags::Cuint, cd_nelmts::Csize_t,
                                cd_values::Ptr{Cuint}, nbytes::Csize_t,
@@ -180,10 +227,39 @@ end
 
 # Filter registration
 
-struct BitshuffleFilter <: Filter end
+# All information for the filter
+
+struct BitshuffleFilter <: Filter
+    major::Cuint
+    minor::Cuint
+    typesize::Cuint
+    blocksize::Cuint
+    compression::Cuint
+    comp_level::Cuint #Zstd only
+end
+
+BitshuffleFilter() = BitshuffleFilter(BSHUF_VERSION_MAJOR,BSHUF_VERSION_MINOR,0,0,0,0)
+
+"""
+    BitshuffleFilter(blocksize=0,compression="",comp_level=0)
+
+The Bitshuffle filter can optionally include compression "lz4" or "zstd". For "zstd"
+comp_level can be provided. This is ignored for "lz4" compression. If `blocksize`
+is zero the default bitshuffle blocksize is used.
+"""
+BitshuffleFilter(;blocksize = 0, compression="",comp_level=0) = begin
+    lowercase(compression) in ("lz4","zstd","") || throw(ArgumentError("Invalid bitshuffle compression $compression"))
+    compcode = 0
+    if compression == "lz4" compcode = BSHUF_H5_COMPRESS_LZ4
+    elseif compression == "zstd" compcode = BSHUF_H5_COMPRESS_ZSTD
+    end
+    BitshuffleFilter(BSHUF_VERSION_MAJOR,BSHUF_VERSION_MINOR,0,blocksize,compcode,comp_level)
+end
 
 filterid(::Type{BitshuffleFilter}) = H5Z_FILTER_BITSHUFFLE
 filtername(::Type{BitshuffleFilter}) = bitshuffle_name
+set_local_func(::Type{BitshuffleFilter}) = bitshuffle_set_local
+set_local_cfunc(::Type{BitshuffleFilter}) = @cfunction(bitshuffle_set_local,API.herr_t,(API.hid_t,API.hid_t,API.hid_t))
 filterfunc(::Type{BitshuffleFilter}) = H5Z_filter_bitshuffle
 filter_cfunc(::Type{BitshuffleFilter}) =  @cfunction(H5Z_filter_bitshuffle, Csize_t,
                                              (Cuint, Csize_t, Ptr{Cuint}, Csize_t,

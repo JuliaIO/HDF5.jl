@@ -9,5 +9,5 @@ bitshuffle_jll = "228fe19c-1b83-5282-a626-13744502a320"
 
 [compat]
 HDF5 = "0.16"
-bitshuffle_jll = "0.1.0"
+bitshuffle_jll = "0.4.2"
 julia = "1.3"
