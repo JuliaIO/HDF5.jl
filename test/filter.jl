@@ -87,6 +87,7 @@ ds = create_dataset(
     
 write(ds, data)
 
+    
 # Close and re-open file for reading
 close(f)
 f = h5open(fn)
