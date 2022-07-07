@@ -1,7 +1,8 @@
 #==
 
-Code implementing the bitshuffle filter for HDF5. A rough translation
-of bshuf_h5filter.c from https://github.com/kiyo-masui/bitshuffle.
+Julia code wrapping the bitshuffle filter for HDF5. A rough translation of
+bshuf_h5filter.c by Kiyoshi Masui, see
+https://github.com/kiyo-masui/bitshuffle.
 
 ==#
 module H5Zbitshuffle
