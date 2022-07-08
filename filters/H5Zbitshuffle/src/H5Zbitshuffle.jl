@@ -251,18 +251,18 @@ struct BitshuffleFilter <: Filter
 end
 
 """
-    BitshuffleFilter(blocksize=0,compression="",comp_level=0)
+    BitshuffleFilter(blocksize=0,compressor=:none,comp_level=0)
 
-The Bitshuffle filter can optionally include compression "lz4" or "zstd". For "zstd"
-comp_level can be provided. This is ignored for "lz4" compression. If `blocksize`
+The Bitshuffle filter can optionally include compression :lz4 or :zstd. For :zstd
+comp_level can be provided. This is ignored for :lz4 compression. If `blocksize`
 is zero the default bitshuffle blocksize is used.
 """
-function BitshuffleFilter(;blocksize = 0, compressor="",comp_level=0)
-    lowercase(compressor) in ("lz4","zstd","") || throw(ArgumentError("Invalid bitshuffle compression $compression"))
+function BitshuffleFilter(;blocksize = 0, compressor=:none, comp_level=0)
+    compressor in (:lz4,:zstd,:none) || throw(ArgumentError("Invalid bitshuffle compression $compressor"))
     compcode = 0
-    if compressor == "lz4"
+    if compressor == :lz4
         compcode = BSHUF_H5_COMPRESS_LZ4
-    elseif compressor == "zstd"
+    elseif compressor == :zstd
         compcode = BSHUF_H5_COMPRESS_ZSTD
     end
     BitshuffleFilter(BSHUF_VERSION_MAJOR,BSHUF_VERSION_MINOR,0,blocksize,compcode,comp_level)

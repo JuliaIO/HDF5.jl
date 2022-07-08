@@ -70,18 +70,18 @@ ds = create_dataset(
     
 write(ds, data)
 
-extra_bitshuffle() = begin
+function extra_bitshuffle()
 
     ds = create_dataset(
         f, "bitshuffle_lz4", datatype(data), dataspace(data),
-        chunk=(100,100), filters=BitshuffleFilter(compressor="lz4")
+        chunk=(100,100), filters=BitshuffleFilter(compressor=:lz4)
     )
 
     write(ds, data)
 
     ds = create_dataset(
         f, "bitshuffle_zstd", datatype(data), dataspace(data),
-        chunk=(100,100), filters=BitshuffleFilter(compressor="zstd",comp_level=5)
+        chunk=(100,100), filters=BitshuffleFilter(compressor=:zstd,comp_level=5)
     )
     
     write(ds, data)
