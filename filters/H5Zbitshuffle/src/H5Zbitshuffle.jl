@@ -1,10 +1,12 @@
 #==
-
 Julia code wrapping the bitshuffle filter for HDF5. A rough translation of
 bshuf_h5filter.c by Kiyoshi Masui, see
 https://github.com/kiyo-masui/bitshuffle.
-
 ==#
+"""
+The bitshuffle filter for HDF5. See https://portal.hdfgroup.org/display/support/Filters#Filters-32008
+and https://github.com/kiyo-masui/bitshuffle for details.
+"""
 module H5Zbitshuffle
 
 using bitshuffle_jll

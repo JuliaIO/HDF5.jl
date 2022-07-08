@@ -1,7 +1,9 @@
 using HDF5
 using HDF5.Filters
 using Test
-using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd, H5Zbitshuffle
+using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
+
+@static if VERSION >= v"1.6" using H5Zbitshuffle end
 
 using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenabled
 
@@ -65,29 +67,35 @@ ds = create_dataset(
     f, "blosc_bitshuffle", datatype(data), dataspace(data),
     chunk=(100,100), filters=BloscFilter(shuffle=H5Zblosc.BITSHUFFLE)
 )
-write(ds, data)
-
-ds = create_dataset(
-    f, "bitshuffle_lz4", datatype(data), dataspace(data),
-    chunk=(100,100), filters=BitshuffleFilter(compressor="lz4")
-)
-write(ds, data)
-
-ds = create_dataset(
-    f, "bitshuffle_zstd", datatype(data), dataspace(data),
-    chunk=(100,100), filters=BitshuffleFilter(compressor="zstd",comp_level=5)
-)
     
 write(ds, data)
 
-ds = create_dataset(
-    f, "bitshuffle_plain", datatype(data), dataspace(data),
-    chunk=(100,100), filters=BitshuffleFilter()
-)
-    
-write(ds, data)
+extra_bitshuffle() = begin
 
+    ds = create_dataset(
+        f, "bitshuffle_lz4", datatype(data), dataspace(data),
+        chunk=(100,100), filters=BitshuffleFilter(compressor="lz4")
+    )
+
+    write(ds, data)
+
+    ds = create_dataset(
+        f, "bitshuffle_zstd", datatype(data), dataspace(data),
+        chunk=(100,100), filters=BitshuffleFilter(compressor="zstd",comp_level=5)
+    )
     
+    write(ds, data)
+    
+    ds = create_dataset(
+        f, "bitshuffle_plain", datatype(data), dataspace(data),
+        chunk=(100,100), filters=BitshuffleFilter()
+    )
+    
+    write(ds, data)
+end
+
+@static VERSION >= v"1.6" ? extra_bitshuffle() : nothing
+        
 # Close and re-open file for reading
 close(f)
 f = h5open(fn)
