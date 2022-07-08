@@ -257,11 +257,13 @@ The Bitshuffle filter can optionally include compression "lz4" or "zstd". For "z
 comp_level can be provided. This is ignored for "lz4" compression. If `blocksize`
 is zero the default bitshuffle blocksize is used.
 """
-BitshuffleFilter(;blocksize = 0, compressor="",comp_level=0) = begin
+function BitshuffleFilter(;blocksize = 0, compressor="",comp_level=0)
     lowercase(compressor) in ("lz4","zstd","") || throw(ArgumentError("Invalid bitshuffle compression $compression"))
     compcode = 0
-    if compressor == "lz4" compcode = BSHUF_H5_COMPRESS_LZ4
-    elseif compressor == "zstd" compcode = BSHUF_H5_COMPRESS_ZSTD
+    if compressor == "lz4"
+        compcode = BSHUF_H5_COMPRESS_LZ4
+    elseif compressor == "zstd"
+        compcode = BSHUF_H5_COMPRESS_ZSTD
     end
     BitshuffleFilter(BSHUF_VERSION_MAJOR,BSHUF_VERSION_MINOR,0,blocksize,compcode,comp_level)
 end
