@@ -68,3 +68,6 @@ import .Filters: ExternalFilter
 @deprecate append!(filters::Filters.FilterPipeline, extra::NTuple{N, Integer}) where N append!(filters, [ExternalFilter(extra...)])
 @deprecate push!(p::Filters.FilterPipeline, f::NTuple{N, Integer}) where N push!(p, ExternalFilter(f...))
 @deprecate ExternalFilter(t::Tuple) ExternalFilter(t...) false
+
+### Changed in PR #982
+@deprecate set_track_order(p::Properties, val::Bool) set_track_order!(p::Properties, val::Bool) false
