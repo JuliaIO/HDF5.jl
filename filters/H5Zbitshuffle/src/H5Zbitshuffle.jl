@@ -196,7 +196,7 @@ function H5Z_filter_bitshuffle(flags::Cuint, cd_nelmts::Csize_t,
             end
         else # just the shuffle thanks
             
-            if flags & H5Z_FLAG_REVERSE != 0
+            if flags & API.H5Z_FLAG_REVERSE != 0
                 err = ccall((:bshuf_bitunshuffle,libbitshuffle),Cint,
                             (Ptr{Cvoid},Ptr{Cvoid},Cuint,Cuint,Cuint),
                             in_buf,out_buf,size,elem_size,block_size)
