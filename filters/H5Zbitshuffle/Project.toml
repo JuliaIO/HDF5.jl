@@ -1,0 +1,13 @@
+name = "H5Zbitshuffle"
+uuid = "51b4e782-877f-4ccf-958a-27bf628210da"
+authors = ["James.Hester <jxh@ansto.gov.au>"]
+version = "0.1.0"
+
+[deps]
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+bitshuffle_jll = "228fe19c-1b83-5282-a626-13744502a320"
+
+[compat]
+HDF5 = "0.16"
+bitshuffle_jll = "0.4.2"
+julia = "1.6"
