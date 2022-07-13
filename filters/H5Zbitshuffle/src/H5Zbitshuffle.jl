@@ -130,7 +130,7 @@ function H5Z_filter_bitshuffle(flags::Cuint, cd_nelmts::Csize_t,
                 nbytes_uncomp = ccall((:bshuf_read_uint64_BE,libbitshuffle),Cuint,(Ptr{Cvoid},),in_buf)
                 # Next 4 bytes are the block size
                 
-                block_size = ccall((:bshuf_read_uint32_BE,libbitshuffle),Cuint,(Ptr{Cvoid},),in_buf+8)/elem_size
+                block_size = ccall((:bshuf_read_uint32_BE,libbitshuffle),Cuint,(Ptr{Cvoid},),in_buf+8)÷elem_size
 
                 in_buf += 12
                 buf_size_out = nbytes_uncomp
@@ -140,10 +140,10 @@ function H5Z_filter_bitshuffle(flags::Cuint, cd_nelmts::Csize_t,
                 nbytes_uncomp = nbytes
                 if compress_flag == BSHUF_H5_COMPRESS_LZ4
                     buf_size_out = ccall((:bshuf_compress_lz4_bound,libbitshuffle),Cuint,(Cuint,Cuint,Cuint),
-                                         nbytes_uncomp/elem_size,elem_size,block_size) + 12
+                                         nbytes_uncomp÷elem_size,elem_size,block_size) + 12
                 elseif compress_flag == BSHUF_H5_COMPRESS_ZSTD
                     buf_size_out = ccall((:bshuf_compress_zstd_bound,libbitshuffle),Cuint,(Cuint,Cuint,Cuint),
-                                         nbytes_uncomp/elem_size,elem_size,block_size)+12
+                                         nbytes_uncomp÷elem_size,elem_size,block_size)+12
                 end
             end
             
@@ -156,7 +156,7 @@ function H5Z_filter_bitshuffle(flags::Cuint, cd_nelmts::Csize_t,
             error("bitshuffle_h5plugin: Uncompressed size $nbytes_uncomp is not a multiple of $elem_size")
         end
 
-        size = nbytes_uncomp/elem_size
+        size = nbytes_uncomp÷elem_size
         out_buf = Libc.malloc(buf_size_out)
         if out_buf == C_NULL
             error("bitshuffle_h5plugin: Cannot allocate memory for outbuf during decompression")
