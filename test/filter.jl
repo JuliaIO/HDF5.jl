@@ -3,10 +3,7 @@ using HDF5.Filters
 using Test
 using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
 
-@static if VERSION >= v"1.6"
-    using H5Zbitshuffle
-    ENV["JULIA_DEBUG"] = "H5Zbitshuffle"
-end
+@static if VERSION >= v"1.6" using H5Zbitshuffle end
 
 using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenabled
 

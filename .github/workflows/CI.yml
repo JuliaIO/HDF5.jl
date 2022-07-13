@@ -9,6 +9,33 @@ on:
   pull_request:
 
 jobs:
+  HDF5-system-libs:
+    name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} (system libhdf5 + mpich)
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        version:
+          - '1.3'
+        os:
+          - ubuntu-20.04 # required for libhdf5 v1.10.4 support
+        arch:
+          - x64
+    steps:
+      - name: Install libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install mpich libhdf5-mpich-dev
+          echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/" >> $GITHUB_ENV
+          echo "JULIA_MPI_BINARY=system" >> $GITHUB_ENV
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/julia-buildpkg@latest
+      - uses: julia-actions/julia-runtest@latest
+
   HDF5:
     name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
@@ -17,12 +44,29 @@ jobs:
       fail-fast: false
       matrix:
         version:
+          - '1.3'
           - '1'
+          - 'nightly'
         os:
+          - ubuntu-latest
+          - macOS-latest
           - windows-latest
         arch:
           - x64
           - x86
+        exclude:
+          - os: macOS-latest
+            arch: x86
+          - os: ubuntu-latest # excluded because HDF5_jll v1.12 does not support i686
+            arch: x86
+          - version: '1.3'
+            arch: x86
+          - version: 'nightly'
+            arch: x86
+          - version: '1.3'
+            os: macOS-latest
+          - version: '1.3'
+            os: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
@@ -33,3 +77,63 @@ jobs:
       - uses: julia-actions/julia-runtest@latest
         env:
           JULIA_DEBUG: Main
+      - uses: julia-actions/julia-processcoverage@latest
+      - uses: codecov/codecov-action@v1
+        with:
+          file: lcov.info
+
+  integration:
+    name: ${{ matrix.package.repo }} - julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1'
+        os:
+          - ubuntu-latest
+        arch:
+          - x64
+        package:
+          - {user: JuliaIO, repo: MAT.jl}
+          - {user: JuliaIO, repo: JLD.jl}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/julia-buildpkg@latest
+      - name: Clone ${{ matrix.package.repo }}
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ matrix.package.user }}/${{ matrix.package.repo }}
+          path: downstream
+      - name: Run ${{ matrix.package.repo }} tests
+        shell: julia --project=downstream {0}
+        run: |
+            using Pkg
+            try
+              # force it to use this PR's version of the package
+              Pkg.develop(PackageSpec(path="."))  # resolver may fail with main deps
+              Pkg.update()
+              Pkg.test()  # resolver may fail with test time deps
+            catch err
+              err isa Pkg.Resolve.ResolverError || rethrow()
+              # If we can't resolve that means this is incompatible by SemVer and this is fine
+              # It means we marked this as a breaking change, so we don't need to worry about
+              # Mistakenly introducing a breaking change, as we have intentionally made one
+              @info "Not compatible with this release. No problem." exception=err
+              exit(0)  #  Exit immediately, as a success
+            end
+
+  docs:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v2
+        - uses: julia-actions/julia-buildpkg@latest
+        - uses: julia-actions/julia-docdeploy@latest
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}

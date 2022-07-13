@@ -207,7 +207,8 @@
 ###
 
 # get
-bind h5p_get(plist_id::hid_t, name::Ptr{Cchar}, value::Ptr{Cvoid})::herr_t "Error in h5p_get (not annotated)"
+@bind h5p_close(id::hid_t)::herr_t "Error closing property list"
+@bind h5p_create(cls_id::hid_t)::hid_t "Error creating property list"
 @bind h5p_get_alignment(fapl_id::hid_t, threshold::Ref{hsize_t}, alignment::Ref{hsize_t})::herr_t "Error getting alignment"
 @bind h5p_get_alloc_time(plist_id::hid_t, alloc_time::Ptr{Cint})::herr_t "Error getting allocation timing"
 @bind h5p_get_append_flush(dapl_id::hid_t, dims::Cuint, boundary::Ptr{hsize_t}, func::Ptr{H5D_append_cb_t}, udata::Ptr{Ptr{Cvoid}})::herr_t "Error in h5p_get_append_flush (not annotated)"
@@ -215,9 +216,6 @@ bind h5p_get(plist_id::hid_t, name::Ptr{Cchar}, value::Ptr{Cvoid})::herr_t "Erro
 @bind h5p_get_btree_ratios(plist_id::hid_t, left::Ptr{Cdouble}, middle::Ptr{Cdouble}, right::Ptr{Cdouble})::herr_t "Error in h5p_get_btree_ratios (not annotated)"
 @bind h5p_get_buffer(plist_id::hid_t, tconv::Ptr{Ptr{Cvoid}}, bkg::Ptr{Ptr{Cvoid}})::Csize_t "Error in h5p_get_buffer (not annotated)"
 @bind h5p_get_cache(plist_id::hid_t, mdc_nelmts::Ptr{Cint}, rdcc_nslots::Ptr{Csize_t}, rdcc_nbytes::Ptr{Csize_t}, rdcc_w0::Ptr{Cdouble})::herr_t "Error in h5p_get_cache (not annotated)"
-@bind h5p_get_class(plist_id::hid_t)::hid_t "Error in h5p_get_class (not annotated)"
-@bind h5p_get_class_name(pclass_id::hid_t)::Ptr{Cchar} "Error in h5p_get_class_name (not annotated)"
-@bind h5p_get_class_parent(pclass_id::hid_t)::hid_t "Error in h5p_get_class_parent (not annotated)"
 @bind h5p_get_chunk_cache(dapl_id::hid_t, rdcc_nslots::Ptr{Csize_t}, rdcc_nbytes::Ptr{Csize_t}, rdcc_w0::Ptr{Cdouble})::herr_t "Error in h5p_get_chunk_cache (not annotated)"
 @bind h5p_get_char_encoding(plist_id::hid_t, encoding::Ref{Cint})::herr_t "Error getting char encoding"
 @bind h5p_get_chunk(plist_id::hid_t, n_dims::Cint, dims::Ptr{hsize_t})::Cint "Error getting chunk size"
@@ -272,7 +270,6 @@ bind h5p_get(plist_id::hid_t, name::Ptr{Cchar}, value::Ptr{Cvoid})::herr_t "Erro
 @bind h5p_get_meta_block_size(fapl_id::hid_t, size::Ptr{hsize_t})::herr_t "Error in h5p_get_meta_block_size (not annotated)"
 @bind h5p_get_metadata_read_attempts(plist_id::hid_t, attempts::Ptr{Cuint})::herr_t "Error in h5p_get_metadata_read_attempts (not annotated)"
 @bind h5p_get_multi_type(fapl_id::hid_t, type::Ptr{H5FD_mem_t})::herr_t "Error in h5p_get_multi_type (not annotated)"
-@bind h5p_get_nprops(id::hid_t, nprops::Ptr{Csize_t})::herr_t "Error in h5p_get_nprops (not annotated)"
 @bind h5p_get_nfilters(plist_id::hid_t)::Cint "Error getting nfilters"
 @bind h5p_get_nlinks(plist_id::hid_t, nlinks::Ptr{Csize_t})::herr_t "Error in h5p_get_nlinks (not annotated)"
 @bind h5p_get_obj_track_times(plist_id::hid_t, track_times::Ref{UInt8})::herr_t "Error getting object time tracking"
@@ -280,7 +277,6 @@ bind h5p_get(plist_id::hid_t, name::Ptr{Cchar}, value::Ptr{Cvoid})::herr_t "Erro
 @bind h5p_get_page_buffer_size(plist_id::hid_t, buf_size::Ptr{Csize_t}, min_meta_perc::Ptr{Cuint}, min_raw_perc::Ptr{Cuint})::herr_t "Error in h5p_get_page_buffer_size (not annotated)"
 @bind h5p_get_preserve(plist_id::hid_t)::Cint "Error in h5p_get_preserve (not annotated)"
 @bind h5p_get_sieve_buf_size(fapl_id::hid_t, size::Ptr{Csize_t})::herr_t "Error in h5p_get_sieve_buf_size (not annotated)"
-@bind h5p_get_size(id::hid_t, name::Ptr{Cchar}, size::Ptr{Csize_t})::herr_t "Error in h5p_get_size (not annotated)"
 @bind h5p_get_small_data_block_size(fapl_id::hid_t, size::Ptr{hsize_t})::herr_t "Error in h5p_get_small_data_block_size (not annotated)"
 @bind h5p_get_type_conv_cb(dxpl_id::hid_t, op::Ptr{H5T_conv_except_func_t}, operate_data::Ptr{Ptr{Cvoid}})::herr_t "Error in h5p_get_type_conv_cb (not annotated)"
 @bind h5p_get_version(plist_id::hid_t, boot::Ptr{Cuint}, freelist::Ptr{Cuint}, stab::Ptr{Cuint}, shhdr::Ptr{Cuint})::herr_t "Error in h5p_get_version (not annotated)"
@@ -386,28 +382,15 @@ bind h5p_get(plist_id::hid_t, name::Ptr{Cchar}, value::Ptr{Cvoid})::herr_t "Erro
 
 # others
 @bind h5p_add_merge_committed_dtype_path(plist_id::hid_t, path::Ptr{Cchar})::herr_t "Error in h5p_add_merge_committed_dtype_path (not annotated)"
-@bind h5p_all_filters_avail(plist_id::hid_t)::htri_t "Error in h5p_all_filters_avail (not annotated)"
-@bind h5p_close(id::hid_t)::herr_t "Error closing property list"
-@bind h5p_copy(plist_id::hid_t)::hid_t "Error in h5p_copy (not annotated)"
-@bind h5p_copy_prop(dst_id::hid_t, src_id::hid_t, name::Ptr{Cchar})::herr_t "Error in h5p_copy_prop (not annotated)"
-@bind h5p_create(cls_id::hid_t)::hid_t "Error creating property list"
-@bind h5p_create_class(parent::hid_t, name::Ptr{Cchar}, create::H5P_cls_create_func_t, create_data::Ptr{Cvoid}, copy::H5P_cls_copy_func_t, copy_data::Ptr{Cvoid}, close::H5P_cls_close_func_t, close_data::Ptr{Cvoid})::hid_t "Error in h5p_create_class (not annotated)"
-@bind h5p_decode(buf::Ptr{Cvoid})::hid_t "Error in h5p_decode (not annotated)"
-@bind h5p_encode1(plist_id::hid_t, buf::Ptr{Cvoid}, nalloc::Ptr{Csize_t})::herr_t "Error in h5p_encode1 (not annotated)"
-@bind h5p_encode2(plist_id::hid_t, buf::Ptr{Cvoid}, nalloc::Ptr{Csize_t}, fapl_id::hid_t)::herr_t "Error in h5p_encode2 (not annotated)"
-@bind h5p_equal(id1::hid_t, id2::hid_t)::htri_t "Error in h5p_equal (not annotated)"
-@bind h5p_exist(plist_id::hid_t, name::Ptr{Cchar})::htri_t "Error in h5p_exist (not annotated)"
-@
 @bind h5p_free_merge_committed_dtype_paths(plist_id::hid_t)::herr_t "Error in h5p_free_merge_committed_dtype_paths (not annotated)"
 @bind h5p_insert1(plist_id::hid_t, name::Ptr{Cchar}, size::Csize_t, value::Ptr{Cvoid}, prp_set::H5P_prp_set_func_t, prp_get::H5P_prp_get_func_t, prp_delete::H5P_prp_delete_func_t, prp_copy::H5P_prp_copy_func_t, prp_close::H5P_prp_close_func_t)::herr_t "Error in h5p_insert1 (not annotated)"
 @bind h5p_insert2(plist_id::hid_t, name::Ptr{Cchar}, size::Csize_t, value::Ptr{Cvoid}, set::H5P_prp_set_func_t, get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, copy::H5P_prp_copy_func_t, compare::H5P_prp_compare_func_t, close::H5P_prp_close_func_t)::herr_t "Error in h5p_insert2 (not annotated)"
-@bind h5p_iterate(id::hid_t, idx::Ptr{Cint}, iter_func::H5P_iterate_t, iter_data::Ptr{Cvoid})::Cint "Error in h5p_iterate (not annotated)"
+@bind h5p_encode1(plist_id::hid_t, buf::Ptr{Cvoid}, nalloc::Ptr{Csize_t})::herr_t "Error in h5p_encode1 (not annotated)"
+@bind h5p_encode2(plist_id::hid_t, buf::Ptr{Cvoid}, nalloc::Ptr{Csize_t}, fapl_id::hid_t)::herr_t "Error in h5p_encode2 (not annotated)"
 @bind h5p_modify_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})::herr_t "Error modifying filter"
-@bind h5p_remove(plist_id::hid_t, name::Ptr{Cchar})::herr_t "Error in h5p_remove (not annotated)"
 @bind h5p_remove_filter(plist_id::hid_t, filter_id::H5Z_filter_t)::herr_t "Error removing filter"
 @bind h5p_register1(cls_id::hid_t, name::Ptr{Cchar}, size::Csize_t, def_value::Ptr{Cvoid}, prp_create::H5P_prp_create_func_t, prp_set::H5P_prp_set_func_t, prp_get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, prp_copy::H5P_prp_copy_func_t, prp_close::H5P_prp_close_func_t)::herr_t "Error in h5p_register1 (not annotated)"
 @bind h5p_register2(cls_id::hid_t, name::Ptr{Cchar}, size::Csize_t, def_value::Ptr{Cvoid}, create::H5P_prp_create_func_t, set::H5P_prp_set_func_t, get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, copy::H5P_prp_copy_func_t, compare::H5P_prp_compare_func_t, close::H5P_prp_close_func_t)::herr_t "Error in h5p_register2 (not annotated)"
-@bind h5p_unregister(pclass_id::hid_t, name::Ptr{Cchar})::herr_t "Error in h5p_unregister (not annotated)"
 
 ###
 ### Plugin Interface
