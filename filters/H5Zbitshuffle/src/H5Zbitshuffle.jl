@@ -114,7 +114,7 @@ function H5Z_filter_bitshuffle(flags::Cuint, cd_nelmts::Csize_t,
         @debug "element size, compress_level, compress_flag" elem_size comp_lvl compress_flag
 
         if block_size == 0
-            block_size = ccall((:bshuf_default_block_size,libbitshuffle),Cuint,(Cuint,),elem_size)
+            block_size = ccall((:bshuf_default_block_size,libbitshuffle),Csize_t,(Csize_t,),elem_size)
         end
         
 
@@ -127,10 +127,10 @@ function H5Z_filter_bitshuffle(flags::Cuint, cd_nelmts::Csize_t,
             if(flags & API.H5Z_FLAG_REVERSE) != 0 # unshuffle and decompress
 
                 # First 8 bytes is number of uncompressed bytes
-                nbytes_uncomp = ccall((:bshuf_read_uint64_BE,libbitshuffle),Cuint,(Ptr{Cvoid},),in_buf)
+                nbytes_uncomp = ccall((:bshuf_read_uint64_BE,libbitshuffle),UInt64,(Ptr{Cvoid},),in_buf)
                 # Next 4 bytes are the block size
                 
-                block_size = ccall((:bshuf_read_uint32_BE,libbitshuffle),Cuint,(Ptr{Cvoid},),in_buf+8)/elem_size
+                block_size = ccall((:bshuf_read_uint32_BE,libbitshuffle),UInt32,(Ptr{Cvoid},),in_buf+8)÷elem_size
 
                 in_buf += 12
                 buf_size_out = nbytes_uncomp
@@ -139,11 +139,11 @@ function H5Z_filter_bitshuffle(flags::Cuint, cd_nelmts::Csize_t,
 
                 nbytes_uncomp = nbytes
                 if compress_flag == BSHUF_H5_COMPRESS_LZ4
-                    buf_size_out = ccall((:bshuf_compress_lz4_bound,libbitshuffle),Cuint,(Cuint,Cuint,Cuint),
-                                         nbytes_uncomp/elem_size,elem_size,block_size) + 12
+                    buf_size_out = ccall((:bshuf_compress_lz4_bound,libbitshuffle),Csize_t,(Csize_t,Csize_t,Csize_t),
+                                         nbytes_uncomp÷elem_size,elem_size,block_size) + 12
                 elseif compress_flag == BSHUF_H5_COMPRESS_ZSTD
-                    buf_size_out = ccall((:bshuf_compress_zstd_bound,libbitshuffle),Cuint,(Cuint,Cuint,Cuint),
-                                         nbytes_uncomp/elem_size,elem_size,block_size)+12
+                    buf_size_out = ccall((:bshuf_compress_zstd_bound,libbitshuffle),Csize_t,(Csize_t,Csize_t,Csize_t),
+                                         nbytes_uncomp÷elem_size,elem_size,block_size)+12
                 end
             end
             
@@ -156,7 +156,7 @@ function H5Z_filter_bitshuffle(flags::Cuint, cd_nelmts::Csize_t,
             error("bitshuffle_h5plugin: Uncompressed size $nbytes_uncomp is not a multiple of $elem_size")
         end
 
-        size = nbytes_uncomp/elem_size
+        size = nbytes_uncomp÷elem_size
         out_buf = Libc.malloc(buf_size_out)
         if out_buf == C_NULL
             error("bitshuffle_h5plugin: Cannot allocate memory for outbuf during decompression")
@@ -167,28 +167,28 @@ function H5Z_filter_bitshuffle(flags::Cuint, cd_nelmts::Csize_t,
         if cd_nelmts > 4 && (compress_flag in (BSHUF_H5_COMPRESS_LZ4, BSHUF_H5_COMPRESS_ZSTD))
             if flags & API.H5Z_FLAG_REVERSE != 0 #unshuffle and decompress
                 if compress_flag == BSHUF_H5_COMPRESS_LZ4
-                    err = ccall((:bshuf_decompress_lz4,libbitshuffle),Cint,
-                                (Ptr{Cvoid},Ptr{Cvoid},Cuint,Cuint,Cuint),
+                    err = ccall((:bshuf_decompress_lz4,libbitshuffle),Int64,
+                                (Ptr{Cvoid},Ptr{Cvoid},Csize_t,Csize_t,Csize_t),
                                 in_buf,out_buf,size,elem_size,block_size)
                 elseif compress_flag == BSHUF_H5_COMPRESS_ZSTD
-                    err = ccall((:bshuf_decompress_zstd,libbitshuffle),Cint,
-                                (Ptr{Cvoid},Ptr{Cvoid},Cuint,Cuint,Cuint),
+                    err = ccall((:bshuf_decompress_zstd,libbitshuffle),Int64,
+                                (Ptr{Cvoid},Ptr{Cvoid},Csize_t,Csize_t,Csize_t),
                                 in_buf,out_buf,size,elem_size,block_size)
                 end
                 nbytes_out = nbytes_uncomp
                 
             else  #shuffle and compress
                 
-                ccall((:bshuf_write_uint64_BE,libbitshuffle),Cvoid,(Ptr{Cvoid},Cuint),out_buf,nbytes_uncomp)
-                ccall((:bshuf_write_uint32_BE,libbitshuffle),Cvoid,(Ptr{Cvoid},Cuint),out_buf+8,block_size*elem_size)
+                ccall((:bshuf_write_uint64_BE,libbitshuffle),Cvoid,(Ptr{Cvoid},UInt64),out_buf,nbytes_uncomp)
+                ccall((:bshuf_write_uint32_BE,libbitshuffle),Cvoid,(Ptr{Cvoid},UInt32),out_buf+8,block_size*elem_size)
                 
                 if compress_flag == BSHUF_H5_COMPRESS_LZ4
-                    err = ccall((:bshuf_compress_lz4,libbitshuffle),Cint,
-                                (Ptr{Cvoid},Ptr{Cvoid},Cuint,Cuint,Cuint),
+                    err = ccall((:bshuf_compress_lz4,libbitshuffle),Int64,
+                                (Ptr{Cvoid},Ptr{Cvoid},Csize_t,Csize_t,Csize_t),
                                 in_buf,out_buf+12,size,elem_size,block_size)
                 else
-                    err = ccall((:bshuf_compress_zstd,libbitshuffle),Cint,
-                                (Ptr{Cvoid},Ptr{Cvoid},Cuint,Cuint,Cuint),
+                    err = ccall((:bshuf_compress_zstd,libbitshuffle),Int64,
+                                (Ptr{Cvoid},Ptr{Cvoid},Csize_t,Csize_t,Csize_t),
                                 in_buf,out_buf+12,size,elem_size,block_size)
                 end
                 
@@ -197,12 +197,12 @@ function H5Z_filter_bitshuffle(flags::Cuint, cd_nelmts::Csize_t,
         else # just the shuffle thanks
             
             if flags & API.H5Z_FLAG_REVERSE != 0
-                err = ccall((:bshuf_bitunshuffle,libbitshuffle),Cint,
-                            (Ptr{Cvoid},Ptr{Cvoid},Cuint,Cuint,Cuint),
+                err = ccall((:bshuf_bitunshuffle,libbitshuffle),Int64,
+                            (Ptr{Cvoid},Ptr{Cvoid},Csize_t,Csize_t,Csize_t),
                             in_buf,out_buf,size,elem_size,block_size)
             else
-                err = ccall((:bshuf_bitshuffle,libbitshuffle),Cint,
-                            (Ptr{Cvoid},Ptr{Cvoid},Cuint,Cuint,Cuint),
+                err = ccall((:bshuf_bitshuffle,libbitshuffle),Int64,
+                            (Ptr{Cvoid},Ptr{Cvoid},Csize_t,Csize_t,Csize_t),
                             in_buf,out_buf,size,elem_size,block_size)
             end
             
