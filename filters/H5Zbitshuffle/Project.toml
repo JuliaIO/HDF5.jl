@@ -1,7 +1,7 @@
 name = "H5Zbitshuffle"
 uuid = "51b4e782-877f-4ccf-958a-27bf628210da"
 authors = ["James.Hester <jxh@ansto.gov.au>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
