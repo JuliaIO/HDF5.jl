@@ -270,7 +270,7 @@ end
 
 get_track_order(p::Properties) = API.h5p_get_link_creation_order(p) != 0 && API.h5p_get_attr_creation_order(p) != 0
 
-function set_track_order(p::Properties, val::Bool)
+function set_track_order!(p::Properties, val::Bool)
     crt_order_flags = val ? (HDF5.API.H5P_CRT_ORDER_TRACKED | HDF5.API.H5P_CRT_ORDER_INDEXED) : 0
     API.h5p_set_link_creation_order(p, crt_order_flags)
     API.h5p_set_attr_creation_order(p, crt_order_flags)
@@ -305,7 +305,7 @@ function class_getproperty(::Type{GroupCreateProperties}, p::Properties, name::S
 end
 function class_setproperty!(::Type{GroupCreateProperties}, p::Properties, name::Symbol, val)
     name === :local_heap_size_hint ? API.h5p_set_local_heap_size_hint(p, val) :
-    name === :track_order ? set_track_order(p, val) :
+    name === :track_order ? set_track_order!(p, val) :
     class_setproperty!(superclass(GroupCreateProperties), p, name, val)
 end
 
@@ -368,7 +368,7 @@ function class_getproperty(::Type{FileCreateProperties}, p::Properties, name::Sy
 end
 function class_setproperty!(::Type{FileCreateProperties}, p::Properties, name::Symbol, val)
     name === :userblock   ? API.h5p_set_userblock(p, val) :
-    name === :track_order ? set_track_order(p, val) : 
+    name === :track_order ? set_track_order!(p, val) :
     name === :strategy ? set_strategy!(p, val) :
     name === :persist ? API.h5p_set_file_space_strategy(p, persist = val) :
     name === :threshold ? API.h5p_set_file_space_strategy(p, threshold = val) :
