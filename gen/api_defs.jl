@@ -221,7 +221,7 @@
 @bind h5p_get_chunk_cache(dapl_id::hid_t, rdcc_nslots::Ptr{Csize_t}, rdcc_nbytes::Ptr{Csize_t}, rdcc_w0::Ptr{Cdouble})::herr_t "Error in h5p_get_chunk_cache (not annotated)"
 @bind h5p_get_chunk_opts(plist_id::hid_t, opts::Ptr{Cuint})::herr_t "Error in h5p_get_chunk_opts (not annotated)"
 @bind h5p_get_class(plist_id::hid_t)::hid_t "Error in h5p_get_class (not annotated)"
-@bind h5p_get_class_name(pclass_id::hid_t)::Ptr{Cchar} "Error in h5p_get_class_name (not annotated)"
+#@bind h5p_get_class_name(pclass_id::hid_t)::Ptr{Cchar} "Error in h5p_get_class_name (not annotated)"
 @bind h5p_get_class_parent(pclass_id::hid_t)::hid_t "Error in h5p_get_class_parent (not annotated)"
 @bind h5p_get_copy_object(plist_id::hid_t, copy_options::Ptr{Cuint})::herr_t "Error in h5p_get_copy_object (not annotated)"
 @bind h5p_get_core_write_tracking(fapl_id::hid_t, is_enabled::Ptr{hbool_t}, page_size::Ptr{Csize_t})::herr_t "Error in h5p_get_core_write_tracking (not annotated)"

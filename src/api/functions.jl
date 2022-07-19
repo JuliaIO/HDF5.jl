@@ -1537,25 +1537,14 @@ function h5o_open_by_idx(loc_id, group_name, index_type, order, n, lapl_id)
 end
 
 """
-    h5p_close(id::hid_t)
+    h5p_get(plist_id::hid_t, name::Ptr{Cchar}, value::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pclose`](https://portal.hdfgroup.org/display/HDF5/H5P_CLOSE).
+See `libhdf5` documentation for [`H5Pget`](https://portal.hdfgroup.org/display/HDF5/H5P_GET).
 """
-function h5p_close(id)
-    var"#status#" = ccall((:H5Pclose, libhdf5), herr_t, (hid_t,), id)
-    var"#status#" < 0 && @h5error("Error closing property list")
+function h5p_get(plist_id, name, value)
+    var"#status#" = ccall((:H5Pget, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{Cvoid}), plist_id, name, value)
+    var"#status#" < 0 && @h5error("Error in h5p_get (not annotated)")
     return nothing
-end
-
-"""
-    h5p_create(cls_id::hid_t) -> hid_t
-
-See `libhdf5` documentation for [`H5Pcreate`](https://portal.hdfgroup.org/display/HDF5/H5P_CREATE).
-"""
-function h5p_create(cls_id)
-    var"#status#" = ccall((:H5Pcreate, libhdf5), hid_t, (hid_t,), cls_id)
-    var"#status#" < 0 && @h5error("Error creating property list")
-    return var"#status#"
 end
 
 """
@@ -1603,6 +1592,17 @@ function h5p_get_attr_creation_order(plist_id, crt_order_flags)
 end
 
 """
+    h5p_get_attr_phase_change(plist_id::hid_t, max_compact::Ptr{Cuint}, min_dense::Ptr{Cuint})
+
+See `libhdf5` documentation for [`H5Pget_attr_phase_change`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_ATTR_PHASE_CHANGE).
+"""
+function h5p_get_attr_phase_change(plist_id, max_compact, min_dense)
+    var"#status#" = ccall((:H5Pget_attr_phase_change, libhdf5), herr_t, (hid_t, Ptr{Cuint}, Ptr{Cuint}), plist_id, max_compact, min_dense)
+    var"#status#" < 0 && @h5error("Error in h5p_get_attr_phase_change (not annotated)")
+    return nothing
+end
+
+"""
     h5p_get_btree_ratios(plist_id::hid_t, left::Ptr{Cdouble}, middle::Ptr{Cdouble}, right::Ptr{Cdouble})
 
 See `libhdf5` documentation for [`H5Pget_btree_ratios`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_BTREE_RATIOS).
@@ -1636,17 +1636,6 @@ function h5p_get_cache(plist_id, mdc_nelmts, rdcc_nslots, rdcc_nbytes, rdcc_w0)
 end
 
 """
-    h5p_get_chunk_cache(dapl_id::hid_t, rdcc_nslots::Ptr{Csize_t}, rdcc_nbytes::Ptr{Csize_t}, rdcc_w0::Ptr{Cdouble})
-
-See `libhdf5` documentation for [`H5Pget_chunk_cache`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CHUNK_CACHE).
-"""
-function h5p_get_chunk_cache(dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
-    var"#status#" = ccall((:H5Pget_chunk_cache, libhdf5), herr_t, (hid_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cdouble}), dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
-    var"#status#" < 0 && @h5error("Error in h5p_get_chunk_cache (not annotated)")
-    return nothing
-end
-
-"""
     h5p_get_char_encoding(plist_id::hid_t, encoding::Ref{Cint})
 
 See `libhdf5` documentation for [`H5Pget_char_encoding`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CHAR_ENCODING).
@@ -1669,6 +1658,17 @@ function h5p_get_chunk(plist_id, n_dims, dims)
 end
 
 """
+    h5p_get_chunk_cache(dapl_id::hid_t, rdcc_nslots::Ptr{Csize_t}, rdcc_nbytes::Ptr{Csize_t}, rdcc_w0::Ptr{Cdouble})
+
+See `libhdf5` documentation for [`H5Pget_chunk_cache`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CHUNK_CACHE).
+"""
+function h5p_get_chunk_cache(dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
+    var"#status#" = ccall((:H5Pget_chunk_cache, libhdf5), herr_t, (hid_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cdouble}), dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
+    var"#status#" < 0 && @h5error("Error in h5p_get_chunk_cache (not annotated)")
+    return nothing
+end
+
+"""
     h5p_get_chunk_opts(plist_id::hid_t, opts::Ptr{Cuint})
 
 See `libhdf5` documentation for [`H5Pget_chunk_opts`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CHUNK_OPTS).
@@ -1677,6 +1677,28 @@ function h5p_get_chunk_opts(plist_id, opts)
     var"#status#" = ccall((:H5Pget_chunk_opts, libhdf5), herr_t, (hid_t, Ptr{Cuint}), plist_id, opts)
     var"#status#" < 0 && @h5error("Error in h5p_get_chunk_opts (not annotated)")
     return nothing
+end
+
+"""
+    h5p_get_class(plist_id::hid_t) -> hid_t
+
+See `libhdf5` documentation for [`H5Pget_class`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CLASS).
+"""
+function h5p_get_class(plist_id)
+    var"#status#" = ccall((:H5Pget_class, libhdf5), hid_t, (hid_t,), plist_id)
+    var"#status#" < 0 && @h5error("Error in h5p_get_class (not annotated)")
+    return var"#status#"
+end
+
+"""
+    h5p_get_class_parent(pclass_id::hid_t) -> hid_t
+
+See `libhdf5` documentation for [`H5Pget_class_parent`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CLASS_PARENT).
+"""
+function h5p_get_class_parent(pclass_id)
+    var"#status#" = ccall((:H5Pget_class_parent, libhdf5), hid_t, (hid_t,), pclass_id)
+    var"#status#" < 0 && @h5error("Error in h5p_get_class_parent (not annotated)")
+    return var"#status#"
 end
 
 """
@@ -1779,6 +1801,17 @@ function h5p_get_edc_check(plist_id)
 end
 
 """
+    h5p_get_efile_prefix(dapl_id::hid_t, prefix::Ptr{UInt8}, size::Csize_t) -> Cssize_t
+
+See `libhdf5` documentation for [`H5Pget_efile_prefix`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_EFILE_PREFIX).
+"""
+function h5p_get_efile_prefix(dapl_id, prefix, size)
+    var"#status#" = ccall((:H5Pget_efile_prefix, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Csize_t), dapl_id, prefix, size)
+    var"#status#" < 0 && @h5error("Error getting external file prefix")
+    return var"#status#"
+end
+
+"""
     h5p_get_elink_acc_flags(lapl_id::hid_t, flags::Ptr{Cuint})
 
 See `libhdf5` documentation for [`H5Pget_elink_acc_flags`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_ELINK_ACC_FLAGS).
@@ -1812,17 +1845,6 @@ function h5p_get_elink_fapl(lapl_id)
 end
 
 """
-    h5p_get_elink_prefix(plist_id::hid_t, prefix::Ptr{Cchar}, size::Csize_t) -> Cssize_t
-
-See `libhdf5` documentation for [`H5Pget_elink_prefix`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_ELINK_PREFIX).
-"""
-function h5p_get_elink_prefix(plist_id, prefix, size)
-    var"#status#" = ccall((:H5Pget_elink_prefix, libhdf5), Cssize_t, (hid_t, Ptr{Cchar}, Csize_t), plist_id, prefix, size)
-    var"#status#" < 0 && @h5error("Error in h5p_get_elink_prefix (not annotated)")
-    return var"#status#"
-end
-
-"""
     h5p_get_elink_file_cache_size(plist_id::hid_t, efc_size::Ptr{Cuint})
 
 See `libhdf5` documentation for [`H5Pget_elink_file_cache_size`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_ELINK_FILE_CACHE_SIZE).
@@ -1834,13 +1856,13 @@ function h5p_get_elink_file_cache_size(plist_id, efc_size)
 end
 
 """
-    h5p_get_efile_prefix(dapl_id::hid_t, prefix::Ptr{UInt8}, size::Csize_t) -> Cssize_t
+    h5p_get_elink_prefix(plist_id::hid_t, prefix::Ptr{Cchar}, size::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Pget_efile_prefix`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_EFILE_PREFIX).
+See `libhdf5` documentation for [`H5Pget_elink_prefix`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_ELINK_PREFIX).
 """
-function h5p_get_efile_prefix(dapl_id, prefix, size)
-    var"#status#" = ccall((:H5Pget_efile_prefix, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Csize_t), dapl_id, prefix, size)
-    var"#status#" < 0 && @h5error("Error getting external file prefix")
+function h5p_get_elink_prefix(plist_id, prefix, size)
+    var"#status#" = ccall((:H5Pget_elink_prefix, libhdf5), Cssize_t, (hid_t, Ptr{Cchar}, Csize_t), plist_id, prefix, size)
+    var"#status#" < 0 && @h5error("Error in h5p_get_elink_prefix (not annotated)")
     return var"#status#"
 end
 
@@ -1933,28 +1955,6 @@ function h5p_get_fapl_hdfs(fapl_id, fa_out)
 end
 
 """
-    h5p_get_fapl_multi(fapl_id::hid_t, memb_map::Ptr{H5FD_mem_t}, memb_fapl::Ptr{hid_t}, memb_name::Ptr{Ptr{Cchar}}, memb_addr::Ptr{haddr_t}, relax::Ptr{hbool_t})
-
-See `libhdf5` documentation for [`H5Pget_fapl_multi`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MULTI).
-"""
-function h5p_get_fapl_multi(fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
-    var"#status#" = ccall((:H5Pget_fapl_multi, libhdf5), herr_t, (hid_t, Ptr{H5FD_mem_t}, Ptr{hid_t}, Ptr{Ptr{Cchar}}, Ptr{haddr_t}, Ptr{hbool_t}), fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
-    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_multi (not annotated)")
-    return nothing
-end
-
-"""
-    h5p_get_fapl_splitter(fapl_id::hid_t, config_ptr::Ptr{H5FD_splitter_vfd_config_t})
-
-See `libhdf5` documentation for [`H5Pget_fapl_splitter`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_SPLITTER).
-"""
-function h5p_get_fapl_splitter(fapl_id, config_ptr)
-    var"#status#" = ccall((:H5Pget_fapl_splitter, libhdf5), herr_t, (hid_t, Ptr{H5FD_splitter_vfd_config_t}), fapl_id, config_ptr)
-    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_splitter (not annotated)")
-    return nothing
-end
-
-"""
     h5p_get_fapl_mpio32(fapl_id::hid_t, comm::Ptr{Hmpih32}, info::Ptr{Hmpih32})
 
 See `libhdf5` documentation for [`H5Pget_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MPIO32).
@@ -1977,24 +1977,24 @@ function h5p_get_fapl_mpio64(fapl_id, comm, info)
 end
 
 """
-    h5p_get_file_space_strategy(plist_id::hid_t, strategy::Ptr{H5F_fspace_strategy_t}, persist::Ptr{hbool_t}, threshold::Ptr{hsize_t})
+    h5p_get_fapl_multi(fapl_id::hid_t, memb_map::Ptr{H5FD_mem_t}, memb_fapl::Ptr{hid_t}, memb_name::Ptr{Ptr{Cchar}}, memb_addr::Ptr{haddr_t}, relax::Ptr{hbool_t})
 
-See `libhdf5` documentation for [`H5Pget_file_space_strategy`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILE_SPACE_STRATEGY).
+See `libhdf5` documentation for [`H5Pget_fapl_multi`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MULTI).
 """
-function h5p_get_file_space_strategy(plist_id, strategy, persist, threshold)
-    var"#status#" = ccall((:H5Pget_file_space_strategy, libhdf5), herr_t, (hid_t, Ptr{H5F_fspace_strategy_t}, Ptr{hbool_t}, Ptr{hsize_t}), plist_id, strategy, persist, threshold)
-    var"#status#" < 0 && @h5error("Error in h5p_get_file_space_strategy (not annotated)")
+function h5p_get_fapl_multi(fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
+    var"#status#" = ccall((:H5Pget_fapl_multi, libhdf5), herr_t, (hid_t, Ptr{H5FD_mem_t}, Ptr{hid_t}, Ptr{Ptr{Cchar}}, Ptr{haddr_t}, Ptr{hbool_t}), fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
+    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_multi (not annotated)")
     return nothing
 end
 
 """
-    h5p_get_file_space_page_size(plist_id::hid_t, fsp_size::Ptr{hsize_t})
+    h5p_get_fapl_splitter(fapl_id::hid_t, config_ptr::Ptr{H5FD_splitter_vfd_config_t})
 
-See `libhdf5` documentation for [`H5Pget_file_space_page_size`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILE_SPACE_PAGE_SIZE).
+See `libhdf5` documentation for [`H5Pget_fapl_splitter`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_SPLITTER).
 """
-function h5p_get_file_space_page_size(plist_id, fsp_size)
-    var"#status#" = ccall((:H5Pget_file_space_page_size, libhdf5), herr_t, (hid_t, Ptr{hsize_t}), plist_id, fsp_size)
-    var"#status#" < 0 && @h5error("Error in h5p_get_file_space_page_size (not annotated)")
+function h5p_get_fapl_splitter(fapl_id, config_ptr)
+    var"#status#" = ccall((:H5Pget_fapl_splitter, libhdf5), herr_t, (hid_t, Ptr{H5FD_splitter_vfd_config_t}), fapl_id, config_ptr)
+    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_splitter (not annotated)")
     return nothing
 end
 
@@ -2039,6 +2039,39 @@ See `libhdf5` documentation for [`H5Pget_file_locking`](https://portal.hdfgroup.
 function h5p_get_file_locking(fapl_id, use_file_locking, ignore_when_disabled)
     var"#status#" = ccall((:H5Pget_file_locking, libhdf5), herr_t, (hid_t, Ptr{hbool_t}, Ptr{hbool_t}), fapl_id, use_file_locking, ignore_when_disabled)
     var"#status#" < 0 && @h5error("Error in h5p_get_file_locking (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_file_space(plist_id::hid_t, strategy::Ptr{H5F_file_space_type_t}, threshold::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Pget_file_space`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILE_SPACE).
+"""
+function h5p_get_file_space(plist_id, strategy, threshold)
+    var"#status#" = ccall((:H5Pget_file_space, libhdf5), herr_t, (hid_t, Ptr{H5F_file_space_type_t}, Ptr{hsize_t}), plist_id, strategy, threshold)
+    var"#status#" < 0 && @h5error("Error in h5p_get_file_space (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_file_space_page_size(plist_id::hid_t, fsp_size::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Pget_file_space_page_size`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILE_SPACE_PAGE_SIZE).
+"""
+function h5p_get_file_space_page_size(plist_id, fsp_size)
+    var"#status#" = ccall((:H5Pget_file_space_page_size, libhdf5), herr_t, (hid_t, Ptr{hsize_t}), plist_id, fsp_size)
+    var"#status#" < 0 && @h5error("Error in h5p_get_file_space_page_size (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_file_space_strategy(plist_id::hid_t, strategy::Ptr{H5F_fspace_strategy_t}, persist::Ptr{hbool_t}, threshold::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Pget_file_space_strategy`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FILE_SPACE_STRATEGY).
+"""
+function h5p_get_file_space_strategy(plist_id, strategy, persist, threshold)
+    var"#status#" = ccall((:H5Pget_file_space_strategy, libhdf5), herr_t, (hid_t, Ptr{H5F_fspace_strategy_t}, Ptr{hbool_t}, Ptr{hsize_t}), plist_id, strategy, persist, threshold)
+    var"#status#" < 0 && @h5error("Error in h5p_get_file_space_strategy (not annotated)")
     return nothing
 end
 
@@ -2109,6 +2142,17 @@ function h5p_get_hyper_vector_size(fapl_id, size)
 end
 
 """
+    h5p_get_istore_k(plist_id::hid_t, ik::Ptr{Cuint})
+
+See `libhdf5` documentation for [`H5Pget_istore_k`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_ISTORE_K).
+"""
+function h5p_get_istore_k(plist_id, ik)
+    var"#status#" = ccall((:H5Pget_istore_k, libhdf5), herr_t, (hid_t, Ptr{Cuint}), plist_id, ik)
+    var"#status#" < 0 && @h5error("Error in h5p_get_istore_k (not annotated)")
+    return nothing
+end
+
+"""
     h5p_get_layout(plist_id::hid_t) -> Int
 
 See `libhdf5` documentation for [`H5Pget_layout`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_LAYOUT).
@@ -2164,6 +2208,17 @@ function h5p_get_local_heap_size_hint(plist_id, size_hint)
 end
 
 """
+    h5p_get_mcdt_search_cb(plist_id::hid_t, func::Ptr{H5O_mcdt_search_cb_t}, op_data::Ptr{Ptr{Cvoid}})
+
+See `libhdf5` documentation for [`H5Pget_mcdt_search_cb`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_MCDT_SEARCH_CB).
+"""
+function h5p_get_mcdt_search_cb(plist_id, func, op_data)
+    var"#status#" = ccall((:H5Pget_mcdt_search_cb, libhdf5), herr_t, (hid_t, Ptr{H5O_mcdt_search_cb_t}, Ptr{Ptr{Cvoid}}), plist_id, func, op_data)
+    var"#status#" < 0 && @h5error("Error in h5p_get_mcdt_search_cb (not annotated)")
+    return nothing
+end
+
+"""
     h5p_get_mdc_config(plist_id::hid_t, config_ptr::Ptr{H5AC_cache_config_t})
 
 See `libhdf5` documentation for [`H5Pget_mdc_config`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_MDC_CONFIG).
@@ -2186,13 +2241,13 @@ function h5p_get_mdc_image_config(plist_id, config_ptr)
 end
 
 """
-    h5p_get_mcdt_search_cb(plist_id::hid_t, func::Ptr{H5O_mcdt_search_cb_t}, op_data::Ptr{Ptr{Cvoid}})
+    h5p_get_mdc_log_options(plist_id::hid_t, is_enabled::Ptr{hbool_t}, location::Ptr{Cchar}, location_size::Ptr{Csize_t}, start_on_access::Ptr{hbool_t})
 
-See `libhdf5` documentation for [`H5Pget_mcdt_search_cb`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_MCDT_SEARCH_CB).
+See `libhdf5` documentation for [`H5Pget_mdc_log_options`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_MDC_LOG_OPTIONS).
 """
-function h5p_get_mcdt_search_cb(plist_id, func, op_data)
-    var"#status#" = ccall((:H5Pget_mcdt_search_cb, libhdf5), herr_t, (hid_t, Ptr{H5O_mcdt_search_cb_t}, Ptr{Ptr{Cvoid}}), plist_id, func, op_data)
-    var"#status#" < 0 && @h5error("Error in h5p_get_mcdt_search_cb (not annotated)")
+function h5p_get_mdc_log_options(plist_id, is_enabled, location, location_size, start_on_access)
+    var"#status#" = ccall((:H5Pget_mdc_log_options, libhdf5), herr_t, (hid_t, Ptr{hbool_t}, Ptr{Cchar}, Ptr{Csize_t}, Ptr{hbool_t}), plist_id, is_enabled, location, location_size, start_on_access)
+    var"#status#" < 0 && @h5error("Error in h5p_get_mdc_log_options (not annotated)")
     return nothing
 end
 
@@ -2252,6 +2307,17 @@ function h5p_get_nlinks(plist_id, nlinks)
 end
 
 """
+    h5p_get_nprops(id::hid_t, nprops::Ptr{Csize_t})
+
+See `libhdf5` documentation for [`H5Pget_nprops`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_NPROPS).
+"""
+function h5p_get_nprops(id, nprops)
+    var"#status#" = ccall((:H5Pget_nprops, libhdf5), herr_t, (hid_t, Ptr{Csize_t}), id, nprops)
+    var"#status#" < 0 && @h5error("Error in h5p_get_nprops (not annotated)")
+    return nothing
+end
+
+"""
     h5p_get_obj_track_times(plist_id::hid_t, track_times::Ref{UInt8})
 
 See `libhdf5` documentation for [`H5Pget_obj_track_times`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_OBJ_TRACK_TIMES).
@@ -2296,6 +2362,39 @@ function h5p_get_preserve(plist_id)
 end
 
 """
+    h5p_get_shared_mesg_index(plist_id::hid_t, index_num::Cuint, mesg_type_flags::Ptr{Cuint}, min_mesg_size::Ptr{Cuint})
+
+See `libhdf5` documentation for [`H5Pget_shared_mesg_index`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_SHARED_MESG_INDEX).
+"""
+function h5p_get_shared_mesg_index(plist_id, index_num, mesg_type_flags, min_mesg_size)
+    var"#status#" = ccall((:H5Pget_shared_mesg_index, libhdf5), herr_t, (hid_t, Cuint, Ptr{Cuint}, Ptr{Cuint}), plist_id, index_num, mesg_type_flags, min_mesg_size)
+    var"#status#" < 0 && @h5error("Error in h5p_get_shared_mesg_index (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_shared_mesg_nindexes(plist_id::hid_t, nindexes::Ptr{Cuint})
+
+See `libhdf5` documentation for [`H5Pget_shared_mesg_nindexes`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_SHARED_MESG_NINDEXES).
+"""
+function h5p_get_shared_mesg_nindexes(plist_id, nindexes)
+    var"#status#" = ccall((:H5Pget_shared_mesg_nindexes, libhdf5), herr_t, (hid_t, Ptr{Cuint}), plist_id, nindexes)
+    var"#status#" < 0 && @h5error("Error in h5p_get_shared_mesg_nindexes (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_shared_mesg_phase_change(plist_id::hid_t, max_list::Ptr{Cuint}, min_btree::Ptr{Cuint})
+
+See `libhdf5` documentation for [`H5Pget_shared_mesg_phase_change`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_SHARED_MESG_PHASE_CHANGE).
+"""
+function h5p_get_shared_mesg_phase_change(plist_id, max_list, min_btree)
+    var"#status#" = ccall((:H5Pget_shared_mesg_phase_change, libhdf5), herr_t, (hid_t, Ptr{Cuint}, Ptr{Cuint}), plist_id, max_list, min_btree)
+    var"#status#" < 0 && @h5error("Error in h5p_get_shared_mesg_phase_change (not annotated)")
+    return nothing
+end
+
+"""
     h5p_get_sieve_buf_size(fapl_id::hid_t, size::Ptr{Csize_t})
 
 See `libhdf5` documentation for [`H5Pget_sieve_buf_size`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_SIEVE_BUF_SIZE).
@@ -2303,6 +2402,28 @@ See `libhdf5` documentation for [`H5Pget_sieve_buf_size`](https://portal.hdfgrou
 function h5p_get_sieve_buf_size(fapl_id, size)
     var"#status#" = ccall((:H5Pget_sieve_buf_size, libhdf5), herr_t, (hid_t, Ptr{Csize_t}), fapl_id, size)
     var"#status#" < 0 && @h5error("Error in h5p_get_sieve_buf_size (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_size(id::hid_t, name::Ptr{Cchar}, size::Ptr{Csize_t})
+
+See `libhdf5` documentation for [`H5Pget_size`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_SIZE).
+"""
+function h5p_get_size(id, name, size)
+    var"#status#" = ccall((:H5Pget_size, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{Csize_t}), id, name, size)
+    var"#status#" < 0 && @h5error("Error in h5p_get_size (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_sizes(plist_id::hid_t, sizeof_addr::Ptr{Csize_t}, sizeof_size::Ptr{Csize_t})
+
+See `libhdf5` documentation for [`H5Pget_sizes`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_SIZES).
+"""
+function h5p_get_sizes(plist_id, sizeof_addr, sizeof_size)
+    var"#status#" = ccall((:H5Pget_sizes, libhdf5), herr_t, (hid_t, Ptr{Csize_t}, Ptr{Csize_t}), plist_id, sizeof_addr, sizeof_size)
+    var"#status#" < 0 && @h5error("Error in h5p_get_sizes (not annotated)")
     return nothing
 end
 
@@ -2318,6 +2439,17 @@ function h5p_get_small_data_block_size(fapl_id, size)
 end
 
 """
+    h5p_get_sym_k(plist_id::hid_t, ik::Ptr{Cuint}, lk::Ptr{Cuint})
+
+See `libhdf5` documentation for [`H5Pget_sym_k`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_SYM_K).
+"""
+function h5p_get_sym_k(plist_id, ik, lk)
+    var"#status#" = ccall((:H5Pget_sym_k, libhdf5), herr_t, (hid_t, Ptr{Cuint}, Ptr{Cuint}), plist_id, ik, lk)
+    var"#status#" < 0 && @h5error("Error in h5p_get_sym_k (not annotated)")
+    return nothing
+end
+
+"""
     h5p_get_type_conv_cb(dxpl_id::hid_t, op::Ptr{H5T_conv_except_func_t}, operate_data::Ptr{Ptr{Cvoid}})
 
 See `libhdf5` documentation for [`H5Pget_type_conv_cb`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_TYPE_CONV_CB).
@@ -2329,6 +2461,17 @@ function h5p_get_type_conv_cb(dxpl_id, op, operate_data)
 end
 
 """
+    h5p_get_userblock(plist_id::hid_t, len::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Pget_userblock`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_USERBLOCK).
+"""
+function h5p_get_userblock(plist_id, len)
+    var"#status#" = ccall((:H5Pget_userblock, libhdf5), herr_t, (hid_t, Ptr{hsize_t}), plist_id, len)
+    var"#status#" < 0 && @h5error("Error getting userblock")
+    return nothing
+end
+
+"""
     h5p_get_version(plist_id::hid_t, boot::Ptr{Cuint}, freelist::Ptr{Cuint}, stab::Ptr{Cuint}, shhdr::Ptr{Cuint})
 
 See `libhdf5` documentation for [`H5Pget_version`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_VERSION).
@@ -2336,28 +2479,6 @@ See `libhdf5` documentation for [`H5Pget_version`](https://portal.hdfgroup.org/d
 function h5p_get_version(plist_id, boot, freelist, stab, shhdr)
     var"#status#" = ccall((:H5Pget_version, libhdf5), herr_t, (hid_t, Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}, Ptr{Cuint}), plist_id, boot, freelist, stab, shhdr)
     var"#status#" < 0 && @h5error("Error in h5p_get_version (not annotated)")
-    return nothing
-end
-
-"""
-    h5p_get_vol_id(plist_id::hid_t, vol_id::Ptr{hid_t})
-
-See `libhdf5` documentation for [`H5Pget_vol_id`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_VOL_ID).
-"""
-function h5p_get_vol_id(plist_id, vol_id)
-    var"#status#" = ccall((:H5Pget_vol_id, libhdf5), herr_t, (hid_t, Ptr{hid_t}), plist_id, vol_id)
-    var"#status#" < 0 && @h5error("Error in h5p_get_vol_id (not annotated)")
-    return nothing
-end
-
-"""
-    h5p_get_vol_info(plist_id::hid_t, vol_info::Ptr{Ptr{Cvoid}})
-
-See `libhdf5` documentation for [`H5Pget_vol_info`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_VOL_INFO).
-"""
-function h5p_get_vol_info(plist_id, vol_info)
-    var"#status#" = ccall((:H5Pget_vol_info, libhdf5), herr_t, (hid_t, Ptr{Ptr{Cvoid}}), plist_id, vol_info)
-    var"#status#" < 0 && @h5error("Error in h5p_get_vol_info (not annotated)")
     return nothing
 end
 
@@ -2428,17 +2549,6 @@ function h5p_get_virtual_srcspace(dcpl_id, index)
 end
 
 """
-    h5p_get_virtual_vspace(dcpl_id::hid_t, index::Csize_t) -> hid_t
-
-See `libhdf5` documentation for [`H5Pget_virtual_vspace`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_VIRTUAL_VSPACE).
-"""
-function h5p_get_virtual_vspace(dcpl_id, index)
-    var"#status#" = ccall((:H5Pget_virtual_vspace, libhdf5), hid_t, (hid_t, Csize_t), dcpl_id, index)
-    var"#status#" < 0 && @h5error("Error in h5p_get_virtual_vspace (not annotated)")
-    return var"#status#"
-end
-
-"""
     h5p_get_virtual_view(dapl_id::hid_t, view::Ptr{H5D_vds_view_t})
 
 See `libhdf5` documentation for [`H5Pget_virtual_view`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_VIRTUAL_VIEW).
@@ -2447,6 +2557,17 @@ function h5p_get_virtual_view(dapl_id, view)
     var"#status#" = ccall((:H5Pget_virtual_view, libhdf5), herr_t, (hid_t, Ptr{H5D_vds_view_t}), dapl_id, view)
     var"#status#" < 0 && @h5error("Error in h5p_get_virtual_view (not annotated)")
     return nothing
+end
+
+"""
+    h5p_get_virtual_vspace(dcpl_id::hid_t, index::Csize_t) -> hid_t
+
+See `libhdf5` documentation for [`H5Pget_virtual_vspace`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_VIRTUAL_VSPACE).
+"""
+function h5p_get_virtual_vspace(dcpl_id, index)
+    var"#status#" = ccall((:H5Pget_virtual_vspace, libhdf5), hid_t, (hid_t, Csize_t), dcpl_id, index)
+    var"#status#" < 0 && @h5error("Error in h5p_get_virtual_vspace (not annotated)")
+    return var"#status#"
 end
 
 """
@@ -2461,13 +2582,35 @@ function h5p_get_vlen_mem_manager(plist_id, alloc_func, alloc_info, free_func, f
 end
 
 """
-    h5p_get_userblock(plist_id::hid_t, len::Ptr{hsize_t})
+    h5p_get_vol_id(plist_id::hid_t, vol_id::Ptr{hid_t})
 
-See `libhdf5` documentation for [`H5Pget_userblock`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_USERBLOCK).
+See `libhdf5` documentation for [`H5Pget_vol_id`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_VOL_ID).
 """
-function h5p_get_userblock(plist_id, len)
-    var"#status#" = ccall((:H5Pget_userblock, libhdf5), herr_t, (hid_t, Ptr{hsize_t}), plist_id, len)
-    var"#status#" < 0 && @h5error("Error getting userblock")
+function h5p_get_vol_id(plist_id, vol_id)
+    var"#status#" = ccall((:H5Pget_vol_id, libhdf5), herr_t, (hid_t, Ptr{hid_t}), plist_id, vol_id)
+    var"#status#" < 0 && @h5error("Error in h5p_get_vol_id (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_get_vol_info(plist_id::hid_t, vol_info::Ptr{Ptr{Cvoid}})
+
+See `libhdf5` documentation for [`H5Pget_vol_info`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_VOL_INFO).
+"""
+function h5p_get_vol_info(plist_id, vol_info)
+    var"#status#" = ccall((:H5Pget_vol_info, libhdf5), herr_t, (hid_t, Ptr{Ptr{Cvoid}}), plist_id, vol_info)
+    var"#status#" < 0 && @h5error("Error in h5p_get_vol_info (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set(plist_id::hid_t, name::Ptr{Cchar}, value::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Pset`](https://portal.hdfgroup.org/display/HDF5/H5P_SET).
+"""
+function h5p_set(plist_id, name, value)
+    var"#status#" = ccall((:H5Pset, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{Cvoid}), plist_id, name, value)
+    var"#status#" < 0 && @h5error("Error in h5p_set (not annotated)")
     return nothing
 end
 
@@ -2494,6 +2637,17 @@ function h5p_set_alloc_time(plist_id, alloc_time)
 end
 
 """
+    h5p_set_append_flush(dapl_id::hid_t, ndims::Cuint, boundary::Ptr{hsize_t}, func::H5D_append_cb_t, udata::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Pset_append_flush`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_APPEND_FLUSH).
+"""
+function h5p_set_append_flush(dapl_id, ndims, boundary, func, udata)
+    var"#status#" = ccall((:H5Pset_append_flush, libhdf5), herr_t, (hid_t, Cuint, Ptr{hsize_t}, H5D_append_cb_t, Ptr{Cvoid}), dapl_id, ndims, boundary, func, udata)
+    var"#status#" < 0 && @h5error("Error in h5p_set_append_flush (not annotated)")
+    return nothing
+end
+
+"""
     h5p_set_attr_creation_order(plist_id::hid_t, crt_order_flags::Cuint)
 
 See `libhdf5` documentation for [`H5Pset_attr_creation_order`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ATTR_CREATION_ORDER).
@@ -2505,13 +2659,13 @@ function h5p_set_attr_creation_order(plist_id, crt_order_flags)
 end
 
 """
-    h5p_set_append_flush(dapl_id::hid_t, ndims::Cuint, boundary::Ptr{hsize_t}, func::H5D_append_cb_t, udata::Ptr{Cvoid})
+    h5p_set_attr_phase_change(plist_id::hid_t, max_compact::Cuint, min_dense::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_append_flush`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_APPEND_FLUSH).
+See `libhdf5` documentation for [`H5Pset_attr_phase_change`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ATTR_PHASE_CHANGE).
 """
-function h5p_set_append_flush(dapl_id, ndims, boundary, func, udata)
-    var"#status#" = ccall((:H5Pset_append_flush, libhdf5), herr_t, (hid_t, Cuint, Ptr{hsize_t}, H5D_append_cb_t, Ptr{Cvoid}), dapl_id, ndims, boundary, func, udata)
-    var"#status#" < 0 && @h5error("Error in h5p_set_append_flush (not annotated)")
+function h5p_set_attr_phase_change(plist_id, max_compact, min_dense)
+    var"#status#" = ccall((:H5Pset_attr_phase_change, libhdf5), herr_t, (hid_t, Cuint, Cuint), plist_id, max_compact, min_dense)
+    var"#status#" < 0 && @h5error("Error in h5p_set_attr_phase_change (not annotated)")
     return nothing
 end
 
@@ -2534,6 +2688,17 @@ See `libhdf5` documentation for [`H5Pset_buffer`](https://portal.hdfgroup.org/di
 function h5p_set_buffer(plist_id, size, tconv, bkg)
     var"#status#" = ccall((:H5Pset_buffer, libhdf5), herr_t, (hid_t, Csize_t, Ptr{Cvoid}, Ptr{Cvoid}), plist_id, size, tconv, bkg)
     var"#status#" < 0 && @h5error("Error in h5p_set_buffer (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_cache(plist_id::hid_t, mdc_nelmts::Cint, rdcc_nslots::Csize_t, rdcc_nbytes::Csize_t, rdcc_w0::Cdouble)
+
+See `libhdf5` documentation for [`H5Pset_cache`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_CACHE).
+"""
+function h5p_set_cache(plist_id, mdc_nelmts, rdcc_nslots, rdcc_nbytes, rdcc_w0)
+    var"#status#" = ccall((:H5Pset_cache, libhdf5), herr_t, (hid_t, Cint, Csize_t, Csize_t, Cdouble), plist_id, mdc_nelmts, rdcc_nslots, rdcc_nbytes, rdcc_w0)
+    var"#status#" < 0 && @h5error("Error in h5p_set_cache (not annotated)")
     return nothing
 end
 
@@ -2626,17 +2791,6 @@ function h5p_set_data_transform(plist_id, expression)
 end
 
 """
-    h5p_set_driver(plist_id::hid_t, driver_id::hid_t, driver_info::Ptr{Cvoid})
-
-See `libhdf5` documentation for [`H5Pset_driver`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_DRIVER).
-"""
-function h5p_set_driver(plist_id, driver_id, driver_info)
-    var"#status#" = ccall((:H5Pset_driver, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cvoid}), plist_id, driver_id, driver_info)
-    var"#status#" < 0 && @h5error("Error in h5p_set_driver (not annotated)")
-    return nothing
-end
-
-"""
     h5p_set_deflate(plist_id::hid_t, setting::Cuint)
 
 See `libhdf5` documentation for [`H5Pset_deflate`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_DEFLATE).
@@ -2644,6 +2798,17 @@ See `libhdf5` documentation for [`H5Pset_deflate`](https://portal.hdfgroup.org/d
 function h5p_set_deflate(plist_id, setting)
     var"#status#" = ccall((:H5Pset_deflate, libhdf5), herr_t, (hid_t, Cuint), plist_id, setting)
     var"#status#" < 0 && @h5error("Error setting compression method and level (deflate)")
+    return nothing
+end
+
+"""
+    h5p_set_driver(plist_id::hid_t, driver_id::hid_t, driver_info::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Pset_driver`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_DRIVER).
+"""
+function h5p_set_driver(plist_id, driver_id, driver_info)
+    var"#status#" = ccall((:H5Pset_driver, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cvoid}), plist_id, driver_id, driver_info)
+    var"#status#" < 0 && @h5error("Error in h5p_set_driver (not annotated)")
     return nothing
 end
 
@@ -2677,28 +2842,6 @@ See `libhdf5` documentation for [`H5Pset_edc_check`](https://portal.hdfgroup.org
 function h5p_set_edc_check(plist_id, check)
     var"#status#" = ccall((:H5Pset_edc_check, libhdf5), herr_t, (hid_t, H5Z_EDC_t), plist_id, check)
     var"#status#" < 0 && @h5error("Error in h5p_set_edc_check (not annotated)")
-    return nothing
-end
-
-"""
-    h5p_set_est_link_info(plist_id::hid_t, est_num_entries::Cuint, est_name_len::Cuint)
-
-See `libhdf5` documentation for [`H5Pset_est_link_info`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_EST_LINK_INFO).
-"""
-function h5p_set_est_link_info(plist_id, est_num_entries, est_name_len)
-    var"#status#" = ccall((:H5Pset_est_link_info, libhdf5), herr_t, (hid_t, Cuint, Cuint), plist_id, est_num_entries, est_name_len)
-    var"#status#" < 0 && @h5error("Error in h5p_set_est_link_info (not annotated)")
-    return nothing
-end
-
-"""
-    h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::off_t, size::Csize_t)
-
-See `libhdf5` documentation for [`H5Pset_external`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_EXTERNAL).
-"""
-function h5p_set_external(plist_id, name, offset, size)
-    var"#status#" = ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Ptr{UInt8}, off_t, Csize_t), plist_id, name, offset, size)
-    var"#status#" < 0 && @h5error("Error setting external property")
     return nothing
 end
 
@@ -2747,6 +2890,17 @@ function h5p_set_elink_fapl(lapl_id, fapl_id)
 end
 
 """
+    h5p_set_elink_file_cache_size(plist_id::hid_t, efc_size::Cuint)
+
+See `libhdf5` documentation for [`H5Pset_elink_file_cache_size`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ELINK_FILE_CACHE_SIZE).
+"""
+function h5p_set_elink_file_cache_size(plist_id, efc_size)
+    var"#status#" = ccall((:H5Pset_elink_file_cache_size, libhdf5), herr_t, (hid_t, Cuint), plist_id, efc_size)
+    var"#status#" < 0 && @h5error("Error in h5p_set_elink_file_cache_size (not annotated)")
+    return nothing
+end
+
+"""
     h5p_set_elink_prefix(plist_id::hid_t, prefix::Ptr{Cchar})
 
 See `libhdf5` documentation for [`H5Pset_elink_prefix`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ELINK_PREFIX).
@@ -2758,13 +2912,13 @@ function h5p_set_elink_prefix(plist_id, prefix)
 end
 
 """
-    h5p_set_elink_file_cache_size(plist_id::hid_t, efc_size::Cuint)
+    h5p_set_est_link_info(plist_id::hid_t, est_num_entries::Cuint, est_name_len::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_elink_file_cache_size`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ELINK_FILE_CACHE_SIZE).
+See `libhdf5` documentation for [`H5Pset_est_link_info`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_EST_LINK_INFO).
 """
-function h5p_set_elink_file_cache_size(plist_id, efc_size)
-    var"#status#" = ccall((:H5Pset_elink_file_cache_size, libhdf5), herr_t, (hid_t, Cuint), plist_id, efc_size)
-    var"#status#" < 0 && @h5error("Error in h5p_set_elink_file_cache_size (not annotated)")
+function h5p_set_est_link_info(plist_id, est_num_entries, est_name_len)
+    var"#status#" = ccall((:H5Pset_est_link_info, libhdf5), herr_t, (hid_t, Cuint, Cuint), plist_id, est_num_entries, est_name_len)
+    var"#status#" < 0 && @h5error("Error in h5p_set_est_link_info (not annotated)")
     return nothing
 end
 
@@ -2780,6 +2934,17 @@ function h5p_set_evict_on_close(fapl_id, evict_on_close)
 end
 
 """
+    h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::off_t, size::Csize_t)
+
+See `libhdf5` documentation for [`H5Pset_external`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_EXTERNAL).
+"""
+function h5p_set_external(plist_id, name, offset, size)
+    var"#status#" = ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Ptr{UInt8}, off_t, Csize_t), plist_id, name, offset, size)
+    var"#status#" < 0 && @h5error("Error setting external property")
+    return nothing
+end
+
+"""
     h5p_set_family_offset(fapl_id::hid_t, offset::hsize_t)
 
 See `libhdf5` documentation for [`H5Pset_family_offset`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAMILY_OFFSET).
@@ -2787,17 +2952,6 @@ See `libhdf5` documentation for [`H5Pset_family_offset`](https://portal.hdfgroup
 function h5p_set_family_offset(fapl_id, offset)
     var"#status#" = ccall((:H5Pset_family_offset, libhdf5), herr_t, (hid_t, hsize_t), fapl_id, offset)
     var"#status#" < 0 && @h5error("Error in h5p_set_family_offset (not annotated)")
-    return nothing
-end
-
-"""
-    h5p_set_filter_callback(plist_id::hid_t, func::H5Z_filter_func_t, op_data::Ptr{Cvoid})
-
-See `libhdf5` documentation for [`H5Pset_filter_callback`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILTER_CALLBACK).
-"""
-function h5p_set_filter_callback(plist_id, func, op_data)
-    var"#status#" = ccall((:H5Pset_filter_callback, libhdf5), herr_t, (hid_t, H5Z_filter_func_t, Ptr{Cvoid}), plist_id, func, op_data)
-    var"#status#" < 0 && @h5error("Error in h5p_set_filter_callback (not annotated)")
     return nothing
 end
 
@@ -2912,6 +3066,17 @@ function h5p_set_fapl_splitter(fapl_id, config_ptr)
 end
 
 """
+    h5p_set_fapl_stdio(fapl_id::hid_t)
+
+See `libhdf5` documentation for [`H5Pset_fapl_stdio`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_STDIO).
+"""
+function h5p_set_fapl_stdio(fapl_id)
+    var"#status#" = ccall((:H5Pset_fapl_stdio, libhdf5), herr_t, (hid_t,), fapl_id)
+    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_stdio (not annotated)")
+    return nothing
+end
+
+"""
     h5p_set_fapl_windows(fapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Pset_fapl_windows`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_WINDOWS).
@@ -2967,13 +3132,13 @@ function h5p_set_file_locking(fapl_id, use_file_locking, ignore_when_disabled)
 end
 
 """
-    h5p_set_file_space_strategy(plist_id::hid_t, strategy::H5F_fspace_strategy_t, persist::hbool_t, threshold::hsize_t)
+    h5p_set_file_space(plist_id::hid_t, strategy::H5F_file_space_type_t, threshold::hsize_t)
 
-See `libhdf5` documentation for [`H5Pset_file_space_strategy`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILE_SPACE_STRATEGY).
+See `libhdf5` documentation for [`H5Pset_file_space`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILE_SPACE).
 """
-function h5p_set_file_space_strategy(plist_id, strategy, persist, threshold)
-    var"#status#" = ccall((:H5Pset_file_space_strategy, libhdf5), herr_t, (hid_t, H5F_fspace_strategy_t, hbool_t, hsize_t), plist_id, strategy, persist, threshold)
-    var"#status#" < 0 && @h5error("Error in h5p_set_file_space_strategy (not annotated)")
+function h5p_set_file_space(plist_id, strategy, threshold)
+    var"#status#" = ccall((:H5Pset_file_space, libhdf5), herr_t, (hid_t, H5F_file_space_type_t, hsize_t), plist_id, strategy, threshold)
+    var"#status#" < 0 && @h5error("Error in h5p_set_file_space (not annotated)")
     return nothing
 end
 
@@ -2985,6 +3150,17 @@ See `libhdf5` documentation for [`H5Pset_file_space_page_size`](https://portal.h
 function h5p_set_file_space_page_size(plist_id, fsp_size)
     var"#status#" = ccall((:H5Pset_file_space_page_size, libhdf5), herr_t, (hid_t, hsize_t), plist_id, fsp_size)
     var"#status#" < 0 && @h5error("Error in h5p_set_file_space_page_size (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_file_space_strategy(plist_id::hid_t, strategy::H5F_fspace_strategy_t, persist::hbool_t, threshold::hsize_t)
+
+See `libhdf5` documentation for [`H5Pset_file_space_strategy`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILE_SPACE_STRATEGY).
+"""
+function h5p_set_file_space_strategy(plist_id, strategy, persist, threshold)
+    var"#status#" = ccall((:H5Pset_file_space_strategy, libhdf5), herr_t, (hid_t, H5F_fspace_strategy_t, hbool_t, hsize_t), plist_id, strategy, persist, threshold)
+    var"#status#" < 0 && @h5error("Error in h5p_set_file_space_strategy (not annotated)")
     return nothing
 end
 
@@ -3011,17 +3187,6 @@ function h5p_set_fill_value(plist_id, type_id, value)
 end
 
 """
-    h5p_fill_value_defined(plist::hid_t, status::Ptr{H5D_fill_value_t})
-
-See `libhdf5` documentation for [`H5Pfill_value_defined`](https://portal.hdfgroup.org/display/HDF5/H5P_FILL_VALUE_DEFINED).
-"""
-function h5p_fill_value_defined(plist, status)
-    var"#status#" = ccall((:H5Pfill_value_defined, libhdf5), herr_t, (hid_t, Ptr{H5D_fill_value_t}), plist, status)
-    var"#status#" < 0 && @h5error("Error in h5p_fill_value_defined (not annotated)")
-    return nothing
-end
-
-"""
     h5p_set_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})
 
 See `libhdf5` documentation for [`H5Pset_filter`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILTER).
@@ -3029,6 +3194,17 @@ See `libhdf5` documentation for [`H5Pset_filter`](https://portal.hdfgroup.org/di
 function h5p_set_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
     var"#status#" = ccall((:H5Pset_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
     var"#status#" < 0 && @h5error("Error setting filter")
+    return nothing
+end
+
+"""
+    h5p_set_filter_callback(plist_id::hid_t, func::H5Z_filter_func_t, op_data::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Pset_filter_callback`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILTER_CALLBACK).
+"""
+function h5p_set_filter_callback(plist_id, func, op_data)
+    var"#status#" = ccall((:H5Pset_filter_callback, libhdf5), herr_t, (hid_t, H5Z_filter_func_t, Ptr{Cvoid}), plist_id, func, op_data)
+    var"#status#" < 0 && @h5error("Error in h5p_set_filter_callback (not annotated)")
     return nothing
 end
 
@@ -3062,6 +3238,17 @@ See `libhdf5` documentation for [`H5Pset_hyper_vector_size`](https://portal.hdfg
 function h5p_set_hyper_vector_size(plist_id, size)
     var"#status#" = ccall((:H5Pset_hyper_vector_size, libhdf5), herr_t, (hid_t, Csize_t), plist_id, size)
     var"#status#" < 0 && @h5error("Error in h5p_set_hyper_vector_size (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_istore_k(plist_id::hid_t, ik::Cuint)
+
+See `libhdf5` documentation for [`H5Pset_istore_k`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ISTORE_K).
+"""
+function h5p_set_istore_k(plist_id, ik)
+    var"#status#" = ccall((:H5Pset_istore_k, libhdf5), herr_t, (hid_t, Cuint), plist_id, ik)
+    var"#status#" < 0 && @h5error("Error in h5p_set_istore_k (not annotated)")
     return nothing
 end
 
@@ -3220,28 +3407,6 @@ function h5p_set_nlinks(plist_id, nlinks)
 end
 
 """
-    h5p_set_page_buffer_size(plist_id::hid_t, buf_size::Csize_t, min_meta_per::Cuint, min_raw_per::Cuint)
-
-See `libhdf5` documentation for [`H5Pset_page_buffer_size`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_PAGE_BUFFER_SIZE).
-"""
-function h5p_set_page_buffer_size(plist_id, buf_size, min_meta_per, min_raw_per)
-    var"#status#" = ccall((:H5Pset_page_buffer_size, libhdf5), herr_t, (hid_t, Csize_t, Cuint, Cuint), plist_id, buf_size, min_meta_per, min_raw_per)
-    var"#status#" < 0 && @h5error("Error in h5p_set_page_buffer_size (not annotated)")
-    return nothing
-end
-
-"""
-    h5p_set_preserve(plist_id::hid_t, status::hbool_t)
-
-See `libhdf5` documentation for [`H5Pset_preserve`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_PRESERVE).
-"""
-function h5p_set_preserve(plist_id, status)
-    var"#status#" = ccall((:H5Pset_preserve, libhdf5), herr_t, (hid_t, hbool_t), plist_id, status)
-    var"#status#" < 0 && @h5error("Error in h5p_set_preserve (not annotated)")
-    return nothing
-end
-
-"""
     h5p_set_obj_track_times(plist_id::hid_t, track_times::UInt8)
 
 See `libhdf5` documentation for [`H5Pset_obj_track_times`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_OBJ_TRACK_TIMES).
@@ -3264,6 +3429,28 @@ function h5p_set_object_flush_cb(plist_id, func, udata)
 end
 
 """
+    h5p_set_page_buffer_size(plist_id::hid_t, buf_size::Csize_t, min_meta_per::Cuint, min_raw_per::Cuint)
+
+See `libhdf5` documentation for [`H5Pset_page_buffer_size`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_PAGE_BUFFER_SIZE).
+"""
+function h5p_set_page_buffer_size(plist_id, buf_size, min_meta_per, min_raw_per)
+    var"#status#" = ccall((:H5Pset_page_buffer_size, libhdf5), herr_t, (hid_t, Csize_t, Cuint, Cuint), plist_id, buf_size, min_meta_per, min_raw_per)
+    var"#status#" < 0 && @h5error("Error in h5p_set_page_buffer_size (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_preserve(plist_id::hid_t, status::hbool_t)
+
+See `libhdf5` documentation for [`H5Pset_preserve`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_PRESERVE).
+"""
+function h5p_set_preserve(plist_id, status)
+    var"#status#" = ccall((:H5Pset_preserve, libhdf5), herr_t, (hid_t, hbool_t), plist_id, status)
+    var"#status#" < 0 && @h5error("Error in h5p_set_preserve (not annotated)")
+    return nothing
+end
+
+"""
     h5p_set_scaleoffset(plist_id::hid_t, scale_type::Cint, scale_factor::Cint)
 
 See `libhdf5` documentation for [`H5Pset_scaleoffset`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SCALEOFFSET).
@@ -3271,6 +3458,39 @@ See `libhdf5` documentation for [`H5Pset_scaleoffset`](https://portal.hdfgroup.o
 function h5p_set_scaleoffset(plist_id, scale_type, scale_factor)
     var"#status#" = ccall((:H5Pset_scaleoffset, libhdf5), herr_t, (hid_t, Cint, Cint), plist_id, scale_type, scale_factor)
     var"#status#" < 0 && @h5error("Error enabling szip filter")
+    return nothing
+end
+
+"""
+    h5p_set_shared_mesg_index(plist_id::hid_t, index_num::Cuint, mesg_type_flags::Cuint, min_mesg_size::Cuint)
+
+See `libhdf5` documentation for [`H5Pset_shared_mesg_index`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SHARED_MESG_INDEX).
+"""
+function h5p_set_shared_mesg_index(plist_id, index_num, mesg_type_flags, min_mesg_size)
+    var"#status#" = ccall((:H5Pset_shared_mesg_index, libhdf5), herr_t, (hid_t, Cuint, Cuint, Cuint), plist_id, index_num, mesg_type_flags, min_mesg_size)
+    var"#status#" < 0 && @h5error("Error in h5p_set_shared_mesg_index (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_shared_mesg_nindexes(plist_id::hid_t, nindexes::Cuint)
+
+See `libhdf5` documentation for [`H5Pset_shared_mesg_nindexes`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SHARED_MESG_NINDEXES).
+"""
+function h5p_set_shared_mesg_nindexes(plist_id, nindexes)
+    var"#status#" = ccall((:H5Pset_shared_mesg_nindexes, libhdf5), herr_t, (hid_t, Cuint), plist_id, nindexes)
+    var"#status#" < 0 && @h5error("Error in h5p_set_shared_mesg_nindexes (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_shared_mesg_phase_change(plist_id::hid_t, max_list::Cuint, min_btree::Cuint)
+
+See `libhdf5` documentation for [`H5Pset_shared_mesg_phase_change`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SHARED_MESG_PHASE_CHANGE).
+"""
+function h5p_set_shared_mesg_phase_change(plist_id, max_list, min_btree)
+    var"#status#" = ccall((:H5Pset_shared_mesg_phase_change, libhdf5), herr_t, (hid_t, Cuint, Cuint), plist_id, max_list, min_btree)
+    var"#status#" < 0 && @h5error("Error in h5p_set_shared_mesg_phase_change (not annotated)")
     return nothing
 end
 
@@ -3297,6 +3517,17 @@ function h5p_set_sieve_buf_size(fapl_id, size)
 end
 
 """
+    h5p_set_sizes(plist_id::hid_t, sizeof_addr::Csize_t, sizeof_size::Csize_t)
+
+See `libhdf5` documentation for [`H5Pset_sizes`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SIZES).
+"""
+function h5p_set_sizes(plist_id, sizeof_addr, sizeof_size)
+    var"#status#" = ccall((:H5Pset_sizes, libhdf5), herr_t, (hid_t, Csize_t, Csize_t), plist_id, sizeof_addr, sizeof_size)
+    var"#status#" < 0 && @h5error("Error in h5p_set_sizes (not annotated)")
+    return nothing
+end
+
+"""
     h5p_set_small_data_block_size(fapl_id::hid_t, size::hsize_t)
 
 See `libhdf5` documentation for [`H5Pset_small_data_block_size`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SMALL_DATA_BLOCK_SIZE).
@@ -3304,6 +3535,17 @@ See `libhdf5` documentation for [`H5Pset_small_data_block_size`](https://portal.
 function h5p_set_small_data_block_size(fapl_id, size)
     var"#status#" = ccall((:H5Pset_small_data_block_size, libhdf5), herr_t, (hid_t, hsize_t), fapl_id, size)
     var"#status#" < 0 && @h5error("Error in h5p_set_small_data_block_size (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_set_sym_k(plist_id::hid_t, ik::Cuint, lk::Cuint)
+
+See `libhdf5` documentation for [`H5Pset_sym_k`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_SYM_K).
+"""
+function h5p_set_sym_k(plist_id, ik, lk)
+    var"#status#" = ccall((:H5Pset_sym_k, libhdf5), herr_t, (hid_t, Cuint, Cuint), plist_id, ik, lk)
+    var"#status#" < 0 && @h5error("Error in h5p_set_sym_k (not annotated)")
     return nothing
 end
 
@@ -3337,17 +3579,6 @@ See `libhdf5` documentation for [`H5Pset_userblock`](https://portal.hdfgroup.org
 function h5p_set_userblock(plist_id, len)
     var"#status#" = ccall((:H5Pset_userblock, libhdf5), herr_t, (hid_t, hsize_t), plist_id, len)
     var"#status#" < 0 && @h5error("Error setting userblock")
-    return nothing
-end
-
-"""
-    h5p_set_vol(plist_id::hid_t, new_vol_id::hid_t, new_vol_info::Ptr{Cvoid})
-
-See `libhdf5` documentation for [`H5Pset_vol`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_VOL).
-"""
-function h5p_set_vol(plist_id, new_vol_id, new_vol_info)
-    var"#status#" = ccall((:H5Pset_vol, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cvoid}), plist_id, new_vol_id, new_vol_info)
-    var"#status#" < 0 && @h5error("Error in h5p_set_vol (not annotated)")
     return nothing
 end
 
@@ -3407,6 +3638,17 @@ function h5p_set_vlen_mem_manager(plist_id, alloc_func, alloc_info, free_func, f
 end
 
 """
+    h5p_set_vol(plist_id::hid_t, new_vol_id::hid_t, new_vol_info::Ptr{Cvoid})
+
+See `libhdf5` documentation for [`H5Pset_vol`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_VOL).
+"""
+function h5p_set_vol(plist_id, new_vol_id, new_vol_info)
+    var"#status#" = ccall((:H5Pset_vol, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cvoid}), plist_id, new_vol_id, new_vol_info)
+    var"#status#" < 0 && @h5error("Error in h5p_set_vol (not annotated)")
+    return nothing
+end
+
+"""
     h5p_add_merge_committed_dtype_path(plist_id::hid_t, path::Ptr{Cchar})
 
 See `libhdf5` documentation for [`H5Padd_merge_committed_dtype_path`](https://portal.hdfgroup.org/display/HDF5/H5P_ADD_MERGE_COMMITTED_DTYPE_PATH).
@@ -3414,6 +3656,149 @@ See `libhdf5` documentation for [`H5Padd_merge_committed_dtype_path`](https://po
 function h5p_add_merge_committed_dtype_path(plist_id, path)
     var"#status#" = ccall((:H5Padd_merge_committed_dtype_path, libhdf5), herr_t, (hid_t, Ptr{Cchar}), plist_id, path)
     var"#status#" < 0 && @h5error("Error in h5p_add_merge_committed_dtype_path (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_all_filters_avail(plist_id::hid_t) -> Bool
+
+See `libhdf5` documentation for [`H5Pall_filters_avail`](https://portal.hdfgroup.org/display/HDF5/H5P_ALL_FILTERS_AVAIL).
+"""
+function h5p_all_filters_avail(plist_id)
+    var"#status#" = ccall((:H5Pall_filters_avail, libhdf5), htri_t, (hid_t,), plist_id)
+    var"#status#" < 0 && @h5error("Error in h5p_all_filters_avail (not annotated)")
+    return var"#status#" > 0
+end
+
+"""
+    h5p_close(id::hid_t)
+
+See `libhdf5` documentation for [`H5Pclose`](https://portal.hdfgroup.org/display/HDF5/H5P_CLOSE).
+"""
+function h5p_close(id)
+    var"#status#" = ccall((:H5Pclose, libhdf5), herr_t, (hid_t,), id)
+    var"#status#" < 0 && @h5error("Error closing property list")
+    return nothing
+end
+
+"""
+    h5p_close_class(plist_id::hid_t)
+
+See `libhdf5` documentation for [`H5Pclose_class`](https://portal.hdfgroup.org/display/HDF5/H5P_CLOSE_CLASS).
+"""
+function h5p_close_class(plist_id)
+    var"#status#" = ccall((:H5Pclose_class, libhdf5), herr_t, (hid_t,), plist_id)
+    var"#status#" < 0 && @h5error("Error in h5p_close_class (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_copy(plist_id::hid_t) -> hid_t
+
+See `libhdf5` documentation for [`H5Pcopy`](https://portal.hdfgroup.org/display/HDF5/H5P_COPY).
+"""
+function h5p_copy(plist_id)
+    var"#status#" = ccall((:H5Pcopy, libhdf5), hid_t, (hid_t,), plist_id)
+    var"#status#" < 0 && @h5error("Error in h5p_copy (not annotated)")
+    return var"#status#"
+end
+
+"""
+    h5p_copy_prop(dst_id::hid_t, src_id::hid_t, name::Ptr{Cchar})
+
+See `libhdf5` documentation for [`H5Pcopy_prop`](https://portal.hdfgroup.org/display/HDF5/H5P_COPY_PROP).
+"""
+function h5p_copy_prop(dst_id, src_id, name)
+    var"#status#" = ccall((:H5Pcopy_prop, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cchar}), dst_id, src_id, name)
+    var"#status#" < 0 && @h5error("Error in h5p_copy_prop (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_create(cls_id::hid_t) -> hid_t
+
+See `libhdf5` documentation for [`H5Pcreate`](https://portal.hdfgroup.org/display/HDF5/H5P_CREATE).
+"""
+function h5p_create(cls_id)
+    var"#status#" = ccall((:H5Pcreate, libhdf5), hid_t, (hid_t,), cls_id)
+    var"#status#" < 0 && @h5error("Error creating property list")
+    return var"#status#"
+end
+
+"""
+    h5p_create_class(parent::hid_t, name::Ptr{Cchar}, create::H5P_cls_create_func_t, create_data::Ptr{Cvoid}, copy::H5P_cls_copy_func_t, copy_data::Ptr{Cvoid}, close::H5P_cls_close_func_t, close_data::Ptr{Cvoid}) -> hid_t
+
+See `libhdf5` documentation for [`H5Pcreate_class`](https://portal.hdfgroup.org/display/HDF5/H5P_CREATE_CLASS).
+"""
+function h5p_create_class(parent, name, create, create_data, copy, copy_data, close, close_data)
+    var"#status#" = ccall((:H5Pcreate_class, libhdf5), hid_t, (hid_t, Ptr{Cchar}, H5P_cls_create_func_t, Ptr{Cvoid}, H5P_cls_copy_func_t, Ptr{Cvoid}, H5P_cls_close_func_t, Ptr{Cvoid}), parent, name, create, create_data, copy, copy_data, close, close_data)
+    var"#status#" < 0 && @h5error("Error in h5p_create_class (not annotated)")
+    return var"#status#"
+end
+
+"""
+    h5p_decode(buf::Ptr{Cvoid}) -> hid_t
+
+See `libhdf5` documentation for [`H5Pdecode`](https://portal.hdfgroup.org/display/HDF5/H5P_DECODE).
+"""
+function h5p_decode(buf)
+    var"#status#" = ccall((:H5Pdecode, libhdf5), hid_t, (Ptr{Cvoid},), buf)
+    var"#status#" < 0 && @h5error("Error in h5p_decode (not annotated)")
+    return var"#status#"
+end
+
+"""
+    h5p_encode(plist_id::hid_t, buf::Ptr{Cvoid}, nalloc::Ptr{Csize_t})
+
+See `libhdf5` documentation for [`H5Pencode1`](https://portal.hdfgroup.org/display/HDF5/H5P_ENCODE1).
+"""
+function h5p_encode(plist_id, buf, nalloc)
+    var"#status#" = ccall((:H5Pencode1, libhdf5), herr_t, (hid_t, Ptr{Cvoid}, Ptr{Csize_t}), plist_id, buf, nalloc)
+    var"#status#" < 0 && @h5error("Error in h5p_encode1 (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_encode(plist_id::hid_t, buf::Ptr{Cvoid}, nalloc::Ptr{Csize_t}, fapl_id::hid_t)
+
+See `libhdf5` documentation for [`H5Pencode2`](https://portal.hdfgroup.org/display/HDF5/H5P_ENCODE2).
+"""
+function h5p_encode(plist_id, buf, nalloc, fapl_id)
+    var"#status#" = ccall((:H5Pencode2, libhdf5), herr_t, (hid_t, Ptr{Cvoid}, Ptr{Csize_t}, hid_t), plist_id, buf, nalloc, fapl_id)
+    var"#status#" < 0 && @h5error("Error in h5p_encode2 (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_equal(id1::hid_t, id2::hid_t) -> Bool
+
+See `libhdf5` documentation for [`H5Pequal`](https://portal.hdfgroup.org/display/HDF5/H5P_EQUAL).
+"""
+function h5p_equal(id1, id2)
+    var"#status#" = ccall((:H5Pequal, libhdf5), htri_t, (hid_t, hid_t), id1, id2)
+    var"#status#" < 0 && @h5error("Error in h5p_equal (not annotated)")
+    return var"#status#" > 0
+end
+
+"""
+    h5p_exist(plist_id::hid_t, name::Ptr{Cchar}) -> Bool
+
+See `libhdf5` documentation for [`H5Pexist`](https://portal.hdfgroup.org/display/HDF5/H5P_EXIST).
+"""
+function h5p_exist(plist_id, name)
+    var"#status#" = ccall((:H5Pexist, libhdf5), htri_t, (hid_t, Ptr{Cchar}), plist_id, name)
+    var"#status#" < 0 && @h5error("Error in h5p_exist (not annotated)")
+    return var"#status#" > 0
+end
+
+"""
+    h5p_fill_value_defined(plist::hid_t, status::Ptr{H5D_fill_value_t})
+
+See `libhdf5` documentation for [`H5Pfill_value_defined`](https://portal.hdfgroup.org/display/HDF5/H5P_FILL_VALUE_DEFINED).
+"""
+function h5p_fill_value_defined(plist, status)
+    var"#status#" = ccall((:H5Pfill_value_defined, libhdf5), herr_t, (hid_t, Ptr{H5D_fill_value_t}), plist, status)
+    var"#status#" < 0 && @h5error("Error in h5p_fill_value_defined (not annotated)")
     return nothing
 end
 
@@ -3451,25 +3836,25 @@ function h5p_insert(plist_id, name, size, value, set, get, prp_del, copy, compar
 end
 
 """
-    h5p_encode(plist_id::hid_t, buf::Ptr{Cvoid}, nalloc::Ptr{Csize_t})
+    h5p_isa_class(plist_id::hid_t, pclass_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Pencode1`](https://portal.hdfgroup.org/display/HDF5/H5P_ENCODE1).
+See `libhdf5` documentation for [`H5Pisa_class`](https://portal.hdfgroup.org/display/HDF5/H5P_ISA_CLASS).
 """
-function h5p_encode(plist_id, buf, nalloc)
-    var"#status#" = ccall((:H5Pencode1, libhdf5), herr_t, (hid_t, Ptr{Cvoid}, Ptr{Csize_t}), plist_id, buf, nalloc)
-    var"#status#" < 0 && @h5error("Error in h5p_encode1 (not annotated)")
-    return nothing
+function h5p_isa_class(plist_id, pclass_id)
+    var"#status#" = ccall((:H5Pisa_class, libhdf5), htri_t, (hid_t, hid_t), plist_id, pclass_id)
+    var"#status#" < 0 && @h5error("Error in h5p_isa_class (not annotated)")
+    return var"#status#" > 0
 end
 
 """
-    h5p_encode(plist_id::hid_t, buf::Ptr{Cvoid}, nalloc::Ptr{Csize_t}, fapl_id::hid_t)
+    h5p_iterate(id::hid_t, idx::Ptr{Cint}, iter_func::H5P_iterate_t, iter_data::Ptr{Cvoid}) -> Int
 
-See `libhdf5` documentation for [`H5Pencode2`](https://portal.hdfgroup.org/display/HDF5/H5P_ENCODE2).
+See `libhdf5` documentation for [`H5Piterate`](https://portal.hdfgroup.org/display/HDF5/H5P_ITERATE).
 """
-function h5p_encode(plist_id, buf, nalloc, fapl_id)
-    var"#status#" = ccall((:H5Pencode2, libhdf5), herr_t, (hid_t, Ptr{Cvoid}, Ptr{Csize_t}, hid_t), plist_id, buf, nalloc, fapl_id)
-    var"#status#" < 0 && @h5error("Error in h5p_encode2 (not annotated)")
-    return nothing
+function h5p_iterate(id, idx, iter_func, iter_data)
+    var"#status#" = ccall((:H5Piterate, libhdf5), Cint, (hid_t, Ptr{Cint}, H5P_iterate_t, Ptr{Cvoid}), id, idx, iter_func, iter_data)
+    var"#status#" < 0 && @h5error("Error in h5p_iterate (not annotated)")
+    return Int(var"#status#")
 end
 
 """
@@ -3480,17 +3865,6 @@ See `libhdf5` documentation for [`H5Pmodify_filter`](https://portal.hdfgroup.org
 function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
     var"#status#" = ccall((:H5Pmodify_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t, Cuint, Csize_t, Ptr{Cuint}), plist_id, filter_id, flags, cd_nelmts, cd_values)
     var"#status#" < 0 && @h5error("Error modifying filter")
-    return nothing
-end
-
-"""
-    h5p_remove_filter(plist_id::hid_t, filter_id::H5Z_filter_t)
-
-See `libhdf5` documentation for [`H5Premove_filter`](https://portal.hdfgroup.org/display/HDF5/H5P_REMOVE_FILTER).
-"""
-function h5p_remove_filter(plist_id, filter_id)
-    var"#status#" = ccall((:H5Premove_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t), plist_id, filter_id)
-    var"#status#" < 0 && @h5error("Error removing filter")
     return nothing
 end
 
@@ -3513,6 +3887,39 @@ See `libhdf5` documentation for [`H5Pregister2`](https://portal.hdfgroup.org/dis
 function h5p_register(cls_id, name, size, def_value, create, set, get, prp_del, copy, compare, close)
     var"#status#" = ccall((:H5Pregister2, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Csize_t, Ptr{Cvoid}, H5P_prp_create_func_t, H5P_prp_set_func_t, H5P_prp_get_func_t, H5P_prp_delete_func_t, H5P_prp_copy_func_t, H5P_prp_compare_func_t, H5P_prp_close_func_t), cls_id, name, size, def_value, create, set, get, prp_del, copy, compare, close)
     var"#status#" < 0 && @h5error("Error in h5p_register2 (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_remove(plist_id::hid_t, name::Ptr{Cchar})
+
+See `libhdf5` documentation for [`H5Premove`](https://portal.hdfgroup.org/display/HDF5/H5P_REMOVE).
+"""
+function h5p_remove(plist_id, name)
+    var"#status#" = ccall((:H5Premove, libhdf5), herr_t, (hid_t, Ptr{Cchar}), plist_id, name)
+    var"#status#" < 0 && @h5error("Error in h5p_remove (not annotated)")
+    return nothing
+end
+
+"""
+    h5p_remove_filter(plist_id::hid_t, filter_id::H5Z_filter_t)
+
+See `libhdf5` documentation for [`H5Premove_filter`](https://portal.hdfgroup.org/display/HDF5/H5P_REMOVE_FILTER).
+"""
+function h5p_remove_filter(plist_id, filter_id)
+    var"#status#" = ccall((:H5Premove_filter, libhdf5), herr_t, (hid_t, H5Z_filter_t), plist_id, filter_id)
+    var"#status#" < 0 && @h5error("Error removing filter")
+    return nothing
+end
+
+"""
+    h5p_unregister(pclass_id::hid_t, name::Ptr{Cchar})
+
+See `libhdf5` documentation for [`H5Punregister`](https://portal.hdfgroup.org/display/HDF5/H5P_UNREGISTER).
+"""
+function h5p_unregister(pclass_id, name)
+    var"#status#" = ccall((:H5Punregister, libhdf5), herr_t, (hid_t, Ptr{Cchar}), pclass_id, name)
+    var"#status#" < 0 && @h5error("Error in h5p_unregister (not annotated)")
     return nothing
 end
 

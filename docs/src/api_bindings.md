@@ -376,15 +376,25 @@ h5pl_size
 
 ## [[`H5P`](https://portal.hdfgroup.org/display/HDF5/Property+Lists) — Property Interface](@id H5P)
 - [`h5p_add_merge_committed_dtype_path`](@ref h5p_add_merge_committed_dtype_path)
+- [`h5p_all_filters_avail`](@ref h5p_all_filters_avail)
 - [`h5p_close`](@ref h5p_close)
+- [`h5p_close_class`](@ref h5p_close_class)
+- [`h5p_copy`](@ref h5p_copy)
+- [`h5p_copy_prop`](@ref h5p_copy_prop)
 - [`h5p_create`](@ref h5p_create)
+- [`h5p_create_class`](@ref h5p_create_class)
+- [`h5p_decode`](@ref h5p_decode)
 - [`h5p_encode`](@ref h5p_encode)
+- [`h5p_equal`](@ref h5p_equal)
+- [`h5p_exist`](@ref h5p_exist)
 - [`h5p_fill_value_defined`](@ref h5p_fill_value_defined)
 - [`h5p_free_merge_committed_dtype_paths`](@ref h5p_free_merge_committed_dtype_paths)
+- [`h5p_get`](@ref h5p_get)
 - [`h5p_get_alignment`](@ref h5p_get_alignment)
 - [`h5p_get_alloc_time`](@ref h5p_get_alloc_time)
 - [`h5p_get_append_flush`](@ref h5p_get_append_flush)
 - [`h5p_get_attr_creation_order`](@ref h5p_get_attr_creation_order)
+- [`h5p_get_attr_phase_change`](@ref h5p_get_attr_phase_change)
 - [`h5p_get_btree_ratios`](@ref h5p_get_btree_ratios)
 - [`h5p_get_buffer`](@ref h5p_get_buffer)
 - [`h5p_get_cache`](@ref h5p_get_cache)
@@ -392,7 +402,9 @@ h5pl_size
 - [`h5p_get_chunk`](@ref h5p_get_chunk)
 - [`h5p_get_chunk_cache`](@ref h5p_get_chunk_cache)
 - [`h5p_get_chunk_opts`](@ref h5p_get_chunk_opts)
+- [`h5p_get_class`](@ref h5p_get_class)
 - [`h5p_get_class_name`](@ref h5p_get_class_name)
+- [`h5p_get_class_parent`](@ref h5p_get_class_parent)
 - [`h5p_get_copy_object`](@ref h5p_get_copy_object)
 - [`h5p_get_core_write_tracking`](@ref h5p_get_core_write_tracking)
 - [`h5p_get_create_intermediate_group`](@ref h5p_get_create_intermediate_group)
@@ -424,6 +436,7 @@ h5pl_size
 - [`h5p_get_file_image`](@ref h5p_get_file_image)
 - [`h5p_get_file_image_callbacks`](@ref h5p_get_file_image_callbacks)
 - [`h5p_get_file_locking`](@ref h5p_get_file_locking)
+- [`h5p_get_file_space`](@ref h5p_get_file_space)
 - [`h5p_get_file_space_page_size`](@ref h5p_get_file_space_page_size)
 - [`h5p_get_file_space_strategy`](@ref h5p_get_file_space_strategy)
 - [`h5p_get_fill_time`](@ref h5p_get_fill_time)
@@ -432,6 +445,7 @@ h5pl_size
 - [`h5p_get_filter_by_id`](@ref h5p_get_filter_by_id)
 - [`h5p_get_gc_references`](@ref h5p_get_gc_references)
 - [`h5p_get_hyper_vector_size`](@ref h5p_get_hyper_vector_size)
+- [`h5p_get_istore_k`](@ref h5p_get_istore_k)
 - [`h5p_get_layout`](@ref h5p_get_layout)
 - [`h5p_get_libver_bounds`](@ref h5p_get_libver_bounds)
 - [`h5p_get_link_creation_order`](@ref h5p_get_link_creation_order)
@@ -440,17 +454,25 @@ h5pl_size
 - [`h5p_get_mcdt_search_cb`](@ref h5p_get_mcdt_search_cb)
 - [`h5p_get_mdc_config`](@ref h5p_get_mdc_config)
 - [`h5p_get_mdc_image_config`](@ref h5p_get_mdc_image_config)
+- [`h5p_get_mdc_log_options`](@ref h5p_get_mdc_log_options)
 - [`h5p_get_meta_block_size`](@ref h5p_get_meta_block_size)
 - [`h5p_get_metadata_read_attempts`](@ref h5p_get_metadata_read_attempts)
 - [`h5p_get_multi_type`](@ref h5p_get_multi_type)
 - [`h5p_get_nfilters`](@ref h5p_get_nfilters)
 - [`h5p_get_nlinks`](@ref h5p_get_nlinks)
+- [`h5p_get_nprops`](@ref h5p_get_nprops)
 - [`h5p_get_obj_track_times`](@ref h5p_get_obj_track_times)
 - [`h5p_get_object_flush_cb`](@ref h5p_get_object_flush_cb)
 - [`h5p_get_page_buffer_size`](@ref h5p_get_page_buffer_size)
 - [`h5p_get_preserve`](@ref h5p_get_preserve)
+- [`h5p_get_shared_mesg_index`](@ref h5p_get_shared_mesg_index)
+- [`h5p_get_shared_mesg_nindexes`](@ref h5p_get_shared_mesg_nindexes)
+- [`h5p_get_shared_mesg_phase_change`](@ref h5p_get_shared_mesg_phase_change)
 - [`h5p_get_sieve_buf_size`](@ref h5p_get_sieve_buf_size)
+- [`h5p_get_size`](@ref h5p_get_size)
+- [`h5p_get_sizes`](@ref h5p_get_sizes)
 - [`h5p_get_small_data_block_size`](@ref h5p_get_small_data_block_size)
+- [`h5p_get_sym_k`](@ref h5p_get_sym_k)
 - [`h5p_get_type_conv_cb`](@ref h5p_get_type_conv_cb)
 - [`h5p_get_userblock`](@ref h5p_get_userblock)
 - [`h5p_get_version`](@ref h5p_get_version)
@@ -466,15 +488,21 @@ h5pl_size
 - [`h5p_get_vol_id`](@ref h5p_get_vol_id)
 - [`h5p_get_vol_info`](@ref h5p_get_vol_info)
 - [`h5p_insert`](@ref h5p_insert)
+- [`h5p_isa_class`](@ref h5p_isa_class)
+- [`h5p_iterate`](@ref h5p_iterate)
 - [`h5p_modify_filter`](@ref h5p_modify_filter)
 - [`h5p_register`](@ref h5p_register)
+- [`h5p_remove`](@ref h5p_remove)
 - [`h5p_remove_filter`](@ref h5p_remove_filter)
+- [`h5p_set`](@ref h5p_set)
 - [`h5p_set_alignment`](@ref h5p_set_alignment)
 - [`h5p_set_alloc_time`](@ref h5p_set_alloc_time)
 - [`h5p_set_append_flush`](@ref h5p_set_append_flush)
 - [`h5p_set_attr_creation_order`](@ref h5p_set_attr_creation_order)
+- [`h5p_set_attr_phase_change`](@ref h5p_set_attr_phase_change)
 - [`h5p_set_btree_ratios`](@ref h5p_set_btree_ratios)
 - [`h5p_set_buffer`](@ref h5p_set_buffer)
+- [`h5p_set_cache`](@ref h5p_set_cache)
 - [`h5p_set_char_encoding`](@ref h5p_set_char_encoding)
 - [`h5p_set_chunk`](@ref h5p_set_chunk)
 - [`h5p_set_chunk_cache`](@ref h5p_set_chunk_cache)
@@ -508,11 +536,13 @@ h5pl_size
 - [`h5p_set_fapl_sec2`](@ref h5p_set_fapl_sec2)
 - [`h5p_set_fapl_split`](@ref h5p_set_fapl_split)
 - [`h5p_set_fapl_splitter`](@ref h5p_set_fapl_splitter)
+- [`h5p_set_fapl_stdio`](@ref h5p_set_fapl_stdio)
 - [`h5p_set_fapl_windows`](@ref h5p_set_fapl_windows)
 - [`h5p_set_fclose_degree`](@ref h5p_set_fclose_degree)
 - [`h5p_set_file_image`](@ref h5p_set_file_image)
 - [`h5p_set_file_image_callbacks`](@ref h5p_set_file_image_callbacks)
 - [`h5p_set_file_locking`](@ref h5p_set_file_locking)
+- [`h5p_set_file_space`](@ref h5p_set_file_space)
 - [`h5p_set_file_space_page_size`](@ref h5p_set_file_space_page_size)
 - [`h5p_set_file_space_strategy`](@ref h5p_set_file_space_strategy)
 - [`h5p_set_fill_time`](@ref h5p_set_fill_time)
@@ -522,6 +552,7 @@ h5pl_size
 - [`h5p_set_fletcher32`](@ref h5p_set_fletcher32)
 - [`h5p_set_gc_references`](@ref h5p_set_gc_references)
 - [`h5p_set_hyper_vector_size`](@ref h5p_set_hyper_vector_size)
+- [`h5p_set_istore_k`](@ref h5p_set_istore_k)
 - [`h5p_set_layout`](@ref h5p_set_layout)
 - [`h5p_set_libver_bounds`](@ref h5p_set_libver_bounds)
 - [`h5p_set_link_creation_order`](@ref h5p_set_link_creation_order)
@@ -541,9 +572,14 @@ h5pl_size
 - [`h5p_set_page_buffer_size`](@ref h5p_set_page_buffer_size)
 - [`h5p_set_preserve`](@ref h5p_set_preserve)
 - [`h5p_set_scaleoffset`](@ref h5p_set_scaleoffset)
+- [`h5p_set_shared_mesg_index`](@ref h5p_set_shared_mesg_index)
+- [`h5p_set_shared_mesg_nindexes`](@ref h5p_set_shared_mesg_nindexes)
+- [`h5p_set_shared_mesg_phase_change`](@ref h5p_set_shared_mesg_phase_change)
 - [`h5p_set_shuffle`](@ref h5p_set_shuffle)
 - [`h5p_set_sieve_buf_size`](@ref h5p_set_sieve_buf_size)
+- [`h5p_set_sizes`](@ref h5p_set_sizes)
 - [`h5p_set_small_data_block_size`](@ref h5p_set_small_data_block_size)
+- [`h5p_set_sym_k`](@ref h5p_set_sym_k)
 - [`h5p_set_szip`](@ref h5p_set_szip)
 - [`h5p_set_type_conv_cb`](@ref h5p_set_type_conv_cb)
 - [`h5p_set_userblock`](@ref h5p_set_userblock)
@@ -553,17 +589,28 @@ h5pl_size
 - [`h5p_set_virtual_view`](@ref h5p_set_virtual_view)
 - [`h5p_set_vlen_mem_manager`](@ref h5p_set_vlen_mem_manager)
 - [`h5p_set_vol`](@ref h5p_set_vol)
+- [`h5p_unregister`](@ref h5p_unregister)
 ```@docs
 h5p_add_merge_committed_dtype_path
+h5p_all_filters_avail
 h5p_close
+h5p_close_class
+h5p_copy
+h5p_copy_prop
 h5p_create
+h5p_create_class
+h5p_decode
 h5p_encode
+h5p_equal
+h5p_exist
 h5p_fill_value_defined
 h5p_free_merge_committed_dtype_paths
+h5p_get
 h5p_get_alignment
 h5p_get_alloc_time
 h5p_get_append_flush
 h5p_get_attr_creation_order
+h5p_get_attr_phase_change
 h5p_get_btree_ratios
 h5p_get_buffer
 h5p_get_cache
@@ -571,7 +618,9 @@ h5p_get_char_encoding
 h5p_get_chunk
 h5p_get_chunk_cache
 h5p_get_chunk_opts
+h5p_get_class
 h5p_get_class_name
+h5p_get_class_parent
 h5p_get_copy_object
 h5p_get_core_write_tracking
 h5p_get_create_intermediate_group
@@ -603,6 +652,7 @@ h5p_get_fclose_degree
 h5p_get_file_image
 h5p_get_file_image_callbacks
 h5p_get_file_locking
+h5p_get_file_space
 h5p_get_file_space_page_size
 h5p_get_file_space_strategy
 h5p_get_fill_time
@@ -611,6 +661,7 @@ h5p_get_filter
 h5p_get_filter_by_id
 h5p_get_gc_references
 h5p_get_hyper_vector_size
+h5p_get_istore_k
 h5p_get_layout
 h5p_get_libver_bounds
 h5p_get_link_creation_order
@@ -619,17 +670,25 @@ h5p_get_local_heap_size_hint
 h5p_get_mcdt_search_cb
 h5p_get_mdc_config
 h5p_get_mdc_image_config
+h5p_get_mdc_log_options
 h5p_get_meta_block_size
 h5p_get_metadata_read_attempts
 h5p_get_multi_type
 h5p_get_nfilters
 h5p_get_nlinks
+h5p_get_nprops
 h5p_get_obj_track_times
 h5p_get_object_flush_cb
 h5p_get_page_buffer_size
 h5p_get_preserve
+h5p_get_shared_mesg_index
+h5p_get_shared_mesg_nindexes
+h5p_get_shared_mesg_phase_change
 h5p_get_sieve_buf_size
+h5p_get_size
+h5p_get_sizes
 h5p_get_small_data_block_size
+h5p_get_sym_k
 h5p_get_type_conv_cb
 h5p_get_userblock
 h5p_get_version
@@ -645,15 +704,21 @@ h5p_get_vlen_mem_manager
 h5p_get_vol_id
 h5p_get_vol_info
 h5p_insert
+h5p_isa_class
+h5p_iterate
 h5p_modify_filter
 h5p_register
+h5p_remove
 h5p_remove_filter
+h5p_set
 h5p_set_alignment
 h5p_set_alloc_time
 h5p_set_append_flush
 h5p_set_attr_creation_order
+h5p_set_attr_phase_change
 h5p_set_btree_ratios
 h5p_set_buffer
+h5p_set_cache
 h5p_set_char_encoding
 h5p_set_chunk
 h5p_set_chunk_cache
@@ -687,11 +752,13 @@ h5p_set_fapl_multi
 h5p_set_fapl_sec2
 h5p_set_fapl_split
 h5p_set_fapl_splitter
+h5p_set_fapl_stdio
 h5p_set_fapl_windows
 h5p_set_fclose_degree
 h5p_set_file_image
 h5p_set_file_image_callbacks
 h5p_set_file_locking
+h5p_set_file_space
 h5p_set_file_space_page_size
 h5p_set_file_space_strategy
 h5p_set_fill_time
@@ -701,6 +768,7 @@ h5p_set_filter_callback
 h5p_set_fletcher32
 h5p_set_gc_references
 h5p_set_hyper_vector_size
+h5p_set_istore_k
 h5p_set_layout
 h5p_set_libver_bounds
 h5p_set_link_creation_order
@@ -720,9 +788,14 @@ h5p_set_object_flush_cb
 h5p_set_page_buffer_size
 h5p_set_preserve
 h5p_set_scaleoffset
+h5p_set_shared_mesg_index
+h5p_set_shared_mesg_nindexes
+h5p_set_shared_mesg_phase_change
 h5p_set_shuffle
 h5p_set_sieve_buf_size
+h5p_set_sizes
 h5p_set_small_data_block_size
+h5p_set_sym_k
 h5p_set_szip
 h5p_set_type_conv_cb
 h5p_set_userblock
@@ -732,6 +805,7 @@ h5p_set_virtual_printf_gap
 h5p_set_virtual_view
 h5p_set_vlen_mem_manager
 h5p_set_vol
+h5p_unregister
 ```
 
 ---

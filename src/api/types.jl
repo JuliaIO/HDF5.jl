@@ -510,6 +510,10 @@ const H5P_prp_cb2_t = Ptr{Cvoid}
 const H5P_prp_set_func_t = H5P_prp_cb2_t
 const H5P_prp_get_func_t = H5P_prp_cb2_t
 const H5P_prp_delete_func_t = H5P_prp_cb2_t
+const H5P_cls_create_func_t = Ptr{Cvoid}
+const H5P_cls_copy_func_t = Ptr{Cvoid}
+const H5P_cls_close_func_t = Ptr{Cvoid}
+const H5P_iterate_t = Ptr{Cvoid}
 const H5D_append_cb_t = Ptr{Cvoid}
 const H5L_elink_traverse_t = Ptr{Cvoid}
 # typedef herr_t ( * H5F_flush_cb_t ) ( hid_t object_id , void * udata )
