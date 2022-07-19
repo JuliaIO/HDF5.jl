@@ -92,12 +92,12 @@ associated with `P`.
     class_getproperty(::Type{P}, p::Properties, name::Symbol)
 
 If `name` is an associated property of type `P`, this should return the value of
-the propery, otherwise call `class_getproperty(superclass(P), p, name)`.
+the property, otherwise call `class_getproperty(superclass(P), p, name)`.
 
     class_setproperty!(::Type{P}, p::Properties, name::Symbol, val)
 
 If `name` is an associated property of type `P`, this should set the value of
-the propery, otherwise call `class_setproperty!(superclass(P), p, name, val)`.
+the property, otherwise call `class_setproperty!(superclass(P), p, name, val)`.
 """
 macro propertyclass(name, classid)
     expr = quote
