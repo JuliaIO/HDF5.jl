@@ -1,5 +1,8 @@
 comment: false
 
+ignore:
+  - "src/api/functions.jl"
+
 coverage:
   range: 0..100
   round: down
