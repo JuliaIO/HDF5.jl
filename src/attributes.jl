@@ -95,7 +95,7 @@ end
 write_attribute(attr::Attribute, memtype::Datatype, x) = API.h5a_write(attr, memtype, x)
 # specific methods
 function write_attribute(attr::Attribute, memtype::Datatype, x::AbstractArray)
-    length(x) == length(attr) || throw(ArgumentError("Invalid length: $(length(x)) != (length($(name(attr))) = $(length(attr)))"))
+    length(x) == length(attr) || throw(ArgumentError("Invalid length: $(length(x)) != $(length(attr)), for attribute \"$(name(attr))\""))
     API.h5a_write(attr, memtype, x)
 end
 function write_attribute(attr::Attribute, memtype::Datatype, str::AbstractString)
