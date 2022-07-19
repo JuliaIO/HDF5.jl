@@ -157,16 +157,12 @@ function Base.setindex!(parent::Union{File,Group}, val, path::Union{AbstractStri
     write(parent, path, val; pv...)
 end
 
-
-
 # end of high-level interface
-
 
 include("api_midlevel.jl")
 
 
 #API.h5s_get_simple_extent_ndims(space_id::API.hid_t) = API.h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
-
 
 # Functions that require special handling
 
