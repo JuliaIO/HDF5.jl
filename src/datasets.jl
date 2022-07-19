@@ -339,7 +339,7 @@ function _check_invalid(dataset::Dataset, buf::AbstractArray)
     num_bytes_dset = Base.checked_mul(sizeof(datatype(dataset)), length(dataset))
     num_bytes_buf = Base.checked_mul(sizeof(eltype(buf)), length(buf))
     num_bytes_buf == num_bytes_dset || throw(ArgumentError(
-        "Invalid number of bytes: $(num_bytes_buf) != (num_bytes($(name(dataset))) = $num_bytes_dset)"
+        "Invalid number of bytes: $(num_bytes_buf) != $num_bytes_dset, for dataset \"$(name(dataset))\""
     ))
     stride(buf, 1) == 1 || throw(ArgumentError("Cannot read/write arrays with a different stride than `Array`"))
 end
