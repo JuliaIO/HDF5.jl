@@ -1404,3 +1404,15 @@ rm(fn1)
 rm(fn2)
 
 end
+
+@testset "bounds" begin
+
+# issue #954
+h5open(tempname(), "w") do f
+    a, _ = create_attribute(f, "a", zeros(4))
+    @test_throws ArgumentError write(a, ones(2))
+    d, _ = create_dataset(f, "dd", zeros(4))
+    @test_throws ArgumentError write(d, ones(2))
+end
+
+end
