@@ -94,6 +94,12 @@ h5open(fn, "w";
 
     @test acpl.char_encoding == :utf8
 
+    dcpl2 = HDF5.DatasetCreateProperties() # uninitialized
+    @test dcpl2.id < 1 # 0 or -1
+    @test !isvalid(dcpl2)
+    @test dcpl2.alloc_time == :late
+    @test isvalid(dcpl2)
+
     nothing
 end
 

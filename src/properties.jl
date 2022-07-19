@@ -48,7 +48,7 @@ end
 
 function Base.getproperty(p::P, name::Symbol) where {P <: Properties}
     name === :id    ? getfield(p, :id) :
-    class_getproperty(P, p, name)
+    class_getproperty(P, init!(p), name)
 end
 
 function Base.setproperty!(p::P, name::Symbol, val) where {P<:Properties}
