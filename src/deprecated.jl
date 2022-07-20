@@ -69,9 +69,9 @@ import .Filters: ExternalFilter
 @deprecate push!(p::Filters.FilterPipeline, f::NTuple{N, Integer}) where N push!(p, ExternalFilter(f...))
 @deprecate ExternalFilter(t::Tuple) ExternalFilter(t...) false
 
-### Changed in PR #982
-@deprecate set_track_order(p::Properties, val::Bool) set_track_order!(p::Properties, val::Bool) false
-
 ### Changed in PR #979
 # Querying items in the file
 @deprecate object_info(obj::Union{File,Object}) API.h5o_get_info1(checkvalid(obj))
+
+### Changed in PR #994
+@deprecate set_track_order(p::Properties, val::Bool) set_track_order!(p::Properties, val::Bool) false
