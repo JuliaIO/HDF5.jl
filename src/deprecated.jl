@@ -73,6 +73,5 @@ import .Filters: ExternalFilter
 @deprecate set_track_order(p::Properties, val::Bool) set_track_order!(p::Properties, val::Bool) false
 
 ### Changed in PR #979
-
 # Querying items in the file
 @deprecate object_info(obj::Union{File,Object}) API.h5o_get_info1(checkvalid(obj))
