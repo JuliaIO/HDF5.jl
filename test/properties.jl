@@ -94,11 +94,19 @@ h5open(fn, "w";
 
     @test acpl.char_encoding == :utf8
 
+    # Test auto-initialization of property lists on get
     dcpl2 = HDF5.DatasetCreateProperties() # uninitialized
     @test dcpl2.id < 1 # 0 or -1
     @test !isvalid(dcpl2)
     @test dcpl2.alloc_time == :late
     @test isvalid(dcpl2)
+
+    # Test H5Pcopy
+    dapl2 = copy(dapl)
+    @test dapl2.id != dapl.id
+    @test dapl2.virtual_prefix == dapl.virtual_prefix
+    dapl2.virtual_prefix = "somewhere_else"
+    @test dapl2.virtual_prefix != dapl.virtual_prefix
 
     nothing
 end
