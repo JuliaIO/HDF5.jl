@@ -59,14 +59,79 @@ struct H5G_info_t
 end
 
 # For objects
+@enum H5_index_t::Cint begin
+    H5_INDEX_UNKNOWN = -1
+    H5_INDEX_NAME = 0
+    H5_INDEX_CRT_ORDER = 1
+    H5_INDEX_N = 2
+end
+@enum H5_iter_order_t::Cint begin
+    H5_ITER_UNKNOWN = -1
+    H5_ITER_INC = 0
+    H5_ITER_DEC = 1
+    H5_ITER_NATIVE = 2
+    H5_ITER_N = 3
+end
+
+const H5O_iterate1_t = Ptr{Cvoid}
+const H5O_iterate2_t = Ptr{Cvoid}
+
+struct _H5O_hdr_info_t_space
+    total::hsize_t
+    meta::hsize_t
+    mesg::hsize_t
+    free::hsize_t
+end
+
+struct _H5O_hdr_info_t_mesg
+    present::UInt64
+    shared::UInt64
+end
+
+struct H5O_hdr_info_t
+    version::Cuint
+    nmesgs::Cuint
+    nchunks::Cuint
+    flags::Cuint
+    space::_H5O_hdr_info_t_space
+    mesg::_H5O_hdr_info_t_mesg
+end
+
 struct H5_ih_info_t
     index_size::hsize_t
     heap_size::hsize_t
 end
-struct H5O_info_t # version 1 type H5O_info1_t
+
+struct _H5O_native_info_t_meta_size
+    obj::H5_ih_info_t
+    attr::H5_ih_info_t
+end
+
+struct H5O_native_info_t
+    hdr::H5O_hdr_info_t
+    meta_size::_H5O_native_info_t_meta_size
+end
+
+const H5O_NATIVE_INFO_HDR = 0x0008
+const H5O_NATIVE_INFO_META_SIZE = 0x0010
+const H5O_NATIVE_INFO_ALL = H5O_NATIVE_INFO_HDR | H5O_NATIVE_INFO_META_SIZE
+
+struct H5O_token_t
+    __data::NTuple{16, UInt8}
+end
+@enum H5O_type_t::Cint begin
+    H5O_TYPE_UNKNOWN = -1
+    H5O_TYPE_GROUP = 0
+    H5O_TYPE_DATASET = 1
+    H5O_TYPE_NAMED_DATATYPE = 2
+    H5O_TYPE_MAP = 3
+    H5O_TYPE_NTYPES = 4
+end
+
+struct H5O_info1_t # version 1 type H5O_info1_t
     fileno::Cuint
     addr::haddr_t
-    otype::Cint # enum H5O_type_t
+    otype::H5O_type_t # enum H5O_type_t
     rc::Cuint
     atime::Ctime_t
     mtime::Ctime_t
@@ -89,6 +154,25 @@ struct H5O_info_t # version 1 type H5O_info1_t
     meta_obj::H5_ih_info_t
     meta_attr::H5_ih_info_t
     #}
+end
+const H5O_info_t = H5O_info1_t
+
+# The field "otype" is originally "type"
+# Alias "otype" as "type" for compat with H5O_info2_t
+Base.getproperty(oinfo::H5O_info1_t, field::Symbol) =
+    field == :type ? getfield(oinfo, :otype) : getfield(oinfo, field)
+
+
+struct H5O_info2_t
+    fileno::Culong
+    token::H5O_token_t
+    type::H5O_type_t
+    rc::Cuint
+    atime::Ctime_t
+    mtime::Ctime_t
+    ctime::Ctime_t
+    btime::Ctime_t
+    num_attrs::hsize_t
 end
 
 # For links
@@ -160,17 +244,19 @@ _read_const(sym::Symbol) = unsafe_load(cglobal(Libdl.dlsym(libhdf5handle[], sym)
 _has_symbol(sym::Symbol) = Libdl.dlsym(libhdf5handle[], sym; throw_error=false) !== nothing
 
 # iteration order constants
-const H5_ITER_UNKNOWN = -1
-const H5_ITER_INC     = 0
-const H5_ITER_DEC     = 1
-const H5_ITER_NATIVE  = 2
-const H5_ITER_N       = 3
+# Moved to H5_iter_t enum
+#const H5_ITER_UNKNOWN = -1
+#const H5_ITER_INC     = 0
+#const H5_ITER_DEC     = 1
+#const H5_ITER_NATIVE  = 2
+#const H5_ITER_N       = 3
 
 # indexing type constants
-const H5_INDEX_UNKNOWN   = -1
-const H5_INDEX_NAME      = 0
-const H5_INDEX_CRT_ORDER = 1
-const H5_INDEX_N = 2
+# Moved to H5_index_t enum
+#const H5_INDEX_UNKNOWN   = -1
+#const H5_INDEX_NAME      = 0
+#const H5_INDEX_CRT_ORDER = 1
+#const H5_INDEX_N = 2
 
 # dataset constants
 const H5D_COMPACT      = 0
@@ -263,10 +349,19 @@ const H5L_TYPE_HARD    = 0
 const H5L_TYPE_SOFT    = 1
 const H5L_TYPE_EXTERNAL= 2
 
+# H5O_INFO constants
+const H5O_INFO_BASIC = Cuint(0x0001)
+const H5O_INFO_TIME = Cuint(0x0002)
+const H5O_INFO_NUM_ATTRS = Cuint(0x0004)
+const H5O_INFO_HDR = Cuint(0x0008)
+const H5O_INFO_META_SIZE = Cuint(0x0010)
+const H5O_INFO_ALL = H5O_INFO_BASIC | H5O_INFO_TIME | H5O_INFO_NUM_ATTRS | H5O_INFO_HDR | H5O_INFO_META_SIZE
+
 # Object constants
-const H5O_TYPE_GROUP   = 0
-const H5O_TYPE_DATASET = 1
-const H5O_TYPE_NAMED_DATATYPE = 2
+# Moved to H5O_type_t enum
+#const H5O_TYPE_GROUP   = 0
+#const H5O_TYPE_DATASET = 1
+#const H5O_TYPE_NAMED_DATATYPE = 2
 
 # Property constants
 const H5P_DEFAULT          = hid_t(0)

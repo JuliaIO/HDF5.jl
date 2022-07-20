@@ -184,6 +184,21 @@ function h5readattr(filename, name::AbstractString)
     dat
 end
 
+"""
+    num_attrs()
+
+Retrieve the number of attributes from an object.
+
+See [`API.h5o_get_info`](@ref).
+"""
+function num_attrs(obj)
+    info = @static if API._libhdf5_build_ver < v"1.12.0"
+        API.h5o_get_info(checkvalid(obj))
+    else
+        API.h5o_get_info(checkvalid(obj), API.H5O_INFO_NUM_ATTRS)
+    end
+    return Int(info.num_attrs)
+end
 
 struct AttributeDict <: AbstractDict{String,Any}
     parent::Object
@@ -208,7 +223,7 @@ function attrs(parent)
 end
 
 Base.haskey(attrdict::AttributeDict, path::AbstractString) = API.h5a_exists(checkvalid(attrdict.parent), path)
-Base.length(attrdict::AttributeDict) = Int(object_info(attrdict.parent).num_attrs)
+Base.length(attrdict::AttributeDict) = num_attrs(attrdict.parent)
 
 function Base.getindex(x::AttributeDict, name::AbstractString)
     haskey(x, name) || throw(KeyError(name))
@@ -284,7 +299,7 @@ function Base.getindex(x::Attributes, name::AbstractString)
 end
 Base.setindex!(x::Attributes, val, name::AbstractString) = write_attribute(x.parent, name, val)
 Base.haskey(attr::Attributes, path::AbstractString) = API.h5a_exists(checkvalid(attr.parent), path)
-Base.length(x::Attributes) = Int(object_info(x.parent).num_attrs)
+Base.length(x::Attributes) = num_attrs(x.parent)
 
 function Base.keys(x::Attributes)
     checkvalid(x.parent)

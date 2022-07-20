@@ -195,12 +195,46 @@
 ### Object Interface
 ###
 
+
+@bind h5o_are_mdc_flushes_disabled(object_id::hid_t, are_disabled::Ptr{hbool_t})::herr_t "Error in h5o_are_mdc_flushes_disabled (not annotated)"
 @bind h5o_close(object_id::hid_t)::herr_t "Error closing object"
 @bind h5o_copy(src_loc_id::hid_t, src_name::Ptr{UInt8}, dst_loc_id::hid_t, dst_name::Ptr{UInt8}, ocpypl_id::hid_t, lcpl_id::hid_t)::herr_t string("Error copying object ", h5i_get_name(src_loc_id), "/", src_name, " to ", h5i_get_name(dst_loc_id), "/", dst_name)
-@bind h5o_get_info1(object_id::hid_t, buf::Ptr{H5O_info_t})::herr_t "Error getting object info"
+@bind h5o_decr_refcount(object_id::hid_t)::herr_t "Error in h5o_decr_refcount (not annotated)"
+@bind h5o_disable_mdc_flushes(object_id::hid_t)::herr_t "Error in h5o_disable_mdc_flushes (not annotated)"
+@bind h5o_enable_mdc_flushes(object_id::hid_t)::herr_t "Error in h5o_enable_mdc_flushes (not annotated)"
+@bind h5o_exists_by_name(loc_id::hid_t, name::Ptr{Cchar}, lapl_id::hid_t)::htri_t "Error in h5o_exists_by_name (not annotated)"
+@bind h5o_flush(obj_id::hid_t)::herr_t "Error in h5o_flush (not annotated)"
+@bind h5o_get_comment(obj_id::hid_t, comment::Ptr{Cchar}, bufsize::Csize_t)::Cssize_t "Error in h5o_get_comment (not annotated)"
+@bind h5o_get_comment_by_name(loc_id::hid_t, name::Ptr{Cchar}, comment::Ptr{Cchar}, bufsize::Csize_t, lapl_id::hid_t)::Cssize_t "Error in h5o_get_comment_by_name (not annotated)"
+@bind h5o_get_info1(object_id::hid_t, buf::Ptr{H5O_info1_t})::herr_t "Error getting object info" (nothing, v"1.12.0")
+#@bind h5o_get_info2(loc_id::hid_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint)::herr_t "Error in h5o_get_info2 (not annotated)"
+@bind h5o_get_info3(loc_id::hid_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint)::herr_t "Error in h5o_get_info3 (not annotated)" (v"1.12.0", nothing)
+@bind h5o_get_info_by_idx1(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx1 (not annotated)" (nothing, v"1.12.0")
+#@bind h5o_get_info_by_idx2(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx2 (not annotated)"
+@bind h5o_get_info_by_idx3(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx3 (not annotated)" (v"1.12.0", nothing)
+#@bind h5o_get_info_by_name1(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name1 (not annotated)"
+#@bind h5o_get_info_by_name2(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name2 (not annotated)"
+@bind h5o_get_info_by_name3(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name3 (not annotated)"
+@bind h5o_get_native_info(loc_id::hid_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint)::herr_t "Error in h5o_get_native_info (not annotated)"
+@bind h5o_get_native_info_by_idx(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_native_info_by_idx (not annotated)"
+@bind h5o_get_native_info_by_name(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_native_info_by_name (not annotated)"
+@bind h5o_incr_refcount(object_id::hid_t)::herr_t "Error in h5o_incr_refcount (not annotated)"
+@bind h5o_link(obj_id::hid_t, new_loc_id::hid_t, new_name::Ptr{Cchar}, lcpl_id::hid_t, lapl_id::hid_t)::herr_t "Error in h5o_link (not annotated)"
 @bind h5o_open(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::hid_t string("Error opening object ", h5i_get_name(loc_id), "/", pathname)
 @bind h5o_open_by_addr(loc_id::hid_t, addr::haddr_t)::hid_t "Error opening object by address"
 @bind h5o_open_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::hid_t string("Error opening object of index ", n)
+@bind h5o_refresh(oid::hid_t)::herr_t "Error in h5o_refresh (not annotated)"
+@bind h5o_set_comment(obj_id::hid_t, comment::Ptr{Cchar})::herr_t "Error in h5o_set_comment (not annotated)"
+@bind h5o_set_comment_by_name(loc_id::hid_t, name::Ptr{Cchar}, comment::Ptr{Cchar}, lapl_id::hid_t)::herr_t "Error in h5o_set_comment_by_name (not annotated)"
+@bind h5o_token_cmp(loc_id::hid_t, token1::Ptr{H5O_token_t}, token2::Ptr{H5O_token_t}, cmp_value::Ptr{Cint})::herr_t "Error in h5o_token_cmp (not annotated)"
+@bind h5o_token_from_str(loc_id::hid_t, token_str::Ptr{Cchar}, token::Ptr{H5O_token_t})::herr_t "Error in h5o_token_from_str (not annotated)"
+@bind h5o_token_to_str(loc_id::hid_t, token::Ptr{H5O_token_t}, token_str::Ptr{Ptr{Cchar}})::herr_t "Error in h5o_token_to_str (not annotated)"
+@bind h5o_visit1(obj_id::hid_t, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid})::herr_t "Error in h5o_visit1 (not annotated)" (nothing, v"1.12.0")
+#@bind h5o_visit2(obj_id::hid_t, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid}, fields::Cuint)::herr_t "Error in h5o_visit2 (not annotated)"
+@bind h5o_visit3(obj_id::hid_t, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint)::herr_t "Error in h5o_visit3 (not annotated)" (v"1.12.0", nothing)
+@bind h5o_visit_by_name1(loc_id::hid_t, obj_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid}, lapl_id::hid_t)::herr_t "Error in h5o_visit_by_name1 (not annotated)" (nothing, v"1.12.0")
+#@bind h5o_visit_by_name2(loc_id::hid_t, obj_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_visit_by_name2 (not annotated)"
+@bind h5o_visit_by_name3(loc_id::hid_t, obj_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_visit_by_name3 (not annotated)" (v"1.12.0", nothing)
 
 ###
 ### Property Interface
