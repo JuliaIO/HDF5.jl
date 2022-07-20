@@ -17,6 +17,7 @@ function Base.close(obj::Properties)
 end
 
 Base.isvalid(obj::Properties) = obj.id != -1 && API.h5i_is_valid(obj)
+Base.copy(obj::P) where P <: Properties = P(HDF5.API.h5p_copy(obj.id))
 
 # By default, properties objects are only initialized lazily
 function init!(prop::P) where {P<:Properties}
