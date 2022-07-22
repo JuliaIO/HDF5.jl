@@ -41,8 +41,8 @@ Filters, Drivers
 h5doc(name) = "[`$name`](https://portal.hdfgroup.org/display/HDF5/$(name))"
 
 include("api/api.jl")
-
 include("properties.jl")
+include("context.jl")
 include("types.jl")
 include("file.jl")
 include("objects.jl")
@@ -154,15 +154,11 @@ function Base.setindex!(parent::Union{File,Group}, val, path::Union{AbstractStri
     write(parent, path, val; pv...)
 end
 
-
 # end of high-level interface
-
 
 include("api_midlevel.jl")
 
-
 #API.h5s_get_simple_extent_ndims(space_id::API.hid_t) = API.h5s_get_simple_extent_ndims(space_id, C_NULL, C_NULL)
-
 
 # Functions that require special handling
 
@@ -172,8 +168,8 @@ const libversion = API.h5_get_libversion()
 get_access_properties(d::Dataset)   = DatasetAccessProperties(API.h5d_get_access_plist(d))
 get_access_properties(f::File)      = FileAccessProperties(API.h5f_get_access_plist(f))
 get_create_properties(d::Dataset)   = DatasetCreateProperties(API.h5d_get_create_plist(d))
-get_create_properties(g::Group)     = isvalid(g.gcpl) ? g.gcpl : GroupCreateProperties(API.h5g_get_create_plist(g))
-get_create_properties(f::File)      = isvalid(f.fcpl) ? f.fcpl : FileCreateProperties(API.h5f_get_create_plist(f))
+get_create_properties(g::Group)     = GroupCreateProperties(API.h5g_get_create_plist(g))
+get_create_properties(f::File)      = FileCreateProperties(API.h5f_get_create_plist(f))
 get_create_properties(a::Attribute) = AttributeCreateProperties(API.h5a_get_create_plist(a))
 
 

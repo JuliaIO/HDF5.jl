@@ -272,7 +272,7 @@ end
 get_track_order(p::Properties) = API.h5p_get_link_creation_order(p) != 0 && API.h5p_get_attr_creation_order(p) != 0
 
 function set_track_order!(p::Properties, val::Bool)
-    crt_order_flags = val ? (HDF5.API.H5P_CRT_ORDER_TRACKED | HDF5.API.H5P_CRT_ORDER_INDEXED) : 0
+    crt_order_flags = val ? (API.H5P_CRT_ORDER_TRACKED | API.H5P_CRT_ORDER_INDEXED) : 0
     API.h5p_set_link_creation_order(p, crt_order_flags)
     API.h5p_set_attr_creation_order(p, crt_order_flags)
     nothing
