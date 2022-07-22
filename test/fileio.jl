@@ -53,26 +53,27 @@ let fn = tempname() * ".h5"
 
   # issue #939
   h5open(fn, "r"; track_order=true) do io
-    @test HDF5.get_create_properties(io).track_order
+    @test HDF5.get_context_property(:file_create).track_order
     @test all(keys(io) .== ["b", "a", "G"])
-    @test HDF5.get_create_properties(io["G"]).track_order
+    @test HDF5.get_context_property(:group_create).track_order
+    @test HDF5.get_create_properties(io["G"]).track_order  # inferred from file, created with `track_order=true`
     @test all(keys(io["G"]) .== ["z", "f"])
   end
 
   h5open(fn, "r"; track_order=false) do io
-    @test !HDF5.get_create_properties(io).track_order
+    @test !HDF5.get_context_property(:file_create).track_order
     @test all(keys(io) .== ["G", "a", "b"])
-    @test !HDF5.get_create_properties(io["G"]).track_order
-    @test all(keys(io["G"]) .== ["f", "z"])
+    @test !HDF5.get_context_property(:group_create).track_order
+    @test HDF5.get_create_properties(io["G"]).track_order  # inferred from file
+    @test all(keys(io["G"]) .== ["z", "f"])
   end
 
   h5open(fn, "r") do io
     @test !HDF5.get_create_properties(io).track_order
     @test all(keys(io) .== ["G", "a", "b"])
-    @test HDF5.get_create_properties(io["G"]).track_order  # inferred from file, created with `track_order=true`
+    @test HDF5.get_create_properties(io["G"]).track_order  # inferred from file
     @test all(keys(io["G"]) .== ["z", "f"])
   end
-
 end
 
 let fn = tempname() * ".h5"

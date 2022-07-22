@@ -26,11 +26,11 @@ function create_group(parent::Union{File,Group}, path::AbstractString,
     haskey(parent, path) && error("cannot create group: object \"", path, "\" already exists at ", name(parent))
     pv = setproperties!(gcpl; pv...)
     isempty(pv) || error("invalid keyword options $pv")
-    Group(API.h5g_create(parent, path, lcpl, gcpl, API.H5P_DEFAULT), file(parent), gcpl)
+    Group(API.h5g_create(parent, path, lcpl, gcpl, API.H5P_DEFAULT), file(parent))
 end
 
 open_group(parent::Union{File,Group}, name::AbstractString, gapl::GroupAccessProperties=GroupAccessProperties()) =
-    Group(API.h5g_open(checkvalid(parent), name, gapl), file(parent), inherit_gcpl(parent))
+    Group(API.h5g_open(checkvalid(parent), name, gapl), file(parent))
 
 # Get the root group
 root(h5file::File) = open_group(h5file, "/")
