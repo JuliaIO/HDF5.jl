@@ -600,6 +600,7 @@ function h5p_get_external(plist, idx = 0)
     name = Base.StringVector(name_size)
     while true
         h5p_get_external(plist, idx, name_size, name, offset, sz)
+        @debug "looping..." offset[] sz[]
         null_id = findfirst(==(0x00), name)
         if isnothing(null_id)
             name_size *= 2
