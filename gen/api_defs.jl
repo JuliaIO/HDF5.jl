@@ -371,7 +371,7 @@
 @bind h5p_set_elink_prefix(plist_id::hid_t, prefix::Ptr{Cchar})::herr_t "Error in h5p_set_elink_prefix (not annotated)"
 @bind h5p_set_est_link_info(plist_id::hid_t, est_num_entries::Cuint, est_name_len::Cuint)::herr_t "Error in h5p_set_est_link_info (not annotated)"
 @bind h5p_set_evict_on_close(fapl_id::hid_t, evict_on_close::hbool_t)::herr_t "Error in h5p_set_evict_on_close (not annotated)"
-@bind h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::off_t, size::Csize_t)::herr_t "Error setting external property"
+@bind h5p_set_external(plist_id::hid_t, name::Ptr{Cchar}, offset::off_t, size::hsize_t)::herr_t "Error setting external property"
 @bind h5p_set_family_offset(fapl_id::hid_t, offset::hsize_t)::herr_t "Error in h5p_set_family_offset (not annotated)"
 @bind h5p_set_fapl_core(fapl_id::hid_t, increment::Csize_t, backing_store::hbool_t)::herr_t "Error in h5p_set_fapl_core (not annotated)"
 @bind h5p_set_fapl_family(fapl_id::hid_t, memb_size::hsize_t, memb_fapl_id::hid_t)::herr_t "Error in h5p_set_fapl_family (not annotated)"

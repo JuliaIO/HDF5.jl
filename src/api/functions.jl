@@ -3247,12 +3247,12 @@ function h5p_set_evict_on_close(fapl_id, evict_on_close)
 end
 
 """
-    h5p_set_external(plist_id::hid_t, name::Ptr{UInt8}, offset::off_t, size::Csize_t)
+    h5p_set_external(plist_id::hid_t, name::Ptr{Cchar}, offset::off_t, size::hsize_t)
 
 See `libhdf5` documentation for [`H5Pset_external`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_EXTERNAL).
 """
 function h5p_set_external(plist_id, name, offset, size)
-    var"#status#" = ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Ptr{UInt8}, off_t, Csize_t), plist_id, name, offset, size)
+    var"#status#" = ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Ptr{Cchar}, off_t, hsize_t), plist_id, name, offset, size)
     var"#status#" < 0 && @h5error("Error setting external property")
     return nothing
 end
