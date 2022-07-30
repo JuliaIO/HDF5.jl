@@ -617,7 +617,6 @@ function h5p_get_external(plist, idx = 0)
     # is HDoff_t which is a different type on Windows (off_t is a 32-bit long,
     # HDoff_t is __int64, a 64-bit type).
     @static if Sys.iswindows() && sizeof(Int) == 4
-        @debug "h5p_get_external" offset[] sz[]
         lower = 0xffffffff & sz[]
         upper = 0xffffffff & (sz[] >> 32)
         # Scenario 1: The size is in the lower 32 bits, upper 32 bits contains garbage v1.12.2
