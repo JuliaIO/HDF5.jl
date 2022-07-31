@@ -1,3 +1,42 @@
+# The context API is under active development. This is an internal API and may change.
+
+"""
+    HDF5Context
+
+*Internal API*
+
+An `HDF5Context` is a collection of HDF5 property lists. It is meant to be used
+as a `Task` local mechanism to store state and change the default property lists
+for new objects.
+
+Use the function `get_context_property(name::Symbol)` to access a property
+list within the local context.
+
+The context in `task_local_storage()[:hdf5_context]` will be checked first.
+A common global HDF5Context is stored in the constant `HDF5.CONTEXT` and
+serves as the default context if the current task does not have a
+`:hdf5_context`.
+
+# Fields
+
+* attribute_access
+* attribute_create
+* dataset_access
+* dataset_create
+* dataset_tranfer
+* datatype_access
+* datatype_create
+* file_access
+* file_create
+* file_mount
+* group_access
+* group_create
+* link_access
+* link_create
+* object_copy
+* object_create
+* string_create
+"""
 struct HDF5Context
    attribute_access::AttributeAccessProperties
    attribute_create::AttributeCreateProperties
@@ -46,7 +85,23 @@ function HDF5Context()
    )
 end
 
+"""
+    HDF5.CONTEXT
+
+*Internal API*
+
+Default `HDF5Context`.
+"""
 const CONTEXT = HDF5Context()
 
+"""
+    get_context_property(name::Symbol)
+
+*Internal API*
+
+Retrieve a property list from the task local context, defaulting to
+`HDF5.CONTEXT` if `task_local_storage()[:hdf5_context]` does not
+exist.
+"""
 get_context_property(name::Symbol) =
     getfield(get(task_local_storage(), :hdf5_context, CONTEXT), name)
