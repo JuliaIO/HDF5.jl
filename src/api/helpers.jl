@@ -427,7 +427,7 @@ end
 ### Object Interface
 ###
 
-@static if _libhdf5_build_ver < v"1.12.0"
+@static if _libhdf5_build_ver < v"1.10.3"
 
     # H5Oget_info1
     function h5o_get_info(loc_id)
@@ -447,6 +447,29 @@ end
     function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, lapl=H5P_DEFAULT)
         oinfo = Ref{H5O_info1_t}()
         h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, lapl)
+        return oinfo[]
+    end
+
+elseif _libhdf5_build_ver >= v"1.10.3" && _libhdf5_build_ver < v"1.12.0"
+
+    # H5Oget_info2
+    function h5o_get_info(loc_id, fields=H5O_INFO_ALL)
+        oinfo = Ref{H5O_info1_t}()
+        h5o_get_info(loc_id, oinfo, fields)
+        return oinfo[]
+    end
+
+    # H5Oget_info_by_name2
+    function h5o_get_info_by_name(loc_id, name, fields=H5O_INFO_ALL, lapl=H5P_DEFAULT)
+        oinfo = Ref{H5O_info1_t}()
+        h5o_get_info_by_name(loc_id, name, oinfo, fields, lapl)
+        return oinfo[]
+    end
+
+    # H5Oget_info_by_idx2
+    function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, fields=H5O_INFO_ALL, lapl=H5P_DEFAULT)
+        oinfo = Ref{H5O_info1_t}()
+        h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl)
         return oinfo[]
     end
 
