@@ -206,15 +206,15 @@
 @bind h5o_flush(obj_id::hid_t)::herr_t "Error in h5o_flush (not annotated)"
 @bind h5o_get_comment(obj_id::hid_t, comment::Ptr{Cchar}, bufsize::Csize_t)::Cssize_t "Error in h5o_get_comment (not annotated)"
 @bind h5o_get_comment_by_name(loc_id::hid_t, name::Ptr{Cchar}, comment::Ptr{Cchar}, bufsize::Csize_t, lapl_id::hid_t)::Cssize_t "Error in h5o_get_comment_by_name (not annotated)"
-@bind h5o_get_info1(object_id::hid_t, buf::Ptr{H5O_info1_t})::herr_t "Error getting object info" (nothing, v"1.12.0")
-#@bind h5o_get_info2(loc_id::hid_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint)::herr_t "Error in h5o_get_info2 (not annotated)"
+@bind h5o_get_info1(object_id::hid_t, buf::Ptr{H5O_info1_t})::herr_t "Error getting object info" (nothing, v"1.10.3")
+@bind h5o_get_info2(loc_id::hid_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint)::herr_t "Error in h5o_get_info2 (not annotated)" (v"1.10.3", v"1.12.0")
 @bind h5o_get_info3(loc_id::hid_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint)::herr_t "Error in h5o_get_info3 (not annotated)" (v"1.12.0", nothing)
-@bind h5o_get_info_by_idx1(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx1 (not annotated)" (nothing, v"1.12.0")
-#@bind h5o_get_info_by_idx2(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx2 (not annotated)"
+@bind h5o_get_info_by_idx1(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx1 (not annotated)" (nothing, v"1.10.3")
+@bind h5o_get_info_by_idx2(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx2 (not annotated)" (v"1.10.3", v"1.12.0")
 @bind h5o_get_info_by_idx3(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx3 (not annotated)" (v"1.12.0", nothing)
-#@bind h5o_get_info_by_name1(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name1 (not annotated)"
-#@bind h5o_get_info_by_name2(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name2 (not annotated)"
-@bind h5o_get_info_by_name3(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name3 (not annotated)"
+@bind h5o_get_info_by_name1(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name1 (not annotated)" (nothing, v"1.10.3")
+@bind h5o_get_info_by_name2(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name2 (not annotated)" (v"1.10.3", v"1.12.0")
+@bind h5o_get_info_by_name3(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name3 (not annotated)" (v"1.12.0", nothing)
 @bind h5o_get_native_info(loc_id::hid_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint)::herr_t "Error in h5o_get_native_info (not annotated)"
 @bind h5o_get_native_info_by_idx(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_native_info_by_idx (not annotated)"
 @bind h5o_get_native_info_by_name(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_native_info_by_name (not annotated)"

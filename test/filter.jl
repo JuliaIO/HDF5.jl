@@ -159,8 +159,8 @@ merge!(HDF5.Filters.FILTERS, FILTERS_backup)
 @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SHUFFLE)
 @static if Sys.iswindows() || VERSION ≤ v"1.6"
     @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
-else
-    # These are missing in the macOS and Linux JLLs
+elseif HDF5.API.h5_get_libversion() >= v"1.12.0"
+    # These are missing in the macOS and Linux JLLs for h5 version 1.12+
     @test_broken HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
 end
 @test HDF5.API.h5z_filter_avail(H5Z_FILTER_BZIP2)
