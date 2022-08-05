@@ -20,7 +20,6 @@
 #! format: off
 # Turns off formatting from this point onwards
 
-
 ###
 ### HDF5 General library functions
 ###
