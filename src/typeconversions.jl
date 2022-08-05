@@ -111,19 +111,21 @@ end
 Base.eltype(::Type{VariableArray{T}}) where {T} = T
 
 ## Conversion between Julia types and HDF5 atomic types
-hdf5_type_id(::Type{Bool}) = API.H5T_NATIVE_B8
-hdf5_type_id(::Type{Int8}) = API.H5T_NATIVE_INT8
-hdf5_type_id(::Type{UInt8}) = API.H5T_NATIVE_UINT8
-hdf5_type_id(::Type{Int16}) = API.H5T_NATIVE_INT16
-hdf5_type_id(::Type{UInt16}) = API.H5T_NATIVE_UINT16
-hdf5_type_id(::Type{Int32}) = API.H5T_NATIVE_INT32
-hdf5_type_id(::Type{UInt32}) = API.H5T_NATIVE_UINT32
-hdf5_type_id(::Type{Int64}) = API.H5T_NATIVE_INT64
-hdf5_type_id(::Type{UInt64}) = API.H5T_NATIVE_UINT64
-hdf5_type_id(::Type{Float32}) = API.H5T_NATIVE_FLOAT
-hdf5_type_id(::Type{Float64}) = API.H5T_NATIVE_DOUBLE
+#! format: off
+hdf5_type_id(::Type{Bool})      = API.H5T_NATIVE_B8
+hdf5_type_id(::Type{Int8})      = API.H5T_NATIVE_INT8
+hdf5_type_id(::Type{UInt8})     = API.H5T_NATIVE_UINT8
+hdf5_type_id(::Type{Int16})     = API.H5T_NATIVE_INT16
+hdf5_type_id(::Type{UInt16})    = API.H5T_NATIVE_UINT16
+hdf5_type_id(::Type{Int32})     = API.H5T_NATIVE_INT32
+hdf5_type_id(::Type{UInt32})    = API.H5T_NATIVE_UINT32
+hdf5_type_id(::Type{Int64})     = API.H5T_NATIVE_INT64
+hdf5_type_id(::Type{UInt64})    = API.H5T_NATIVE_UINT64
+hdf5_type_id(::Type{Float32})   = API.H5T_NATIVE_FLOAT
+hdf5_type_id(::Type{Float64})   = API.H5T_NATIVE_DOUBLE
 hdf5_type_id(::Type{Reference}) = API.H5T_STD_REF_OBJ
 hdf5_type_id(::Type{<:AbstractString}) = API.H5T_C_S1
+#! format: on
 
 # It's not safe to use particular id codes because these can change, so we use characteristics of the type.
 function _hdf5_type_map(class_id, is_signed, native_size)

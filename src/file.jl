@@ -24,14 +24,16 @@ function h5open(
     fcpl::FileCreateProperties=FileCreateProperties();
     swmr::Bool=false
 )
+    #! format: off
     rd, wr, cr, tr, ff =
-        mode == "r"  ? (true, false, false, false, false) :
-        mode == "r+" ? (true, true, false, false, true)   :
-        mode == "cw" ? (false, true, true, false, true)   :
-        mode == "w"  ? (false, true, true, true, false)   :
+        mode == "r"  ? (true,  false, false, false, false) :
+        mode == "r+" ? (true,  true,  false, false, true ) :
+        mode == "cw" ? (false, true,  true,  false, true ) :
+        mode == "w"  ? (false, true,  true,  true,  false) :
         # mode == "w+" ? (true,  true,  true,  true,  false) :
         # mode == "a"  ? (true,  true,  true,  true,  true ) :
         error("invalid open mode: ", mode)
+    #! format: on
     if ff && !wr
         error("HDF5 does not support appending without writing")
     end
