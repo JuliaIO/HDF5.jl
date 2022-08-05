@@ -77,6 +77,8 @@ open(joinpath(@__DIR__, "..", "src", "api", "functions.jl"), "w") do fid
             print(fid, funcblock, "\n\n")
         end
     end
+    # Remove last endline
+    truncate(fid, position(fid) - 1)
 end
 
 # Also generate auto-docs that simply list all of the bound API functions
