@@ -1,3 +1,4 @@
+#! format: off
 # The `@bind` macro is used to automatically generate Julia bindings to the low-level
 # HDF5 library functions.
 #
