@@ -228,6 +228,8 @@ end
 ### Define Properties types
 ###
 
+#! format: off
+
 """
     ObjectCreateProperties(;kws...)
     ObjectCreateProperties(f::Function; kws...)
@@ -245,44 +247,24 @@ that will be closed.
 
 @bool_property(obj_track_times)
 
-class_propertynames(::Type{ObjectCreateProperties}) = (:obj_track_times, :track_times,)
+class_propertynames(::Type{ObjectCreateProperties}) = (
+    :obj_track_times,
+    :track_times,
+    )
 function class_getproperty(::Type{ObjectCreateProperties}, p::Properties, name::Symbol)
-    if name === :obj_track_times
-        get_obj_track_times(p)
-        # deprecated
-    elseif name === :track_times
-        (
-            depwarn(
-                "`track_times` property is deprecated, use `obj_track_times` instead",
-                :track_times
-            );
-            get_obj_track_times(p)
-        )
-    else
-        class_getproperty(superclass(ObjectCreateProperties), p, name)
-    end
+    name === :obj_track_times ? get_obj_track_times(p) :
+    # deprecated
+    name === :track_times ? (depwarn("`track_times` property is deprecated, use `obj_track_times` instead",:track_times); get_obj_track_times(p)) :
+    class_getproperty(superclass(ObjectCreateProperties), p, name)
 end
-function class_setproperty!(
-    ::Type{ObjectCreateProperties}, p::Properties, name::Symbol, val
-)
-    if name === :obj_track_times
-        set_obj_track_times!(p, val)
-        # deprecated
-    elseif name === :track_times
-        (
-            depwarn(
-                "`track_times=$val` keyword option is deprecated, use `obj_track_times=$val` instead",
-                :track_times
-            );
-            set_obj_track_times!(p, val)
-        )
-    else
-        class_setproperty!(superclass(ObjectCreateProperties), p, name, val)
-    end
+function class_setproperty!(::Type{ObjectCreateProperties}, p::Properties, name::Symbol, val)
+    name === :obj_track_times ? set_obj_track_times!(p, val) :
+    # deprecated
+    name === :track_times ? (depwarn("`track_times=$val` keyword option is deprecated, use `obj_track_times=$val` instead",:track_times); set_obj_track_times!(p, val)) :
+    class_setproperty!(superclass(ObjectCreateProperties), p, name, val)
 end
 
-get_track_order(p::Properties) =
-    API.h5p_get_link_creation_order(p) != 0 && API.h5p_get_attr_creation_order(p) != 0
+get_track_order(p::Properties) = API.h5p_get_link_creation_order(p) != 0 && API.h5p_get_attr_creation_order(p) != 0
 
 function set_track_order!(p::Properties, val::Bool)
     crt_order_flags = val ? (API.H5P_CRT_ORDER_TRACKED | API.H5P_CRT_ORDER_INDEXED) : 0
@@ -308,24 +290,19 @@ that will be closed.
 @propertyclass GroupCreateProperties API.H5P_GROUP_CREATE
 superclass(::Type{GroupCreateProperties}) = ObjectCreateProperties
 
-class_propertynames(::Type{GroupCreateProperties}) = (:local_heap_size_hint, :track_order,)
+class_propertynames(::Type{GroupCreateProperties}) = (
+    :local_heap_size_hint,
+    :track_order,
+    )
 function class_getproperty(::Type{GroupCreateProperties}, p::Properties, name::Symbol)
-    if name === :local_heap_size_hint
-        API.h5p_get_local_heap_size_hint(p)
-    elseif name === :track_order
-        get_track_order(p)
-    else
-        class_getproperty(superclass(GroupCreateProperties), p, name)
-    end
+    name === :local_heap_size_hint ? API.h5p_get_local_heap_size_hint(p) :
+    name === :track_order ? get_track_order(p) :
+    class_getproperty(superclass(GroupCreateProperties), p, name)
 end
 function class_setproperty!(::Type{GroupCreateProperties}, p::Properties, name::Symbol, val)
-    if name === :local_heap_size_hint
-        API.h5p_set_local_heap_size_hint(p, val)
-    elseif name === :track_order
-        set_track_order!(p, val)
-    else
-        class_setproperty!(superclass(GroupCreateProperties), p, name, val)
-    end
+    name === :local_heap_size_hint ? API.h5p_set_local_heap_size_hint(p, val) :
+    name === :track_order ? set_track_order!(p, val) :
+    class_setproperty!(superclass(GroupCreateProperties), p, name, val)
 end
 
 """
@@ -346,8 +323,15 @@ that will be closed.
 @propertyclass FileCreateProperties API.H5P_FILE_CREATE
 superclass(::Type{FileCreateProperties}) = ObjectCreateProperties
 
-class_propertynames(::Type{FileCreateProperties}) =
-    (:userblock, :track_order, :strategy, :persist, :threshold, :file_space_page_size)
+
+class_propertynames(::Type{FileCreateProperties}) = (
+    :userblock,
+    :track_order,
+    :strategy,
+    :persist,
+    :threshold,
+    :file_space_page_size
+    )
 
 const FSPACE_STRATEGY_SYMBOLS = Dict(
     :fsm_aggr => API.H5F_FSPACE_STRATEGY_FSM_AGGR,
@@ -357,10 +341,8 @@ const FSPACE_STRATEGY_SYMBOLS = Dict(
     :ntypes => API.H5F_FSPACE_STRATEGY_NTYPES
 )
 
-set_strategy!(p::FileCreateProperties, val) =
-    API.h5p_set_file_space_strategy(p; strategy=val)
-set_strategy!(p::FileCreateProperties, val::Symbol) =
-    API.h5p_set_file_space_strategy(p; strategy=FSPACE_STRATEGY_SYMBOLS[val])
+set_strategy!(p::FileCreateProperties, val) = API.h5p_set_file_space_strategy(p, strategy = val)
+set_strategy!(p::FileCreateProperties, val::Symbol) = API.h5p_set_file_space_strategy(p, strategy = FSPACE_STRATEGY_SYMBOLS[val])
 function get_strategy(p::FileCreateProperties)
     strategy = API.h5p_get_file_space_strategy(p)[:strategy]
     for (k, v) in FSPACE_STRATEGY_SYMBOLS
@@ -372,31 +354,24 @@ function get_strategy(p::FileCreateProperties)
 end
 
 function class_getproperty(::Type{FileCreateProperties}, p::Properties, name::Symbol)
-    if name === :userblock
-        API.h5p_get_userblock(p)
-    elseif name === :track_order
-        get_track_order(p)
-    elseif name === :strategy
-        get_strategy(p)
-    elseif name === :persist
-        API.h5p_get_file_space_strategy(p)[:persist]
-    elseif name === :threshold
-        API.h5p_get_file_space_strategy(p)[:threshold]
-    elseif name === :file_space_page_size
-        API.h5p_get_file_space_page_size(p)
-    else
-        class_getproperty(superclass(FileCreateProperties), p, name)
-    end
+    name === :userblock   ? API.h5p_get_userblock(p) :
+    name === :track_order ? get_track_order(p) :
+    name === :strategy    ? get_strategy(p) :
+    name === :persist     ? API.h5p_get_file_space_strategy(p)[:persist] :
+    name === :threshold   ? API.h5p_get_file_space_strategy(p)[:threshold] :
+    name === :file_space_page_size ? API.h5p_get_file_space_page_size(p) :
+    class_getproperty(superclass(FileCreateProperties), p, name)
 end
 function class_setproperty!(::Type{FileCreateProperties}, p::Properties, name::Symbol, val)
-    name === :userblock ? API.h5p_set_userblock(p, val)                     :
-    name === :track_order ? set_track_order!(p, val)                          :
-    name === :strategy ? set_strategy!(p, val)                             :
-    name === :persist ? API.h5p_set_file_space_strategy(p; persist=val)   :
-    name === :threshold ? API.h5p_set_file_space_strategy(p; threshold=val) :
-    name === :file_space_page_size ? API.h5p_set_file_space_page_size(p, val)          :
+    name === :userblock   ? API.h5p_set_userblock(p, val) :
+    name === :track_order ? set_track_order!(p, val) :
+    name === :strategy ? set_strategy!(p, val) :
+    name === :persist ? API.h5p_set_file_space_strategy(p, persist = val) :
+    name === :threshold ? API.h5p_set_file_space_strategy(p, threshold = val) :
+    name === :file_space_page_size ? API.h5p_set_file_space_page_size(p, val) :
     class_setproperty!(superclass(FileCreateProperties), p, name, val)
 end
+
 
 """
     DatatypeCreateProperties(;kws...)
@@ -485,33 +460,27 @@ that will be closed.
 @propertyclass DatasetCreateProperties API.H5P_DATASET_CREATE
 superclass(::Type{DatasetCreateProperties}) = ObjectCreateProperties
 
-@enum_property(
-    alloc_time,
+@enum_property(alloc_time,
     :default     => API.H5D_ALLOC_TIME_DEFAULT,
     :early       => API.H5D_ALLOC_TIME_EARLY,
     :incremental => API.H5D_ALLOC_TIME_INCR,
-    :late        => API.H5D_ALLOC_TIME_LATE
-)
+    :late        => API.H5D_ALLOC_TIME_LATE)
 
 # reverse indices
 function get_chunk(p::Properties)
     dims, N = API.h5p_get_chunk(p)
-    ntuple(i -> Int(dims[N - i + 1]), N)
+    ntuple(i -> Int(dims[N-i+1]), N)
 end
-set_chunk!(p::Properties, dims) =
-    API.h5p_set_chunk(p, length(dims), API.hsize_t[reverse(dims)...])
+set_chunk!(p::Properties, dims) = API.h5p_set_chunk(p, length(dims), API.hsize_t[reverse(dims)...])
 
-@enum_property(
-    layout,
+@enum_property(layout,
     :compact    => API.H5D_COMPACT,
     :contiguous => API.H5D_CONTIGUOUS,
     :chunked    => API.H5D_CHUNKED,
-    :virtual    => API.H5D_VIRTUAL
-)
+    :virtual    => API.H5D_VIRTUAL)
 
 # See https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILL_TIME
-@enum_property(
-    fill_time,
+@enum_property(fill_time,
     :alloc => API.H5D_FILL_TIME_ALLOC,
     :never => API.H5D_FILL_TIME_NEVER,
     :ifset => API.H5D_FILL_TIME_IFSET
@@ -519,22 +488,16 @@ set_chunk!(p::Properties, dims) =
 
 # filters getters/setters
 get_filters(p::Properties) = Filters.FilterPipeline(p)
-set_filters!(p::Properties, val::Filters.Filter) =
-    push!(empty!(Filters.FilterPipeline(p)), val)
-set_filters!(p::Properties, vals::Union{Tuple,AbstractVector}) =
-    append!(empty!(Filters.FilterPipeline(p)), vals)
+set_filters!(p::Properties, val::Filters.Filter) = push!(empty!(Filters.FilterPipeline(p)), val)
+set_filters!(p::Properties, vals::Union{Tuple, AbstractVector}) = append!(empty!(Filters.FilterPipeline(p)), vals)
 
 # convenience
-set_deflate!(p::Properties, val::Bool) =
-    val && push!(Filters.FilterPipeline(p), Filters.Deflate())
-set_deflate!(p::Properties, level::Integer) =
-    push!(Filters.FilterPipeline(p), Filters.Deflate(; level=level))
-set_shuffle!(p::Properties, val::Bool) =
-    val && push!(Filters.FilterPipeline(p), Filters.Shuffle())
-set_fletcher32!(p::Properties, val::Bool) =
-    val && push!(Filters.FilterPipeline(p), Filters.Fletcher32())
-set_blosc!(p::Properties, val) =
-    error("The Blosc filter now requires the H5Zblosc package be loaded")
+set_deflate!(p::Properties, val::Bool) = val && push!(Filters.FilterPipeline(p), Filters.Deflate())
+set_deflate!(p::Properties, level::Integer) = push!(Filters.FilterPipeline(p), Filters.Deflate(level=level))
+set_shuffle!(p::Properties, val::Bool) = val && push!(Filters.FilterPipeline(p), Filters.Shuffle())
+set_fletcher32!(p::Properties, val::Bool) = val && push!(Filters.FilterPipeline(p), Filters.Fletcher32())
+set_blosc!(p::Properties, val) = error("The Blosc filter now requires the H5Zblosc package be loaded")
+
 
 class_propertynames(::Type{DatasetCreateProperties}) = (
     :alloc_time,
@@ -553,96 +516,48 @@ class_propertynames(::Type{DatasetCreateProperties}) = (
     # deprecated
     :compress,
     :filter
-)
+    )
+
 
 function class_getproperty(::Type{DatasetCreateProperties}, p::Properties, name::Symbol)
-    if name === :alloc_time
-        get_alloc_time(p)
-    elseif name === :fill_time
-        get_fill_time(p)
-    elseif name === :fill_value
-        get_fill_value(p)
-    elseif name === :chunk
-        get_chunk(p)
-    elseif name === :external
-        API.h5p_get_external(p)
-    elseif name === :filters
-        get_filters(p)
-    elseif name === :layout
-        get_layout(p)
-    elseif name === :no_attrs_hint
-        @static(
-            API.h5_get_libversion() < v"1.10.5" ? false : API.h5p_get_dset_no_attrs_hint(p)
-        )
-        # deprecated
-    elseif name === :filter
-        (
-            depwarn(
-                "`filter` property name is deprecated, use `filters` instead",
-                :class_getproperty
-            );
-            get_filters(p)
-        )
-    else
-        class_getproperty(superclass(DatasetCreateProperties), p, name)
-    end
+    name === :alloc_time  ? get_alloc_time(p) :
+    name === :fill_time   ? get_fill_time(p) :
+    name === :fill_value  ? get_fill_value(p) :
+    name === :chunk       ? get_chunk(p) :
+    name === :external    ? API.h5p_get_external(p) :
+    name === :filters     ? get_filters(p) :
+    name === :layout      ? get_layout(p) :
+    name === :no_attrs_hint ?
+        @static(API.h5_get_libversion() < v"1.10.5" ?
+            false :
+            API.h5p_get_dset_no_attrs_hint(p)
+        ) :
+    # deprecated
+    name === :filter      ? (depwarn("`filter` property name is deprecated, use `filters` instead",:class_getproperty); get_filters(p)) :
+    class_getproperty(superclass(DatasetCreateProperties), p, name)
 end
-function class_setproperty!(
-    ::Type{DatasetCreateProperties}, p::Properties, name::Symbol, val
-)
-    if name === :alloc_time
-        set_alloc_time!(p, val)
-    elseif name === :fill_time
-        set_fill_time!(p, val)
-    elseif name === :fill_value
-        set_fill_value!(p, val)
-    elseif name === :chunk
-        set_chunk!(p, val)
-    elseif name === :external
-        API.h5p_set_external(p, val...)
-    elseif name === :filters
-        set_filters!(p, val)
-    elseif name === :layout
-        set_layout!(p, val)
-    elseif name === :no_attrs_hint
-        @static(
-            if API.h5_get_libversion() < v"1.10.5"
-                error(
-                    "no_attrs_hint is only valid for HDF5 library versions 1.10.5 or greater"
-                )
-            else
-                API.h5p_set_dset_no_attrs_hint(p, val)
-            end
-        )
-        # set-only for convenience
-    elseif name === :blosc
-        set_blosc!(p, val)
-    elseif name === :deflate
-        set_deflate!(p, val)
-    elseif name === :fletcher32
-        set_fletcher32!(p, val)
-    elseif name === :shuffle
-        set_shuffle!(p, val)
-        # deprecated
-    elseif name === :filter
-        (
-            depwarn(
-                "`filter=$val` keyword option is deprecated, use `filters=$val` instead",
-                :class_setproperty!
-            );
-            set_filters!(p, val)
-        )
-    elseif name === :compress
-        (
-            depwarn(
-                "`compress=$val` keyword option is deprecated, use `deflate=$val` instead",
-                :class_setproperty!
-            );
-            set_deflate!(p, val)
-        )
-    else
-        class_setproperty!(superclass(DatasetCreateProperties), p, name, val)
-    end
+function class_setproperty!(::Type{DatasetCreateProperties}, p::Properties, name::Symbol, val)
+    name === :alloc_time  ? set_alloc_time!(p, val) :
+    name === :fill_time   ? set_fill_time!(p, val) :
+    name === :fill_value  ? set_fill_value!(p, val) :
+    name === :chunk       ? set_chunk!(p, val) :
+    name === :external    ? API.h5p_set_external(p, val...) :
+    name === :filters     ? set_filters!(p, val) :
+    name === :layout      ? set_layout!(p, val) :
+    name === :no_attrs_hint ?
+        @static(API.h5_get_libversion() < v"1.10.5" ?
+            error("no_attrs_hint is only valid for HDF5 library versions 1.10.5 or greater") :
+            API.h5p_set_dset_no_attrs_hint(p, val)
+        ) :
+    # set-only for convenience
+    name === :blosc       ? set_blosc!(p, val) :
+    name === :deflate     ? set_deflate!(p, val) :
+    name === :fletcher32  ? set_fletcher32!(p, val) :
+    name === :shuffle     ? set_shuffle!(p, val) :
+    # deprecated
+    name === :filter      ? (depwarn("`filter=$val` keyword option is deprecated, use `filters=$val` instead",:class_setproperty!); set_filters!(p, val)) :
+    name === :compress    ? (depwarn("`compress=$val` keyword option is deprecated, use `deflate=$val` instead",:class_setproperty!); set_deflate!(p, val)) :
+    class_setproperty!(superclass(DatasetCreateProperties), p, name, val)
 end
 
 """
@@ -654,24 +569,21 @@ that will be closed.
 """
 @propertyclass StringCreateProperties API.H5P_STRING_CREATE
 
-@enum_property(char_encoding, :ascii => API.H5T_CSET_ASCII, :utf8 => API.H5T_CSET_UTF8)
+@enum_property(char_encoding,
+    :ascii => API.H5T_CSET_ASCII,
+    :utf8  => API.H5T_CSET_UTF8)
 
-class_propertynames(::Type{StringCreateProperties}) = (:char_encoding,)
+
+class_propertynames(::Type{StringCreateProperties}) = (
+    :char_encoding,
+    )
 function class_getproperty(::Type{StringCreateProperties}, p::Properties, name::Symbol)
-    if name === :char_encoding
-        get_char_encoding(p)
-    else
-        class_getproperty(superclass(StringCreateProperties), p, name)
-    end
+    name === :char_encoding ? get_char_encoding(p) :
+    class_getproperty(superclass(StringCreateProperties), p, name)
 end
-function class_setproperty!(
-    ::Type{StringCreateProperties}, p::Properties, name::Symbol, val
-)
-    if name === :char_encoding
-        set_char_encoding!(p, val)
-    else
-        class_setproperty!(superclass(StringCreateProperties), p, name, val)
-    end
+function class_setproperty!(::Type{StringCreateProperties}, p::Properties, name::Symbol, val)
+    name === :char_encoding ? set_char_encoding!(p, val) :
+    class_setproperty!(superclass(StringCreateProperties), p, name, val)
 end
 
 """
@@ -693,20 +605,16 @@ superclass(::Type{LinkCreateProperties}) = StringCreateProperties
 
 @bool_property(create_intermediate_group)
 
-class_propertynames(::Type{LinkCreateProperties}) = (:create_intermediate_group,)
+class_propertynames(::Type{LinkCreateProperties}) = (
+    :create_intermediate_group,
+    )
 function class_getproperty(::Type{LinkCreateProperties}, p::Properties, name::Symbol)
-    if name === :create_intermediate_group
-        get_create_intermediate_group(p)
-    else
-        class_getproperty(superclass(LinkCreateProperties), p, name)
-    end
+    name === :create_intermediate_group ? get_create_intermediate_group(p) :
+    class_getproperty(superclass(LinkCreateProperties), p, name)
 end
 function class_setproperty!(::Type{LinkCreateProperties}, p::Properties, name::Symbol, val)
-    if name === :create_intermediate_group
-        set_create_intermediate_group!(p, val)
-    else
-        class_setproperty!(superclass(LinkCreateProperties), p, name, val)
-    end
+    name === :create_intermediate_group ? set_create_intermediate_group!(p, val) :
+    class_setproperty!(superclass(LinkCreateProperties), p, name, val)
 end
 
 """
@@ -722,6 +630,7 @@ that will be closed.
 """
 @propertyclass AttributeCreateProperties API.H5P_ATTRIBUTE_CREATE
 superclass(::Type{AttributeCreateProperties}) = StringCreateProperties
+
 
 """
     FileAccessProperties(;kws...)
@@ -770,21 +679,19 @@ end
 
 @tuple_property(alignment)
 
-@enum_property(
-    fclose_degree,
-    :weak    => API.H5F_CLOSE_WEAK,
-    :semi    => API.H5F_CLOSE_SEMI,
-    :strong  => API.H5F_CLOSE_STRONG,
-    :default => API.H5F_CLOSE_DEFAULT
-)
+@enum_property(fclose_degree,
+               :weak    => API.H5F_CLOSE_WEAK,
+               :semi    => API.H5F_CLOSE_SEMI,
+               :strong  => API.H5F_CLOSE_STRONG,
+               :default => API.H5F_CLOSE_DEFAULT)
 
 # getter/setter for libver_bounds
 libver_bound_to_enum(val::Integer) = val
 libver_bound_to_enum(val::API.H5F_libver_t) = val
 function libver_bound_to_enum(val::VersionNumber)
-    val >= v"1.12" ? API.H5F_LIBVER_V112 :
-    val >= v"1.10" ? API.H5F_LIBVER_V110 :
-    val >= v"1.8"  ? API.H5F_LIBVER_V18 :
+    val >= v"1.12"   ? API.H5F_LIBVER_V112 :
+    val >= v"1.10"   ? API.H5F_LIBVER_V110 :
+    val >= v"1.8"    ? API.H5F_LIBVER_V18 :
     throw(ArgumentError("libver_bound must be >= v\"1.8\"."))
 end
 function libver_bound_to_enum(val::Symbol)
@@ -811,6 +718,7 @@ function set_libver_bounds!(p::Properties, val)
     API.h5p_set_libver_bounds(p, libver_bound_to_enum(val), libver_bound_to_enum(val))
 end
 
+
 class_propertynames(::Type{FileAccessProperties}) = (
     :alignment,
     :driver,
@@ -820,63 +728,32 @@ class_propertynames(::Type{FileAccessProperties}) = (
     :file_locking,
     :libver_bounds,
     :meta_block_size,
-)
+    )
 
 function class_getproperty(::Type{FileAccessProperties}, p::Properties, name::Symbol)
-    if name === :alignment
-        get_alignment(p)
-    elseif name === :driver
-        Drivers.get_driver(p)
-    elseif name === :driver_info
-        API.h5p_get_driver_info(p) # get only
-    elseif name === :fclose_degree
-        get_fclose_degree(p)
-    elseif name === :file_locking
-        API.h5p_get_file_locking(p)
-    elseif name === :libver_bounds
-        get_libver_bounds(p)
-    elseif name === :meta_block_size
-        API.h5p_get_meta_block_size(p)
-        # deprecated
-    elseif name === :fapl_mpio
-        (
-            depwarn(
-                "The `fapl_mpio` property is deprecated, use `driver=HDF5.Drivers.MPIO(...)` instead.",
-                :fapl_mpio
-            );
-            drv = get_driver(p, MPIO);
-            (drv.comm, drv.info)
-        )
-    else
-        class_getproperty(superclass(FileAccessProperties), p, name)
-    end
+    name === :alignment     ? get_alignment(p) :
+    name === :driver        ? Drivers.get_driver(p) :
+    name === :driver_info   ? API.h5p_get_driver_info(p) : # get only
+    name === :fclose_degree ? get_fclose_degree(p) :
+    name === :file_locking  ? API.h5p_get_file_locking(p) :
+    name === :libver_bounds ? get_libver_bounds(p) :
+    name === :meta_block_size ? API.h5p_get_meta_block_size(p) :
+    # deprecated
+    name === :fapl_mpio     ? (depwarn("The `fapl_mpio` property is deprecated, use `driver=HDF5.Drivers.MPIO(...)` instead.", :fapl_mpio); drv = get_driver(p, MPIO); (drv.comm, drv.info)) :
+    class_getproperty(superclass(FileAccessProperties), p, name)
 end
 function class_setproperty!(::Type{FileAccessProperties}, p::Properties, name::Symbol, val)
-    if name === :alignment
-        set_alignment!(p, val)
-    elseif name === :driver
-        Drivers.set_driver!(p, val)
-    elseif name === :fclose_degree
-        set_fclose_degree!(p, val)
-    elseif name === :file_locking
-        API.h5p_set_file_locking(p, val...)
-    elseif name === :libver_bounds
-        set_libver_bounds!(p, val)
-    elseif name === :meta_block_size
-        API.h5p_set_meta_block_size(p, val)
-        # deprecated
-    elseif name === :fapl_mpio
-        (
-            depwarn(
-                "The `fapl_mpio` property is deprecated, use `driver=HDF5.Drivers.MPIO(...)` instead.",
-                :fapl_mpio
-            );
-            p.driver = Drivers.MPIO(val...)
-        )
-    else
-        class_setproperty!(superclass(FileAccessProperties), p, name, val)
-    end
+    name === :alignment     ? set_alignment!(p, val) :
+    name === :driver        ? Drivers.set_driver!(p, val) :
+    name === :fclose_degree ? set_fclose_degree!(p, val) :
+    name === :file_locking  ? API.h5p_set_file_locking(p, val...) :
+    name === :libver_bounds ? set_libver_bounds!(p, val) :
+    name === :meta_block_size ? API.h5p_set_meta_block_size(p, val) :
+    # deprecated
+    name === :fapl_mpio     ? (depwarn("The `fapl_mpio` property is deprecated, use `driver=HDF5.Drivers.MPIO(...)` instead.", :fapl_mpio); p.driver = Drivers.MPIO(val...)) :
+    class_setproperty!(superclass(FileAccessProperties), p, name, val)
 end
+
 
 @propertyclass LinkAccessProperties API.H5P_LINK_ACCESS
 
@@ -916,46 +793,34 @@ See [Dataset Access Properties](https://portal.hdfgroup.org/display/HDF5/Dataset
 @propertyclass DatasetAccessProperties API.H5P_DATASET_ACCESS
 superclass(::Type{DatasetAccessProperties}) = LinkAccessProperties
 
-class_propertynames(::Type{DatasetAccessProperties}) =
-    (:chunk_cache, :efile_prefix, :virtual_prefix, :virtual_printf_gap, :virtual_view)
+class_propertynames(::Type{DatasetAccessProperties}) = (
+    :chunk_cache,
+    :efile_prefix,
+    :virtual_prefix,
+    :virtual_printf_gap,
+    :virtual_view
+)
 
-@enum_property(
-    virtual_view,
+@enum_property(virtual_view,
     :first_missing  => API.H5D_VDS_FIRST_MISSING,
     :last_available => API.H5D_VDS_LAST_AVAILABLE
 )
 
 function class_getproperty(::Type{DatasetAccessProperties}, p::Properties, name::Symbol)
-    if name === :chunk_cache
-        API.h5p_get_chunk_cache(p)
-    elseif name === :efile_prefix
-        API.h5p_get_efile_prefix(p)
-    elseif name === :virtual_prefix
-        API.h5p_get_virtual_prefix(p)
-    elseif name === :virtual_printf_gap
-        API.h5p_get_virtual_printf_gap(p)
-    elseif name === :virtual_view
-        get_virtual_view(p)
-    else
-        class_getproperty(superclass(DatasetAccessProperties), p, name)
-    end
+    name === :chunk_cache ? API.h5p_get_chunk_cache(p) :
+    name === :efile_prefix ? API.h5p_get_efile_prefix(p) :
+    name === :virtual_prefix ? API.h5p_get_virtual_prefix(p) :
+    name === :virtual_printf_gap ? API.h5p_get_virtual_printf_gap(p) :
+    name === :virtual_view ? get_virtual_view(p) :
+    class_getproperty(superclass(DatasetAccessProperties), p, name)
 end
-function class_setproperty!(
-    ::Type{DatasetAccessProperties}, p::Properties, name::Symbol, val
-)
-    if name === :chunk_cache
-        API.h5p_set_chunk_cache(p, val...)
-    elseif name === :efile_prefix
-        API.h5p_set_efile_prefix(p, val)
-    elseif name === :virtual_prefix
-        API.h5p_set_virtual_prefix(p, val)
-    elseif name === :virtual_printf_gap
-        API.h5p_set_virtual_printf_gap(p, val)
-    elseif name === :virtual_view
-        set_virtual_view!(p, val)
-    else
-        class_setproperty!(superclass(DatasetAccessProperties), p, name, val)
-    end
+function class_setproperty!(::Type{DatasetAccessProperties}, p::Properties, name::Symbol, val)
+    name === :chunk_cache ? API.h5p_set_chunk_cache(p, val...) :
+    name === :efile_prefix ? API.h5p_set_efile_prefix(p, val) :
+    name === :virtual_prefix ? API.h5p_set_virtual_prefix(p, val) :
+    name === :virtual_printf_gap ? API.h5p_set_virtual_printf_gap(p, val) :
+    name === :virtual_view ? set_virtual_view!(p, val) :
+    class_setproperty!(superclass(DatasetAccessProperties), p, name, val)
 end
 
 @propertyclass AttributeAccessProperties API.H5P_ATTRIBUTE_ACCESS
@@ -976,32 +841,25 @@ that will be closed.
 """
 @propertyclass DatasetTransferProperties API.H5P_DATASET_XFER
 
-@enum_property(
-    dxpl_mpio,
-    :independent => API.H5FD_MPIO_INDEPENDENT,
-    :collective  => API.H5FD_MPIO_COLLECTIVE
-)
+@enum_property(dxpl_mpio,
+               :independent => API.H5FD_MPIO_INDEPENDENT,
+               :collective  => API.H5FD_MPIO_COLLECTIVE)
 
-class_propertynames(::Type{DatasetTransferProperties}) = (:dxpl_mpio,)
+class_propertynames(::Type{DatasetTransferProperties}) = (
+    :dxpl_mpio,
+    )
 function class_getproperty(::Type{DatasetTransferProperties}, p::Properties, name::Symbol)
-    if name === :dxpl_mpio
-        get_dxpl_mpio(p)
-    else
-        class_getproperty(superclass(DatasetTransferProperties), p, name)
-    end
+    name === :dxpl_mpio  ? get_dxpl_mpio(p) :
+    class_getproperty(superclass(DatasetTransferProperties), p, name)
 end
-function class_setproperty!(
-    ::Type{DatasetTransferProperties}, p::Properties, name::Symbol, val
-)
-    if name === :dxpl_mpio
-        set_dxpl_mpio!(p, val)
-    else
-        class_setproperty!(superclass(DatasetTransferProperties), p, name, val)
-    end
+function class_setproperty!(::Type{DatasetTransferProperties}, p::Properties, name::Symbol, val)
+    name === :dxpl_mpio  ? set_dxpl_mpio!(p, val) :
+    class_setproperty!(superclass(DatasetTransferProperties), p, name, val)
 end
 
 @propertyclass FileMountProperties API.H5P_FILE_MOUNT
 @propertyclass ObjectCopyProperties API.H5P_OBJECT_COPY
+
 
 const DEFAULT_PROPERTIES = GenericProperties()
 # These properties are initialized in __init__()
@@ -1012,3 +870,5 @@ const UTF8_ATTRIBUTE_PROPERTIES = AttributeCreateProperties()
 
 _link_properties(::AbstractString) = UTF8_LINK_PROPERTIES
 _attr_properties(::AbstractString) = UTF8_ATTRIBUTE_PROPERTIES
+
+#! format: on
