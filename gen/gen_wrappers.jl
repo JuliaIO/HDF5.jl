@@ -129,9 +129,9 @@ open(joinpath(@__DIR__, "..", "docs", "src", "api_bindings.md"), "w") do fid
         ```@meta
         CurrentModule = HDF5.API
         ```
-        
+
         # Low-level library bindings
-        
+
         At the lowest level, `HDF5.jl` operates by calling the public API of the HDF5 shared
         library through a set of `ccall` wrapper functions.
         This page documents the function names and nominal C argument types of the API which
@@ -140,10 +140,10 @@ open(joinpath(@__DIR__, "..", "docs", "src", "api_bindings.md"), "w") do fid
         `ccall` conversions.
         For instance, `HDF5.Datatype` objects will be automatically converted to their `hid_t` ID
         by Julia's `cconvert`+`unsafe_convert` `ccall` rules.
-        
+
         There are additional helper wrappers (often for out-argument functions) which are not
         documented here.
-        
+
         $apidocs
         """
     )
