@@ -2,6 +2,9 @@
 #
 # To add new bindings, define the binding in `gen/api_defs.jl`, re-run
 # `gen/gen_wrappers.jl`, and commit the updated `src/api/functions.jl`.
+#
+#! format: off
+# Turns off formatting from this point onwards
 
 _libhdf5_build_ver = let
         (majnum, minnum, relnum) = (Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}())

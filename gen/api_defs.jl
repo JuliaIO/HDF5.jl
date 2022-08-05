@@ -16,6 +16,10 @@
 # `bind_exceptions` Dict in `bind_generator.jl`.
 #
 # Execute gen_wrappers.jl to generate ../src/api/functions.jl from this file.
+#
+#! format: off
+# Turns off formatting from this point onwards
+
 
 ###
 ### HDF5 General library functions

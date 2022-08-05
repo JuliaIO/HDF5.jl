@@ -1,0 +1,12 @@
+style = "blue"
+annotate_untyped_fields_with_any = false
+separate_kwargs_with_semicolon = true
+short_to_long_function_def = false
+trailing_comma = "nothing"
+always_use_return = false
+conditional_to_if = false
+import_to_using = false
+align_struct_field = true
+align_conditional = true
+align_assignment = true
+align_pair_arrow = true
