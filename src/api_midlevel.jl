@@ -20,7 +20,9 @@ Change the dimensions of a dataspace `dspace` to `new_dims`, optionally with the
 dimensions `max_dims` different from the active size `new_dims`. If not given, `max_dims` is set equal
 to `new_dims`.
 """
-function set_extent_dims(dspace::Dataspace, size::Dims, max_dims::Union{Dims,Nothing} = nothing)
+function set_extent_dims(
+    dspace::Dataspace, size::Dims, max_dims::Union{Dims,Nothing}=nothing
+)
     checkvalid(dspace)
     rank = length(size)
     current_size = API.hsize_t[reverse(size)...]
@@ -39,8 +41,8 @@ function get_extent_dims(obj::Union{Dataspace,Dataset,Attribute})
     h5_dims, h5_maxdims = API.h5s_get_simple_extent_dims(dspace)
     # reverse dimensions since hdf5 uses C-style order
     N = length(h5_dims)
-    dims = ntuple(i -> @inbounds(Int(h5_dims[N-i+1])), N)
-    maxdims = ntuple(i -> @inbounds(h5_maxdims[N-i+1]) % Int, N) # allows max_dims to be specified as -1 without triggering an overflow
+    dims = ntuple(i -> @inbounds(Int(h5_dims[N - i + 1])), N)
+    maxdims = ntuple(i -> @inbounds(h5_maxdims[N - i + 1]) % Int, N) # allows max_dims to be specified as -1 without triggering an overflow
     obj isa Dataspace || close(dspace)
     return dims, maxdims
 end
@@ -54,7 +56,9 @@ For a 1-based API, see `HDF5.ChunkStorage`.
 function get_chunk_offset(dataset_id, index)
     extent = size(dataset_id)
     chunk = get_chunk(dataset_id)
-    chunk_indices = CartesianIndices(ntuple(i -> 0:extent[i]÷chunk[i]-1, length(extent)))
+    chunk_indices = CartesianIndices(
+        ntuple(i -> 0:(extent[i] ÷ chunk[i] - 1), length(extent))
+    )
     offset = API.hsize_t.(chunk_indices[index + 1].I .* chunk)
     return offset
 end
@@ -68,7 +72,7 @@ For a 1-based API, see `HDF5.ChunkStorage`.
 function get_chunk_index(dataset_id, offset)
     extent = size(dataset_id)
     chunk = get_chunk(dataset_id)
-    chunk_indices = LinearIndices(ntuple(i->0:extent[i]÷chunk[i]-1, length(extent)))
+    chunk_indices = LinearIndices(ntuple(i -> 0:(extent[i] ÷ chunk[i] - 1), length(extent)))
     chunk_indices[(offset .÷ chunk .+ 1)...] - 1
 end
 
@@ -126,11 +130,13 @@ Argument `filters` can be retrieved by supplying a `Ref{UInt32}` value via a key
 
 This method returns `Vector{UInt8}`.
 """
-function read_chunk(dataset_id, offset,
-        buf::Vector{UInt8} = Vector{UInt8}(undef, get_chunk_length(dataset_id));
-        dxpl_id = API.H5P_DEFAULT,
-        filters = Ref{UInt32}()
-    )
+function read_chunk(
+    dataset_id,
+    offset,
+    buf::Vector{UInt8}=Vector{UInt8}(undef, get_chunk_length(dataset_id));
+    dxpl_id=API.H5P_DEFAULT,
+    filters=Ref{UInt32}()
+)
     API.h5d_read_chunk(dataset_id, dxpl_id, offset, filters, buf)
     return buf
 end
@@ -146,13 +152,15 @@ Argument `filters` can be retrieved by supplying a `Ref{UInt32}` value via a key
 
 This method returns `Vector{UInt8}`.
 """
-function read_chunk(dataset_id, index::Integer,
-        buf::Vector{UInt8} = Vector{UInt8}(undef, get_chunk_length(dataset_id));
-        dxpl_id = API.H5P_DEFAULT,
-        filters = Ref{UInt32}()
-    )
+function read_chunk(
+    dataset_id,
+    index::Integer,
+    buf::Vector{UInt8}=Vector{UInt8}(undef, get_chunk_length(dataset_id));
+    dxpl_id=API.H5P_DEFAULT,
+    filters=Ref{UInt32}()
+)
     offset = [reverse(get_chunk_offset(dataset_id, index))...]
-    read_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filters = filters)
+    read_chunk(dataset_id, offset, buf; dxpl_id=dxpl_id, filters=filters)
 end
 
 """
@@ -160,13 +168,22 @@ end
 
 Helper method to write chunks via 0-based offsets `offset` as a `Tuple`.
 """
-function write_chunk(dataset_id, offset, buf::AbstractArray; dxpl_id = API.H5P_DEFAULT, filter_mask = 0)
+function write_chunk(
+    dataset_id, offset, buf::AbstractArray; dxpl_id=API.H5P_DEFAULT, filter_mask=0
+)
     # Borrowed from write_dataset stride detection
-    stride(buf, 1) == 1 || throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
+    stride(buf, 1) == 1 ||
+        throw(ArgumentError("Cannot write arrays with a different stride than `Array`"))
     API.h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, sizeof(buf), buf)
 end
 
-function write_chunk(dataset_id, offset, buf::Union{DenseArray,Base.FastContiguousSubArray}; dxpl_id = API.H5P_DEFAULT, filter_mask = 0)
+function write_chunk(
+    dataset_id,
+    offset,
+    buf::Union{DenseArray,Base.FastContiguousSubArray};
+    dxpl_id=API.H5P_DEFAULT,
+    filter_mask=0
+)
     # We can bypass the need to check stride with Array and FastContiguousSubArray
     API.h5d_write_chunk(dataset_id, dxpl_id, filter_mask, offset, sizeof(buf), buf)
 end
@@ -176,19 +193,27 @@ end
 
 Helper method to write chunks via 0-based integer `index`.
 """
-function write_chunk(dataset_id, index::Integer, buf::AbstractArray; dxpl_id = API.H5P_DEFAULT, filter_mask = 0)
+function write_chunk(
+    dataset_id, index::Integer, buf::AbstractArray; dxpl_id=API.H5P_DEFAULT, filter_mask=0
+)
     offset = [reverse(get_chunk_offset(dataset_id, index))...]
-    write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
+    write_chunk(dataset_id, offset, buf; dxpl_id=dxpl_id, filter_mask=filter_mask)
 end
 
 # Avoid ambiguous method with offset based versions
-function write_chunk(dataset_id, index::Integer, buf::Union{DenseArray,Base.FastContiguousSubArray}; dxpl_id = API.H5P_DEFAULT, filter_mask = 0)
+function write_chunk(
+    dataset_id,
+    index::Integer,
+    buf::Union{DenseArray,Base.FastContiguousSubArray};
+    dxpl_id=API.H5P_DEFAULT,
+    filter_mask=0
+)
     # We can bypass the need to check stride with Array and FastContiguousSubArray
     offset = [reverse(get_chunk_offset(dataset_id, index))...]
-    write_chunk(dataset_id, offset, buf; dxpl_id = dxpl_id, filter_mask = filter_mask)
+    write_chunk(dataset_id, offset, buf; dxpl_id=dxpl_id, filter_mask=filter_mask)
 end
 
-function get_fill_value(plist_id, ::Type{T}) where T
+function get_fill_value(plist_id, ::Type{T}) where {T}
     value = Ref{T}()
     API.h5p_get_fill_value(plist_id, datatype(T), value)
     return value[]

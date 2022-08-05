@@ -12,7 +12,7 @@ highest compression (but slowest speed).
 struct Deflate <: Filter
     level::Cuint
 end
-Deflate(;level=5) = Deflate(level)
+Deflate(; level=5) = Deflate(level)
 Base.show(io::IO, deflate::Deflate) = print(io, Deflate, "(level=", Int(deflate.level), ")")
 
 filterid(::Type{Deflate}) = API.H5Z_FILTER_DEFLATE
@@ -44,8 +44,7 @@ compression filter without the shuffle filter.
 # External links
 - $(h5doc("H5P_SET_SHUFFLE"))
 """
-struct Shuffle <: Filter
-end
+struct Shuffle <: Filter end
 filterid(::Type{Shuffle}) = API.H5Z_FILTER_SHUFFLE
 FILTERS[API.H5Z_FILTER_SHUFFLE] = Shuffle
 
@@ -65,8 +64,7 @@ This should be applied _after_ any lossy filters have been applied.
 - $(h5doc("H5P_SET_FLETCHER32"))
 - [_Fletcher's checksum_ on Wikipedia](https://en.wikipedia.org/wiki/Fletcher's_checksum)
 """
-struct Fletcher32 <: Filter
-end
+struct Fletcher32 <: Filter end
 filterid(::Type{Fletcher32}) = API.H5Z_FILTER_FLETCHER32
 FILTERS[API.H5Z_FILTER_FLETCHER32] = Fletcher32
 function Base.push!(f::FilterPipeline, ::Fletcher32)
@@ -92,7 +90,7 @@ struct Szip <: Filter
     options_mask::Cuint
     pixels_per_block::Cuint
 end
-function Szip(;coding=:nn, pixels_per_block=8)
+function Szip(; coding=:nn, pixels_per_block=8)
     options_mask = Cuint(0)
     if coding == :ec
         options_mask |= API.H5_SZIP_EC_OPTION_MASK
@@ -128,8 +126,7 @@ The N-Bit filter.
 # External links
 - $(h5doc("H5P_SET_NBIT"))
 """
-struct NBit <: Filter
-end
+struct NBit <: Filter end
 filterid(::Type{NBit}) = API.H5Z_FILTER_NBIT
 FILTERS[API.H5Z_FILTER_NBIT] = NBit
 function Base.push!(f::FilterPipeline, ::NBit)
@@ -156,4 +153,3 @@ function Base.push!(f::FilterPipeline, scaleoffset::ScaleOffset)
     API.h5p_set_scaleoffset(f.plist, scaleoffset.scale_type, scaleoffset.scale_factor)
     return f
 end
-

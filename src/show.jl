@@ -1,10 +1,10 @@
 function Base.show(io::IO, fid::File)
     if isvalid(fid)
-        intent = API.h5f_get_intent(fid)
+        intent    = API.h5f_get_intent(fid)
         RW_MASK   = API.H5F_ACC_RDONLY | API.H5F_ACC_RDWR
         SWMR_MASK = API.H5F_ACC_SWMR_READ | API.H5F_ACC_SWMR_WRITE
-        rw = (intent & RW_MASK) == API.H5F_ACC_RDONLY ? "(read-only" : "(read-write"
-        swmr = (intent & SWMR_MASK) != 0 ? ", swmr) " : ") "
+        rw        = (intent & RW_MASK) == API.H5F_ACC_RDONLY ? "(read-only" : "(read-write"
+        swmr      = (intent & SWMR_MASK) != 0 ? ", swmr) " : ") "
         print(io, "HDF5.File: ", rw, swmr, fid.filename)
     else
         print(io, "HDF5.File: (closed) ", fid.filename)
@@ -36,7 +36,7 @@ function Base.show(io::IO, prop::Properties)
             # or always well-defined (e.g. chunk if layout != :chunked, dxpl_mpio if no MPI)
             try
                 val = getproperty(prop, name)
-                print(io, "\n  ", rpad(name, 15), " = ", repr(val),",")
+                print(io, "\n  ", rpad(name, 15), " = ", repr(val), ",")
             catch e
             end
         end
@@ -46,7 +46,16 @@ end
 
 function Base.show(io::IO, dset::Dataset)
     if isvalid(dset)
-        print(io, "HDF5.Dataset: ", name(dset), " (file: ", dset.file.filename, " xfer_mode: ", dset.xfer.id, ")")
+        print(
+            io,
+            "HDF5.Dataset: ",
+            name(dset),
+            " (file: ",
+            dset.file.filename,
+            " xfer_mode: ",
+            dset.xfer.id,
+            ")"
+        )
     else
         print(io, "HDF5.Dataset: (invalid)")
     end
@@ -72,8 +81,7 @@ function Base.summary(io::IO, attrdict::AttributeDict)
     end
 end
 
-
-const ENDIAN_DICT  = Dict(
+const ENDIAN_DICT = Dict(
     API.H5T_ORDER_LE    => "little endian byte order",
     API.H5T_ORDER_BE    => "big endian byte order",
     API.H5T_ORDER_VAX   => "vax mixed endian byte order",
@@ -81,12 +89,11 @@ const ENDIAN_DICT  = Dict(
     API.H5T_ORDER_NONE  => "no particular byte order",
 )
 
-
 function Base.show(io::IO, dtype::Datatype)
     print(io, "HDF5.Datatype: ")
     if isvalid(dtype)
         API.h5t_committed(dtype) && print(io, name(dtype), " ")
-        buffer = IOBuffer(; sizehint = 18)
+        buffer = IOBuffer(; sizehint=18)
         print(buffer, API.h5lt_dtype_to_text(dtype))
         str = String(take!(buffer))
         if str == "undefined integer"
@@ -94,7 +101,7 @@ function Base.show(io::IO, dtype::Datatype)
             println(io, "         size: ", API.h5t_get_size(dtype), " bytes")
             println(io, "    precision: ", API.h5t_get_precision(dtype), " bits")
             println(io, "       offset: ", API.h5t_get_offset(dtype), " bits")
-            print(io,   "        order: ", ENDIAN_DICT[API.h5t_get_order(dtype)])
+            print(io, "        order: ", ENDIAN_DICT[API.h5t_get_order(dtype)])
         else
             print(io, str)
         end
@@ -116,16 +123,16 @@ end
 function Base.show(io::IO, dspace::Dataspace)
     if !isvalid(dspace)
         print(io, "HDF5.Dataspace: (invalid)")
-        return
+        return nothing
     end
     print(io, "HDF5.Dataspace: ")
     type = API.h5s_get_simple_extent_type(dspace)
     if type == API.H5S_NULL
         print(io, "H5S_NULL")
-        return
+        return nothing
     elseif type == API.H5S_SCALAR
         print(io, "H5S_SCALAR")
-        return
+        return nothing
     end
     # otherwise type == API.H5S_SIMPLE
     sz, maxsz = get_extent_dims(dspace)
@@ -136,7 +143,7 @@ function Base.show(io::IO, dspace::Dataspace)
         print(io, "(")
         for ii in 1:ndims
             s, d, l = start[ii], stride[ii], count[ii]
-            print(io, range(s + 1, length = l, step = d == 1 ? nothing : d))
+            print(io, range(s + 1; length=l, step=d == 1 ? nothing : d))
             ii != ndims && print(io, ", ")
         end
         print(io, ") / (")
@@ -178,7 +185,9 @@ Maximum number of children to show at each node.
 """
 const SHOW_TREE_MAX_CHILDREN = Ref{Int}(50)
 
-function Base.show(io::IO, ::MIME"text/plain", obj::Union{File,Group,Dataset,Attributes,Attribute})
+function Base.show(
+    io::IO, ::MIME"text/plain", obj::Union{File,Group,Dataset,Attributes,Attribute}
+)
     if get(io, :compact, false)::Bool
         show(io, obj)
     else
@@ -192,23 +201,28 @@ _tree_icon(::Type{Dataset})   = SHOW_TREE_ICONS[] ? "🔢" : "[D]"
 _tree_icon(::Type{Datatype})  = SHOW_TREE_ICONS[] ? "📄" : "[T]"
 _tree_icon(::Type{File})      = SHOW_TREE_ICONS[] ? "🗂️" : "[F]"
 _tree_icon(::Type)            = SHOW_TREE_ICONS[] ? "❓" : "[?]"
-_tree_icon(obj) = _tree_icon(typeof(obj))
-_tree_icon(obj::Attributes) = _tree_icon(obj.parent)
+_tree_icon(obj)               = _tree_icon(typeof(obj))
+_tree_icon(obj::Attributes)   = _tree_icon(obj.parent)
 
 _tree_head(io::IO, obj) = print(io, _tree_icon(obj), " ", obj)
-_tree_head(io::IO, obj::Datatype) = print(io, _tree_icon(obj), " HDF5.Datatype: ", name(obj))
+_tree_head(io::IO, obj::Datatype) =
+    print(io, _tree_icon(obj), " HDF5.Datatype: ", name(obj))
 
 _tree_count(parent::Union{File,Group}, attributes::Bool) =
     length(parent) + (attributes ? length(HDF5.attrs(parent)) : 0)
-_tree_count(parent::Dataset, attributes::Bool) =
-    attributes ? length(HDF5.attrs(parent)) : 0
+_tree_count(parent::Dataset, attributes::Bool) = attributes ? length(HDF5.attrs(parent)) : 0
 _tree_count(parent::Attributes, _::Bool) = length(parent)
 _tree_count(parent::Union{Attribute,Datatype}, _::Bool) = 0
 
-function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,Attribute}, indent::String="";
-                    attributes::Bool = true, depth::Int = 1)
+function _show_tree(
+    io::IO,
+    obj::Union{File,Group,Dataset,Datatype,Attributes,Attribute},
+    indent::String="";
+    attributes::Bool=true,
+    depth::Int=1
+)
     isempty(indent) && _tree_head(io, obj)
-    isvalid(obj) || return
+    isvalid(obj) || return nothing
 
     INDENT = "   "
     PIPE   = "│  "
@@ -249,7 +263,7 @@ function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,At
         end
     end
 
-    typeof(obj) <: Union{File, Group} || return nothing
+    typeof(obj) <: Union{File,Group} || return nothing
 
     API.h5l_iterate(obj, idx_type(obj), order(obj)) do loc_id, cname, _
         depth_check() && return API.herr_t(1)
@@ -261,7 +275,7 @@ function _show_tree(io::IO, obj::Union{File,Group,Dataset,Datatype,Attributes,At
         islast = counter == nchildren
         print(io, "\n", indent, islast ? ELBOW : TEE, icon, " ", name)
         nextindent = indent * (islast ? INDENT : PIPE)
-        _show_tree(io, child, nextindent; attributes = attributes, depth = depth + 1)
+        _show_tree(io, child, nextindent; attributes=attributes, depth=depth + 1)
 
         close(child)
         return API.herr_t(0)

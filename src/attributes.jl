@@ -25,7 +25,6 @@ function Base.close(obj::Attribute)
 end
 name(attr::Attribute) = API.h5a_get_name(attr)
 
-
 datatype(dset::Attribute) = Datatype(API.h5a_get_type(checkvalid(dset)), file(dset))
 dataspace(attr::Attribute) = Dataspace(API.h5a_get_space(checkvalid(attr)))
 
@@ -64,8 +63,11 @@ read_attribute(attr::Attribute, memtype::Datatype, buf) = API.h5a_read(attr, mem
 
 Open the [`Attribute`](@ref) named `name` on the object `parent`.
 """
-open_attribute(parent::Union{File,Object}, name::AbstractString, aapl::AttributeAccessProperties=AttributeAccessProperties()) =
-    Attribute(API.h5a_open(checkvalid(parent), name, aapl), file(parent))
+open_attribute(
+    parent::Union{File,Object},
+    name::AbstractString,
+    aapl::AttributeAccessProperties=AttributeAccessProperties()
+) = Attribute(API.h5a_open(checkvalid(parent), name, aapl), file(parent))
 
 """
     create_attribute(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, space::Dataspace)
@@ -86,8 +88,12 @@ function create_attribute(parent::Union{File,Object}, name::AbstractString, data
     end
     return obj, dtype
 end
-function create_attribute(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace)
-    attrid = API.h5a_create(checkvalid(parent), name, dtype, dspace, _attr_properties(name), API.H5P_DEFAULT)
+function create_attribute(
+    parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace
+)
+    attrid = API.h5a_create(
+        checkvalid(parent), name, dtype, dspace, _attr_properties(name), API.H5P_DEFAULT
+    )
     return Attribute(attrid, file(parent))
 end
 
@@ -95,7 +101,11 @@ end
 write_attribute(attr::Attribute, memtype::Datatype, x) = API.h5a_write(attr, memtype, x)
 # specific methods
 function write_attribute(attr::Attribute, memtype::Datatype, x::AbstractArray)
-    length(x) == length(attr) || throw(ArgumentError("Invalid length: $(length(x)) != $(length(attr)), for attribute \"$(name(attr))\""))
+    length(x) == length(attr) || throw(
+        ArgumentError(
+            "Invalid length: $(length(x)) != $(length(attr)), for attribute \"$(name(attr))\""
+        )
+    )
     API.h5a_write(attr, memtype, x)
 end
 function write_attribute(attr::Attribute, memtype::Datatype, str::AbstractString)
@@ -105,7 +115,9 @@ function write_attribute(attr::Attribute, memtype::Datatype, str::AbstractString
         write_attribute(attr, memtype, buf)
     end
 end
-function write_attribute(attr::Attribute, memtype::Datatype, x::T) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
+function write_attribute(
+    attr::Attribute, memtype::Datatype, x::T
+) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
     write_attribute(attr, memtype, tmp)
 end
@@ -139,16 +151,17 @@ end
 
 Rename the [`Attribute`](@ref) of the object `parent` named `oldname` to `newname`.
 """
-rename_attribute(parent::Union{File,Object}, oldname::AbstractString, newname::AbstractString) =
-    API.h5a_rename(checkvalid(parent), oldname, newname)
+rename_attribute(
+    parent::Union{File,Object}, oldname::AbstractString, newname::AbstractString
+) = API.h5a_rename(checkvalid(parent), oldname, newname)
 
 """
     delete_attribute(parent::Union{File,Object}, name::AbstractString)
 
 Delete the [`Attribute`](@ref) named `name` on the object `parent`.
 """
-delete_attribute(parent::Union{File,Object}, path::AbstractString) = API.h5a_delete(checkvalid(parent), path)
-
+delete_attribute(parent::Union{File,Object}, path::AbstractString) =
+    API.h5a_delete(checkvalid(parent), path)
 
 """
     h5writeattr(filename, name::AbstractString, data::Dict)
@@ -173,7 +186,7 @@ Read the attributes of the object at `name` in the HDF5 file `filename`, returni
 """
 function h5readattr(filename, name::AbstractString)
     local dat
-    file = h5open(filename,"r")
+    file = h5open(filename, "r")
     try
         obj = file[name]
         dat = Dict(attrs(obj))
@@ -222,7 +235,8 @@ function attrs(parent)
     return AttributeDict(parent)
 end
 
-Base.haskey(attrdict::AttributeDict, path::AbstractString) = API.h5a_exists(checkvalid(attrdict.parent), path)
+Base.haskey(attrdict::AttributeDict, path::AbstractString) =
+    API.h5a_exists(checkvalid(attrdict.parent), path)
 Base.length(attrdict::AttributeDict) = num_attrs(attrdict.parent)
 
 function Base.getindex(x::AttributeDict, name::AbstractString)
@@ -248,13 +262,16 @@ function Base.setindex!(attrdict::AttributeDict, val, name::AbstractString)
         write_attribute(attrdict.parent, name, val)
     end
 end
-Base.delete!(attrdict::AttributeDict, path::AbstractString) = delete_attribute(attrdict.parent, path)
+Base.delete!(attrdict::AttributeDict, path::AbstractString) =
+    delete_attribute(attrdict.parent, path)
 
 function Base.keys(attrdict::AttributeDict)
     # faster than iteratively calling h5a_get_name_by_idx
     checkvalid(attrdict.parent)
     keyvec = sizehint!(String[], length(attrdict))
-    API.h5a_iterate(attrdict.parent, idx_type(attrdict.parent), order(attrdict.parent)) do _, attr_name, _
+    API.h5a_iterate(
+        attrdict.parent, idx_type(attrdict.parent), order(attrdict.parent)
+    ) do _, attr_name, _
         push!(keyvec, unsafe_string(attr_name))
         return false
     end
@@ -275,9 +292,6 @@ function Base.iterate(attrdict::AttributeDict, (keyvec, n))
     return (key => attrdict[key]), (keyvec, nn)
 end
 
-
-
-
 struct Attributes
     parent::Union{File,Object}
 end
@@ -297,8 +311,10 @@ function Base.getindex(x::Attributes, name::AbstractString)
     haskey(x, name) || throw(KeyError(name))
     open_attribute(x.parent, name)
 end
-Base.setindex!(x::Attributes, val, name::AbstractString) = write_attribute(x.parent, name, val)
-Base.haskey(attr::Attributes, path::AbstractString) = API.h5a_exists(checkvalid(attr.parent), path)
+Base.setindex!(x::Attributes, val, name::AbstractString) =
+    write_attribute(x.parent, name, val)
+Base.haskey(attr::Attributes, path::AbstractString) =
+    API.h5a_exists(checkvalid(attr.parent), path)
 Base.length(x::Attributes) = num_attrs(x.parent)
 
 function Base.keys(x::Attributes)
@@ -313,10 +329,12 @@ end
 Base.read(attr::Attributes, name::AbstractString) = read_attribute(attr.parent, name)
 
 # Dataset methods which act like attributes
-Base.write(parent::Dataset, name::AbstractString, data; pv...) = write_attribute(parent, name, data; pv...)
+Base.write(parent::Dataset, name::AbstractString, data; pv...) =
+    write_attribute(parent, name, data; pv...)
 function Base.getindex(dset::Dataset, name::AbstractString)
     haskey(dset, name) || throw(KeyError(name))
     open_attribute(dset, name)
 end
 Base.setindex!(dset::Dataset, val, name::AbstractString) = write_attribute(dset, name, val)
-Base.haskey(dset::Union{Dataset,Datatype}, path::AbstractString) = API.h5a_exists(checkvalid(dset), path)
+Base.haskey(dset::Union{Dataset,Datatype}, path::AbstractString) =
+    API.h5a_exists(checkvalid(dset), path)

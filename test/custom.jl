@@ -38,10 +38,10 @@ end
         v_read = read(dset, Simple, indices...)
         @test v_read == v[indices...]
 
-        v_read = read(h5f, "data"=>Simple)
+        v_read = read(h5f, "data" => Simple)
         @test v_read == v
     end
 
-    v_read = h5read(fn, "data"=>Simple)
+    v_read = h5read(fn, "data" => Simple)
     @test v_read == v
 end

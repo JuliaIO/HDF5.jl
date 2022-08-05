@@ -17,12 +17,18 @@ lists passed in via keyword will be closed. This is useful to set properties not
 
 Note that `h5open` uses `fclose_degree = :strong` by default, but this can be overriden by the `fapl` keyword.
 """
-function h5open(filename::AbstractString, mode::AbstractString, fapl::FileAccessProperties, fcpl::FileCreateProperties=FileCreateProperties(); swmr::Bool = false)
+function h5open(
+    filename::AbstractString,
+    mode::AbstractString,
+    fapl::FileAccessProperties,
+    fcpl::FileCreateProperties=FileCreateProperties();
+    swmr::Bool=false
+)
     rd, wr, cr, tr, ff =
-        mode == "r"  ? (true,  false, false, false, false) :
-        mode == "r+" ? (true,  true,  false, false, true ) :
-        mode == "cw" ? (false, true,  true,  false, true ) :
-        mode == "w"  ? (false, true,  true,  true,  false) :
+        mode == "r"  ? (true, false, false, false, false) :
+        mode == "r+" ? (true, true, false, false, true)   :
+        mode == "cw" ? (false, true, true, false, true)   :
+        mode == "w"  ? (false, true, true, true, false)   :
         # mode == "w+" ? (true,  true,  true,  true,  false) :
         # mode == "a"  ? (true,  true,  true,  true,  true ) :
         error("invalid open mode: ", mode)
@@ -31,25 +37,28 @@ function h5open(filename::AbstractString, mode::AbstractString, fapl::FileAccess
     end
 
     if cr && (tr || !isfile(filename))
-        flag = swmr ? API.H5F_ACC_TRUNC|API.H5F_ACC_SWMR_WRITE : API.H5F_ACC_TRUNC
+        flag = swmr ? API.H5F_ACC_TRUNC | API.H5F_ACC_SWMR_WRITE : API.H5F_ACC_TRUNC
         fid = API.h5f_create(filename, flag, fcpl, fapl)
     else
-        ishdf5(filename) || error("unable to determine if $filename is accessible in the HDF5 format (file may not exist)")
+        ishdf5(filename) || error(
+            "unable to determine if $filename is accessible in the HDF5 format (file may not exist)"
+        )
         if wr
-            flag = swmr ? API.H5F_ACC_RDWR|API.H5F_ACC_SWMR_WRITE : API.H5F_ACC_RDWR
+            flag = swmr ? API.H5F_ACC_RDWR | API.H5F_ACC_SWMR_WRITE : API.H5F_ACC_RDWR
         else
-            flag = swmr ? API.H5F_ACC_RDONLY|API.H5F_ACC_SWMR_READ : API.H5F_ACC_RDONLY
+            flag = swmr ? API.H5F_ACC_RDONLY | API.H5F_ACC_SWMR_READ : API.H5F_ACC_RDONLY
         end
         fid = API.h5f_open(filename, flag, fapl)
     end
     return File(fid, filename)
 end
 
-
-function h5open(filename::AbstractString, mode::AbstractString = "r";
-    swmr::Bool = false,
+function h5open(
+    filename::AbstractString,
+    mode::AbstractString="r";
+    swmr::Bool=false,
     # With garbage collection, the other modes don't make sense
-    fapl = FileAccessProperties(; fclose_degree = :strong),
+    fapl = FileAccessProperties(; fclose_degree=:strong),
     fcpl = FileCreateProperties(),
     pv...
 )
@@ -75,7 +84,7 @@ For example with a `do` block:
     end
 
 """
-function h5open(f::Function, args...; context = copy(CONTEXT), pv...)
+function h5open(f::Function, args...; context=copy(CONTEXT), pv...)
     file = h5open(args...; pv...)
     task_local_storage(:hdf5_context, context) do
         if (track_order = get(pv, :track_order, nothing)) !== nothing
@@ -91,26 +100,25 @@ function h5open(f::Function, args...; context = copy(CONTEXT), pv...)
 end
 
 function h5rewrite(f::Function, filename::AbstractString, args...)
-  tmppath,tmpio = mktemp(dirname(filename))
-  close(tmpio)
+    tmppath, tmpio = mktemp(dirname(filename))
+    close(tmpio)
 
-  try
-      val = h5open(f, tmppath, "w", args...)
-      Base.Filesystem.rename(tmppath, filename)
-      return val
-  catch
-      Base.Filesystem.unlink(tmppath)
-      rethrow()
-  end
+    try
+        val = h5open(f, tmppath, "w", args...)
+        Base.Filesystem.rename(tmppath, filename)
+        return val
+    catch
+        Base.Filesystem.unlink(tmppath)
+        rethrow()
+    end
 end
 
-
 function Base.close(obj::File)
-  if obj.id != -1
-      API.h5f_close(obj)
-      obj.id = -1
-  end
-  nothing
+    if obj.id != -1
+        API.h5f_close(obj)
+        obj.id = -1
+    end
+    nothing
 end
 
 """
@@ -119,7 +127,6 @@ end
 Returns `true` if `obj` has not been closed, `false` if it has been closed.
 """
 Base.isopen(obj::File) = obj.id != -1
-
 
 """
     ishdf5(name::AbstractString)
@@ -142,7 +149,8 @@ file(f::File) = f
 file(o::Union{Object,Attribute}) = o.file
 fd(obj::Object) = API.h5i_get_file_id(checkvalid(obj))
 
-filename(obj::Union{File,Group,Dataset,Attribute,Datatype}) = API.h5f_get_name(checkvalid(obj))
+filename(obj::Union{File,Group,Dataset,Attribute,Datatype}) =
+    API.h5f_get_name(checkvalid(obj))
 
 """
     start_swmr_write(h5::HDF5.File)
@@ -153,5 +161,5 @@ See [SWMR documentation](https://portal.hdfgroup.org/display/HDF5/Single+Writer+
 start_swmr_write(h5::File) = API.h5f_start_swmr_write(h5)
 
 # Flush buffers
-Base.flush(f::Union{Object,Attribute,Datatype,File}, scope = API.H5F_SCOPE_GLOBAL) = API.h5f_flush(checkvalid(f), scope)
-
+Base.flush(f::Union{Object,Attribute,Datatype,File}, scope=API.H5F_SCOPE_GLOBAL) =
+    API.h5f_flush(checkvalid(f), scope)

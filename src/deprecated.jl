@@ -41,8 +41,11 @@ function create_property(class; kwargs...)
         class == HDF5.API.H5P_LINK_CREATE      ? (:H5P_LINK_CREATE, LinkCreateProperties) :
         class == HDF5.API.H5P_LINK_ACCESS      ? (:H5P_LINK_ACCESS, LinkAccessProperties) :
         error("invalid class")
-    Base.depwarn("`create_property(HDF5.$oldname; kwargs...)` has been deprecated, use `$newtype(;kwargs...)` instead.", :create_property)
-    init!(newtype(;kwargs...))
+    Base.depwarn(
+        "`create_property(HDF5.$oldname; kwargs...)` has been deprecated, use `$newtype(;kwargs...)` instead.",
+        :create_property
+    )
+    init!(newtype(; kwargs...))
 end
 
 @deprecate set_chunk(p::Properties, dims...) set_chunk!(p, dims) false
@@ -65,8 +68,12 @@ end
 ### Changed in PR #902
 import Base: append!, push!
 import .Filters: ExternalFilter
-@deprecate append!(filters::Filters.FilterPipeline, extra::NTuple{N, Integer}) where N append!(filters, [ExternalFilter(extra...)])
-@deprecate push!(p::Filters.FilterPipeline, f::NTuple{N, Integer}) where N push!(p, ExternalFilter(f...))
+@deprecate append!(filters::Filters.FilterPipeline, extra::NTuple{N,Integer}) where {N} append!(
+    filters, [ExternalFilter(extra...)]
+)
+@deprecate push!(p::Filters.FilterPipeline, f::NTuple{N,Integer}) where {N} push!(
+    p, ExternalFilter(f...)
+)
 @deprecate ExternalFilter(t::Tuple) ExternalFilter(t...) false
 
 ### Changed in PR #979
@@ -74,4 +81,6 @@ import .Filters: ExternalFilter
 @deprecate object_info(obj::Union{File,Object}) API.h5o_get_info1(checkvalid(obj))
 
 ### Changed in PR #994
-@deprecate set_track_order(p::Properties, val::Bool) set_track_order!(p::Properties, val::Bool) false
+@deprecate set_track_order(p::Properties, val::Bool) set_track_order!(
+    p::Properties, val::Bool
+) false

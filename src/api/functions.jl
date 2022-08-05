@@ -5403,4 +5403,3 @@ function h5fd_stdio_init()
     var"#status#" < 0 && @h5error("Error initializing file driver")
     return var"#status#"
 end
-

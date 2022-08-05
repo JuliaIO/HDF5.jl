@@ -1,15 +1,14 @@
 using HDF5, Test
 
-function test_attrs(o::Union{HDF5.File, HDF5.Object})
-
+function test_attrs(o::Union{HDF5.File,HDF5.Object})
     @test attrs(o) isa HDF5.AttributeDict
 
     attrs(o)["a"] = 1
     @test haskey(attrs(o), "a")
     @test attrs(o)["a"] == 1
 
-    attrs(o)["b"] = [2,3]
-    @test attrs(o)["b"] == [2,3]
+    attrs(o)["b"] = [2, 3]
+    @test attrs(o)["b"] == [2, 3]
     @test haskey(attrs(o), "a")
     @test length(attrs(o)) == 2
     @test sort(keys(attrs(o))) == ["a", "b"]
@@ -24,8 +23,8 @@ function test_attrs(o::Union{HDF5.File, HDF5.Object})
     @test sort(keys(attrs(o))) == ["a", "b"]
 
     # overwrite: different size
-    attrs(o)["b"] = [4,5,6]
-    @test attrs(o)["b"] == [4,5,6]
+    attrs(o)["b"] = [4, 5, 6]
+    @test attrs(o)["b"] == [4, 5, 6]
     @test length(attrs(o)) == 2
     @test sort(keys(attrs(o))) == ["a", "b"]
 
@@ -43,9 +42,7 @@ function test_attrs(o::Union{HDF5.File, HDF5.Object})
 
     @test_throws KeyError attrs(o)["a"]
     @test isnothing(get(attrs(o), "a", nothing))
-
 end
-
 
 @testset "attrs interface" begin
     filename = tempname()
@@ -64,8 +61,8 @@ end
         test_attrs(d)
 
         # Test attrs on a HDF5.Datatype
-        t = commit_datatype(g, "datatype_int16",
-            HDF5.Datatype(HDF5.API.h5t_copy(HDF5.API.H5T_NATIVE_INT16))
+        t = commit_datatype(
+            g, "datatype_int16", HDF5.Datatype(HDF5.API.h5t_copy(HDF5.API.H5T_NATIVE_INT16))
         )
         test_attrs(t)
     finally

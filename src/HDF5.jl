@@ -9,18 +9,42 @@ import Mmap
 
 ### PUBLIC API ###
 
-export
-@read, @write,
-h5open, h5read, h5write, h5rewrite, h5writeattr, h5readattr,
-create_attribute, open_attribute, read_attribute, write_attribute, delete_attribute, rename_attribute, attributes, attrs,
-create_dataset, open_dataset, read_dataset, write_dataset,
-create_group, open_group,
-copy_object, open_object, delete_object, move_link,
-create_datatype, commit_datatype, open_datatype,
-create_property,
-group_info, object_info,
-dataspace, datatype,
-Filters, Drivers
+export @read,
+    @write,
+    h5open,
+    h5read,
+    h5write,
+    h5rewrite,
+    h5writeattr,
+    h5readattr,
+    create_attribute,
+    open_attribute,
+    read_attribute,
+    write_attribute,
+    delete_attribute,
+    rename_attribute,
+    attributes,
+    attrs,
+    create_dataset,
+    open_dataset,
+    read_dataset,
+    write_dataset,
+    create_group,
+    open_group,
+    copy_object,
+    open_object,
+    delete_object,
+    move_link,
+    create_datatype,
+    commit_datatype,
+    open_datatype,
+    create_property,
+    group_info,
+    object_info,
+    dataspace,
+    datatype,
+    Filters,
+    Drivers
 
 ### The following require module scoping ###
 
@@ -69,7 +93,7 @@ end
 
 function h5read(filename, name::AbstractString; pv...)
     local dat
-    fapl = FileAccessProperties(; fclose_degree = :strong)
+    fapl = FileAccessProperties(; fclose_degree=:strong)
     pv = setproperties!(fapl; pv...)
     file = h5open(filename, "r", fapl)
     try
@@ -84,7 +108,7 @@ end
 
 function h5read(filename, name_type_pair::Pair{<:AbstractString,DataType}; pv...)
     local dat
-    fapl = FileAccessProperties(; fclose_degree = :strong)
+    fapl = FileAccessProperties(; fclose_degree=:strong)
     pv = setproperties!(fapl; pv...)
     file = h5open(filename, "r", fapl)
     try
@@ -97,9 +121,14 @@ function h5read(filename, name_type_pair::Pair{<:AbstractString,DataType}; pv...
     dat
 end
 
-function h5read(filename, name::AbstractString, indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}}; pv...)
+function h5read(
+    filename,
+    name::AbstractString,
+    indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}};
+    pv...
+)
     local dat
-    fapl = FileAccessProperties(; fclose_degree = :strong)
+    fapl = FileAccessProperties(; fclose_degree=:strong)
     pv = setproperties!(fapl; pv...)
     file = h5open(filename, "r", fapl)
     try
@@ -111,8 +140,6 @@ function h5read(filename, name::AbstractString, indices::Tuple{Vararg{Union{Abst
     end
     dat
 end
-
-
 
 function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     haskey(parent, path) || throw(KeyError(path))
@@ -136,7 +163,9 @@ end
 
 # Assign syntax: obj[path] = value
 # Create a dataset with properties: obj[path, prop = val, ...] = val
-function Base.setindex!(parent::Union{File,Group}, val, path::Union{AbstractString,Nothing}; pv...)
+function Base.setindex!(
+    parent::Union{File,Group}, val, path::Union{AbstractString,Nothing}; pv...
+)
     need_chunks = any(k in keys(chunked_props) for k in keys(pv))
     have_chunks = any(k == :chunk for k in keys(pv))
 
@@ -148,7 +177,7 @@ function Base.setindex!(parent::Union{File,Group}, val, path::Union{AbstractStri
         pv = pairs(Base.structdiff((; pv...), chunked_props))
     else
         if need_chunks && !have_chunks
-            pv = pairs((; chunk = chunk, pv...))
+            pv = pairs((; chunk=chunk, pv...))
         end
     end
     write(parent, path, val; pv...)
@@ -171,7 +200,6 @@ get_create_properties(d::Dataset)   = DatasetCreateProperties(API.h5d_get_create
 get_create_properties(g::Group)     = GroupCreateProperties(API.h5g_get_create_plist(g))
 get_create_properties(f::File)      = FileCreateProperties(API.h5f_get_create_plist(f))
 get_create_properties(a::Attribute) = AttributeCreateProperties(API.h5a_get_create_plist(a))
-
 
 const HAS_PARALLEL = Ref(false)
 
@@ -196,12 +224,16 @@ function __init__()
     ASCII_ATTRIBUTE_PROPERTIES.char_encoding = :ascii
     UTF8_ATTRIBUTE_PROPERTIES.char_encoding = :utf8
 
-    @require FileIO="5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" begin
-        @require OrderedCollections="bac558e1-5e72-5ebc-8fee-abe8a469f55d" include("fileio.jl")
+    @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" begin
+        @require OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d" include(
+            "fileio.jl"
+        )
     end
-    @require H5Zblosc="c8ec2601-a99c-407f-b158-e79c03c2f5f7" begin
-        set_blosc!(p::Properties, val::Bool) = val && push!(Filters.FilterPipeline(p), H5Zblosc.BloscFilter())
-        set_blosc!(p::Properties, level::Integer) = push!(Filters.FilterPipeline(p), H5Zblosc.BloscFilter(level=level))
+    @require H5Zblosc = "c8ec2601-a99c-407f-b158-e79c03c2f5f7" begin
+        set_blosc!(p::Properties, val::Bool) =
+            val && push!(Filters.FilterPipeline(p), H5Zblosc.BloscFilter())
+        set_blosc!(p::Properties, level::Integer) =
+            push!(Filters.FilterPipeline(p), H5Zblosc.BloscFilter(; level=level))
     end
 
     return nothing

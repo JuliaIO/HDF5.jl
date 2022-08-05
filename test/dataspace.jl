@@ -16,7 +16,7 @@ using Test
 
     @test isvalid(ds_scalar)
 
-    @test ndims(ds_null)   === 0
+    @test ndims(ds_null) === 0
     @test ndims(ds_scalar) === 0
     @test ndims(ds_zerosz) === 1
     @test ndims(ds_vector) === 1
@@ -25,23 +25,27 @@ using Test
     # Test that properties of existing datasets can be extracted.
     # Note: Julia reverses the order of dimensions when using the high-level API versus
     #       the dimensions used above to create the reference objects.
-    @test size(ds_null)   === ()
+    @test size(ds_null) === ()
     @test size(ds_scalar) === ()
     @test size(ds_zerosz) === (0,)
     @test size(ds_vector) === (5,)
     @test size(ds_matrix) === (5, 7)
     @test size(ds_maxdim) === (5, 7)
 
-    @test size(ds_null, 5)   === 1
+    @test size(ds_null, 5) === 1
     @test size(ds_scalar, 5) === 1
     @test size(ds_zerosz, 5) === 1
     @test size(ds_vector, 5) === 1
     @test size(ds_matrix, 5) === 1
     @test size(ds_maxdim, 5) === 1
-    @test_throws ArgumentError("invalid dimension d; must be positive integer") size(ds_null, 0)
-    @test_throws ArgumentError("invalid dimension d; must be positive integer") size(ds_scalar, -1)
+    @test_throws ArgumentError("invalid dimension d; must be positive integer") size(
+        ds_null, 0
+    )
+    @test_throws ArgumentError("invalid dimension d; must be positive integer") size(
+        ds_scalar, -1
+    )
 
-    @test length(ds_null)   === 0
+    @test length(ds_null) === 0
     @test length(ds_scalar) === 1
     @test length(ds_zerosz) === 0
     @test length(ds_vector) === 5
@@ -58,23 +62,23 @@ using Test
     @test !HDF5.isnull(ds_zerosz)
     @test !HDF5.isnull(ds_vector)
 
-    @test HDF5.get_extent_dims(ds_null)   === ((), ())
+    @test HDF5.get_extent_dims(ds_null) === ((), ())
     @test HDF5.get_extent_dims(ds_scalar) === ((), ())
     @test HDF5.get_extent_dims(ds_zerosz) === ((0,), (0,))
     @test HDF5.get_extent_dims(ds_vector) === ((5,), (5,))
     @test HDF5.get_extent_dims(ds_matrix) === ((5, 7), (5, 7))
     @test HDF5.get_extent_dims(ds_maxdim) === ((5, 7), (20, 20))
-    @test HDF5.get_extent_dims(ds_unlim)  === ((1,), (-1,))
+    @test HDF5.get_extent_dims(ds_unlim) === ((1,), (-1,))
 
     # Can create new copies
     ds_tmp  = copy(ds_maxdim)
     ds_tmp2 = HDF5.Dataspace(ds_tmp.id) # copy of ID, but new Julia object
     @test ds_tmp.id == ds_tmp2.id != ds_maxdim.id
     # Equality and hashing
-    @test ds_tmp  == ds_maxdim
+    @test ds_tmp == ds_maxdim
     @test ds_tmp !== ds_maxdim
     @test hash(ds_tmp) != hash(ds_maxdim)
-    @test ds_tmp  == ds_tmp2
+    @test ds_tmp == ds_tmp2
     @test ds_tmp !== ds_tmp2
     @test hash(ds_tmp) == hash(ds_tmp2)
 
@@ -98,8 +102,8 @@ using Test
     @test dataspace(()) == ds_scalar
     @test dataspace((5,)) == ds_vector
     @test dataspace((5, 7)) == ds_matrix != ds_maxdim
-    @test dataspace((5, 7), max_dims = (20, 20)) == ds_maxdim != ds_matrix
-    @test dataspace((1,), max_dims = (-1,)) == ds_unlim
+    @test dataspace((5, 7); max_dims=(20, 20)) == ds_maxdim != ds_matrix
+    @test dataspace((1,); max_dims=(-1,)) == ds_unlim
     # for ≥ 2 numbers, same as single tuple argument
     @test dataspace(5, 7) == ds_matrix
     @test dataspace(5, 7, 1) == dataspace((5, 7, 1))
@@ -127,9 +131,9 @@ using Test
         h5open(path, "w") do hid
             dset = create_dataset(hid, "dset", datatype(Int), ds_matrix)
             attr = create_attribute(dset, "attr", datatype(Bool), ds_vector)
-            @test dataspace(dset)  == ds_matrix
+            @test dataspace(dset) == ds_matrix
             @test dataspace(dset) !== ds_matrix
-            @test dataspace(attr)  == ds_vector
+            @test dataspace(attr) == ds_vector
             @test dataspace(attr) !== ds_vector
             close(dset)
             close(attr)
@@ -138,20 +142,23 @@ using Test
         end
     end
 
-
     # Test mid-level routines: set/get_extent_dims
 
     dspace_norm = dataspace((100, 4))
-    @test HDF5.get_extent_dims(dspace_norm)[1] == HDF5.get_extent_dims(dspace_norm)[2] == (100, 4)
+    @test HDF5.get_extent_dims(dspace_norm)[1] ==
+        HDF5.get_extent_dims(dspace_norm)[2] ==
+        (100, 4)
     HDF5.set_extent_dims(dspace_norm, (8, 2))
-    @test HDF5.get_extent_dims(dspace_norm)[1] == HDF5.get_extent_dims(dspace_norm)[2] == (8, 2)
+    @test HDF5.get_extent_dims(dspace_norm)[1] ==
+        HDF5.get_extent_dims(dspace_norm)[2] ==
+        (8, 2)
 
-    dspace_maxd = dataspace((100, 4), max_dims = (256, 5))
+    dspace_maxd = dataspace((100, 4); max_dims=(256, 5))
     @test HDF5.get_extent_dims(dspace_maxd)[1] == (100, 4)
     @test HDF5.get_extent_dims(dspace_maxd)[2] == (256, 5)
     HDF5.set_extent_dims(dspace_maxd, (8, 2))
     @test HDF5.get_extent_dims(dspace_maxd)[1] == (8, 2)
-    HDF5.set_extent_dims(dspace_maxd, (3, 1), (4,2))
+    HDF5.set_extent_dims(dspace_maxd, (3, 1), (4, 2))
     @test HDF5.get_extent_dims(dspace_maxd)[1] == (3, 1)
     @test HDF5.get_extent_dims(dspace_maxd)[2] == (4, 2)
     HDF5.set_extent_dims(dspace_maxd, (3, 1), (-1, -1)) # unlimited max size
