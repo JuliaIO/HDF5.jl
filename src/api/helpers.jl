@@ -37,7 +37,7 @@ end
 function h5a_get_name(attr_id)
     len = h5a_get_name(attr_id, 0, C_NULL)
     buf = StringVector(len)
-    h5a_get_name(attr_id, len+1, buf)
+    h5a_get_name(attr_id, len + 1, buf)
     return String(buf)
 end
 
@@ -52,7 +52,9 @@ end
 # emulating it with the less desirable form of creating closure handles directly in
 # `@cfunction` with `$f`.
 # This helper translates between the two preferred forms for each respective language.
-function h5a_iterate_helper(loc_id::hid_t, attr_name::Ptr{Cchar}, ainfo::Ptr{H5A_info_t}, @nospecialize(data::Any))::herr_t
+function h5a_iterate_helper(
+    loc_id::hid_t, attr_name::Ptr{Cchar}, ainfo::Ptr{H5A_info_t}, @nospecialize(data::Any)
+)::herr_t
     f, err_ref = data
     try
         return herr_t(f(loc_id, attr_name, ainfo))
@@ -85,7 +87,7 @@ julia> HDF5.API.h5a_iterate(obj, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC) d
        end
 ```
 """
-function h5a_iterate(@nospecialize(f), obj_id, idx_type, order, idx = 0)
+function h5a_iterate(@nospecialize(f), obj_id, idx_type, order, idx=0)
     err_ref = Ref{Any}(nothing)
     idxref = Ref{hsize_t}(idx)
     fptr = @cfunction(h5a_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5A_info_t}, Any))
@@ -130,9 +132,10 @@ function h5d_get_chunk_info(dataset_id, fspace_id, index)
     addr = Ref{haddr_t}()
     size = Ref{hsize_t}()
     h5d_get_chunk_info(dataset_id, fspace_id, index, offset, filter_mask, addr, size)
-    return (offset = offset, filter_mask = filter_mask[], addr = addr[], size = size[])
+    return (offset=offset, filter_mask=filter_mask[], addr=addr[], size=size[])
 end
-h5d_get_chunk_info(dataset_id, index; fspace_id = H5S_ALL) = h5d_get_chunk_info(dataset_id, fspace_id, index)
+h5d_get_chunk_info(dataset_id, index; fspace_id=H5S_ALL) =
+    h5d_get_chunk_info(dataset_id, fspace_id, index)
 
 """
     h5d_get_chunk_info_by_coord(dataset_id, offset)
@@ -144,7 +147,7 @@ function h5d_get_chunk_info_by_coord(dataset_id, offset)
     addr = Ref{haddr_t}()
     size = Ref{hsize_t}()
     h5d_get_chunk_info_by_coord(dataset_id, offset, filter_mask, addr, size)
-    return (filter_mask = filter_mask[], addr = addr[], size = size[])
+    return (filter_mask=filter_mask[], addr=addr[], size=size[])
 end
 
 """
@@ -164,7 +167,7 @@ end
 
     Helper method to retrieve the number of chunks. Returns an integer of type `HDF5.API.hsize_t`.
     """
-    function h5d_get_num_chunks(dataset_id, fspace_id = H5S_ALL)
+    function h5d_get_num_chunks(dataset_id, fspace_id=H5S_ALL)
         nchunks = Ref{hsize_t}()
         h5d_get_num_chunks(dataset_id, fspace_id, nchunks)
         return nchunks[]
@@ -182,7 +185,6 @@ function h5d_get_space_status(dataset_id)
     h5d_get_space_status(dataset_id, r)
     return r[]
 end
-
 
 ###
 ### Error Interface
@@ -203,14 +205,15 @@ function h5e_get_msg(mesg_id)
     mesg_type = Ref{Cint}()
     mesg_len = h5e_get_msg(mesg_id, mesg_type, C_NULL, 0)
     buffer = StringVector(mesg_len)
-    h5e_get_msg(mesg_id, mesg_type, buffer, mesg_len+1)
+    h5e_get_msg(mesg_id, mesg_type, buffer, mesg_len + 1)
     resize!(buffer, mesg_len)
     return mesg_type[], String(buffer)
 end
 
-
 # See explanation for h5a_iterate above.
-function h5e_walk_helper(n::Cuint, err_desc::Ptr{H5E_error2_t}, @nospecialize(data::Any))::herr_t
+function h5e_walk_helper(
+    n::Cuint, err_desc::Ptr{H5E_error2_t}, @nospecialize(data::Any)
+)::herr_t
     f, err_ref = data
     try
         return herr_t(f(n, err_desc))
@@ -246,7 +249,7 @@ end
 function h5f_get_name(loc_id)
     len = h5f_get_name(loc_id, C_NULL, 0)
     buf = StringVector(len)
-    h5f_get_name(loc_id, buf, len+1)
+    h5f_get_name(loc_id, buf, len + 1)
     return String(buf)
 end
 
@@ -289,24 +292,26 @@ function h5p_get_file_locking(fapl)
     use_file_locking = Ref{API.hbool_t}(0)
     ignore_when_disabled = Ref{API.hbool_t}(0)
     h5p_get_file_locking(fapl, use_file_locking, ignore_when_disabled)
-    return (use_file_locking     = Bool(use_file_locking[]),
-            ignore_when_disabled = Bool(ignore_when_disabled[]))
+    return (
+        use_file_locking     = Bool(use_file_locking[]),
+        ignore_when_disabled = Bool(ignore_when_disabled[])
+    )
 end
 
 # Check to see if h5p_set_file_locking should exist
 const _has_h5p_set_file_locking = _has_symbol(:H5Pset_file_locking)
 function has_h5p_set_file_locking()
-   return _has_h5p_set_file_locking
-   #=
-   h5_version = h5_get_libversion()
-   if (h5_version >= v"1.10" && h5_version < v"1.10.7") ||
-      (h5_version >= v"1.12" && h5_version < v"1.12.1") ||
-      (h5_version < v"1.10")
-      return false
-   else
-      return true
-   end
-   =#
+    return _has_h5p_set_file_locking
+    #=
+    h5_version = h5_get_libversion()
+    if (h5_version >= v"1.10" && h5_version < v"1.10.7") ||
+       (h5_version >= v"1.12" && h5_version < v"1.12.1") ||
+       (h5_version < v"1.10")
+       return false
+    else
+       return true
+    end
+    =#
 end
 
 function h5p_get_file_space_strategy(plist_id)
@@ -314,7 +319,7 @@ function h5p_get_file_space_strategy(plist_id)
     persist = Ref{hbool_t}(0)
     threshold = Ref{hsize_t}()
     h5p_get_file_space_strategy(plist_id, strategy, persist, threshold)
-    return (strategy = strategy[], persist = persist[], threshold = threshold[])
+    return (strategy=strategy[], persist=persist[], threshold=threshold[])
 end
 
 function h5p_get_file_space_page_size(plist_id)
@@ -323,7 +328,9 @@ function h5p_get_file_space_page_size(plist_id)
     return fsp_size[]
 end
 
-function h5p_set_file_space_strategy(plist_id; strategy = nothing, persist = nothing, threshold = nothing)
+function h5p_set_file_space_strategy(
+    plist_id; strategy=nothing, persist=nothing, threshold=nothing
+)
     current = h5p_get_file_space_strategy(plist_id)
     strategy = isnothing(strategy) ? current[:strategy] : strategy
     persist = isnothing(persist) ? current[:persist] : persist
@@ -354,7 +361,7 @@ end
 function h5i_get_name(loc_id)
     len = h5i_get_name(loc_id, C_NULL, 0)
     buf = StringVector(len)
-    h5i_get_name(loc_id, buf, len+1)
+    h5i_get_name(loc_id, buf, len + 1)
     return String(buf)
 end
 
@@ -376,7 +383,9 @@ function h5l_get_name_by_idx(loc_id, group_name, idx_type, order, idx, lapl_id)
 end
 
 # See explanation for h5a_iterate above.
-function h5l_iterate_helper(group::hid_t, name::Ptr{Cchar}, info::Ptr{H5L_info_t}, @nospecialize(data::Any))::herr_t
+function h5l_iterate_helper(
+    group::hid_t, name::Ptr{Cchar}, info::Ptr{H5L_info_t}, @nospecialize(data::Any)
+)::herr_t
     f, err_ref = data
     try
         return herr_t(f(group, name, info))
@@ -407,12 +416,12 @@ julia> HDF5.API.h5l_iterate(hfile, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC)
        end
 ```
 """
-function h5l_iterate(@nospecialize(f), group_id, idx_type, order, idx = 0)
+function h5l_iterate(@nospecialize(f), group_id, idx_type, order, idx=0)
     err_ref = Ref{Any}(nothing)
     idxref = Ref{hsize_t}(idx)
     fptr = @cfunction(h5l_iterate_helper, herr_t, (hid_t, Ptr{Cchar}, Ptr{H5L_info_t}, Any))
     try
-        h5l_iterate(group_id, idx_type, order, idxref, fptr, (f,err_ref))
+        h5l_iterate(group_id, idx_type, order, idxref, fptr, (f, err_ref))
     catch h5err
         jlerr = err_ref[]
         if !isnothing(jlerr)
@@ -467,7 +476,9 @@ elseif _libhdf5_build_ver >= v"1.10.3" && _libhdf5_build_ver < v"1.12.0"
     end
 
     # H5Oget_info_by_idx2
-    function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, fields=H5O_INFO_ALL, lapl=H5P_DEFAULT)
+    function h5o_get_info_by_idx(
+        loc_id, group_name, idx_type, order, n, fields=H5O_INFO_ALL, lapl=H5P_DEFAULT
+    )
         oinfo = Ref{H5O_info1_t}()
         h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl)
         return oinfo[]
@@ -490,25 +501,22 @@ else # _libhdf5_build_ver >= v"1.12.0"
     end
 
     # H5Oget_info_by_idx3
-    function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, fields=H5O_INFO_ALL, lapl=H5P_DEFAULT)
+    function h5o_get_info_by_idx(
+        loc_id, group_name, idx_type, order, n, fields=H5O_INFO_ALL, lapl=H5P_DEFAULT
+    )
         oinfo = Ref{H5O_info2_t}()
         h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl)
         return oinfo[]
     end
 
-    function h5o_get_native_info(
-        loc_id,
-        fields=H5O_NATIVE_INFO_ALL
-    )
+    function h5o_get_native_info(loc_id, fields=H5O_NATIVE_INFO_ALL)
         oinfo = Ref{H5O_native_info_t}()
         h5o_get_native_info(loc_id, oinfo, fields)
         return oinfo[]
     end
 
     function h5o_get_native_info_by_idx(
-        loc_id, group_name, idx_type, order, n,
-        fields=H5O_NATIVE_INFO_ALL,
-        lapl=H5P_DEFAULT
+        loc_id, group_name, idx_type, order, n, fields=H5O_NATIVE_INFO_ALL, lapl=H5P_DEFAULT
     )
         oinfo = Ref{H5O_native_info_t}()
         h5o_get_native_info_by_idx(
@@ -518,15 +526,12 @@ else # _libhdf5_build_ver >= v"1.12.0"
     end
 
     function h5o_get_native_info_by_name(
-        loc_id, name,
-        fields=H5O_NATIVE_INFO_ALL,
-        lapl=H5P_DEFAULT
+        loc_id, name, fields=H5O_NATIVE_INFO_ALL, lapl=H5P_DEFAULT
     )
         oinfo = Ref{H5O_native_info_t}()
         h5o_get_native_info_by_name(loc_id, name, oinfo, fields, lapl)
         return oinfo[]
     end
-
 end # @static if _libhdf5_build_ver < v"1.12.0"
 
 # Add a default link access property list if not specified
@@ -544,7 +549,9 @@ Deprecated HDF5 function. Use [`h5o_get_info`](@ref) or [`h5o_get_native_info`](
 See `libhdf5` documentation for [`H5Oget_info1`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO1).
 """
 function h5o_get_info1(object_id, buf)
-    var"#status#" = ccall((:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info_t}), object_id, buf)
+    var"#status#" = ccall(
+        (:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info_t}), object_id, buf
+    )
     var"#status#" < 0 && @h5error("Error getting object info")
     return nothing
 end
@@ -589,7 +596,7 @@ function h5p_get_chunk_cache(dapl_id)
     nbytes = Ref{Csize_t}()
     w0 = Ref{Cdouble}()
     h5p_get_chunk_cache(dapl_id, nslots, nbytes, w0)
-    return (nslots = nslots[], nbytes = nbytes[], w0 = w0[])
+    return (nslots=nslots[], nbytes=nbytes[], w0=w0[])
 end
 
 function h5p_get_create_intermediate_group(plist_id)
@@ -607,16 +614,23 @@ end
 function h5p_get_efile_prefix(plist)
     efile_len = h5p_get_efile_prefix(plist, C_NULL, 0)
     buffer = StringVector(efile_len)
-    prefix_size = h5p_get_efile_prefix(plist, buffer, efile_len+1)
+    prefix_size = h5p_get_efile_prefix(plist, buffer, efile_len + 1)
     return String(buffer)
 end
 
 function h5p_set_efile_prefix(plist, sym::Symbol)
-    sym === :origin ? h5p_set_efile_prefix(plist, raw"$ORIGIN") :
-    throw(ArgumentError("The only valid `Symbol` argument for `h5p_set_efile_prefix` is `:origin`. Got `$sym`."))
+    if sym === :origin
+        h5p_set_efile_prefix(plist, raw"$ORIGIN")
+    else
+        throw(
+            ArgumentError(
+                "The only valid `Symbol` argument for `h5p_set_efile_prefix` is `:origin`. Got `$sym`."
+            )
+        )
+    end
 end
 
-function h5p_get_external(plist, idx = 0)
+function h5p_get_external(plist, idx=0)
     offset = Ref{off_t}(0)
     sz = Ref{hsize_t}(0)
     name_size = 64
@@ -628,7 +642,7 @@ function h5p_get_external(plist, idx = 0)
             name_size *= 2
             resize!(name, name_size)
         else
-            resize!(name, null_id-1)
+            resize!(name, null_id - 1)
             break
         end
     end
@@ -646,7 +660,7 @@ function h5p_get_external(plist, idx = 0)
         # Scenario 2: The size is in the upper 32 bits, lower 32 bits is 0 as of HDF5 v1.12.1
         sz[] = lower == 0 && upper != 0xffffffff ? upper : lower
     end
-    return (name = String(name), offset = offset[], size = sz[])
+    return (name=String(name), offset=offset[], size=sz[])
 end
 
 function h5p_get_fclose_degree(fapl_id)
@@ -695,7 +709,7 @@ end
 function h5p_get_virtual_prefix(dapl_id)
     virtual_file_len = h5p_get_virtual_prefix(dapl_id, C_NULL, 0)
     buffer = StringVector(virtual_file_len)
-    prefix_size = h5p_get_virtual_prefix(dapl_id, buffer, virtual_file_len+1)
+    prefix_size = h5p_get_virtual_prefix(dapl_id, buffer, virtual_file_len + 1)
     return String(buffer)
 end
 
@@ -757,7 +771,7 @@ function h5pl_get_loading_state()
     plugin_control_mask[]
 end
 
-function h5pl_get(index = 0)
+function h5pl_get(index=0)
     buf_size = Csize_t(1024)
     path_buf = Vector{Cchar}(undef, buf_size)
     h5pl_get(index, path_buf, buf_size)
@@ -770,7 +784,6 @@ function h5pl_size()
     num_paths[]
 end
 
-
 ###
 ### Reference Interface
 ###
@@ -780,7 +793,7 @@ end
 ###
 
 function h5s_get_regular_hyperslab(space_id)
-    n = h5s_get_simple_extent_ndims(space_id)
+    n      = h5s_get_simple_extent_ndims(space_id)
     start  = Vector{hsize_t}(undef, n)
     stride = Vector{hsize_t}(undef, n)
     count  = Vector{hsize_t}(undef, n)
@@ -802,7 +815,6 @@ function h5s_get_simple_extent_dims(space_id, ::Nothing)
     h5s_get_simple_extent_dims(space_id, dims, C_NULL)
     return dims
 end
-
 
 ###
 ### Datatype Interface
@@ -857,9 +869,7 @@ function h5t_get_tag(type_id)
     return s
 end
 
-h5t_get_native_type(type_id) =
-    h5t_get_native_type(type_id, H5T_DIR_ASCEND)
-
+h5t_get_native_type(type_id) = h5t_get_native_type(type_id, H5T_DIR_ASCEND)
 
 ###
 ### Optimized Functions Interface
@@ -901,7 +911,7 @@ function h5tb_get_field_info(loc_id, table_name)
     did = h5d_open(loc_id, table_name, H5P_DEFAULT)
     tid = h5d_get_type(did)
     h5d_close(did)
-    field_names = [h5t_get_member_name(tid, i-1) for i in 1:nfields]
+    field_names = [h5t_get_member_name(tid, i - 1) for i in 1:nfields]
     h5t_close(tid)
     return field_names, field_sizes, field_offsets, type_size[]
 end
@@ -916,7 +926,6 @@ function h5z_get_filter_info(filter)
     ref[]
 end
 
-
 ###
 ### MPIO
 ###
@@ -925,7 +934,6 @@ h5p_set_fapl_mpio(fapl_id, comm::Hmpih32, info::Hmpih32) =
     h5p_set_fapl_mpio32(fapl_id, comm, info)
 h5p_set_fapl_mpio(fapl_id, comm::Hmpih64, info::Hmpih64) =
     h5p_set_fapl_mpio64(fapl_id, comm, info)
-
 
 h5p_get_fapl_mpio(fapl_id, comm::Ref{Hmpih32}, info::Ref{Hmpih32}) =
     h5p_get_fapl_mpio32(fapl_id, comm, info)

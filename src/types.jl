@@ -13,13 +13,12 @@ end
 # Read every variable in the file
 function Base.read(f::H5DataStore)
     vars = keys(f)
-    vals = Vector{Any}(undef,length(vars))
-    for i = 1:length(vars)
+    vals = Vector{Any}(undef, length(vars))
+    for i in 1:length(vars)
         vals[i] = read(f, vars[i])
     end
     Dict(zip(vars, vals))
 end
-
 
 ### Base HDF5 structs ###
 
@@ -68,7 +67,7 @@ mutable struct Dataset
     file::File
     xfer::DatasetTransferProperties
 
-    function Dataset(id, file, xfer = DatasetTransferProperties())
+    function Dataset(id, file, xfer=DatasetTransferProperties())
         dset = new(id, file, xfer)
         finalizer(close, dset)
         dset
@@ -129,24 +128,34 @@ Base.unsafe_convert(::Type{API.hid_t}, attr::Attribute) = attr.id
 
 # High-level reference handler
 struct Reference
-  r::API.hobj_ref_t
+    r::API.hobj_ref_t
 end
-Base.cconvert(::Type{Ptr{T}}, ref::Reference) where {T<:Union{Reference,API.hobj_ref_t,Cvoid}} = Ref(ref)
+Base.cconvert(
+    ::Type{Ptr{T}}, ref::Reference
+) where {T<:Union{Reference,API.hobj_ref_t,Cvoid}} = Ref(ref)
 
-const BitsType = Union{Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64}
+const BitsType = Union{
+    Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64
+}
 const ScalarType = Union{BitsType,Reference}
 
 # Define an H5O Object type
 const Object = Union{Group,Dataset,Datatype}
 
 idx_type(obj::File) =
-    get_context_property(:file_create).track_order ||
-    get_create_properties(obj).track_order ? 
-    API.H5_INDEX_CRT_ORDER : API.H5_INDEX_NAME
+    if get_context_property(:file_create).track_order ||
+        get_create_properties(obj).track_order
+        API.H5_INDEX_CRT_ORDER
+    else
+        API.H5_INDEX_NAME
+    end
 idx_type(obj::Group) =
-    get_context_property(:group_create).track_order ||
-    get_create_properties(obj).track_order ? 
-    API.H5_INDEX_CRT_ORDER : API.H5_INDEX_NAME
+    if get_context_property(:group_create).track_order ||
+        get_create_properties(obj).track_order
+        API.H5_INDEX_CRT_ORDER
+    else
+        API.H5_INDEX_NAME
+    end
 idx_type(obj) = API.H5_INDEX_NAME
 
 # TODO: implement alternative iteration order ?

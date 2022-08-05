@@ -5,7 +5,8 @@ dataspace(dset::Dataset) = Dataspace(API.h5d_get_space(checkvalid(dset)))
 
 # Open Dataset
 
-open_dataset(parent::Union{File,Group},
+open_dataset(
+    parent::Union{File,Group},
     name::AbstractString,
     dapl::DatasetAccessProperties=DatasetAccessProperties(),
     dxpl::DatasetTransferProperties=DatasetTransferProperties()
@@ -43,13 +44,17 @@ function create_dataset(
     path::Union{AbstractString,Nothing},
     dtype::Datatype,
     dspace::Dataspace;
-    dcpl::DatasetCreateProperties = DatasetCreateProperties(),
-    dxpl::DatasetTransferProperties = DatasetTransferProperties(),
-    dapl::DatasetAccessProperties = DatasetAccessProperties(),
+    dcpl::DatasetCreateProperties=DatasetCreateProperties(),
+    dxpl::DatasetTransferProperties=DatasetTransferProperties(),
+    dapl::DatasetAccessProperties=DatasetAccessProperties(),
     pv...
 )
-    !isnothing(path) && haskey(parent, path) && error("cannot create dataset: object \"", path, "\" already exists at ", name(parent))
-    pv = setproperties!(dcpl,dxpl,dapl; pv...)
+    !isnothing(path) &&
+        haskey(parent, path) &&
+        error(
+            "cannot create dataset: object \"", path, "\" already exists at ", name(parent)
+        )
+    pv = setproperties!(dcpl, dxpl, dapl; pv...)
     isempty(pv) || error("invalid keyword options")
     if isnothing(path)
         ds = API.h5d_create_anon(parent, dtype, dspace, dcpl, dapl)
@@ -58,11 +63,53 @@ function create_dataset(
     end
     Dataset(ds, file(parent), dxpl)
 end
-create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Datatype, dspace_dims::Dims; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
-create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Datatype, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
-create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Type, dspace_dims::Tuple{Dims,Dims}; pv...) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims[1], max_dims=dspace_dims[2]); pv...)
-create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Type, dspace_dims::Dims; pv...) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
-create_dataset(parent::Union{File,Group}, path::Union{AbstractString,Nothing}, dtype::Type, dspace_dims::Int...; pv...) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
+create_dataset(
+    parent::Union{File,Group},
+    path::Union{AbstractString,Nothing},
+    dtype::Datatype,
+    dspace_dims::Dims;
+    pv...
+) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
+create_dataset(
+    parent::Union{File,Group},
+    path::Union{AbstractString,Nothing},
+    dtype::Datatype,
+    dspace_dims::Tuple{Dims,Dims};
+    pv...
+) = create_dataset(
+    checkvalid(parent),
+    path,
+    dtype,
+    dataspace(dspace_dims[1]; max_dims=dspace_dims[2]);
+    pv...
+)
+create_dataset(
+    parent::Union{File,Group},
+    path::Union{AbstractString,Nothing},
+    dtype::Type,
+    dspace_dims::Tuple{Dims,Dims};
+    pv...
+) = create_dataset(
+    checkvalid(parent),
+    path,
+    datatype(dtype),
+    dataspace(dspace_dims[1]; max_dims=dspace_dims[2]);
+    pv...
+)
+create_dataset(
+    parent::Union{File,Group},
+    path::Union{AbstractString,Nothing},
+    dtype::Type,
+    dspace_dims::Dims;
+    pv...
+) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
+create_dataset(
+    parent::Union{File,Group},
+    path::Union{AbstractString,Nothing},
+    dtype::Type,
+    dspace_dims::Int...;
+    pv...
+) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
 
 # Get the datatype of a dataset
 datatype(dset::Dataset) = Datatype(API.h5d_get_type(checkvalid(dset)), file(dset))
@@ -168,7 +215,7 @@ function readmmap(obj::Dataset, ::Type{T}) where {T}
     elseif offset % Base.datatype_alignment(T) == 0
         A = Mmap.mmap(fd, Array{T,length(dims)}, dims, offset)
     else
-        Aflat = Mmap.mmap(fd, Vector{UInt8}, prod(dims)*sizeof(T), offset)
+        Aflat = Mmap.mmap(fd, Vector{UInt8}, prod(dims) * sizeof(T), offset)
         A = reshape(reinterpret(T, Aflat), dims)
     end
 
@@ -187,18 +234,25 @@ function readmmap(obj::Dataset)
 end
 
 # Generic write
-function Base.write(parent::Union{File,Group}, name1::Union{AbstractString,Nothing}, val1, name2::Union{AbstractString,Nothing}, val2, nameval...) # FIXME: remove?
+function Base.write(
+    parent::Union{File,Group},
+    name1::Union{AbstractString,Nothing},
+    val1,
+    name2::Union{AbstractString,Nothing},
+    val2,
+    nameval...
+) # FIXME: remove?
     if !iseven(length(nameval))
         error("name, value arguments must come in pairs")
     end
     write(parent, name1, val1)
     write(parent, name2, val2)
-    for i = 1:2:length(nameval)
+    for i in 1:2:length(nameval)
         thisname = nameval[i]
         if !isa(thisname, AbstractString)
-            error("Argument ", i+5, " should be a string, but it's a ", typeof(thisname))
+            error("Argument ", i + 5, " should be a string, but it's a ", typeof(thisname))
         end
-        write(parent, thisname, nameval[i+1])
+        write(parent, thisname, nameval[i + 1])
     end
 end
 
@@ -208,7 +262,9 @@ end
 # Create datasets and attributes with "native" types, but don't write the data.
 # The return syntax is: dset, dtype = create_dataset(parent, name, data; properties...)
 
-function create_dataset(parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data; pv...)
+function create_dataset(
+    parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data; pv...
+)
     dtype = datatype(data)
     dspace = dataspace(data)
     obj = try
@@ -220,7 +276,9 @@ function create_dataset(parent::Union{File,Group}, name::Union{AbstractString,No
 end
 
 # Create and write, closing the objects upon exit
-function write_dataset(parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data; pv...)
+function write_dataset(
+    parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data; pv...
+)
     obj, dtype = create_dataset(parent, name, data; pv...)
     try
         write_dataset(obj, dtype, data)
@@ -245,8 +303,8 @@ function Base.write(obj::Dataset, x)
 end
 
 # For plain files and groups, let "write(obj, name, val; properties...)" mean "write_dataset"
-Base.write(parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data; pv...) = write_dataset(parent, name, data; pv...)
-
+Base.write(parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data; pv...) =
+    write_dataset(parent, name, data; pv...)
 
 # Indexing
 
@@ -256,7 +314,7 @@ Base.axes(dset::Dataset) = map(Base.OneTo, size(dset))
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
 
 const IndexType = Union{AbstractRange{Int},Int,Colon}
-function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where T
+function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where {T}
     !isconcretetype(T) && error("type $T is not concrete")
     U = get_jl_type(dset)
 
@@ -293,7 +351,7 @@ function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where T
     return X
 end
 
-function Base.setindex!(dset::Dataset, x::T, I::IndexType...) where T <: Number
+function Base.setindex!(dset::Dataset, x::T, I::IndexType...) where {T<:Number}
     indices = Base.to_indices(dset, I)
     X = fill(x, map(length, indices))
     Base.setindex!(dset, X, indices...)
@@ -317,42 +375,82 @@ Use `API.h5p_set_external` to link to multiple segments.
 
 See also [`API.h5p_set_external`](@ref)
 """
-function create_external_dataset(parent::Union{File,Group}, name::AbstractString, filepath::AbstractString, t, sz::Dims, offset::Integer=0)
+function create_external_dataset(
+    parent::Union{File,Group},
+    name::AbstractString,
+    filepath::AbstractString,
+    t,
+    sz::Dims,
+    offset::Integer=0
+)
     create_external_dataset(parent, name, filepath, datatype(t), dataspace(sz), offset)
 end
-function create_external_dataset(parent::Union{File,Group}, name::AbstractString, filepath::AbstractString, dtype::Datatype, dspace::Dataspace, offset::Integer=0)
+function create_external_dataset(
+    parent::Union{File,Group},
+    name::AbstractString,
+    filepath::AbstractString,
+    dtype::Datatype,
+    dspace::Dataspace,
+    offset::Integer=0
+)
     checkvalid(parent)
-    create_dataset(parent, name, dtype, dspace; external=(filepath, offset, length(dspace)*sizeof(dtype)))
+    create_dataset(
+        parent,
+        name,
+        dtype,
+        dspace;
+        external=(filepath, offset, length(dspace) * sizeof(dtype))
+    )
 end
 
 ### HDF5 utilities ###
 
-
 # default behavior
-read_dataset(dset::Dataset, memtype::Datatype, buf, xfer::DatasetTransferProperties=dset.xfer) =
-    API.h5d_read(dset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
-write_dataset(dset::Dataset, memtype::Datatype, x, xfer::DatasetTransferProperties=dset.xfer) =
-    API.h5d_write(dset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, x)
+read_dataset(
+    dset::Dataset, memtype::Datatype, buf, xfer::DatasetTransferProperties=dset.xfer
+) = API.h5d_read(dset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
+write_dataset(
+    dset::Dataset, memtype::Datatype, x, xfer::DatasetTransferProperties=dset.xfer
+) = API.h5d_write(dset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, x)
 
 # type-specific behaviors
 function _check_invalid(dataset::Dataset, buf::AbstractArray)
     num_bytes_dset = Base.checked_mul(sizeof(datatype(dataset)), length(dataset))
     num_bytes_buf = Base.checked_mul(sizeof(eltype(buf)), length(buf))
-    num_bytes_buf == num_bytes_dset || throw(ArgumentError(
-        "Invalid number of bytes: $num_bytes_buf != $num_bytes_dset, for dataset \"$(name(dataset))\""
-    ))
-    stride(buf, 1) == 1 || throw(ArgumentError("Cannot read/write arrays with a different stride than `Array`"))
+    num_bytes_buf == num_bytes_dset || throw(
+        ArgumentError(
+            "Invalid number of bytes: $num_bytes_buf != $num_bytes_dset, for dataset \"$(name(dataset))\""
+        )
+    )
+    stride(buf, 1) == 1 || throw(
+        ArgumentError("Cannot read/write arrays with a different stride than `Array`")
+    )
 end
-function read_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::DatasetTransferProperties=dataset.xfer)
+function read_dataset(
+    dataset::Dataset,
+    memtype::Datatype,
+    buf::AbstractArray,
+    xfer::DatasetTransferProperties=dataset.xfer
+)
     _check_invalid(dataset, buf)
     API.h5d_read(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
 end
 
-function write_dataset(dataset::Dataset, memtype::Datatype, buf::AbstractArray, xfer::DatasetTransferProperties=dataset.xfer)
+function write_dataset(
+    dataset::Dataset,
+    memtype::Datatype,
+    buf::AbstractArray,
+    xfer::DatasetTransferProperties=dataset.xfer
+)
     _check_invalid(dataset, buf)
     API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
 end
-function write_dataset(dataset::Dataset, memtype::Datatype, str::Union{AbstractString,Nothing}, xfer::DatasetTransferProperties=dataset.xfer)
+function write_dataset(
+    dataset::Dataset,
+    memtype::Datatype,
+    str::Union{AbstractString,Nothing},
+    xfer::DatasetTransferProperties=dataset.xfer
+)
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
         # unsafe_convert(Cstring, strbuf) is responsible for enforcing the no-'\0' policy,
@@ -362,15 +460,27 @@ function write_dataset(dataset::Dataset, memtype::Datatype, str::Union{AbstractS
         API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
     end
 end
-function write_dataset(dataset::Dataset, memtype::Datatype, x::T, xfer::DatasetTransferProperties=dataset.xfer) where {T<:Union{ScalarType, Complex{<:ScalarType}}}
+function write_dataset(
+    dataset::Dataset, memtype::Datatype, x::T, xfer::DatasetTransferProperties=dataset.xfer
+) where {T<:Union{ScalarType,Complex{<:ScalarType}}}
     tmp = Ref{T}(x)
     API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, tmp)
 end
-function write_dataset(dataset::Dataset, memtype::Datatype, strs::Array{<:AbstractString}, xfer::DatasetTransferProperties=dataset.xfer)
+function write_dataset(
+    dataset::Dataset,
+    memtype::Datatype,
+    strs::Array{<:AbstractString},
+    xfer::DatasetTransferProperties=dataset.xfer
+)
     p = Ref{Cstring}(strs)
     API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, p)
 end
-write_dataset(dataset::Dataset, memtype::Datatype, ::EmptyArray, xfer::DatasetTransferProperties=dataset.xfer) = nothing
+write_dataset(
+    dataset::Dataset,
+    memtype::Datatype,
+    ::EmptyArray,
+    xfer::DatasetTransferProperties=dataset.xfer
+) = nothing
 
 """
     get_datasets(file::HDF5.File) -> datasets::Vector{HDF5.Dataset}
@@ -382,7 +492,7 @@ function get_datasets(file::File)
     get_datasets!(list, file)
     list
 end
- function get_datasets!(list::Vector{Dataset}, node::Union{File,Group,Dataset})
+function get_datasets!(list::Vector{Dataset}, node::Union{File,Group,Dataset})
     if isa(node, Dataset)
         push!(list, node)
     else
@@ -402,11 +512,11 @@ function heuristic_chunk(T, shape)
     chunk = [shape...]
     nd = length(chunk)
     # simplification of ugly heuristic target chunk size from PyTables/h5py:
-    target = min(1500000, max(12000, floor(Int, 300*cbrt(Ts*sz))))
+    target = min(1500000, max(12000, floor(Int, 300 * cbrt(Ts * sz))))
     Ts > target && return ones(chunk)
     # divide last non-unit dimension by 2 until we get <= target
     # (since Julia default to column-major, favor contiguous first dimension)
-    while Ts*prod(chunk) > target
+    while Ts * prod(chunk) > target
         i = nd
         while chunk[i] == 1
             i -= 1
@@ -440,7 +550,9 @@ Write a raw chunk at a given linear index.
 `chunk_bytes` is an AbstractArray that can be converted to a pointer, Ptr{Cvoid}.
 `index` is 1-based and consecutive up to the number of chunks.
 """
-function do_write_chunk(dataset::Dataset, index::Integer, chunk_bytes::AbstractArray, filter_mask=0)
+function do_write_chunk(
+    dataset::Dataset, index::Integer, chunk_bytes::AbstractArray, filter_mask=0
+)
     checkvalid(dataset)
     index -= 1
     write_chunk(dataset, index, chunk_bytes; filter_mask=UInt32(filter_mask))
@@ -456,7 +568,7 @@ function do_read_chunk(dataset::Dataset, offset)
     checkvalid(dataset)
     offs = collect(API.hsize_t, reverse(offset)) .- 1
     filters = Ref{UInt32}()
-    buf = read_chunk(dataset, offs; filters = filters)
+    buf = read_chunk(dataset, offs; filters=filters)
     return (filters[], buf)
 end
 
@@ -470,7 +582,7 @@ function do_read_chunk(dataset::Dataset, index::Integer)
     checkvalid(dataset)
     index -= 1
     filters = Ref{UInt32}()
-    buf = read_chunk(dataset, index; filters = filters)
+    buf = read_chunk(dataset, index; filters=filters)
     return (filters[], buf)
 end
 
@@ -483,11 +595,10 @@ Base.IndexStyle(::ChunkStorage{I}) where {I<:IndexStyle} = I()
 # ChunkStorage{IndexCartesian,N} (default)
 
 function ChunkStorage(dataset)
-    ChunkStorage{IndexCartesian, ndims(dataset)}(dataset)
+    ChunkStorage{IndexCartesian,ndims(dataset)}(dataset)
 end
 
 Base.size(cs::ChunkStorage{IndexCartesian}) = get_num_chunks_per_dim(cs.dataset)
-
 
 function Base.axes(cs::ChunkStorage{IndexCartesian})
     chunk = get_chunk(cs.dataset)
@@ -496,12 +607,18 @@ function Base.axes(cs::ChunkStorage{IndexCartesian})
 end
 
 # Filter flags provided
-function Base.setindex!(chunk_storage::ChunkStorage{IndexCartesian}, v::Tuple{<:Integer,AbstractArray}, index::Integer...)
+function Base.setindex!(
+    chunk_storage::ChunkStorage{IndexCartesian},
+    v::Tuple{<:Integer,AbstractArray},
+    index::Integer...
+)
     do_write_chunk(chunk_storage.dataset, index, v[2], v[1])
 end
 
 # Filter flags will default to 0
-function Base.setindex!(chunk_storage::ChunkStorage{IndexCartesian}, v::AbstractArray, index::Integer...)
+function Base.setindex!(
+    chunk_storage::ChunkStorage{IndexCartesian}, v::AbstractArray, index::Integer...
+)
     do_write_chunk(chunk_storage.dataset, index, v)
 end
 
@@ -511,16 +628,22 @@ end
 
 # ChunkStorage{IndexLinear,1}
 
-ChunkStorage{IndexLinear}(dataset) = ChunkStorage{IndexLinear,1}(dataset)
+ChunkStorage{IndexLinear}(dataset)         = ChunkStorage{IndexLinear,1}(dataset)
 Base.size(cs::ChunkStorage{IndexLinear})   = (get_num_chunks(cs.dataset),)
-Base.length(cs::ChunkStorage{IndexLinear}) =  get_num_chunks(cs.dataset)
+Base.length(cs::ChunkStorage{IndexLinear}) = get_num_chunks(cs.dataset)
 
-function Base.setindex!(chunk_storage::ChunkStorage{IndexLinear}, v::Tuple{<:Integer,AbstractArray}, index::Integer)
+function Base.setindex!(
+    chunk_storage::ChunkStorage{IndexLinear},
+    v::Tuple{<:Integer,AbstractArray},
+    index::Integer
+)
     do_write_chunk(chunk_storage.dataset, index, v[2], v[1])
 end
 
 # Filter flags will default to 0
-function Base.setindex!(chunk_storage::ChunkStorage{IndexLinear}, v::AbstractArray, index::Integer)
+function Base.setindex!(
+    chunk_storage::ChunkStorage{IndexLinear}, v::AbstractArray, index::Integer
+)
     do_write_chunk(chunk_storage.dataset, index, v)
 end
 
@@ -532,13 +655,15 @@ end
 # ChunkStorage axes may be StepRanges, but this is not available until v"1.6.0"
 # no method matching CartesianIndices(::Tuple{StepRange{Int64,Int64},UnitRange{Int64}}) until v"1.6.0"
 
-function Base.show(io::IO, cs::ChunkStorage{IndexCartesian,N}) where N
+function Base.show(io::IO, cs::ChunkStorage{IndexCartesian,N}) where {N}
     println(io, "HDF5.ChunkStorage{IndexCartesian,$N}")
     print(io, "Axes: ")
     println(io, axes(cs))
     print(io, cs.dataset)
 end
-Base.show(io::IO, ::MIME{Symbol("text/plain")}, cs::ChunkStorage{IndexCartesian,N}) where {N} = show(io, cs)
+Base.show(
+    io::IO, ::MIME{Symbol("text/plain")}, cs::ChunkStorage{IndexCartesian,N}
+) where {N} = show(io, cs)
 
 function get_chunk(dset::Dataset)
     p = get_create_properties(dset)

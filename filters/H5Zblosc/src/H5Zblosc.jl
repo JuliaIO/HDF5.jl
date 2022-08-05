@@ -4,7 +4,14 @@ module H5Zblosc
 import Blosc
 using HDF5.API
 import HDF5.Filters: Filter, FilterPipeline
-import HDF5.Filters: filterid, register_filter, filtername, filter_func, filter_cfunc, set_local_func, set_local_cfunc
+import HDF5.Filters:
+    filterid,
+    register_filter,
+    filtername,
+    filter_func,
+    filter_cfunc,
+    set_local_func,
+    set_local_cfunc
 import HDF5.Filters.Shuffle
 
 export H5Z_FILTER_BLOSC, blosc_filter, BloscFilter
@@ -18,11 +25,20 @@ const blosc_name = "blosc"
 
 function blosc_set_local(dcpl::API.hid_t, htype::API.hid_t, space::API.hid_t)
     blosc_flags = Ref{Cuint}()
-    blosc_values = Vector{Cuint}(undef,8)
+    blosc_values = Vector{Cuint}(undef, 8)
     blosc_nelements = Ref{Csize_t}(length(blosc_values))
-    blosc_chunkdims = Vector{API.hsize_t}(undef,32)
+    blosc_chunkdims = Vector{API.hsize_t}(undef, 32)
 
-    API.h5p_get_filter_by_id(dcpl, H5Z_FILTER_BLOSC, blosc_flags, blosc_nelements, blosc_values, 0, C_NULL, C_NULL)
+    API.h5p_get_filter_by_id(
+        dcpl,
+        H5Z_FILTER_BLOSC,
+        blosc_flags,
+        blosc_nelements,
+        blosc_values,
+        0,
+        C_NULL,
+        C_NULL
+    )
     flags = blosc_flags[]
 
     nelements = max(blosc_nelements[], 4) # First 4 slots reserved
@@ -60,9 +76,14 @@ function blosc_set_local(dcpl::API.hid_t, htype::API.hid_t, space::API.hid_t)
     return API.herr_t(1)
 end
 
-function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
-                      cd_values::Ptr{Cuint}, nbytes::Csize_t,
-                      buf_size::Ptr{Csize_t}, buf::Ptr{Ptr{Cvoid}})
+function blosc_filter(
+    flags::Cuint,
+    cd_nelmts::Csize_t,
+    cd_values::Ptr{Cuint},
+    nbytes::Csize_t,
+    buf_size::Ptr{Csize_t},
+    buf::Ptr{Ptr{Cvoid}}
+)
     typesize = unsafe_load(cd_values, 3) # The datatype size
     outbuf_size = unsafe_load(cd_values, 4)
     # Compression level:
@@ -85,8 +106,9 @@ function blosc_filter(flags::Cuint, cd_nelmts::Csize_t,
             "blosclz"
         end
         Blosc.set_compressor(compname)
-        status = Blosc.blosc_compress(clevel, doshuffle, typesize, nbytes,
-                                      unsafe_load(buf), outbuf, nbytes)
+        status = Blosc.blosc_compress(
+            clevel, doshuffle, typesize, nbytes, unsafe_load(buf), outbuf, nbytes
+        )
         status < 0 && (Libc.free(outbuf); return Csize_t(0))
     else # decompressing
         # Extract the exact outbuf_size from the buffer header.
@@ -139,38 +161,55 @@ struct BloscFilter <: Filter
     compcode::Cuint
 end
 
-function BloscFilter(;level=5, shuffle=SHUFFLE, compressor="blosclz")
+function BloscFilter(; level=5, shuffle=SHUFFLE, compressor="blosclz")
     Blosc.isvalidshuffle(shuffle) || throw(ArgumentError("invalid blosc shuffle $shuffle"))
     compcode = Blosc.compcode(compressor)
-    BloscFilter(0,0,0,0,level,shuffle,compcode)
+    BloscFilter(0, 0, 0, 0, level, shuffle, compcode)
 end
 
 filterid(::Type{BloscFilter}) = H5Z_FILTER_BLOSC
 filtername(::Type{BloscFilter}) = blosc_name
 set_local_func(::Type{BloscFilter}) = blosc_set_local
-set_local_cfunc(::Type{BloscFilter}) = @cfunction(blosc_set_local, API.herr_t, (API.hid_t,API.hid_t,API.hid_t))
+set_local_cfunc(::Type{BloscFilter}) =
+    @cfunction(blosc_set_local, API.herr_t, (API.hid_t, API.hid_t, API.hid_t))
 filter_func(::Type{BloscFilter}) = blosc_filter
-filter_cfunc(::Type{BloscFilter}) = @cfunction(blosc_filter, Csize_t,
-                                                 (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
-                                                 Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
+filter_cfunc(::Type{BloscFilter}) = @cfunction(
+    blosc_filter,
+    Csize_t,
+    (Cuint, Csize_t, Ptr{Cuint}, Csize_t, Ptr{Csize_t}, Ptr{Ptr{Cvoid}})
+)
 
 function Base.show(io::IO, blosc::BloscFilter)
-    print(io, BloscFilter,
-          "(level=", Int(blosc.level),
-          ",shuffle=", blosc.shuffle==NOSHUFFLE  ? "NOSHUFFLE"  :
-                       blosc.shuffle==SHUFFLE    ? "SHUFFLE"    :
-                       blosc.shuffle==BITSHUFFLE ? "BITSHUFFLE" :
-                       "UNKNOWN",
-          ",compressor=", Blosc.compname(blosc.compcode),
-          ")")
+    print(
+        io,
+        BloscFilter,
+        "(level=",
+        Int(blosc.level),
+        ",shuffle=",
+        blosc.shuffle == NOSHUFFLE  ? "NOSHUFFLE"  :
+        blosc.shuffle == SHUFFLE    ? "SHUFFLE"    :
+        blosc.shuffle == BITSHUFFLE ? "BITSHUFFLE" :
+        "UNKNOWN",
+        ",compressor=",
+        Blosc.compname(blosc.compcode),
+        ")"
+    )
 end
 
 function Base.push!(f::FilterPipeline, blosc::BloscFilter)
-    0 <= blosc.level <= 9 || throw(ArgumentError("blosc compression $(blosc.level) not in [0,9]"))
-    Blosc.isvalidshuffle(blosc.shuffle) || throw(ArgumentError("invalid blosc shuffle $(blosc.shuffle)"))
+    0 <= blosc.level <= 9 ||
+        throw(ArgumentError("blosc compression $(blosc.level) not in [0,9]"))
+    Blosc.isvalidshuffle(blosc.shuffle) ||
+        throw(ArgumentError("invalid blosc shuffle $(blosc.shuffle)"))
     ref = Ref(blosc)
     GC.@preserve ref begin
-        API.h5p_set_filter(f.plist, filterid(BloscFilter), API.H5Z_FLAG_OPTIONAL, div(sizeof(BloscFilter), sizeof(Cuint)), pointer_from_objref(ref))
+        API.h5p_set_filter(
+            f.plist,
+            filterid(BloscFilter),
+            API.H5Z_FLAG_OPTIONAL,
+            div(sizeof(BloscFilter), sizeof(Cuint)),
+            pointer_from_objref(ref)
+        )
     end
     return f
 end

@@ -19,18 +19,25 @@ There are many keyword properties that can be set. Below are a few select keywor
 See also
 * [`H5P`](@ref H5P)
 """
-function create_group(parent::Union{File,Group}, path::AbstractString,
-                  lcpl::LinkCreateProperties=_link_properties(path),
-                  gcpl::GroupCreateProperties=GroupCreateProperties();
-                  pv...)
-    haskey(parent, path) && error("cannot create group: object \"", path, "\" already exists at ", name(parent))
+function create_group(
+    parent::Union{File,Group},
+    path::AbstractString,
+    lcpl::LinkCreateProperties=_link_properties(path),
+    gcpl::GroupCreateProperties=GroupCreateProperties();
+    pv...
+)
+    haskey(parent, path) &&
+        error("cannot create group: object \"", path, "\" already exists at ", name(parent))
     pv = setproperties!(gcpl; pv...)
     isempty(pv) || error("invalid keyword options $pv")
     Group(API.h5g_create(parent, path, lcpl, gcpl, API.H5P_DEFAULT), file(parent))
 end
 
-open_group(parent::Union{File,Group}, name::AbstractString, gapl::GroupAccessProperties=GroupAccessProperties()) =
-    Group(API.h5g_open(checkvalid(parent), name, gapl), file(parent))
+open_group(
+    parent::Union{File,Group},
+    name::AbstractString,
+    gapl::GroupAccessProperties=GroupAccessProperties()
+) = Group(API.h5g_open(checkvalid(parent), name, gapl), file(parent))
 
 # Get the root group
 root(h5file::File) = open_group(h5file, "/")
@@ -44,12 +51,17 @@ Base.isempty(x::Union{Group,File}) = length(x) == 0
 name(obj::Union{File,Group,Dataset,Datatype}) = API.h5i_get_name(checkvalid(obj))
 
 # iteration by objects
-function Base.iterate(parent::Union{File,Group}, iter = (1,nothing))
+function Base.iterate(parent::Union{File,Group}, iter=(1, nothing))
     n, prev_obj = iter
     prev_obj ≢ nothing && close(prev_obj)
     n > length(parent) && return nothing
-    obj = h5object(API.h5o_open_by_idx(checkvalid(parent), ".", idx_type(parent), order(parent), n-1, API.H5P_DEFAULT), parent)
-    return (obj, (n+1,obj))
+    obj = h5object(
+        API.h5o_open_by_idx(
+            checkvalid(parent), ".", idx_type(parent), order(parent), n - 1, API.H5P_DEFAULT
+        ),
+        parent
+    )
+    return (obj, (n + 1, obj))
 end
 
 function Base.parent(obj::Union{File,Group,Dataset})
@@ -78,7 +90,11 @@ function split1(path::AbstractString)
     end
 end
 
-function Base.haskey(parent::Union{File,Group}, path::AbstractString, lapl::LinkAccessProperties = LinkAccessProperties())
+function Base.haskey(
+    parent::Union{File,Group},
+    path::AbstractString,
+    lapl::LinkAccessProperties=LinkAccessProperties()
+)
     # recursively check each step of the path exists
     # see https://portal.hdfgroup.org/display/HDF5/H5L_EXISTS
     checkvalid(parent)
@@ -106,16 +122,29 @@ function Base.keys(x::Union{Group,File})
     return children
 end
 
-
-delete_object(parent::Union{File,Group}, path::AbstractString, lapl::LinkAccessProperties=LinkAccessProperties()) =
-    API.h5l_delete(checkvalid(parent), path, lapl)
-delete_object(obj::Object) = delete_object(parent(obj), ascii(split(name(obj),"/")[end])) # FIXME: remove ascii?
+delete_object(
+    parent::Union{File,Group},
+    path::AbstractString,
+    lapl::LinkAccessProperties=LinkAccessProperties()
+) = API.h5l_delete(checkvalid(parent), path, lapl)
+delete_object(obj::Object) = delete_object(parent(obj), ascii(split(name(obj), "/")[end])) # FIXME: remove ascii?
 
 # Move links
-move_link(src::Union{File,Group}, src_name::AbstractString, dest::Union{File,Group}, dest_name::AbstractString=src_name, lapl::LinkAccessProperties = LinkAccessProperties(), lcpl::LinkCreateProperties = LinkCreateProperties()) =
-    API.h5l_move(checkvalid(src), src_name, checkvalid(dest), dest_name, lcpl, lapl)
-move_link(parent::Union{File,Group}, src_name::AbstractString, dest_name::AbstractString, lapl::LinkAccessProperties = LinkAccessProperties(), lcpl::LinkCreateProperties = LinkCreateProperties())  =
-    API.h5l_move(checkvalid(parent), src_name, parent, dest_name, lcpl, lapl)
+move_link(
+    src::Union{File,Group},
+    src_name::AbstractString,
+    dest::Union{File,Group},
+    dest_name::AbstractString=src_name,
+    lapl::LinkAccessProperties=LinkAccessProperties(),
+    lcpl::LinkCreateProperties=LinkCreateProperties()
+) = API.h5l_move(checkvalid(src), src_name, checkvalid(dest), dest_name, lcpl, lapl)
+move_link(
+    parent::Union{File,Group},
+    src_name::AbstractString,
+    dest_name::AbstractString,
+    lapl::LinkAccessProperties=LinkAccessProperties(),
+    lcpl::LinkCreateProperties=LinkCreateProperties()
+) = API.h5l_move(checkvalid(parent), src_name, parent, dest_name, lcpl, lapl)
 
 """
     create_external(source::Union{HDF5.File, HDF5.Group}, source_relpath, target_filename, target_path;
@@ -124,7 +153,16 @@ move_link(parent::Union{File,Group}, src_name::AbstractString, dest_name::Abstra
 Create an external link such that `source[source_relpath]` points to `target_path` within the file
 with path `target_filename`; Calls `[H5Lcreate_external](https://www.hdfgroup.org/HDF5/doc/RM/RM_H5L.html#Link-CreateExternal)`.
 """
-function create_external(source::Union{File,Group}, source_relpath, target_filename, target_path; lcpl_id=API.H5P_DEFAULT, lapl_id=API.H5P_DEFAULT)
-    API.h5l_create_external(target_filename, target_path, source, source_relpath, lcpl_id, lapl_id)
+function create_external(
+    source::Union{File,Group},
+    source_relpath,
+    target_filename,
+    target_path;
+    lcpl_id=API.H5P_DEFAULT,
+    lapl_id=API.H5P_DEFAULT
+)
+    API.h5l_create_external(
+        target_filename, target_path, source, source_relpath, lcpl_id, lapl_id
+    )
     nothing
 end

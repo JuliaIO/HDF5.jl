@@ -1,11 +1,10 @@
 using HDF5
 using Test
 
-
 hf = h5open(tempname(), "w")
 
 fv = 3.14
-data = [1.,2.,3.,4.,5.,6.]
+data = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
 floatsize = sizeof(data[1])
 h5t = datatype(data[1])
 title = "lal"
@@ -14,16 +13,32 @@ nfield = 2
 nrec = 3
 recsize = nfield * floatsize
 colname = ["f1_verylongnameforfun", "f2"]
-offset = [0,floatsize]
+offset = [0, floatsize]
 tid = [h5t.id, h5t.id]
 chunk = 7
 fillvalue = [3.14, 2.71]
 compress = 1
 
-HDF5.API.h5tb_make_table(title, hf, name, nfield, nrec, recsize, colname, offset, tid, chunk, fillvalue, compress, data)
+HDF5.API.h5tb_make_table(
+    title,
+    hf,
+    name,
+    nfield,
+    nrec,
+    recsize,
+    colname,
+    offset,
+    tid,
+    chunk,
+    fillvalue,
+    compress,
+    data
+)
 fieldsize = [floatsize, floatsize]
 HDF5.API.h5tb_append_records(hf, name, nrec, recsize, offset, fieldsize, data)
-HDF5.API.h5tb_write_records(hf, name, 1, 4, recsize, offset, fieldsize, collect(1:8) .+ 20.0)
+HDF5.API.h5tb_write_records(
+    hf, name, 1, 4, recsize, offset, fieldsize, collect(1:8) .+ 20.0
+)
 buf = fill(0.0, 100)
 
 HDF5.API.h5tb_read_table(hf, name, recsize, offset, fieldsize, buf)

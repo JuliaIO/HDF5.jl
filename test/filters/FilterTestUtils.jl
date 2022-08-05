@@ -13,7 +13,7 @@ using Test
 
 export test_filter
 
-function test_filter_init(; cd_values = Cuint[], data = ones(UInt8, 1024))
+function test_filter_init(; cd_values=Cuint[], data=ones(UInt8, 1024))
     flags = Cuint(0)
     nbytes = sizeof(data)
     buf_size = Ref(Csize_t(sizeof(data)))
@@ -24,7 +24,14 @@ function test_filter_init(; cd_values = Cuint[], data = ones(UInt8, 1024))
     return flags, cd_values, nbytes, buf_size, buf
 end
 
-function test_filter_compress!(filter_func, flags::Cuint, cd_values::Vector{Cuint}, nbytes::Integer, buf_size::Ref{Csize_t}, buf::Ref{Ptr{Cvoid}})
+function test_filter_compress!(
+    filter_func,
+    flags::Cuint,
+    cd_values::Vector{Cuint},
+    nbytes::Integer,
+    buf_size::Ref{Csize_t},
+    buf::Ref{Ptr{Cvoid}}
+)
     nbytes = Csize_t(nbytes)
     cd_nelmts = Csize_t(length(cd_values))
     GC.@preserve flags cd_nelmts cd_values nbytes buf_size buf begin
@@ -44,7 +51,14 @@ function test_filter_compress!(filter_func, flags::Cuint, cd_values::Vector{Cuin
     return ret_code
 end
 
-function test_filter_decompress!(filter_func, flags::Cuint, cd_values::Vector{Cuint}, nbytes::Integer, buf_size::Ref{Csize_t}, buf::Ref{Ptr{Cvoid}})
+function test_filter_decompress!(
+    filter_func,
+    flags::Cuint,
+    cd_values::Vector{Cuint},
+    nbytes::Integer,
+    buf_size::Ref{Csize_t},
+    buf::Ref{Ptr{Cvoid}}
+)
     nbytes = Csize_t(nbytes)
     cd_nelmts = Csize_t(length(cd_values))
     flags |= UInt32(API.H5Z_FLAG_REVERSE)
@@ -54,7 +68,7 @@ function test_filter_decompress!(filter_func, flags::Cuint, cd_values::Vector{Cu
             cd_nelmts,
             pointer(cd_values),
             Csize_t(nbytes),
-            Base.unsafe_convert(Ptr{Csize_t},buf_size),
+            Base.unsafe_convert(Ptr{Csize_t}, buf_size),
             Base.unsafe_convert(Ptr{Ptr{Cvoid}}, buf)
         )
         @debug "Decompression:" ret_code buf_size[]
@@ -66,15 +80,21 @@ function test_filter_cleanup!(buf::Ref{Ptr{Cvoid}})
     Libc.free(buf[])
 end
 
-function test_filter(filter_func; cd_values::Vector{Cuint} = Cuint[], data = ones(UInt8, 1024))
-    flags, cd_values, nbytes, buf_size, buf = test_filter_init(; cd_values = cd_values, data = data)
+function test_filter(filter_func; cd_values::Vector{Cuint}=Cuint[], data=ones(UInt8, 1024))
+    flags, cd_values, nbytes, buf_size, buf = test_filter_init(;
+        cd_values=cd_values, data=data
+    )
     nbytes_compressed, nbytes_decompressed = 0, 0
     try
-        nbytes_compressed = test_filter_compress!(filter_func, flags, cd_values, nbytes, buf_size, buf)
-        nbytes_decompressed = test_filter_decompress!(filter_func, flags, cd_values, nbytes_compressed, buf_size, buf)
+        nbytes_compressed = test_filter_compress!(
+            filter_func, flags, cd_values, nbytes, buf_size, buf
+        )
+        nbytes_decompressed = test_filter_decompress!(
+            filter_func, flags, cd_values, nbytes_compressed, buf_size, buf
+        )
         if nbytes_decompressed > 0
             # ret_code is the number of bytes out
-            round_trip_data = unsafe_wrap(Array,Ptr{UInt8}(buf[]), nbytes_decompressed)
+            round_trip_data = unsafe_wrap(Array, Ptr{UInt8}(buf[]), nbytes_decompressed)
             @debug "Is the data the same after a roundtrip?" data == round_trip_data
         end
     catch err
@@ -86,19 +106,19 @@ function test_filter(filter_func; cd_values::Vector{Cuint} = Cuint[], data = one
     return nbytes_compressed, nbytes_decompressed
 end
 
-function test_bzip2_filter(data = ones(UInt8, 1024))
+function test_bzip2_filter(data=ones(UInt8, 1024))
     cd_values = Cuint[8]
-    test_filter(H5Z_filter_bzip2; cd_values = cd_values, data = data)
+    test_filter(H5Z_filter_bzip2; cd_values=cd_values, data=data)
 end
 
-function test_lz4_filter(data = ones(UInt8, 1024))
+function test_lz4_filter(data=ones(UInt8, 1024))
     cd_values = Cuint[1024]
-    test_filter(H5Z_filter_lz4; cd_values = cd_values, data = data)
+    test_filter(H5Z_filter_lz4; cd_values=cd_values, data=data)
 end
 
-function test_zstd_filter(data = ones(UInt8, 1024))
+function test_zstd_filter(data=ones(UInt8, 1024))
     cd_values = Cuint[3] # aggression
-    test_filter(H5Z_filter_zstd; cd_values = cd_values, data = data)
+    test_filter(H5Z_filter_zstd; cd_values=cd_values, data=data)
 end
 
 function __init__()

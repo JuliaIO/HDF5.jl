@@ -10,30 +10,34 @@ bind_exceptions[:h5p_get_fapl_mpio64] = :H5Pget_fapl_mpio
 bind_exceptions[:h5p_set_fapl_mpio32] = :H5Pset_fapl_mpio
 bind_exceptions[:h5p_set_fapl_mpio64] = :H5Pset_fapl_mpio
 # have numbers at the end
-bind_exceptions[:h5p_set_fletcher32]  = :H5Pset_fletcher32
-bind_exceptions[:h5p_set_fapl_sec2]   = :H5Pset_fapl_sec2
+bind_exceptions[:h5p_set_fletcher32] = :H5Pset_fletcher32
+bind_exceptions[:h5p_set_fapl_sec2]  = :H5Pset_fapl_sec2
 # underscore separator not removed
-bind_exceptions[:h5fd_core_init]      = :H5FD_core_init
-bind_exceptions[:h5fd_family_init]    = :H5FD_family_init
-bind_exceptions[:h5fd_log_init]       = :H5FD_log_init
-bind_exceptions[:h5fd_mpio_init]      = :H5FD_mpio_init
-bind_exceptions[:h5fd_multi_init]     = :H5FD_multi_init
-bind_exceptions[:h5fd_sec2_init]      = :H5FD_sec2_init
-bind_exceptions[:h5fd_stdio_init]     = :H5FD_stdio_init
+bind_exceptions[:h5fd_core_init]   = :H5FD_core_init
+bind_exceptions[:h5fd_family_init] = :H5FD_family_init
+bind_exceptions[:h5fd_log_init]    = :H5FD_log_init
+bind_exceptions[:h5fd_mpio_init]   = :H5FD_mpio_init
+bind_exceptions[:h5fd_multi_init]  = :H5FD_multi_init
+bind_exceptions[:h5fd_sec2_init]   = :H5FD_sec2_init
+bind_exceptions[:h5fd_stdio_init]  = :H5FD_stdio_init
 
 # An expression which is injected at the beginning of the API defitions to aid in doing
 # (pre)compile-time conditional compilation based on the libhdf5 version.
 _libhdf5_build_ver_expr = quote
     _libhdf5_build_ver = let
-            majnum, minnum, relnum = Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}()
-            r = ccall((:H5get_libversion, libhdf5), herr_t,
-                      (Ref{Cuint}, Ref{Cuint}, Ref{Cuint}),
-                      majnum, minnum, relnum)
-            r < 0 && error("Error getting HDF5 library version")
-            VersionNumber(majnum[], minnum[], relnum[])
-        end
+        majnum, minnum, relnum = Ref{Cuint}(), Ref{Cuint}(), Ref{Cuint}()
+        r = ccall(
+            (:H5get_libversion, libhdf5),
+            herr_t,
+            (Ref{Cuint}, Ref{Cuint}, Ref{Cuint}),
+            majnum,
+            minnum,
+            relnum
+        )
+        r < 0 && error("Error getting HDF5 library version")
+        VersionNumber(majnum[], minnum[], relnum[])
+    end
 end
-
 
 # We'll also use this processing pass to automatically generate documentation that simply
 # lists all of the bound API functions.
@@ -130,7 +134,8 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
     # Pull apart return-type and rest of function declaration
     rettype = sig.args[2]::Union{Symbol,Expr}
     funcsig = sig.args[1]
-    isexpr(funcsig, :call) || error("expected function-like expression, found `", funcsig, "`")
+    isexpr(funcsig, :call) ||
+        error("expected function-like expression, found `", funcsig, "`")
     funcsig = funcsig::Expr
 
     # Extract function name and argument list
@@ -143,13 +148,15 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
     for ii in 1:length(funcargs)
         argex = funcargs[ii]
         if !isexpr(argex, :(::)) || !(argex.args[1] isa Symbol)
-            error("expected `name::type` expression in argument ", ii, ", got ", funcargs[ii])
+            error(
+                "expected `name::type` expression in argument ", ii, ", got ", funcargs[ii]
+            )
         end
         push!(args, argex.args[1])
         push!(argt, argex.args[2])
     end
 
-    prefix, rest = split(string(jlfuncname), "_", limit = 2)
+    prefix, rest = split(string(jlfuncname), "_"; limit=2)
     # Translate the C function name to a local equivalent
     if haskey(bind_exceptions, jlfuncname)
         cfuncname = bind_exceptions[jlfuncname]
@@ -158,7 +165,7 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
         cfuncname = Symbol(uppercase(prefix), rest)
         # Remove the version number if present (excluding match to literal "hdf5" suffix)
         if occursin(r"\d(?<!hdf5)$", String(jlfuncname))
-            jlfuncname = Symbol(chop(String(jlfuncname), tail = 1))
+            jlfuncname = Symbol(chop(String(jlfuncname); tail=1))
         end
     end
 
@@ -220,12 +227,14 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
 
     if prefix == "h5fd" && endswith(rest, "_init")
         # remove trailing _init
-        drivername = rest[1:end-5]
-        docstr *= "\n\nThis function is exposed in `libhdf5` as the macro `H5FD_$(uppercase(drivername))`. " *
+        drivername = rest[1:(end - 5)]
+        docstr *=
+            "\n\nThis function is exposed in `libhdf5` as the macro `H5FD_$(uppercase(drivername))`. " *
             "See `libhdf5` documentation for [`H5Pget_driver`]" *
             "(https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER).\n"
     else
-        docstr *= "\n\nSee `libhdf5` documentation for [`$cfuncname`]" *
+        docstr *=
+            "\n\nSee `libhdf5` documentation for [`$cfuncname`]" *
             "(https://portal.hdfgroup.org/display/HDF5/$(uppercase(string(funcsig.args[1])))).\n"
     end
     # Then assemble the pieces. Doing it through explicit Expr() objects

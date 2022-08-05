@@ -2,10 +2,10 @@ using .MPI
 import Libdl
 
 # Low-level MPI handles.
-const MPIHandle = Union{MPI.MPI_Comm, MPI.MPI_Info}
+const MPIHandle = Union{MPI.MPI_Comm,MPI.MPI_Info}
 
 # MPI.jl wrapper types.
-const MPIHandleWrapper = Union{MPI.Comm, MPI.Info}
+const MPIHandleWrapper = Union{MPI.Comm,MPI.Info}
 
 const H5MPIHandle = let csize = sizeof(MPI.MPI_Comm)
     @assert csize in (4, 8)
@@ -17,7 +17,6 @@ h5_to_mpi_info(handle::H5MPIHandle) = reinterpret(MPI.MPI_Info, handle)
 
 mpi_to_h5(handle::MPIHandle) = reinterpret(H5MPIHandle, handle)
 mpi_to_h5(mpiobj::MPIHandleWrapper) = mpi_to_h5(mpiobj.val)
-
 
 """
     MPIO(comm::MPI.Comm, info::MPI.Info)
@@ -39,8 +38,7 @@ struct MPIO <: Driver
     comm::MPI.Comm
     info::MPI.Info
 end
- MPIO(comm::MPI.Comm; kwargs...) =
-    MPIO(comm, MPI.Info(;kwargs...))
+MPIO(comm::MPI.Comm; kwargs...) = MPIO(comm, MPI.Info(; kwargs...))
 
 function set_driver!(fapl::Properties, mpio::MPIO)
     HDF5.has_parallel() || error(
@@ -78,9 +76,12 @@ See the [HDF5 docs](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MPIO)
 for details on the `comm` and `info` arguments.
 """
 function HDF5.h5open(
-        filename::AbstractString, mode::AbstractString,
-        comm::MPI.Comm, info::MPI.Info = MPI.Info(); pv...
-    )
+    filename::AbstractString,
+    mode::AbstractString,
+    comm::MPI.Comm,
+    info::MPI.Info=MPI.Info();
+    pv...
+)
     HDF5.h5open(filename, mode; driver=MPIO(comm, info), pv...)
 end
 

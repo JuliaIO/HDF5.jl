@@ -64,9 +64,7 @@ using HDF5.API
             @test oninfo.hdr.mesg.present > 0
         end
 
-        oinfo = API.h5o_get_info_by_idx(
-            h5f, ".", API.H5_INDEX_NAME, API.H5_ITER_INC, 0
-        )
+        oinfo = API.h5o_get_info_by_idx(h5f, ".", API.H5_INDEX_NAME, API.H5_ITER_INC, 0)
         @test oinfo.num_attrs == 0
 
         @static if HDF5.API.h5_get_libversion() >= v"1.12.0"
@@ -83,6 +81,5 @@ using HDF5.API
             @test oninfo.hdr.space.free > 0
             @test oninfo.hdr.mesg.present > 0
         end
-
     end
 end

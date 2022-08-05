@@ -15,18 +15,19 @@ end
 struct foo_hdf5
     a::Float64
     b::Cstring
-    c::NTuple{20, UInt8}
-    d::NTuple{9, ComplexF64}
+    c::NTuple{20,UInt8}
+    d::NTuple{9,ComplexF64}
     e::HDF5.API.hvl_t
 end
 
 function unsafe_convert(::Type{foo_hdf5}, x::foo)
-    foo_hdf5(x.a,
-            Base.unsafe_convert(Cstring, x.b),
-            ntuple(i -> i <= ncodeunits(x.c) ? codeunit(x.c, i) : '\0', 20),
-            ntuple(i -> x.d[i], length(x.d)),
-            HDF5.API.hvl_t(length(x.e), pointer(x.e))
-            )
+    foo_hdf5(
+        x.a,
+        Base.unsafe_convert(Cstring, x.b),
+        ntuple(i -> i <= ncodeunits(x.c) ? codeunit(x.c, i) : '\0', 20),
+        ntuple(i -> x.d[i], length(x.d)),
+        HDF5.API.hvl_t(length(x.e), pointer(x.e))
+    )
 end
 
 function datatype(::Type{foo_hdf5})
@@ -44,7 +45,7 @@ function datatype(::Type{foo_hdf5})
     HDF5.API.h5t_set_strpad(fixedstr_dtype, HDF5.API.H5T_STR_NULLPAD)
     HDF5.API.h5t_insert(dtype, "c", fieldoffset(foo_hdf5, 3), fixedstr_dtype)
 
-    hsz = HDF5.API.hsize_t[3,3]
+    hsz = HDF5.API.hsize_t[3, 3]
     array_dtype = HDF5.API.h5t_array_create(datatype(ComplexF64), 2, hsz)
     HDF5.API.h5t_insert(dtype, "d", fieldoffset(foo_hdf5, 4), array_dtype)
 
@@ -59,7 +60,7 @@ struct bar
 end
 
 struct bar_hdf5
-    a::NTuple{2, NTuple{20, UInt8}}
+    a::NTuple{2,NTuple{20,UInt8}}
 end
 
 function datatype(::Type{bar_hdf5})
@@ -78,25 +79,26 @@ function datatype(::Type{bar_hdf5})
 end
 
 function convert(::Type{bar_hdf5}, x::bar)
-    bar_hdf5(ntuple(i -> ntuple(j -> j <= ncodeunits(x.a[i]) ? codeunit(x.a[i], j) : '\0', 20), 2))
+    bar_hdf5(
+        ntuple(
+            i -> ntuple(j -> j <= ncodeunits(x.a[i]) ? codeunit(x.a[i], j) : '\0', 20), 2
+        )
+    )
 end
-
 
 @testset "compound" begin
     N = 10
-    v = [foo(rand(),
+    v = [
+        foo(
+            rand(),
             randstring(rand(10:100)),
             randstring(10),
-            rand(ComplexF64, 3,3),
+            rand(ComplexF64, 3, 3),
             rand(1:10, rand(10:100))
-            )
-        for _ in 1:N]
+        ) for _ in 1:N
+    ]
 
-    v[1] = foo(1.0,
-              "uniçº∂e",
-              "uniçº∂e",
-              rand(ComplexF64, 3,3),
-              rand(1:10, rand(10:100)))
+    v[1] = foo(1.0, "uniçº∂e", "uniçº∂e", rand(ComplexF64, 3, 3), rand(1:10, rand(10:100)))
 
     v_write = unsafe_convert.(foo_hdf5, v)
 
@@ -128,18 +130,18 @@ end
         @test f.(w) == f.(w_read)
     end
 
-    T = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, Cstring}}
-    TT = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, T}}
-    TTT = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, TT}}
-    TTTT = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, TTT}}
+    T = NamedTuple{(:a, :b, :c, :d, :e, :f),Tuple{Int,Int,Int,Int,Int,Cstring}}
+    TT = NamedTuple{(:a, :b, :c, :d, :e, :f),Tuple{Int,Int,Int,Int,Int,T}}
+    TTT = NamedTuple{(:a, :b, :c, :d, :e, :f),Tuple{Int,Int,Int,Int,Int,TT}}
+    TTTT = NamedTuple{(:a, :b, :c, :d, :e, :f),Tuple{Int,Int,Int,Int,Int,TTT}}
 
     @test HDF5.do_reclaim(TTTT) == true
     @test HDF5.do_normalize(TTTT) == true
 
-    T = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, HDF5.FixedArray}}
-    TT = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, T}}
-    TTT = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, TT}}
-    TTTT = NamedTuple{(:a, :b, :c, :d, :e, :f), Tuple{Int, Int, Int, Int, Int, TTT}}
+    T = NamedTuple{(:a, :b, :c, :d, :e, :f),Tuple{Int,Int,Int,Int,Int,HDF5.FixedArray}}
+    TT = NamedTuple{(:a, :b, :c, :d, :e, :f),Tuple{Int,Int,Int,Int,Int,T}}
+    TTT = NamedTuple{(:a, :b, :c, :d, :e, :f),Tuple{Int,Int,Int,Int,Int,TT}}
+    TTTT = NamedTuple{(:a, :b, :c, :d, :e, :f),Tuple{Int,Int,Int,Int,Int,TTT}}
 
     @test HDF5.do_reclaim(TTTT) == false
     @test HDF5.do_normalize(TTTT) == true

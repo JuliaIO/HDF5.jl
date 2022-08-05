@@ -50,7 +50,6 @@ export Deflate, Shuffle, Fletcher32, Szip, NBit, ScaleOffset, ExternalFilter
 
 import ..HDF5: Properties, h5doc, API
 
-
 """
     Filter
 
@@ -91,7 +90,7 @@ abstract type Filter end
 
 Maps filter id to filter type.
 """
-const FILTERS = Dict{API.H5Z_filter_t, Type{<: Filter}}()
+const FILTERS = Dict{API.H5Z_filter_t,Type{<:Filter}}()
 
 """
     filterid(F) where {F <: Filter}
@@ -153,7 +152,7 @@ function can_apply_cfunc(::Type{F}) where {F<:Filter}
     if func === nothing
         return C_NULL
     else
-        return @cfunction($func, API.herr_t, (API.hid_t,API.hid_t,API.hid_t))
+        return @cfunction($func, API.herr_t, (API.hid_t, API.hid_t, API.hid_t))
     end
 end
 
@@ -181,10 +180,9 @@ function set_local_cfunc(::Type{F}) where {F<:Filter}
     if func === nothing
         return C_NULL
     else
-        return @cfunction($func, API.herr_t, (API.hid_t,API.hid_t,API.hid_t))
+        return @cfunction($func, API.herr_t, (API.hid_t, API.hid_t, API.hid_t))
     end
 end
-
 
 """
     filter_func(::Type{F}) where {F<:Filter}
@@ -210,9 +208,9 @@ function filter_cfunc(::Type{F}) where {F<:Filter}
     if func === nothing
         error("Filter function for $F must be defined via `filter_func`.")
     end
-    c_filter_func = @cfunction($func, Csize_t,
-                               (Cuint, Csize_t, Ptr{Cuint}, Csize_t,
-                               Ptr{Csize_t}, Ptr{Ptr{Cvoid}}))
+    c_filter_func = @cfunction(
+        $func, Csize_t, (Cuint, Csize_t, Ptr{Cuint}, Csize_t, Ptr{Csize_t}, Ptr{Ptr{Cvoid}})
+    )
     return c_filter_func
 end
 
@@ -223,7 +221,7 @@ end
 Register the filter with the HDF5 library via [`API.h5z_register`](@ref).
 Also add F to the FILTERS dictionary.
 """
-function register_filter(::Type{F}) where F <: Filter
+function register_filter(::Type{F}) where {F<:Filter}
     id = filterid(F)
     encoder = encoder_present(F)
     decoder = decoder_present(F)
@@ -232,16 +230,18 @@ function register_filter(::Type{F}) where F <: Filter
     set_local = set_local_cfunc(F)
     func = filter_cfunc(F)
     GC.@preserve name begin
-        API.h5z_register(API.H5Z_class_t(
-            API.H5Z_CLASS_T_VERS,
-            id,
-            encoder,
-            decoder,
-            pointer(name),
-            can_apply,
-            set_local,
-            func
-        ))
+        API.h5z_register(
+            API.H5Z_class_t(
+                API.H5Z_CLASS_T_VERS,
+                id,
+                encoder,
+                decoder,
+                pointer(name),
+                can_apply,
+                set_local,
+                func
+            )
+        )
     end
     FILTERS[id] = F
     return nothing
@@ -288,7 +288,7 @@ end
 function ExternalFilter(filter_id, flags, data::Integer...)
     ExternalFilter(filter_id, flags, Cuint[data...])
 end
-function ExternalFilter(filter_id, data::AbstractVector{<:Integer} = Cuint[])
+function ExternalFilter(filter_id, data::AbstractVector{<:Integer}=Cuint[])
     ExternalFilter(filter_id, API.H5Z_FLAG_MANDATORY, data)
 end
 filterid(filter::ExternalFilter) = filter.filter_id
@@ -328,22 +328,26 @@ end
 Base.size(f::FilterPipeline) = (length(f),)
 
 function Base.getindex(f::FilterPipeline, i::Integer)
-    id = API.h5p_get_filter(f.plist, i-1, C_NULL, C_NULL, C_NULL, 0, C_NULL, C_NULL)
+    id = API.h5p_get_filter(f.plist, i - 1, C_NULL, C_NULL, C_NULL, 0, C_NULL, C_NULL)
     F = get(FILTERS, id, ExternalFilter)
     return getindex(f, F, i)
 end
 
-function Base.getindex(f::FilterPipeline, ::Type{ExternalFilter}, i::Integer, cd_values::Vector{Cuint} = Cuint[])
+function Base.getindex(
+    f::FilterPipeline, ::Type{ExternalFilter}, i::Integer, cd_values::Vector{Cuint}=Cuint[]
+)
     flags = Ref{Cuint}()
     cd_nelmts = Ref{Csize_t}(length(cd_values))
     namebuf = Array{UInt8}(undef, 256)
     config = Ref{Cuint}()
-    id = API.h5p_get_filter(f.plist, i-1, flags, cd_nelmts, cd_values, length(namebuf), namebuf, config)
+    id = API.h5p_get_filter(
+        f.plist, i - 1, flags, cd_nelmts, cd_values, length(namebuf), namebuf, config
+    )
     if cd_nelmts[] > length(cd_values)
         resize!(cd_values, cd_nelmts[])
         return getindex(f, ExternalFilter, i, cd_values)
     end
-    resize!(namebuf, findfirst(isequal(0), namebuf)-1)
+    resize!(namebuf, findfirst(isequal(0), namebuf) - 1)
     resize!(cd_values, cd_nelmts[])
     return ExternalFilter(id, flags[], cd_values, String(namebuf), config[])
 end
@@ -352,7 +356,16 @@ function Base.getindex(f::FilterPipeline, ::Type{F}, i::Integer) where {F<:Filte
     @assert isbitstype(F)
     ref = Ref{F}()
     GC.@preserve ref begin
-        id = API.h5p_get_filter(f.plist, i-1, C_NULL, div(sizeof(F), sizeof(Cuint)), pointer_from_objref(ref), 0, C_NULL, C_NULL)
+        id = API.h5p_get_filter(
+            f.plist,
+            i - 1,
+            C_NULL,
+            div(sizeof(F), sizeof(Cuint)),
+            pointer_from_objref(ref),
+            0,
+            C_NULL,
+            C_NULL
+        )
     end
     @assert id == filterid(F)
     return ref[]
@@ -361,11 +374,19 @@ function Base.getindex(f::FilterPipeline, ::Type{F}) where {F<:Filter}
     @assert isbitstype(F)
     ref = Ref{F}()
     GC.@preserve ref begin
-        API.h5p_get_filter_by_id(f.plist, filterid(F), C_NULL, div(sizeof(F), sizeof(Cuint)), pointer_from_objref(ref), 0, C_NULL, C_NULL)
+        API.h5p_get_filter_by_id(
+            f.plist,
+            filterid(F),
+            C_NULL,
+            div(sizeof(F), sizeof(Cuint)),
+            pointer_from_objref(ref),
+            0,
+            C_NULL,
+            C_NULL
+        )
     end
     return ref[]
 end
-
 
 function Base.empty!(filters::FilterPipeline)
     API.h5p_remove_filter(filters.plist, API.H5Z_FILTER_ALL)
@@ -375,16 +396,24 @@ function Base.delete!(filters::FilterPipeline, ::Type{F}) where {F<:Filter}
     API.h5p_remove_filter(filters.plist, filterid(F))
     return filters
 end
-function Base.append!(filters::FilterPipeline, extra::Union{AbstractVector{<:Filter}, NTuple{N, Filter} where N})
+function Base.append!(
+    filters::FilterPipeline, extra::Union{AbstractVector{<:Filter},NTuple{N,Filter} where N}
+)
     for filter in extra
         push!(filters, filter)
     end
     return filters
 end
-function Base.push!(p::FilterPipeline, f::F) where F <: Filter
+function Base.push!(p::FilterPipeline, f::F) where {F<:Filter}
     ref = Ref(f)
     GC.@preserve ref begin
-        API.h5p_set_filter(p.plist, filterid(F), API.H5Z_FLAG_OPTIONAL, div(sizeof(F), sizeof(Cuint)), pointer_from_objref(ref))
+        API.h5p_set_filter(
+            p.plist,
+            filterid(F),
+            API.H5Z_FLAG_OPTIONAL,
+            div(sizeof(F), sizeof(Cuint)),
+            pointer_from_objref(ref)
+        )
     end
     return p
 end
@@ -396,7 +425,7 @@ function Base.push!(p::FilterPipeline, f::ExternalFilter)
 end
 
 # Convert a Filter to an Integer subtype using filterid
-function Base.convert(::Type{I}, ::Type{F}) where {I <: Integer, F <: Filter}
+function Base.convert(::Type{I}, ::Type{F}) where {I<:Integer,F<:Filter}
     Base.convert(I, filterid(F))
 end
 
