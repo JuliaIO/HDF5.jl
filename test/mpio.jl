@@ -87,4 +87,4 @@ using Test
     MPI.Barrier(MPI.COMM_WORLD)
 
     MPI.Finalize()
-end # testset mpio
+end

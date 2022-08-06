@@ -120,4 +120,4 @@ end
     if nprocs() > 1
         rmprocs(procs)
     end
-end # testset swmr
+end

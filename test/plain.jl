@@ -471,7 +471,7 @@ end
             @test all(f["dataset"][:, :] .== 5)
         end
         rm(fn)
-    end # testset "Test h5d_fill
+    end
 
     @testset "h5d_gather" begin
         src_buf = rand(Int, (4, 4))
@@ -588,7 +588,7 @@ end
     @test open(crc32c, fn1) == open(crc32c, fn2)
     rm(fn1)
     rm(fn2)
-end # testset plain
+end
 
 @testset "complex" begin
     HDF5.enable_complex_support()
@@ -668,7 +668,7 @@ end
 
     close(f)
     rm(fn)
-end # testset null and undefined
+end
 
 # test writing abstract arrays
 @testset "abstract arrays" begin
@@ -704,7 +704,7 @@ end # testset null and undefined
     h5open(fn, "w"; alignment=(0, 8)) do fid
         fid["x"] = zeros(10, 10)
     end
-end # writing abstract arrays
+end
 
 # issue #705
 @testset "empty and 0-size arrays" begin
@@ -793,7 +793,7 @@ end # writing abstract arrays
     @test String(take!(buf)) == "HDF5.EmptyArray{Int64}()"
     show(buf, MIME"text/plain"(), HDF5.EmptyArray{Int64}())
     @test String(take!(buf)) == "HDF5.EmptyArray{Int64}()"
-end # empty and 0-size arrays
+end
 
 @testset "generic read of native types" begin
     fn = tempname()
@@ -862,7 +862,7 @@ end # empty and 0-size arrays
 
     close(hfile)
     rm(fn)
-end # generic read of native types
+end
 
 @testset "show" begin
     fn = tempname()
@@ -1190,7 +1190,7 @@ end # generic read of native types
     end
 
     rm(fn)
-end # show tests
+end
 
 @testset "split1" begin
     @test HDF5.split1("/") == ("/", "")
@@ -1263,7 +1263,7 @@ end # split1 tests
 
     close(hfile)
     rm(fn)
-end # haskey tests
+end
 
 @testset "AbstractString" begin
     fn = GenericString(tempname())

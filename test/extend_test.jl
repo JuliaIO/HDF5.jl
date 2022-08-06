@@ -75,4 +75,4 @@ using Test
 
     close(fid)
     rm(fn)
-end # testset extend_test
+end

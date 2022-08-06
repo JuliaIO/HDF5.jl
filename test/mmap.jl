@@ -58,4 +58,4 @@ using Test
     close(f)
     # Restore complex support state
     complex_support && HDF5.enable_complex_support()
-end # testset
+end

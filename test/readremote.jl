@@ -197,4 +197,4 @@ using LinearAlgebra: norm
     A = read(fid, "DS1")
     @test A == AA
     close(fid)
-end # testset readremote
+end

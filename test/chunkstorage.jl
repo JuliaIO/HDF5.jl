@@ -169,4 +169,4 @@ using Test
     end == reshape(1:24, 4, 6)
 
     rm(fn)
-end # testset "Raw Chunk I/O"
+end

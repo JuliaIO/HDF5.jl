@@ -222,4 +222,4 @@ using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenab
     @test isdecoderenabled(H5Z_FILTER_LZ4)
     @test isencoderenabled(Lz4Filter)
     @test isdecoderenabled(Lz4Filter)
-end # @testset "filter"
+end
