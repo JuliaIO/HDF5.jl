@@ -67,6 +67,7 @@ include("api/api.jl")
 include("properties.jl")
 include("context.jl")
 include("types.jl")
+include("propertymanipulation.jl")
 include("file.jl")
 include("objects.jl")
 include("groups.jl")
@@ -79,6 +80,7 @@ include("readwrite.jl")
 include("references.jl")
 include("show.jl")
 include("api_midlevel.jl")
+include("highlevel.jl")
 
 # Functions that require special handling
 
