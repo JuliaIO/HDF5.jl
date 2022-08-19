@@ -38,6 +38,7 @@ makedocs(;
             "properties.md",
             "filters.md"
         ],
+        "mpi.md",
         "Low-level library bindings" => "api_bindings.md",
     ],
 )
