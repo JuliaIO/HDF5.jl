@@ -1,43 +1,43 @@
 """
-    create_group(parent, path[, lcpl, gcpl]; properties...)
+    create_group(parent::Union{File,Group}, path::AbstratString; properties...)
 
-# Arguments
-* `parent` - `File` or `Group`
-* `path` - `String` describing the path of the group within the HDF5 file
-* `lcpl` - [`LinkCreateProperties`](@ref)
-* `gcpl` - [`GroupCreateProperties`](@ref)
-* `properties` - keyword name-value pairs set properties of the group
-
-# Keywords
-
-There are many keyword properties that can be set. Below are a few select keywords.
-* `track_order` - `Bool` tracks the group creation order. 
-        Currently this is only used with `FileIO` and `OrderedDict`.
-        Files created with `track_order = true` 
-        should create all subgroups with `track_order = true`.
-
-See also
-* [`H5P`](@ref H5P)
+Create a new `Group` at `path` under the `parent` object. Optional keyword
+arguments include any keywords that that belong to
+[`LinkCreateProperties`](@ref) or [`GroupCreateProperties`](@ref).
 """
 function create_group(
     parent::Union{File,Group},
     path::AbstractString,
-    lcpl::LinkCreateProperties=_link_properties(path),
-    gcpl::GroupCreateProperties=GroupCreateProperties();
-    pv...
+    lcpl::LinkCreateProperties,
+    gcpl::GroupCreateProperties
 )
-    haskey(parent, path) &&
-        error("cannot create group: object \"", path, "\" already exists at ", name(parent))
-    pv = setproperties!(gcpl; pv...)
-    isempty(pv) || error("invalid keyword options $pv")
-    Group(API.h5g_create(parent, path, lcpl, gcpl, API.H5P_DEFAULT), file(parent))
+    return Group(API.h5g_create(parent, path, lcpl, gcpl, API.H5P_DEFAULT), file(parent))
+end
+function create_group(parent::Union{File,Group}, path::AbstractString; pv...)
+    lcpl = _link_properties(path)
+    gcpl = GroupCreateProperties()
+    try
+        pv = setproperties!(lcpl, gcpl; pv...)
+        isempty(pv) || error("invalid keyword options $pv")
+        return create_group(parent, path, lcpl, gcpl)
+    finally
+        close(lcpl)
+        close(gcpl)
+    end
 end
 
-open_group(
+"""
+    open_group(parent::Union{File,Group}, path::AbstratString)
+
+Open an existing `Group` at `path` under the `parent` object.
+"""
+function open_group(
     parent::Union{File,Group},
     name::AbstractString,
     gapl::GroupAccessProperties=GroupAccessProperties()
-) = Group(API.h5g_open(checkvalid(parent), name, gapl), file(parent))
+)
+    return Group(API.h5g_open(checkvalid(parent), name, gapl), file(parent))
+end
 
 # Get the root group
 root(h5file::File) = open_group(h5file, "/")

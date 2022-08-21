@@ -868,7 +868,7 @@ const UTF8_LINK_PROPERTIES = LinkCreateProperties()
 const ASCII_ATTRIBUTE_PROPERTIES = AttributeCreateProperties()
 const UTF8_ATTRIBUTE_PROPERTIES = AttributeCreateProperties()
 
-_link_properties(::AbstractString) = UTF8_LINK_PROPERTIES
-_attr_properties(::AbstractString) = UTF8_ATTRIBUTE_PROPERTIES
+_link_properties(::AbstractString) = copy(UTF8_LINK_PROPERTIES)
+_attr_properties(::AbstractString) = copy(UTF8_ATTRIBUTE_PROPERTIES)
 
 #! format: on
