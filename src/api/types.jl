@@ -129,7 +129,7 @@ end
 end
 
 struct H5O_info1_t # version 1 type H5O_info1_t
-    fileno::Cuint
+    fileno::Culong
     addr::haddr_t
     otype::H5O_type_t # enum H5O_type_t
     rc::Cuint
