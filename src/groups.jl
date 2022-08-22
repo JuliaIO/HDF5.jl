@@ -1,5 +1,5 @@
 """
-    create_group(parent::Union{File,Group}, path::AbstratString; properties...)
+    create_group(parent::Union{File,Group}, path::AbstractString; properties...)
 
 Create a new `Group` at `path` under the `parent` object. Optional keyword
 arguments include any keywords that that belong to
