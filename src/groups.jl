@@ -9,8 +9,16 @@ function create_group(
     parent::Union{File,Group},
     path::AbstractString,
     lcpl::LinkCreateProperties,
-    gcpl::GroupCreateProperties
+    gcpl::GroupCreateProperties;
+    pv...
 )
+    if !isempty(pv)
+        depwarn(
+            "Passing properties as positional and keyword arguments in the same call is deprecated.",
+            :create_group
+        )
+        setproperties!(gcpl; pv...)
+    end
     return Group(API.h5g_create(parent, path, lcpl, gcpl, API.H5P_DEFAULT), file(parent))
 end
 function create_group(parent::Union{File,Group}, path::AbstractString; pv...)
