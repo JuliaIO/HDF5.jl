@@ -32,11 +32,12 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Interface" => [
-            "dataspaces.md",
-            "dataset.md",
-            "attributes.md",
-            "properties.md",
-            "filters.md"
+            "interface/groups.md",
+            "interface/dataspaces.md",
+            "interface/dataset.md",
+            "interface/attributes.md",
+            "interface/properties.md",
+            "interface/filters.md"
         ],
         "mpi.md",
         "Low-level library bindings" => "api_bindings.md",
