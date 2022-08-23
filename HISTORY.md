@@ -2,6 +2,15 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.16.11
+
+* Doc improvements
+* Internal code re-organization and cleanup
+* Fixed `track_order` usage in do block syntax
+* Implement `copy` for `Properties` type
+* Additional H5P functions
+* Introduction of experimental context based API for property lists (internal API subject to change)
+
 ## v0.16.10
 
 * New attribute dictionary interface
