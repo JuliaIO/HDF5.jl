@@ -222,6 +222,14 @@ struct H5FD_hdfs_fapl_t
     stream_buffer_size::Int32
 end
 
+struct H5FD_ros3_fapl_t
+    version::Int32
+    authenticate::hbool_t
+    aws_region::NTuple{33,Cchar}
+    secret_id::NTuple{129,Cchar}
+    secret_key::NTuple{129,Cchar}
+end
+
 struct H5FD_splitter_vfd_config_t
     magic::Int32
     version::Cuint

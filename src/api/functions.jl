@@ -2367,6 +2367,17 @@ function h5p_get_fapl_splitter(fapl_id, config_ptr)
 end
 
 """
+    h5p_get_fapl_ros3(fapl_id::hid_t, fa_out::Ptr{H5FD_hdfs_fapl_t})
+
+See `libhdf5` documentation for [`H5Pget_fapl_ros3`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_ROS3).
+"""
+function h5p_get_fapl_ros3(fapl_id, fa_out)
+    var"#status#" = ccall((:H5Pget_fapl_ros3, libhdf5), herr_t, (hid_t, Ptr{H5FD_ros3_fapl_t}), fapl_id, fa_out)
+    var"#status#" < 0 && @h5error("Error in getting ros3 properties")
+    return nothing
+end
+
+"""
     h5p_get_fclose_degree(fapl_id::hid_t, fc_degree::Ref{Cint})
 
 See `libhdf5` documentation for [`H5Pget_fclose_degree`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FCLOSE_DEGREE).
@@ -3408,6 +3419,17 @@ See `libhdf5` documentation for [`H5Pset_fapl_sec2`](https://portal.hdfgroup.org
 function h5p_set_fapl_sec2(fapl_id)
     var"#status#" = ccall((:H5Pset_fapl_sec2, libhdf5), herr_t, (hid_t,), fapl_id)
     var"#status#" < 0 && @h5error("Error setting Sec2 properties")
+    return nothing
+end
+
+"""
+    h5p_set_fapl_ros3(fapl_id::hid_t, fa::Ptr{H5FD_ros3_fapl_t})
+
+See `libhdf5` documentation for [`H5Pset_fapl_ros3`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_ROS3).
+"""
+function h5p_set_fapl_ros3(fapl_id, fa)
+    var"#status#" = ccall((:H5Pset_fapl_ros3, libhdf5), herr_t, (hid_t, Ptr{H5FD_ros3_fapl_t}), fapl_id, fa)
+    var"#status#" < 0 && @h5error("Error in setting ros3 properties")
     return nothing
 end
 

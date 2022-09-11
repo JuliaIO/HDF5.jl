@@ -44,5 +44,6 @@ CurrentModule = HDF5.Drivers
 ```@docs
 Core
 POSIX
+ROS3
 MPIO
 ```

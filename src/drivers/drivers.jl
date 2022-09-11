@@ -1,6 +1,6 @@
 module Drivers
 
-export POSIX
+export POSIX, ROS3
 
 import ..API
 import ..HDF5: HDF5, Properties, h5doc
@@ -79,10 +79,39 @@ function set_driver!(fapl::Properties, ::POSIX)
     return nothing
 end
 
+"""
+    ROS3()
+
+This is the read-only virtual driver that enables access to HDF5 objects stored in AWS S3
+"""
+struct ROS3 <: Driver
+    fa::API.H5FD_ros3_fapl_t
+end
+ROS3(region::T, id::T, key::T) where {T<:AbstractString} = (ROS3 ∘ API.H5FD_ros3_fapl_t)(
+    1, true, cconvert(region, 33), cconvert(id, 129), cconvert(key, 129)
+)
+ROS3() = (ROS3 ∘ API.H5FD_ros3_fapl_t)(
+    1, false, cconvert("", 33), cconvert("", 129), cconvert("", 129)
+)
+
+cconvert(s::AbstractString, N::Integer) = Tuple(i ≤ length(s) ? s[i] : '\0' for i in 1:N)
+
+function get_driver(fapl::Properties, ::Type{ROS3})
+    ROS3()
+end
+
+function set_driver!(fapl::Properties, driver::ROS3)
+    HDF5.init!(fapl)
+    API.h5p_set_fapl_ros3(fapl, driver.fa)
+    DRIVERS[API.h5p_get_driver(fapl)] = ROS3
+    return nothing
+end
+
 function __init__()
-    # Initialize POSIX key in DRIVERS
+    # Initialize POSIX,ROS3 keys in DRIVERS
     HDF5.FileAccessProperties() do fapl
         set_driver!(fapl, POSIX())
+        set_driver!(fapl, ROS3())
     end
 
     # Check whether the libhdf5 was compiled with parallel support.
