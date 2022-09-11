@@ -19,6 +19,7 @@ not_low_level_api(::typeof(HDF5.API.h5p_get_class_name)) = false
 not_low_level_api(::typeof(HDF5.API.h5t_get_member_name)) = false
 not_low_level_api(::typeof(HDF5.API.h5t_get_tag)) = false
 
+
 makedocs(;
     sitename="HDF5.jl",
     modules=[HDF5, H5Zblosc, H5Zbzip2, H5Zlz4, H5Zzstd],
@@ -41,7 +42,9 @@ makedocs(;
         ],
         "mpi.md",
         "Low-level library bindings" => "api_bindings.md",
+        "Python interoperability" => "h5py.md"
     ],
+    strict=true,
 )
 
 deploydocs(;
