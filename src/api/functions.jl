@@ -2372,7 +2372,7 @@ end
 See `libhdf5` documentation for [`H5Pget_fapl_ros3`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_ROS3).
 """
 function h5p_get_fapl_ros3(fapl_id, fa_out)
-    var"#status#" = ccall((:H5Pget_fapl_ros3, libhdf5), herr_t, (hid_t, Ptr{H5FD_ros3_fapl_t}), fapl_id, fa_out)
+    var"#status#" = ccall((:H5Pget_fapl_ros3, libhdf5), herr_t, (hid_t, Ref{H5FD_ros3_fapl_t}), fapl_id, fa_out)
     var"#status#" < 0 && @h5error("Error in getting ros3 properties")
     return nothing
 end
@@ -3428,7 +3428,7 @@ end
 See `libhdf5` documentation for [`H5Pset_fapl_ros3`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_ROS3).
 """
 function h5p_set_fapl_ros3(fapl_id, fa)
-    var"#status#" = ccall((:H5Pset_fapl_ros3, libhdf5), herr_t, (hid_t, Ptr{H5FD_ros3_fapl_t}), fapl_id, fa)
+    var"#status#" = ccall((:H5Pset_fapl_ros3, libhdf5), herr_t, (hid_t, Ref{H5FD_ros3_fapl_t}), fapl_id, fa)
     var"#status#" < 0 && @h5error("Error in setting ros3 properties")
     return nothing
 end
