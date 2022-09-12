@@ -138,12 +138,11 @@ function Base.show(io::IO, dspace::Dataspace)
     sz, maxsz = get_extent_dims(dspace)
     sel = API.h5s_get_select_type(dspace)
     if sel == API.H5S_SEL_HYPERSLABS && API.h5s_is_regular_hyperslab(dspace)
-        start, stride, count, _ = get_regular_hyperslab(dspace)
-        ndims = length(start)
+        blockranges = get_regular_hyperslab(dspace)
+        ndims = length(blockranges)
         print(io, "(")
         for ii in 1:ndims
-            s, d, l = start[ii], stride[ii], count[ii]
-            print(io, range(s + 1; length=l, step=d == 1 ? nothing : d))
+            print(io, blockranges[ii])
             ii != ndims && print(io, ", ")
         end
         print(io, ") / (")

@@ -121,51 +121,148 @@ function isnull(dspace::Dataspace)
     return API.h5s_get_simple_extent_type(checkvalid(dspace)) == API.H5S_NULL
 end
 
+"""
+    HDF5.get_regular_hyperslab(dspace)::Tuple
+
+Get the hyperslab selection from `dspace`. Returns a tuple of [`BlockRange`](@ref) objects.
+"""
 function get_regular_hyperslab(dspace::Dataspace)
-    start, stride, count, block = API.h5s_get_regular_hyperslab(dspace)
-    N = length(start)
-    @inline rev(v) = ntuple(i -> @inbounds(Int(v[N - i + 1])), N)
-    return rev(start), rev(stride), rev(count), rev(block)
+    start0, stride, count, block = API.h5s_get_regular_hyperslab(dspace)
+    N = length(start0)
+    ntuple(N) do i
+        ri = N - i + 1
+        @inbounds BlockRange(start0[ri], stride[ri], count[ri], block[ri])
+    end
 end
 
-function hyperslab(dspace::Dataspace, I::Union{AbstractRange{Int},Int}...)
-    dims = size(dspace)
-    n_dims = length(dims)
-    if length(I) != n_dims
-        error(
-            "Wrong number of indices supplied, supplied length $(length(I)) but expected $(n_dims)."
-        )
+struct BlockRange
+    start0::API.hsize_t
+    stride::API.hsize_t
+    count::API.hsize_t
+    block::API.hsize_t
+end
+
+"""
+    BlockRange(;start::Integer, stride::Integer=1, count::Integer=1, block::Integer=1)
+
+A `BlockRange` represents a selection along a single dimension of a HDF5
+hyperslab. It is similar to a Julia `range` object, with some extra features for
+selecting multiple contiguous blocks.
+
+- `start`: the index of the first element in the first block (1-based).
+- `stride`: the step between the first element of each block (must be >0)
+- `count`: the number of blocks (can be -1 for an unlimited number of blocks)
+- `block`: the number of elements in each block.
+
+    BlockRange(obj::Union{Integer, OrdinalRange})
+
+Convert `obj` to a `BlockRange` object.
+
+# External links
+- [HDF5 User Guide, section 7.4.2.1 "Selecting Hyperslabs"](https://support.hdfgroup.org/HDF5/doc/UG/HDF5_Users_Guide-Responsive%20HTML5/index.html#t=HDF5_Users_Guide%2FDataspaces%2FHDF5_Dataspaces_and_Partial_I_O.htm%23TOC_7_4_2_Programming_Modelbc-8&rhtocid=7.2.0_2)
+"""
+function BlockRange(; start::Integer, stride::Integer=1, count::Integer=1, block::Integer=1)
+    if count == -1
+        count = API.H5S_UNLIMITED
     end
-    dsel_id     = API.h5s_copy(dspace)
-    dsel_start  = Vector{API.hsize_t}(undef, n_dims)
-    dsel_stride = Vector{API.hsize_t}(undef, n_dims)
-    dsel_count  = Vector{API.hsize_t}(undef, n_dims)
-    for k in 1:n_dims
-        index = I[n_dims - k + 1]
-        if isa(index, Integer)
-            dsel_start[k] = index - 1
-            dsel_stride[k] = 1
-            dsel_count[k] = 1
-        elseif isa(index, AbstractRange)
-            dsel_start[k] = first(index) - 1
-            dsel_stride[k] = step(index)
-            dsel_count[k] = length(index)
+    BlockRange(start - 1, stride, count, block)
+end
+BlockRange(start::Integer; stride=1, count=1, block=1) =
+    BlockRange(; start=start, stride=stride, count=count, block=block)
+BlockRange(r::AbstractUnitRange; stride=length(r), count=1) =
+    BlockRange(; start=first(r), stride=stride, count=count, block=length(r))
+BlockRange(r::OrdinalRange) = BlockRange(; start=first(r), stride=step(r), count=length(r))
+BlockRange(br::BlockRange) = br
+
+function Base.show(io::IO, br::BlockRange)
+    start = Int(br.start0 + 1)
+    # choose the simplest possible representation
+    if br.count == 1
+        if br.block == 1
+            # integer
+            print(io, start)
         else
-            error("index must be range or integer")
+            # UnitRange
+            print(io, range(start; length=Int(br.block)))
         end
-        if dsel_start[k] < 0 ||
-            dsel_start[k] + (dsel_count[k] - 1) * dsel_stride[k] >= dims[n_dims - k + 1]
-            println(dsel_start)
-            println(dsel_stride)
-            println(dsel_count)
-            println(reverse(dims))
-            error("index out of range")
+    elseif br.block == 1 && br.count != API.H5S_UNLIMITED
+        # StepRange
+        print(io, range(start; step=Int(br.stride), length=Int(br.count)))
+    else
+        # BlockRange(int; ...)
+        print(io, BlockRange, "(start=", start)
+        if br.stride != 1
+            print(io, ", stride=", Int(br.stride))
         end
+        if br.count != 1
+            print(io, ", count=", br.count == API.API.H5S_UNLIMITED ? -1 : Int(br.count))
+        end
+        if br.block != 1
+            print(io, ", block=", Int(br.block))
+        end
+        print(io, ")")
     end
-    API.h5s_select_hyperslab(
-        dsel_id, API.H5S_SELECT_SET, dsel_start, dsel_stride, dsel_count, C_NULL
-    )
-    return Dataspace(dsel_id)
+end
+
+"""
+    select_hyperslab!(dspace::Dataspace, [op, ], idxs::Tuple)
+
+Selects a hyperslab region of the `dspace`. `idxs` should be a tuple of
+integers, ranges or [`blockrange`](@ref) objects.
+
+- `op` determines how the new selection is to be combined with the already
+  selected dataspace:
+  - `:select` (default): replace the existing selection with the new selection.
+  - `:or`: adds the new selection to the existing selection
+  - `:and`: retains only the overlapping portions of the new and existing
+    selection.
+  - `:xor`: retains only the elements that are members of the new selection or
+    the existing selection, excluding elements that are members of both
+    selections.
+  - `:notb`: retains only elements of the existing selection that are not in the
+    new selection.
+  - `:nota`: retains only elements of the new selection that are not in the
+    existing selection.
+
+"""
+function select_hyperslab!(
+    dspace::Dataspace, op::Union{Symbol,typeof(&),typeof(|),typeof(xor)}, idxs::Tuple
+)
+    N = ndims(dspace)
+    length(idxs) == N || error("Number of indices does not match dimension of Dataspace")
+
+    blockranges = map(BlockRange, idxs)
+    _start0 = API.hsize_t[blockranges[N - i + 1].start0 for i in 1:N]
+    _stride = API.hsize_t[blockranges[N - i + 1].stride for i in 1:N]
+    _count = API.hsize_t[blockranges[N - i + 1].count for i in 1:N]
+    _block = API.hsize_t[blockranges[N - i + 1].block for i in 1:N]
+
+    _op = if op == :select
+        API.H5S_SELECT_SET
+    elseif (op == :or || op === |)
+        API.H5S_SELECT_OR
+    elseif (op == :and || op === &)
+        API.H5S_SELECT_AND
+    elseif (op == :xor || op === xor)
+        API.H5S_SELECT_XOR
+    elseif op == :notb
+        API.H5S_SELECT_NOTB
+    elseif op == :nota
+        API.H5S_SELECT_NOTA
+    else
+        error("invalid operator $op")
+    end
+
+    API.h5s_select_hyperslab(dspace, _op, _start0, _stride, _count, _block)
+    return dspace
+end
+select_hyperslab!(dspace::Dataspace, idxs::Tuple) = select_hyperslab!(dspace, :select, idxs)
+
+hyperslab(dspace::Dataspace, I::Union{AbstractRange{Int},Integer,BlockRange}...) =
+    hyperslab(dspace, I)
+
+function hyperslab(dspace::Dataspace, I::Tuple)
+    select_hyperslab!(copy(dspace), I)
 end
 
 # methods for Dataset/Attribute which operate on Dataspace
