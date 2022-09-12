@@ -102,7 +102,7 @@ end
 
 function set_driver!(fapl::Properties, driver::ROS3)
     HDF5.init!(fapl)
-    API.h5p_set_fapl_ros3(fapl, driver.fa)
+    API.h5p_set_fapl_ros3(fapl, Ref(driver.fa))
     DRIVERS[API.h5p_get_driver(fapl)] = ROS3
     return nothing
 end
