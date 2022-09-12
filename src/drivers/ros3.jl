@@ -7,11 +7,24 @@ struct ROS3 <: Driver
     fa::API.H5FD_ros3_fapl_t
 end
 
-function ROS3( version::Integer, auth::Bool, region::AbstractString, id::AbstractString, key::AbstractString )
-    return (ROS3 ∘ API.H5FD_ros3_fapl_t)( version, auth, Base.unsafe_convert(Cstring, region), Base.unsafe_convert(Cstring, id), Base.unsafe_convert(Cstring, key))
+function ROS3(
+    version::Integer,
+    auth::Bool,
+    region::AbstractString,
+    id::AbstractString,
+    key::AbstractString
+)
+    return (ROS3 ∘ API.H5FD_ros3_fapl_t)(
+        version,
+        auth,
+        Base.unsafe_convert(Cstring, region),
+        Base.unsafe_convert(Cstring, id),
+        Base.unsafe_convert(Cstring, key)
+    )
 end
 
-ROS3(region::AbstractString, id::AbstractString, key::AbstractString) = ROS3(1, true, region, id, key)
+ROS3(region::AbstractString, id::AbstractString, key::AbstractString) =
+    ROS3(1, true, region, id, key)
 ROS3() = ROS3(1, false, "", "", "")
 
 function get_driver(fapl::Properties, ::Type{ROS3})
