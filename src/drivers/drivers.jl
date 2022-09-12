@@ -79,57 +79,20 @@ function set_driver!(fapl::Properties, ::POSIX)
     return nothing
 end
 
-"""
-    ROS3()
-
-This is the read-only virtual driver that enables access to HDF5 objects stored in AWS S3
-"""
-struct ROS3 <: Driver
-    fa::API.H5FD_ros3_fapl_t
-end
-ROS3(
-    version::Integer,
-    auth::Bool,
-    region::AbstractString,
-    id::AbstractString,
-    key::AbstractString
-) = (ROS3 ∘ API.H5FD_ros3_fapl_t)(
-    version,
-    auth,
-    Base.unsafe_convert(Cstring, region),
-    Base.unsafe_convert(Cstring, id),
-    Base.unsafe_convert(Cstring, key)
-)
-ROS3(region::AbstractString, id::AbstractString, key::AbstractString) =
-    ROS3(1, true, region, id, key)
-ROS3() = ROS3(1, false, "", "", "")
-
-function get_driver(fapl::Properties, ::Type{ROS3})
-    r_fa = Ref{H5FD_ros3_fapl_t}()
-    API.h5p_get_fapl_ros(fapl, r_fa)
-    return ROS3(r_fa[])
-end
-
-function set_driver!(fapl::Properties, driver::ROS3)
-    HDF5.init!(fapl)
-    API.h5p_set_fapl_ros(fapl, Ref(driver.fa))
-    DRIVERS[API.h5p_get_driver(fapl)] = ROS3
-    return nothing
-end
-
 function __init__()
-    # Initialize POSIX,ROS3 keys in DRIVERS
+    # Initialize POSIX key in DRIVERS
     HDF5.FileAccessProperties() do fapl
         set_driver!(fapl, POSIX())
-        set_driver!(fapl, ROS3())
     end
 
     # Check whether the libhdf5 was compiled with parallel support.
     HDF5.HAS_PARALLEL[] = API._has_symbol(:H5Pset_fapl_mpio)
+    HDF5.HAS_ROS3[] = API._has_symbol(:H5Pset_fapl_ros3)
 
     @require MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195" (
         HDF5.has_parallel() && include("mpio.jl")
     )
 end
 
+include("ros3.jl")
 end # module

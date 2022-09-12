@@ -20,7 +20,6 @@ using Test
     # Check that serial drivers are still there after loading MPI (#928)
     @test Drivers.Core ∈ values(Drivers.DRIVERS)
     @test Drivers.POSIX ∈ values(Drivers.DRIVERS)
-    @test Drivers.ROS3 ∈ values(Drivers.DRIVERS)
 
     let fileprop = HDF5.FileAccessProperties()
         fileprop.driver = HDF5.Drivers.MPIO(comm, info)

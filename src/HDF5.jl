@@ -85,6 +85,7 @@ include("highlevel.jl")
 
 const libversion = API.h5_get_libversion()
 const HAS_PARALLEL = Ref(false)
+const HAS_ROS3 = Ref(false)
 
 """
     has_parallel()
@@ -95,6 +96,13 @@ and if parallel functionality was loaded into HDF5.jl.
 For the second condition to be true, MPI.jl must be imported before HDF5.jl.
 """
 has_parallel() = HAS_PARALLEL[]
+
+"""
+    has_ros3()
+
+Returns `true` if the HDF5 libraries were compiled with ros3 support
+"""
+has_ros3() = HAS_ROS3[]
 
 function __init__()
     # HDF5.API.__init__() is run first
