@@ -1546,6 +1546,7 @@ end
     @test !HDF5.ishdf5(fn1) # check that a non-hdf5 file retuns false
     @test !HDF5.ishdf5(fn2) # checks that a file that does not exist returns false
 
+    @test_throws ErrorException h5write(fn1, "x", 1) # non hdf5 file throws
     h5write(fn2, "x", 1)
 
     @test HDF5.ishdf5(fn2)
