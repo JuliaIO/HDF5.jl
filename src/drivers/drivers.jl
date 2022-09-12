@@ -97,7 +97,9 @@ ROS3() = (ROS3 ∘ API.H5FD_ros3_fapl_t)(
 cconvert(s::AbstractString, N::Integer) = Tuple(i ≤ length(s) ? s[i] : '\0' for i in 1:N)
 
 function get_driver(fapl::Properties, ::Type{ROS3})
-    ROS3()
+    r_fa = Ref{H5FD_ros3_fapl_t}()
+    H5Pget_fapl_ros3(fapl, r_fa)
+    return ROS3(r_fa[])
 end
 
 function set_driver!(fapl::Properties, driver::ROS3)
