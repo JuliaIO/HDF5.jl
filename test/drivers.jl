@@ -18,4 +18,9 @@ using Test
         ds = write_dataset(f, "core_dataset", A)
     end
     @test !isfile(fn)
+
+    s3 = Drivers.ROS3()
+    h5open("http://s3.us-east-2.amazonaws.com/hdf5ros3/GMODO-SVM01.h5"; driver=s3) do f
+        @test keys(f) == ["All_Data", "Data_Products"]
+    end
 end
