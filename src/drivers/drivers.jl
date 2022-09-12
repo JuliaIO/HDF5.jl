@@ -104,8 +104,6 @@ ROS3(region::AbstractString, id::AbstractString, key::AbstractString) =
     ROS3(1, true, region, id, key)
 ROS3() = ROS3(1, false, "", "", "")
 
-cconvert(s::AbstractString, N::Integer) = Tuple(i ≤ length(s) ? s[i] : '\0' for i in 1:N)
-
 function get_driver(fapl::Properties, ::Type{ROS3})
     r_fa = Ref{H5FD_ros3_fapl_t}()
     API.h5p_get_fapl_ros(fapl, r_fa)
