@@ -87,24 +87,34 @@ This is the read-only virtual driver that enables access to HDF5 objects stored 
 struct ROS3 <: Driver
     fa::API.H5FD_ros3_fapl_t
 end
-ROS3(region::T, id::T, key::T) where {T<:AbstractString} = (ROS3 ∘ API.H5FD_ros3_fapl_t)(
-    1, true, cconvert(region, 33), cconvert(id, 129), cconvert(key, 129)
+ROS3(
+    version::Integer,
+    auth::Bool,
+    region::AbstractString,
+    id::AbstractString,
+    key::AbstractString
+) = (ROS3 ∘ API.H5FD_ros3_fapl_t)(
+    version,
+    auth,
+    Base.unsafe_convert(Cstring, region),
+    Base.unsafe_convert(Cstring, id),
+    Base.unsafe_convert(Cstring, key)
 )
-ROS3() = (ROS3 ∘ API.H5FD_ros3_fapl_t)(
-    1, false, cconvert("", 33), cconvert("", 129), cconvert("", 129)
-)
+ROS3(region::AbstractString, id::AbstractString, key::AbstractString) =
+    ROS3(1, true, region, id, key)
+ROS3() = ROS3(1, false, "", "", "")
 
 cconvert(s::AbstractString, N::Integer) = Tuple(i ≤ length(s) ? s[i] : '\0' for i in 1:N)
 
 function get_driver(fapl::Properties, ::Type{ROS3})
     r_fa = Ref{H5FD_ros3_fapl_t}()
-    H5Pget_fapl_ros3(fapl, r_fa)
+    API.h5p_get_fapl_ros(fapl, r_fa)
     return ROS3(r_fa[])
 end
 
 function set_driver!(fapl::Properties, driver::ROS3)
     HDF5.init!(fapl)
-    API.h5p_set_fapl_ros3(fapl, Ref(driver.fa))
+    API.h5p_set_fapl_ros(fapl, Ref(driver.fa))
     DRIVERS[API.h5p_get_driver(fapl)] = ROS3
     return nothing
 end

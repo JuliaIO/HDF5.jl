@@ -2367,12 +2367,12 @@ function h5p_get_fapl_splitter(fapl_id, config_ptr)
 end
 
 """
-    h5p_get_fapl_ros3(fapl_id::hid_t, fa_out::Ptr{H5FD_hdfs_fapl_t})
+    h5p_get_fapl_ros(fapl_id::hid_t, fa_out::Ptr{H5FD_ros3_fapl_t})
 
 See `libhdf5` documentation for [`H5Pget_fapl_ros3`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_ROS3).
 """
-function h5p_get_fapl_ros3(fapl_id, fa_out)
-    var"#status#" = ccall((:H5Pget_fapl_ros3, libhdf5), herr_t, (hid_t, Ref{H5FD_ros3_fapl_t}), fapl_id, fa_out)
+function h5p_get_fapl_ros(fapl_id, fa_out)
+    var"#status#" = ccall((:H5Pget_fapl_ros3, libhdf5), herr_t, (hid_t, Ptr{H5FD_ros3_fapl_t}), fapl_id, fa_out)
     var"#status#" < 0 && @h5error("Error in getting ros3 properties")
     return nothing
 end
@@ -3423,12 +3423,12 @@ function h5p_set_fapl_sec2(fapl_id)
 end
 
 """
-    h5p_set_fapl_ros3(fapl_id::hid_t, fa::Ptr{H5FD_ros3_fapl_t})
+    h5p_set_fapl_ros(fapl_id::hid_t, fa::Ptr{H5FD_ros3_fapl_t})
 
 See `libhdf5` documentation for [`H5Pset_fapl_ros3`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_ROS3).
 """
-function h5p_set_fapl_ros3(fapl_id, fa)
-    var"#status#" = ccall((:H5Pset_fapl_ros3, libhdf5), herr_t, (hid_t, Ref{H5FD_ros3_fapl_t}), fapl_id, fa)
+function h5p_set_fapl_ros(fapl_id, fa)
+    var"#status#" = ccall((:H5Pset_fapl_ros3, libhdf5), herr_t, (hid_t, Ptr{H5FD_ros3_fapl_t}), fapl_id, fa)
     var"#status#" < 0 && @h5error("Error in setting ros3 properties")
     return nothing
 end

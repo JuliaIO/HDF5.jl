@@ -225,9 +225,9 @@ end
 struct H5FD_ros3_fapl_t
     version::Int32
     authenticate::hbool_t
-    aws_region::NTuple{33,Cchar}
-    secret_id::NTuple{129,Cchar}
-    secret_key::NTuple{129,Cchar}
+    aws_region::Cstring
+    secret_id::Cstring
+    secret_key::Cstring
 end
 
 struct H5FD_splitter_vfd_config_t

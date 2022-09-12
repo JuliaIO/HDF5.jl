@@ -477,8 +477,8 @@ h5pl_size
 - [`h5p_get_fapl_mpio32`](@ref h5p_get_fapl_mpio32)
 - [`h5p_get_fapl_mpio64`](@ref h5p_get_fapl_mpio64)
 - [`h5p_get_fapl_multi`](@ref h5p_get_fapl_multi)
+- [`h5p_get_fapl_ros`](@ref h5p_get_fapl_ros)
 - [`h5p_get_fapl_splitter`](@ref h5p_get_fapl_splitter)
-- [`h5p_get_fapl_ros3`](@ref h5p_get_fapl_ros3)
 - [`h5p_get_fclose_degree`](@ref h5p_get_fclose_degree)
 - [`h5p_get_file_image`](@ref h5p_get_file_image)
 - [`h5p_get_file_image_callbacks`](@ref h5p_get_file_image_callbacks)
@@ -580,8 +580,8 @@ h5pl_size
 - [`h5p_set_fapl_mpio32`](@ref h5p_set_fapl_mpio32)
 - [`h5p_set_fapl_mpio64`](@ref h5p_set_fapl_mpio64)
 - [`h5p_set_fapl_multi`](@ref h5p_set_fapl_multi)
+- [`h5p_set_fapl_ros`](@ref h5p_set_fapl_ros)
 - [`h5p_set_fapl_sec2`](@ref h5p_set_fapl_sec2)
-- [`h5p_set_fapl_ros3`](@ref h5p_set_fapl_ros3)
 - [`h5p_set_fapl_split`](@ref h5p_set_fapl_split)
 - [`h5p_set_fapl_splitter`](@ref h5p_set_fapl_splitter)
 - [`h5p_set_fapl_stdio`](@ref h5p_set_fapl_stdio)
@@ -695,8 +695,8 @@ h5p_get_fapl_hdfs
 h5p_get_fapl_mpio32
 h5p_get_fapl_mpio64
 h5p_get_fapl_multi
+h5p_get_fapl_ros
 h5p_get_fapl_splitter
-h5p_get_fapl_ros3
 h5p_get_fclose_degree
 h5p_get_file_image
 h5p_get_file_image_callbacks
@@ -798,8 +798,8 @@ h5p_set_fapl_log
 h5p_set_fapl_mpio32
 h5p_set_fapl_mpio64
 h5p_set_fapl_multi
+h5p_set_fapl_ros
 h5p_set_fapl_sec2
-h5p_set_fapl_ros3
 h5p_set_fapl_split
 h5p_set_fapl_splitter
 h5p_set_fapl_stdio
