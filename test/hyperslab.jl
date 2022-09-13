@@ -3,23 +3,39 @@ using Random, Test, HDF5
 @testset "BlockRange" begin
     br = HDF5.BlockRange(2)
     @test length(br) == 1
-    @test range(br) == 2:2
+    @test range(br) === 2:2
+    @test convert(AbstractRange, br) === 2:2
+    @test convert(UnitRange, br) === 2:2
+    @test convert(StepRange, br) === 2:1:2
 
     br = HDF5.BlockRange(Base.OneTo(3))
     @test length(br) == 3
     @test range(br) == 1:3
+    @test convert(AbstractRange, br) === 1:3
+    @test convert(UnitRange, br) === 1:3
+    @test convert(StepRange, br) === 1:1:3
 
     br = HDF5.BlockRange(2:7)
     @test length(br) == 6
     @test range(br) == 2:7
+    @test convert(AbstractRange, br) === 2:7
+    @test convert(UnitRange, br) === 2:7
+    @test convert(StepRange, br) === 2:1:7
+
 
     br = HDF5.BlockRange(1:2:7)
     @test length(br) == 4
     @test range(br) == 1:2:7
+    @test convert(AbstractRange, br) === 1:2:7
+    @test_throws Exception convert(UnitRange, br)
+    @test convert(StepRange, br) === 1:2:7
 
     br = HDF5.BlockRange(; start=2, stride=8, block=2, count=3)
     @test length(br) == 6
     @test_throws Exception range(br)
+    @test_throws Exception convert(AbstractRange, br)
+    @test_throws Exception convert(UnitRange, br)
+    @test_throws Exception convert(StepRange, br)
 end
 
 @testset "hyperslab" begin

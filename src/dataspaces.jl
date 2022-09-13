@@ -219,7 +219,7 @@ function Base.range(br::BlockRange)
         error("$br cannot be converted to a Julia range")
     end
 end
-Base.convert(::Type{T}, br::BlockRange) where {T  <: AbstractRange} = range(br)::T 
+Base.convert(::Type{T}, br::BlockRange) where {T<:AbstractRange} = convert(T, range(br))
 
 """
     HDF5.select_hyperslab!(dspace::Dataspace, [op, ], idxs::Tuple)
