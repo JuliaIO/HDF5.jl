@@ -143,7 +143,7 @@ struct BlockRange
 end
 
 """
-    BlockRange(;start::Integer, stride::Integer=1, count::Integer=1, block::Integer=1)
+    HDF5.BlockRange(;start::Integer, stride::Integer=1, count::Integer=1, block::Integer=1)
 
 A `BlockRange` represents a selection along a single dimension of a HDF5
 hyperslab. It is similar to a Julia `range` object, with some extra features for
@@ -173,6 +173,9 @@ BlockRange(r::AbstractUnitRange; stride=length(r), count=1) =
     BlockRange(; start=first(r), stride=stride, count=count, block=length(r))
 BlockRange(r::OrdinalRange) = BlockRange(; start=first(r), stride=step(r), count=length(r))
 BlockRange(br::BlockRange) = br
+
+Base.to_index(d::Dataset, br::BlockRange) = br
+Base.length(br::BlockRange) = Int(br.count * br.block)
 
 function Base.show(io::IO, br::BlockRange)
     start = Int(br.start0 + 1)
@@ -204,8 +207,22 @@ function Base.show(io::IO, br::BlockRange)
     end
 end
 
+function Base.range(br::BlockRange)
+    start = Int(br.start0 + 1)
+    if br.count == 1
+        # UnitRange
+        return range(start; length=Int(br.block))
+    elseif br.block == 1 && br.count != API.H5S_UNLIMITED
+        # StepRange
+        return range(start; step=Int(br.stride), length=Int(br.count))
+    else
+        error("$br cannot be converted to a Julia range")
+    end
+end
+Base.convert(::Type{AbstractRange}, br::BlockRange) = range(br)
+
 """
-    select_hyperslab!(dspace::Dataspace, [op, ], idxs::Tuple)
+    HDF5.select_hyperslab!(dspace::Dataspace, [op, ], idxs::Tuple)
 
 Selects a hyperslab region of the `dspace`. `idxs` should be a tuple of
 integers, ranges or [`blockrange`](@ref) objects.
