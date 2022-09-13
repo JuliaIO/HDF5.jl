@@ -169,7 +169,7 @@ function BlockRange(; start::Integer, stride::Integer=1, count::Integer=1, block
 end
 BlockRange(start::Integer; stride=1, count=1, block=1) =
     BlockRange(; start=start, stride=stride, count=count, block=block)
-BlockRange(r::AbstractUnitRange; stride=length(r), count=1) =
+BlockRange(r::AbstractUnitRange; stride=max(length(r), 1), count=1) =
     BlockRange(; start=first(r), stride=stride, count=count, block=length(r))
 BlockRange(r::OrdinalRange) = BlockRange(; start=first(r), stride=step(r), count=length(r))
 BlockRange(br::BlockRange) = br

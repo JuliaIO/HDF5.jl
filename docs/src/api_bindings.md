@@ -296,6 +296,7 @@ h5g_open
 - [`h5i_get_type`](@ref h5i_get_type)
 - [`h5i_inc_ref`](@ref h5i_inc_ref)
 - [`h5i_is_valid`](@ref h5i_is_valid)
+- [`h5i_object_verify`](@ref h5i_object_verify)
 ```@docs
 h5i_dec_ref
 h5i_get_file_id
@@ -304,6 +305,7 @@ h5i_get_ref
 h5i_get_type
 h5i_inc_ref
 h5i_is_valid
+h5i_object_verify
 ```
 
 ---

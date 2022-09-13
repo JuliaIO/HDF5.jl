@@ -1358,6 +1358,17 @@ function h5i_is_valid(obj_id)
 end
 
 """
+    h5i_object_verify(obj_id::hid_t, id_type::Cint) -> Ptr{Cvoid}
+
+See `libhdf5` documentation for [`H5Iobject_verify`](https://portal.hdfgroup.org/display/HDF5/H5I_OBJECT_VERIFY).
+"""
+function h5i_object_verify(obj_id, id_type)
+    var"#status#" = ccall((:H5Iobject_verify, libhdf5), Ptr{Cvoid}, (hid_t, Cint), obj_id, id_type)
+    var"#status#" == C_NULL && @h5error("Error verifying object")
+    return var"#status#"
+end
+
+"""
     h5l_create_external(target_file_name::Ptr{UInt8}, target_obj_name::Ptr{UInt8}, link_loc_id::hid_t, link_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Lcreate_external`](https://portal.hdfgroup.org/display/HDF5/H5L_CREATE_EXTERNAL).

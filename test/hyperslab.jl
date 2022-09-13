@@ -51,3 +51,16 @@ end
         @test dset[indices...] == vcat(v[1:2, 1:5:6], v[5:6, 1:5:6])
     end
 end
+
+@testset "read 0-length arrays: issue #859" begin
+    fname = tempname()
+    dsetname = "foo"
+
+    h5open(fname, "w") do fid
+        create_dataset(fid, dsetname, datatype(Float32), ((0,), (-1,)); chunk=(100,))
+    end
+
+    h5open(fname, "r") do fid
+        fid[dsetname][:]
+    end
+end
