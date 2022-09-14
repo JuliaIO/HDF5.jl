@@ -22,7 +22,6 @@ using Random, Test, HDF5
     @test convert(UnitRange, br) === 2:7
     @test convert(StepRange, br) === 2:1:7
 
-
     br = HDF5.BlockRange(1:2:7)
     @test length(br) == 4
     @test range(br) == 1:2:7
