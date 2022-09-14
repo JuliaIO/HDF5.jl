@@ -29,7 +29,7 @@ ROS3() = ROS3(1, false, "", "", "")
 
 function get_driver(fapl::Properties, ::Type{ROS3})
     r_fa = Ref{H5FD_ros3_fapl_t}()
-    API.h5p_get_fapl_ros(fapl, r_fa)
+    API.h5p_get_fapl_ros3(fapl, r_fa)
     return ROS3(r_fa[])
 end
 
@@ -39,7 +39,7 @@ function set_driver!(fapl::Properties, driver::ROS3)
         " Make sure that you're using ROS3-enabled HDF5 libraries"
     )
     HDF5.init!(fapl)
-    API.h5p_set_fapl_ros(fapl, Ref(driver.fa))
+    API.h5p_set_fapl_ros3(fapl, Ref(driver.fa))
     DRIVERS[API.h5p_get_driver(fapl)] = ROS3
     return nothing
 end

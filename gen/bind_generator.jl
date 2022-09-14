@@ -12,6 +12,8 @@ bind_exceptions[:h5p_set_fapl_mpio64] = :H5Pset_fapl_mpio
 # have numbers at the end
 bind_exceptions[:h5p_set_fletcher32] = :H5Pset_fletcher32
 bind_exceptions[:h5p_set_fapl_sec2]  = :H5Pset_fapl_sec2
+bind_exceptions[:h5p_get_fapl_ros3]  = :H5Pget_fapl_ros3
+bind_exceptions[:h5p_set_fapl_ros3]  = :H5Pset_fapl_ros3
 # underscore separator not removed
 bind_exceptions[:h5fd_core_init]   = :H5FD_core_init
 bind_exceptions[:h5fd_family_init] = :H5FD_family_init
