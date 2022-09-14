@@ -120,6 +120,42 @@ function Base.show(io::IO, dtype::Datatype)
     end
 end
 
+function Base.show(io::IO, br::BlockRange)
+    start = Int(br.start0 + 1)
+    # choose the simplest possible representation
+    if br.count == 1
+        if br.block == 1
+            # integer
+            r = start
+        else
+            # UnitRange
+            r = range(start; length=Int(br.block))
+        end
+    elseif br.block == 1 && br.count != API.H5S_UNLIMITED
+        # StepRange
+        r = range(start; step=Int(br.stride), length=Int(br.count))
+    else
+        # BlockRange(int; ...)
+        print(io, BlockRange, "(start=", start)
+        if br.stride != 1
+            print(io, ", stride=", Int(br.stride))
+        end
+        if br.count != 1
+            print(io, ", count=", br.count == API.API.H5S_UNLIMITED ? -1 : Int(br.count))
+        end
+        if br.block != 1
+            print(io, ", block=", Int(br.block))
+        end
+        print(io, ")")
+        return nothing
+    end
+    compact = get(io, :compact, false)
+    compact || print(io, BlockRange, "(")
+    print(io, r)
+    compact || print(io, BlockRange, ")")
+    return nothing
+end
+
 function Base.show(io::IO, dspace::Dataspace)
     if !isvalid(dspace)
         print(io, "HDF5.Dataspace: (invalid)")
@@ -138,19 +174,20 @@ function Base.show(io::IO, dspace::Dataspace)
     sz, maxsz = get_extent_dims(dspace)
     sel = API.h5s_get_select_type(dspace)
     if sel == API.H5S_SEL_HYPERSLABS && API.h5s_is_regular_hyperslab(dspace)
+        io_compact = IOContext(io, :compact => true)
         blockranges = get_regular_hyperslab(dspace)
         ndims = length(blockranges)
-        print(io, "(")
+        print(io_compact, "(")
         for ii in 1:ndims
-            print(io, blockranges[ii])
-            ii != ndims && print(io, ", ")
+            print(io_compact, blockranges[ii])
+            ii != ndims && print(io_compact, ", ")
         end
-        print(io, ") / (")
+        print(io_compact, ") / (")
         for ii in 1:ndims
-            print(io, 1:maxsz[ii])
-            ii != ndims && print(io, ", ")
+            print(io_compact, 1:maxsz[ii])
+            ii != ndims && print(io_compact, ", ")
         end
-        print(io, ")")
+        print(io_compact, ")")
     else
         print(io, sz)
         if maxsz != sz

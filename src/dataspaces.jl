@@ -177,36 +177,6 @@ BlockRange(br::BlockRange) = br
 Base.to_index(d::Dataset, br::BlockRange) = br
 Base.length(br::BlockRange) = Int(br.count * br.block)
 
-function Base.show(io::IO, br::BlockRange)
-    start = Int(br.start0 + 1)
-    # choose the simplest possible representation
-    if br.count == 1
-        if br.block == 1
-            # integer
-            print(io, start)
-        else
-            # UnitRange
-            print(io, range(start; length=Int(br.block)))
-        end
-    elseif br.block == 1 && br.count != API.H5S_UNLIMITED
-        # StepRange
-        print(io, range(start; step=Int(br.stride), length=Int(br.count)))
-    else
-        # BlockRange(int; ...)
-        print(io, BlockRange, "(start=", start)
-        if br.stride != 1
-            print(io, ", stride=", Int(br.stride))
-        end
-        if br.count != 1
-            print(io, ", count=", br.count == API.API.H5S_UNLIMITED ? -1 : Int(br.count))
-        end
-        if br.block != 1
-            print(io, ", block=", Int(br.block))
-        end
-        print(io, ")")
-    end
-end
-
 function Base.range(br::BlockRange)
     start = Int(br.start0 + 1)
     if br.count == 1
@@ -230,7 +200,7 @@ integers, ranges or [`blockrange`](@ref) objects.
 - `op` determines how the new selection is to be combined with the already
   selected dataspace:
   - `:select` (default): replace the existing selection with the new selection.
-  - `:or`: adds the new selection to the existing selection. 
+  - `:or`: adds the new selection to the existing selection.
      Aliases: `|`, `∪`, `union`.
   - `:and`: retains only the overlapping portions of the new and existing
     selection. Aliases: `&`, `∩`, `intersect`.
@@ -244,9 +214,7 @@ integers, ranges or [`blockrange`](@ref) objects.
 
 """
 function select_hyperslab!(
-    dspace::Dataspace,
-    op::Union{Symbol,typeof.((&, |, ⊻, ∪, ∩, setdiff))...},
-    idxs::Tuple
+    dspace::Dataspace, op::Union{Symbol,typeof.((&, |, ⊻, ∪, ∩, setdiff))...}, idxs::Tuple
 )
     N = ndims(dspace)
     length(idxs) == N || error("Number of indices does not match dimension of Dataspace")
@@ -259,11 +227,11 @@ function select_hyperslab!(
 
     _op = if op == :select
         API.H5S_SELECT_SET
-    elseif (op == :or || op === | || op === ∪)
+    elseif (op == :or || op === (|) || op === (∪))
         API.H5S_SELECT_OR
-    elseif (op == :and || op === & || op === ∩)
+    elseif (op == :and || op === (&) || op === (∩))
         API.H5S_SELECT_AND
-    elseif (op == :xor || op === ⊻)
+    elseif (op == :xor || op === (⊻))
         API.H5S_SELECT_XOR
     elseif op == :notb || op === setdiff
         API.H5S_SELECT_NOTB
