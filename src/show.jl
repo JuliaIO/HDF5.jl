@@ -152,7 +152,7 @@ function Base.show(io::IO, br::BlockRange)
     compact = get(io, :compact, false)
     compact || print(io, BlockRange, "(")
     print(io, r)
-    compact || print(io, BlockRange, ")")
+    compact || print(io, ")")
     return nothing
 end
 
