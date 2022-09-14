@@ -230,20 +230,23 @@ integers, ranges or [`blockrange`](@ref) objects.
 - `op` determines how the new selection is to be combined with the already
   selected dataspace:
   - `:select` (default): replace the existing selection with the new selection.
-  - `:or`: adds the new selection to the existing selection
+  - `:or`: adds the new selection to the existing selection. 
+     Aliases: `|`, `∪`, `union`.
   - `:and`: retains only the overlapping portions of the new and existing
-    selection.
+    selection. Aliases: `&`, `∩`, `intersect`.
   - `:xor`: retains only the elements that are members of the new selection or
     the existing selection, excluding elements that are members of both
-    selections.
+    selections. Aliases: `⊻`, `xor`
   - `:notb`: retains only elements of the existing selection that are not in the
-    new selection.
+    new selection. Alias: `setdiff`.
   - `:nota`: retains only elements of the new selection that are not in the
     existing selection.
 
 """
 function select_hyperslab!(
-    dspace::Dataspace, op::Union{Symbol,typeof(&),typeof(|),typeof(xor)}, idxs::Tuple
+    dspace::Dataspace,
+    op::Union{Symbol,typeof.((&, |, ⊻, ∪, ∩, setdiff))...},
+    idxs::Tuple
 )
     N = ndims(dspace)
     length(idxs) == N || error("Number of indices does not match dimension of Dataspace")
@@ -256,13 +259,13 @@ function select_hyperslab!(
 
     _op = if op == :select
         API.H5S_SELECT_SET
-    elseif (op == :or || op === |)
+    elseif (op == :or || op === | || op === ∪)
         API.H5S_SELECT_OR
-    elseif (op == :and || op === &)
+    elseif (op == :and || op === & || op === ∩)
         API.H5S_SELECT_AND
-    elseif (op == :xor || op === xor)
+    elseif (op == :xor || op === ⊻)
         API.H5S_SELECT_XOR
-    elseif op == :notb
+    elseif op == :notb || op === setdiff
         API.H5S_SELECT_NOTB
     elseif op == :nota
         API.H5S_SELECT_NOTA
