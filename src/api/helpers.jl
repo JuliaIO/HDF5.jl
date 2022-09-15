@@ -706,6 +706,25 @@ function h5p_get_userblock(plist_id)
     return len[]
 end
 
+function h5p_get_virtual_count(dcpl_id)
+    count = Ref{Csize_t}()
+    h5p_get_virtual_count(dcpl_id, count)
+    return count[]
+end
+
+function h5p_get_virtual_dsetname(dcpl_id, index)
+    len = h5p_get_virtual_dsetname(dcpl_id, index, C_NULL, 0)
+    buffer = StringVector(len)
+    h5p_get_virtual_dsetname(dcpl_id, index, buffer, len + 1)
+    return String(buffer)
+end
+function h5p_get_virtual_filename(dcpl_id, index)
+    len = h5p_get_virtual_filename(dcpl_id, index, C_NULL, 0)
+    buffer = StringVector(len)
+    h5p_get_virtual_filename(dcpl_id, index, buffer, len + 1)
+    return String(buffer)
+end
+
 function h5p_get_virtual_prefix(dapl_id)
     virtual_file_len = h5p_get_virtual_prefix(dapl_id, C_NULL, 0)
     buffer = StringVector(virtual_file_len)

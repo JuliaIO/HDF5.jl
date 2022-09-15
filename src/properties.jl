@@ -498,6 +498,9 @@ set_shuffle!(p::Properties, val::Bool) = val && push!(Filters.FilterPipeline(p),
 set_fletcher32!(p::Properties, val::Bool) = val && push!(Filters.FilterPipeline(p), Filters.Fletcher32())
 set_blosc!(p::Properties, val) = error("The Blosc filter now requires the H5Zblosc package be loaded")
 
+get_virtual(p::Properties) = VirtualLayout(p)
+set_virtual!(p::Properties, vmaps) = append!(VirtualLayout(p), vmaps)
+
 
 class_propertynames(::Type{DatasetCreateProperties}) = (
     :alloc_time,
@@ -508,6 +511,7 @@ class_propertynames(::Type{DatasetCreateProperties}) = (
     :filters,
     :layout,
     :no_attrs_hint,
+    :virtual,
     # convenience
     :blosc,
     :deflate,
@@ -532,6 +536,7 @@ function class_getproperty(::Type{DatasetCreateProperties}, p::Properties, name:
             false :
             API.h5p_get_dset_no_attrs_hint(p)
         ) :
+    name === :virtual     ? get_virtual(p) :
     # deprecated
     name === :filter      ? (depwarn("`filter` property name is deprecated, use `filters` instead",:class_getproperty); get_filters(p)) :
     class_getproperty(superclass(DatasetCreateProperties), p, name)
@@ -549,6 +554,7 @@ function class_setproperty!(::Type{DatasetCreateProperties}, p::Properties, name
             error("no_attrs_hint is only valid for HDF5 library versions 1.10.5 or greater") :
             API.h5p_set_dset_no_attrs_hint(p, val)
         ) :
+    name === :virtual     ? set_virtual!(p, val) :
     # set-only for convenience
     name === :blosc       ? set_blosc!(p, val) :
     name === :deflate     ? set_deflate!(p, val) :
