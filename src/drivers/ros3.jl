@@ -1,5 +1,7 @@
 """
     ROS3()
+    ROS3(aws_region::String, secret_id::String, secret_key::String)
+    ROS3(version::Int32, authenticate::Bool, aws_region::String, secret_id::String, secret_key::String)
 
 This is the read-only virtual driver that enables access to HDF5 objects stored in AWS S3
 """
@@ -21,15 +23,17 @@ struct ROS3 <: Driver
 end
 
 ROS3() = ROS3(1, false, "", "", "")
+
 ROS3(region::AbstractString, id::AbstractString, key::AbstractString) =
     ROS3(1, true, region, id, key)
-_ntuple_to_string(x) = unsafe_string(Ptr{Cchar}(pointer_from_objref(Ref(x))), length(x))
+
 function ROS3(driver::API.H5FD_ros3_fapl_t)
     aws_region = _ntuple_to_string(driver.aws_region)
     secret_id = _ntuple_to_string(driver.secret_id)
     secret_key = _ntuple_to_string(driver.secret_key)
     ROS3(driver.version, driver.authenticate, aws_region, secret_id, secret_key)
 end
+_ntuple_to_string(x) = unsafe_string(Ptr{Cchar}(pointer_from_objref(Ref(x))), length(x))
 
 function Base.convert(::Type{API.H5FD_ros3_fapl_t}, driver::ROS3)
     aws_region = ntuple(
