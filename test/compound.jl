@@ -147,7 +147,6 @@ end
     @test HDF5.do_normalize(TTTT) == true
 end
 
-
 struct Bar
     a::Int32
     b::Float64
@@ -156,8 +155,8 @@ end
 
 @testset "write_compound" begin
     bars = [
-        [Bar(1, 1.1, true) Bar(2, 2.1, false) Bar(3, 3.1, true)];
-        [Bar(4, 4.1, false) Bar(5, 5.1, true) Bar(6, 6.1, false)];
+        [Bar(1, 1.1, true) Bar(2, 2.1, false) Bar(3, 3.1, true)]
+        [Bar(4, 4.1, false) Bar(5, 5.1, true) Bar(6, 6.1, false)]
     ]
 
     fn = tempname()
