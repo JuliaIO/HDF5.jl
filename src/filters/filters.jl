@@ -429,7 +429,6 @@ function Base.convert(::Type{I}, ::Type{F}) where {I<:Integer,F<:Filter}
     Base.convert(I, filterid(F))
 end
 
-
 """
     EXTERNAL_FILTER_JULIA_PACKAGES
 
@@ -443,7 +442,6 @@ const EXTERNAL_FILTER_JULIA_PACKAGES = Dict{API.H5Z_filter_t,String}([
     32015 => "H5Zzstd",
 ])
 
-
 """
 Error if all filters in a filter pipeline are not available.
 """
@@ -454,18 +452,22 @@ function ensure_filters_available(f::FilterPipeline)
             filter::UnknownFilter = getindex(f, UnknownFilter, i)
             filter_id = filterid(filter)
             filter_name = filtername(filter)
-            if(!API.h5z_filter_avail(filter_id))
-                if haskey(EXTERNAL_FILTER_JULIA_PACKAGES,filter_id)
-                    error("""
-                        filter missing, filter id: $filter_id name: $filter_name
-                        Try running `import $(EXTERNAL_FILTER_JULIA_PACKAGES[filter_id])` to install this filter.
-                        """)
+            if (!API.h5z_filter_avail(filter_id))
+                if haskey(EXTERNAL_FILTER_JULIA_PACKAGES, filter_id)
+                    error(
+                        """
+                      filter missing, filter id: $filter_id name: $filter_name
+                      Try running `import $(EXTERNAL_FILTER_JULIA_PACKAGES[filter_id])` to install this filter.
+                      """
+                    )
                 else
-                    error("""
-                        filter missing, filter id: $filter_id name: $filter_name
-                        This filter is not currently available as a Julia package.
-                        Maybe more information is here https://support.hdfgroup.org/services/contributions.html
-                        """)
+                    error(
+                        """
+                      filter missing, filter id: $filter_id name: $filter_name
+                      This filter is not currently available as a Julia package.
+                      Maybe more information is here https://support.hdfgroup.org/services/contributions.html
+                      """
+                    )
                 end
             end
         end
@@ -474,8 +476,6 @@ function ensure_filters_available(f::FilterPipeline)
     end
     error("unreachable")
 end
-
-
 
 include("builtin.jl")
 include("filters_midlevel.jl")

@@ -16,16 +16,17 @@ using Test
     f = h5open(fn)
     filter_name = "HDF5 lz4 filter; see http://www.hdfgroup.org/services/contributions.html"
     filter_id = 32004
-    @test_throws(ErrorException("""
-        filter missing, filter id: $filter_id name: $filter_name
-        Try running `import $(Filters.EXTERNAL_FILTER_JULIA_PACKAGES[filter_id])` to install this filter.
-        """),
+    @test_throws(
+        ErrorException(
+            """
+filter missing, filter id: $filter_id name: $filter_name
+Try running `import $(Filters.EXTERNAL_FILTER_JULIA_PACKAGES[filter_id])` to install this filter.
+"""
+        ),
         read(f["lz4"])
     )
     close(f)
 end
-
-
 
 using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
 
