@@ -4,8 +4,7 @@ using Test
 
 # This test must run before external filters are loaded
 @testset "missing filter errors" begin
-    test_files = joinpath(@__DIR__, "test_files")
-    fn = joinpath(test_files, "lz4_compressed.test_h5")
+    fn = joinpath(@__DIR__, "lz4_compressed.test_h5")
     # using H5Zlz4
     # f = h5open(fn, "w")
     # data = zeros(100, 100)
