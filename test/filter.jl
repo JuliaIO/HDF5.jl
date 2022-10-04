@@ -1,6 +1,33 @@
 using HDF5
 using HDF5.Filters
 using Test
+
+# This test must run before external filters are loaded
+@testset "missing filter errors" begin
+    test_files = joinpath(@__DIR__, "test_files")
+    fn = joinpath(test_files, "lz4_compressed.test_h5")
+    # using H5Zlz4
+    # f = h5open(fn, "w")
+    # data = zeros(100, 100)
+    # ds = create_dataset(
+    #         f, "lz4", datatype(data), dataspace(data); chunk=(100, 100), filters=Lz4Filter()
+    #     )
+    # write(ds, data)
+    # close(f)
+    f = h5open(fn)
+    filter_name = "HDF5 lz4 filter; see http://www.hdfgroup.org/services/contributions.html"
+    filter_id = 32004
+    @test_throws(ErrorException("""
+        filter missing, filter id: $filter_id name: $filter_name
+        Try running `import $(Filters.EXTERNAL_FILTER_JULIA_PACKAGES[filter_id])` to install this filter.
+        """),
+        read(f["lz4"])
+    )
+    close(f)
+end
+
+
+
 using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
 
 @static if VERSION >= v"1.6"

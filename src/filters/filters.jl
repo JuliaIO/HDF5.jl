@@ -457,12 +457,12 @@ function ensure_filters_available(f::FilterPipeline)
             if(!API.h5z_filter_avail(filter_id))
                 if haskey(EXTERNAL_FILTER_JULIA_PACKAGES,filter_id)
                     error("""
-                        filter missing, filter id: $filter_id name: $filter_name.
+                        filter missing, filter id: $filter_id name: $filter_name
                         Try running `import $(EXTERNAL_FILTER_JULIA_PACKAGES[filter_id])` to install this filter.
                         """)
                 else
                     error("""
-                        filter missing, filter id: $filter_id name: $filter_name.
+                        filter missing, filter id: $filter_id name: $filter_name
                         This filter is not currently available as a Julia package.
                         Maybe more information is here https://support.hdfgroup.org/services/contributions.html
                         """)
