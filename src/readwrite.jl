@@ -187,15 +187,8 @@ function _generic_read(
     catch e
         # Add nicer errors if reading fails
         if obj isa Dataset
-            prop = API.h5d_get_create_plist(obj)
-            try
-                filter_error = Filters.ensure_filters_available(Filters.FilterPipeline(prop))
-            finally
-                API.h5p_close(prop)
-            end
-            if !isnothing(filter_error)
-                throw(filter_error)
-            end
+            prop = get_create_properties(obj)
+            Filters.ensure_filters_available(Filters.FilterPipeline(prop))
         end
         throw(e)
     finally

@@ -445,9 +445,9 @@ const EXTERNAL_FILTER_JULIA_PACKAGES = Dict{API.H5Z_filter_t,String}([
 
 
 """
-Return an Error if all filters in a filter pipeline are not available.
+Error if all filters in a filter pipeline are not available.
 """
-function ensure_filters_available(f::FilterPipeline)::Union{ErrorException, Nothing}
+function ensure_filters_available(f::FilterPipeline)
     if !API.h5p_all_filters_avail(f.plist)
         nfilters = length(f)
         for i in 1:nfilters
@@ -456,12 +456,12 @@ function ensure_filters_available(f::FilterPipeline)::Union{ErrorException, Noth
             filter_name = filtername(filter)
             if(!API.h5z_filter_avail(filter_id))
                 if haskey(EXTERNAL_FILTER_JULIA_PACKAGES,filter_id)
-                    return ErrorException("""
+                    error("""
                         filter missing, filter id: $filter_id name: $filter_name.
                         Try running `import $(EXTERNAL_FILTER_JULIA_PACKAGES[filter_id])` to install this filter.
                         """)
                 else
-                    return ErrorException("""
+                    error("""
                         filter missing, filter id: $filter_id name: $filter_name.
                         This filter is not currently available as a Julia package.
                         Maybe more information is here https://support.hdfgroup.org/services/contributions.html
