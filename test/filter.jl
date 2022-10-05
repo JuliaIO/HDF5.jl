@@ -1,7 +1,6 @@
 using HDF5
 using HDF5.Filters
 using Test
-
 using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
 
 @static if VERSION >= v"1.6"
