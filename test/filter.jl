@@ -2,32 +2,6 @@ using HDF5
 using HDF5.Filters
 using Test
 
-# This test must run before external filters are loaded
-@testset "missing filter errors" begin
-    fn = joinpath(@__DIR__, "lz4_compressed.test_h5")
-    # using H5Zlz4
-    # f = h5open(fn, "w")
-    # data = zeros(100, 100)
-    # ds = create_dataset(
-    #         f, "lz4", datatype(data), dataspace(data); chunk=(100, 100), filters=Lz4Filter()
-    #     )
-    # write(ds, data)
-    # close(f)
-    f = h5open(fn)
-    filter_name = "HDF5 lz4 filter; see http://www.hdfgroup.org/services/contributions.html"
-    filter_id = 32004
-    @test_throws(
-        ErrorException(
-            """
-filter missing, filter id: $filter_id name: $filter_name
-Try running `import $(Filters.EXTERNAL_FILTER_JULIA_PACKAGES[filter_id])` to install this filter.
-"""
-        ),
-        read(f["lz4"])
-    )
-    close(f)
-end
-
 using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
 
 @static if VERSION >= v"1.6"
@@ -182,6 +156,34 @@ using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenab
     end
 
     close(f)
+
+    # Test that reading a dataset with a missing filter has an informative error message.
+    h5open(fn, "w") do f
+        data = zeros(100, 100)
+        ds = create_dataset(
+            f,
+            "data",
+            datatype(data),
+            dataspace(data);
+            chunk=(100, 100),
+            filters=Lz4Filter()
+        )
+        write(ds, data)
+        close(ds)
+    end
+    HDF5.API.h5z_unregister(Filters.filterid(H5Zlz4.Lz4Filter))
+    h5open(fn) do f
+        filter_name = Filters.filtername(H5Zlz4.Lz4Filter)
+        filter_id = Filters.filterid(H5Zlz4.Lz4Filter)
+        @test_throws(
+            ErrorException("""
+                           filter missing, filter id: $filter_id name: $filter_name
+                           Try running `import H5Zlz4` to install this filter.
+                           """),
+            read(f["data"])
+        )
+        HDF5.Filters.register_filter(H5Zlz4.Lz4Filter)
+    end
 
     # Issue #896 and https://github.com/JuliaIO/HDF5.jl/issues/285#issuecomment-1002243321
     # Create an ExternalFilter from a Tuple
