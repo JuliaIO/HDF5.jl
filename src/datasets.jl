@@ -523,7 +523,9 @@ julia> reinterpret(Foo, thefoo)
 ```
 
 """
-function write_compound(f::AbstractString, name::AbstractString, data::AbstractArray{T}) where {T}
+function write_compound(
+    f::AbstractString, name::AbstractString, data::AbstractArray{T}
+) where {T}
     dtype = API.h5t_create(API.H5T_COMPOUND, sizeof(T))
     for (idx, fn) in enumerate(fieldnames(T))
         API.h5t_insert(dtype, fn, fieldoffset(T, idx), datatype(fieldtype(T, idx)))
