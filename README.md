@@ -24,7 +24,7 @@ Please see [HISTORY.md](HISTORY.md) and the [release notes](https://github.com/J
 julia>]
 pkg> add HDF5
 ```
-For custom build instructions please refer to the [documentation](https://JuliaIO.github.io/HDF5.jl/stable).
+For custom build instructions please refer to the [documentation](https://juliaio.github.io/HDF5.jl/stable/#Using-custom-or-system-provided-HDF5-binaries).
 
 ### Quickstart
 
