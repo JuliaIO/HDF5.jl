@@ -465,7 +465,7 @@ function ensure_filters_available(f::FilterPipeline)
                         """
                       filter missing, filter id: $filter_id name: $filter_name
                       This filter is not currently available as a Julia package.
-                      Maybe more information is here https://support.hdfgroup.org/services/contributions.html
+                      For more information, see https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins
                       """
                     )
                 end
