@@ -185,7 +185,7 @@ function _generic_read(
             return out
         end
     catch e
-        # Add nicer errors if reading fails
+        # Add nicer errors if reading fails.
         if obj isa Dataset
             prop = get_create_properties(obj)
             try
