@@ -60,6 +60,15 @@ function datatype(str::VLen{C}) where {C<:CharType}
     Datatype(API.h5t_vlen_create(type_id))
 end
 
+# Compound types
+function datatype(A::AbstractArray{T}) where {T}
+    dtype = API.h5t_create(API.H5T_COMPOUND, sizeof(T))
+    for (idx, fn) in enumerate(fieldnames(T))
+        API.h5t_insert(dtype, fn, fieldoffset(T, idx), datatype(fieldtype(T, idx)))
+    end
+    Datatype(dtype)
+end
+
 # Opaque types
 struct Opaque
     data

@@ -482,7 +482,6 @@ write_dataset(
     xfer::DatasetTransferProperties=dataset.xfer
 ) = nothing
 
-
 """
     get_datasets(file::HDF5.File) -> datasets::Vector{HDF5.Dataset}
 
