@@ -483,7 +483,7 @@ write_dataset(
 ) = nothing
 
 """
-    function write_compound(f::AbstractString, name::AbstractString, data::AbstractArray{T}) where T
+    function write_compound_dataset(f:Union{File, Group}, name::AbstractString, data::AbstractArray{T}) where T
 
 Writes an array of structs with primitive field types to an HDF5Compound dataset.
 
@@ -523,8 +523,8 @@ julia> reinterpret(Foo, thefoo)
 ```
 
 """
-function write_compound(
-    f::AbstractString, name::AbstractString, data::AbstractArray{T}
+function write_compound_dataset(
+    f::Union{File, Group}, name::AbstractString, data::AbstractArray{T}
 ) where {T}
     dtype = API.h5t_create(API.H5T_COMPOUND, sizeof(T))
     for (idx, fn) in enumerate(fieldnames(T))
@@ -533,6 +533,11 @@ function write_compound(
     dt = Datatype(dtype)
     dset = create_dataset(f, name, dt, dataspace(data))
     write_dataset(dset, dt, data)
+end
+function write_compound_dataset(f::AbstractString, name::AbstractString, data::AbstractArray{T}) where {T}
+    h5open(f, "w") do h5f
+        write_compound_dataset(h5f, name, data)
+    end
 end
 
 """

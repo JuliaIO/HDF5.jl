@@ -161,7 +161,7 @@ end
 
     fn = tempname()
     h5open(fn, "w") do h5f
-        write_compound(h5f, "the/bar", bars)
+        write_compound_dataset(h5f, "the/bar", bars)
     end
 
     thebars = h5open(fn, "r") do h5f
