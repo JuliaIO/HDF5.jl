@@ -482,63 +482,6 @@ write_dataset(
     xfer::DatasetTransferProperties=dataset.xfer
 ) = nothing
 
-"""
-    function write_compound_dataset(f:Union{File, Group}, name::AbstractString, data::AbstractArray{T}) where T
-
-Writes an array of structs with primitive field types to an HDF5Compound dataset.
-
-Examples
-========
-
-```
-julia> struct Foo
-           x::Int32
-           y::Float64
-       end
-
-julia> foos = [[Foo(1, 2) Foo(3, 4) Foo(5, 6)]; [Foo(7, 8) Foo(9, 10) Foo(11, 12)]]
-2×3 Matrix{Foo}:
- Foo(1, 2.0)  Foo(3, 4.0)   Foo(5, 6.0)
- Foo(7, 8.0)  Foo(9, 10.0)  Foo(11, 12.0)
-
-julia> h5open("foo.h5", "w") do h5f
-           write_compound(h5f, "the/foo", ts)
-       end
-
-julia> thefoo = h5open("foo.h5", "r") do file
-           read(file, "the/foo")
-       end
-2×3 Matrix{NamedTuple{(:x, :y), Tuple{Int32, Float64}}}:
- (x = 1, y = 2.0)  (x = 3, y = 4.0)   (x = 5, y = 6.0)
- (x = 7, y = 8.0)  (x = 9, y = 10.0)  (x = 11, y = 12.0)
-```
-
-The data can be reinterpreted to the original data type using `reinterpret()`:
-
-```
-julia> reinterpret(Foo, thefoo)
-2×3 reinterpret(Foo, ::Matrix{NamedTuple{(:x, :y), Tuple{Int32, Float64}}}):
- Foo(1, 2.0)  Foo(3, 4.0)   Foo(5, 6.0)
- Foo(7, 8.0)  Foo(9, 10.0)  Foo(11, 12.0)
-```
-
-"""
-function write_compound_dataset(
-    f::Union{File, Group}, name::AbstractString, data::AbstractArray{T}
-) where {T}
-    dtype = API.h5t_create(API.H5T_COMPOUND, sizeof(T))
-    for (idx, fn) in enumerate(fieldnames(T))
-        API.h5t_insert(dtype, fn, fieldoffset(T, idx), datatype(fieldtype(T, idx)))
-    end
-    dt = Datatype(dtype)
-    dset = create_dataset(f, name, dt, dataspace(data))
-    write_dataset(dset, dt, data)
-end
-function write_compound_dataset(f::AbstractString, name::AbstractString, data::AbstractArray{T}) where {T}
-    h5open(f, "w") do h5f
-        write_compound_dataset(h5f, name, data)
-    end
-end
 
 """
     get_datasets(file::HDF5.File) -> datasets::Vector{HDF5.Dataset}
