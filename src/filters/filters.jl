@@ -258,7 +258,7 @@ quick creation of filters using internal/proprietary filters without subtyping
 Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`.
 
 # Fields / Arguments
-* `filter_id` - (required) `Integer`` filter identifer.
+* `filter_id` - (required) `Integer` filter identifer.
 * `flags` -     (optional) bit vector describing general properties of the filter. Defaults to `API.H5Z_FLAG_MANDATORY`
 * `data` -      (optional) auxillary data for the filter. See [`cd_values`](@ref API.h5p_set_filter). Defaults to `Cuint[]`
 * `name` -      (optional) `String` describing the name of the filter. Defaults to "Unknown Filter with id [filter_id]"
@@ -427,6 +427,54 @@ end
 # Convert a Filter to an Integer subtype using filterid
 function Base.convert(::Type{I}, ::Type{F}) where {I<:Integer,F<:Filter}
     Base.convert(I, filterid(F))
+end
+
+"""
+    EXTERNAL_FILTER_JULIA_PACKAGES
+
+Maps filter id to the Julia package name that contains the filter.
+"""
+const EXTERNAL_FILTER_JULIA_PACKAGES = Dict{API.H5Z_filter_t,String}([
+    32008 => "H5Zbitshuffle",
+    32001 => "H5Zblosc",
+    307   => "H5Zbzip2",
+    32004 => "H5Zlz4",
+    32015 => "H5Zzstd",
+])
+
+"""
+Error if all filters in a filter pipeline are not available.
+"""
+function ensure_filters_available(f::FilterPipeline)
+    if !API.h5p_all_filters_avail(f.plist)
+        nfilters = length(f)
+        for i in 1:nfilters
+            filter::UnknownFilter = getindex(f, UnknownFilter, i)
+            filter_id = filterid(filter)
+            filter_name = filtername(filter)
+            if !API.h5z_filter_avail(filter_id)
+                if haskey(EXTERNAL_FILTER_JULIA_PACKAGES, filter_id)
+                    error(
+                        """
+                        filter missing, filter id: $filter_id name: $filter_name
+                        Try running `import $(EXTERNAL_FILTER_JULIA_PACKAGES[filter_id])` to install this filter.
+                        """
+                    )
+                else
+                    error(
+                        """
+                        filter missing, filter id: $filter_id name: $filter_name
+                        This filter is not currently available as a Julia package.
+                        For more information, see https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins
+                        """
+                    )
+                end
+            end
+        end
+    else
+        return nothing
+    end
+    error("unreachable")
 end
 
 include("builtin.jl")

@@ -156,6 +156,34 @@ using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenab
 
     close(f)
 
+    # Test that reading a dataset with a missing filter has an informative error message.
+    h5open(fn, "w") do f
+        data = zeros(100, 100)
+        ds = create_dataset(
+            f,
+            "data",
+            datatype(data),
+            dataspace(data);
+            chunk=(100, 100),
+            filters=Lz4Filter()
+        )
+        write(ds, data)
+        close(ds)
+    end
+    HDF5.API.h5z_unregister(Filters.filterid(H5Zlz4.Lz4Filter))
+    h5open(fn) do f
+        filter_name = Filters.filtername(H5Zlz4.Lz4Filter)
+        filter_id = Filters.filterid(H5Zlz4.Lz4Filter)
+        @test_throws(
+            ErrorException("""
+                           filter missing, filter id: $filter_id name: $filter_name
+                           Try running `import H5Zlz4` to install this filter.
+                           """),
+            read(f["data"])
+        )
+        HDF5.Filters.register_filter(H5Zlz4.Lz4Filter)
+    end
+
     # Issue #896 and https://github.com/JuliaIO/HDF5.jl/issues/285#issuecomment-1002243321
     # Create an ExternalFilter from a Tuple
     h5open(fn, "w") do f

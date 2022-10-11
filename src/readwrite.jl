@@ -184,7 +184,17 @@ function _generic_read(
         else
             return out
         end
-
+    catch e
+        # Add nicer errors if reading fails.
+        if obj isa Dataset
+            prop = get_create_properties(obj)
+            try
+                Filters.ensure_filters_available(Filters.FilterPipeline(prop))
+            finally
+                close(prop)
+            end
+        end
+        throw(e)
     finally
         close(memtype)
         close(memspace)
