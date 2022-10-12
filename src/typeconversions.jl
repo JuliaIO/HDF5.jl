@@ -61,7 +61,8 @@ function datatype(str::VLen{C}) where {C<:CharType}
 end
 
 # Compound types
-function datatype(A::AbstractArray{T}) where {T}
+datatype(x::AbstractArray{T}) where {T} = HDF5.datatype(x, Val(isstructtype(T)))
+function datatype(x::AbstractArray{T}, isstruct::Val{true}) where {T}
     dtype = API.h5t_create(API.H5T_COMPOUND, sizeof(T))
     for (idx, fn) in enumerate(fieldnames(T))
         API.h5t_insert(dtype, fn, fieldoffset(T, idx), datatype(fieldtype(T, idx)))

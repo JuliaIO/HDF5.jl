@@ -163,12 +163,17 @@ end
 
     fn = tempname()
     h5open(fn, "w") do h5f
-        write_dataset(h5f, "the/bar", bars)
-        write_dataset(h5f, "the/namedtuples", namedtuples)
+#        write_dataset(h5f, "the/bar", Bar(1, 2.3, false))
+       write_dataset(h5f, "the/bars", bars)
+       write_dataset(h5f, "the/namedtuples", namedtuples)
     end
 
+    # thebar = h5open(fn, "r") do h5f
+    #     read(h5f, "the/bar")
+    # end
+
     thebars = h5open(fn, "r") do h5f
-        read(h5f, "the/bar")
+        read(h5f, "the/bars")
     end
 
     @test (2, 3) == size(thebars)
