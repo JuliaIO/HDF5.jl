@@ -159,9 +159,12 @@ end
         [Bar(4, 4.1, false) Bar(5, 5.1, true) Bar(6, 6.1, false)]
     ]
 
+    namedtuples = [(a=1, b=2.3), (a=4, b=5.6)]
+
     fn = tempname()
     h5open(fn, "w") do h5f
         write_dataset(h5f, "the/bar", bars)
+        write_dataset(h5f, "the/namedtuples", namedtuples)
     end
 
     thebars = h5open(fn, "r") do h5f
@@ -178,4 +181,15 @@ end
     @test thebars_r[1, 2].b ≈ 2.1
     @test thebars_r[2, 1].a == 4
     @test thebars_r[1, 3].c
+
+    thenamedtuples = h5open(fn, "r") do h5f
+        read(h5f, "the/namedtuples")
+    end
+
+    @test (2,) == size(thenamedtuples)
+    @test thenamedtuples[1].a == 1
+    @test thenamedtuples[1].b ≈ 2.3
+    @test thenamedtuples[2].a == 4
+    @test thenamedtuples[2].b ≈ 5.6
+
 end
