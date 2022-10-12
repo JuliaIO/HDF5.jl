@@ -191,5 +191,4 @@ end
     @test thenamedtuples[1].b ≈ 2.3
     @test thenamedtuples[2].a == 4
     @test thenamedtuples[2].b ≈ 5.6
-
 end
