@@ -62,21 +62,24 @@ end
 
 # Compound types
 
-datatype(::T) where T = Datatype(hdf5_type_id(T), false)
-datatype(::Type{T}) where T = Datatype(hdf5_type_id(T), false)
-datatype(x::AbstractArray{T}) where T = Datatype(hdf5_type_id(T), false)
+datatype(::T) where {T} = Datatype(hdf5_type_id(T), false)
+datatype(::Type{T}) where {T} = Datatype(hdf5_type_id(T), false)
+datatype(x::AbstractArray{T}) where {T} = Datatype(hdf5_type_id(T), false)
 
-
-hdf5_type_id(::Type{T}) where T = hdf5_type_id(T, Val(isstructtype(T)))
-function hdf5_type_id(::Type{T}, isstruct::Val{true}) where T
+hdf5_type_id(::Type{T}) where {T} = hdf5_type_id(T, Val(isstructtype(T)))
+function hdf5_type_id(::Type{T}, isstruct::Val{true}) where {T}
     dtype = API.h5t_create(API.H5T_COMPOUND, sizeof(T))
+    offset = 0
     for (idx, fn) in enumerate(fieldnames(T))
-        API.h5t_insert(dtype, fn, fieldoffset(T, idx), hdf5_type_id(fieldtype(T, idx)))
+        ftype = fieldtype(T, idx)
+        API.h5t_insert(dtype, fn, fieldoffset(T, idx), hdf5_type_id(ftype))
+        offset += sizeof(ftype)
     end
     return dtype
 end
 # Perhaps we need a custom error type here
-hdf5_type_id(::Type{T}, isstruct::Val{false}) where T = throw(MethodError(hdf5_type_id, (T, isstruct)))
+hdf5_type_id(::Type{T}, isstruct::Val{false}) where {T} =
+    throw(MethodError(hdf5_type_id, (T, isstruct)))
 
 # Opaque types
 struct Opaque
