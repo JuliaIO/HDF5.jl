@@ -67,7 +67,6 @@ datatype(::Type{T}) where T = Datatype(hdf5_type_id(T), false)
 datatype(x::AbstractArray{T}) where T = Datatype(hdf5_type_id(T), false)
 
 
-# Move closer to where hdf5_type_id is defined
 hdf5_type_id(::Type{T}) where T = hdf5_type_id(T, Val(isstructtype(T)))
 function hdf5_type_id(::Type{T}, isstruct::Val{true}) where T
     dtype = API.h5t_create(API.H5T_COMPOUND, sizeof(T))
