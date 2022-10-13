@@ -69,11 +69,9 @@ datatype(x::AbstractArray{T}) where {T} = Datatype(hdf5_type_id(T), false)
 hdf5_type_id(::Type{T}) where {T} = hdf5_type_id(T, Val(isstructtype(T)))
 function hdf5_type_id(::Type{T}, isstruct::Val{true}) where {T}
     dtype = API.h5t_create(API.H5T_COMPOUND, sizeof(T))
-    offset = 0
     for (idx, fn) in enumerate(fieldnames(T))
         ftype = fieldtype(T, idx)
         API.h5t_insert(dtype, fn, fieldoffset(T, idx), hdf5_type_id(ftype))
-        offset += sizeof(ftype)
     end
     return dtype
 end
