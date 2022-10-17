@@ -260,6 +260,7 @@ _has_symbol(sym::Symbol) = Libdl.dlsym(libhdf5handle[], sym; throw_error=false) 
 const H5D_COMPACT    = 0
 const H5D_CONTIGUOUS = 1
 const H5D_CHUNKED    = 2
+const H5D_VIRTUAL    = 3
 
 # allocation times (C enum H5D_alloc_time_t)
 const H5D_ALLOC_TIME_ERROR = -1
