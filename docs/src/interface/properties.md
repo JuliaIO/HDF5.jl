@@ -29,6 +29,13 @@ StringCreateProperties
 DatatypeCreateProperties
 ```
 
+## Virtual Datasets
+
+```@docs
+VirtualMapping
+VirtualLyout
+```
+
 ## Drivers
 
 ```@meta
@@ -46,3 +53,4 @@ Core
 POSIX
 MPIO
 ```
+

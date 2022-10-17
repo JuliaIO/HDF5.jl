@@ -25,7 +25,14 @@ d = create_dataset(
     "x",
     datatype(Float64),
     vspace;
-    virtual=[HDF5.VirtualMapping(vspace, "./sub-%b.hdf5", "x", srcspace)]
+    virtual=[HDF5.VirtualMapping(vspace, "./sub-%0b.hdf5", "x", srcspace)]
 )
 
+@test size(d) == (3, 2)
 @test read(d) == hcat(fill(1.0, 3), fill(2.0, 3))
+
+dcpl = HDF5.get_create_properties(d)
+
+@test dcpl.virtual isa HDF5.VirtualLayout
+@test length(dcpl.virtual) == 1
+@test dcpl.virtual[1] isa HDF5.VirtualMapping

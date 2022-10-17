@@ -431,15 +431,20 @@ Properties used when creating a new `Dataset`. Inherits from
    - `:chunked`: Store raw data separately from the object header as chunks of
      data in separate locations in the file.
 
-   - `:virtual`:  Draw raw data from multiple datasets in different files.
+   - `:virtual`:  Draw raw data from multiple datasets in different files. See
+     the `virtual` property below.
 
   See $(h5doc("H5P_SET_LAYOUT")).
 
 - `no_attrs_hint`: Minimize the space for dataset metadata by hinting that no
    attributes will be added if set to `true`. Attributes can still be added but
-   may exist elsewhere within the file.
-   See $(h5doc("H5P_SET_DSET_NO_ATTRS_HINT")).
+   may exist elsewhere within the file. See
+   $(h5doc("H5P_SET_DSET_NO_ATTRS_HINT")).
 
+- `virtual`: when specified, creates a virtual dataset (VDS). The argument
+  should be a "virtuala collection of [`VirtualMapping`](@ref) objects for
+  describing the mapping from the dataset to the source datasets. When accessed,
+  returns a [`VirtualLayout`](@ref) object.
 
 The following options are shortcuts for the various filters, and are set-only.
 They will be appended to the filter pipeline in the order in which they appear
