@@ -2,6 +2,12 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.16.12
+
+* Virtual dataset support
+* More informative errors when missing a filter
+* Add BlockRange object to represent a slab of a hyperslab selection
+
 ## v0.16.11
 
 * Doc improvements
