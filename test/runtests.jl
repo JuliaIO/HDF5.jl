@@ -65,7 +65,6 @@ end
     @debug "virtual datasets"
     include("virtual_dataset.jl")
 
-
     using MPI
     if HDF5.has_parallel()
         # basic MPI tests, for actual parallel tests we need to run in MPI mode
