@@ -63,7 +63,9 @@ end
     @debug "objects"
     include("objects.jl")
     @debug "virtual datasets"
-    include("virtual_dataset.jl")
+    if VERSION > v"1.3"
+        include("virtual_dataset.jl")
+    end
 
     using MPI
     if HDF5.has_parallel()
