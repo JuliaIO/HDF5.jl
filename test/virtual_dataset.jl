@@ -25,7 +25,7 @@ d = create_dataset(
     "x",
     datatype(Float64),
     vspace;
-    virtual=[HDF5.VirtualMapping(vspace, "./sub-%0b.hdf5", "x", srcspace)]
+    virtual=[HDF5.VirtualMapping(vspace, "./sub-%b.hdf5", "x", srcspace)]
 )
 
 @test size(d) == (3, 2)

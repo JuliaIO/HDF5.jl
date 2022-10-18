@@ -62,6 +62,8 @@ end
     include("filters/FilterTestUtils.jl")
     @debug "objects"
     include("objects.jl")
+    @debug "virtual dataset"
+    include("virtual_dataset.jl")
 
     using MPI
     if HDF5.has_parallel()
