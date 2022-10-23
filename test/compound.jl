@@ -153,6 +153,10 @@ struct Bar
     c::Bool
 end
 
+mutable struct MutableBar
+    x::Int64
+end
+
 @testset "write_compound" begin
     bars = [
         [Bar(1, 1.1, true) Bar(2, 2.1, false) Bar(3, 3.1, true)]
@@ -191,4 +195,17 @@ end
     @test thenamedtuples[1].b ≈ 2.3
     @test thenamedtuples[2].a == 4
     @test thenamedtuples[2].b ≈ 5.6
+
+    mutable_bars = [MutableBar(1), MutableBar(2), MutableBar(3)]
+
+    fn = tempname()
+    h5open(fn, "w") do h5f
+        write_dataset(h5f, "the/mutable_bars", mutable_bars)
+    end
+
+    themutablebars = h5open(fn, "r") do h5f
+        read(h5f, "the/mutable_bars")
+    end
+
+    @test [1, 2, 3] == [b.x for b ∈ themutablebars]
 end
