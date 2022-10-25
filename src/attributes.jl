@@ -142,7 +142,8 @@ function write_attribute(attr::Attribute, memtype::Datatype, x::Ref{T}) where {T
 end
 
 # specific methods
-write_attribute(attr::Attribute, memtype::Datatype, x::VLen) = API.h5a_write(attr, memtype, x)
+write_attribute(attr::Attribute, memtype::Datatype, x::VLen) =
+    API.h5a_write(attr, memtype, x)
 function write_attribute(attr::Attribute, memtype::Datatype, x::AbstractArray{T}) where {T}
     length(x) == length(attr) || throw(
         ArgumentError(
