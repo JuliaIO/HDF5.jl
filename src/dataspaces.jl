@@ -46,6 +46,12 @@ The default `Dataspace` used for representing a Julia object `data`:
  - arrays: a simple `Dataspace`
  - `nothing` or an `EmptyArray`: a null dataspace
 """
+dataspace(x::T) where {T} =
+    if isstructtype(T)
+        Dataspace(API.h5s_create(API.H5S_SCALAR))
+    else
+        throw(MethodError(dataspace, x))
+    end
 dataspace(x::Union{T,Complex{T}}) where {T<:ScalarType} =
     Dataspace(API.h5s_create(API.H5S_SCALAR))
 dataspace(::AbstractString) = Dataspace(API.h5s_create(API.H5S_SCALAR))

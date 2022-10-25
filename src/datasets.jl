@@ -456,7 +456,7 @@ function write_dataset(
             if err isa MethodError
                 throw(
                     ArgumentError(
-                        "Could not convert non-bitstype $T to $jl_type for writing to HDF5. Consider implementing `convert(::Type{Array{$jl_type}}, ::$T)`"
+                        "Could not convert non-bitstype $T to $jl_type for writing to HDF5. Consider implementing `convert(::Type{$jl_type}, ::$T)`"
                     )
                 )
             else

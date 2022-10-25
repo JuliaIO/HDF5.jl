@@ -206,14 +206,25 @@ end
     end
 
     Base.convert(::Type{NamedTuple{(:x,),Tuple{Int64}}}, mb::MutableBar) = (x=mb.x,)
+    Base.unsafe_convert(::Type{Ptr{Nothing}}, mb::MutableBar) = pointer_from_objref(mb)
 
     h5open(fn, "w") do h5f
         write_dataset(h5f, "the/mutable_bars", mutable_bars)
+        write_dataset(h5f, "the/mutable_bar", first(mutable_bars))
     end
 
-    themutablebars = h5open(fn, "r") do h5f
-        read(h5f, "the/mutable_bars")
+    h5open(fn, "r") do h5f
+        @test [1, 2, 3] == [b.x for b in read(h5f, "the/mutable_bars")]
+        @test 1 == read(h5f, "the/mutable_bar").x
     end
 
-    @test [1, 2, 3] == [b.x for b in themutablebars]
+    h5open(fn, "w") do h5f
+        write_attribute(h5f, "mutable_bars", mutable_bars)
+        write_attribute(h5f, "mutable_bar", first(mutable_bars))
+    end
+
+    h5open(fn, "r") do h5f
+        @test [1, 2, 3] == [b.x for b in attrs(h5f)["mutable_bars"]]
+        @test 1 == attrs(h5f)["mutable_bar"].x
+    end
 end
