@@ -199,6 +199,14 @@ end
     mutable_bars = [MutableBar(1), MutableBar(2), MutableBar(3)]
 
     fn = tempname()
+    @test_throws ArgumentError begin
+        h5open(fn, "w") do h5f
+            write_dataset(h5f, "the/mutable_bars", mutable_bars)
+        end
+    end
+
+    Base.convert(::Type{NamedTuple{(:x,),Tuple{Int64}}}, mb::MutableBar) = (x=mb.x,)
+
     h5open(fn, "w") do h5f
         write_dataset(h5f, "the/mutable_bars", mutable_bars)
     end
@@ -207,5 +215,5 @@ end
         read(h5f, "the/mutable_bars")
     end
 
-    @test [1, 2, 3] == [b.x for b ∈ themutablebars]
+    @test [1, 2, 3] == [b.x for b in themutablebars]
 end

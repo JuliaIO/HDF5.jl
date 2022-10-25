@@ -439,11 +439,31 @@ end
 function write_dataset(
     dataset::Dataset,
     memtype::Datatype,
-    buf::AbstractArray,
+    buf::AbstractArray{T},
     xfer::DatasetTransferProperties=dataset.xfer
-)
+) where {T}
     _check_invalid(dataset, buf)
-    API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
+    if isbitstype(T)
+        API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, buf)
+    else
+        # For non-bitstypes, we need to convert the buffer to a bitstype
+        # For mutable structs, this will usually be a NamedTuple.
+        jl_type = get_mem_compatible_jl_type(memtype)
+        try
+            memtype_buf = convert(Array{jl_type}, buf)
+            API.h5d_write(dataset, memtype, API.H5S_ALL, API.H5S_ALL, xfer, memtype_buf)
+        catch err
+            if err isa MethodError
+                throw(
+                    ArgumentError(
+                        "Could not convert non-bitstype $T to $jl_type for writing to HDF5. Consider implementing `convert(::Type{Array{$jl_type}}, ::$T)`"
+                    )
+                )
+            else
+                rethrow()
+            end
+        end
+    end
 end
 function write_dataset(
     dataset::Dataset,

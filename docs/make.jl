@@ -27,7 +27,7 @@ makedocs(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://JuliaIO.github.io/HDF5.jl",
         assets=String[],
-        sidebar_sitename=false,
+        sidebar_sitename=false
     ),
     pages=[
         "Home" => "index.md",
@@ -41,10 +41,7 @@ makedocs(;
         ],
         "mpi.md",
         "Low-level library bindings" => "api_bindings.md",
-    ],
+    ]
 )
 
-deploydocs(;
-    repo="github.com/JuliaIO/HDF5.jl.git",
-    push_preview=true,
-)
+deploydocs(; repo="github.com/JuliaIO/HDF5.jl.git", push_preview=true)
