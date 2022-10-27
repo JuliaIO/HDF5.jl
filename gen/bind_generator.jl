@@ -241,7 +241,13 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
     # avoids inserting the line number nodes for the macro --- the call site
     # is instead explicitly injected into the function body via __source__.
     jlfuncsig = Expr(:call, jlfuncname, args...)
-    jlfuncbody = Expr(:block, __source__, :($statsym = $ccallexpr))
+    jlfuncbody = Expr(
+        :block, __source__, :(lock(liblock)), :($statsym = try
+            $ccallexpr
+        finally
+            unlock(liblock)
+        end)
+    )
     if errexpr !== nothing
         push!(jlfuncbody.args, errexpr)
     end
