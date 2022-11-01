@@ -1,6 +1,13 @@
+"""
+    HDF5.API
+
+Low-level API module with configurable locking mechanism to support
+multithreading.
+"""
 module API
 
 import Libdl
+import Preferences
 using Base: StringVector
 
 const depsfile = joinpath(@__DIR__, "..", "..", "deps", "deps.jl")
@@ -13,10 +20,7 @@ else
     )
 end
 
-const liblock = ReentrantLock()
-const _use_lock = Ref(true)
-use_lock() = _use_lock[]
-
+include("lock.jl")
 include("types.jl")
 include("error.jl")
 include("functions.jl") # core API ccall wrappers
@@ -26,7 +30,7 @@ function __init__()
     # HDF5.API.__init__() is run before HDF5.__init__()
     
     # Not need to lock if single threaded
-    _use_lock[] = Threads.nthreads() > 1
+    _use_lock[] = Threads.nthreads() > 1 && _use_lock[]
 
     # From deps.jl
     check_deps()

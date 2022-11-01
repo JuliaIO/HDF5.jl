@@ -40,7 +40,7 @@ Base.isempty(err::H5Error) = length(err) == 0
 function H5Error(msg::AbstractString)
     id = h5e_get_current_stack()
     err = H5Error(msg, id)
-    finalizer(close, err)
+    finalizer(lock_and_close, err)
     return err
 end
 
