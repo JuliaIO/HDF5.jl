@@ -64,6 +64,7 @@ export @read,
 h5doc(name) = "[`$name`](https://portal.hdfgroup.org/display/HDF5/$(name))"
 
 include("api/api.jl")
+include("api/rawapi.jl")
 include("properties.jl")
 include("context.jl")
 include("types.jl")

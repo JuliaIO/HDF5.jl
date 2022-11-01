@@ -1,4 +1,7 @@
-module API
+"""
+    Low-level HDF5 API without locks by default
+"""
+module RawAPI
 
 import Libdl
 using Base: StringVector
@@ -14,8 +17,8 @@ else
 end
 
 const liblock = ReentrantLock()
-const _use_lock = Ref(true)
-use_lock() = _use_lock[]
+const _use_lock = false
+use_lock() = _use_lock
 
 include("types.jl")
 include("error.jl")
@@ -24,9 +27,6 @@ include("helpers.jl")
 
 function __init__()
     # HDF5.API.__init__() is run before HDF5.__init__()
-    
-    # Not need to lock if single threaded
-    _use_lock[] = Threads.nthreads() > 1
 
     # From deps.jl
     check_deps()
