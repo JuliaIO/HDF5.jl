@@ -1,5 +1,7 @@
 """
-    Low-level HDF5 API without locks by default
+    HFD5.RawAPI
+
+Low-level HDF5 API without locks.
 """
 module RawAPI
 
@@ -16,9 +18,9 @@ else
     )
 end
 
-const liblock = ReentrantLock()
 const _use_lock = false
 use_lock() = _use_lock
+lock_and_close(obj) = close(obj)
 
 include("types.jl")
 include("error.jl")
