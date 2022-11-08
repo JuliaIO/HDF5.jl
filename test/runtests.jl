@@ -72,6 +72,8 @@ end
         # basic MPI tests, for actual parallel tests we need to run in MPI mode
         include("mpio.jl")
     end
+    @debug "API lock"
+    include("lock.jl")
 
     # Clean up after all resources
     HDF5.API.h5_close()
