@@ -245,11 +245,11 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
     jlfuncsig = Expr(:call, jlfuncname, args...)
     jlfuncbody = Expr(
         :block, __source__,
-        :(use_lock() && lock(liblock)),
+        :(use_api_lock && lock(liblock)),
         :($statsym = try
             $ccallexpr
         finally
-            use_lock() && unlock(liblock)
+            use_api_lock && unlock(liblock)
         end)
     )
     if errexpr !== nothing
