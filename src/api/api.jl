@@ -29,9 +29,6 @@ include("helpers.jl")
 function __init__()
     # HDF5.API.__init__() is run before HDF5.__init__()
     
-    # Not need to lock if single threaded
-    _use_lock[] = Threads.nthreads() > 1 && _use_lock[]
-
     # From deps.jl
     check_deps()
 
