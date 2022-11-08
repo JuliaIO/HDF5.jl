@@ -72,6 +72,8 @@ end
         # basic MPI tests, for actual parallel tests we need to run in MPI mode
         include("mpio.jl")
     end
+    @debug "API lock"
+    include("lock.jl")
 
     if HDF5.has_ros3()
         include("ros3.jl")
