@@ -18,6 +18,6 @@ using Test
         @test load_preference(HDF5, "use_api_lock") === nothing
     else
         @test prev_use_api_lock
-        @test_throws ErrorException HDF5.API.set_use_api_lock(true)
+        @test_throws ErrorException HDF5.API.set_use_api_lock!(true)
     end
 end
