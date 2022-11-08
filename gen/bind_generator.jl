@@ -244,7 +244,8 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
     # is instead explicitly injected into the function body via __source__.
     jlfuncsig = Expr(:call, jlfuncname, args...)
     jlfuncbody = Expr(
-        :block, __source__,
+        :block,
+        __source__,
         :(use_api_lock && lock(liblock)),
         :($statsym = try
             $ccallexpr

@@ -30,7 +30,7 @@ include("helpers.jl")
 
 function __init__()
     # HDF5.API.__init__() is run before HDF5.__init__()
-    
+
     # From deps.jl
     check_deps()
 
