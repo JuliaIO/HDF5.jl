@@ -7,7 +7,9 @@ multithreading.
 module API
 
 import Libdl
-import Preferences
+@static if VERSION >= v"1.6"
+    import Preferences
+end
 using Base: StringVector
 
 const depsfile = joinpath(@__DIR__, "..", "..", "deps", "deps.jl")
