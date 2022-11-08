@@ -6,7 +6,6 @@ using Test, HDF5
     filename = joinpath(dirname, "main.hdf5")
 
     h5open(filename, "w") do f
-
         sub0 = joinpath(dirname, "sub-0.hdf5")
         f0 = h5open(sub0, "w")
         f0["x"] = fill(1.0, 3)
@@ -37,6 +36,5 @@ using Test, HDF5
         @test dcpl.virtual isa HDF5.VirtualLayout
         @test length(dcpl.virtual) == 1
         @test dcpl.virtual[1] isa HDF5.VirtualMapping
-
     end
 end
