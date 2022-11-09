@@ -22,7 +22,8 @@ const liblock = ReentrantLock()
     # For diagnostics
     # We do not need to lock twice when use_api_lock is on
     const use_lock_on_close =
-        Preferences.@load_preference("use_lock_on_close", default = true)::Bool && !use_api_lock
+        Preferences.@load_preference("use_lock_on_close", default = true)::Bool &&
+        !use_api_lock
 else
     const use_api_lock = true
     const use_lock_on_close = true
