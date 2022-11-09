@@ -28,7 +28,6 @@ else
     const use_lock_on_close = true
 end
 
-
 """
     HDF5.API.set_use_api_lock!(use_lock::Bool)
 
@@ -47,7 +46,8 @@ See also [`HDF5.API.get_use_api_lock`](@ref).
 """
 function set_use_api_lock!(use_api_lock::Bool)
     @static if VERSION >= v"1.6"
-        use_api_lock != get_use_api_lock() && @info "Please restart Julia for the use_api_lock preference to take effect"
+        use_api_lock != get_use_api_lock() &&
+            @info "Please restart Julia for the use_api_lock preference to take effect"
         Preferences.@set_preferences!("use_api_lock" => use_api_lock)
     else
         error("HDF5 preferences can only be set with Julia 1.6 or greater")
