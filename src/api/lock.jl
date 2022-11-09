@@ -8,21 +8,26 @@ const liblock = ReentrantLock()
     the HDF5 C library is not thread-safe. Concurrent calls to the HDF5 library
     from multiple threads will likely fail.
     """
-    const use_api_lock = Preferences.@load_preference("use_api_lock", default = true)
+    const use_api_lock = try
+        pref = Preferences.@load_preference("use_api_lock", default = true)
+        if pref isa AbstractString
+            pref = parse(Bool, pref)
+        end
+        pref::Bool
+    catch err
+        Preferences.@delete_preferences!("use_api_lock")
+        @warn "Could not read HDF5 preference `use_api_lock` as a `Bool`. Resetting the `use_api_lock` preference to `true`."
+        true
+    end
     # For diagnostics
     # We do not need to lock twice when use_api_lock is on
-    const use_lock_and_close =
-        Preferences.@load_preference("use_lock_and_close", default = true) && !use_api_lock
+    const use_lock_on_close::Bool =
+        Preferences.@load_preference("use_lock_on_close", default = true) && !use_api_lock
 else
     const use_api_lock = true
-    const use_lock_and_close = true
+    const use_lock_on_close = true
 end
 
-@static if !(use_api_lock isa Bool)
-    error("""An unknown HDF5 `use_api_lock` preference of "$use_api_lock"
-    was loaded. The `use_api_lock` will default to `true`.
-    Use `HDF5.API.set_use_api_lock!(true)` to remove this warning.""")
-end
 
 """
     HDF5.API.set_use_api_lock!(use_lock::Bool)
@@ -42,7 +47,7 @@ See also [`HDF5.API.get_use_api_lock`](@ref).
 """
 function set_use_api_lock!(use_api_lock::Bool)
     @static if VERSION >= v"1.6"
-        @info "Please restart Julia for the use_api_lock preference to take effect"
+        use_api_lock != get_use_api_lock() && @info "Please restart Julia for the use_api_lock preference to take effect"
         Preferences.@set_preferences!("use_api_lock" => use_api_lock)
     else
         error("HDF5 preferences can only be set with Julia 1.6 or greater")
@@ -72,10 +77,10 @@ Acquiring a lock within a finalizer could be problematic:
 https://github.com/JuliaLang/julia/issues/35689
 """
 function lock_and_close(obj)
-    use_lock_and_close && lock(liblock)
+    use_lock_on_close && lock(liblock)
     try
         close(obj)
     finally
-        use_lock_and_close && unlock(liblock)
+        use_lock_on_close && unlock(liblock)
     end
 end
