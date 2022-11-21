@@ -73,6 +73,10 @@ end
         include("mpio.jl")
     end
 
+    if HDF5.has_ros3()
+        include("ros3.jl")
+    end
+
     # Clean up after all resources
     HDF5.API.h5_close()
 end

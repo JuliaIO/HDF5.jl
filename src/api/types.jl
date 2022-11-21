@@ -3,7 +3,7 @@ const Ctime_t = Int
 
 ## HDF5 types and constants
 const haddr_t  = UInt64
-const hbool_t  = Cuint
+const hbool_t  = Bool
 const herr_t   = Cint
 const hid_t    = Int64
 const hsize_t  = UInt64
@@ -220,6 +220,18 @@ struct H5FD_hdfs_fapl_t
     user_name::NTuple{129,Cchar}
     kerberos_ticket_cache::NTuple{129,Cchar}
     stream_buffer_size::Int32
+end
+
+const H5FD_ROS3_MAX_REGION_LEN = 32
+const H5FD_ROS3_MAX_SECRET_ID_LEN = 128
+const H5FD_ROS3_MAX_SECRET_KEY_LEN = 128
+
+struct H5FD_ros3_fapl_t
+    version::Int32
+    authenticate::hbool_t
+    aws_region::NTuple{H5FD_ROS3_MAX_REGION_LEN + 1,Cchar}
+    secret_id::NTuple{H5FD_ROS3_MAX_SECRET_ID_LEN + 1,Cchar}
+    secret_key::NTuple{H5FD_ROS3_MAX_SECRET_KEY_LEN + 1,Cchar}
 end
 
 struct H5FD_splitter_vfd_config_t

@@ -42,9 +42,11 @@ function h5open(
         flag = swmr ? API.H5F_ACC_TRUNC | API.H5F_ACC_SWMR_WRITE : API.H5F_ACC_TRUNC
         fid = API.h5f_create(filename, flag, fcpl, fapl)
     else
-        ishdf5(filename) || error(
-            "unable to determine if $filename is accessible in the HDF5 format (file may not exist)"
-        )
+        occursin(r"(s3a?|https?)://", filename) ||
+            ishdf5(filename) ||
+            error(
+                "unable to determine if $filename is accessible in the HDF5 format (file may not exist)"
+            )
         if wr
             flag = swmr ? API.H5F_ACC_RDWR | API.H5F_ACC_SWMR_WRITE : API.H5F_ACC_RDWR
         else

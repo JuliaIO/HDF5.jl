@@ -1,6 +1,6 @@
 module Drivers
 
-export POSIX
+export POSIX, ROS3
 
 import ..API
 import ..HDF5: HDF5, Properties, h5doc
@@ -87,10 +87,12 @@ function __init__()
 
     # Check whether the libhdf5 was compiled with parallel support.
     HDF5.HAS_PARALLEL[] = API._has_symbol(:H5Pset_fapl_mpio)
+    HDF5.HAS_ROS3[] = API._has_symbol(:H5Pset_fapl_ros3)
 
     @require MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195" (
         HDF5.has_parallel() && include("mpio.jl")
     )
 end
 
+include("ros3.jl")
 end # module
