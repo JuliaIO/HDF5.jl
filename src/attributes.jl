@@ -253,7 +253,7 @@ function Base.setindex!(attrdict::AttributeDict, val, name::AbstractString)
         max_tries = 100 # number of times to try making a new name
         _name = nothing
         for i in 1:max_tries
-            _name = bytes2hex(rand(UInt8, 16))
+            _name = "-><7;*<_NY"*bytes2hex(rand(UInt8, 16))
             if haskey(attrdict, _name)
                 _name = nothing
             else
