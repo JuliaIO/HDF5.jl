@@ -13,6 +13,8 @@ else
     )
 end
 
+const liblock = ReentrantLock()
+
 include("types.jl")
 include("error.jl")
 include("functions.jl") # core API ccall wrappers
