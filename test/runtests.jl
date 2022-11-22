@@ -12,10 +12,12 @@ end
 
 @info "libhdf5 v$(HDF5.API.h5_get_libversion())"
 
+@info "preferences" HDF5.API.get_use_api_lock()
+
 # To debug HDF5.jl tests, uncomment the next line
 # ENV["JULIA_DEBUG"] = "Main"
 
-@testset "HDF5.jl" begin
+@testset verbose=true "HDF5.jl" begin
     @debug "plain"
     include("plain.jl")
     @debug "api"
