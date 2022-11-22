@@ -250,8 +250,17 @@ end
 function Base.setindex!(attrdict::AttributeDict, val, name::AbstractString)
     if haskey(attrdict, name)
         # in case of an error, we write first to a temporary, then rename
-        _name = "-><7;*<_NY" * bytes2hex(rand(Random.RandomDevice(), UInt8, 16))
-        haskey(attrdict, _name) && error("`attrdict` has the temp name somehow")
+        max_tries = 100 # number of times to try making a new name
+        _name = nothing
+        for i in 1:max_tries
+            _name = bytes2hex(rand(Random.RandomDevice(), UInt8, 16))
+            if haskey(attrdict, _name)
+                _name = nothing
+            else
+                break
+            end
+        end
+        isnothing(_name) && error("tempname: max_tries exhausted")
         try
             write_attribute(attrdict.parent, _name, val)
             delete_attribute(attrdict.parent, name)
