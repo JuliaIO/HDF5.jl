@@ -160,8 +160,8 @@ rename_attribute(
 
 Delete the [`Attribute`](@ref) named `name` on the object `parent`.
 """
-delete_attribute(parent::Union{File,Object}, path::AbstractString) =
-    API.h5a_delete(checkvalid(parent), path)
+delete_attribute(parent::Union{File,Object}, name::AbstractString) =
+    API.h5a_delete(checkvalid(parent), name)
 
 """
     h5writeattr(filename, name::AbstractString, data::Dict)
@@ -250,7 +250,8 @@ end
 function Base.setindex!(attrdict::AttributeDict, val, name::AbstractString)
     if haskey(attrdict, name)
         # in case of an error, we write first to a temporary, then rename
-        _name = tempname()
+        _name = name * "_hdf5jl_" * string(uuid4())
+        haskey(attrdict, _name) && error("temp attribute name exists against all odds")
         try
             write_attribute(attrdict.parent, _name, val)
             delete_attribute(attrdict.parent, name)
