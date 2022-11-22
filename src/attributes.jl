@@ -250,17 +250,8 @@ end
 function Base.setindex!(attrdict::AttributeDict, val, name::AbstractString)
     if haskey(attrdict, name)
         # in case of an error, we write first to a temporary, then rename
-        max_tries = 100 # number of times to try making a new name
-        _name = nothing
-        for i in 1:max_tries
-            _name = name * "_hdf5jl_" * string(uuid4())
-            if haskey(attrdict, _name)
-                _name = nothing
-            else
-                break
-            end
-        end
-        isnothing(_name) && error("tempname: max_tries exhausted")
+        _name = name * "_hdf5jl_" * string(uuid4())
+        haskey(attrdict, _name) && error("temp attribute name exists against all odds")
         try
             write_attribute(attrdict.parent, _name, val)
             delete_attribute(attrdict.parent, name)
