@@ -98,15 +98,77 @@ function create_attribute(
 end
 
 # generic method
-write_attribute(attr::Attribute, memtype::Datatype, x) = API.h5a_write(attr, memtype, x)
+function write_attribute(attr::Attribute, memtype::Datatype, x::T) where {T}
+    if isbitstype(T)
+        API.h5a_write(attr, memtype, x)
+    else
+        jl_type = get_mem_compatible_jl_type(memtype)
+        try
+            x_mem = convert(jl_type, x)
+            API.h5a_write(attr, memtype, Ref(x_mem))
+        catch err
+            if err isa MethodError
+                throw(
+                    ArgumentError(
+                        "Could not convert non-bitstype $T to $jl_type for writing to HDF5. Consider implementing `convert(::Type{$jl_type}, ::$T)`"
+                    )
+                )
+            else
+                rethrow()
+            end
+        end
+    end
+end
+function write_attribute(attr::Attribute, memtype::Datatype, x::Ref{T}) where {T}
+    if isbitstype(T)
+        API.h5a_write(attr, memtype, x)
+    else
+        jl_type = get_mem_compatible_jl_type(memtype)
+        try
+            x_mem = convert(Ref{jl_type}, x[])
+            API.h5a_write(attr, memtype, x_mem)
+        catch err
+            if err isa MethodError
+                throw(
+                    ArgumentError(
+                        "Could not convert non-bitstype $T to $jl_type for writing to HDF5. Consider implementing `convert(::Type{$jl_type}, ::$T)`"
+                    )
+                )
+            else
+                rethrow()
+            end
+        end
+    end
+end
+
 # specific methods
-function write_attribute(attr::Attribute, memtype::Datatype, x::AbstractArray)
+write_attribute(attr::Attribute, memtype::Datatype, x::VLen) =
+    API.h5a_write(attr, memtype, x)
+function write_attribute(attr::Attribute, memtype::Datatype, x::AbstractArray{T}) where {T}
     length(x) == length(attr) || throw(
         ArgumentError(
             "Invalid length: $(length(x)) != $(length(attr)), for attribute \"$(name(attr))\""
         )
     )
-    API.h5a_write(attr, memtype, x)
+    if isbitstype(T)
+        API.h5a_write(attr, memtype, x)
+    else
+        jl_type = get_mem_compatible_jl_type(memtype)
+        try
+            x_mem = convert(Array{jl_type}, x)
+            API.h5a_write(attr, memtype, x_mem)
+        catch err
+            if err isa MethodError
+                throw(
+                    ArgumentError(
+                        "Could not convert non-bitstype $T to $jl_type for writing to HDF5. Consider implementing `convert(::Type{$jl_type}, ::$T)`"
+                    )
+                )
+            else
+                rethrow()
+            end
+        end
+    end
 end
 function write_attribute(attr::Attribute, memtype::Datatype, str::AbstractString)
     strbuf = Base.cconvert(Cstring, str)

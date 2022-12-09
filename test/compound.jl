@@ -146,3 +146,85 @@ end
     @test HDF5.do_reclaim(TTTT) == false
     @test HDF5.do_normalize(TTTT) == true
 end
+
+struct Bar
+    a::Int32
+    b::Float64
+    c::Bool
+end
+
+mutable struct MutableBar
+    x::Int64
+end
+
+@testset "write_compound" begin
+    bars = [
+        [Bar(1, 1.1, true) Bar(2, 2.1, false) Bar(3, 3.1, true)]
+        [Bar(4, 4.1, false) Bar(5, 5.1, true) Bar(6, 6.1, false)]
+    ]
+
+    namedtuples = [(a=1, b=2.3), (a=4, b=5.6)]
+
+    fn = tempname()
+    h5open(fn, "w") do h5f
+        write_dataset(h5f, "the/bars", bars)
+        write_dataset(h5f, "the/namedtuples", namedtuples)
+    end
+
+    thebars = h5open(fn, "r") do h5f
+        read(h5f, "the/bars")
+    end
+
+    @test (2, 3) == size(thebars)
+    @test thebars[1, 2].b ≈ 2.1
+    @test thebars[2, 1].a == 4
+    @test thebars[1, 3].c
+
+    thebars_r = reinterpret(Bar, thebars)
+    @test (2, 3) == size(thebars_r)
+    @test thebars_r[1, 2].b ≈ 2.1
+    @test thebars_r[2, 1].a == 4
+    @test thebars_r[1, 3].c
+
+    thenamedtuples = h5open(fn, "r") do h5f
+        read(h5f, "the/namedtuples")
+    end
+
+    @test (2,) == size(thenamedtuples)
+    @test thenamedtuples[1].a == 1
+    @test thenamedtuples[1].b ≈ 2.3
+    @test thenamedtuples[2].a == 4
+    @test thenamedtuples[2].b ≈ 5.6
+
+    mutable_bars = [MutableBar(1), MutableBar(2), MutableBar(3)]
+
+    fn = tempname()
+    @test_throws ArgumentError begin
+        h5open(fn, "w") do h5f
+            write_dataset(h5f, "the/mutable_bars", mutable_bars)
+        end
+    end
+
+    Base.convert(::Type{NamedTuple{(:x,),Tuple{Int64}}}, mb::MutableBar) = (x=mb.x,)
+    Base.unsafe_convert(::Type{Ptr{Nothing}}, mb::MutableBar) = pointer_from_objref(mb)
+
+    h5open(fn, "w") do h5f
+        write_dataset(h5f, "the/mutable_bars", mutable_bars)
+        write_dataset(h5f, "the/mutable_bar", first(mutable_bars))
+    end
+
+    h5open(fn, "r") do h5f
+        @test [1, 2, 3] == [b.x for b in read(h5f, "the/mutable_bars")]
+        @test 1 == read(h5f, "the/mutable_bar").x
+    end
+
+    h5open(fn, "w") do h5f
+        write_attribute(h5f, "mutable_bars", mutable_bars)
+        write_attribute(h5f, "mutable_bar", first(mutable_bars))
+    end
+
+    h5open(fn, "r") do h5f
+        @test [1, 2, 3] == [b.x for b in attrs(h5f)["mutable_bars"]]
+        @test 1 == attrs(h5f)["mutable_bar"].x
+    end
+end
