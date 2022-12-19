@@ -23,7 +23,11 @@ using Test
     @test d[1, end] ≈ 4.1231
     @test d[:, end] ≈ [4.1231]
     @test d[end, :] == [1.1231, 1.313, 5.123, 2.231, 4.1231]
+    @test d[1, begin] ≈ 1.1231
+    @test d[:, begin] ≈ [1.1231]
+    @test d[begin, :] == [1.1231, 1.313, 5.123, 2.231, 4.1231]
     @test d[:, :] == [1.1231 1.313 5.123 2.231 4.1231]
+    @test d[:, begin:end] == [1.1231 1.313 5.123 2.231 4.1231]
 
     # Test all integer types work
     @test d[UInt8(1), UInt16(1)] == 1.1231

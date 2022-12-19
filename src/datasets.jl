@@ -310,6 +310,7 @@ Base.write(parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data;
 
 Base.eachindex(::IndexLinear, A::Dataset) = Base.OneTo(length(A))
 Base.axes(dset::Dataset) = map(Base.OneTo, size(dset))
+Base.axes(dset::Dataset, d::Integer) = Base.OneTo(size(dset, d))
 
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
 
