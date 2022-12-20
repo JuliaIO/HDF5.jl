@@ -2,6 +2,13 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.16.13
+
+* Writing compound data set support
+* Invalidation fixes
+* Support read-only s3 virtual driver
+* Locks around API calls (may introduce a minor regression around API calls)
+
 ## v0.16.12
 
 * Virtual dataset support
