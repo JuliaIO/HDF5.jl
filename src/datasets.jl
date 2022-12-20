@@ -131,6 +131,7 @@ Base.flush(ds::Dataset) = API.h5d_flush(checkvalid(ds))
 # Array constructor for datasets
 Base.Array(x::Dataset) = read(x)
 
+# The next two lines are kept for v"1.4" <= VERSION <= v"1.5"
 Base.lastindex(dset::Dataset) = length(dset)
 Base.lastindex(dset::Dataset, d::Int) = size(dset, d)
 
