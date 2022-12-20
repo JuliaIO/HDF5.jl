@@ -761,7 +761,7 @@ function class_setproperty!(::Type{FileAccessProperties}, p::Properties, name::S
     name === :libver_bounds ? set_libver_bounds!(p, val) :
     name === :meta_block_size ? API.h5p_set_meta_block_size(p, val) :
     # deprecated
-    name === :fapl_mpio     ? (depwarn("The `fapl_mpio` property is deprecated, use `driver=HDF5.Drivers.MPIO(...)` instead.", :fapl_mpio); p.driver = Drivers.MPIO(val...)) :
+    name === :fapl_mpio     ? (depwarn("The `fapl_mpio` property is deprecated, use `driver=HDF5.Drivers.MPIO(...)` instead.", :fapl_mpio); Drivers.set_driver!(p, Drivers.MPIO(val...))) :
     class_setproperty!(superclass(FileAccessProperties), p, name, val)
 end
 
