@@ -25,6 +25,11 @@ using Test
     @test d[end, :] == [1.1231, 1.313, 5.123, 2.231, 4.1231]
     @test d[:, :] == [1.1231 1.313 5.123 2.231 4.1231]
 
+    if VERSION >= v"1.4"
+        include("extend_test_begin.jl")
+        extend_test_begin(d)
+    end
+
     # Test all integer types work
     @test d[UInt8(1), UInt16(1)] == 1.1231
     @test d[UInt32(1), UInt128(1)] == 1.1231
