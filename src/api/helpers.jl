@@ -174,6 +174,22 @@ end
     end
 end
 
+@static if v"1.12.3" ≤ _libhdf5_build_ver
+    function h5d_chunk_iter(dset_id, dxpl_id, cb::Function, op_data::T=nothing) where T
+        fptr = @cfunction($cb,
+           H5_iter_t,
+           (
+            Ptr{hsize_t},
+            Cuint,
+            haddr_t,
+            hsize_t,
+            Ptr{T}
+           )
+        )
+        return h5d_chunk_iter(dset_id, dxpl_id, fptr, op_data)
+    end
+end
+
 """
     h5d_get_space_status(dataset_id)
 
