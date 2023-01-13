@@ -27,7 +27,7 @@ Starting from Julia 1.3, the HDF5 binaries are by default downloaded using the `
 
 ### Using custom or system provided HDF5 binaries
 
-To use system-provided HDF5 binaries instead, set the environment variable `JULIA_HDF5_PATH` to the top-level installation directory HDF5, i.e. the library should be located in `${JULIA_HDF5_PATH}/lib` or `${JULIA_HDF5_PATH}/lib64` . Then run `import Pkg; Pkg.build("HDF5")`. In particular, this is required if you need parallel HDF5 support, which is not provided by the `HDF5_jll` binaries.
+To use system-provided HDF5 binaries instead, set the environment variable `JULIA_HDF5_PATH` to the top-level installation directory HDF5, i.e. the library should be located in `${JULIA_HDF5_PATH}/lib` or `${JULIA_HDF5_PATH}/lib64`, or alternatively simply in `${JULIA_HDF5_PATH}`. Then run `import Pkg; Pkg.build("HDF5")`. In particular, this is required if you need parallel HDF5 support, which is not provided by the `HDF5_jll` binaries.
 
 If the library is in your library search path, then `JULIA_HDF5_PATH` can be set to an empty string.
 
