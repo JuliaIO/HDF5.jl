@@ -73,9 +73,9 @@ end
     H5_ITER_N = 3
 end
 @enum H5_iter_t::Cint begin
-    H5_ITER_CONT  =  0
+    H5_ITER_CONT  = 0
     H5_ITER_ERROR = -1
-    H5_ITER_STOP  =  1
+    H5_ITER_STOP  = 1
 end
 
 const H5O_iterate1_t = Ptr{Cvoid}

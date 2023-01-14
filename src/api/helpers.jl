@@ -175,18 +175,37 @@ end
 end
 
 @static if v"1.12.3" ≤ _libhdf5_build_ver
-    function h5d_chunk_iter(dset_id, dxpl_id, cb::Function, op_data::T=nothing) where T
-        fptr = @cfunction($cb,
-           H5_iter_t,
-           (
-            Ptr{hsize_t},
-            Cuint,
-            haddr_t,
-            hsize_t,
-            Ptr{T}
-           )
+    function h5d_chunk_iter_helper(
+        offset::Ptr{hsize_t},
+        filter_mask::Cuint,
+        addr::haddr_t,
+        size::hsize_t,
+        @nospecialize(data::Any)
+    )::H5_iter_t
+        func, err_ref = data
+        try
+            retval = func(offset, filter_mask, addr, size)
+            isnothing(retval) && return H5_ITER_CONT
+            return H5_iter_t(retval)
+        catch err
+            err_ref[] = err
+            return H5_ITER_ERROR
+        end
+    end
+    function h5d_chunk_iter(@nospecialize(f), dset_id, dxpl_id)
+        err_ref = Ref{Any}(nothing)
+        fptr = @cfunction(
+            h5d_chunk_iter_helper, H5_iter_t, (Ptr{hsize_t}, Cuint, haddr_t, hsize_t, Any)
         )
-        return h5d_chunk_iter(dset_id, dxpl_id, fptr, op_data)
+        try
+            return h5d_chunk_iter(dset_id, dxpl_id, fptr, (f, err_ref))
+        catch h5err
+            jlerr = err_ref[]
+            if !isnothing(jlerr)
+                rethrow(jlerr)
+            end
+            rethrow(h5err)
+        end
     end
 end
 
