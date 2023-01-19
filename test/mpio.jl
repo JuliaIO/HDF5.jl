@@ -79,7 +79,6 @@ using Test
         dxpl_mpio=:collective
     )
     @test A == vec(B)
-    GC.gc()
 
     MPI.Finalize()
 end # testset mpio
