@@ -192,7 +192,7 @@ end
             return H5_ITER_ERROR
         end
     end
-    function h5d_chunk_iter(@nospecialize(f), dset_id, dxpl_id)
+    function h5d_chunk_iter(@nospecialize(f), dset_id, dxpl_id=H5P_DEFAULT)
         err_ref = Ref{Any}(nothing)
         fptr = @cfunction(
             h5d_chunk_iter_helper, H5_iter_t, (Ptr{hsize_t}, Cuint, haddr_t, hsize_t, Any)

@@ -6,6 +6,7 @@ using Mmap: Mmap
 # needed for filter(f, tuple) in julia 1.3
 using Compat
 using UUIDs: uuid4
+using Printf: @sprintf
 
 ### PUBLIC API ###
 

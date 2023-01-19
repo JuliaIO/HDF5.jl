@@ -735,6 +735,51 @@ function get_chunk(dset::Dataset)
     ret
 end
 
+
+struct ChunkInfo{N}
+    offset::NTuple{N, Int}
+    filter_mask::Cuint
+    addr::API.haddr_t
+    size::API.hsize_t
+end
+# Base.show(io::IO, ::MIME"text/plain", ci::ChunkInfo) = print(io, @sprintf("%10s", ci.offset), "\t", ci.filter_mask, "\t", ci.addr, "\t", ci.size)
+function Base.show(io::IO, ::MIME"text/plain", info::Vector{ <: ChunkInfo})
+    println("Offset    \tFilter Mask                     \tAddress\tSize")
+    println("----------\t--------------------------------\t-------\t----")
+    for ci in info
+        println(io, @sprintf("%10s", ci.offset), "\t", bitstring(ci.filter_mask), "\t", ci.addr, "\t", ci.size)
+    end
+end
+
+"""
+    HDF5.get_all_chunk_info(dataset, [dxpl])
+
+Obtain information on all the chunks in a dataset. Returns a
+`Vector{ChunkInfo{N}}`.  The fields of `ChunkInfo{N}` are
+* offset - `NTuple{N, Int}` indicating the offset of the chunk in terms of elements
+* filter_mask - Cuint, 32-bit flags indicating whether filters have been applied to the cunk
+* addr - haddr_t, byte-offset of the chunk in the file
+* size - hsize_t, size of the chunk in bytes
+"""
+function get_all_chunk_info(dataset, dxpl=H5P_DEFAULT)
+    ds = dataspace(dataset)
+    N = ndims(ds)
+    info = ChunkInfo{N}[]
+    sizehint!(info, get_num_chunks(dataset))
+    API.h5d_chunk_iter(dataset, dxpl) do offset, filter_mask, addr, size
+        push!(info,
+            ChunkInfo{N}(
+                unsafe_load(Ptr{NTuple{N, Int}}(offset)),
+                filter_mask,
+                addr,
+                size
+            )
+        )
+        return nothing
+    end
+    return info
+end
+
 # properties that require chunks in order to work (e.g. any filter)
 # values do not matter -- just needed to form a NamedTuple with the desired keys
 const chunked_props = (; compress=nothing, deflate=nothing, blosc=nothing, shuffle=nothing)
