@@ -3,13 +3,8 @@ using HDF5
 using Test
 
 @testset "mpio" begin
-    HDF5.FileAccessProperties() do fapl
-        Drivers.set_driver!(fapl, Drivers.Core())
-    end
-
     MPI.Init()
 
-    info = MPI.Info()
     comm = MPI.COMM_WORLD
 
     nprocs = MPI.Comm_size(comm)
@@ -22,7 +17,7 @@ using Test
     @test Drivers.POSIX ∈ values(Drivers.DRIVERS)
 
     let fileprop = HDF5.FileAccessProperties()
-        fileprop.driver = HDF5.Drivers.MPIO(comm, info)
+        fileprop.driver = HDF5.Drivers.MPIO(comm)
         driver = fileprop.driver
         h5comm = driver.comm
         h5info = driver.info
@@ -36,7 +31,7 @@ using Test
     # open file in parallel and write dataset
     fn = MPI.bcast(tempname(), 0, comm)
     A = [myrank + i for i in 1:10]
-    h5open(fn, "w", comm, info) do f
+    h5open(fn, "w", comm) do f
         @test isopen(f)
         g = create_group(f, "mygroup")
         dset = create_dataset(
@@ -66,7 +61,7 @@ using Test
 
     MPI.Barrier(comm)
 
-    B = h5read(fn, "mygroup/B"; driver=HDF5.Drivers.MPIO(comm, info), dxpl_mpio=:collective)
+    B = h5read(fn, "mygroup/B"; driver=HDF5.Drivers.MPIO(comm), dxpl_mpio=:collective)
     @test A == vec(B[:, myrank + 1])
 
     MPI.Barrier(comm)
@@ -75,16 +70,10 @@ using Test
         fn,
         "mygroup/B",
         (:, myrank + 1);
-        driver=HDF5.Drivers.MPIO(comm, info),
+        driver=HDF5.Drivers.MPIO(comm),
         dxpl_mpio=:collective
     )
     @test A == vec(B)
-
-    # we need to close HDF5 and finalize the info object before finalizing MPI
-    finalize(info)
-    HDF5.API.h5_close()
-
-    MPI.Barrier(MPI.COMM_WORLD)
 
     MPI.Finalize()
 end # testset mpio
