@@ -28,8 +28,9 @@ using Test
 
         # check that the two communicators point to the same group
         if isdefined(MPI, :Comm_compare)  # requires recent MPI.jl version
-            @test MPI.Comm_compare(comm, h5comm) === MPI.CONGRUENT
+            @test MPI.Comm_compare(comm, h5comm) == MPI.CONGRUENT
         end
+        HDF5.close(fileprop)
     end
 
     # open file in parallel and write dataset
@@ -78,7 +79,6 @@ using Test
         dxpl_mpio=:collective
     )
     @test A == vec(B)
-
     GC.gc()
 
     MPI.Finalize()
