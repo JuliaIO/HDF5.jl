@@ -12,6 +12,8 @@ end
 
 @info "libhdf5 v$(HDF5.API.h5_get_libversion())"
 
+@info "preferences" HDF5.API.get_use_api_lock()
+
 # To debug HDF5.jl tests, uncomment the next line
 # ENV["JULIA_DEBUG"] = "Main"
 
@@ -72,6 +74,8 @@ end
         # basic MPI tests, for actual parallel tests we need to run in MPI mode
         include("mpio.jl")
     end
+    @debug "API lock"
+    include("lock.jl")
 
     if HDF5.has_ros3()
         include("ros3.jl")

@@ -1,6 +1,15 @@
+"""
+    HDF5.API
+
+Low-level API module with configurable locking mechanism to support
+multithreading.
+"""
 module API
 
 import Libdl
+@static if VERSION >= v"1.6"
+    import Preferences
+end
 using Base: StringVector
 
 const depsfile = joinpath(@__DIR__, "..", "..", "deps", "deps.jl")
@@ -13,8 +22,7 @@ else
     )
 end
 
-const liblock = ReentrantLock()
-
+include("lock.jl")
 include("types.jl")
 include("error.jl")
 include("functions.jl") # core API ccall wrappers
@@ -37,7 +45,7 @@ function __init__()
     end
 
     # use our own error handling machinery (i.e. turn off automatic error printing)
-    h5e_set_auto(API.H5E_DEFAULT, C_NULL, C_NULL)
+    h5e_set_auto(H5E_DEFAULT, C_NULL, C_NULL)
 end
 
 end # module API
