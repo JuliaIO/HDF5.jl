@@ -79,5 +79,7 @@ using Test
     )
     @test A == vec(B)
 
+    GC.gc()
+
     MPI.Finalize()
 end # testset mpio
