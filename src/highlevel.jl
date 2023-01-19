@@ -10,10 +10,14 @@ function h5write(filename, name::AbstractString, data; pv...)
 end
 
 function h5read(filename, name::AbstractString; pv...)
-    local dat
+    local dat, file
     fapl = FileAccessProperties(; fclose_degree=:strong)
     pv = setproperties!(fapl; pv...)
-    file = h5open(filename, "r", fapl)
+    try
+        file = h5open(filename, "r", fapl)
+    finally
+        close(fapl)
+    end
     try
         obj = getindex(file, name; pv...)
         dat = read(obj)
@@ -25,10 +29,14 @@ function h5read(filename, name::AbstractString; pv...)
 end
 
 function h5read(filename, name_type_pair::Pair{<:AbstractString,DataType}; pv...)
-    local dat
+    local dat, file
     fapl = FileAccessProperties(; fclose_degree=:strong)
     pv = setproperties!(fapl; pv...)
-    file = h5open(filename, "r", fapl)
+    try
+        file = h5open(filename, "r", fapl)
+    finally
+        close(fapl)
+    end
     try
         obj = getindex(file, name_type_pair[1]; pv...)
         dat = read(obj, name_type_pair[2])
@@ -45,10 +53,14 @@ function h5read(
     indices::Tuple{Vararg{Union{AbstractRange{Int},Int,Colon}}};
     pv...
 )
-    local dat
+    local dat, file
     fapl = FileAccessProperties(; fclose_degree=:strong)
     pv = setproperties!(fapl; pv...)
-    file = h5open(filename, "r", fapl)
+    try
+        file = h5open(filename, "r", fapl)
+    finally
+        close(fapl)
+    end
     try
         dset = getindex(file, name; pv...)
         dat = dset[indices...]
