@@ -1,7 +1,22 @@
 """
+    HDF5.Group
+
+An object representing a [HDF5
+group](https://docs.hdfgroup.org/hdf5/develop/_h5_d_m__u_g.html#subsubsec_data_model_abstract_group).
+A group is analagous to a file system directory, in that, except for the root
+group, every object must be a member of at least one group.
+
+# See also
+
+- [`create_group`](@ref)
+- [`open_group`](@ref)
+"""
+Group
+
+"""
     create_group(parent::Union{File,Group}, path::AbstractString; properties...)
 
-Create a new `Group` at `path` under the `parent` object. Optional keyword
+Create a new [`Group`](@ref) at `path` under the `parent` object. Optional keyword
 arguments include any keywords that that belong to
 [`LinkCreateProperties`](@ref) or [`GroupCreateProperties`](@ref).
 """
@@ -37,7 +52,7 @@ end
 """
     open_group(parent::Union{File,Group}, path::AbstratString)
 
-Open an existing `Group` at `path` under the `parent` object.
+Open an existing [`Group`](@ref) at `path` under the `parent` object.
 """
 function open_group(
     parent::Union{File,Group},
