@@ -949,18 +949,19 @@ end
 ### MPIO
 ###
 
-h5p_set_fapl_mpio(fapl_id, comm::Hmpih32, info::Hmpih32) =
-    h5p_set_fapl_mpio32(fapl_id, comm, info)
-h5p_set_fapl_mpio(fapl_id, comm::Hmpih64, info::Hmpih64) =
-    h5p_set_fapl_mpio64(fapl_id, comm, info)
+# define these stubs, but can't define the methods as the types aren't
+# known until MPI.jl is loaded.
 
-h5p_get_fapl_mpio(fapl_id, comm::Ref{Hmpih32}, info::Ref{Hmpih32}) =
-    h5p_get_fapl_mpio32(fapl_id, comm, info)
-h5p_get_fapl_mpio(fapl_id, comm::Ref{Hmpih64}, info::Ref{Hmpih64}) =
-    h5p_get_fapl_mpio64(fapl_id, comm, info)
+"""
+    h5p_get_fapl_mpio(fapl_id::hid_t, comm::Ptr{MPI.API.MPI_Comm}, info::Ptr{MPI.API.MPI_Info})
 
-function h5p_get_fapl_mpio(fapl_id, ::Type{Hmpih}) where {Hmpih<:Union{Hmpih32,Hmpih64}}
-    comm, info = Ref{Hmpih}(), Ref{Hmpih}()
-    h5p_get_fapl_mpio(fapl_id, comm, info)
-    return comm[], info[]
-end
+See `libhdf5` documentation for [`H5Pget_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MPIO32).
+"""
+function h5p_set_fapl_mpio end
+
+"""
+    h5p_set_fapl_mpio32(fapl_id::hid_t, comm::MPI.API.MPI_Comm, info::MPI.API.MPI_Info)
+
+See `libhdf5` documentation for [`H5Pset_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MPIO32).
+"""
+function h5p_get_fapl_mpio end

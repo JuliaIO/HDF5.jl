@@ -89,9 +89,7 @@ function __init__()
     HDF5.HAS_PARALLEL[] = API._has_symbol(:H5Pset_fapl_mpio)
     HDF5.HAS_ROS3[] = API._has_symbol(:H5Pset_fapl_ros3)
 
-    @require MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195" (
-        HDF5.has_parallel() && include("mpio.jl")
-    )
+    @require MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195" include("mpio.jl")
 end
 
 include("ros3.jl")

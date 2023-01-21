@@ -67,11 +67,8 @@ end
         include("virtual_dataset.jl")
     end
 
-    using MPI
-    if HDF5.has_parallel()
-        # basic MPI tests, for actual parallel tests we need to run in MPI mode
-        include("mpio.jl")
-    end
+    # basic MPI tests, for actual parallel tests we need to run in MPI mode
+    include("mpio.jl")
 
     if HDF5.has_ros3()
         include("ros3.jl")

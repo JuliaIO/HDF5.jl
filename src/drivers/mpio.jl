@@ -1,22 +1,46 @@
 using .MPI
 import Libdl
 
-# Low-level MPI handles.
-const MPIHandle = Union{MPI.MPI_Comm,MPI.MPI_Info}
+###
+### MPIO
+###
 
-# MPI.jl wrapper types.
-const MPIHandleWrapper = Union{MPI.Comm,MPI.Info}
-
-const H5MPIHandle = let csize = sizeof(MPI.MPI_Comm)
-    @assert csize in (4, 8)
-    csize == 4 ? API.Hmpih32 : API.Hmpih64
+# define API functions here
+function API.h5p_set_fapl_mpio(fapl_id, comm, info)
+    API.lock(API.liblock)
+    var"#status#" = try
+        ccall(
+            (:H5Pset_fapl_mpio, API.libhdf5),
+            API.herr_t,
+            (API.hid_t, MPI.MPI_Comm, MPI.MPI_Info),
+            fapl_id,
+            comm,
+            info
+        )
+    finally
+        API.unlock(API.liblock)
+    end
+    var"#status#" < 0 && API.@h5error("Error setting MPIO properties")
+    return nothing
 end
 
-h5_to_mpi_comm(handle::H5MPIHandle) = reinterpret(MPI.MPI_Comm, handle)
-h5_to_mpi_info(handle::H5MPIHandle) = reinterpret(MPI.MPI_Info, handle)
-
-mpi_to_h5(handle::MPIHandle) = reinterpret(H5MPIHandle, handle)
-mpi_to_h5(mpiobj::MPIHandleWrapper) = mpi_to_h5(mpiobj.val)
+function API.h5p_get_fapl_mpio(fapl_id, comm, info)
+    API.lock(API.liblock)
+    var"#status#" = try
+        ccall(
+            (:H5Pget_fapl_mpio, API.libhdf5),
+            API.herr_t,
+            (API.hid_t, Ptr{MPI.MPI_Comm}, Ptr{MPI.MPI_Info}),
+            fapl_id,
+            comm,
+            info
+        )
+    finally
+        API.unlock(API.liblock)
+    end
+    var"#status#" < 0 && API.@h5error("Error getting MPIO properties")
+    return nothing
+end
 
 """
     MPIO(comm::MPI.Comm, info::MPI.Info)
@@ -47,19 +71,16 @@ function set_driver!(fapl::Properties, mpio::MPIO)
         " MPI was loaded before HDF5." *
         " See HDF5.jl docs for details."
     )
-    # Note: HDF5 creates a COPY of the comm and info objects.
-    GC.@preserve mpio begin
-        API.h5p_set_fapl_mpio(fapl, mpi_to_h5(mpio.comm), mpi_to_h5(mpio.info))
-    end
-
+    # Note: HDF5 creates a COPY of the comm and info objects, so we don't need to keep a reference around.
+    API.h5p_set_fapl_mpio(fapl, mpio.comm, mpio.info)
     DRIVERS[API.h5p_get_driver(fapl)] = MPIO
     return nothing
 end
 
 function get_driver(fapl::Properties, ::Type{MPIO})
-    h5comm, h5info = API.h5p_get_fapl_mpio(fapl, H5MPIHandle)
-    comm = MPI.Comm(h5_to_mpi_comm(h5comm))
-    info = MPI.Info(h5_to_mpi_info(h5info))
+    comm = MPI.Comm()
+    info = MPI.Info()
+    API.h5p_get_fapl_mpio(fapl, comm, info)
     return MPIO(comm, info)
 end
 

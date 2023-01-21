@@ -4,11 +4,6 @@ using Base.Meta: isexpr, quot
 # of the translations explicitly.
 const bind_exceptions = Dict{Symbol,Symbol}()
 
-# Distinguishes 32-bit vs 64-bit handle arguments
-bind_exceptions[:h5p_get_fapl_mpio32] = :H5Pget_fapl_mpio
-bind_exceptions[:h5p_get_fapl_mpio64] = :H5Pget_fapl_mpio
-bind_exceptions[:h5p_set_fapl_mpio32] = :H5Pset_fapl_mpio
-bind_exceptions[:h5p_set_fapl_mpio64] = :H5Pset_fapl_mpio
 # have numbers at the end
 bind_exceptions[:h5p_set_fletcher32] = :H5Pset_fletcher32
 bind_exceptions[:h5p_set_fapl_sec2]  = :H5Pset_fapl_sec2
