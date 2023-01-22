@@ -15,11 +15,17 @@ Base.remove_linenums!(exprs)
 
 # Definitions which are not automatically generated, but should still be documented as
 # part of the raw low-level API:
-append!(bound_api["H5P"], ["h5p_get_class_name"])   # defined in src/api/helpers.jl
+append!(bound_api["H5P"], [
+    # defined in src/api/helpers.jl
+    "h5p_get_class_name",
+    "h5p_get_fapl_mpio",
+    "h5p_set_fapl_mpio",
+])
 append!(bound_api["H5T"], [
-    "h5t_get_member_name",   # defined in src/api/helpers.jl
-    "h5t_get_tag"
-])          # defined in src/api/helpers.jl
+    # defined in src/api/helpers.jl
+    "h5t_get_member_name",
+    "h5t_get_tag",
+])
 
 # Now dump the text representation to disk
 open(joinpath(@__DIR__, "..", "src", "api", "functions.jl"), "w") do fid

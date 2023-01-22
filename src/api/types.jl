@@ -207,11 +207,6 @@ struct H5E_error2_t
     desc::Cstring # optional supplied description
 end
 
-# MPI communicators required by H5P
-abstract type Hmpih end
-primitive type Hmpih32 <: Hmpih 32 end # MPICH C/Fortran, OpenMPI Fortran: 32 bit handles
-primitive type Hmpih64 <: Hmpih 64 end # OpenMPI C: pointers (mostly 64 bit)
-
 # HDFS Drivers
 struct H5FD_hdfs_fapl_t
     version::Int32

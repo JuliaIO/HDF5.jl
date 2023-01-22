@@ -3358,38 +3358,6 @@ function h5p_get_fapl_hdfs(fapl_id, fa_out)
 end
 
 """
-    h5p_get_fapl_mpio32(fapl_id::hid_t, comm::Ptr{Hmpih32}, info::Ptr{Hmpih32})
-
-See `libhdf5` documentation for [`H5Pget_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MPIO32).
-"""
-function h5p_get_fapl_mpio32(fapl_id, comm, info)
-    lock(liblock)
-    var"#status#" = try
-            ccall((:H5Pget_fapl_mpio, libhdf5), herr_t, (hid_t, Ptr{Hmpih32}, Ptr{Hmpih32}), fapl_id, comm, info)
-        finally
-            unlock(liblock)
-        end
-    var"#status#" < 0 && @h5error("Error getting MPIO properties")
-    return nothing
-end
-
-"""
-    h5p_get_fapl_mpio64(fapl_id::hid_t, comm::Ptr{Hmpih64}, info::Ptr{Hmpih64})
-
-See `libhdf5` documentation for [`H5Pget_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MPIO64).
-"""
-function h5p_get_fapl_mpio64(fapl_id, comm, info)
-    lock(liblock)
-    var"#status#" = try
-            ccall((:H5Pget_fapl_mpio, libhdf5), herr_t, (hid_t, Ptr{Hmpih64}, Ptr{Hmpih64}), fapl_id, comm, info)
-        finally
-            unlock(liblock)
-        end
-    var"#status#" < 0 && @h5error("Error getting MPIO properties")
-    return nothing
-end
-
-"""
     h5p_get_fapl_multi(fapl_id::hid_t, memb_map::Ptr{H5FD_mem_t}, memb_fapl::Ptr{hid_t}, memb_name::Ptr{Ptr{Cchar}}, memb_addr::Ptr{haddr_t}, relax::Ptr{hbool_t})
 
 See `libhdf5` documentation for [`H5Pget_fapl_multi`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MULTI).
@@ -3427,7 +3395,12 @@ end
 See `libhdf5` documentation for [`H5Pget_fapl_ros3`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_ROS3).
 """
 function h5p_get_fapl_ros3(fapl_id, fa_out)
-    var"#status#" = ccall((:H5Pget_fapl_ros3, libhdf5), herr_t, (hid_t, Ptr{H5FD_ros3_fapl_t}), fapl_id, fa_out)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Pget_fapl_ros3, libhdf5), herr_t, (hid_t, Ptr{H5FD_ros3_fapl_t}), fapl_id, fa_out)
+        finally
+            unlock(liblock)
+        end
     var"#status#" < 0 && @h5error("Error in getting ros3 properties")
     return nothing
 end
@@ -4889,38 +4862,6 @@ function h5p_set_fapl_log(fapl_id, logfile, flags, buf_size)
 end
 
 """
-    h5p_set_fapl_mpio32(fapl_id::hid_t, comm::Hmpih32, info::Hmpih32)
-
-See `libhdf5` documentation for [`H5Pset_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MPIO32).
-"""
-function h5p_set_fapl_mpio32(fapl_id, comm, info)
-    lock(liblock)
-    var"#status#" = try
-            ccall((:H5Pset_fapl_mpio, libhdf5), herr_t, (hid_t, Hmpih32, Hmpih32), fapl_id, comm, info)
-        finally
-            unlock(liblock)
-        end
-    var"#status#" < 0 && @h5error("Error setting MPIO properties")
-    return nothing
-end
-
-"""
-    h5p_set_fapl_mpio64(fapl_id::hid_t, comm::Hmpih64, info::Hmpih64)
-
-See `libhdf5` documentation for [`H5Pset_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MPIO64).
-"""
-function h5p_set_fapl_mpio64(fapl_id, comm, info)
-    lock(liblock)
-    var"#status#" = try
-            ccall((:H5Pset_fapl_mpio, libhdf5), herr_t, (hid_t, Hmpih64, Hmpih64), fapl_id, comm, info)
-        finally
-            unlock(liblock)
-        end
-    var"#status#" < 0 && @h5error("Error setting MPIO properties")
-    return nothing
-end
-
-"""
     h5p_set_fapl_multi(fapl_id::hid_t, memb_map::Ptr{H5FD_mem_t}, memb_fapl::Ptr{hid_t}, memb_name::Ptr{Ptr{Cchar}}, memb_addr::Ptr{haddr_t}, relax::hbool_t)
 
 See `libhdf5` documentation for [`H5Pset_fapl_multi`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MULTI).
@@ -4958,7 +4899,12 @@ end
 See `libhdf5` documentation for [`H5Pset_fapl_ros3`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_ROS3).
 """
 function h5p_set_fapl_ros3(fapl_id, fa)
-    var"#status#" = ccall((:H5Pset_fapl_ros3, libhdf5), herr_t, (hid_t, Ptr{H5FD_ros3_fapl_t}), fapl_id, fa)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Pset_fapl_ros3, libhdf5), herr_t, (hid_t, Ptr{H5FD_ros3_fapl_t}), fapl_id, fa)
+        finally
+            unlock(liblock)
+        end
     var"#status#" < 0 && @h5error("Error in setting ros3 properties")
     return nothing
 end
