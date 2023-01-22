@@ -202,7 +202,7 @@ Base.convert(::Type{T}, br::BlockRange) where {T<:AbstractRange} = convert(T, ra
     HDF5.select_hyperslab!(dspace::Dataspace, [op, ], idxs::Tuple)
 
 Selects a hyperslab region of the `dspace`. `idxs` should be a tuple of
-integers, ranges or [`blockrange`](@ref) objects.
+integers, ranges or [`BlockRange`](@ref) objects.
 
 - `op` determines how the new selection is to be combined with the already
   selected dataspace:
