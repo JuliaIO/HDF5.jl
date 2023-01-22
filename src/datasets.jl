@@ -761,7 +761,7 @@ Obtain information on all the chunks in a dataset. Returns a
 * addr - haddr_t, byte-offset of the chunk in the file
 * size - hsize_t, size of the chunk in bytes
 """
-function get_all_chunk_info(dataset, dxpl=H5P_DEFAULT)
+function get_all_chunk_info(dataset, dxpl=API.H5P_DEFAULT)
     ds = dataspace(dataset)
     N = ndims(ds)
     info = ChunkInfo{N}[]

@@ -66,6 +66,18 @@ using Test
         @test HDF5.get_chunk_index(d, (2, 5)) == 5
         @test HDF5.get_chunk_index(d, (3, 4)) == 5
         @test HDF5.get_chunk_index(d, (3, 5)) == 5
+        # Test chunk iter
+        if v"1.12.3" ≤ HDF5.API._libhdf5_build_ver
+            infos = HDF5.get_all_chunk_info(d)
+            offsets = [info.offset for info in infos]
+            addrs = [info.addr for info in infos]
+            filter_masks = [info.filter_mask for info in infos]
+            sizes = [info.size for info in infos]
+            @test isempty(setdiff(offsets, [ (0, 0), (0, 2), (2, 0), (2, 2) ]))
+            @test length(unique(addrs)) == 4
+            @test only(unique(filter_masks)) === UInt32(0)
+            @test only(unique(sizes)) == 4*sizeof(Int)
+        end
     end
 
     # Test direct write chunk writing via linear indexing
