@@ -953,15 +953,15 @@ end
 # known until MPI.jl is loaded.
 
 """
-    h5p_get_fapl_mpio(fapl_id::hid_t, comm::Ptr{MPI.API.MPI_Comm}, info::Ptr{MPI.API.MPI_Info})
+    h5p_get_fapl_mpio(fapl_id::hid_t, comm::Ptr{MPI.MPI_Comm}, info::Ptr{MPI.MPI_Info})
 
 See `libhdf5` documentation for [`H5Pget_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MPIO32).
 """
-function h5p_set_fapl_mpio end
+function h5p_get_fapl_mpio end
 
 """
-    h5p_set_fapl_mpio32(fapl_id::hid_t, comm::MPI.API.MPI_Comm, info::MPI.API.MPI_Info)
+    h5p_set_fapl_mpio(fapl_id::hid_t, comm::MPI.MPI_Comm, info::MPI.MPI_Info)
 
 See `libhdf5` documentation for [`H5Pset_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MPIO32).
 """
-function h5p_get_fapl_mpio end
+function h5p_set_fapl_mpio end
