@@ -73,10 +73,10 @@ using Test
             addrs = [info.addr for info in infos]
             filter_masks = [info.filter_mask for info in infos]
             sizes = [info.size for info in infos]
-            @test isempty(setdiff(offsets, [ (0, 0), (0, 2), (2, 0), (2, 2) ]))
+            @test isempty(setdiff(offsets, [(0, 0), (0, 2), (2, 0), (2, 2)]))
             @test length(unique(addrs)) == 4
             @test only(unique(filter_masks)) === UInt32(0)
-            @test only(unique(sizes)) == 4*sizeof(Int)
+            @test only(unique(sizes)) == 4 * sizeof(Int)
         end
     end
 
