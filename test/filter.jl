@@ -137,24 +137,33 @@ using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenab
     close(f)
     f = h5open(fn)
 
-    # Read datasets and test for equality
-    for name in keys(f)
-        ds = f[name]
-        @testset "$name" begin
-            @debug "Filter Dataset" HDF5.name(ds)
-            @test ds[] == data
-            filters = HDF5.get_create_properties(ds).filters
-            if startswith(name, "shuffle+")
-                @test filters[1] isa Shuffle
-                @test filters[2] isa compressionFilters[name[9:end]]
-            elseif haskey(compressionFilters, name) || name == "blosc_bitshuffle"
-                name = replace(name, r"_.*" => "")
-                @test filters[1] isa compressionFilters[name]
+    try
+
+        # Read datasets and test for equality
+        for name in keys(f)
+            ds = f[name]
+            @testset "$name" begin
+                @debug "Filter Dataset" HDF5.name(ds)
+                @test ds[] == data
+                filters = HDF5.get_create_properties(ds).filters
+                if startswith(name, "shuffle+")
+                    @test filters[1] isa Shuffle
+                    @test filters[2] isa compressionFilters[name[9:end]]
+                elseif haskey(compressionFilters, name) || name == "blosc_bitshuffle"
+                    name = replace(name, r"_.*" => "")
+                    @test filters[1] isa compressionFilters[name]
+                end
+
+                if v"1.12.3" ≤ HDF5.API._libhdf5_build_ver
+                    infos = HDF5.get_all_chunk_info(ds)
+                    filter_masks = [info.filter_mask for info in infos]
+                    @test only(unique(filter_masks)) === UInt32(0)
+                end
             end
         end
+    finally
+        close(f)
     end
-
-    close(f)
 
     # Test that reading a dataset with a missing filter has an informative error message.
     h5open(fn, "w") do f
