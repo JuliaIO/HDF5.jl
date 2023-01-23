@@ -160,7 +160,9 @@ filename(obj::Union{File,Group,Dataset,Attribute,Datatype}) =
     start_swmr_write(h5::HDF5.File)
 
 Start Single Reader Multiple Writer (SWMR) writing mode.
-See [SWMR documentation](https://portal.hdfgroup.org/display/HDF5/Single+Writer+Multiple+Reader++-+SWMR).
+
+# External links
+[*Single Writer Multiple Reader* from the HDF5 manual](https://portal.hdfgroup.org/display/HDF5/Single+Writer+Multiple+Reader++-+SWMR).
 """
 start_swmr_write(h5::File) = API.h5f_start_swmr_write(h5)
 

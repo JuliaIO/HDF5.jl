@@ -1,10 +1,21 @@
 # Dataspaces
 
+```@meta
+CurrentModule = HDF5
+```
+
 ```@docs
-HDF5.Dataspace
+Dataspace
 dataspace
-HDF5.isnull
-HDF5.BlockRange
-HDF5.select_hyperslab!
-HDF5.get_regular_hyperslab
+isnull
+get_extent_dims
+set_extent_dims
+```
+
+# Hyperslab
+
+```@docs
+BlockRange
+select_hyperslab!
+get_regular_hyperslab
 ```

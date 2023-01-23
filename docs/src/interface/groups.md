@@ -1,6 +1,12 @@
 # Groups
 
+```@meta
+CurrentModule = HDF5
+```
+
 ```@docs
-HDF5.create_group
-HDF5.open_group
+Group
+create_group
+open_group
+create_external
 ```

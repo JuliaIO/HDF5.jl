@@ -161,7 +161,8 @@ selecting multiple contiguous blocks.
 - `count`: the number of blocks (can be -1 for an unlimited number of blocks)
 - `block`: the number of elements in each block.
 
-    BlockRange(obj::Union{Integer, OrdinalRange})
+
+    HDF5.BlockRange(obj::Union{Integer, OrdinalRange})
 
 Convert `obj` to a `BlockRange` object.
 
@@ -202,7 +203,7 @@ Base.convert(::Type{T}, br::BlockRange) where {T<:AbstractRange} = convert(T, ra
     HDF5.select_hyperslab!(dspace::Dataspace, [op, ], idxs::Tuple)
 
 Selects a hyperslab region of the `dspace`. `idxs` should be a tuple of
-integers, ranges or [`blockrange`](@ref) objects.
+integers, ranges or [`BlockRange`](@ref) objects.
 
 - `op` determines how the new selection is to be combined with the already
   selected dataspace:

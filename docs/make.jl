@@ -29,9 +29,12 @@ makedocs(;
         assets=String[],
         sidebar_sitename=false
     ),
+    strict=true,
     pages=[
         "Home" => "index.md",
         "Interface" => [
+            "interface/configuration.md",
+            "interface/files.md",
             "interface/groups.md",
             "interface/dataspaces.md",
             "interface/dataset.md",

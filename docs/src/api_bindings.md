@@ -344,6 +344,7 @@ h5l_move
 - [`h5o_get_comment`](@ref h5o_get_comment)
 - [`h5o_get_comment_by_name`](@ref h5o_get_comment_by_name)
 - [`h5o_get_info`](@ref h5o_get_info)
+- [`h5o_get_info1`](@ref h5o_get_info1)
 - [`h5o_get_info_by_idx`](@ref h5o_get_info_by_idx)
 - [`h5o_get_info_by_name`](@ref h5o_get_info_by_name)
 - [`h5o_get_native_info`](@ref h5o_get_native_info)
@@ -374,6 +375,7 @@ h5o_flush
 h5o_get_comment
 h5o_get_comment_by_name
 h5o_get_info
+h5o_get_info1
 h5o_get_info_by_idx
 h5o_get_info_by_name
 h5o_get_native_info
@@ -1012,6 +1014,26 @@ h5z_filter_avail
 h5z_get_filter_info
 h5z_register
 h5z_unregister
+```
+
+---
+
+## [[`H5FD`](https://portal.hdfgroup.org/display/HDF5/File+Drivers) — File Drivers](@id H5FD)
+- [`h5fd_core_init`](@ref h5fd_core_init)
+- [`h5fd_family_init`](@ref h5fd_family_init)
+- [`h5fd_log_init`](@ref h5fd_log_init)
+- [`h5fd_mpio_init`](@ref h5fd_mpio_init)
+- [`h5fd_multi_init`](@ref h5fd_multi_init)
+- [`h5fd_sec2_init`](@ref h5fd_sec2_init)
+- [`h5fd_stdio_init`](@ref h5fd_stdio_init)
+```@docs
+h5fd_core_init
+h5fd_family_init
+h5fd_log_init
+h5fd_mpio_init
+h5fd_multi_init
+h5fd_sec2_init
+h5fd_stdio_init
 ```
 
 ---

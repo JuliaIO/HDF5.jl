@@ -843,7 +843,7 @@ superclass(::Type{AttributeAccessProperties}) = LinkAccessProperties
 
 Properties used when transferring data to/from datasets
 
-- `dxpl_mpio`: MPI transfer mode:
+- `dxpl_mpio`: MPI transfer mode when using [`Drivers.MPIO`](@ref) file driver:
    - `:independent`: use independent I/O access (default),
    - `:collective`: use collective I/O access.
 

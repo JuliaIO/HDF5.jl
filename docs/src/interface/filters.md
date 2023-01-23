@@ -172,10 +172,16 @@ The filter interface is used to describe filters and obtain information on them.
 ```@docs
 Filter
 FilterPipeline
+UnknownFilter
 FILTERS
+EXTERNAL_FILTER_JULIA_PACKAGES
 filterid
-encoder_present
+isavailable
+isdecoderenabled
+isencoderenabled
 decoder_present
+encoder_present
+ensure_filters_available
 filtername
 can_apply_func
 can_apply_cfunc

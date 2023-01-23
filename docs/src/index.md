@@ -536,16 +536,3 @@ Note that some languages or libraries use both methods, so please check the dats
   improving the handling of HDF5's constants
 
 - Thanks also to the users who have reported bugs and tested fixes
-
-# API Reference
-
-Below we include a limited number of API references. Note not all of these are public interfaces, thus proceed with caution.
-
-```@index
-Pages = ["index.md"]
-```
-
-```@autodocs
-Modules = [HDF5]
-Filter = not_low_level_api
-```

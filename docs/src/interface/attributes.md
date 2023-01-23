@@ -1,5 +1,9 @@
 # Attributes
 
+```@meta
+CurrentModule = HDF5
+```
+
 ## Dictionary interface
 
 ```@docs
@@ -10,7 +14,7 @@ attributes
 ## Mid-level Interface
 
 ```@docs
-HDF5.Attribute
+Attribute
 open_attribute
 create_attribute
 read_attribute
@@ -24,4 +28,5 @@ rename_attribute
 ```@docs
 h5readattr
 h5writeattr
+num_attrs
 ```

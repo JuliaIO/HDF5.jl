@@ -13,6 +13,12 @@ so users will not usually be required to construct them manually.
 Not all properties defined by the HDF5 library are currently available in HDF5.jl. If you
 require additional properties, please open an issue or pull request.
 
+## Common functions
+
+```@docs
+setproperties!
+```
+
 ## `Properties` types
 
 ```@docs
@@ -33,7 +39,7 @@ DatatypeCreateProperties
 
 ```@docs
 VirtualMapping
-VirtualLyout
+VirtualLayout
 ```
 
 ## Drivers
@@ -55,3 +61,17 @@ ROS3
 MPIO
 ```
 
+## Internals
+
+```@meta
+CurrentModule = HDF5
+```
+
+The following macros are used for defining new properties and property getters/setters.
+
+```@docs
+@propertyclass
+@bool_property
+@enum_property
+@tuple_property
+```

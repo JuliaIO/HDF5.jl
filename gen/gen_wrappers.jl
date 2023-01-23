@@ -15,6 +15,10 @@ Base.remove_linenums!(exprs)
 
 # Definitions which are not automatically generated, but should still be documented as
 # part of the raw low-level API:
+append!(bound_api["H5O"], [
+    # defined in src/api/helpers.jl
+    "h5o_get_info1",
+])
 append!(bound_api["H5P"], [
     # defined in src/api/helpers.jl
     "h5p_get_class_name",
@@ -105,6 +109,7 @@ for (mod, desc, urltail) in (
     ("H5S", "Dataspace Interface", "Dataspaces"),
     ("H5T", "Datatype Interface", "Datatypes"),
     ("H5Z", "Filter Interface", "Filters"),
+    ("H5FD", "File Drivers", "File+Drivers"),
     ("H5DO", "Optimized Functions Interface", "Optimizations"),
     ("H5DS", "Dimension Scale Interface", "Dimension+Scales"),
     ("H5LT", "Lite Interface", "Lite"),

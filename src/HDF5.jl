@@ -92,10 +92,9 @@ const HAS_ROS3 = Ref(false)
 """
     has_parallel()
 
-Returns `true` if the HDF5 libraries were compiled with parallel support,
-and if parallel functionality was loaded into HDF5.jl.
+Returns `true` if the HDF5 libraries were compiled with MPI parallel support via the [`Drivers.MPIO`](@ref) driver.
 
-For the second condition to be true, MPI.jl must be imported before HDF5.jl.
+See [Parallel HDF5](@ref) for more details.
 """
 has_parallel() = HAS_PARALLEL[]
 
