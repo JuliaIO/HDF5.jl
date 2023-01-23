@@ -179,8 +179,9 @@ filterid
 isavailable
 isdecoderenabled
 isencoderenabled
-encoder_present
 decoder_present
+encoder_present
+ensure_filters_available
 filtername
 can_apply_func
 can_apply_cfunc
