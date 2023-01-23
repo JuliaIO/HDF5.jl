@@ -63,6 +63,10 @@ MPIO
 
 ## Internals
 
+```@meta
+CurrentModule = HDF5
+```
+
 The following macros are used for defining new properties and property getters/setters.
 
 ```@docs
