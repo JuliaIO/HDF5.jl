@@ -2,6 +2,11 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.16.14
+* Allow `begin` to work in a dataset
+* Simplify MPIO tests and internals
+* Minor updates to docs and several docstrings
+
 ## v0.16.13
 
 * Writing compound data set support
