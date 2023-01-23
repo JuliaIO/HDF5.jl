@@ -1016,6 +1016,26 @@ h5z_unregister
 
 ---
 
+## [[`H5FD`](https://portal.hdfgroup.org/display/HDF5/File+Drivers) — File Drivers](@id H5FD)
+- [`h5fd_core_init`](@ref h5fd_core_init)
+- [`h5fd_family_init`](@ref h5fd_family_init)
+- [`h5fd_log_init`](@ref h5fd_log_init)
+- [`h5fd_mpio_init`](@ref h5fd_mpio_init)
+- [`h5fd_multi_init`](@ref h5fd_multi_init)
+- [`h5fd_sec2_init`](@ref h5fd_sec2_init)
+- [`h5fd_stdio_init`](@ref h5fd_stdio_init)
+```@docs
+h5fd_core_init
+h5fd_family_init
+h5fd_log_init
+h5fd_mpio_init
+h5fd_multi_init
+h5fd_sec2_init
+h5fd_stdio_init
+```
+
+---
+
 ## [[`H5DO`](https://portal.hdfgroup.org/display/HDF5/Optimizations) — Optimized Functions Interface](@id H5DO)
 - [`h5do_append`](@ref h5do_append)
 - [`h5do_write_chunk`](@ref h5do_write_chunk)

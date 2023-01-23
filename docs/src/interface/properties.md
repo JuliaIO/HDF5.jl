@@ -39,7 +39,7 @@ DatatypeCreateProperties
 
 ```@docs
 VirtualMapping
-VirtualLyout
+VirtualLayout
 ```
 
 ## Drivers

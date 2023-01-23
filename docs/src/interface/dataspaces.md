@@ -8,8 +8,14 @@ CurrentModule = HDF5
 Dataspace
 dataspace
 isnull
+get_extent_dims
+set_extent_dims
+```
+
+# Hyperslab
+
+```@docs
 BlockRange
 select_hyperslab!
-get_extent_dims
 get_regular_hyperslab
 ```

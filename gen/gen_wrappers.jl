@@ -105,6 +105,7 @@ for (mod, desc, urltail) in (
     ("H5S", "Dataspace Interface", "Dataspaces"),
     ("H5T", "Datatype Interface", "Datatypes"),
     ("H5Z", "Filter Interface", "Filters"),
+    ("H5FD", "File Drivers", "File+Drivers"),
     ("H5DO", "Optimized Functions Interface", "Optimizations"),
     ("H5DS", "Dimension Scale Interface", "Dimension+Scales"),
     ("H5LT", "Lite Interface", "Lite"),
