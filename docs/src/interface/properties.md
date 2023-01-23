@@ -61,3 +61,13 @@ ROS3
 MPIO
 ```
 
+## Internals
+
+The following macros are used for defining new properties and property getters/setters.
+
+```@docs
+@propertyclass
+@bool_property
+@enum_property
+@tuple_property
+```

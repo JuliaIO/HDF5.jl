@@ -30,12 +30,3 @@ h5readattr
 h5writeattr
 num_attrs
 ```
-
-## Internals
-
-```@docs
-@propertyclass
-@bool_property
-@enum_property
-@tuple_property
-```
