@@ -33,7 +33,7 @@ There are many keyword properties that can be set. Below are a few select keywor
 
 Additionally, the initial create, transfer, and access properties can be provided as a keyword:
 * `dcpl` - [`DatasetCreateProperties`](@ref)
-* `dxpl` - [`DatasetTransferProperties`](@ref)
+* `dxpl` - [`HDF5.DatasetTransferProperties`](@ref)
 * `dapl` - [`DatasetAccessProperties`](@ref)
 
 See also
