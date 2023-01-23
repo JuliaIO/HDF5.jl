@@ -127,13 +127,3 @@ jobs:
               @info "Not compatible with this release. No problem." exception=err
               exit(0)  #  Exit immediately, as a success
             end
-
-  docs:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v3
-        - uses: julia-actions/julia-buildpkg@latest
-        - uses: julia-actions/julia-docdeploy@latest
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}

@@ -56,7 +56,7 @@ built with MPI support.
 
 # See also
 
-- [`has_parallel`](@ref)
+- [`HDF5.has_parallel`](@ref)
 - [Parallel HDF5](@ref)
 
 # External links
