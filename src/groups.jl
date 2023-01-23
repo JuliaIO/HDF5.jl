@@ -174,7 +174,10 @@ move_link(
                     lcpl_id=HDF5.API.H5P_DEFAULT, lapl_id=HDF5.H5P.DEFAULT)
 
 Create an external link such that `source[source_relpath]` points to `target_path` within the file
-with path `target_filename`; Calls `[H5Lcreate_external](https://www.hdfgroup.org/HDF5/doc/RM/RM_H5L.html#Link-CreateExternal)`.
+with path `target_filename`.
+
+# See also
+[`API.h5l_create_external`](@ref)
 """
 function create_external(
     source::Union{File,Group},

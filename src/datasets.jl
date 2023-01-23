@@ -33,11 +33,9 @@ There are many keyword properties that can be set. Below are a few select keywor
 
 Additionally, the initial create, transfer, and access properties can be provided as a keyword:
 * `dcpl` - [`DatasetCreateProperties`](@ref)
-* `dxpl` - [`HDF5.DatasetTransferProperties`](@ref)
+* `dxpl` - [`DatasetTransferProperties`](@ref)
 * `dapl` - [`DatasetAccessProperties`](@ref)
 
-See also
-* [`H5P`](@ref H5P)
 """
 function create_dataset(
     parent::Union{File,Group},
@@ -366,16 +364,14 @@ end
 """
     create_external_dataset(parent, name, filepath, dtype, dspace, offset = 0)
 
-Create a external dataset with data in an external file.
+Create an external dataset with data in an external file.
 * `parent` - File or Group
 * `name` - Name of the Dataset
 * `filepath` - File path to where the data is tored
 * `dtype` - Datatype, Type, or value where `datatype` is applicable
 * `offset` - Offset, in bytes, from the beginning of the file to the location in the file where the data starts.
 
-Use `API.h5p_set_external` to link to multiple segments.
-
-See also [`API.h5p_set_external`](@ref)
+See also [`API.h5p_set_external`](@ref) to link to multiple segments.
 """
 function create_external_dataset(
     parent::Union{File,Group},
