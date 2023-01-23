@@ -15,6 +15,10 @@ Base.remove_linenums!(exprs)
 
 # Definitions which are not automatically generated, but should still be documented as
 # part of the raw low-level API:
+append!(bound_api["H5O"], [
+    # defined in src/api/helpers.jl
+    "h5o_get_info1",
+])
 append!(bound_api["H5P"], [
     # defined in src/api/helpers.jl
     "h5p_get_class_name",

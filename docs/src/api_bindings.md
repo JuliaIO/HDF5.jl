@@ -344,6 +344,7 @@ h5l_move
 - [`h5o_get_comment`](@ref h5o_get_comment)
 - [`h5o_get_comment_by_name`](@ref h5o_get_comment_by_name)
 - [`h5o_get_info`](@ref h5o_get_info)
+- [`h5o_get_info1`](@ref h5o_get_info1)
 - [`h5o_get_info_by_idx`](@ref h5o_get_info_by_idx)
 - [`h5o_get_info_by_name`](@ref h5o_get_info_by_name)
 - [`h5o_get_native_info`](@ref h5o_get_native_info)
@@ -374,6 +375,7 @@ h5o_flush
 h5o_get_comment
 h5o_get_comment_by_name
 h5o_get_info
+h5o_get_info1
 h5o_get_info_by_idx
 h5o_get_info_by_name
 h5o_get_native_info

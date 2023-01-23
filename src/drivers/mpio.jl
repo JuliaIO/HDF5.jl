@@ -1,5 +1,6 @@
 using .MPI
 import Libdl
+import HDF5: h5open
 
 ###
 ### MPIO
@@ -96,15 +97,15 @@ support.
 See the [HDF5 docs](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MPIO)
 for details on the `comm` and `info` arguments.
 """
-function HDF5.h5open(
+function h5open(
     filename::AbstractString,
     mode::AbstractString,
     comm::MPI.Comm,
     info::MPI.Info=MPI.Info();
     pv...
 )
-    HDF5.h5open(filename, mode; driver=MPIO(comm, info), pv...)
+    h5open(filename, mode; driver=MPIO(comm, info), pv...)
 end
 
-HDF5.h5open(filename::AbstractString, comm::MPI.Comm, args...; pv...) =
-    HDF5.h5open(filename, "r", comm, args...; pv...)
+h5open(filename::AbstractString, comm::MPI.Comm, args...; pv...) =
+    h5open(filename, "r", comm, args...; pv...)
