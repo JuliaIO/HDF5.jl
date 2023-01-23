@@ -54,6 +54,11 @@ built with MPI support.
 - `comm` is the communicator over which the file will be opened.
 - `info`/`kwargs` are MPI-IO options, and are passed to `MPI_FILE_OPEN`.
 
+# See also
+
+- [`has_parallel`](@ref)
+- [Parallel HDF5](@ref)
+
 # External links
 
 - $(h5doc("H5P_SET_FAPL_MPIO"))

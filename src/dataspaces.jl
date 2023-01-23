@@ -161,7 +161,8 @@ selecting multiple contiguous blocks.
 - `count`: the number of blocks (can be -1 for an unlimited number of blocks)
 - `block`: the number of elements in each block.
 
-    BlockRange(obj::Union{Integer, OrdinalRange})
+
+    HDF5.BlockRange(obj::Union{Integer, OrdinalRange})
 
 Convert `obj` to a `BlockRange` object.
 
