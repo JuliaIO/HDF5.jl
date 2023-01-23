@@ -13,6 +13,12 @@ so users will not usually be required to construct them manually.
 Not all properties defined by the HDF5 library are currently available in HDF5.jl. If you
 require additional properties, please open an issue or pull request.
 
+## Common functions
+
+```@docs
+setproperties!
+```
+
 ## `Properties` types
 
 ```@docs
