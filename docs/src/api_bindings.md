@@ -22,7 +22,7 @@ documented here.
 
 ---
 
-## [[`H5`](https://portal.hdfgroup.org/display/HDF5/Library) — General Library Functions](@id H5)
+## [[`H5`](https://docs.hdfgroup.org/hdf5/develop/group___h5.html) — General Library Functions](@id H5)
 - [`h5_close`](@ref h5_close)
 - [`h5_dont_atexit`](@ref h5_dont_atexit)
 - [`h5_free_memory`](@ref h5_free_memory)
@@ -44,7 +44,7 @@ h5_set_free_list_limits
 
 ---
 
-## [[`H5A`](https://portal.hdfgroup.org/display/HDF5/Attributes) — Attribute Interface](@id H5A)
+## [[`H5A`](https://docs.hdfgroup.org/hdf5/develop/group___h5_a.html) — Attribute Interface](@id H5A)
 - [`h5a_close`](@ref h5a_close)
 - [`h5a_create`](@ref h5a_create)
 - [`h5a_create_by_name`](@ref h5a_create_by_name)
@@ -88,7 +88,7 @@ h5a_write
 
 ---
 
-## [[`H5D`](https://portal.hdfgroup.org/display/HDF5/Datasets) — Dataset Interface](@id H5D)
+## [[`H5D`](https://docs.hdfgroup.org/hdf5/develop/group___h5_d.html) — Dataset Interface](@id H5D)
 - [`h5d_close`](@ref h5d_close)
 - [`h5d_create`](@ref h5d_create)
 - [`h5d_create_anon`](@ref h5d_create_anon)
@@ -152,7 +152,7 @@ h5d_write_chunk
 
 ---
 
-## [[`H5E`](https://portal.hdfgroup.org/display/HDF5/Error+Handling) — Error Interface](@id H5E)
+## [[`H5E`](https://docs.hdfgroup.org/hdf5/develop/group___h5_e.html) — Error Interface](@id H5E)
 - [`h5e_close_stack`](@ref h5e_close_stack)
 - [`h5e_get_auto`](@ref h5e_get_auto)
 - [`h5e_get_current_stack`](@ref h5e_get_current_stack)
@@ -172,7 +172,7 @@ h5e_walk
 
 ---
 
-## [[`H5F`](https://portal.hdfgroup.org/display/HDF5/Files) — File Interface](@id H5F)
+## [[`H5F`](https://docs.hdfgroup.org/hdf5/develop/group___h5_f.html) — File Interface](@id H5F)
 - [`h5f_clear_elink_file_cache`](@ref h5f_clear_elink_file_cache)
 - [`h5f_close`](@ref h5f_close)
 - [`h5f_create`](@ref h5f_create)
@@ -268,7 +268,7 @@ h5f_unmount
 
 ---
 
-## [[`H5G`](https://portal.hdfgroup.org/display/HDF5/Groups) — Group Interface](@id H5G)
+## [[`H5G`](https://docs.hdfgroup.org/hdf5/develop/group___h5_g.html) — Group Interface](@id H5G)
 - [`h5g_close`](@ref h5g_close)
 - [`h5g_create`](@ref h5g_create)
 - [`h5g_get_create_plist`](@ref h5g_get_create_plist)
@@ -288,7 +288,7 @@ h5g_open
 
 ---
 
-## [[`H5I`](https://portal.hdfgroup.org/display/HDF5/Identifiers) — Identifier Interface](@id H5I)
+## [[`H5I`](https://docs.hdfgroup.org/hdf5/develop/group___h5_i.html) — Identifier Interface](@id H5I)
 - [`h5i_dec_ref`](@ref h5i_dec_ref)
 - [`h5i_get_file_id`](@ref h5i_get_file_id)
 - [`h5i_get_name`](@ref h5i_get_name)
@@ -308,7 +308,7 @@ h5i_is_valid
 
 ---
 
-## [[`H5L`](https://portal.hdfgroup.org/display/HDF5/Links) — Link Interface](@id H5L)
+## [[`H5L`](https://docs.hdfgroup.org/hdf5/develop/group___h5_l.html) — Link Interface](@id H5L)
 - [`h5l_create_external`](@ref h5l_create_external)
 - [`h5l_create_hard`](@ref h5l_create_hard)
 - [`h5l_create_soft`](@ref h5l_create_soft)
@@ -332,7 +332,7 @@ h5l_move
 
 ---
 
-## [[`H5O`](https://portal.hdfgroup.org/display/HDF5/Objects) — Object Interface](@id H5O)
+## [[`H5O`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html) — Object Interface](@id H5O)
 - [`h5o_are_mdc_flushes_disabled`](@ref h5o_are_mdc_flushes_disabled)
 - [`h5o_close`](@ref h5o_close)
 - [`h5o_copy`](@ref h5o_copy)
@@ -398,7 +398,7 @@ h5o_visit_by_name
 
 ---
 
-## [[`H5PL`](https://portal.hdfgroup.org/display/HDF5/Plugins) — Plugin Interface](@id H5PL)
+## [[`H5PL`](https://docs.hdfgroup.org/hdf5/develop/group___h5_p_l.html) — Plugin Interface](@id H5PL)
 - [`h5pl_append`](@ref h5pl_append)
 - [`h5pl_get`](@ref h5pl_get)
 - [`h5pl_get_loading_state`](@ref h5pl_get_loading_state)
@@ -422,7 +422,7 @@ h5pl_size
 
 ---
 
-## [[`H5P`](https://portal.hdfgroup.org/display/HDF5/Property+Lists) — Property Interface](@id H5P)
+## [[`H5P`](https://docs.hdfgroup.org/hdf5/develop/group___h5_p.html) — Property Interface](@id H5P)
 - [`h5p_add_merge_committed_dtype_path`](@ref h5p_add_merge_committed_dtype_path)
 - [`h5p_all_filters_avail`](@ref h5p_all_filters_avail)
 - [`h5p_close`](@ref h5p_close)
@@ -858,7 +858,7 @@ h5p_unregister
 
 ---
 
-## [[`H5R`](https://portal.hdfgroup.org/display/HDF5/References) — Reference Interface](@id H5R)
+## [[`H5R`](https://docs.hdfgroup.org/hdf5/develop/group___h5_r.html) — Reference Interface](@id H5R)
 - [`h5r_create`](@ref h5r_create)
 - [`h5r_dereference`](@ref h5r_dereference)
 - [`h5r_get_obj_type`](@ref h5r_get_obj_type)
@@ -872,7 +872,7 @@ h5r_get_region
 
 ---
 
-## [[`H5S`](https://portal.hdfgroup.org/display/HDF5/Dataspaces) — Dataspace Interface](@id H5S)
+## [[`H5S`](https://docs.hdfgroup.org/hdf5/develop/group___h5_s.html) — Dataspace Interface](@id H5S)
 - [`h5s_close`](@ref h5s_close)
 - [`h5s_combine_select`](@ref h5s_combine_select)
 - [`h5s_copy`](@ref h5s_copy)
@@ -912,7 +912,7 @@ h5s_set_extent_simple
 
 ---
 
-## [[`H5T`](https://portal.hdfgroup.org/display/HDF5/Datatypes) — Datatype Interface](@id H5T)
+## [[`H5T`](https://docs.hdfgroup.org/hdf5/develop/group___h5_t.html) — Datatype Interface](@id H5T)
 - [`h5t_array_create`](@ref h5t_array_create)
 - [`h5t_close`](@ref h5t_close)
 - [`h5t_commit`](@ref h5t_commit)
@@ -1004,7 +1004,7 @@ h5t_vlen_create
 
 ---
 
-## [[`H5Z`](https://portal.hdfgroup.org/display/HDF5/Filters) — Filter Interface](@id H5Z)
+## [[`H5Z`](https://docs.hdfgroup.org/hdf5/develop/group___h5_z.html) — Filter Interface](@id H5Z)
 - [`h5z_filter_avail`](@ref h5z_filter_avail)
 - [`h5z_get_filter_info`](@ref h5z_get_filter_info)
 - [`h5z_register`](@ref h5z_register)
@@ -1018,6 +1018,7 @@ h5z_unregister
 
 ---
 
+<<<<<<< HEAD
 ## [[`H5FD`](https://portal.hdfgroup.org/display/HDF5/File+Drivers) — File Drivers](@id H5FD)
 - [`h5fd_core_init`](@ref h5fd_core_init)
 - [`h5fd_family_init`](@ref h5fd_family_init)
@@ -1039,6 +1040,9 @@ h5fd_stdio_init
 ---
 
 ## [[`H5DO`](https://portal.hdfgroup.org/display/HDF5/Optimizations) — Optimized Functions Interface](@id H5DO)
+=======
+## [[`H5DO`](https://docs.hdfgroup.org/hdf5/develop/group___h5_d_o.html) — Optimized Functions Interface](@id H5DO)
+>>>>>>> 6eafbd2 (Use new URLs in docstrings)
 - [`h5do_append`](@ref h5do_append)
 - [`h5do_write_chunk`](@ref h5do_write_chunk)
 ```@docs
@@ -1048,7 +1052,7 @@ h5do_write_chunk
 
 ---
 
-## [[`H5DS`](https://portal.hdfgroup.org/display/HDF5/Dimension+Scales) — Dimension Scale Interface](@id H5DS)
+## [[`H5DS`](https://docs.hdfgroup.org/hdf5/develop/group___h5_d_s.html) — Dimension Scale Interface](@id H5DS)
 - [`h5ds_attach_scale`](@ref h5ds_attach_scale)
 - [`h5ds_detach_scale`](@ref h5ds_detach_scale)
 - [`h5ds_get_label`](@ref h5ds_get_label)
@@ -1072,7 +1076,7 @@ h5ds_set_scale
 
 ---
 
-## [[`H5LT`](https://portal.hdfgroup.org/display/HDF5/Lite) — Lite Interface](@id H5LT)
+## [[`H5LT`](https://docs.hdfgroup.org/hdf5/develop/group___h5_l_t.html) — Lite Interface](@id H5LT)
 - [`h5lt_dtype_to_text`](@ref h5lt_dtype_to_text)
 ```@docs
 h5lt_dtype_to_text
@@ -1080,7 +1084,7 @@ h5lt_dtype_to_text
 
 ---
 
-## [[`H5TB`](https://portal.hdfgroup.org/display/HDF5/Tables) — Table Interface](@id H5TB)
+## [[`H5TB`](https://docs.hdfgroup.org/hdf5/develop/group___h5_t_b.html) — Table Interface](@id H5TB)
 - [`h5tb_append_records`](@ref h5tb_append_records)
 - [`h5tb_get_field_info`](@ref h5tb_get_field_info)
 - [`h5tb_get_table_info`](@ref h5tb_get_table_info)
