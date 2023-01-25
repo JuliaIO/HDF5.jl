@@ -1,6 +1,14 @@
 # Generate ../src/api/functions.jl
 # Run `julia --project=.. gen_wrappers.jl`` to execute this script
 
+const group_url_dict = Dict{String,String}(
+    [func_urls[1] => func_urls[2]
+     for func_urls
+     in split.(readlines("DoxygenTagParser/hdf5_group_urls.tsv"))
+    ]
+)
+
+
 include(joinpath(@__DIR__, "bind_generator.jl"))
 
 # Read in the API definition macros from the definitions file
@@ -122,7 +130,7 @@ for (mod, desc, urltail) in (
     apidocs *= """
         ---
 
-        ## [[`$mod`](https://portal.hdfgroup.org/display/HDF5/$urltail) — $desc](@id $mod)
+        ## [[`$mod`]($(group_url_dict[mod])) — $desc](@id $mod)
         $index
         ```@docs
         $funcs

@@ -4,6 +4,13 @@ using Base.Meta: isexpr, quot
 # of the translations explicitly.
 const bind_exceptions = Dict{Symbol,Symbol}()
 
+# Load URLs for HDF Group Doxygen
+const urldict = Dict{String,String}(
+    [func_urls[1] => func_urls[2]
+     for func_urls
+     in split.(readlines("DoxygenTagParser/hdf5_func_urls.tsv"))
+    ]
+)
 # have numbers at the end
 bind_exceptions[:h5p_set_fletcher32] = :H5Pset_fletcher32
 bind_exceptions[:h5p_set_fapl_sec2]  = :H5Pset_fapl_sec2
@@ -228,11 +235,11 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
         docstr *=
             "\n\nThis function is exposed in `libhdf5` as the macro `H5FD_$(uppercase(drivername))`. " *
             "See `libhdf5` documentation for [`H5Pget_driver`]" *
-            "(https://portal.hdfgroup.org/display/HDF5/H5P_GET_DRIVER).\n"
+            "(" * urldict["H5Pget_driver"] *  ").\n"
     else
         docstr *=
             "\n\nSee `libhdf5` documentation for [`$cfuncname`]" *
-            "(https://portal.hdfgroup.org/display/HDF5/$(uppercase(string(funcsig.args[1])))).\n"
+            "(" * urldict[cfuncname] * ").\n"
     end
     # Then assemble the pieces. Doing it through explicit Expr() objects
     # avoids inserting the line number nodes for the macro --- the call site
