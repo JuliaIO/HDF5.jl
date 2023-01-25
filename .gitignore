@@ -3,4 +3,5 @@
 *.jl.cov
 *.jl.mem
 /docs/build/
+/docs/hdf5.tag
 Manifest.toml

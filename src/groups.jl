@@ -10,6 +10,11 @@ group, every object must be a member of at least one group.
 
 - [`create_group`](@ref)
 - [`open_group`](@ref)
+
+# External links
+
+- [](@doxygen /tagfile/compound[title='The HDF5 Data Model and File Structure']/docanchor[@title='Group'])
+
 """
 Group
 

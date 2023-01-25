@@ -1,5 +1,7 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+EzXML = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
 H5Zblosc = "c8ec2601-a99c-407f-b158-e79c03c2f5f7"
 H5Zbzip2 = "094576f2-1e46-4c84-8e32-c46c042eaaa2"
 H5Zlz4 = "eb20ec05-5464-47b5-ba41-098e3c1068a3"

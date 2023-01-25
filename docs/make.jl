@@ -6,6 +6,8 @@ using H5Zlz4
 using H5Zzstd
 using MPI  # needed to generate docs for parallel HDF5 API
 
+include("doxygen.jl")
+
 # Used in index.md to filter the autodocs list
 not_low_level_api(m::Method) = !endswith(String(m.file), "src/api.jl")
 not_low_level_api(f::Function) = all(not_low_level_api, methods(f))
