@@ -130,7 +130,7 @@ for (mod, desc, urltail) in (
     apidocs *= """
         ---
 
-        ## [[`$mod`]($(group_url_dict[mod])) — $desc](@id $mod)
+        ## [[`$mod`]($(get(group_url_dict, mod, "https://docs.hdfgroup.org/hdf5/develop/"))) — $desc](@id $mod)
         $index
         ```@docs
         $funcs

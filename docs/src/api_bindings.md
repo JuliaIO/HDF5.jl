@@ -476,10 +476,7 @@ h5pl_size
 - [`h5p_get_fapl_core`](@ref h5p_get_fapl_core)
 - [`h5p_get_fapl_family`](@ref h5p_get_fapl_family)
 - [`h5p_get_fapl_hdfs`](@ref h5p_get_fapl_hdfs)
-<<<<<<< HEAD
 - [`h5p_get_fapl_mpio`](@ref h5p_get_fapl_mpio)
-=======
->>>>>>> 77d4e53 (Grab api_defs.jl from master)
 - [`h5p_get_fapl_multi`](@ref h5p_get_fapl_multi)
 - [`h5p_get_fapl_ros3`](@ref h5p_get_fapl_ros3)
 - [`h5p_get_fapl_splitter`](@ref h5p_get_fapl_splitter)
@@ -581,10 +578,7 @@ h5pl_size
 - [`h5p_set_fapl_family`](@ref h5p_set_fapl_family)
 - [`h5p_set_fapl_hdfs`](@ref h5p_set_fapl_hdfs)
 - [`h5p_set_fapl_log`](@ref h5p_set_fapl_log)
-<<<<<<< HEAD
 - [`h5p_set_fapl_mpio`](@ref h5p_set_fapl_mpio)
-=======
->>>>>>> 77d4e53 (Grab api_defs.jl from master)
 - [`h5p_set_fapl_multi`](@ref h5p_set_fapl_multi)
 - [`h5p_set_fapl_ros3`](@ref h5p_set_fapl_ros3)
 - [`h5p_set_fapl_sec2`](@ref h5p_set_fapl_sec2)
@@ -698,10 +692,7 @@ h5p_get_family_offset
 h5p_get_fapl_core
 h5p_get_fapl_family
 h5p_get_fapl_hdfs
-<<<<<<< HEAD
 h5p_get_fapl_mpio
-=======
->>>>>>> 77d4e53 (Grab api_defs.jl from master)
 h5p_get_fapl_multi
 h5p_get_fapl_ros3
 h5p_get_fapl_splitter
@@ -803,10 +794,7 @@ h5p_set_fapl_core
 h5p_set_fapl_family
 h5p_set_fapl_hdfs
 h5p_set_fapl_log
-<<<<<<< HEAD
 h5p_set_fapl_mpio
-=======
->>>>>>> 77d4e53 (Grab api_defs.jl from master)
 h5p_set_fapl_multi
 h5p_set_fapl_ros3
 h5p_set_fapl_sec2
@@ -1030,8 +1018,7 @@ h5z_unregister
 
 ---
 
-<<<<<<< HEAD
-## [[`H5FD`](https://portal.hdfgroup.org/display/HDF5/File+Drivers) — File Drivers](@id H5FD)
+## [[`H5FD`](https://docs.hdfgroup.org/hdf5/develop/) — File Drivers](@id H5FD)
 - [`h5fd_core_init`](@ref h5fd_core_init)
 - [`h5fd_family_init`](@ref h5fd_family_init)
 - [`h5fd_log_init`](@ref h5fd_log_init)
@@ -1051,10 +1038,7 @@ h5fd_stdio_init
 
 ---
 
-## [[`H5DO`](https://portal.hdfgroup.org/display/HDF5/Optimizations) — Optimized Functions Interface](@id H5DO)
-=======
 ## [[`H5DO`](https://docs.hdfgroup.org/hdf5/develop/group___h5_d_o.html) — Optimized Functions Interface](@id H5DO)
->>>>>>> 6eafbd2 (Use new URLs in docstrings)
 - [`h5do_append`](@ref h5do_append)
 - [`h5do_write_chunk`](@ref h5do_write_chunk)
 ```@docs
