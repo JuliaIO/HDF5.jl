@@ -240,7 +240,7 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
         docstr *=
             "\n\nSee `libhdf5` documentation for [`$cfuncname`]" *
             "(" *
-            get(urldict, string(cfuncname), "https://docs.hdfgroup.org/hdf5/develop/") *
+            get(urldict, string(cfuncname), "https://docs.hdfgroup.org/hdf5/v1_14/") *
             ").\n"
     end
     # Then assemble the pieces. Doing it through explicit Expr() objects

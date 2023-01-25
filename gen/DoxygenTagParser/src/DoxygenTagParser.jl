@@ -65,6 +65,9 @@ function parse_tag_file(hdf5_tag_url=HDF5_TAG_URL)
                             func_arglist = content(func_child)
                         end
                     end
+                    if func_name == "H5Pget_chunk"
+                        println(compound_element)
+                    end
                     funcdict[func_name] = HDF5FunctionInfo(
                         func_name, func_anchorfile, func_anchor, func_arglist
                     )
@@ -72,9 +75,15 @@ function parse_tag_file(hdf5_tag_url=HDF5_TAG_URL)
                     group_name = content(compound_child)
                 elseif name(compound_child) == "title"
                     group_title = content(compound_child)
+                    if startswith(group_title, "Java")
+                        break
+                    end
                 elseif name(compound_child) == "filename"
                     group_filename = content(compound_child)
                 end
+            end
+            if startswith(group_title, "Java")
+                continue
             end
             groupdict[group_name] = HDF5GroupInfo(group_name, group_title, group_filename)
         end
@@ -92,7 +101,7 @@ function hdf5_func_url(info::HDF5FunctionInfo; prefix=DEFAULT_URL_PREFIX)
 end
 
 function hdf5_group_url(
-    info::HDF5GroupInfo; prefix="https://docs.hdfgroup.org/hdf5/develop/"
+    info::HDF5GroupInfo; prefix="https://docs.hdfgroup.org/hdf5/v1_14/"
 )
     return prefix * info.filename
 end
