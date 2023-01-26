@@ -7,6 +7,7 @@ const group_url_dict = Dict{String,String}(
      in split.(readlines("DoxygenTagParser/hdf5_group_urls.tsv"))
     ]
 )
+group_url_dict["H5FD"] = group_url_dict["VFL"]
 
 
 include(joinpath(@__DIR__, "bind_generator.jl"))

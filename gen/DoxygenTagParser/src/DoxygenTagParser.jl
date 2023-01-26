@@ -42,7 +42,7 @@ function parse_tag_file(hdf5_tag_url = HDF5_TAG_URL)
         if compound_kind == "class"
             # Java or C++ methods
             continue
-        elseif compound_kind == "group"
+        elseif compound_kind == "group" || compound_kind == "page"
             group_name = ""
             group_title = ""
             group_filename = ""
