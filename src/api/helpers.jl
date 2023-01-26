@@ -184,9 +184,7 @@ end
     )::H5_iter_t
         func, err_ref = data
         try
-            retval = func(offset, filter_mask, addr, size)
-            isnothing(retval) && return H5_ITER_CONT
-            return H5_iter_t(retval)
+            return H5_iter_t(func(offset, filter_mask, addr, size))
         catch err
             err_ref[] = err
             return H5_ITER_ERROR

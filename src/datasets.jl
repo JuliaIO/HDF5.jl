@@ -779,7 +779,7 @@ function get_all_chunk_info(dataset, dxpl=API.H5P_DEFAULT)
             info,
             ChunkInfo{N}(unsafe_load(Ptr{NTuple{N,Int}}(offset)), filter_mask, addr, size)
         )
-        return nothing
+        return HDF5.API.H5_ITER_CONT
     end
     return info
 end
