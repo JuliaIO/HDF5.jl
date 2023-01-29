@@ -212,13 +212,22 @@ using Test
 
     # Test chunk info retrieval method performance
     h5open(fn, "w") do f
-        d = create_dataset(f, "dataset", datatype(UInt8), dataspace(256, 256); chunk = (16, 16), alloc_time = :early)
-        index_time = @elapsed infos_by_index = HDF5._get_chunk_info_all_by_index(d)
-        @test length(infos_by_index) == 256
-        if v"1.12.3" ≤ HDF5.API._libhdf5_build_ver
-            iter_time = @elapsed infos_by_iter = HDF5._get_chunk_info_all_by_iter(d)
-            @test infos_by_iter == infos_by_index
-            @test iter_time < index_time
+        d = create_dataset(
+            f,
+            "dataset",
+            datatype(UInt8),
+            dataspace(256, 256);
+            chunk=(16, 16),
+            alloc_time=:early
+        )
+        if v"1.10.5" ≤ HDF5.API._libhdf5_build_ver
+            index_time = @elapsed infos_by_index = HDF5._get_chunk_info_all_by_index(d)
+            @test length(infos_by_index) == 256
+            if v"1.12.3" ≤ HDF5.API._libhdf5_build_ver
+                iter_time = @elapsed infos_by_iter = HDF5._get_chunk_info_all_by_iter(d)
+                @test infos_by_iter == infos_by_index
+                @test iter_time < index_time
+            end
         end
     end
     rm(fn)

@@ -814,10 +814,7 @@ through the chunks once.
     sizehint!(info, num_chunks)
     API.h5d_chunk_iter(dataset, dxpl) do offset, filter_mask, addr, size
         _offset = reverse(unsafe_load(Ptr{NTuple{N,Int}}(offset)))
-        push!(
-            info,
-            ChunkInfo{N}(_offset, filter_mask, addr, size)
-        )
+        push!(info, ChunkInfo{N}(_offset, filter_mask, addr, size))
         return HDF5.API.H5_ITER_CONT
     end
     return info
@@ -837,16 +834,13 @@ iterates through the B-tree structure.
     info = ChunkInfo{N}[]
     num_chunks = get_num_chunks(dataset)
     sizehint!(info, num_chunks)
-    for chunk_index in 0:num_chunks-1
+    for chunk_index in 0:(num_chunks - 1)
         _info_nt = HDF5.API.h5d_get_chunk_info(dataset, chunk_index)
         _offset = (reverse(_info_nt[:offset])...,)
         filter_mask = _info_nt[:filter_mask]
         addr = _info_nt[:addr]
         size = _info_nt[:size]
-        push!(
-            info,
-            ChunkInfo{N}(_offset, filter_mask, addr, size)
-        )
+        push!(info, ChunkInfo{N}(_offset, filter_mask, addr, size))
     end
     return info
 end
