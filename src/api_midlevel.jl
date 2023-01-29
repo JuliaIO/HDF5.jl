@@ -148,7 +148,7 @@ end
 
 Helper method to read chunks via 0-based integer `index`.
 
-Argument `buf` is optional and defaults to a `Vector{UInt8}` of length determined by `HDF5.h5d_get_chunk_info`.
+Argument `buf` is optional and defaults to a `Vector{UInt8}` of length determined by `HDF5.API.h5d_get_chunk_info`.
 Argument `dxpl_id` can be supplied a keyword and defaults to `HDF5.API.H5P_DEFAULT`.
 Argument `filters` can be retrieved by supplying a `Ref{UInt32}` value via a keyword argument.
 

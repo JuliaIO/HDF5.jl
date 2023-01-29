@@ -3,8 +3,12 @@
 # Get the dataspace of a dataset
 dataspace(dset::Dataset) = Dataspace(API.h5d_get_space(checkvalid(dset)))
 
-# Open Dataset
+"""
+    open_dataset(parent::Union{File, Group}, name::AbstractString, [dapl, dxpl])
 
+Open a dataset and return a [`HDF5.Dataset`](@ref) handle. Alternatively , just use index
+a file or group with `name`.
+"""
 open_dataset(
     parent::Union{File,Group},
     name::AbstractString,
@@ -112,6 +116,14 @@ create_dataset(
 # Get the datatype of a dataset
 datatype(dset::Dataset) = Datatype(API.h5d_get_type(checkvalid(dset)), file(dset))
 
+"""
+    read_dataset(parent::Union{File,Group}, name::AbstractString)
+
+Read a dataset with named `name` from `parent`. This will typically return an array.
+The dataset will be opened, read, and closed.
+
+See also [`HDF5.open_dataset`](@ref), [`Base.read`](@ref)
+"""
 function read_dataset(parent::Union{File,Group}, name::AbstractString)
     local ret
     obj = open_dataset(parent, name)
@@ -275,6 +287,14 @@ function create_dataset(
 end
 
 # Create and write, closing the objects upon exit
+"""
+    write_dataset(parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data; pv...)
+
+Create and write a dataset with `data`. Keywords are forwarded to [`create_dataset`](@ref).
+Providing `nothing` as the name will create an anonymous dataset.
+
+See also [`create_dataset`](@ref)
+"""
 function write_dataset(
     parent::Union{File,Group}, name::Union{AbstractString,Nothing}, data; pv...
 )
@@ -741,8 +761,9 @@ struct ChunkInfo{N}
     addr::API.haddr_t
     size::API.hsize_t
 end
-# Base.show(io::IO, ::MIME"text/plain", ci::ChunkInfo) = print(io, @sprintf("%10s", ci.offset), "\t", ci.filter_mask, "\t", ci.addr, "\t", ci.size)
 function Base.show(io::IO, ::MIME"text/plain", info::Vector{<:ChunkInfo})
+    print(typeof(info))
+    println(" with $(length(info)) elements:")
     println("Offset    \tFilter Mask                     \tAddress\tSize")
     println("----------\t--------------------------------\t-------\t----")
     for ci in info
@@ -760,26 +781,72 @@ function Base.show(io::IO, ::MIME"text/plain", info::Vector{<:ChunkInfo})
 end
 
 """
-    HDF5.get_all_chunk_info(dataset, [dxpl])
+    HDF5.get_chunk_info_all(dataset, [dxpl])
 
 Obtain information on all the chunks in a dataset. Returns a
 `Vector{ChunkInfo{N}}`.  The fields of `ChunkInfo{N}` are
-* offset - `NTuple{N, Int}` indicating the offset of the chunk in terms of elements
+* offset - `NTuple{N, Int}` indicating the offset of the chunk in terms of elements, reversed to F-order
 * filter_mask - Cuint, 32-bit flags indicating whether filters have been applied to the cunk
 * addr - haddr_t, byte-offset of the chunk in the file
 * size - hsize_t, size of the chunk in bytes
 """
-function get_all_chunk_info(dataset, dxpl=API.H5P_DEFAULT)
+function get_chunk_info_all(dataset, dxpl=API.H5P_DEFAULT)
+    @static if isdefined(HDF5.API, :h5d_chunk_iter)
+        return _get_chunk_info_all_by_iter(dataset, dxpl)
+    else
+        return _get_chunk_info_all_by_index(dataset, dxpl)
+    end
+end
+
+"""
+    _get_chunk_info_all_by_iter(dataset, [dxpl])
+
+Implementation of [`get_chunk_info_all`](@ref) via [`HDF5.API.h5d_chunk_iter`](@ref).
+
+We expect this will be faster, O(N), than using `h5d_get_chunk_info` since this allows us to iterate
+through the chunks once.
+"""
+@inline function _get_chunk_info_all_by_iter(dataset, dxpl=API.H5P_DEFAULT)
     ds = dataspace(dataset)
     N = ndims(ds)
     info = ChunkInfo{N}[]
-    sizehint!(info, get_num_chunks(dataset))
+    num_chunks = get_num_chunks(dataset)
+    sizehint!(info, num_chunks)
     API.h5d_chunk_iter(dataset, dxpl) do offset, filter_mask, addr, size
+        _offset = reverse(unsafe_load(Ptr{NTuple{N,Int}}(offset)))
         push!(
             info,
-            ChunkInfo{N}(unsafe_load(Ptr{NTuple{N,Int}}(offset)), filter_mask, addr, size)
+            ChunkInfo{N}(_offset, filter_mask, addr, size)
         )
         return HDF5.API.H5_ITER_CONT
+    end
+    return info
+end
+
+"""
+    _get_chunk_info_all_by_index(dataset, [dxpl])
+
+Implementation of [`get_chunk_info_all`](@ref) via [`HDF5.API.h5d_get_chunk_info`](@ref).
+
+We expect this will be slower, O(N^2), than using `h5d_chunk_iter` since each call to `h5d_get_chunk_info`
+iterates through the B-tree structure.
+"""
+@inline function _get_chunk_info_all_by_index(dataset, dxpl=API.H5P_DEFAULT)
+    ds = dataspace(dataset)
+    N = ndims(ds)
+    info = ChunkInfo{N}[]
+    num_chunks = get_num_chunks(dataset)
+    sizehint!(info, num_chunks)
+    for chunk_index in 0:num_chunks-1
+        _info_nt = HDF5.API.h5d_get_chunk_info(dataset, chunk_index)
+        _offset = (reverse(_info_nt[:offset])...,)
+        filter_mask = _info_nt[:filter_mask]
+        addr = _info_nt[:addr]
+        size = _info_nt[:size]
+        push!(
+            info,
+            ChunkInfo{N}(_offset, filter_mask, addr, size)
+        )
     end
     return info
 end

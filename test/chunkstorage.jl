@@ -68,12 +68,12 @@ using Test
         @test HDF5.get_chunk_index(d, (3, 5)) == 5
         # Test chunk iter
         if v"1.12.3" ≤ HDF5.API._libhdf5_build_ver
-            infos = HDF5.get_all_chunk_info(d)
+            infos = HDF5.get_chunk_info_all(d)
             offsets = [info.offset for info in infos]
             addrs = [info.addr for info in infos]
             filter_masks = [info.filter_mask for info in infos]
             sizes = [info.size for info in infos]
-            @test isempty(setdiff(offsets, [(0, 0), (0, 2), (2, 0), (2, 2)]))
+            @test isempty(setdiff(offsets, [(0, 0), (2, 0), (0, 2), (2, 2)]))
             @test length(unique(addrs)) == 4
             @test only(unique(filter_masks)) === UInt32(0)
             @test only(unique(sizes)) == 4 * sizeof(Int)
@@ -210,5 +210,16 @@ using Test
         f["dataset"][:, :]
     end == reshape(1:20, 4, 5)
 
+    # Test chunk info retrieval method performance
+    h5open(fn, "w") do f
+        d = create_dataset(f, "dataset", datatype(UInt8), dataspace(256, 256); chunk = (16, 16), alloc_time = :early)
+        index_time = @elapsed infos_by_index = HDF5._get_chunk_info_all_by_index(d)
+        @test length(infos_by_index) == 256
+        if v"1.12.3" ≤ HDF5.API._libhdf5_build_ver
+            iter_time = @elapsed infos_by_iter = HDF5._get_chunk_info_all_by_iter(d)
+            @test infos_by_iter == infos_by_index
+            @test iter_time < index_time
+        end
+    end
     rm(fn)
 end # testset "Raw Chunk I/O"

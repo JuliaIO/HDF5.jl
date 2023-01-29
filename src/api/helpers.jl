@@ -174,7 +174,8 @@ end
     end
 end
 
-@static if v"1.12.3" ≤ _libhdf5_build_ver
+@static if v"1.12.3" ≤ _libhdf5_build_ver || (_libhdf5_build_ver.minor == 10 && _libhdf5_build_ver.patch >= 10)
+    # H5Dchunk_iter is first available in 1.10.10, 1.12.3, and 1.14.0 in the 1.10, 1.12, and 1.14 minor version series, respectively
     function h5d_chunk_iter_helper(
         offset::Ptr{hsize_t},
         filter_mask::Cuint,
@@ -184,7 +185,7 @@ end
     )::H5_iter_t
         func, err_ref = data
         try
-            return H5_iter_t(func(offset, filter_mask, addr, size))
+            return convert(H5_iter_t, func(offset, filter_mask, addr, size))
         catch err
             err_ref[] = err
             return H5_ITER_ERROR

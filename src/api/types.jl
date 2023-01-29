@@ -77,6 +77,7 @@ end
     H5_ITER_ERROR = -1
     H5_ITER_STOP  = 1
 end
+Base.convert(::Type{H5_iter_t}, x::Integer) = H5_iter_t(x)
 
 const H5O_iterate1_t = Ptr{Cvoid}
 const H5O_iterate2_t = Ptr{Cvoid}

@@ -12,14 +12,19 @@ Base.copyto!
 Base.similar
 create_external_dataset
 get_datasets
+open_dataset
+write_dataset
+read_dataset
 ```
 
 ## Chunks
 
 ```@docs
+<<<<<<< HEAD
 do_read_chunk
 do_write_chunk
 get_chunk_index
+get_chunk_info_all
 get_chunk_length
 get_chunk_offset
 get_num_chunks

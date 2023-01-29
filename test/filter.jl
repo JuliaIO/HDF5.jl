@@ -155,7 +155,7 @@ using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenab
                 end
 
                 if v"1.12.3" ≤ HDF5.API._libhdf5_build_ver
-                    infos = HDF5.get_all_chunk_info(ds)
+                    infos = HDF5.get_chunk_info_all(ds)
                     filter_masks = [info.filter_mask for info in infos]
                     @test only(unique(filter_masks)) === UInt32(0)
                 end
