@@ -126,6 +126,7 @@ function h5a_iterate(::Type{Channel}, loc_id, idx_type, order, idx=0; kwargs...)
             # release API lock
             unlock(liblock)
             try
+                isopen(ch) || return true
                 put!(ch, (loc, name, info))
             finally
                 # restore API lock
