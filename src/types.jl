@@ -63,7 +63,7 @@ Base.cconvert(::Type{API.hid_t}, g::Group) = g
 Base.unsafe_convert(::Type{API.hid_t}, g::Group) = g.id
 
 """
-    Dataset
+    HDF5.Dataset
 
 A mutable wrapper for a HDF5 Dataset `HDF5.API.hid_t`.
 """
