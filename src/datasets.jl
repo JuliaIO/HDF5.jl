@@ -813,7 +813,7 @@ through the chunks once.
     num_chunks = get_num_chunks(dataset)
     sizehint!(info, num_chunks)
     API.h5d_chunk_iter(dataset, dxpl) do offset, filter_mask, addr, size
-        _offset = reverse(unsafe_load(Ptr{NTuple{N,Int}}(offset)))
+        _offset = reverse(unsafe_load(Ptr{NTuple{N,API.hsize_t}}(offset)))
         push!(info, ChunkInfo{N}(_offset, filter_mask, addr, size))
         return HDF5.API.H5_ITER_CONT
     end
