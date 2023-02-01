@@ -174,6 +174,17 @@ end
     end
 end
 
+"""
+    h5d_chunk_iter(f, dataset, [dxpl_id=H5P_DEFAULT])
+
+Call `f(offset::Ptr{hsize_t}, filter_mask::Cuint, addr::haddr_t, size::hsize_t)` for each chunk.
+`dataset` maybe a `HDF5.Dataset` or a dataset id.
+`dxpl_id` is the the dataset transfer property list and is optional.
+
+Available only for HDF5 1.10.x series for 1.10.9 and greater or for version HDF5 1.12.3 or greater.
+"""
+h5d_chunk_iter() = nothing
+
 @static if v"1.12.3" ≤ _libhdf5_build_ver ||
     (_libhdf5_build_ver.minor == 10 && _libhdf5_build_ver.patch >= 10)
     # H5Dchunk_iter is first available in 1.10.10, 1.12.3, and 1.14.0 in the 1.10, 1.12, and 1.14 minor version series, respectively
