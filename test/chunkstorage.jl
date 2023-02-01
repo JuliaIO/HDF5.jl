@@ -223,6 +223,10 @@ using Test
         if v"1.10.5" ≤ HDF5.API._libhdf5_build_ver
             index_time = @elapsed infos_by_index = HDF5._get_chunk_info_all_by_index(d)
             @test length(infos_by_index) == 256
+            iob = IOBuffer()
+            show(iob, MIME"text/plain"(), infos_by_index)
+            seekstart(iob)
+            @test length(readlines(iob)) == 259
             if v"1.12.3" ≤ HDF5.API._libhdf5_build_ver
                 iter_time = @elapsed infos_by_iter = HDF5._get_chunk_info_all_by_iter(d)
                 @test infos_by_iter == infos_by_index

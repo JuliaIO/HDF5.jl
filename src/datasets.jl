@@ -762,10 +762,10 @@ struct ChunkInfo{N}
     size::API.hsize_t
 end
 function Base.show(io::IO, ::MIME"text/plain", info::Vector{<:ChunkInfo})
-    print(typeof(info))
-    println(" with $(length(info)) elements:")
-    println("Offset    \tFilter Mask                     \tAddress\tSize")
-    println("----------\t--------------------------------\t-------\t----")
+    print(io, typeof(info))
+    println(io, " with $(length(info)) elements:")
+    println(io, "Offset    \tFilter Mask                     \tAddress\tSize")
+    println(io, "----------\t--------------------------------\t-------\t----")
     for ci in info
         println(
             io,
@@ -791,33 +791,35 @@ Obtain information on all the chunks in a dataset. Returns a
 * size - hsize_t, size of the chunk in bytes
 """
 function get_chunk_info_all(dataset, dxpl=API.H5P_DEFAULT)
-    @static if isdefined(HDF5.API, :h5d_chunk_iter)
+    @static if hasmethod(API.h5d_chunk_iter, Tuple{API.hid_t})
         return _get_chunk_info_all_by_iter(dataset, dxpl)
     else
         return _get_chunk_info_all_by_index(dataset, dxpl)
     end
 end
 
-"""
-    _get_chunk_info_all_by_iter(dataset, [dxpl])
+@static if hasmethod(API.h5d_chunk_iter, Tuple{API.hid_t})
+    """
+        _get_chunk_info_all_by_iter(dataset, [dxpl])
 
-Implementation of [`get_chunk_info_all`](@ref) via [`HDF5.API.h5d_chunk_iter`](@ref).
+    Implementation of [`get_chunk_info_all`](@ref) via [`HDF5.API.h5d_chunk_iter`](@ref).
 
-We expect this will be faster, O(N), than using `h5d_get_chunk_info` since this allows us to iterate
-through the chunks once.
-"""
-@inline function _get_chunk_info_all_by_iter(dataset, dxpl=API.H5P_DEFAULT)
-    ds = dataspace(dataset)
-    N = ndims(ds)
-    info = ChunkInfo{N}[]
-    num_chunks = get_num_chunks(dataset)
-    sizehint!(info, num_chunks)
-    API.h5d_chunk_iter(dataset, dxpl) do offset, filter_mask, addr, size
-        _offset = reverse(unsafe_load(Ptr{NTuple{N,Int}}(offset)))
-        push!(info, ChunkInfo{N}(_offset, filter_mask, addr, size))
-        return HDF5.API.H5_ITER_CONT
+    We expect this will be faster, O(N), than using `h5d_get_chunk_info` since this allows us to iterate
+    through the chunks once.
+    """
+    @inline function _get_chunk_info_all_by_iter(dataset, dxpl=API.H5P_DEFAULT)
+        ds = dataspace(dataset)
+        N = ndims(ds)
+        info = ChunkInfo{N}[]
+        num_chunks = get_num_chunks(dataset)
+        sizehint!(info, num_chunks)
+        API.h5d_chunk_iter(dataset, dxpl) do offset, filter_mask, addr, size
+            _offset = reverse(unsafe_load(Ptr{NTuple{N,Int}}(offset)))
+            push!(info, ChunkInfo{N}(_offset, filter_mask, addr, size))
+            return HDF5.API.H5_ITER_CONT
+        end
+        return info
     end
-    return info
 end
 
 """
