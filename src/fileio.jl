@@ -1,5 +1,4 @@
 import .FileIO
-import .OrderedCollections: OrderedDict
 
 function loadtodict!(d::AbstractDict, g::Union{File,Group}, prefix::String="")
     for k in keys(g)
@@ -13,7 +12,13 @@ function loadtodict!(d::AbstractDict, g::Union{File,Group}, prefix::String="")
 end
 
 _infer_track_order(track_order::Union{Nothing,Bool}, dict::AbstractDict) =
-    track_order === nothing ? isa(dict, OrderedDict) : track_order
+    something(track_order, false)
+
+@require OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d" begin
+    _infer_track_order(
+        track_order::Union{Nothing,Bool}, dict::OrderedCollections.OrderedDict
+    ) = something(track_order, true)
+end
 
 # load with just a filename returns a flat dictionary containing all the variables
 function fileio_load(
