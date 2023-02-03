@@ -11,4 +11,5 @@ function try_close_finalizer(x)
     else
         finalizer(try_close_finalizer, x)
     end
+    return nothing
 end
