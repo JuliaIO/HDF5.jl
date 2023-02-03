@@ -4,13 +4,11 @@ const liblock = ReentrantLock()
 # Otherwise, defer finalization
 # https://github.com/JuliaIO/HDF5.jl/issues/1048
 function try_close_finalizer(x)
-    if !islocked(liblock) &&
-        trylock(liblock) do
-            close(x)
-            true
-        end
+    if !islocked(liblock) && trylock(liblock) do
+        close(x)
+        true
+    end
     else
         finalizer(try_close_finalizer, x)
     end
 end
-

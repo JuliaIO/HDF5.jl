@@ -62,8 +62,6 @@ export @read,
 # H5DataStore, Attribute, File, Group, Dataset, Datatype, Opaque,
 # Dataspace, Object, Properties, VLen, ChunkStorage, Reference
 
-
-
 h5doc(name) = "[`$name`](https://portal.hdfgroup.org/display/HDF5/$(name))"
 
 include("api/api.jl")

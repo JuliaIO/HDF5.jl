@@ -5,7 +5,6 @@
 # Supertype of HDF5.File, HDF5.Group, JldFile, JldGroup, Matlabv5File, and MatlabHDF5File.
 abstract type H5DataStore end
 
-
 # Read a list of variables, read(parent, "A", "B", "x", ...)
 function Base.read(parent::H5DataStore, name::AbstractString...)
     tuple((read(parent, x) for x in name)...)
