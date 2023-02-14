@@ -104,7 +104,7 @@ macro propertyclass(name, classid)
             id::API.hid_t
             function $name(id::API.hid_t)
                 obj = new(id)
-                finalizer(close, obj)
+                finalizer(API.try_close_finalizer, obj)
                 obj
             end
         end

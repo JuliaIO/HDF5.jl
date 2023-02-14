@@ -41,7 +41,7 @@ mutable struct File <: H5DataStore
     function File(id, filename, toclose::Bool=true)
         f = new(id, filename)
         if toclose
-            finalizer(close, f)
+            finalizer(API.try_close_finalizer, f)
         end
         f
     end
@@ -55,7 +55,7 @@ mutable struct Group <: H5DataStore
 
     function Group(id, file)
         g = new(id, file)
-        finalizer(close, g)
+        finalizer(API.try_close_finalizer, g)
         g
     end
 end
@@ -69,7 +69,7 @@ mutable struct Dataset
 
     function Dataset(id, file, xfer=DatasetTransferProperties())
         dset = new(id, file, xfer)
-        finalizer(close, dset)
+        finalizer(API.try_close_finalizer, dset)
         dset
     end
 end
@@ -84,14 +84,14 @@ mutable struct Datatype
     function Datatype(id, toclose::Bool=true)
         nt = new(id, toclose)
         if toclose
-            finalizer(close, nt)
+            finalizer(API.try_close_finalizer, nt)
         end
         nt
     end
     function Datatype(id, file::File, toclose::Bool=true)
         nt = new(id, toclose, file)
         if toclose
-            finalizer(close, nt)
+            finalizer(API.try_close_finalizer, nt)
         end
         nt
     end
@@ -106,7 +106,7 @@ mutable struct Dataspace
 
     function Dataspace(id)
         dspace = new(id)
-        finalizer(close, dspace)
+        finalizer(API.try_close_finalizer, dspace)
         dspace
     end
 end
@@ -119,7 +119,7 @@ mutable struct Attribute
 
     function Attribute(id, file)
         dset = new(id, file)
-        finalizer(close, dset)
+        finalizer(API.try_close_finalizer, dset)
         dset
     end
 end
