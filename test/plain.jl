@@ -1525,6 +1525,11 @@ end
     @test_throws HDF5.API.H5Error create_group(hfile, "/group1/group1a")
     @test_throws HDF5.API.H5Error create_group(g1, "group1a")
 
+    # issue #1055
+    create_group(hfile, SubString("abcdef", 1, 3))
+    @test haskey(hfile, "abc")
+    @test !haskey(hfile, "abcdef")
+
     create_dataset(hfile, "dset1", 1)
     create_dataset(hfile, "/group1/dset1", 1)
 
