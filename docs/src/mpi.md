@@ -28,7 +28,7 @@ After installing MPIPreferences.jl and running
 MPIPreferences.jl identifies any available MPI implementation and stores the information
 in a file LocalPreferences.toml.
 See the [MPI.jl
-docs](https://juliaparallel.github.io/MPI.jl/stable/configuration/#Using-a-system-provided-MPI-1)
+docs](https://juliaparallel.org/MPI.jl/stable/configuration/#Using-a-system-provided-MPI-backend)
 for details.
 
 ### 2. Using parallel HDF5 libraries
