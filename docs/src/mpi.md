@@ -22,10 +22,11 @@ parallel-enabled HDF5 libraries linked to an existent MPI installation.
 
 ### 1. Using system-provided MPI libraries
 
-Set the environment variable `JULIA_MPI_BINARY=system` and then run
-`]build MPI` from Julia.
-For more control, one can also set the `JULIA_MPI_PATH` environment variable
-to the top-level installation directory of the MPI library.
+Using a system-provided MPI library can be done with MPIPreferences.jl.
+After installing MPIPreferences.jl and running
+`julia --project -e 'using MPIPreferences; MPIPreferences.use_system_binary()'`
+MPIPreferences.jl identifies any available MPI implementation and stores the information
+in a file LocalPreferences.toml.
 See the [MPI.jl
 docs](https://juliaparallel.github.io/MPI.jl/stable/configuration/#Using-a-system-provided-MPI-1)
 for details.
