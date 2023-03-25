@@ -314,12 +314,8 @@ function get_mem_compatible_jl_type(obj_type::Datatype)
             (membertypes[1] == membertypes[2]) &&
             (membertypes[1] <: ScalarType)
 
-        istuple = all(((i,e),) -> string(i) == e, enumerate(membernames))
-
         if iscomplex
             return Complex{membertypes[1]}
-        elseif istuple
-            return Tuple{membertypes...}
         else
             return NamedTuple{Symbol.(membernames),Tuple{membertypes...}}
         end
