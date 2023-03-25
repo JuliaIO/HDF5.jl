@@ -64,6 +64,7 @@ end
 
 # These will use finalizers. Close them eagerly to avoid issues.
 datatype(::T) where {T} = Datatype(hdf5_type_id(T), true)
+datatype(::Type{T}) where {T} = Datatype(hdf5_type_id(T), true)
 datatype(x::AbstractArray{T}) where {T} = Datatype(hdf5_type_id(T), true)
 
 hdf5_type_id(::Type{T}) where {T} = hdf5_type_id(T, Val(isstructtype(T)))
@@ -71,7 +72,7 @@ function hdf5_type_id(::Type{T}, isstruct::Val{true}) where {T}
     dtype = API.h5t_create(API.H5T_COMPOUND, sizeof(T))
     for (idx, fn) in enumerate(fieldnames(T))
         ftype = fieldtype(T, idx)
-        API.h5t_insert(dtype, fn, fieldoffset(T, idx), hdf5_type_id(ftype))
+        API.h5t_insert(dtype, Symbol(fn), fieldoffset(T, idx), hdf5_type_id(ftype))
     end
     return dtype
 end
@@ -313,8 +314,12 @@ function get_mem_compatible_jl_type(obj_type::Datatype)
             (membertypes[1] == membertypes[2]) &&
             (membertypes[1] <: ScalarType)
 
+        istuple = all(((i,e),) -> string(i) == e, enumerate(membernames))
+
         if iscomplex
             return Complex{membertypes[1]}
+        elseif istuple
+            return Tuple{membertypes...}
         else
             return NamedTuple{Symbol.(membernames),Tuple{membertypes...}}
         end
