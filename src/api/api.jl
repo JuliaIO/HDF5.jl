@@ -1,16 +1,46 @@
 module API
 
-import Libdl
+using Libdl
 using Base: StringVector
+using Preferences: @load_preference
 
-const depsfile = joinpath(@__DIR__, "..", "..", "deps", "deps.jl")
-if isfile(depsfile)
-    include(depsfile)
+# We avoid calling Libdl.find_library to avoid possible segfault when calling
+# dlclose (#929).
+# The only difference with Libdl.find_library is that we allow custom dlopen
+# flags via the `flags` argument.
+function find_library_alt(libnames, extrapaths=String[]; flags=RTLD_LAZY)
+    for lib in libnames
+        for path in extrapaths
+            l = joinpath(path, lib)
+            p = dlopen(l, flags; throw_error=false)
+            if p !== nothing
+                dlclose(p)
+                return l
+            end
+        end
+        p = dlopen(lib, flags; throw_error=false)
+        if p !== nothing
+            dlclose(p)
+            return lib
+        end
+    end
+    return ""
+end
+
+const libpath = @load_preference("libhdf5path", nothing)
+if libpath === nothing
+    using HDF5_JLL
 else
-    @error(
-        "HDF5 is not properly installed. Please run Pkg.build(\"HDF5\") ",
-        "and restart Julia."
-    )
+    libpaths = [libpath, joinpath(libpath, "lib"), joinpath(libpath, "lib64")]
+    flags = RTLD_LAZY | RTLD_NODELETE  # RTLD_NODELETE may be needed to avoid segfault (#929)
+
+    libhdf5 = find_library_alt(["libhdf5"], libpaths; flags=flags)
+    libhdf5_hl = find_library_alt(["libhdf5_hl"], libpaths; flags=flags)
+
+    isempty(libhdf5) && error("libhdf5 could not be found")
+    isempty(libhdf5_hl) && error("libhdf5_hl could not be found")
+
+    libhdf5_size = filesize(dlpath(libhdf5))
 end
 
 include("lock.jl")
@@ -22,11 +52,8 @@ include("helpers.jl")
 function __init__()
     # HDF5.API.__init__() is run before HDF5.__init__()
 
-    # From deps.jl
-    check_deps()
-
     # Ensure this is reinitialized on using
-    libhdf5handle[] = Libdl.dlopen(libhdf5)
+    libhdf5handle[] = dlopen(libhdf5)
 
     # Disable file locking as that can cause problems with mmap'ing.
     # File locking is disabled in HDF5.init!(::FileAccessPropertyList)

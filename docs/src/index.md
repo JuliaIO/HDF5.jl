@@ -27,23 +27,34 @@ Starting from Julia 1.3, the HDF5 binaries are by default downloaded using the `
 
 ### Using custom or system provided HDF5 binaries
 
-To use system-provided HDF5 binaries instead, set the environment variable `JULIA_HDF5_PATH` to the top-level installation directory HDF5, i.e. the library should be located in `${JULIA_HDF5_PATH}/lib` or `${JULIA_HDF5_PATH}/lib64`, or alternatively simply in `${JULIA_HDF5_PATH}`. Then run `import Pkg; Pkg.build("HDF5")`. In particular, this is required if you need parallel HDF5 support, which is not provided by the `HDF5_jll` binaries.
+To use system-provided HDF5 binaries instead, set the preference `libhdf5path`, see also [Preferences.jl](https://github.com/JuliaPackaging/Preferences.jl). This has to be the top-level installation directory of HDF5, i.e. the library should be located in `${JULIA_HDF5_PATH}/lib` or `${JULIA_HDF5_PATH}/lib64`, or alternatively simply in `${JULIA_HDF5_PATH}`. In particular, this is required if you need parallel HDF5 support, which is not provided by the `HDF5_jll` binaries.
 
-If the library is in your library search path, then `JULIA_HDF5_PATH` can be set to an empty string.
+If the library is in your library search path, then `libhdf5path` can be set to an empty string.
 
-For example, to use HDF5 (`libhdf5-mpich-dev`) with MPI using system libraries on Ubuntu 20.04, you would run:
+For example, to use HDF5 (`libhdf5-mpich-dev`) with MPI using system libraries on Ubuntu 20.04, you would run
 
 ```sh
 $ sudo apt install mpich libhdf5-mpich-dev
-$ JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/
-$ JULIA_MPI_BINARY=system
 ```
 
 Then in Julia, run:
 
 ```julia
-pkg> build
+using MPIPreferences
+MPIPreferences.use_system_binary()
 ```
+
+to set the MPI preferences, see the [documentation of MPI.jl](https://juliaparallel.org/MPI.jl/stable/configuration/) and then:
+
+```julia
+using Preferences, UUIDs
+
+set_preferences!(
+    UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
+    "libhdf5path" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/", force = true)
+```
+
+to set the preference for the custom HDF5 library.
 
 ## Opening and closing files
 

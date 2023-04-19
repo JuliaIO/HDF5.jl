@@ -34,9 +34,16 @@ for details.
 ### 2. Using parallel HDF5 libraries
 
 As detailed in [Using custom or system provided HDF5 binaries](@ref), set the
-`JULIA_HDF5_PATH` environment variable to the path where the parallel HDF5
-binaries are located.
-Then run `]build HDF5` from Julia.
+preference `libhdf5path` to the path where the parallel HDF5 binaries are located.
+This can be done by:
+
+```julia
+julia> using Preferences, UUIDs
+
+julia> set_preferences!(
+           UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
+           "libhdf5path" => "/path/to/your/hdf5/binaries/", force = true)
+```
 
 ### 3. Loading MPI-enabled HDF5
 
