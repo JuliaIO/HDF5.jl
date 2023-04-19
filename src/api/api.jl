@@ -1,6 +1,6 @@
 module API
 
-using Libdl: dlopen, dlclose, dlpath, RTLD_LAZY, RTLD_NODELETE
+using Libdl: dlopen, dlclose, dlpath, dlsym, RTLD_LAZY, RTLD_NODELETE
 using Base: StringVector
 using Preferences: @load_preference
 
