@@ -29,7 +29,7 @@ end
 
 const libpath = @load_preference("libhdf5path", nothing)
 if libpath === nothing
-    using HDF5_JLL
+    using HDF5_jll
 else
     libpaths = [libpath, joinpath(libpath, "lib"), joinpath(libpath, "lib64")]
     flags = RTLD_LAZY | RTLD_NODELETE  # RTLD_NODELETE may be needed to avoid segfault (#929)
