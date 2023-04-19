@@ -34,8 +34,8 @@ else
     libpaths = [libpath, joinpath(libpath, "lib"), joinpath(libpath, "lib64")]
     flags = RTLD_LAZY | RTLD_NODELETE  # RTLD_NODELETE may be needed to avoid segfault (#929)
 
-    libhdf5 = find_library_alt(["libhdf5"], libpaths; flags=flags)
-    libhdf5_hl = find_library_alt(["libhdf5_hl"], libpaths; flags=flags)
+    libhdf5 = find_library_alt(["libhdf5", "libhdf5_openmpi", "libhdf5_mpich"], libpaths; flags=flags)
+    libhdf5_hl = find_library_alt(["libhdf5_hl", "libhdf5_openmpi_hl", "libhdf5_mpich_hl"], libpaths; flags=flags)
 
     isempty(libhdf5) && error("libhdf5 could not be found")
     isempty(libhdf5_hl) && error("libhdf5_hl could not be found")
