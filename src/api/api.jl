@@ -36,9 +36,8 @@ else
 
     libhdf5 = find_library_alt(["libhdf5", "libhdf5_openmpi", "libhdf5_mpich"], libpaths; flags=flags)
     libhdf5_hl = find_library_alt(["libhdf5_hl", "libhdf5_openmpi_hl", "libhdf5_mpich_hl"], libpaths; flags=flags)
-
-    isempty(libhdf5) && error("libhdf5 could not be found")
-    isempty(libhdf5_hl) && error("libhdf5_hl could not be found")
+    isempty(libhdf5) && error("You have set the preference for a system HDF5 library to $libpath, but none of libhdf5, libhdf5_openmpi, libhdf5_mpich was found in that directory or a subdirectory 'lib' or 'lib64'.")
+    isempty(libhdf5_hl) && error("You have set the preference for a system HDF5 library to $libpath, but none of libhdf5_hl, libhdf5_openmpi_hl, libhdf5_mpich_hl was found in that directory or a subdirectory 'lib' or 'lib64'.")
 
     libhdf5_size = filesize(dlpath(libhdf5))
 end

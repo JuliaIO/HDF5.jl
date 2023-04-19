@@ -37,14 +37,14 @@ For example, to use HDF5 (`libhdf5-mpich-dev`) with MPI using system libraries o
 $ sudo apt install mpich libhdf5-mpich-dev
 ```
 
-Then in Julia, run:
+If your system HDF5 library is compiled with MPI, you need to tell MPI.jl to use the same locally installed MPI implementation. This can be done in Julia by running:
 
 ```julia
 using MPIPreferences
 MPIPreferences.use_system_binary()
 ```
 
-to set the MPI preferences, see the [documentation of MPI.jl](https://juliaparallel.org/MPI.jl/stable/configuration/) and then:
+to set the MPI preferences, see the [documentation of MPI.jl](https://juliaparallel.org/MPI.jl/stable/configuration/). You can set the path to the system library using [Preferences.jl](https://github.com/JuliaPackaging/Preferences.jl) by:
 
 ```julia
 using Preferences, UUIDs
@@ -54,7 +54,7 @@ set_preferences!(
     "libhdf5path" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/", force = true)
 ```
 
-to set the preference for the custom HDF5 library.
+Both, the MPI preferences and the preferences for HDF5.jl write to a file called LocalPreferences.toml in the project directory. If you want to switch to another HDF5 library or the library moved, you can call the `set_preferences!` command again (or manually edit LocalPreferences.toml) to set the new path. Using the default (not MPI supported) implementation provided by HDF5_jll can be done by simply manually deleting the LocalPreferences.toml file.
 
 ## Opening and closing files
 
