@@ -2,6 +2,9 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.17.0
+* Replace build step by using Preferences.jl to use system HDF5 library
+
 ## v0.16.14
 * Allow `begin` to work in a dataset
 * Simplify MPIO tests and internals
