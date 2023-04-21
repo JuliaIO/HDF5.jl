@@ -6,7 +6,9 @@ import ..API
 import ..HDF5: HDF5, Properties, h5doc
 
 using Libdl: dlopen, dlsym
-using Requires: @require
+if !isdefined(Base, :get_extension)
+    using Requires: @require
+end
 
 function get_driver(p::Properties)
     driver_id = API.h5p_get_driver(p)
@@ -89,7 +91,9 @@ function __init__()
     HDF5.HAS_PARALLEL[] = API._has_symbol(:H5Pset_fapl_mpio)
     HDF5.HAS_ROS3[] = API._has_symbol(:H5Pset_fapl_ros3)
 
-    @require MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195" include("mpio.jl")
+    @static if !isdefined(Base, :get_extension)
+        @require MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195" include("../../ext/MPIExt.jl")
+    end
 end
 
 include("ros3.jl")

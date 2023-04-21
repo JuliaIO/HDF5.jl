@@ -1,5 +1,8 @@
-using .MPI
+module MPIExt
+
+isdefined(Base, :get_extension) ? (using MPI) : (using ..MPI)
 import Libdl
+using HDF5: API, Drivers.Driver, Properties, h5doc
 import HDF5: h5open
 
 ###
@@ -114,3 +117,5 @@ end
 
 h5open(filename::AbstractString, comm::MPI.Comm, args...; pv...) =
     h5open(filename, "r", comm, args...; pv...)
+
+end
