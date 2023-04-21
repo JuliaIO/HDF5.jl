@@ -33,6 +33,12 @@ for details.
 
 ### 2. Using parallel HDF5 libraries
 
+!!! note "Migration from HDF5.jl v0.16 and earlier"
+    How to use a system-provided HDF5 library has been changed in HDF5.jl v0.17. Previously,
+    the library path was set by the environment variable `JULIA_HDF5_PATH`, which required to
+    rebuild HDF5.jl afterwards. The environment variable has been removed and no longer has an
+    effect. Instead, proceed as described below.
+
 As detailed in [Using custom or system provided HDF5 binaries](@ref), set the
 preference `libhdf5path` to the path where the parallel HDF5 binaries are located.
 This can be done by:
