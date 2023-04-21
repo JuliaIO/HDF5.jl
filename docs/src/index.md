@@ -31,7 +31,8 @@ Starting from Julia 1.3, the HDF5 binaries are by default downloaded using the `
     How to use a system-provided HDF5 library has been changed in HDF5.jl v0.17. Previously,
     the library path was set by the environment variable `JULIA_HDF5_PATH`, which required to
     rebuild HDF5.jl afterwards. The environment variable has been removed and no longer has an
-    effect. Instead, proceed as described below.
+    effect (for backward compatibility it is still recommended to **also** set the environment
+    variable). Instead, proceed as described below.
 
 To use system-provided HDF5 binaries instead, set the preference `libhdf5path`, see also [Preferences.jl](https://github.com/JuliaPackaging/Preferences.jl). This has to be the top-level installation directory of HDF5, i.e. the library should be located in `${JULIA_HDF5_PATH}/lib` or `${JULIA_HDF5_PATH}/lib64`, or alternatively simply in `${JULIA_HDF5_PATH}`. In particular, this is required if you need parallel HDF5 support, which is not provided by the `HDF5_jll` binaries.
 
@@ -60,7 +61,21 @@ set_preferences!(
     "libhdf5path" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/", force = true)
 ```
 
-Both, the MPI preferences and the preferences for HDF5.jl write to a file called LocalPreferences.toml in the project directory. If you want to switch to another HDF5 library or the library moved, you can call the `set_preferences!` command again (or manually edit LocalPreferences.toml) to set the new path. Using the default (not MPI supported) implementation provided by HDF5_jll can be done by simply manually deleting the LocalPreferences.toml file.
+Both, the MPI preferences and the preferences for HDF5.jl write to a file called LocalPreferences.toml in the project directory. After performing the described steps this file could look like the following:
+
+```toml
+[MPIPreferences]
+_format = "1.0"
+abi = "MPICH"
+binary = "system"
+libmpi = "/software/mpi/lib/libmpi.so"
+mpiexec = "/software/mpi/bin/mpiexec"
+
+[HDF5]
+libhdf5path = "/usr/lib/x86_64-linux-gnu/hdf5/mpich/"
+```
+
+If you want to switch to another HDF5 library or the library moved, you can call the `set_preferences!` command again (or manually edit LocalPreferences.toml) to set the new path. Using the default (not MPI supported) implementation provided by HDF5_jll can be done by simply manually deleting the LocalPreferences.toml file.
 
 ## Opening and closing files
 
