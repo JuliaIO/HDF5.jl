@@ -34,12 +34,13 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/julia-buildpkg@latest
-      - uses: julia-actions/julia-runtest@latest
       - name: Configure MPI.jl
         shell: julia --color=yes {0}
         run: |
           @show pwd()
           include(joinpath(pwd(), "test", "configure_packages.jl"))
+      - uses: julia-actions/julia-runtest@latest
+
 
   HDF5:
     name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
