@@ -29,12 +29,6 @@ jobs:
           sudo apt-get install mpich libhdf5-mpich-dev
           echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/" >> $GITHUB_ENV
       - uses: actions/checkout@v3
-      - uses: julia-actions/setup-julia@v1
-        with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-          show-versioninfo: true
-      - uses: julia-actions/cache@v1
       - name: Configure MPI.jl
         shell: julia --color=yes {0}
         run: |
