@@ -2,12 +2,11 @@ using Pkg
 Pkg.activate(dirname(@__DIR__))
 Pkg.instantiate()
 
-
 # Configure the test setup based on environment variables set in CI.
 # First, we get the settings and remove all local preference configurations
 # that may still exist.
 const JULIA_HDF5_PATH = get(ENV, "JULIA_HDF5_PATH", "")
-rm(joinpath(dirname(@__DIR__), "LocalPreferences.toml"), force = true)
+rm(joinpath(dirname(@__DIR__), "LocalPreferences.toml"); force=true)
 
 # Next, we configure MPI.jl appropriately.
 import MPIPreferences
@@ -17,4 +16,6 @@ MPIPreferences.use_system_binary()
 import UUIDs, Preferences
 Preferences.set_preferences!(
     UUIDs.UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
-    "libhdf5path" => JULIA_HDF5_PATH, force = true)
+    "libhdf5path" => JULIA_HDF5_PATH;
+    force=true
+)
