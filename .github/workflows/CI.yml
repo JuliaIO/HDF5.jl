@@ -31,8 +31,8 @@ jobs:
       - name: Configure MPI.jl
         shell: julia --color=yes {0}
         run: |
-          @show dirname(pwd())
-          include(joinpath(dirname(pwd()), "test", "configure_packages.jl"))
+          @show pwd()
+          include(joinpath(pwd(), "test", "configure_packages.jl"))
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@latest
         with:
