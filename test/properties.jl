@@ -96,7 +96,11 @@ using Test
         @test dapl.virtual_prefix == "virtual"
         # We probably need to actually use a virtual dataset
         @test_broken dapl.virtual_printf_gap == 2
-        @test_broken dapl.virtual_view == :last_available
+        if HDF5.API.h5_get_libversion() >= v"1.14.0"
+            @test dapl.virtual_view == :last_available
+        else
+            @test_broken dapl.virtual_view == :last_available
+        end
 
         @test acpl.char_encoding == :utf8
 
