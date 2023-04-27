@@ -232,7 +232,10 @@ using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenab
     @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_NBIT)
     @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SCALEOFFSET)
     @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SHUFFLE)
-    @static if Sys.iswindows() || VERSION ≤ v"1.6"
+    @static if Sys.iswindows() ||
+        VERSION ≤ v"1.6" ||
+        HDF5.API.h5_get_libversion() >= v"1.14.0"
+        # SZIP via libaec_jll should be available in HDF5_jll 1.14 builds and beyond
         @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
     elseif HDF5.API.h5_get_libversion() >= v"1.12.0"
         # These are missing in the macOS and Linux JLLs for h5 version 1.12+
