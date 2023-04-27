@@ -17,6 +17,7 @@ jobs:
       matrix:
         version:
           - '1.6'
+          - '1'
         os:
           - ubuntu-20.04 # required for libhdf5 v1.10.4 support
         arch:
@@ -27,7 +28,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install mpich libhdf5-mpich-dev
           echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/" >> $GITHUB_ENV
-          echo "JULIA_MPI_BINARY=system" >> $GITHUB_ENV
+      - name: Configure MPI.jl
+        shell: julia --color=yes {0}
+        run: |
+          @show pwd()
+          include(joinpath(pwd(), "test", "configure_packages.jl"))
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@latest
         with:
