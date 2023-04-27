@@ -34,9 +34,7 @@ Starting from Julia 1.3, the HDF5 binaries are by default downloaded using the `
     effect (for backward compatibility it is still recommended to **also** set the environment
     variable). Instead, proceed as described below.
 
-To use system-provided HDF5 binaries instead, set the preference `libhdf5path`, see also [Preferences.jl](https://github.com/JuliaPackaging/Preferences.jl). This has to be the top-level installation directory of HDF5, i.e. the library (called `libhdf5.so` and `libhdf5_hl.so` or `libhdf_openmpi.so` and `libhdf_openmpi_hl.so` or `libhdf_mpich.so` and `libhdf_mpich_hl.so`) be located in `libhdf5path/lib` or `libhdf5path/lib64`, or alternatively simply in `libhdf5path`. In particular, this is required if you need parallel HDF5 support, which is not provided by the `HDF5_jll` binaries.
-
-If the library is in your library search path, then `libhdf5path` can be set to an empty string.
+To use system-provided HDF5 binaries instead, set the preferences `libhdf5` and `libhdf5_hl`, see also [Preferences.jl](https://github.com/JuliaPackaging/Preferences.jl). These need to point to the local paths of the libraries `libhdf5` and `libhdf5_hl`. In particular, this is required if you need parallel HDF5 support, which is not provided by the `HDF5_jll` binaries.
 
 For example, to use HDF5 (`libhdf5-mpich-dev`) with MPI using system libraries on Ubuntu 20.04, you would run
 
@@ -58,7 +56,10 @@ using Preferences, UUIDs
 
 set_preferences!(
     UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
-    "libhdf5path" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/", force = true)
+    "libhdf5" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5.so", force = true)
+set_preferences!(
+    UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
+    "libhdf5_hl" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5_hl.so", force = true)
 ```
 
 Both, the MPI preferences and the preferences for HDF5.jl write to a file called LocalPreferences.toml in the project directory. After performing the described steps this file could look like the following:
@@ -72,10 +73,11 @@ libmpi = "/software/mpi/lib/libmpi.so"
 mpiexec = "/software/mpi/bin/mpiexec"
 
 [HDF5]
-libhdf5path = "/usr/lib/x86_64-linux-gnu/hdf5/mpich/"
+libhdf5 = "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5.so"
+libhdf5_hl = "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5_hl.so"
 ```
 
-If you want to switch to another HDF5 library or the library moved, you can call the `set_preferences!` command again (or manually edit LocalPreferences.toml) to set the new path. Using the default (not MPI supported) implementation provided by HDF5_jll can be done by simply manually deleting the LocalPreferences.toml file.
+If you want to switch to another HDF5 library or the library moved, you can call the `set_preferences!` commands again (or manually edit LocalPreferences.toml) to set the new paths. Using the default (not MPI supported) implementation provided by HDF5_jll can be done by simply manually deleting the LocalPreferences.toml file.
 
 ## Opening and closing files
 

@@ -4,49 +4,21 @@ using Libdl: dlopen, dlclose, dlpath, dlsym, RTLD_LAZY, RTLD_NODELETE
 using Base: StringVector
 using Preferences: @load_preference
 
-# We avoid calling Libdl.find_library to avoid possible segfault when calling
-# dlclose (#929).
-# The only difference with Libdl.find_library is that we allow custom dlopen
-# flags via the `flags` argument.
-function find_library_alt(libnames, extrapaths=String[]; flags=RTLD_LAZY)
-    for lib in libnames
-        for path in extrapaths
-            l = joinpath(path, lib)
-            p = dlopen(l, flags; throw_error=false)
-            if p !== nothing
-                dlclose(p)
-                return l
-            end
-        end
-        p = dlopen(lib, flags; throw_error=false)
-        if p !== nothing
-            dlclose(p)
-            return lib
-        end
-    end
-    return ""
-end
-
-const libpath = @load_preference("libhdf5path", nothing)
-if libpath === nothing
+const _PREFERENCE_LIBHDF5 = @load_preference("libhdf5", nothing)
+const _PREFERENCE_LIBHDF5_HL = @load_preference("libhdf5_hl", nothing)
+if _PREFERENCE_LIBHDF5 === nothing && _PREFERENCE_LIBHDF5_HL === nothing
     using HDF5_jll
+elseif _PREFERENCE_LIBHDF5 !== nothing && _PREFERENCE_LIBHDF5_HL === nothing
+    error("You have only set a preference for the path of libhdf5, but not of libhdf5_hl.")
+elseif _PREFERENCE_LIBHDF5 === nothing && _PREFERENCE_LIBHDF5_HL !== nothing
+    error("You have only set a preference for the path of libhdf5_hl, but not of libhdf5.")
 else
-    libpaths = [libpath, joinpath(libpath, "lib"), joinpath(libpath, "lib64")]
-    flags = RTLD_LAZY | RTLD_NODELETE  # RTLD_NODELETE may be needed to avoid segfault (#929)
-
-    libhdf5 = find_library_alt(
-        ["libhdf5", "libhdf5_openmpi", "libhdf5_mpich"], libpaths; flags=flags
-    )
-    libhdf5_hl = find_library_alt(
-        ["libhdf5_hl", "libhdf5_openmpi_hl", "libhdf5_mpich_hl"], libpaths; flags=flags
-    )
-    isempty(libhdf5) && error(
-        "You have set the preference for a system HDF5 library to $libpath, but none of libhdf5, libhdf5_openmpi, libhdf5_mpich was found in that directory or a subdirectory 'lib' or 'lib64'."
-    )
-    isempty(libhdf5_hl) && error(
-        "You have set the preference for a system HDF5 library to $libpath, but none of libhdf5_hl, libhdf5_openmpi_hl, libhdf5_mpich_hl was found in that directory or a subdirectory 'lib' or 'lib64'."
-    )
-
+    libhdf5 = _PREFERENCE_LIBHDF5
+    libhdf5_hl = _PREFERENCE_LIBHDF5_HL
+    # Check whether we can open the libraries
+    flags = RTLD_LAZY | RTLD_NODELETE
+    dlopen(libhdf5, flags; throw_error=true)
+    dlopen(libhdf5_hl, flags; throw_error=true)
     libhdf5_size = filesize(dlpath(libhdf5))
 end
 

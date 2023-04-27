@@ -41,7 +41,7 @@ for details.
     variable). Instead, proceed as described below.
 
 As detailed in [Using custom or system provided HDF5 binaries](@ref), set the
-preference `libhdf5path` to the path where the parallel HDF5 binaries are located.
+preferences `libhdf5` and `libhdf5_hl` to the full path, where the parallel HDF5 binaries are located.
 This can be done by:
 
 ```julia
@@ -49,7 +49,10 @@ julia> using Preferences, UUIDs
 
 julia> set_preferences!(
            UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
-           "libhdf5path" => "/path/to/your/hdf5/binaries/", force = true)
+           "libhdf5" => "/path/to/your/libhdf5.so", force = true)
+julia> set_preferences!(
+           UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
+           "libhdf5_hl" => "/path/to/your/libhdf5_hl.so", force = true)
 ```
 
 ### 3. Loading MPI-enabled HDF5
