@@ -2,7 +2,7 @@ module MPIExt
 
 isdefined(Base, :get_extension) ? (using MPI) : (using ..MPI)
 import Libdl
-using HDF5: HDF5, API, Drivers, Drivers.Driver, Properties, h5doc
+import HDF5: HDF5, API, Drivers, Drivers.Driver, Properties, h5doc, h5open
 
 ###
 ### MPIO
@@ -93,10 +93,10 @@ function HDF5.h5open(
     info::MPI.Info=MPI.Info();
     pv...
 )
-    h5open(filename, mode; driver=MPIO(comm, info), pv...)
+    HDF5.h5open(filename, mode; driver=MPIO(comm, info), pv...)
 end
 
 HDF5.h5open(filename::AbstractString, comm::MPI.Comm, args...; pv...) =
-    h5open(filename, "r", comm, args...; pv...)
+    HDF5.h5open(filename, "r", comm, args...; pv...)
 
 end
