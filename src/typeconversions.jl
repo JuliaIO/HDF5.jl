@@ -214,7 +214,7 @@ function datatype(str::AbstractString)
     API.h5t_set_cset(type_id, cset(typeof(str)))
     Datatype(type_id)
 end
-function datatype(::Type{S}) where S <: AbstractString
+function datatype(::Type{S}) where {S<:AbstractString}
     type_id = API.h5t_copy(hdf5_type_id(S))
     API.h5t_set_size(type_id, API.H5T_VARIABLE)
     API.h5t_set_cset(type_id, cset(S))

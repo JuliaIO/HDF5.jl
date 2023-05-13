@@ -351,7 +351,9 @@ function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where {T}
     return X
 end
 
-function Base.setindex!(dset::Dataset, X::Array{S}, I::IndexType...) where {S <: AbstractString}
+function Base.setindex!(
+    dset::Dataset, X::Array{S}, I::IndexType...
+) where {S<:AbstractString}
     !isconcretetype(S) && error("type $S is not concrete")
     U = get_jl_type(dset)
 
@@ -372,7 +374,6 @@ function Base.setindex!(dset::Dataset, X::Array{S}, I::IndexType...) where {S <:
         error("number of elements in src and dest arrays must be equal")
     end
 
-
     p = Ref{Cstring}(X)
     try
         API.h5d_write(dset, memtype, memspace, dspace, dset.xfer, p)
@@ -383,7 +384,6 @@ function Base.setindex!(dset::Dataset, X::Array{S}, I::IndexType...) where {S <:
     end
 
     return X
-
 end
 
 function Base.setindex!(dset::Dataset, x::T, I::IndexType...) where {T<:Number}
