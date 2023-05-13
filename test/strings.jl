@@ -38,7 +38,7 @@ using HDF5
         ds = write_dataset(f, "string", GenericString("Hi"))
     end
     h5open(fn) do f
-        @test f["string"][]  == "Hi"
+        @test f["string"][] == "Hi"
     end
     rm(fn)
 end
