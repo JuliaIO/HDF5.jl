@@ -64,7 +64,7 @@ end
 
 # These will use finalizers. Close them eagerly to avoid issues.
 datatype(::T) where {T} = Datatype(hdf5_type_id(T), true)
-datatype(::Type{T}) where T = Datatype(hdf5_type_id(T), isstructtype(T))
+datatype(::Type{T}) where {T} = Datatype(hdf5_type_id(T), isstructtype(T))
 datatype(x::AbstractArray{T}) where {T} = Datatype(hdf5_type_id(T), true)
 
 hdf5_type_id(::Type{T}) where {T} = hdf5_type_id(T, Val(isstructtype(T)))
