@@ -189,10 +189,13 @@ end
 
     namedtuples = [(a=1, b=2.3), (a=4, b=5.6)]
 
+    tuples = [(1, namedtuples[1], (0.1,)), (2, namedtuples[2], (1.0,))]
+
     fn = tempname()
     h5open(fn, "w") do h5f
         write_dataset(h5f, "the/bars", bars)
         write_dataset(h5f, "the/namedtuples", namedtuples)
+        write_dataset(h5f, "the/tuples", tuples)
     end
 
     thebars = h5open(fn, "r") do h5f
@@ -219,6 +222,20 @@ end
     @test thenamedtuples[1].b ≈ 2.3
     @test thenamedtuples[2].a == 4
     @test thenamedtuples[2].b ≈ 5.6
+
+    thetuples = h5open(fn, "r") do h5f
+        read(h5f, "the/tuples")
+    end
+
+    @test (2,) == size(thetuples)
+    @test thetuples[1][1] == 1
+    @test thetuples[1][2].a == 1
+    @test thetuples[1][2].b ≈ 2.3
+    @test thetuples[1][3][1] ≈ 0.1
+    @test thetuples[2][1] == 2
+    @test thetuples[2][2].a == 4
+    @test thetuples[2][2].b ≈ 5.6
+    @test thetuples[2][3][1] ≈ 1.0
 
     mutable_bars = [MutableBar(1), MutableBar(2), MutableBar(3)]
 

@@ -386,7 +386,7 @@ function Base.setindex!(
     return X
 end
 
-function Base.setindex!(dset::Dataset, x::T, I::IndexType...) where {T<:Number}
+function Base.setindex!(dset::Dataset, x, I::IndexType...)
     indices = Base.to_indices(dset, I)
     X = fill(x, map(length, indices))
     Base.setindex!(dset, X, indices...)
