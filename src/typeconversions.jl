@@ -64,7 +64,8 @@ end
 
 # These will use finalizers. Close them eagerly to avoid issues.
 datatype(::T) where {T} = Datatype(hdf5_type_id(T), true)
-datatype(T::Type) = Datatype(hdf5_type_id(T), true)
+
+datatype(::Type{T}) where {T} = Datatype(hdf5_type_id(T), true)
 datatype(x::AbstractArray{T}) where {T} = Datatype(hdf5_type_id(T), true)
 
 hdf5_type_id(::Type{T}) where {T} = hdf5_type_id(T, Val(isstructtype(T)))
@@ -213,6 +214,12 @@ function datatype(str::AbstractString)
     type_id = API.h5t_copy(hdf5_type_id(typeof(str)))
     API.h5t_set_size(type_id, max(sizeof(str), 1))
     API.h5t_set_cset(type_id, cset(typeof(str)))
+    Datatype(type_id)
+end
+function datatype(::Type{S}) where {S<:AbstractString}
+    type_id = API.h5t_copy(hdf5_type_id(S))
+    API.h5t_set_size(type_id, API.H5T_VARIABLE)
+    API.h5t_set_cset(type_id, cset(S))
     Datatype(type_id)
 end
 function datatype(::Array{S}) where {S<:AbstractString}

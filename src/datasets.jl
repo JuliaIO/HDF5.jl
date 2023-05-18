@@ -351,7 +351,49 @@ function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where {T}
     return X
 end
 
+
+function Base.setindex!(
+    dset::Dataset, X::Array{S}, I::IndexType...
+) where {S<:AbstractString}
+    !isconcretetype(S) && error("type $S is not concrete")
+    U = get_jl_type(dset)
+
+    filetype = datatype(dset)
+    memtype = _memtype(filetype, eltype(X))
+    close(filetype)
+
+    dspace = dataspace(dset)
+    stype = API.h5s_get_simple_extent_type(dspace)
+    stype == API.H5S_NULL && error("attempting to write to null dataspace")
+
+    indices = Base.to_indices(dset, I)
+    dspace = hyperslab(dspace, indices...)
+
+    memspace = dataspace(X)
+
+    if API.h5s_get_select_npoints(dspace) != API.h5s_get_select_npoints(memspace)
+        error("number of elements in src and dest arrays must be equal")
+    end
+
+    p = Ref{Cstring}(X)
+    try
+        API.h5d_write(dset, memtype, memspace, dspace, dset.xfer, p)
+    finally
+        close(memtype)
+        close(memspace)
+        close(dspace)
+    end
+
+    return X
+end
+
 function Base.setindex!(dset::Dataset, x, I::IndexType...)
+    indices = Base.to_indices(dset, I)
+    X = fill(x, map(length, indices))
+    Base.setindex!(dset, X, indices...)
+end
+
+function Base.setindex!(dset::Dataset, x::T, I::IndexType...) where {T<:AbstractString}
     indices = Base.to_indices(dset, I)
     X = fill(x, map(length, indices))
     Base.setindex!(dset, X, indices...)

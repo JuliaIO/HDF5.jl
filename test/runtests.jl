@@ -18,6 +18,8 @@ end
 @testset "HDF5.jl" begin
     @debug "plain"
     include("plain.jl")
+    @debug "strings"
+    include("strings.jl")
     @debug "api"
     include("api.jl")
     @debug "compound"

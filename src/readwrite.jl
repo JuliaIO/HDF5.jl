@@ -300,6 +300,10 @@ if the size matches.
     return memtype
 end
 
+@inline function _memtype(filetype::Datatype, ::Type{S}) where {S<:AbstractString}
+    return datatype(S)
+end
+
 #=
     _size_of_buffer(obj::DatasetOrAttribute, [I::Tuple, dspace::Dataspace])
 
