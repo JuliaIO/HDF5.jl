@@ -351,7 +351,6 @@ function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where {T}
     return X
 end
 
-
 function Base.setindex!(
     dset::Dataset, X::Array{S}, I::IndexType...
 ) where {S<:AbstractString}

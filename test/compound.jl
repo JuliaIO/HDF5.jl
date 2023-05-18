@@ -189,7 +189,7 @@ end
 
     namedtuples = [(a=1, b=2.3), (a=4, b=5.6)]
 
-    tuples = [(1, namedtuples[1], (0.1, )), (2, namedtuples[2], (1.0,))]
+    tuples = [(1, namedtuples[1], (0.1,)), (2, namedtuples[2], (1.0,))]
 
     fn = tempname()
     h5open(fn, "w") do h5f
@@ -236,7 +236,6 @@ end
     @test thetuples[2][2].a == 4
     @test thetuples[2][2].b ≈ 5.6
     @test thetuples[2][3][1] ≈ 1.0
-
 
     mutable_bars = [MutableBar(1), MutableBar(2), MutableBar(3)]
 
