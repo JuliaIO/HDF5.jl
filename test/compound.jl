@@ -157,6 +157,30 @@ mutable struct MutableBar
     x::Int64
 end
 
+@testset "create_dataset (compound)" begin
+    bars = [Bar(1, 2, true), Bar(3, 4, false), Bar(5, 6, true), Bar(7, 8, false)]
+    fn = tempname()
+    h5open(fn, "w") do h5f
+        d = create_dataset(h5f, "the/bars", Bar, ((2,), (-1,)); chunk=(100,))
+        d[1:2] = bars[1:2]
+    end
+
+    h5open(fn, "cw") do h5f
+        d = h5f["the/bars"]
+        HDF5.set_extent_dims(d, (4,))
+        d[3:4] = bars[3:4]
+    end
+
+    thebars = h5open(fn, "r") do h5f
+        read(h5f, "the/bars")
+    end
+
+    @test 4 == length(thebars)
+    @test 1 == thebars[1].a
+    @test true == thebars[3].c
+    @test 8 == thebars[4].b
+end
+
 @testset "write_compound" begin
     bars = [
         [Bar(1, 1.1, true) Bar(2, 2.1, false) Bar(3, 3.1, true)]
