@@ -45,6 +45,19 @@ function gettype(parent, path::AbstractString)
 end
 
 # Copy objects
+"""
+    copy_object(src_parent::Union{File,Group}, src_path::AbstractString, dst_parent::Union{File,Group}, dst_path::AbstractString)
+
+Copy data from `src_parent[src_path]` to `dst_parent[dst_path]`.
+
+# Examples
+```julia
+f = h5open("f.h5", "r")
+g = h5open("g.h5", "cw")
+copy_object(f, "Group1", g, "GroupA")
+copy_object(f["Group1"], "data1", g, "DataSet/data_1")
+```
+"""
 copy_object(
     src_parent::Union{File,Group},
     src_path::AbstractString,
@@ -58,6 +71,14 @@ copy_object(
     API.H5P_DEFAULT,
     _link_properties(dst_path)
 )
+"""
+    copy_object(src_obj::Object, dst_parent::Union{File,Group}, dst_path::AbstractString)
+# Examples
+```julia
+copy_object(f["Group1"], g, "GroupA")
+copy_object(f["Group1/data1"], g, "DataSet/data_1")
+```
+"""
 copy_object(src_obj::Object, dst_parent::Union{File,Group}, dst_path::AbstractString) =
     API.h5o_copy(
         checkvalid(src_obj),
