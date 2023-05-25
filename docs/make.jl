@@ -40,7 +40,8 @@ makedocs(;
             "interface/dataset.md",
             "interface/attributes.md",
             "interface/properties.md",
-            "interface/filters.md"
+            "interface/filters.md",
+            "interface/objects.md",
         ],
         "mpi.md",
         "Low-level library bindings" => "api_bindings.md",
