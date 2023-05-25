@@ -57,7 +57,7 @@ function get_chunk_offset(dataset_id, index)
     extent = size(dataset_id)
     chunk = get_chunk(dataset_id)
     chunk_indices = CartesianIndices(
-        ntuple(i -> 0:(extent[i] ÷ chunk[i] - 1), length(extent))
+        ntuple(i -> 0:(cld(extent[i], chunk[i]) - 1), length(extent))
     )
     offset = API.hsize_t.(chunk_indices[index + 1].I .* chunk)
     return offset
@@ -72,8 +72,10 @@ For a 1-based API, see `HDF5.ChunkStorage`.
 function get_chunk_index(dataset_id, offset)
     extent = size(dataset_id)
     chunk = get_chunk(dataset_id)
-    chunk_indices = LinearIndices(ntuple(i -> 0:(extent[i] ÷ chunk[i] - 1), length(extent)))
-    chunk_indices[(offset .÷ chunk .+ 1)...] - 1
+    chunk_indices = LinearIndices(
+        ntuple(i -> 0:(cld(extent[i], chunk[i]) - 1), length(extent))
+    )
+    chunk_indices[(fld.(offset, chunk) .+ 1)...] - 1
 end
 
 """
@@ -84,7 +86,7 @@ Get the number of chunks in each dimension in Julia's column-major order.
 function get_num_chunks_per_dim(dataset_id)
     extent = size(dataset_id)
     chunk = get_chunk(dataset_id)
-    return extent .÷ chunk
+    return cld.(extent, chunk)
 end
 
 """
