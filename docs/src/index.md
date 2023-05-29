@@ -34,7 +34,7 @@ Starting from Julia 1.3, the HDF5 binaries are by default downloaded using the `
     effect (for backward compatibility it is still recommended to **also** set the environment
     variable). Instead, proceed as described below.
 
-To use system-provided HDF5 binaries instead, set the preferences `libhdf5` and `libhdf5_hl`, see also [Preferences.jl](https://github.com/JuliaPackaging/Preferences.jl). These need to point to the local paths of the libraries `libhdf5` and `libhdf5_hl`. In particular, this is required if you need parallel HDF5 support, which is not provided by the `HDF5_jll` binaries.
+To use system-provided HDF5 binaries instead, set the preferences `libhdf5` and `libhdf5_hl`, see also [Preferences.jl](https://github.com/JuliaPackaging/Preferences.jl). These need to point to the local paths of the libraries `libhdf5` and `libhdf5_hl`.
 
 For example, to use HDF5 (`libhdf5-mpich-dev`) with MPI using system libraries on Ubuntu 20.04, you would run
 
@@ -77,7 +77,7 @@ libhdf5 = "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5.so"
 libhdf5_hl = "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5_hl.so"
 ```
 
-If you want to switch to another HDF5 library or the library moved, you can call the `set_preferences!` commands again (or manually edit LocalPreferences.toml) to set the new paths. Using the default (not MPI supported) implementation provided by HDF5_jll can be done by simply manually deleting the LocalPreferences.toml file.
+If you want to switch to another HDF5 library or the library moved, you can call the `set_preferences!` commands again (or manually edit LocalPreferences.toml) to set the new paths. Using the default implementation provided by HDF5_jll can be done by simply manually deleting the LocalPreferences.toml file.
 
 ## Opening and closing files
 
