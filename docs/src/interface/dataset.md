@@ -21,7 +21,6 @@ read_dataset
 ## Chunks
 
 ```@docs
-<<<<<<< HEAD
 do_read_chunk
 do_write_chunk
 get_chunk_index
