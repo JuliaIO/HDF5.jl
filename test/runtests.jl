@@ -1,3 +1,14 @@
+# Work around JuliaLang/Pkg.jl#2500
+if VERSION < v"1.8-"
+    test_project = first(Base.load_path())
+    preferences_file = "../LocalPreferences.toml"
+    test_preferences_file = joinpath(dirname(test_project), "LocalPreferences.toml")
+    if isfile(preferences_file) && !isfile(test_preferences_file)
+        cp(preferences_file, test_preferences_file)
+        @info "copied LocalPreferences.toml to $test_preferences_file"
+    end
+end
+
 using HDF5
 using Test
 using Pkg
