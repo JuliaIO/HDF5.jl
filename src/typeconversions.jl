@@ -380,7 +380,6 @@ else
         # dependent on data elements being properly aligned for all datatypes, on all
         # platforms.
     end
-
 end
 
 _normalize_types(::Type{T}, buf::AbstractVector{UInt8}) where {T} = _typed_load(T, buf)
