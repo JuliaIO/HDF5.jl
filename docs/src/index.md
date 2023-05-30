@@ -489,6 +489,13 @@ b[1:10000] = collect(1:10000)
 
 when dimensions are reduced, the truncated data is lost. A maximum dimension of -1 is often referred to as unlimited dimensions, though it is limited by the maximum size of an unsigned integer.
 
+You can copy data from one file to another:
+
+```julia
+copy_object(source, data_name, target, name)
+copy_object(source[data_name], target, name)
+```
+
 Finally, it's possible to delete objects:
 
 ```julia
@@ -498,9 +505,9 @@ delete_attribute(parent, name)   # for attributes
 
 ## Low-level routines
 
-Many of the most commonly-used libhdf5 functions have been wrapped. These are not exported, so you need to preface them with `HDF5.function` to use them. The library follows a consistent convention: for example, libhdf5's `H5Adelete` is wrapped with a Julia function called `h5a_delete`. The arguments are exactly as specified in the [HDF5](https://www.hdfgroup.org/solutions/hdf5/) reference manual.
+Many of the most commonly-used libhdf5 functions have been wrapped in a submodule `API`. The library follows a consistent convention: for example, libhdf5's `H5Adelete` is wrapped with a Julia function called `h5a_delete`. The arguments are exactly as specified in the [HDF5](https://www.hdfgroup.org/solutions/hdf5/) reference manual. Note that the functions in the `API` submodule are not exported, so unless you import them specifically, you need to preface them with `HDF5.API` to use them: for example, `HDF5.API.h5a_delete`.
 
-HDF5 is a large library, and the low-level wrap is not complete. However, many of the most-commonly used functions are wrapped, and in general wrapping a new function takes only a single line of code. Users who need additional functionality are encourage to contribute it.
+HDF5 is a large library, and the low-level wrap is not complete. However, many of the most-commonly used functions are wrapped, and in general wrapping a new function takes only a single line of code. Users who need additional functionality are encouraged to contribute it.
 
 Note that Julia's HDF5 directly uses the "2" interfaces, e.g., `H5Dcreate2`, so you need to have version 1.8 of the HDF5 library or later.
 

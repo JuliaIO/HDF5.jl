@@ -156,14 +156,14 @@ function h5a_close(id)
 end
 
 """
-    h5a_create(loc_id::hid_t, attr_name::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t) -> hid_t
+    h5a_create(loc_id::hid_t, attr_name::Cstring, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Acreate2`](https://docs.hdfgroup.org/hdf5/develop/group___h5_a.html#ga4f4e5248c09f689633079ed8afc0b308).
 """
 function h5a_create(loc_id, attr_name, type_id, space_id, acpl_id, aapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Acreate2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t), loc_id, attr_name, type_id, space_id, acpl_id, aapl_id)
+            ccall((:H5Acreate2, libhdf5), hid_t, (hid_t, Cstring, hid_t, hid_t, hid_t, hid_t), loc_id, attr_name, type_id, space_id, acpl_id, aapl_id)
         finally
             unlock(liblock)
         end
@@ -172,14 +172,14 @@ function h5a_create(loc_id, attr_name, type_id, space_id, acpl_id, aapl_id)
 end
 
 """
-    h5a_create_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t, lapl_id::hid_t) -> hid_t
+    h5a_create_by_name(loc_id::hid_t, obj_name::Cstring, attr_name::Cstring, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t, lapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Acreate_by_name`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_a.html#gaaef64fc50a8e431d7ef2a408c0b7f182).
 """
 function h5a_create_by_name(loc_id, obj_name, attr_name, type_id, space_id, acpl_id, aapl_id, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Acreate_by_name, libhdf5), hid_t, (hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t, hid_t), loc_id, obj_name, attr_name, type_id, space_id, acpl_id, aapl_id, lapl_id)
+            ccall((:H5Acreate_by_name, libhdf5), hid_t, (hid_t, Cstring, Cstring, hid_t, hid_t, hid_t, hid_t, hid_t), loc_id, obj_name, attr_name, type_id, space_id, acpl_id, aapl_id, lapl_id)
         finally
             unlock(liblock)
         end
@@ -188,14 +188,14 @@ function h5a_create_by_name(loc_id, obj_name, attr_name, type_id, space_id, acpl
 end
 
 """
-    h5a_delete(loc_id::hid_t, attr_name::Ptr{UInt8})
+    h5a_delete(loc_id::hid_t, attr_name::Cstring)
 
 See `libhdf5` documentation for [`H5Adelete`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_a.html#ga1b9cf352d8c13cf44100994b7f0ba59a).
 """
 function h5a_delete(loc_id, attr_name)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Adelete, libhdf5), herr_t, (hid_t, Ptr{UInt8}), loc_id, attr_name)
+            ccall((:H5Adelete, libhdf5), herr_t, (hid_t, Cstring), loc_id, attr_name)
         finally
             unlock(liblock)
         end
@@ -204,14 +204,14 @@ function h5a_delete(loc_id, attr_name)
 end
 
 """
-    h5a_delete_by_idx(loc_id::hid_t, obj_name::Ptr{UInt8}, idx_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)
+    h5a_delete_by_idx(loc_id::hid_t, obj_name::Cstring, idx_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Adelete_by_idx`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_a.html#gaf3dce5df66e9755bc7fc7f48227173e5).
 """
 function h5a_delete_by_idx(loc_id, obj_name, idx_type, order, n, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Adelete_by_idx, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, hid_t), loc_id, obj_name, idx_type, order, n, lapl_id)
+            ccall((:H5Adelete_by_idx, libhdf5), herr_t, (hid_t, Cstring, Cint, Cint, hsize_t, hid_t), loc_id, obj_name, idx_type, order, n, lapl_id)
         finally
             unlock(liblock)
         end
@@ -220,14 +220,14 @@ function h5a_delete_by_idx(loc_id, obj_name, idx_type, order, n, lapl_id)
 end
 
 """
-    h5a_delete_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, lapl_id::hid_t)
+    h5a_delete_by_name(loc_id::hid_t, obj_name::Cstring, attr_name::Cstring, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Adelete_by_name`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_a.html#ga1c93e03fe90ded2036fdef54b5ac11b4).
 """
 function h5a_delete_by_name(loc_id, obj_name, attr_name, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Adelete_by_name, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t), loc_id, obj_name, attr_name, lapl_id)
+            ccall((:H5Adelete_by_name, libhdf5), herr_t, (hid_t, Cstring, Cstring, hid_t), loc_id, obj_name, attr_name, lapl_id)
         finally
             unlock(liblock)
         end
@@ -236,14 +236,14 @@ function h5a_delete_by_name(loc_id, obj_name, attr_name, lapl_id)
 end
 
 """
-    h5a_exists(obj_id::hid_t, attr_name::Ptr{UInt8}) -> Bool
+    h5a_exists(obj_id::hid_t, attr_name::Cstring) -> Bool
 
 See `libhdf5` documentation for [`H5Aexists`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_a.html#ga9acefc248d57f22eb413edb32a06ca75).
 """
 function h5a_exists(obj_id, attr_name)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Aexists, libhdf5), htri_t, (hid_t, Ptr{UInt8}), obj_id, attr_name)
+            ccall((:H5Aexists, libhdf5), htri_t, (hid_t, Cstring), obj_id, attr_name)
         finally
             unlock(liblock)
         end
@@ -252,14 +252,14 @@ function h5a_exists(obj_id, attr_name)
 end
 
 """
-    h5a_exists_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, lapl_id::hid_t) -> Bool
+    h5a_exists_by_name(loc_id::hid_t, obj_name::Cstring, attr_name::Cstring, lapl_id::hid_t) -> Bool
 
 See `libhdf5` documentation for [`H5Aexists_by_name`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_a.html#ga93541205dbc0260716beb3aff646e2da).
 """
 function h5a_exists_by_name(loc_id, obj_name, attr_name, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Aexists_by_name, libhdf5), htri_t, (hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t), loc_id, obj_name, attr_name, lapl_id)
+            ccall((:H5Aexists_by_name, libhdf5), htri_t, (hid_t, Cstring, Cstring, hid_t), loc_id, obj_name, attr_name, lapl_id)
         finally
             unlock(liblock)
         end
@@ -364,14 +364,14 @@ function h5a_iterate(obj_id, idx_type, order, n, op, op_data)
 end
 
 """
-    h5a_open(obj_id::hid_t, attr_name::Ptr{UInt8}, aapl_id::hid_t) -> hid_t
+    h5a_open(obj_id::hid_t, attr_name::Cstring, aapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Aopen`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_a.html#gab03fbbac9f1d0d57c6c3f327b14495e0).
 """
 function h5a_open(obj_id, attr_name, aapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Aopen, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), obj_id, attr_name, aapl_id)
+            ccall((:H5Aopen, libhdf5), hid_t, (hid_t, Cstring, hid_t), obj_id, attr_name, aapl_id)
         finally
             unlock(liblock)
         end
@@ -380,14 +380,14 @@ function h5a_open(obj_id, attr_name, aapl_id)
 end
 
 """
-    h5a_open_by_idx(obj_id::hid_t, pathname::Ptr{UInt8}, idx_type::Cint, order::Cint, n::hsize_t, aapl_id::hid_t, lapl_id::hid_t) -> hid_t
+    h5a_open_by_idx(obj_id::hid_t, pathname::Cstring, idx_type::Cint, order::Cint, n::hsize_t, aapl_id::hid_t, lapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Aopen_by_idx`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_a.html#gab77c909b06d05667592a86f328d80658).
 """
 function h5a_open_by_idx(obj_id, pathname, idx_type, order, n, aapl_id, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Aopen_by_idx, libhdf5), hid_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, hid_t, hid_t), obj_id, pathname, idx_type, order, n, aapl_id, lapl_id)
+            ccall((:H5Aopen_by_idx, libhdf5), hid_t, (hid_t, Cstring, Cint, Cint, hsize_t, hid_t, hid_t), obj_id, pathname, idx_type, order, n, aapl_id, lapl_id)
         finally
             unlock(liblock)
         end
@@ -443,6 +443,24 @@ function h5a_write(attr_hid, mem_type_id, buf)
     return nothing
 end
 
+@static if v"1.12.3" ≤ _libhdf5_build_ver
+    @doc """
+        h5d_chunk_iter(dset_id::hid_t, dxpl_id::hid_t, cb::Ptr{Nothing}, op_data::Any)
+
+    See `libhdf5` documentation for [`H5Dchunk_iter`](https://portal.hdfgroup.org/display/HDF5/H5D_CHUNK_ITER).
+    """
+    function h5d_chunk_iter(dset_id, dxpl_id, cb, op_data)
+        lock(liblock)
+        var"#status#" = try
+                ccall((:H5Dchunk_iter, libhdf5), herr_t, (hid_t, hid_t, Ptr{Nothing}, Any), dset_id, dxpl_id, cb, op_data)
+            finally
+                unlock(liblock)
+            end
+        var"#status#" < 0 && @h5error("Error iterating over chunks")
+        return nothing
+    end
+end
+
 """
     h5d_close(dataset_id::hid_t)
 
@@ -460,14 +478,14 @@ function h5d_close(dataset_id)
 end
 
 """
-    h5d_create(loc_id::hid_t, pathname::Ptr{UInt8}, dtype_id::hid_t, space_id::hid_t, lcpl_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t) -> hid_t
+    h5d_create(loc_id::hid_t, pathname::Cstring, dtype_id::hid_t, space_id::hid_t, lcpl_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Dcreate2`](https://docs.hdfgroup.org/hdf5/develop/group___h5_d.html#gabf62045119f4e9c512d87d77f2f992df).
 """
 function h5d_create(loc_id, pathname, dtype_id, space_id, lcpl_id, dcpl_id, dapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Dcreate2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t, hid_t), loc_id, pathname, dtype_id, space_id, lcpl_id, dcpl_id, dapl_id)
+            ccall((:H5Dcreate2, libhdf5), hid_t, (hid_t, Cstring, hid_t, hid_t, hid_t, hid_t, hid_t), loc_id, pathname, dtype_id, space_id, lcpl_id, dcpl_id, dapl_id)
         finally
             unlock(liblock)
         end
@@ -752,14 +770,14 @@ function h5d_iterate(buf, type_id, space_id, operator, operator_data)
 end
 
 """
-    h5d_open(loc_id::hid_t, pathname::Ptr{UInt8}, dapl_id::hid_t) -> hid_t
+    h5d_open(loc_id::hid_t, pathname::Cstring, dapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Dopen2`](https://docs.hdfgroup.org/hdf5/develop/group___h5_d.html#ga04198c4cf0b849ed3a8921f6c7169ee2).
 """
 function h5d_open(loc_id, pathname, dapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Dopen2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, pathname, dapl_id)
+            ccall((:H5Dopen2, libhdf5), hid_t, (hid_t, Cstring, hid_t), loc_id, pathname, dapl_id)
         finally
             unlock(liblock)
         end
@@ -1056,14 +1074,14 @@ function h5f_close(file_id)
 end
 
 """
-    h5f_create(pathname::Ptr{UInt8}, flags::Cuint, fcpl_id::hid_t, fapl_id::hid_t) -> hid_t
+    h5f_create(pathname::Cstring, flags::Cuint, fcpl_id::hid_t, fapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Fcreate`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_f.html#gabd29514d186d5ff99f1b7789168b7518).
 """
 function h5f_create(pathname, flags, fcpl_id, fapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Fcreate, libhdf5), hid_t, (Ptr{UInt8}, Cuint, hid_t, hid_t), pathname, flags, fcpl_id, fapl_id)
+            ccall((:H5Fcreate, libhdf5), hid_t, (Cstring, Cuint, hid_t, hid_t), pathname, flags, fcpl_id, fapl_id)
         finally
             unlock(liblock)
         end
@@ -1072,14 +1090,14 @@ function h5f_create(pathname, flags, fcpl_id, fapl_id)
 end
 
 """
-    h5f_delete(filename::Ptr{Cchar}, fapl_id::hid_t)
+    h5f_delete(filename::Cstring, fapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Fdelete`](https://docs.hdfgroup.org/hdf5/develop/group___h5_f.html#ga2e8b5e19b343123e8ab21442f9169a62).
 """
 function h5f_delete(filename, fapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Fdelete, libhdf5), herr_t, (Ptr{Cchar}, hid_t), filename, fapl_id)
+            ccall((:H5Fdelete, libhdf5), herr_t, (Cstring, hid_t), filename, fapl_id)
         finally
             unlock(liblock)
         end
@@ -1504,14 +1522,14 @@ function h5f_increment_filesize(file_id, increment)
 end
 
 """
-    h5f_is_accessible(container_name::Ptr{Cchar}, fapl_id::hid_t) -> Bool
+    h5f_is_accessible(container_name::Cstring, fapl_id::hid_t) -> Bool
 
 See `libhdf5` documentation for [`H5Fis_accessible`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_f.html#gae8de9cf6ae6ec03c881fb096dea7e0f6).
 """
 function h5f_is_accessible(container_name, fapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Fis_accessible, libhdf5), htri_t, (Ptr{Cchar}, hid_t), container_name, fapl_id)
+            ccall((:H5Fis_accessible, libhdf5), htri_t, (Cstring, hid_t), container_name, fapl_id)
         finally
             unlock(liblock)
         end
@@ -1536,14 +1554,14 @@ function h5f_is_hdf5(pathname)
 end
 
 """
-    h5f_mount(loc::hid_t, name::Ptr{Cchar}, child::hid_t, plist::hid_t)
+    h5f_mount(loc::hid_t, name::Cstring, child::hid_t, plist::hid_t)
 
 See `libhdf5` documentation for [`H5Fmount`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_f.html#ga9332f0a150de188d9277a372f77d7c81).
 """
 function h5f_mount(loc, name, child, plist)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Fmount, libhdf5), herr_t, (hid_t, Ptr{Cchar}, hid_t, hid_t), loc, name, child, plist)
+            ccall((:H5Fmount, libhdf5), herr_t, (hid_t, Cstring, hid_t, hid_t), loc, name, child, plist)
         finally
             unlock(liblock)
         end
@@ -1728,14 +1746,14 @@ function h5f_stop_mdc_logging(file_id)
 end
 
 """
-    h5f_unmount(loc::hid_t, name::Ptr{Cchar})
+    h5f_unmount(loc::hid_t, name::Cstring)
 
 See `libhdf5` documentation for [`H5Funmount`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_f.html#ga0f3ce0599852b2394154c803e91f98dd).
 """
 function h5f_unmount(loc, name)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Funmount, libhdf5), herr_t, (hid_t, Ptr{Cchar}), loc, name)
+            ccall((:H5Funmount, libhdf5), herr_t, (hid_t, Cstring), loc, name)
         finally
             unlock(liblock)
         end
@@ -1760,14 +1778,14 @@ function h5g_close(group_id)
 end
 
 """
-    h5g_create(loc_id::hid_t, pathname::Ptr{UInt8}, lcpl_id::hid_t, gcpl_id::hid_t, gapl_id::hid_t) -> hid_t
+    h5g_create(loc_id::hid_t, pathname::Cstring, lcpl_id::hid_t, gcpl_id::hid_t, gapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Gcreate2`](https://docs.hdfgroup.org/hdf5/develop/group___h5_g.html#ga86d93295965f750ef25dea2505a711d9).
 """
 function h5g_create(loc_id, pathname, lcpl_id, gcpl_id, gapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Gcreate2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t), loc_id, pathname, lcpl_id, gcpl_id, gapl_id)
+            ccall((:H5Gcreate2, libhdf5), hid_t, (hid_t, Cstring, hid_t, hid_t, hid_t), loc_id, pathname, lcpl_id, gcpl_id, gapl_id)
         finally
             unlock(liblock)
         end
@@ -1840,14 +1858,14 @@ function h5g_get_objname_by_idx(loc_id, idx, pathname, size)
 end
 
 """
-    h5g_open(loc_id::hid_t, pathname::Ptr{UInt8}, gapl_id::hid_t) -> hid_t
+    h5g_open(loc_id::hid_t, pathname::Cstring, gapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Gopen2`](https://docs.hdfgroup.org/hdf5/develop/group___h5_g.html#gadab91e2dd7a7e253dcc0e4fe04b81403).
 """
 function h5g_open(loc_id, pathname, gapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Gopen2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, pathname, gapl_id)
+            ccall((:H5Gopen2, libhdf5), hid_t, (hid_t, Cstring, hid_t), loc_id, pathname, gapl_id)
         finally
             unlock(liblock)
         end
@@ -1968,14 +1986,14 @@ function h5i_is_valid(obj_id)
 end
 
 """
-    h5l_create_external(target_file_name::Ptr{UInt8}, target_obj_name::Ptr{UInt8}, link_loc_id::hid_t, link_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)
+    h5l_create_external(target_file_name::Cstring, target_obj_name::Cstring, link_loc_id::hid_t, link_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Lcreate_external`](https://docs.hdfgroup.org/hdf5/develop/group___h5_l.html#ga15dfaeb9b1c0b3136533cb97ee45e683).
 """
 function h5l_create_external(target_file_name, target_obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Lcreate_external, libhdf5), herr_t, (Ptr{UInt8}, Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), target_file_name, target_obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
+            ccall((:H5Lcreate_external, libhdf5), herr_t, (Cstring, Cstring, hid_t, Cstring, hid_t, hid_t), target_file_name, target_obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
         finally
             unlock(liblock)
         end
@@ -1984,14 +2002,14 @@ function h5l_create_external(target_file_name, target_obj_name, link_loc_id, lin
 end
 
 """
-    h5l_create_hard(obj_loc_id::hid_t, obj_name::Ptr{UInt8}, link_loc_id::hid_t, link_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)
+    h5l_create_hard(obj_loc_id::hid_t, obj_name::Cstring, link_loc_id::hid_t, link_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Lcreate_hard`](https://docs.hdfgroup.org/hdf5/develop/group___h5_l.html#ga69d50f7acdfd2f1dc7c4372397e63bd2).
 """
 function h5l_create_hard(obj_loc_id, obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Lcreate_hard, libhdf5), herr_t, (hid_t, Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), obj_loc_id, obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
+            ccall((:H5Lcreate_hard, libhdf5), herr_t, (hid_t, Cstring, hid_t, Cstring, hid_t, hid_t), obj_loc_id, obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2000,14 +2018,14 @@ function h5l_create_hard(obj_loc_id, obj_name, link_loc_id, link_name, lcpl_id, 
 end
 
 """
-    h5l_create_soft(target_path::Ptr{UInt8}, link_loc_id::hid_t, link_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)
+    h5l_create_soft(target_path::Cstring, link_loc_id::hid_t, link_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Lcreate_soft`](https://docs.hdfgroup.org/hdf5/develop/group___h5_l.html#ga894444623b58ce1ac3bd35538245ac78).
 """
 function h5l_create_soft(target_path, link_loc_id, link_name, lcpl_id, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Lcreate_soft, libhdf5), herr_t, (Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), target_path, link_loc_id, link_name, lcpl_id, lapl_id)
+            ccall((:H5Lcreate_soft, libhdf5), herr_t, (Cstring, hid_t, Cstring, hid_t, hid_t), target_path, link_loc_id, link_name, lcpl_id, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2016,14 +2034,14 @@ function h5l_create_soft(target_path, link_loc_id, link_name, lcpl_id, lapl_id)
 end
 
 """
-    h5l_delete(obj_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)
+    h5l_delete(obj_id::hid_t, pathname::Cstring, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Ldelete`](https://docs.hdfgroup.org/hdf5/develop/group___h5_l.html#ga5b4e7f59f5d4bdae94fd8ce6875295cf).
 """
 function h5l_delete(obj_id, pathname, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Ldelete, libhdf5), herr_t, (hid_t, Ptr{UInt8}, hid_t), obj_id, pathname, lapl_id)
+            ccall((:H5Ldelete, libhdf5), herr_t, (hid_t, Cstring, hid_t), obj_id, pathname, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2032,14 +2050,14 @@ function h5l_delete(obj_id, pathname, lapl_id)
 end
 
 """
-    h5l_move(src_obj_id::hid_t, src_name::Ptr{UInt8}, dest_obj_id::hid_t, dest_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)
+    h5l_move(src_obj_id::hid_t, src_name::Cstring, dest_obj_id::hid_t, dest_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Lmove`](https://docs.hdfgroup.org/hdf5/develop/group___h5_l.html#ga0bbc7f9bf25c8aca9dd8433a325c8acb).
 """
 function h5l_move(src_obj_id, src_name, dest_obj_id, dest_name, lcpl_id, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Lmove, libhdf5), herr_t, (hid_t, Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), src_obj_id, src_name, dest_obj_id, dest_name, lcpl_id, lapl_id)
+            ccall((:H5Lmove, libhdf5), herr_t, (hid_t, Cstring, hid_t, Cstring, hid_t, hid_t), src_obj_id, src_name, dest_obj_id, dest_name, lcpl_id, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2048,14 +2066,14 @@ function h5l_move(src_obj_id, src_name, dest_obj_id, dest_name, lcpl_id, lapl_id
 end
 
 """
-    h5l_exists(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t) -> Bool
+    h5l_exists(loc_id::hid_t, pathname::Cstring, lapl_id::hid_t) -> Bool
 
 See `libhdf5` documentation for [`H5Lexists`](https://docs.hdfgroup.org/hdf5/develop/group___h5_l.html#ga171be6e41dc1a464edc402df0ebdf801).
 """
 function h5l_exists(loc_id, pathname, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Lexists, libhdf5), htri_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, pathname, lapl_id)
+            ccall((:H5Lexists, libhdf5), htri_t, (hid_t, Cstring, hid_t), loc_id, pathname, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2064,14 +2082,14 @@ function h5l_exists(loc_id, pathname, lapl_id)
 end
 
 """
-    h5l_get_info(link_loc_id::hid_t, link_name::Ptr{UInt8}, link_buf::Ptr{H5L_info_t}, lapl_id::hid_t)
+    h5l_get_info(link_loc_id::hid_t, link_name::Cstring, link_buf::Ptr{H5L_info_t}, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Lget_info`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_l.html#ga305046a96e35e869e627628ec65ab64c).
 """
 function h5l_get_info(link_loc_id, link_name, link_buf, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Lget_info, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Ptr{H5L_info_t}, hid_t), link_loc_id, link_name, link_buf, lapl_id)
+            ccall((:H5Lget_info, libhdf5), herr_t, (hid_t, Cstring, Ptr{H5L_info_t}, hid_t), link_loc_id, link_name, link_buf, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2080,14 +2098,14 @@ function h5l_get_info(link_loc_id, link_name, link_buf, lapl_id)
 end
 
 """
-    h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t) -> Cssize_t
+    h5l_get_name_by_idx(loc_id::hid_t, group_name::Cstring, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t) -> Cssize_t
 
 See `libhdf5` documentation for [`H5Lget_name_by_idx`](https://docs.hdfgroup.org/hdf5/develop/group___h5_l.html#ga453ea40c3bb85ec8120dd17deed2bd90).
 """
 function h5l_get_name_by_idx(loc_id, group_name, index_field, order, n, name, size, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Lget_name_by_idx, libhdf5), Cssize_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, Ptr{UInt8}, Csize_t, hid_t), loc_id, group_name, index_field, order, n, name, size, lapl_id)
+            ccall((:H5Lget_name_by_idx, libhdf5), Cssize_t, (hid_t, Cstring, Cint, Cint, hsize_t, Ptr{UInt8}, Csize_t, hid_t), loc_id, group_name, index_field, order, n, name, size, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2164,14 +2182,14 @@ function h5o_close(object_id)
 end
 
 """
-    h5o_copy(src_loc_id::hid_t, src_name::Ptr{UInt8}, dst_loc_id::hid_t, dst_name::Ptr{UInt8}, ocpypl_id::hid_t, lcpl_id::hid_t)
+    h5o_copy(src_loc_id::hid_t, src_name::Cstring, dst_loc_id::hid_t, dst_name::Cstring, ocpypl_id::hid_t, lcpl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Ocopy`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#gaa94449be6f67f499be5ddd3fc44f4225).
 """
 function h5o_copy(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Ocopy, libhdf5), herr_t, (hid_t, Ptr{UInt8}, hid_t, Ptr{UInt8}, hid_t, hid_t), src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id)
+            ccall((:H5Ocopy, libhdf5), herr_t, (hid_t, Cstring, hid_t, Cstring, hid_t, hid_t), src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id)
         finally
             unlock(liblock)
         end
@@ -2228,14 +2246,14 @@ function h5o_enable_mdc_flushes(object_id)
 end
 
 """
-    h5o_exists_by_name(loc_id::hid_t, name::Ptr{Cchar}, lapl_id::hid_t) -> Bool
+    h5o_exists_by_name(loc_id::hid_t, name::Cstring, lapl_id::hid_t) -> Bool
 
 See `libhdf5` documentation for [`H5Oexists_by_name`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#gab0fef18d97844c4f83d412c5a22def7b).
 """
 function h5o_exists_by_name(loc_id, name, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Oexists_by_name, libhdf5), htri_t, (hid_t, Ptr{Cchar}, hid_t), loc_id, name, lapl_id)
+            ccall((:H5Oexists_by_name, libhdf5), htri_t, (hid_t, Cstring, hid_t), loc_id, name, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2276,14 +2294,14 @@ function h5o_get_comment(obj_id, comment, bufsize)
 end
 
 """
-    h5o_get_comment_by_name(loc_id::hid_t, name::Ptr{Cchar}, comment::Ptr{Cchar}, bufsize::Csize_t, lapl_id::hid_t) -> Cssize_t
+    h5o_get_comment_by_name(loc_id::hid_t, name::Cstring, comment::Ptr{Cchar}, bufsize::Csize_t, lapl_id::hid_t) -> Cssize_t
 
 See `libhdf5` documentation for [`H5Oget_comment_by_name`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#gae6d92d597c5a292d342a1bda91e41171).
 """
 function h5o_get_comment_by_name(loc_id, name, comment, bufsize, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Oget_comment_by_name, libhdf5), Cssize_t, (hid_t, Ptr{Cchar}, Ptr{Cchar}, Csize_t, hid_t), loc_id, name, comment, bufsize, lapl_id)
+            ccall((:H5Oget_comment_by_name, libhdf5), Cssize_t, (hid_t, Cstring, Ptr{Cchar}, Csize_t, hid_t), loc_id, name, comment, bufsize, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2347,14 +2365,14 @@ end
 
 @static if _libhdf5_build_ver < v"1.10.3"
     @doc """
-        h5o_get_info_by_idx(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)
+        h5o_get_info_by_idx(loc_id::hid_t, group_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)
 
     See `libhdf5` documentation for [`H5Oget_info_by_idx1`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#ga7208d2cf198dcfc875603323841bffae).
     """
     function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, lapl_id)
         lock(liblock)
         var"#status#" = try
-                ccall((:H5Oget_info_by_idx1, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_info1_t}, hid_t), loc_id, group_name, idx_type, order, n, oinfo, lapl_id)
+                ccall((:H5Oget_info_by_idx1, libhdf5), herr_t, (hid_t, Cstring, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_info1_t}, hid_t), loc_id, group_name, idx_type, order, n, oinfo, lapl_id)
             finally
                 unlock(liblock)
             end
@@ -2365,14 +2383,14 @@ end
 
 @static if v"1.10.3" ≤ _libhdf5_build_ver < v"1.12.0"
     @doc """
-        h5o_get_info_by_idx(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)
+        h5o_get_info_by_idx(loc_id::hid_t, group_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)
 
     See `libhdf5` documentation for [`H5Oget_info_by_idx2`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#ga85e15e65922874111da1a5efd5dd7bed).
     """
     function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
         lock(liblock)
         var"#status#" = try
-                ccall((:H5Oget_info_by_idx2, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_info1_t}, Cuint, hid_t), loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
+                ccall((:H5Oget_info_by_idx2, libhdf5), herr_t, (hid_t, Cstring, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_info1_t}, Cuint, hid_t), loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
             finally
                 unlock(liblock)
             end
@@ -2383,14 +2401,14 @@ end
 
 @static if v"1.12.0" ≤ _libhdf5_build_ver
     @doc """
-        h5o_get_info_by_idx(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)
+        h5o_get_info_by_idx(loc_id::hid_t, group_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)
 
     See `libhdf5` documentation for [`H5Oget_info_by_idx3`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#gafa2f8884f7d3e7fd9b8549f5b59fd9eb).
     """
     function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
         lock(liblock)
         var"#status#" = try
-                ccall((:H5Oget_info_by_idx3, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_info2_t}, Cuint, hid_t), loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
+                ccall((:H5Oget_info_by_idx3, libhdf5), herr_t, (hid_t, Cstring, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_info2_t}, Cuint, hid_t), loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
             finally
                 unlock(liblock)
             end
@@ -2401,14 +2419,14 @@ end
 
 @static if _libhdf5_build_ver < v"1.10.3"
     @doc """
-        h5o_get_info_by_name(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)
+        h5o_get_info_by_name(loc_id::hid_t, name::Cstring, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)
 
     See `libhdf5` documentation for [`H5Oget_info_by_name1`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#ga96ce408ffda805210844246904da2842).
     """
     function h5o_get_info_by_name(loc_id, name, oinfo, lapl_id)
         lock(liblock)
         var"#status#" = try
-                ccall((:H5Oget_info_by_name1, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{H5O_info1_t}, hid_t), loc_id, name, oinfo, lapl_id)
+                ccall((:H5Oget_info_by_name1, libhdf5), herr_t, (hid_t, Cstring, Ptr{H5O_info1_t}, hid_t), loc_id, name, oinfo, lapl_id)
             finally
                 unlock(liblock)
             end
@@ -2419,14 +2437,14 @@ end
 
 @static if v"1.10.3" ≤ _libhdf5_build_ver < v"1.12.0"
     @doc """
-        h5o_get_info_by_name(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)
+        h5o_get_info_by_name(loc_id::hid_t, name::Cstring, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)
 
     See `libhdf5` documentation for [`H5Oget_info_by_name2`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#ga0090da86c086c1c63a5acfaed39a035e).
     """
     function h5o_get_info_by_name(loc_id, name, oinfo, fields, lapl_id)
         lock(liblock)
         var"#status#" = try
-                ccall((:H5Oget_info_by_name2, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{H5O_info1_t}, Cuint, hid_t), loc_id, name, oinfo, fields, lapl_id)
+                ccall((:H5Oget_info_by_name2, libhdf5), herr_t, (hid_t, Cstring, Ptr{H5O_info1_t}, Cuint, hid_t), loc_id, name, oinfo, fields, lapl_id)
             finally
                 unlock(liblock)
             end
@@ -2437,14 +2455,14 @@ end
 
 @static if v"1.12.0" ≤ _libhdf5_build_ver
     @doc """
-        h5o_get_info_by_name(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)
+        h5o_get_info_by_name(loc_id::hid_t, name::Cstring, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)
 
     See `libhdf5` documentation for [`H5Oget_info_by_name3`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#gabb69c962999e027cef0079bbb1282199).
     """
     function h5o_get_info_by_name(loc_id, name, oinfo, fields, lapl_id)
         lock(liblock)
         var"#status#" = try
-                ccall((:H5Oget_info_by_name3, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{H5O_info2_t}, Cuint, hid_t), loc_id, name, oinfo, fields, lapl_id)
+                ccall((:H5Oget_info_by_name3, libhdf5), herr_t, (hid_t, Cstring, Ptr{H5O_info2_t}, Cuint, hid_t), loc_id, name, oinfo, fields, lapl_id)
             finally
                 unlock(liblock)
             end
@@ -2470,14 +2488,14 @@ function h5o_get_native_info(loc_id, oinfo, fields)
 end
 
 """
-    h5o_get_native_info_by_idx(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)
+    h5o_get_native_info_by_idx(loc_id::hid_t, group_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Oget_native_info_by_idx`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#gafa6570d8b0ef6e2aff75093e1f99f67e).
 """
 function h5o_get_native_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Oget_native_info_by_idx, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_native_info_t}, Cuint, hid_t), loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
+            ccall((:H5Oget_native_info_by_idx, libhdf5), herr_t, (hid_t, Cstring, H5_index_t, H5_iter_order_t, hsize_t, Ptr{H5O_native_info_t}, Cuint, hid_t), loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2486,14 +2504,14 @@ function h5o_get_native_info_by_idx(loc_id, group_name, idx_type, order, n, oinf
 end
 
 """
-    h5o_get_native_info_by_name(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)
+    h5o_get_native_info_by_name(loc_id::hid_t, name::Cstring, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Oget_native_info_by_name`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#ga296ded21aeac3921fee07272353b8476).
 """
 function h5o_get_native_info_by_name(loc_id, name, oinfo, fields, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Oget_native_info_by_name, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{H5O_native_info_t}, Cuint, hid_t), loc_id, name, oinfo, fields, lapl_id)
+            ccall((:H5Oget_native_info_by_name, libhdf5), herr_t, (hid_t, Cstring, Ptr{H5O_native_info_t}, Cuint, hid_t), loc_id, name, oinfo, fields, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2518,14 +2536,14 @@ function h5o_incr_refcount(object_id)
 end
 
 """
-    h5o_link(obj_id::hid_t, new_loc_id::hid_t, new_name::Ptr{Cchar}, lcpl_id::hid_t, lapl_id::hid_t)
+    h5o_link(obj_id::hid_t, new_loc_id::hid_t, new_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Olink`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#ga2c97dd58e64b67d16325fceb7e02113f).
 """
 function h5o_link(obj_id, new_loc_id, new_name, lcpl_id, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Olink, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cchar}, hid_t, hid_t), obj_id, new_loc_id, new_name, lcpl_id, lapl_id)
+            ccall((:H5Olink, libhdf5), herr_t, (hid_t, hid_t, Cstring, hid_t, hid_t), obj_id, new_loc_id, new_name, lcpl_id, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2534,14 +2552,14 @@ function h5o_link(obj_id, new_loc_id, new_name, lcpl_id, lapl_id)
 end
 
 """
-    h5o_open(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t) -> hid_t
+    h5o_open(loc_id::hid_t, pathname::Cstring, lapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Oopen`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#ga9f635f58c7ddf17f87c253bfbca08bc1).
 """
 function h5o_open(loc_id, pathname, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Oopen, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, pathname, lapl_id)
+            ccall((:H5Oopen, libhdf5), hid_t, (hid_t, Cstring, hid_t), loc_id, pathname, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2566,14 +2584,14 @@ function h5o_open_by_addr(loc_id, addr)
 end
 
 """
-    h5o_open_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t) -> hid_t
+    h5o_open_by_idx(loc_id::hid_t, group_name::Cstring, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Oopen_by_idx`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#gaeb66e5cbb3ca79890fc284a0b06762be).
 """
 function h5o_open_by_idx(loc_id, group_name, index_type, order, n, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Oopen_by_idx, libhdf5), hid_t, (hid_t, Ptr{UInt8}, Cint, Cint, hsize_t, hid_t), loc_id, group_name, index_type, order, n, lapl_id)
+            ccall((:H5Oopen_by_idx, libhdf5), hid_t, (hid_t, Cstring, Cint, Cint, hsize_t, hid_t), loc_id, group_name, index_type, order, n, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2598,14 +2616,14 @@ function h5o_refresh(oid)
 end
 
 """
-    h5o_set_comment(obj_id::hid_t, comment::Ptr{Cchar})
+    h5o_set_comment(obj_id::hid_t, comment::Cstring)
 
 See `libhdf5` documentation for [`H5Oset_comment`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#ga8b5cf8e916204e29616516046121f631).
 """
 function h5o_set_comment(obj_id, comment)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Oset_comment, libhdf5), herr_t, (hid_t, Ptr{Cchar}), obj_id, comment)
+            ccall((:H5Oset_comment, libhdf5), herr_t, (hid_t, Cstring), obj_id, comment)
         finally
             unlock(liblock)
         end
@@ -2614,14 +2632,14 @@ function h5o_set_comment(obj_id, comment)
 end
 
 """
-    h5o_set_comment_by_name(loc_id::hid_t, name::Ptr{Cchar}, comment::Ptr{Cchar}, lapl_id::hid_t)
+    h5o_set_comment_by_name(loc_id::hid_t, name::Cstring, comment::Cstring, lapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Oset_comment_by_name`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#gafeb5242de7f1080b5c19f4fe19784505).
 """
 function h5o_set_comment_by_name(loc_id, name, comment, lapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Oset_comment_by_name, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{Cchar}, hid_t), loc_id, name, comment, lapl_id)
+            ccall((:H5Oset_comment_by_name, libhdf5), herr_t, (hid_t, Cstring, Cstring, hid_t), loc_id, name, comment, lapl_id)
         finally
             unlock(liblock)
         end
@@ -2646,14 +2664,14 @@ function h5o_token_cmp(loc_id, token1, token2, cmp_value)
 end
 
 """
-    h5o_token_from_str(loc_id::hid_t, token_str::Ptr{Cchar}, token::Ptr{H5O_token_t})
+    h5o_token_from_str(loc_id::hid_t, token_str::Cstring, token::Ptr{H5O_token_t})
 
 See `libhdf5` documentation for [`H5Otoken_from_str`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#ga5136c14b4e907f15007030d7a6d6cd24).
 """
 function h5o_token_from_str(loc_id, token_str, token)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Otoken_from_str, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{H5O_token_t}), loc_id, token_str, token)
+            ccall((:H5Otoken_from_str, libhdf5), herr_t, (hid_t, Cstring, Ptr{H5O_token_t}), loc_id, token_str, token)
         finally
             unlock(liblock)
         end
@@ -2715,14 +2733,14 @@ end
 
 @static if _libhdf5_build_ver < v"1.12.0"
     @doc """
-        h5o_visit_by_name(loc_id::hid_t, obj_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid}, lapl_id::hid_t)
+        h5o_visit_by_name(loc_id::hid_t, obj_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid}, lapl_id::hid_t)
 
     See `libhdf5` documentation for [`H5Ovisit_by_name1`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#gaffacf3bd66f4fe074099eae1c80914f2).
     """
     function h5o_visit_by_name(loc_id, obj_name, idx_type, order, op, op_data, lapl_id)
         lock(liblock)
         var"#status#" = try
-                ccall((:H5Ovisit_by_name1, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, H5O_iterate1_t, Ptr{Cvoid}, hid_t), loc_id, obj_name, idx_type, order, op, op_data, lapl_id)
+                ccall((:H5Ovisit_by_name1, libhdf5), herr_t, (hid_t, Cstring, H5_index_t, H5_iter_order_t, H5O_iterate1_t, Ptr{Cvoid}, hid_t), loc_id, obj_name, idx_type, order, op, op_data, lapl_id)
             finally
                 unlock(liblock)
             end
@@ -2733,14 +2751,14 @@ end
 
 @static if v"1.12.0" ≤ _libhdf5_build_ver
     @doc """
-        h5o_visit_by_name(loc_id::hid_t, obj_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint, lapl_id::hid_t)
+        h5o_visit_by_name(loc_id::hid_t, obj_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint, lapl_id::hid_t)
 
     See `libhdf5` documentation for [`H5Ovisit_by_name3`](https://docs.hdfgroup.org/hdf5/develop/group___h5_o.html#ga34815400b01df59c4dac19436124885a).
     """
     function h5o_visit_by_name(loc_id, obj_name, idx_type, order, op, op_data, fields, lapl_id)
         lock(liblock)
         var"#status#" = try
-                ccall((:H5Ovisit_by_name3, libhdf5), herr_t, (hid_t, Ptr{Cchar}, H5_index_t, H5_iter_order_t, H5O_iterate2_t, Ptr{Cvoid}, Cuint, hid_t), loc_id, obj_name, idx_type, order, op, op_data, fields, lapl_id)
+                ccall((:H5Ovisit_by_name3, libhdf5), herr_t, (hid_t, Cstring, H5_index_t, H5_iter_order_t, H5O_iterate2_t, Ptr{Cvoid}, Cuint, hid_t), loc_id, obj_name, idx_type, order, op, op_data, fields, lapl_id)
             finally
                 unlock(liblock)
             end
@@ -2750,14 +2768,14 @@ end
 end
 
 """
-    h5p_get(plist_id::hid_t, name::Ptr{Cchar}, value::Ptr{Cvoid})
+    h5p_get(plist_id::hid_t, name::Cstring, value::Ptr{Cvoid})
 
 See `libhdf5` documentation for [`H5Pget`](https://docs.hdfgroup.org/hdf5/develop/group___p_l_c_r_a.html#ga40f1c3042011462c632844464a746db3).
 """
 function h5p_get(plist_id, name, value)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pget, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{Cvoid}), plist_id, name, value)
+            ccall((:H5Pget, libhdf5), herr_t, (hid_t, Cstring, Ptr{Cvoid}), plist_id, name, value)
         finally
             unlock(liblock)
         end
@@ -4286,14 +4304,14 @@ function h5p_get_vol_info(plist_id, vol_info)
 end
 
 """
-    h5p_set(plist_id::hid_t, name::Ptr{Cchar}, value::Ptr{Cvoid})
+    h5p_set(plist_id::hid_t, name::Cstring, value::Ptr{Cvoid})
 
 See `libhdf5` documentation for [`H5Pset`](https://docs.hdfgroup.org/hdf5/develop/group___p_l_c_r_a.html#ga971d2f700cb98ccdfcdf93a39118983b).
 """
 function h5p_set(plist_id, name, value)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pset, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Ptr{Cvoid}), plist_id, name, value)
+            ccall((:H5Pset, libhdf5), herr_t, (hid_t, Cstring, Ptr{Cvoid}), plist_id, name, value)
         finally
             unlock(liblock)
         end
@@ -4542,14 +4560,14 @@ function h5p_set_create_intermediate_group(plist_id, setting)
 end
 
 """
-    h5p_set_data_transform(plist_id::hid_t, expression::Ptr{Cchar})
+    h5p_set_data_transform(plist_id::hid_t, expression::Cstring)
 
 See `libhdf5` documentation for [`H5Pset_data_transform`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p.html#gaf0f2a3b06a62f253da9af05d0629ab25).
 """
 function h5p_set_data_transform(plist_id, expression)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pset_data_transform, libhdf5), herr_t, (hid_t, Ptr{Cchar}), plist_id, expression)
+            ccall((:H5Pset_data_transform, libhdf5), herr_t, (hid_t, Cstring), plist_id, expression)
         finally
             unlock(liblock)
         end
@@ -4638,14 +4656,14 @@ function h5p_set_edc_check(plist_id, check)
 end
 
 """
-    h5p_set_efile_prefix(plist_id::hid_t, prefix::Ptr{UInt8})
+    h5p_set_efile_prefix(plist_id::hid_t, prefix::Cstring)
 
 See `libhdf5` documentation for [`H5Pset_efile_prefix`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p.html#gae39f0a8c39f76dad42d86b29451d8b7a).
 """
 function h5p_set_efile_prefix(plist_id, prefix)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pset_efile_prefix, libhdf5), herr_t, (hid_t, Ptr{UInt8}), plist_id, prefix)
+            ccall((:H5Pset_efile_prefix, libhdf5), herr_t, (hid_t, Cstring), plist_id, prefix)
         finally
             unlock(liblock)
         end
@@ -4718,14 +4736,14 @@ function h5p_set_elink_file_cache_size(plist_id, efc_size)
 end
 
 """
-    h5p_set_elink_prefix(plist_id::hid_t, prefix::Ptr{Cchar})
+    h5p_set_elink_prefix(plist_id::hid_t, prefix::Cstring)
 
 See `libhdf5` documentation for [`H5Pset_elink_prefix`](https://docs.hdfgroup.org/hdf5/develop/group___l_a_p_l.html#gafa5eced13ba3a00cdd65669626dc7294).
 """
 function h5p_set_elink_prefix(plist_id, prefix)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pset_elink_prefix, libhdf5), herr_t, (hid_t, Ptr{Cchar}), plist_id, prefix)
+            ccall((:H5Pset_elink_prefix, libhdf5), herr_t, (hid_t, Cstring), plist_id, prefix)
         finally
             unlock(liblock)
         end
@@ -4766,14 +4784,14 @@ function h5p_set_evict_on_close(fapl_id, evict_on_close)
 end
 
 """
-    h5p_set_external(plist_id::hid_t, name::Ptr{Cchar}, offset::off_t, size::hsize_t)
+    h5p_set_external(plist_id::hid_t, name::Cstring, offset::off_t, size::hsize_t)
 
 See `libhdf5` documentation for [`H5Pset_external`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p.html#gac05792da2a615696c25150f0d92a4fa4).
 """
 function h5p_set_external(plist_id, name, offset, size)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Ptr{Cchar}, off_t, hsize_t), plist_id, name, offset, size)
+            ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Cstring, off_t, hsize_t), plist_id, name, offset, size)
         finally
             unlock(liblock)
         end
@@ -4846,14 +4864,14 @@ function h5p_set_fapl_hdfs(fapl_id, fa)
 end
 
 """
-    h5p_set_fapl_log(fapl_id::hid_t, logfile::Ptr{Cchar}, flags::Culonglong, buf_size::Csize_t)
+    h5p_set_fapl_log(fapl_id::hid_t, logfile::Cstring, flags::Culonglong, buf_size::Csize_t)
 
 See `libhdf5` documentation for [`H5Pset_fapl_log`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p.html#ga002bf6c2c2afee566f4a3a31f4903650).
 """
 function h5p_set_fapl_log(fapl_id, logfile, flags, buf_size)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pset_fapl_log, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Culonglong, Csize_t), fapl_id, logfile, flags, buf_size)
+            ccall((:H5Pset_fapl_log, libhdf5), herr_t, (hid_t, Cstring, Culonglong, Csize_t), fapl_id, logfile, flags, buf_size)
         finally
             unlock(liblock)
         end
@@ -4862,14 +4880,14 @@ function h5p_set_fapl_log(fapl_id, logfile, flags, buf_size)
 end
 
 """
-    h5p_set_fapl_multi(fapl_id::hid_t, memb_map::Ptr{H5FD_mem_t}, memb_fapl::Ptr{hid_t}, memb_name::Ptr{Ptr{Cchar}}, memb_addr::Ptr{haddr_t}, relax::hbool_t)
+    h5p_set_fapl_multi(fapl_id::hid_t, memb_map::Ptr{H5FD_mem_t}, memb_fapl::Ptr{hid_t}, memb_name::Ptr{Cstring}, memb_addr::Ptr{haddr_t}, relax::hbool_t)
 
 See `libhdf5` documentation for [`H5Pset_fapl_multi`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p.html#ga07763d62b497c5b297624cb293bbf195).
 """
 function h5p_set_fapl_multi(fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pset_fapl_multi, libhdf5), herr_t, (hid_t, Ptr{H5FD_mem_t}, Ptr{hid_t}, Ptr{Ptr{Cchar}}, Ptr{haddr_t}, hbool_t), fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
+            ccall((:H5Pset_fapl_multi, libhdf5), herr_t, (hid_t, Ptr{H5FD_mem_t}, Ptr{hid_t}, Ptr{Cstring}, Ptr{haddr_t}, hbool_t), fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
         finally
             unlock(liblock)
         end
@@ -4910,14 +4928,14 @@ function h5p_set_fapl_ros3(fapl_id, fa)
 end
 
 """
-    h5p_set_fapl_split(fapl::hid_t, meta_ext::Ptr{Cchar}, meta_plist_id::hid_t, raw_ext::Ptr{Cchar}, raw_plist_id::hid_t)
+    h5p_set_fapl_split(fapl::hid_t, meta_ext::Cstring, meta_plist_id::hid_t, raw_ext::Cstring, raw_plist_id::hid_t)
 
 See `libhdf5` documentation for [`H5Pset_fapl_split`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p.html#gab7435e90b23b181f14da085b273e8810).
 """
 function h5p_set_fapl_split(fapl, meta_ext, meta_plist_id, raw_ext, raw_plist_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pset_fapl_split, libhdf5), herr_t, (hid_t, Ptr{Cchar}, hid_t, Ptr{Cchar}, hid_t), fapl, meta_ext, meta_plist_id, raw_ext, raw_plist_id)
+            ccall((:H5Pset_fapl_split, libhdf5), herr_t, (hid_t, Cstring, hid_t, Cstring, hid_t), fapl, meta_ext, meta_plist_id, raw_ext, raw_plist_id)
         finally
             unlock(liblock)
         end
@@ -5342,14 +5360,14 @@ function h5p_set_mdc_image_config(plist_id, config_ptr)
 end
 
 """
-    h5p_set_mdc_log_options(plist_id::hid_t, is_enabled::hbool_t, location::Ptr{Cchar}, start_on_access::hbool_t)
+    h5p_set_mdc_log_options(plist_id::hid_t, is_enabled::hbool_t, location::Cstring, start_on_access::hbool_t)
 
 See `libhdf5` documentation for [`H5Pset_mdc_log_options`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p.html#ga912b572a34add84ce3596e5d4c150650).
 """
 function h5p_set_mdc_log_options(plist_id, is_enabled, location, start_on_access)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pset_mdc_log_options, libhdf5), herr_t, (hid_t, hbool_t, Ptr{Cchar}, hbool_t), plist_id, is_enabled, location, start_on_access)
+            ccall((:H5Pset_mdc_log_options, libhdf5), herr_t, (hid_t, hbool_t, Cstring, hbool_t), plist_id, is_enabled, location, start_on_access)
         finally
             unlock(liblock)
         end
@@ -5694,14 +5712,14 @@ function h5p_set_userblock(plist_id, len)
 end
 
 """
-    h5p_set_virtual(dcpl_id::hid_t, vspace_id::hid_t, src_file_name::Ptr{UInt8}, src_dset_name::Ptr{UInt8}, src_space_id::hid_t)
+    h5p_set_virtual(dcpl_id::hid_t, vspace_id::hid_t, src_file_name::Cstring, src_dset_name::Cstring, src_space_id::hid_t)
 
 See `libhdf5` documentation for [`H5Pset_virtual`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p.html#ga30184adabe7585c8e7ad58e6b88f1ca7).
 """
 function h5p_set_virtual(dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pset_virtual, libhdf5), herr_t, (hid_t, hid_t, Ptr{UInt8}, Ptr{UInt8}, hid_t), dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
+            ccall((:H5Pset_virtual, libhdf5), herr_t, (hid_t, hid_t, Cstring, Cstring, hid_t), dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
         finally
             unlock(liblock)
         end
@@ -5710,14 +5728,14 @@ function h5p_set_virtual(dcpl_id, vspace_id, src_file_name, src_dset_name, src_s
 end
 
 """
-    h5p_set_virtual_prefix(dapl_id::hid_t, prefix::Ptr{Cchar})
+    h5p_set_virtual_prefix(dapl_id::hid_t, prefix::Cstring)
 
 See `libhdf5` documentation for [`H5Pset_virtual_prefix`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p.html#ga8f13f900b2028f43616255eeaa9b07c0).
 """
 function h5p_set_virtual_prefix(dapl_id, prefix)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pset_virtual_prefix, libhdf5), herr_t, (hid_t, Ptr{Cchar}), dapl_id, prefix)
+            ccall((:H5Pset_virtual_prefix, libhdf5), herr_t, (hid_t, Cstring), dapl_id, prefix)
         finally
             unlock(liblock)
         end
@@ -5790,14 +5808,14 @@ function h5p_set_vol(plist_id, new_vol_id, new_vol_info)
 end
 
 """
-    h5p_add_merge_committed_dtype_path(plist_id::hid_t, path::Ptr{Cchar})
+    h5p_add_merge_committed_dtype_path(plist_id::hid_t, path::Cstring)
 
 See `libhdf5` documentation for [`H5Padd_merge_committed_dtype_path`](https://docs.hdfgroup.org/hdf5/develop/group___o_c_p_y_p_l.html#gab89c9debe50afca848151ff046afc82f).
 """
 function h5p_add_merge_committed_dtype_path(plist_id, path)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Padd_merge_committed_dtype_path, libhdf5), herr_t, (hid_t, Ptr{Cchar}), plist_id, path)
+            ccall((:H5Padd_merge_committed_dtype_path, libhdf5), herr_t, (hid_t, Cstring), plist_id, path)
         finally
             unlock(liblock)
         end
@@ -5870,14 +5888,14 @@ function h5p_copy(plist_id)
 end
 
 """
-    h5p_copy_prop(dst_id::hid_t, src_id::hid_t, name::Ptr{Cchar})
+    h5p_copy_prop(dst_id::hid_t, src_id::hid_t, name::Cstring)
 
 See `libhdf5` documentation for [`H5Pcopy_prop`](https://docs.hdfgroup.org/hdf5/develop/group___p_l_c_r_a.html#ga339a27b865cf2d57ff95a6b26e94a581).
 """
 function h5p_copy_prop(dst_id, src_id, name)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pcopy_prop, libhdf5), herr_t, (hid_t, hid_t, Ptr{Cchar}), dst_id, src_id, name)
+            ccall((:H5Pcopy_prop, libhdf5), herr_t, (hid_t, hid_t, Cstring), dst_id, src_id, name)
         finally
             unlock(liblock)
         end
@@ -5902,14 +5920,14 @@ function h5p_create(cls_id)
 end
 
 """
-    h5p_create_class(parent::hid_t, name::Ptr{Cchar}, create::H5P_cls_create_func_t, create_data::Ptr{Cvoid}, copy::H5P_cls_copy_func_t, copy_data::Ptr{Cvoid}, close::H5P_cls_close_func_t, close_data::Ptr{Cvoid}) -> hid_t
+    h5p_create_class(parent::hid_t, name::Cstring, create::H5P_cls_create_func_t, create_data::Ptr{Cvoid}, copy::H5P_cls_copy_func_t, copy_data::Ptr{Cvoid}, close::H5P_cls_close_func_t, close_data::Ptr{Cvoid}) -> hid_t
 
 See `libhdf5` documentation for [`H5Pcreate_class`](https://docs.hdfgroup.org/hdf5/develop/group___p_l_c_r_a.html#ga62a1119b6ad2c33bcc9149df5e24ae12).
 """
 function h5p_create_class(parent, name, create, create_data, copy, copy_data, close, close_data)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pcreate_class, libhdf5), hid_t, (hid_t, Ptr{Cchar}, H5P_cls_create_func_t, Ptr{Cvoid}, H5P_cls_copy_func_t, Ptr{Cvoid}, H5P_cls_close_func_t, Ptr{Cvoid}), parent, name, create, create_data, copy, copy_data, close, close_data)
+            ccall((:H5Pcreate_class, libhdf5), hid_t, (hid_t, Cstring, H5P_cls_create_func_t, Ptr{Cvoid}, H5P_cls_copy_func_t, Ptr{Cvoid}, H5P_cls_close_func_t, Ptr{Cvoid}), parent, name, create, create_data, copy, copy_data, close, close_data)
         finally
             unlock(liblock)
         end
@@ -5982,14 +6000,14 @@ function h5p_equal(id1, id2)
 end
 
 """
-    h5p_exist(plist_id::hid_t, name::Ptr{Cchar}) -> Bool
+    h5p_exist(plist_id::hid_t, name::Cstring) -> Bool
 
 See `libhdf5` documentation for [`H5Pexist`](https://docs.hdfgroup.org/hdf5/develop/group___p_l_c_r_a.html#gae135cf333c12375f3808cfe931ea9190).
 """
 function h5p_exist(plist_id, name)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pexist, libhdf5), htri_t, (hid_t, Ptr{Cchar}), plist_id, name)
+            ccall((:H5Pexist, libhdf5), htri_t, (hid_t, Cstring), plist_id, name)
         finally
             unlock(liblock)
         end
@@ -6030,14 +6048,14 @@ function h5p_free_merge_committed_dtype_paths(plist_id)
 end
 
 """
-    h5p_insert(plist_id::hid_t, name::Ptr{Cchar}, size::Csize_t, value::Ptr{Cvoid}, prp_set::H5P_prp_set_func_t, prp_get::H5P_prp_get_func_t, prp_delete::H5P_prp_delete_func_t, prp_copy::H5P_prp_copy_func_t, prp_close::H5P_prp_close_func_t)
+    h5p_insert(plist_id::hid_t, name::Cstring, size::Csize_t, value::Ptr{Cvoid}, prp_set::H5P_prp_set_func_t, prp_get::H5P_prp_get_func_t, prp_delete::H5P_prp_delete_func_t, prp_copy::H5P_prp_copy_func_t, prp_close::H5P_prp_close_func_t)
 
 See `libhdf5` documentation for [`H5Pinsert1`](https://docs.hdfgroup.org/hdf5/develop/group___p_l_c_r_a.html#ga6ba9694c03ae97c9f514470366a909f9).
 """
 function h5p_insert(plist_id, name, size, value, prp_set, prp_get, prp_delete, prp_copy, prp_close)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pinsert1, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Csize_t, Ptr{Cvoid}, H5P_prp_set_func_t, H5P_prp_get_func_t, H5P_prp_delete_func_t, H5P_prp_copy_func_t, H5P_prp_close_func_t), plist_id, name, size, value, prp_set, prp_get, prp_delete, prp_copy, prp_close)
+            ccall((:H5Pinsert1, libhdf5), herr_t, (hid_t, Cstring, Csize_t, Ptr{Cvoid}, H5P_prp_set_func_t, H5P_prp_get_func_t, H5P_prp_delete_func_t, H5P_prp_copy_func_t, H5P_prp_close_func_t), plist_id, name, size, value, prp_set, prp_get, prp_delete, prp_copy, prp_close)
         finally
             unlock(liblock)
         end
@@ -6046,14 +6064,14 @@ function h5p_insert(plist_id, name, size, value, prp_set, prp_get, prp_delete, p
 end
 
 """
-    h5p_insert(plist_id::hid_t, name::Ptr{Cchar}, size::Csize_t, value::Ptr{Cvoid}, set::H5P_prp_set_func_t, get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, copy::H5P_prp_copy_func_t, compare::H5P_prp_compare_func_t, close::H5P_prp_close_func_t)
+    h5p_insert(plist_id::hid_t, name::Cstring, size::Csize_t, value::Ptr{Cvoid}, set::H5P_prp_set_func_t, get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, copy::H5P_prp_copy_func_t, compare::H5P_prp_compare_func_t, close::H5P_prp_close_func_t)
 
 See `libhdf5` documentation for [`H5Pinsert2`](https://docs.hdfgroup.org/hdf5/develop/group___p_l_c_r_a.html#ga930e15d5f994e223bea80621ef3065d4).
 """
 function h5p_insert(plist_id, name, size, value, set, get, prp_del, copy, compare, close)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pinsert2, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Csize_t, Ptr{Cvoid}, H5P_prp_set_func_t, H5P_prp_get_func_t, H5P_prp_delete_func_t, H5P_prp_copy_func_t, H5P_prp_compare_func_t, H5P_prp_close_func_t), plist_id, name, size, value, set, get, prp_del, copy, compare, close)
+            ccall((:H5Pinsert2, libhdf5), herr_t, (hid_t, Cstring, Csize_t, Ptr{Cvoid}, H5P_prp_set_func_t, H5P_prp_get_func_t, H5P_prp_delete_func_t, H5P_prp_copy_func_t, H5P_prp_compare_func_t, H5P_prp_close_func_t), plist_id, name, size, value, set, get, prp_del, copy, compare, close)
         finally
             unlock(liblock)
         end
@@ -6110,14 +6128,14 @@ function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
 end
 
 """
-    h5p_register(cls_id::hid_t, name::Ptr{Cchar}, size::Csize_t, def_value::Ptr{Cvoid}, prp_create::H5P_prp_create_func_t, prp_set::H5P_prp_set_func_t, prp_get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, prp_copy::H5P_prp_copy_func_t, prp_close::H5P_prp_close_func_t)
+    h5p_register(cls_id::hid_t, name::Cstring, size::Csize_t, def_value::Ptr{Cvoid}, prp_create::H5P_prp_create_func_t, prp_set::H5P_prp_set_func_t, prp_get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, prp_copy::H5P_prp_copy_func_t, prp_close::H5P_prp_close_func_t)
 
 See `libhdf5` documentation for [`H5Pregister1`](https://docs.hdfgroup.org/hdf5/develop/group___p_l_c_r_a.html#ga91799f6cda78911e9ecc2cfaaea3a3b5).
 """
 function h5p_register(cls_id, name, size, def_value, prp_create, prp_set, prp_get, prp_del, prp_copy, prp_close)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pregister1, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Csize_t, Ptr{Cvoid}, H5P_prp_create_func_t, H5P_prp_set_func_t, H5P_prp_get_func_t, H5P_prp_delete_func_t, H5P_prp_copy_func_t, H5P_prp_close_func_t), cls_id, name, size, def_value, prp_create, prp_set, prp_get, prp_del, prp_copy, prp_close)
+            ccall((:H5Pregister1, libhdf5), herr_t, (hid_t, Cstring, Csize_t, Ptr{Cvoid}, H5P_prp_create_func_t, H5P_prp_set_func_t, H5P_prp_get_func_t, H5P_prp_delete_func_t, H5P_prp_copy_func_t, H5P_prp_close_func_t), cls_id, name, size, def_value, prp_create, prp_set, prp_get, prp_del, prp_copy, prp_close)
         finally
             unlock(liblock)
         end
@@ -6126,14 +6144,14 @@ function h5p_register(cls_id, name, size, def_value, prp_create, prp_set, prp_ge
 end
 
 """
-    h5p_register(cls_id::hid_t, name::Ptr{Cchar}, size::Csize_t, def_value::Ptr{Cvoid}, create::H5P_prp_create_func_t, set::H5P_prp_set_func_t, get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, copy::H5P_prp_copy_func_t, compare::H5P_prp_compare_func_t, close::H5P_prp_close_func_t)
+    h5p_register(cls_id::hid_t, name::Cstring, size::Csize_t, def_value::Ptr{Cvoid}, create::H5P_prp_create_func_t, set::H5P_prp_set_func_t, get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, copy::H5P_prp_copy_func_t, compare::H5P_prp_compare_func_t, close::H5P_prp_close_func_t)
 
 See `libhdf5` documentation for [`H5Pregister2`](https://docs.hdfgroup.org/hdf5/develop/group___p_l_c_r_a.html#gaac3f957a5d3cbb4adc8b7ba2aa5f1719).
 """
 function h5p_register(cls_id, name, size, def_value, create, set, get, prp_del, copy, compare, close)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Pregister2, libhdf5), herr_t, (hid_t, Ptr{Cchar}, Csize_t, Ptr{Cvoid}, H5P_prp_create_func_t, H5P_prp_set_func_t, H5P_prp_get_func_t, H5P_prp_delete_func_t, H5P_prp_copy_func_t, H5P_prp_compare_func_t, H5P_prp_close_func_t), cls_id, name, size, def_value, create, set, get, prp_del, copy, compare, close)
+            ccall((:H5Pregister2, libhdf5), herr_t, (hid_t, Cstring, Csize_t, Ptr{Cvoid}, H5P_prp_create_func_t, H5P_prp_set_func_t, H5P_prp_get_func_t, H5P_prp_delete_func_t, H5P_prp_copy_func_t, H5P_prp_compare_func_t, H5P_prp_close_func_t), cls_id, name, size, def_value, create, set, get, prp_del, copy, compare, close)
         finally
             unlock(liblock)
         end
@@ -6142,14 +6160,14 @@ function h5p_register(cls_id, name, size, def_value, create, set, get, prp_del, 
 end
 
 """
-    h5p_remove(plist_id::hid_t, name::Ptr{Cchar})
+    h5p_remove(plist_id::hid_t, name::Cstring)
 
 See `libhdf5` documentation for [`H5Premove`](https://docs.hdfgroup.org/hdf5/develop/group___p_l_c_r_a.html#ga2bf026d42a7823e89b6070a4cafc284b).
 """
 function h5p_remove(plist_id, name)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Premove, libhdf5), herr_t, (hid_t, Ptr{Cchar}), plist_id, name)
+            ccall((:H5Premove, libhdf5), herr_t, (hid_t, Cstring), plist_id, name)
         finally
             unlock(liblock)
         end
@@ -6174,14 +6192,14 @@ function h5p_remove_filter(plist_id, filter_id)
 end
 
 """
-    h5p_unregister(pclass_id::hid_t, name::Ptr{Cchar})
+    h5p_unregister(pclass_id::hid_t, name::Cstring)
 
 See `libhdf5` documentation for [`H5Punregister`](https://docs.hdfgroup.org/hdf5/develop/group___p_l_c_r_a.html#gaefb44d3535e309ba4041e420f3712aea).
 """
 function h5p_unregister(pclass_id, name)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Punregister, libhdf5), herr_t, (hid_t, Ptr{Cchar}), pclass_id, name)
+            ccall((:H5Punregister, libhdf5), herr_t, (hid_t, Cstring), pclass_id, name)
         finally
             unlock(liblock)
         end
@@ -6222,14 +6240,14 @@ function h5pl_get_loading_state(plugin_control_mask)
 end
 
 """
-    h5pl_append(search_path::Ptr{Cchar})
+    h5pl_append(search_path::Cstring)
 
 See `libhdf5` documentation for [`H5PLappend`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p_l.html#ga1c81591d0f7f74f6addf22fe1b26a724).
 """
 function h5pl_append(search_path)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5PLappend, libhdf5), herr_t, (Ptr{Cchar},), search_path)
+            ccall((:H5PLappend, libhdf5), herr_t, (Cstring,), search_path)
         finally
             unlock(liblock)
         end
@@ -6238,14 +6256,14 @@ function h5pl_append(search_path)
 end
 
 """
-    h5pl_prepend(search_path::Ptr{Cchar})
+    h5pl_prepend(search_path::Cstring)
 
 See `libhdf5` documentation for [`H5PLprepend`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p_l.html#ga877ff026cf5a3be493c71e06b543c1f6).
 """
 function h5pl_prepend(search_path)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5PLprepend, libhdf5), herr_t, (Ptr{Cchar},), search_path)
+            ccall((:H5PLprepend, libhdf5), herr_t, (Cstring,), search_path)
         finally
             unlock(liblock)
         end
@@ -6254,14 +6272,14 @@ function h5pl_prepend(search_path)
 end
 
 """
-    h5pl_replace(search_path::Ptr{Cchar}, index::Cuint)
+    h5pl_replace(search_path::Cstring, index::Cuint)
 
 See `libhdf5` documentation for [`H5PLreplace`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p_l.html#ga1cd24b01797d556dacf66d04dc068499).
 """
 function h5pl_replace(search_path, index)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5PLreplace, libhdf5), herr_t, (Ptr{Cchar}, Cuint), search_path, index)
+            ccall((:H5PLreplace, libhdf5), herr_t, (Cstring, Cuint), search_path, index)
         finally
             unlock(liblock)
         end
@@ -6270,14 +6288,14 @@ function h5pl_replace(search_path, index)
 end
 
 """
-    h5pl_insert(search_path::Ptr{Cchar}, index::Cuint)
+    h5pl_insert(search_path::Cstring, index::Cuint)
 
 See `libhdf5` documentation for [`H5PLinsert`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_p_l.html#gaf05018428cac6b3de1f769687aefbd6c).
 """
 function h5pl_insert(search_path, index)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5PLinsert, libhdf5), herr_t, (Ptr{Cchar}, Cuint), search_path, index)
+            ccall((:H5PLinsert, libhdf5), herr_t, (Cstring, Cuint), search_path, index)
         finally
             unlock(liblock)
         end
@@ -6334,14 +6352,14 @@ function h5pl_size(num_paths)
 end
 
 """
-    h5r_create(ref::Ptr{Cvoid}, loc_id::hid_t, pathname::Ptr{UInt8}, ref_type::Cint, space_id::hid_t)
+    h5r_create(ref::Ptr{Cvoid}, loc_id::hid_t, pathname::Cstring, ref_type::Cint, space_id::hid_t)
 
 See `libhdf5` documentation for [`H5Rcreate`](https://docs.hdfgroup.org/hdf5/develop/group___h5_r.html#ga0ac6997b5de26b11d91a95de2869950d).
 """
 function h5r_create(ref, loc_id, pathname, ref_type, space_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Rcreate, libhdf5), herr_t, (Ptr{Cvoid}, hid_t, Ptr{UInt8}, Cint, hid_t), ref, loc_id, pathname, ref_type, space_id)
+            ccall((:H5Rcreate, libhdf5), herr_t, (Ptr{Cvoid}, hid_t, Cstring, Cint, hid_t), ref, loc_id, pathname, ref_type, space_id)
         finally
             unlock(liblock)
         end
@@ -6720,14 +6738,14 @@ function h5t_committed(dtype_id)
 end
 
 """
-    h5t_commit(loc_id::hid_t, name::Ptr{UInt8}, dtype_id::hid_t, lcpl_id::hid_t, tcpl_id::hid_t, tapl_id::hid_t)
+    h5t_commit(loc_id::hid_t, name::Cstring, dtype_id::hid_t, lcpl_id::hid_t, tcpl_id::hid_t, tapl_id::hid_t)
 
 See `libhdf5` documentation for [`H5Tcommit2`](https://docs.hdfgroup.org/hdf5/develop/group___h5_t.html#ga10352b6fa9ac58a7fbd5299496f1df31).
 """
 function h5t_commit(loc_id, name, dtype_id, lcpl_id, tcpl_id, tapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Tcommit2, libhdf5), herr_t, (hid_t, Ptr{UInt8}, hid_t, hid_t, hid_t, hid_t), loc_id, name, dtype_id, lcpl_id, tcpl_id, tapl_id)
+            ccall((:H5Tcommit2, libhdf5), herr_t, (hid_t, Cstring, hid_t, hid_t, hid_t, hid_t), loc_id, name, dtype_id, lcpl_id, tcpl_id, tapl_id)
         finally
             unlock(liblock)
         end
@@ -6912,14 +6930,14 @@ function h5t_get_member_class(dtype_id, index)
 end
 
 """
-    h5t_get_member_index(dtype_id::hid_t, membername::Ptr{UInt8}) -> Int
+    h5t_get_member_index(dtype_id::hid_t, membername::Cstring) -> Int
 
 See `libhdf5` documentation for [`H5Tget_member_index`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_t.html#ga535df381669deb554ad06e5db4a389c5).
 """
 function h5t_get_member_index(dtype_id, membername)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Tget_member_index, libhdf5), Cint, (hid_t, Ptr{UInt8}), dtype_id, membername)
+            ccall((:H5Tget_member_index, libhdf5), Cint, (hid_t, Cstring), dtype_id, membername)
         finally
             unlock(liblock)
         end
@@ -7104,14 +7122,14 @@ function h5t_get_super(dtype_id)
 end
 
 """
-    h5t_insert(dtype_id::hid_t, fieldname::Ptr{UInt8}, offset::Csize_t, field_id::hid_t)
+    h5t_insert(dtype_id::hid_t, fieldname::Cstring, offset::Csize_t, field_id::hid_t)
 
 See `libhdf5` documentation for [`H5Tinsert`](https://docs.hdfgroup.org/hdf5/develop/group___j_h5_t.html#ga09403f6654ba59890deefe3d17104008).
 """
 function h5t_insert(dtype_id, fieldname, offset, field_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Tinsert, libhdf5), herr_t, (hid_t, Ptr{UInt8}, Csize_t, hid_t), dtype_id, fieldname, offset, field_id)
+            ccall((:H5Tinsert, libhdf5), herr_t, (hid_t, Cstring, Csize_t, hid_t), dtype_id, fieldname, offset, field_id)
         finally
             unlock(liblock)
         end
@@ -7152,14 +7170,14 @@ function h5t_lock(type_id)
 end
 
 """
-    h5t_open(loc_id::hid_t, name::Ptr{UInt8}, tapl_id::hid_t) -> hid_t
+    h5t_open(loc_id::hid_t, name::Cstring, tapl_id::hid_t) -> hid_t
 
 See `libhdf5` documentation for [`H5Topen2`](https://docs.hdfgroup.org/hdf5/develop/group___h5_t.html#ga7e65e77634f1fb4ba38cbcdab9a59bc2).
 """
 function h5t_open(loc_id, name, tapl_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Topen2, libhdf5), hid_t, (hid_t, Ptr{UInt8}, hid_t), loc_id, name, tapl_id)
+            ccall((:H5Topen2, libhdf5), hid_t, (hid_t, Cstring, hid_t), loc_id, name, tapl_id)
         finally
             unlock(liblock)
         end
@@ -7488,14 +7506,14 @@ function h5ds_set_label(did, idx, label)
 end
 
 """
-    h5ds_set_scale(dsid::hid_t, dimname::Ptr{UInt8})
+    h5ds_set_scale(dsid::hid_t, dimname::Cstring)
 
 See `libhdf5` documentation for [`H5DSset_scale`](https://docs.hdfgroup.org/hdf5/develop/group___h5_d_s.html#ga508a06962e9fc11dff32ed356e0a71fa).
 """
 function h5ds_set_scale(dsid, dimname)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5DSset_scale, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}), dsid, dimname)
+            ccall((:H5DSset_scale, libhdf5_hl), herr_t, (hid_t, Cstring), dsid, dimname)
         finally
             unlock(liblock)
         end
@@ -7520,14 +7538,14 @@ function h5lt_dtype_to_text(datatype, str, lang_type, len)
 end
 
 """
-    h5tb_append_records(loc_id::hid_t, dset_name::Ptr{UInt8}, nrecords::hsize_t, type_size::Csize_t, field_offset::Ptr{Csize_t}, field_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})
+    h5tb_append_records(loc_id::hid_t, dset_name::Cstring, nrecords::hsize_t, type_size::Csize_t, field_offset::Ptr{Csize_t}, field_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})
 
 See `libhdf5` documentation for [`H5TBappend_records`](https://docs.hdfgroup.org/hdf5/develop/group___h5_t_b.html#ga86f4907fb623ca561df39028dad83201).
 """
 function h5tb_append_records(loc_id, dset_name, nrecords, type_size, field_offset, field_sizes, data)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5TBappend_records, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, hsize_t, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, dset_name, nrecords, type_size, field_offset, field_sizes, data)
+            ccall((:H5TBappend_records, libhdf5_hl), herr_t, (hid_t, Cstring, hsize_t, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, dset_name, nrecords, type_size, field_offset, field_sizes, data)
         finally
             unlock(liblock)
         end
@@ -7536,14 +7554,14 @@ function h5tb_append_records(loc_id, dset_name, nrecords, type_size, field_offse
 end
 
 """
-    h5tb_get_field_info(loc_id::hid_t, table_name::Ptr{UInt8}, field_names::Ptr{Ptr{UInt8}}, field_sizes::Ptr{Csize_t}, field_offsets::Ptr{Csize_t}, type_size::Ptr{Csize_t})
+    h5tb_get_field_info(loc_id::hid_t, table_name::Cstring, field_names::Ptr{Ptr{UInt8}}, field_sizes::Ptr{Csize_t}, field_offsets::Ptr{Csize_t}, type_size::Ptr{Csize_t})
 
 See `libhdf5` documentation for [`H5TBget_field_info`](https://docs.hdfgroup.org/hdf5/develop/group___h5_t_b.html#gaa0f9db05008cec2c37de8487531000ba).
 """
 function h5tb_get_field_info(loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5TBget_field_info, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, Ptr{Ptr{UInt8}}, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Csize_t}), loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
+            ccall((:H5TBget_field_info, libhdf5_hl), herr_t, (hid_t, Cstring, Ptr{Ptr{UInt8}}, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Csize_t}), loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
         finally
             unlock(liblock)
         end
@@ -7552,14 +7570,14 @@ function h5tb_get_field_info(loc_id, table_name, field_names, field_sizes, field
 end
 
 """
-    h5tb_get_table_info(loc_id::hid_t, table_name::Ptr{UInt8}, nfields::Ptr{hsize_t}, nrecords::Ptr{hsize_t})
+    h5tb_get_table_info(loc_id::hid_t, table_name::Cstring, nfields::Ptr{hsize_t}, nrecords::Ptr{hsize_t})
 
 See `libhdf5` documentation for [`H5TBget_table_info`](https://docs.hdfgroup.org/hdf5/develop/group___h5_t_b.html#ga35c13910216330ca1768396ac7ecd99c).
 """
 function h5tb_get_table_info(loc_id, table_name, nfields, nrecords)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5TBget_table_info, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, Ptr{hsize_t}, Ptr{hsize_t}), loc_id, table_name, nfields, nrecords)
+            ccall((:H5TBget_table_info, libhdf5_hl), herr_t, (hid_t, Cstring, Ptr{hsize_t}, Ptr{hsize_t}), loc_id, table_name, nfields, nrecords)
         finally
             unlock(liblock)
         end
@@ -7568,14 +7586,14 @@ function h5tb_get_table_info(loc_id, table_name, nfields, nrecords)
 end
 
 """
-    h5tb_make_table(table_title::Ptr{UInt8}, loc_id::hid_t, dset_name::Ptr{UInt8}, nfields::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_names::Ptr{Ptr{UInt8}}, field_offset::Ptr{Csize_t}, field_types::Ptr{hid_t}, chunk_size::hsize_t, fill_data::Ptr{Cvoid}, compress::Cint, data::Ptr{Cvoid})
+    h5tb_make_table(table_title::Cstring, loc_id::hid_t, dset_name::Cstring, nfields::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_names::Ptr{Cstring}, field_offset::Ptr{Csize_t}, field_types::Ptr{hid_t}, chunk_size::hsize_t, fill_data::Ptr{Cvoid}, compress::Cint, data::Ptr{Cvoid})
 
 See `libhdf5` documentation for [`H5TBmake_table`](https://docs.hdfgroup.org/hdf5/develop/group___h5_t_b.html#gacce384a15825421d1bddfc7b3ab1e7d0).
 """
 function h5tb_make_table(table_title, loc_id, dset_name, nfields, nrecords, type_size, field_names, field_offset, field_types, chunk_size, fill_data, compress, data)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5TBmake_table, libhdf5_hl), herr_t, (Ptr{UInt8}, hid_t, Ptr{UInt8}, hsize_t, hsize_t, Csize_t, Ptr{Ptr{UInt8}}, Ptr{Csize_t}, Ptr{hid_t}, hsize_t, Ptr{Cvoid}, Cint, Ptr{Cvoid}), table_title, loc_id, dset_name, nfields, nrecords, type_size, field_names, field_offset, field_types, chunk_size, fill_data, compress, data)
+            ccall((:H5TBmake_table, libhdf5_hl), herr_t, (Cstring, hid_t, Cstring, hsize_t, hsize_t, Csize_t, Ptr{Cstring}, Ptr{Csize_t}, Ptr{hid_t}, hsize_t, Ptr{Cvoid}, Cint, Ptr{Cvoid}), table_title, loc_id, dset_name, nfields, nrecords, type_size, field_names, field_offset, field_types, chunk_size, fill_data, compress, data)
         finally
             unlock(liblock)
         end
@@ -7584,14 +7602,14 @@ function h5tb_make_table(table_title, loc_id, dset_name, nfields, nrecords, type
 end
 
 """
-    h5tb_read_records(loc_id::hid_t, table_name::Ptr{UInt8}, start::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_offsets::Ptr{Csize_t}, dst_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})
+    h5tb_read_records(loc_id::hid_t, table_name::Cstring, start::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_offsets::Ptr{Csize_t}, dst_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})
 
 See `libhdf5` documentation for [`H5TBread_records`](https://docs.hdfgroup.org/hdf5/develop/group___h5_t_b.html#ga597aa39196582e086ebb6ff60abcd3fc).
 """
 function h5tb_read_records(loc_id, table_name, start, nrecords, type_size, field_offsets, dst_sizes, data)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5TBread_records, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, hsize_t, hsize_t, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, table_name, start, nrecords, type_size, field_offsets, dst_sizes, data)
+            ccall((:H5TBread_records, libhdf5_hl), herr_t, (hid_t, Cstring, hsize_t, hsize_t, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, table_name, start, nrecords, type_size, field_offsets, dst_sizes, data)
         finally
             unlock(liblock)
         end
@@ -7600,14 +7618,14 @@ function h5tb_read_records(loc_id, table_name, start, nrecords, type_size, field
 end
 
 """
-    h5tb_read_table(loc_id::hid_t, table_name::Ptr{UInt8}, dst_size::Csize_t, dst_offset::Ptr{Csize_t}, dst_sizes::Ptr{Csize_t}, dst_buf::Ptr{Cvoid})
+    h5tb_read_table(loc_id::hid_t, table_name::Cstring, dst_size::Csize_t, dst_offset::Ptr{Csize_t}, dst_sizes::Ptr{Csize_t}, dst_buf::Ptr{Cvoid})
 
 See `libhdf5` documentation for [`H5TBread_table`](https://docs.hdfgroup.org/hdf5/develop/group___h5_t_b.html#gae3f29b60e32a09a4d6c7bae56374a3bb).
 """
 function h5tb_read_table(loc_id, table_name, dst_size, dst_offset, dst_sizes, dst_buf)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5TBread_table, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, table_name, dst_size, dst_offset, dst_sizes, dst_buf)
+            ccall((:H5TBread_table, libhdf5_hl), herr_t, (hid_t, Cstring, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, table_name, dst_size, dst_offset, dst_sizes, dst_buf)
         finally
             unlock(liblock)
         end
@@ -7616,14 +7634,14 @@ function h5tb_read_table(loc_id, table_name, dst_size, dst_offset, dst_sizes, ds
 end
 
 """
-    h5tb_write_records(loc_id::hid_t, table_name::Ptr{UInt8}, start::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_offsets::Ptr{UInt8}, field_sizes::Ptr{UInt8}, data::Ptr{Cvoid})
+    h5tb_write_records(loc_id::hid_t, table_name::Cstring, start::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_offsets::Ptr{Csize_t}, field_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})
 
 See `libhdf5` documentation for [`H5TBwrite_records`](https://docs.hdfgroup.org/hdf5/develop/group___h5_t_b.html#ga04c5ef340c562ff96bff16d222c5677e).
 """
 function h5tb_write_records(loc_id, table_name, start, nrecords, type_size, field_offsets, field_sizes, data)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5TBwrite_records, libhdf5_hl), herr_t, (hid_t, Ptr{UInt8}, hsize_t, hsize_t, Csize_t, Ptr{UInt8}, Ptr{UInt8}, Ptr{Cvoid}), loc_id, table_name, start, nrecords, type_size, field_offsets, field_sizes, data)
+            ccall((:H5TBwrite_records, libhdf5_hl), herr_t, (hid_t, Cstring, hsize_t, hsize_t, Csize_t, Ptr{Csize_t}, Ptr{Csize_t}, Ptr{Cvoid}), loc_id, table_name, start, nrecords, type_size, field_offsets, field_sizes, data)
         finally
             unlock(liblock)
         end

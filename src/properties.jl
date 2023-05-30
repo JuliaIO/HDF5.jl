@@ -104,7 +104,7 @@ macro propertyclass(name, classid)
             id::API.hid_t
             function $name(id::API.hid_t)
                 obj = new(id)
-                finalizer(close, obj)
+                finalizer(API.try_close_finalizer, obj)
                 obj
             end
         end
@@ -700,6 +700,8 @@ end
 libver_bound_to_enum(val::Integer) = val
 libver_bound_to_enum(val::API.H5F_libver_t) = val
 function libver_bound_to_enum(val::VersionNumber)
+    val >= v"1.16"   ? API.H5F_LIBVER_V116 :
+    val >= v"1.14"   ? API.H5F_LIBVER_V114 :
     val >= v"1.12"   ? API.H5F_LIBVER_V112 :
     val >= v"1.10"   ? API.H5F_LIBVER_V110 :
     val >= v"1.8"    ? API.H5F_LIBVER_V18 :
@@ -715,6 +717,8 @@ function libver_bound_from_enum(enum::API.H5F_libver_t)
     enum == API.H5F_LIBVER_V18      ? v"1.8" :
     enum == API.H5F_LIBVER_V110     ? v"1.10" :
     enum == API.H5F_LIBVER_V112     ? v"1.12" :
+    enum == API.H5F_LIBVER_V114     ? v"1.14" :
+    enum == API.H5F_LIBVER_V116     ? v"1.16" :
     error("Unknown libver_bound value $enum")
 end
 libver_bound_from_enum(enum) = libver_bound_from_enum(API.H5F_libver_t(enum))

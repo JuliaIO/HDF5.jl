@@ -89,6 +89,7 @@ h5a_write
 ---
 
 ## [[`H5D`](https://docs.hdfgroup.org/hdf5/develop/group___h5_d.html) — Dataset Interface](@id H5D)
+- [`h5d_chunk_iter`](@ref h5d_chunk_iter)
 - [`h5d_close`](@ref h5d_close)
 - [`h5d_create`](@ref h5d_create)
 - [`h5d_create_anon`](@ref h5d_create_anon)
@@ -119,6 +120,7 @@ h5a_write
 - [`h5d_write`](@ref h5d_write)
 - [`h5d_write_chunk`](@ref h5d_write_chunk)
 ```@docs
+h5d_chunk_iter
 h5d_close
 h5d_create
 h5d_create_anon

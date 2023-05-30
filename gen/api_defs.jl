@@ -36,21 +36,21 @@
 ###
 
 @bind h5a_close(id::hid_t)::herr_t "Error closing attribute"
-@bind h5a_create2(loc_id::hid_t, attr_name::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t)::hid_t string("Error creating attribute ", attr_name, " for object ", h5i_get_name(loc_id))
-@bind h5a_create_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t, lapl_id::hid_t)::hid_t string("Error creating attribute ", attr_name, " for object ", obj_name)
-@bind h5a_delete(loc_id::hid_t, attr_name::Ptr{UInt8})::herr_t string("Error deleting attribute ", attr_name)
-@bind h5a_delete_by_idx(loc_id::hid_t, obj_name::Ptr{UInt8}, idx_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::herr_t string("Error deleting attribute ", n, " from object ", obj_name)
-@bind h5a_delete_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, lapl_id::hid_t)::herr_t string("Error removing attribute ", attr_name, " from object ", obj_name)
-@bind h5a_exists(obj_id::hid_t, attr_name::Ptr{UInt8})::htri_t string("Error checking whether attribute ", attr_name, " exists")
-@bind h5a_exists_by_name(loc_id::hid_t, obj_name::Ptr{UInt8}, attr_name::Ptr{UInt8}, lapl_id::hid_t)::htri_t string("Error checking whether object ", obj_name, " has attribute ", attr_name)
+@bind h5a_create2(loc_id::hid_t, attr_name::Cstring, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t)::hid_t string("Error creating attribute ", attr_name, " for object ", h5i_get_name(loc_id))
+@bind h5a_create_by_name(loc_id::hid_t, obj_name::Cstring, attr_name::Cstring, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t, lapl_id::hid_t)::hid_t string("Error creating attribute ", attr_name, " for object ", obj_name)
+@bind h5a_delete(loc_id::hid_t, attr_name::Cstring)::herr_t string("Error deleting attribute ", attr_name)
+@bind h5a_delete_by_idx(loc_id::hid_t, obj_name::Cstring, idx_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::herr_t string("Error deleting attribute ", n, " from object ", obj_name)
+@bind h5a_delete_by_name(loc_id::hid_t, obj_name::Cstring, attr_name::Cstring, lapl_id::hid_t)::herr_t string("Error removing attribute ", attr_name, " from object ", obj_name)
+@bind h5a_exists(obj_id::hid_t, attr_name::Cstring)::htri_t string("Error checking whether attribute ", attr_name, " exists")
+@bind h5a_exists_by_name(loc_id::hid_t, obj_name::Cstring, attr_name::Cstring, lapl_id::hid_t)::htri_t string("Error checking whether object ", obj_name, " has attribute ", attr_name)
 @bind h5a_get_create_plist(attr_id::hid_t)::hid_t "Cannot get creation property list"
 @bind h5a_get_name(attr_id::hid_t, buf_size::Csize_t, buf::Ptr{UInt8})::Cssize_t "Error getting attribute name"
 @bind h5a_get_name_by_idx(loc_id::hid_t, obj_name::Cstring, index_type::Cint, order::Cint, idx::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting attribute name"
 @bind h5a_get_space(attr_id::hid_t)::hid_t "Error getting attribute dataspace"
 @bind h5a_get_type(attr_id::hid_t)::hid_t "Error getting attribute type"
 @bind h5a_iterate2(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)::herr_t string("Error iterating attributes in object ", h5i_get_name(obj_id))
-@bind h5a_open(obj_id::hid_t, attr_name::Ptr{UInt8}, aapl_id::hid_t)::hid_t string("Error opening attribute ", attr_name, " for object ", h5i_get_name(obj_id))
-@bind h5a_open_by_idx(obj_id::hid_t, pathname::Ptr{UInt8}, idx_type::Cint, order::Cint, n::hsize_t, aapl_id::hid_t, lapl_id::hid_t)::hid_t string("Error opening attribute ", n, " of ", h5i_get_name(obj_id), "/", pathname)
+@bind h5a_open(obj_id::hid_t, attr_name::Cstring, aapl_id::hid_t)::hid_t string("Error opening attribute ", attr_name, " for object ", h5i_get_name(obj_id))
+@bind h5a_open_by_idx(obj_id::hid_t, pathname::Cstring, idx_type::Cint, order::Cint, n::hsize_t, aapl_id::hid_t, lapl_id::hid_t)::hid_t string("Error opening attribute ", n, " of ", h5i_get_name(obj_id), "/", pathname)
 @bind h5a_read(attr_id::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})::herr_t string("Error reading attribute ", h5a_get_name(attr_id))
 @bind h5a_rename(loc_id::hid_t, old_attr_name::Cstring, new_attr_name::Cstring)::herr_t string("Could not rename attribute")
 @bind h5a_write(attr_hid::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})::herr_t "Error writing attribute data"
@@ -59,8 +59,9 @@
 ### Dataset Interface
 ###
 
+@bind h5d_chunk_iter(dset_id::hid_t, dxpl_id::hid_t, cb::Ptr{Nothing}, op_data::Any)::herr_t "Error iterating over chunks" (v"1.12.3", nothing)
 @bind h5d_close(dataset_id::hid_t)::herr_t "Error closing dataset"
-@bind h5d_create2(loc_id::hid_t, pathname::Ptr{UInt8}, dtype_id::hid_t, space_id::hid_t, lcpl_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)::hid_t string("Error creating dataset ", h5i_get_name(loc_id), "/", pathname)
+@bind h5d_create2(loc_id::hid_t, pathname::Cstring, dtype_id::hid_t, space_id::hid_t, lcpl_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)::hid_t string("Error creating dataset ", h5i_get_name(loc_id), "/", pathname)
 @bind h5d_create_anon(loc_id::hid_t, type_id::hid_t, space_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)::hid_t "Error in creating anonymous dataset"
 @bind h5d_extend(dataset_id::hid_t, size::Ptr{hsize_t})::herr_t "Error extending dataset" # deprecated in favor of h5d_set_extent
 @bind h5d_fill(fill::Ptr{Cvoid}, fill_type_id::hid_t, buf::Ptr{Cvoid}, buf_type_id::hid_t, space_id::hid_t)::herr_t "Error filling dataset"
@@ -78,7 +79,7 @@
 @bind h5d_get_storage_size(dataset_id::hid_t)::hsize_t "Error getting storage size"
 @bind h5d_get_type(dataset_id::hid_t)::hid_t "Error getting dataspace type"
 @bind h5d_iterate(buf::Ptr{Cvoid}, type_id::hid_t, space_id::hid_t, operator::Ptr{Cvoid}, operator_data::Any)::herr_t "Error iterating dataset"
-@bind h5d_open2(loc_id::hid_t, pathname::Ptr{UInt8}, dapl_id::hid_t)::hid_t string("Error opening dataset ", h5i_get_name(loc_id), "/", pathname)
+@bind h5d_open2(loc_id::hid_t, pathname::Cstring, dapl_id::hid_t)::hid_t string("Error opening dataset ", h5i_get_name(loc_id), "/", pathname)
 @bind h5d_read(dataset_id::hid_t, mem_type_id::hid_t, mem_space_id::hid_t, file_space_id::hid_t, xfer_plist_id::hid_t, buf::Ptr{Cvoid})::herr_t string("Error reading dataset ", h5i_get_name(dataset_id))
 @bind h5d_read_chunk(dset::hid_t, dxpl_id::hid_t, offset::Ptr{hsize_t}, filters::Ptr{UInt32}, buf::Ptr{Cvoid})::herr_t "Error reading chunk"
 @bind h5d_refresh(dataset_id::hid_t)::herr_t "Error refreshing dataset"
@@ -107,8 +108,8 @@
 
 @bind h5f_clear_elink_file_cache(file_id::hid_t)::herr_t "Error in h5f_clear_elink_file_cache (not annotated)"
 @bind h5f_close(file_id::hid_t)::herr_t "Error closing file"
-@bind h5f_create(pathname::Ptr{UInt8}, flags::Cuint, fcpl_id::hid_t, fapl_id::hid_t)::hid_t "Error creating file $pathname"
-@bind h5f_delete(filename::Ptr{Cchar}, fapl_id::hid_t)::herr_t "Error in h5f_delete (not annotated)"
+@bind h5f_create(pathname::Cstring, flags::Cuint, fcpl_id::hid_t, fapl_id::hid_t)::hid_t "Error creating file $pathname"
+@bind h5f_delete(filename::Cstring, fapl_id::hid_t)::herr_t "Error in h5f_delete (not annotated)"
 @bind h5f_flush(object_id::hid_t, scope::Cint)::herr_t "Error flushing object to file"
 @bind h5f_format_convert(fid::hid_t)::herr_t "Error in h5f_format_convert (not annotated)"
 @bind h5f_get_access_plist(file_id::hid_t)::hid_t "Error getting file access property list"
@@ -135,9 +136,9 @@
 @bind h5f_get_page_buffering_stats(file_id::hid_t, accesses::Ptr{Cuint}, hits::Ptr{Cuint}, misses::Ptr{Cuint}, evictions::Ptr{Cuint}, bypasses::Ptr{Cuint})::herr_t "Error in h5f_get_page_buffering_stats (not annotated)"
 @bind h5f_get_vfd_handle(file_id::hid_t, fapl_id::hid_t, file_handle::Ref{Ptr{Cvoid}})::herr_t "Error getting VFD handle"
 @bind h5f_increment_filesize(file_id::hid_t, increment::hsize_t)::herr_t "Error in h5f_increment_filesize (not annotated)"
-@bind h5f_is_accessible(container_name::Ptr{Cchar}, fapl_id::hid_t)::htri_t "Error in h5f_is_accessible (not annotated)"
+@bind h5f_is_accessible(container_name::Cstring, fapl_id::hid_t)::htri_t "Error in h5f_is_accessible (not annotated)"
 @bind h5f_is_hdf5(pathname::Cstring)::htri_t "Unable to access file $pathname"
-@bind h5f_mount(loc::hid_t, name::Ptr{Cchar}, child::hid_t, plist::hid_t)::herr_t "Error in h5f_mount (not annotated)"
+@bind h5f_mount(loc::hid_t, name::Cstring, child::hid_t, plist::hid_t)::herr_t "Error in h5f_mount (not annotated)"
 @bind h5f_open(pathname::Cstring, flags::Cuint, fapl_id::hid_t)::hid_t "Error opening file $pathname"
 @bind h5f_reopen(file_id::hid_t)::hid_t "Error in h5f_reopen (not annotated)"
 @bind h5f_reset_mdc_hit_rate_stats(file_id::hid_t)::herr_t "Error in h5f_reset_mdc_hit_rate_stats (not annotated)"
@@ -149,19 +150,19 @@
 @bind h5f_start_mdc_logging(file_id::hid_t)::herr_t "Error in h5f_start_mdc_logging (not annotated)"
 @bind h5f_start_swmr_write(id::hid_t)::herr_t "Error starting SWMR write"
 @bind h5f_stop_mdc_logging(file_id::hid_t)::herr_t "Error in h5f_stop_mdc_logging (not annotated)"
-@bind h5f_unmount(loc::hid_t, name::Ptr{Cchar})::herr_t "Error in h5f_unmount (not annotated)"
+@bind h5f_unmount(loc::hid_t, name::Cstring)::herr_t "Error in h5f_unmount (not annotated)"
 
 ###
 ### Group Interface
 ###
 
 @bind h5g_close(group_id::hid_t)::herr_t "Error closing group"
-@bind h5g_create2(loc_id::hid_t, pathname::Ptr{UInt8}, lcpl_id::hid_t, gcpl_id::hid_t, gapl_id::hid_t)::hid_t "Error creating group $(h5i_get_name(loc_id))/$(pathname)"
+@bind h5g_create2(loc_id::hid_t, pathname::Cstring, lcpl_id::hid_t, gcpl_id::hid_t, gapl_id::hid_t)::hid_t "Error creating group $(h5i_get_name(loc_id))/$(pathname)"
 @bind h5g_get_create_plist(group_id::hid_t)::hid_t "Error getting group create property list"
 @bind h5g_get_info(group_id::hid_t, buf::Ptr{H5G_info_t})::herr_t "Error getting group info"
 @bind h5g_get_num_objs(loc_id::hid_t, num_obj::Ptr{hsize_t})::hid_t "Error getting group length"
 @bind h5g_get_objname_by_idx(loc_id::hid_t, idx::hsize_t, pathname::Ptr{UInt8}, size::Csize_t)::Cssize_t "Error getting group object name $(h5i_get_name(loc_id))/$(pathname)"
-@bind h5g_open2(loc_id::hid_t, pathname::Ptr{UInt8}, gapl_id::hid_t)::hid_t "Error opening group $(h5i_get_name(loc_id))/$(pathname)"
+@bind h5g_open2(loc_id::hid_t, pathname::Cstring, gapl_id::hid_t)::hid_t "Error opening group $(h5i_get_name(loc_id))/$(pathname)"
 
 ###
 ### Identifier Interface
@@ -179,14 +180,14 @@
 ### Link Interface
 ###
 
-@bind h5l_create_external(target_file_name::Ptr{UInt8}, target_obj_name::Ptr{UInt8}, link_loc_id::hid_t, link_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)::herr_t string("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name)
-@bind h5l_create_hard(obj_loc_id::hid_t, obj_name::Ptr{UInt8}, link_loc_id::hid_t, link_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)::herr_t string("Error creating hard link ", link_name, " pointing to ", obj_name)
-@bind h5l_create_soft(target_path::Ptr{UInt8}, link_loc_id::hid_t, link_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)::herr_t string("Error creating soft link ", link_name, " pointing to ", target_path)
-@bind h5l_delete(obj_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::herr_t string("Error deleting ", h5i_get_name(obj_id), "/", pathname)
-@bind h5l_move(src_obj_id::hid_t, src_name::Ptr{UInt8}, dest_obj_id::hid_t, dest_name::Ptr{UInt8}, lcpl_id::hid_t, lapl_id::hid_t)::herr_t string("Error moving ", h5i_get_name(src_obj_id), "/", src_name, " to ", h5i_get_name(dest_obj_id), "/", dest_name)
-@bind h5l_exists(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::htri_t string("Cannot determine whether ", pathname, " exists")
-@bind h5l_get_info(link_loc_id::hid_t, link_name::Ptr{UInt8}, link_buf::Ptr{H5L_info_t}, lapl_id::hid_t)::herr_t string("Error getting info for link ", link_name)
-@bind h5l_get_name_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting object name"
+@bind h5l_create_external(target_file_name::Cstring, target_obj_name::Cstring, link_loc_id::hid_t, link_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)::herr_t string("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name)
+@bind h5l_create_hard(obj_loc_id::hid_t, obj_name::Cstring, link_loc_id::hid_t, link_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)::herr_t string("Error creating hard link ", link_name, " pointing to ", obj_name)
+@bind h5l_create_soft(target_path::Cstring, link_loc_id::hid_t, link_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)::herr_t string("Error creating soft link ", link_name, " pointing to ", target_path)
+@bind h5l_delete(obj_id::hid_t, pathname::Cstring, lapl_id::hid_t)::herr_t string("Error deleting ", h5i_get_name(obj_id), "/", pathname)
+@bind h5l_move(src_obj_id::hid_t, src_name::Cstring, dest_obj_id::hid_t, dest_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)::herr_t string("Error moving ", h5i_get_name(src_obj_id), "/", src_name, " to ", h5i_get_name(dest_obj_id), "/", dest_name)
+@bind h5l_exists(loc_id::hid_t, pathname::Cstring, lapl_id::hid_t)::htri_t string("Cannot determine whether ", pathname, " exists")
+@bind h5l_get_info(link_loc_id::hid_t, link_name::Cstring, link_buf::Ptr{H5L_info_t}, lapl_id::hid_t)::herr_t string("Error getting info for link ", link_name)
+@bind h5l_get_name_by_idx(loc_id::hid_t, group_name::Cstring, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t)::Cssize_t "Error getting object name"
 # libhdf5 v1.10 provides the name H5Literate
 # libhdf5 v1.12 provides the same under H5Literate1, and a newer interface on H5Literate2
 @bind h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)::herr_t string("Error iterating through links in group ", h5i_get_name(group_id)) (nothing, v"1.12")
@@ -199,50 +200,50 @@
 
 @bind h5o_are_mdc_flushes_disabled(object_id::hid_t, are_disabled::Ptr{hbool_t})::herr_t "Error in h5o_are_mdc_flushes_disabled (not annotated)"
 @bind h5o_close(object_id::hid_t)::herr_t "Error closing object"
-@bind h5o_copy(src_loc_id::hid_t, src_name::Ptr{UInt8}, dst_loc_id::hid_t, dst_name::Ptr{UInt8}, ocpypl_id::hid_t, lcpl_id::hid_t)::herr_t string("Error copying object ", h5i_get_name(src_loc_id), "/", src_name, " to ", h5i_get_name(dst_loc_id), "/", dst_name)
+@bind h5o_copy(src_loc_id::hid_t, src_name::Cstring, dst_loc_id::hid_t, dst_name::Cstring, ocpypl_id::hid_t, lcpl_id::hid_t)::herr_t string("Error copying object ", h5i_get_name(src_loc_id), "/", src_name, " to ", h5i_get_name(dst_loc_id), "/", dst_name)
 @bind h5o_decr_refcount(object_id::hid_t)::herr_t "Error in h5o_decr_refcount (not annotated)"
 @bind h5o_disable_mdc_flushes(object_id::hid_t)::herr_t "Error in h5o_disable_mdc_flushes (not annotated)"
 @bind h5o_enable_mdc_flushes(object_id::hid_t)::herr_t "Error in h5o_enable_mdc_flushes (not annotated)"
-@bind h5o_exists_by_name(loc_id::hid_t, name::Ptr{Cchar}, lapl_id::hid_t)::htri_t "Error in h5o_exists_by_name (not annotated)"
+@bind h5o_exists_by_name(loc_id::hid_t, name::Cstring, lapl_id::hid_t)::htri_t "Error in h5o_exists_by_name (not annotated)"
 @bind h5o_flush(obj_id::hid_t)::herr_t "Error in h5o_flush (not annotated)"
 @bind h5o_get_comment(obj_id::hid_t, comment::Ptr{Cchar}, bufsize::Csize_t)::Cssize_t "Error in h5o_get_comment (not annotated)"
-@bind h5o_get_comment_by_name(loc_id::hid_t, name::Ptr{Cchar}, comment::Ptr{Cchar}, bufsize::Csize_t, lapl_id::hid_t)::Cssize_t "Error in h5o_get_comment_by_name (not annotated)"
+@bind h5o_get_comment_by_name(loc_id::hid_t, name::Cstring, comment::Ptr{Cchar}, bufsize::Csize_t, lapl_id::hid_t)::Cssize_t "Error in h5o_get_comment_by_name (not annotated)"
 @bind h5o_get_info1(object_id::hid_t, buf::Ptr{H5O_info1_t})::herr_t "Error getting object info" (nothing, v"1.10.3")
 @bind h5o_get_info2(loc_id::hid_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint)::herr_t "Error in h5o_get_info2 (not annotated)" (v"1.10.3", v"1.12.0")
 @bind h5o_get_info3(loc_id::hid_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint)::herr_t "Error in h5o_get_info3 (not annotated)" (v"1.12.0", nothing)
-@bind h5o_get_info_by_idx1(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx1 (not annotated)" (nothing, v"1.10.3")
-@bind h5o_get_info_by_idx2(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx2 (not annotated)" (v"1.10.3", v"1.12.0")
-@bind h5o_get_info_by_idx3(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx3 (not annotated)" (v"1.12.0", nothing)
-@bind h5o_get_info_by_name1(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name1 (not annotated)" (nothing, v"1.10.3")
-@bind h5o_get_info_by_name2(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name2 (not annotated)" (v"1.10.3", v"1.12.0")
-@bind h5o_get_info_by_name3(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name3 (not annotated)" (v"1.12.0", nothing)
+@bind h5o_get_info_by_idx1(loc_id::hid_t, group_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx1 (not annotated)" (nothing, v"1.10.3")
+@bind h5o_get_info_by_idx2(loc_id::hid_t, group_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx2 (not annotated)" (v"1.10.3", v"1.12.0")
+@bind h5o_get_info_by_idx3(loc_id::hid_t, group_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_idx3 (not annotated)" (v"1.12.0", nothing)
+@bind h5o_get_info_by_name1(loc_id::hid_t, name::Cstring, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name1 (not annotated)" (nothing, v"1.10.3")
+@bind h5o_get_info_by_name2(loc_id::hid_t, name::Cstring, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name2 (not annotated)" (v"1.10.3", v"1.12.0")
+@bind h5o_get_info_by_name3(loc_id::hid_t, name::Cstring, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_info_by_name3 (not annotated)" (v"1.12.0", nothing)
 @bind h5o_get_native_info(loc_id::hid_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint)::herr_t "Error in h5o_get_native_info (not annotated)"
-@bind h5o_get_native_info_by_idx(loc_id::hid_t, group_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_native_info_by_idx (not annotated)"
-@bind h5o_get_native_info_by_name(loc_id::hid_t, name::Ptr{Cchar}, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_native_info_by_name (not annotated)"
+@bind h5o_get_native_info_by_idx(loc_id::hid_t, group_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_native_info_by_idx (not annotated)"
+@bind h5o_get_native_info_by_name(loc_id::hid_t, name::Cstring, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_get_native_info_by_name (not annotated)"
 @bind h5o_incr_refcount(object_id::hid_t)::herr_t "Error in h5o_incr_refcount (not annotated)"
-@bind h5o_link(obj_id::hid_t, new_loc_id::hid_t, new_name::Ptr{Cchar}, lcpl_id::hid_t, lapl_id::hid_t)::herr_t "Error in h5o_link (not annotated)"
-@bind h5o_open(loc_id::hid_t, pathname::Ptr{UInt8}, lapl_id::hid_t)::hid_t string("Error opening object ", h5i_get_name(loc_id), "/", pathname)
+@bind h5o_link(obj_id::hid_t, new_loc_id::hid_t, new_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)::herr_t "Error in h5o_link (not annotated)"
+@bind h5o_open(loc_id::hid_t, pathname::Cstring, lapl_id::hid_t)::hid_t string("Error opening object ", h5i_get_name(loc_id), "/", pathname)
 @bind h5o_open_by_addr(loc_id::hid_t, addr::haddr_t)::hid_t "Error opening object by address"
-@bind h5o_open_by_idx(loc_id::hid_t, group_name::Ptr{UInt8}, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::hid_t string("Error opening object of index ", n)
+@bind h5o_open_by_idx(loc_id::hid_t, group_name::Cstring, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)::hid_t string("Error opening object of index ", n)
 @bind h5o_refresh(oid::hid_t)::herr_t "Error in h5o_refresh (not annotated)"
-@bind h5o_set_comment(obj_id::hid_t, comment::Ptr{Cchar})::herr_t "Error in h5o_set_comment (not annotated)"
-@bind h5o_set_comment_by_name(loc_id::hid_t, name::Ptr{Cchar}, comment::Ptr{Cchar}, lapl_id::hid_t)::herr_t "Error in h5o_set_comment_by_name (not annotated)"
+@bind h5o_set_comment(obj_id::hid_t, comment::Cstring)::herr_t "Error in h5o_set_comment (not annotated)"
+@bind h5o_set_comment_by_name(loc_id::hid_t, name::Cstring, comment::Cstring, lapl_id::hid_t)::herr_t "Error in h5o_set_comment_by_name (not annotated)"
 @bind h5o_token_cmp(loc_id::hid_t, token1::Ptr{H5O_token_t}, token2::Ptr{H5O_token_t}, cmp_value::Ptr{Cint})::herr_t "Error in h5o_token_cmp (not annotated)"
-@bind h5o_token_from_str(loc_id::hid_t, token_str::Ptr{Cchar}, token::Ptr{H5O_token_t})::herr_t "Error in h5o_token_from_str (not annotated)"
+@bind h5o_token_from_str(loc_id::hid_t, token_str::Cstring, token::Ptr{H5O_token_t})::herr_t "Error in h5o_token_from_str (not annotated)"
 @bind h5o_token_to_str(loc_id::hid_t, token::Ptr{H5O_token_t}, token_str::Ptr{Ptr{Cchar}})::herr_t "Error in h5o_token_to_str (not annotated)"
 @bind h5o_visit1(obj_id::hid_t, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid})::herr_t "Error in h5o_visit1 (not annotated)" (nothing, v"1.12.0")
 #@bind h5o_visit2(obj_id::hid_t, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid}, fields::Cuint)::herr_t "Error in h5o_visit2 (not annotated)"
 @bind h5o_visit3(obj_id::hid_t, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint)::herr_t "Error in h5o_visit3 (not annotated)" (v"1.12.0", nothing)
-@bind h5o_visit_by_name1(loc_id::hid_t, obj_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid}, lapl_id::hid_t)::herr_t "Error in h5o_visit_by_name1 (not annotated)" (nothing, v"1.12.0")
-#@bind h5o_visit_by_name2(loc_id::hid_t, obj_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_visit_by_name2 (not annotated)"
-@bind h5o_visit_by_name3(loc_id::hid_t, obj_name::Ptr{Cchar}, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_visit_by_name3 (not annotated)" (v"1.12.0", nothing)
+@bind h5o_visit_by_name1(loc_id::hid_t, obj_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid}, lapl_id::hid_t)::herr_t "Error in h5o_visit_by_name1 (not annotated)" (nothing, v"1.12.0")
+#@bind h5o_visit_by_name2(loc_id::hid_t, obj_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_visit_by_name2 (not annotated)"
+@bind h5o_visit_by_name3(loc_id::hid_t, obj_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint, lapl_id::hid_t)::herr_t "Error in h5o_visit_by_name3 (not annotated)" (v"1.12.0", nothing)
 
 ###
 ### Property Interface
 ###
 
 # get
-@bind h5p_get(plist_id::hid_t, name::Ptr{Cchar}, value::Ptr{Cvoid})::herr_t "Error in h5p_get (not annotated)"
+@bind h5p_get(plist_id::hid_t, name::Cstring, value::Ptr{Cvoid})::herr_t "Error in h5p_get (not annotated)"
 @bind h5p_get_alignment(fapl_id::hid_t, threshold::Ref{hsize_t}, alignment::Ref{hsize_t})::herr_t "Error getting alignment"
 @bind h5p_get_alloc_time(plist_id::hid_t, alloc_time::Ptr{Cint})::herr_t "Error getting allocation timing"
 @bind h5p_get_append_flush(dapl_id::hid_t, dims::Cuint, boundary::Ptr{hsize_t}, func::Ptr{H5D_append_cb_t}, udata::Ptr{Ptr{Cvoid}})::herr_t "Error in h5p_get_append_flush (not annotated)"
@@ -341,7 +342,7 @@
 @bind h5p_get_vol_info(plist_id::hid_t, vol_info::Ptr{Ptr{Cvoid}})::herr_t "Error in h5p_get_vol_info (not annotated)"
 
 # set
-@bind h5p_set(plist_id::hid_t, name::Ptr{Cchar}, value::Ptr{Cvoid})::herr_t "Error in h5p_set (not annotated)"
+@bind h5p_set(plist_id::hid_t, name::Cstring, value::Ptr{Cvoid})::herr_t "Error in h5p_set (not annotated)"
 @bind h5p_set_alignment(plist_id::hid_t, threshold::hsize_t, alignment::hsize_t)::herr_t "Error setting alignment"
 @bind h5p_set_alloc_time(plist_id::hid_t, alloc_time::Cint)::herr_t "Error setting allocation timing"
 @bind h5p_set_append_flush(dapl_id::hid_t, ndims::Cuint, boundary::Ptr{hsize_t}, func::H5D_append_cb_t, udata::Ptr{Cvoid})::herr_t "Error in h5p_set_append_flush (not annotated)"
@@ -357,30 +358,30 @@
 @bind h5p_set_copy_object(plist_id::hid_t, copy_options::Cuint)::herr_t "Error in h5p_set_copy_object (not annotated)"
 @bind h5p_set_core_write_tracking(fapl_id::hid_t, is_enabled::hbool_t, page_size::Csize_t)::herr_t "Error in h5p_set_core_write_tracking (not annotated)"
 @bind h5p_set_create_intermediate_group(plist_id::hid_t, setting::Cuint)::herr_t "Error setting create intermediate group"
-@bind h5p_set_data_transform(plist_id::hid_t, expression::Ptr{Cchar})::herr_t "Error in h5p_set_data_transform (not annotated)"
+@bind h5p_set_data_transform(plist_id::hid_t, expression::Cstring)::herr_t "Error in h5p_set_data_transform (not annotated)"
 @bind h5p_set_deflate(plist_id::hid_t, setting::Cuint)::herr_t "Error setting compression method and level (deflate)"
 @bind h5p_set_driver(plist_id::hid_t, driver_id::hid_t, driver_info::Ptr{Cvoid})::herr_t "Error in h5p_set_driver (not annotated)"
 @bind h5p_set_dset_no_attrs_hint(dcpl_id::hid_t, minimize::hbool_t)::herr_t "Error in setting dataset no attributes hint property"
 @bind h5p_set_dxpl_mpio(dxpl_id::hid_t, xfer_mode::Cint)::herr_t "Error setting MPIO transfer mode"
 @bind h5p_set_edc_check(plist_id::hid_t, check::H5Z_EDC_t)::herr_t "Error in h5p_set_edc_check (not annotated)"
-@bind h5p_set_efile_prefix(plist_id::hid_t, prefix::Ptr{UInt8})::herr_t "Error setting external file prefix"
+@bind h5p_set_efile_prefix(plist_id::hid_t, prefix::Cstring)::herr_t "Error setting external file prefix"
 @bind h5p_set_elink_acc_flags(lapl_id::hid_t, flags::Cuint)::herr_t "Error in h5p_set_elink_acc_flags (not annotated)"
 @bind h5p_set_elink_cb(lapl_id::hid_t, func::H5L_elink_traverse_t, op_data::Ptr{Cvoid})::herr_t "Error in h5p_set_elink_cb (not annotated)"
 @bind h5p_set_elink_fapl(lapl_id::hid_t, fapl_id::hid_t)::herr_t "Error in h5p_set_elink_fapl (not annotated)"
 @bind h5p_set_elink_file_cache_size(plist_id::hid_t, efc_size::Cuint)::herr_t "Error in h5p_set_elink_file_cache_size (not annotated)"
-@bind h5p_set_elink_prefix(plist_id::hid_t, prefix::Ptr{Cchar})::herr_t "Error in h5p_set_elink_prefix (not annotated)"
+@bind h5p_set_elink_prefix(plist_id::hid_t, prefix::Cstring)::herr_t "Error in h5p_set_elink_prefix (not annotated)"
 @bind h5p_set_est_link_info(plist_id::hid_t, est_num_entries::Cuint, est_name_len::Cuint)::herr_t "Error in h5p_set_est_link_info (not annotated)"
 @bind h5p_set_evict_on_close(fapl_id::hid_t, evict_on_close::hbool_t)::herr_t "Error in h5p_set_evict_on_close (not annotated)"
-@bind h5p_set_external(plist_id::hid_t, name::Ptr{Cchar}, offset::off_t, size::hsize_t)::herr_t "Error setting external property"
+@bind h5p_set_external(plist_id::hid_t, name::Cstring, offset::off_t, size::hsize_t)::herr_t "Error setting external property"
 @bind h5p_set_family_offset(fapl_id::hid_t, offset::hsize_t)::herr_t "Error in h5p_set_family_offset (not annotated)"
 @bind h5p_set_fapl_core(fapl_id::hid_t, increment::Csize_t, backing_store::hbool_t)::herr_t "Error in h5p_set_fapl_core (not annotated)"
 @bind h5p_set_fapl_family(fapl_id::hid_t, memb_size::hsize_t, memb_fapl_id::hid_t)::herr_t "Error in h5p_set_fapl_family (not annotated)"
 @bind h5p_set_fapl_hdfs(fapl_id::hid_t, fa::Ptr{H5FD_hdfs_fapl_t})::herr_t "Error in h5p_set_fapl_hdfs (not annotated)"
-@bind h5p_set_fapl_log(fapl_id::hid_t, logfile::Ptr{Cchar}, flags::Culonglong, buf_size::Csize_t)::herr_t "Error in h5p_set_fapl_log (not annotated)"
-@bind h5p_set_fapl_multi(fapl_id::hid_t, memb_map::Ptr{H5FD_mem_t}, memb_fapl::Ptr{hid_t}, memb_name::Ptr{Ptr{Cchar}}, memb_addr::Ptr{haddr_t}, relax::hbool_t)::herr_t "Error in h5p_set_fapl_multi (not annotated)"
+@bind h5p_set_fapl_log(fapl_id::hid_t, logfile::Cstring, flags::Culonglong, buf_size::Csize_t)::herr_t "Error in h5p_set_fapl_log (not annotated)"
+@bind h5p_set_fapl_multi(fapl_id::hid_t, memb_map::Ptr{H5FD_mem_t}, memb_fapl::Ptr{hid_t}, memb_name::Ptr{Cstring}, memb_addr::Ptr{haddr_t}, relax::hbool_t)::herr_t "Error in h5p_set_fapl_multi (not annotated)"
 @bind h5p_set_fapl_sec2(fapl_id::hid_t)::herr_t "Error setting Sec2 properties"
 @bind h5p_set_fapl_ros3(fapl_id::hid_t, fa::Ptr{H5FD_ros3_fapl_t})::herr_t "Error in setting ros3 properties"
-@bind h5p_set_fapl_split(fapl::hid_t, meta_ext::Ptr{Cchar}, meta_plist_id::hid_t, raw_ext::Ptr{Cchar}, raw_plist_id::hid_t)::herr_t "Error in h5p_set_fapl_split (not annotated)"
+@bind h5p_set_fapl_split(fapl::hid_t, meta_ext::Cstring, meta_plist_id::hid_t, raw_ext::Cstring, raw_plist_id::hid_t)::herr_t "Error in h5p_set_fapl_split (not annotated)"
 @bind h5p_set_fapl_splitter(fapl_id::hid_t, config_ptr::Ptr{H5FD_splitter_vfd_config_t})::herr_t "Error in h5p_set_fapl_splitter (not annotated)"
 @bind h5p_set_fapl_stdio(fapl_id::hid_t)::herr_t "Error in h5p_set_fapl_stdio (not annotated)"
 @bind h5p_set_fapl_windows(fapl_id::hid_t)::herr_t "Error in h5p_set_fapl_windows (not annotated)"
@@ -407,7 +408,7 @@
 @bind h5p_set_mcdt_search_cb(plist_id::hid_t, func::H5O_mcdt_search_cb_t, op_data::Ptr{Cvoid})::herr_t "Error in h5p_set_mcdt_search_cb (not annotated)"
 @bind h5p_set_mdc_config(plist_id::hid_t, config_ptr::Ptr{H5AC_cache_config_t})::herr_t "Error in h5p_set_mdc_config (not annotated)"
 @bind h5p_set_mdc_image_config(plist_id::hid_t, config_ptr::Ptr{H5AC_cache_image_config_t})::herr_t "Error in h5p_set_mdc_image_config (not annotated)"
-@bind h5p_set_mdc_log_options(plist_id::hid_t, is_enabled::hbool_t, location::Ptr{Cchar}, start_on_access::hbool_t)::herr_t "Error in h5p_set_mdc_log_options (not annotated)"
+@bind h5p_set_mdc_log_options(plist_id::hid_t, is_enabled::hbool_t, location::Cstring, start_on_access::hbool_t)::herr_t "Error in h5p_set_mdc_log_options (not annotated)"
 @bind h5p_set_meta_block_size(fapl_id::hid_t, size::hsize_t)::herr_t "Error in h5p_set_meta_block_size (not annotated)"
 @bind h5p_set_metadata_read_attempts(plist_id::hid_t, attempts::Cuint)::herr_t "Error in h5p_set_metadata_read_attempts (not annotated)"
 @bind h5p_set_multi_type(fapl_id::hid_t, type::H5FD_mem_t)::herr_t "Error in h5p_set_multi_type (not annotated)"
@@ -429,8 +430,8 @@
 @bind h5p_set_szip(plist_id::hid_t, options_mask::Cuint, pixels_per_block::Cuint)::herr_t "Error enabling szip filter"
 @bind h5p_set_type_conv_cb(dxpl_id::hid_t, op::H5T_conv_except_func_t, operate_data::Ptr{Cvoid})::herr_t "Error in h5p_set_type_conv_cb (not annotated)"
 @bind h5p_set_userblock(plist_id::hid_t, len::hsize_t)::herr_t "Error setting userblock"
-@bind h5p_set_virtual(dcpl_id::hid_t, vspace_id::hid_t, src_file_name::Ptr{UInt8}, src_dset_name::Ptr{UInt8}, src_space_id::hid_t)::herr_t "Error setting virtual"
-@bind h5p_set_virtual_prefix(dapl_id::hid_t, prefix::Ptr{Cchar})::herr_t "Error in h5p_set_virtual_prefix (not annotated)"
+@bind h5p_set_virtual(dcpl_id::hid_t, vspace_id::hid_t, src_file_name::Cstring, src_dset_name::Cstring, src_space_id::hid_t)::herr_t "Error setting virtual"
+@bind h5p_set_virtual_prefix(dapl_id::hid_t, prefix::Cstring)::herr_t "Error in h5p_set_virtual_prefix (not annotated)"
 @bind h5p_set_virtual_printf_gap(dapl_id::hid_t, gap_size::hsize_t)::herr_t "Error in h5p_set_virtual_printf_gap (not annotated)"
 @bind h5p_set_virtual_view(dapl_id::hid_t, view::H5D_vds_view_t)::herr_t "Error in h5p_set_virtual_view (not annotated)"
 @bind h5p_set_vlen_mem_manager(plist_id::hid_t, alloc_func::H5MM_allocate_t, alloc_info::Ptr{Cvoid}, free_func::H5MM_free_t, free_info::Ptr{Cvoid})::herr_t "Error in h5p_set_vlen_mem_manager (not annotated)"
@@ -438,31 +439,31 @@
 
 # others
 
-@bind h5p_add_merge_committed_dtype_path(plist_id::hid_t, path::Ptr{Cchar})::herr_t "Error in h5p_add_merge_committed_dtype_path (not annotated)"
+@bind h5p_add_merge_committed_dtype_path(plist_id::hid_t, path::Cstring)::herr_t "Error in h5p_add_merge_committed_dtype_path (not annotated)"
 @bind h5p_all_filters_avail(plist_id::hid_t)::htri_t "Error in h5p_all_filters_avail (not annotated)"
 @bind h5p_close(id::hid_t)::herr_t "Error closing property list"
 @bind h5p_close_class(plist_id::hid_t)::herr_t "Error in h5p_close_class (not annotated)"
 @bind h5p_copy(plist_id::hid_t)::hid_t "Error in h5p_copy (not annotated)"
-@bind h5p_copy_prop(dst_id::hid_t, src_id::hid_t, name::Ptr{Cchar})::herr_t "Error in h5p_copy_prop (not annotated)"
+@bind h5p_copy_prop(dst_id::hid_t, src_id::hid_t, name::Cstring)::herr_t "Error in h5p_copy_prop (not annotated)"
 @bind h5p_create(cls_id::hid_t)::hid_t "Error creating property list"
-@bind h5p_create_class(parent::hid_t, name::Ptr{Cchar}, create::H5P_cls_create_func_t, create_data::Ptr{Cvoid}, copy::H5P_cls_copy_func_t, copy_data::Ptr{Cvoid}, close::H5P_cls_close_func_t, close_data::Ptr{Cvoid})::hid_t "Error in h5p_create_class (not annotated)"
+@bind h5p_create_class(parent::hid_t, name::Cstring, create::H5P_cls_create_func_t, create_data::Ptr{Cvoid}, copy::H5P_cls_copy_func_t, copy_data::Ptr{Cvoid}, close::H5P_cls_close_func_t, close_data::Ptr{Cvoid})::hid_t "Error in h5p_create_class (not annotated)"
 @bind h5p_decode(buf::Ptr{Cvoid})::hid_t "Error in h5p_decode (not annotated)"
 @bind h5p_encode1(plist_id::hid_t, buf::Ptr{Cvoid}, nalloc::Ptr{Csize_t})::herr_t "Error in h5p_encode1 (not annotated)"
 @bind h5p_encode2(plist_id::hid_t, buf::Ptr{Cvoid}, nalloc::Ptr{Csize_t}, fapl_id::hid_t)::herr_t "Error in h5p_encode2 (not annotated)"
 @bind h5p_equal(id1::hid_t, id2::hid_t)::htri_t "Error in h5p_equal (not annotated)"
-@bind h5p_exist(plist_id::hid_t, name::Ptr{Cchar})::htri_t "Error in h5p_exist (not annotated)"
+@bind h5p_exist(plist_id::hid_t, name::Cstring)::htri_t "Error in h5p_exist (not annotated)"
 @bind h5p_fill_value_defined(plist::hid_t, status::Ptr{H5D_fill_value_t})::herr_t "Error in h5p_fill_value_defined (not annotated)"
 @bind h5p_free_merge_committed_dtype_paths(plist_id::hid_t)::herr_t "Error in h5p_free_merge_committed_dtype_paths (not annotated)"
-@bind h5p_insert1(plist_id::hid_t, name::Ptr{Cchar}, size::Csize_t, value::Ptr{Cvoid}, prp_set::H5P_prp_set_func_t, prp_get::H5P_prp_get_func_t, prp_delete::H5P_prp_delete_func_t, prp_copy::H5P_prp_copy_func_t, prp_close::H5P_prp_close_func_t)::herr_t "Error in h5p_insert1 (not annotated)"
-@bind h5p_insert2(plist_id::hid_t, name::Ptr{Cchar}, size::Csize_t, value::Ptr{Cvoid}, set::H5P_prp_set_func_t, get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, copy::H5P_prp_copy_func_t, compare::H5P_prp_compare_func_t, close::H5P_prp_close_func_t)::herr_t "Error in h5p_insert2 (not annotated)"
+@bind h5p_insert1(plist_id::hid_t, name::Cstring, size::Csize_t, value::Ptr{Cvoid}, prp_set::H5P_prp_set_func_t, prp_get::H5P_prp_get_func_t, prp_delete::H5P_prp_delete_func_t, prp_copy::H5P_prp_copy_func_t, prp_close::H5P_prp_close_func_t)::herr_t "Error in h5p_insert1 (not annotated)"
+@bind h5p_insert2(plist_id::hid_t, name::Cstring, size::Csize_t, value::Ptr{Cvoid}, set::H5P_prp_set_func_t, get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, copy::H5P_prp_copy_func_t, compare::H5P_prp_compare_func_t, close::H5P_prp_close_func_t)::herr_t "Error in h5p_insert2 (not annotated)"
 @bind h5p_isa_class(plist_id::hid_t, pclass_id::hid_t)::htri_t "Error in h5p_isa_class (not annotated)"
 @bind h5p_iterate(id::hid_t, idx::Ptr{Cint}, iter_func::H5P_iterate_t, iter_data::Ptr{Cvoid})::Cint "Error in h5p_iterate (not annotated)"
 @bind h5p_modify_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})::herr_t "Error modifying filter"
-@bind h5p_register1(cls_id::hid_t, name::Ptr{Cchar}, size::Csize_t, def_value::Ptr{Cvoid}, prp_create::H5P_prp_create_func_t, prp_set::H5P_prp_set_func_t, prp_get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, prp_copy::H5P_prp_copy_func_t, prp_close::H5P_prp_close_func_t)::herr_t "Error in h5p_register1 (not annotated)"
-@bind h5p_register2(cls_id::hid_t, name::Ptr{Cchar}, size::Csize_t, def_value::Ptr{Cvoid}, create::H5P_prp_create_func_t, set::H5P_prp_set_func_t, get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, copy::H5P_prp_copy_func_t, compare::H5P_prp_compare_func_t, close::H5P_prp_close_func_t)::herr_t "Error in h5p_register2 (not annotated)"
-@bind h5p_remove(plist_id::hid_t, name::Ptr{Cchar})::herr_t "Error in h5p_remove (not annotated)"
+@bind h5p_register1(cls_id::hid_t, name::Cstring, size::Csize_t, def_value::Ptr{Cvoid}, prp_create::H5P_prp_create_func_t, prp_set::H5P_prp_set_func_t, prp_get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, prp_copy::H5P_prp_copy_func_t, prp_close::H5P_prp_close_func_t)::herr_t "Error in h5p_register1 (not annotated)"
+@bind h5p_register2(cls_id::hid_t, name::Cstring, size::Csize_t, def_value::Ptr{Cvoid}, create::H5P_prp_create_func_t, set::H5P_prp_set_func_t, get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, copy::H5P_prp_copy_func_t, compare::H5P_prp_compare_func_t, close::H5P_prp_close_func_t)::herr_t "Error in h5p_register2 (not annotated)"
+@bind h5p_remove(plist_id::hid_t, name::Cstring)::herr_t "Error in h5p_remove (not annotated)"
 @bind h5p_remove_filter(plist_id::hid_t, filter_id::H5Z_filter_t)::herr_t "Error removing filter"
-@bind h5p_unregister(pclass_id::hid_t, name::Ptr{Cchar})::herr_t "Error in h5p_unregister (not annotated)"
+@bind h5p_unregister(pclass_id::hid_t, name::Cstring)::herr_t "Error in h5p_unregister (not annotated)"
 
 ###
 ### Plugin Interface
@@ -470,10 +471,10 @@
 
 @bind h5pl_set_loading_state(plugin_control_mask::Cuint)::herr_t "Error setting plugin loading state"
 @bind h5pl_get_loading_state(plugin_control_mask::Ptr{Cuint})::herr_t "Error getting plugin loading state"
-@bind h5pl_append(search_path::Ptr{Cchar})::herr_t "Error appending plugin path"
-@bind h5pl_prepend(search_path::Ptr{Cchar})::herr_t "Error prepending plugin path"
-@bind h5pl_replace(search_path::Ptr{Cchar}, index::Cuint)::herr_t "Error replacing plugin path"
-@bind h5pl_insert(search_path::Ptr{Cchar}, index::Cuint)::herr_t "Error inserting plugin path"
+@bind h5pl_append(search_path::Cstring)::herr_t "Error appending plugin path"
+@bind h5pl_prepend(search_path::Cstring)::herr_t "Error prepending plugin path"
+@bind h5pl_replace(search_path::Cstring, index::Cuint)::herr_t "Error replacing plugin path"
+@bind h5pl_insert(search_path::Cstring, index::Cuint)::herr_t "Error inserting plugin path"
 @bind h5pl_remove(index::Cuint)::herr_t "Error removing plugin path"
 @bind h5pl_get(index::Cuint, path_buf::Ptr{Cchar}, buf_size::Csize_t)::Cssize_t "Error getting plugin path"
 @bind h5pl_size(num_paths::Ptr{Cuint})::herr_t "Error in getting number of plugins paths"
@@ -482,7 +483,7 @@
 ### Reference Interface
 ###
 
-@bind h5r_create(ref::Ptr{Cvoid}, loc_id::hid_t, pathname::Ptr{UInt8}, ref_type::Cint, space_id::hid_t)::herr_t string("Error creating reference to object ", h5i_get_name(loc_id), "/", pathname)
+@bind h5r_create(ref::Ptr{Cvoid}, loc_id::hid_t, pathname::Cstring, ref_type::Cint, space_id::hid_t)::herr_t string("Error creating reference to object ", h5i_get_name(loc_id), "/", pathname)
 @bind h5r_dereference2(obj_id::hid_t, oapl_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid})::hid_t "Error dereferencing object"
 @bind h5r_get_obj_type2(loc_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid}, obj_type::Ptr{Cint})::herr_t "Error getting object type"
 @bind h5r_get_region(loc_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid})::hid_t "Error getting region from reference"
@@ -516,7 +517,7 @@
 @bind h5t_array_create2(basetype_id::hid_t, ndims::Cuint, sz::Ptr{hsize_t})::hid_t string("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz)
 @bind h5t_close(dtype_id::hid_t)::herr_t "Error closing datatype"
 @bind h5t_committed(dtype_id::hid_t)::htri_t "Error determining whether datatype is committed"
-@bind h5t_commit2(loc_id::hid_t, name::Ptr{UInt8}, dtype_id::hid_t, lcpl_id::hid_t, tcpl_id::hid_t, tapl_id::hid_t)::herr_t "Error committing type"
+@bind h5t_commit2(loc_id::hid_t, name::Cstring, dtype_id::hid_t, lcpl_id::hid_t, tcpl_id::hid_t, tapl_id::hid_t)::herr_t "Error committing type"
 # @bind h5t_commit_anon
 # @bind h5t_compiler_conv
 @bind h5t_copy(dtype_id::hid_t)::hid_t "Error copying datatype"
@@ -537,7 +538,7 @@
 @bind h5t_get_ebias(dtype_id::hid_t)::Csize_t "Error getting exponent bias"
 @bind h5t_get_fields(dtype_id::hid_t, spos::Ref{Csize_t}, epos::Ref{Csize_t}, esize::Ref{Csize_t}, mpos::Ref{Csize_t}, msize::Ref{Csize_t})::herr_t "Error getting datatype floating point bit positions"
 @bind h5t_get_member_class(dtype_id::hid_t, index::Cuint)::Cint string("Error getting class of compound datatype member #", index)
-@bind h5t_get_member_index(dtype_id::hid_t, membername::Ptr{UInt8})::Cint string("Error getting index of compound datatype member \"", membername, "\"")
+@bind h5t_get_member_index(dtype_id::hid_t, membername::Cstring)::Cint string("Error getting index of compound datatype member \"", membername, "\"")
 # @bind h5t_get_member_name(dtype_id::hid_t, index::Cuint)::Cstring string("Error getting name of compound datatype member #", index) # See below
 @bind h5t_get_member_offset(dtype_id::hid_t, index::Cuint)::Csize_t "Error getting offset of compound datatype #$(index)"
 @bind h5t_get_member_type(dtype_id::hid_t, index::Cuint)::hid_t string("Error getting type of compound datatype member #", index)
@@ -554,10 +555,10 @@
 @bind h5t_get_strpad(dtype_id::hid_t)::Cint "Error getting string padding"
 @bind h5t_get_super(dtype_id::hid_t)::hid_t "Error getting super type"
 # @bind h5t_get_tag(type_id::hid_t)::Cstring "Error getting datatype opaque tag" # See below
-@bind h5t_insert(dtype_id::hid_t, fieldname::Ptr{UInt8}, offset::Csize_t, field_id::hid_t)::herr_t string("Error adding field ", fieldname, " to compound datatype")
+@bind h5t_insert(dtype_id::hid_t, fieldname::Cstring, offset::Csize_t, field_id::hid_t)::herr_t string("Error adding field ", fieldname, " to compound datatype")
 @bind h5t_is_variable_str(type_id::hid_t)::htri_t "Error determining whether string is of variable length"
 @bind h5t_lock(type_id::hid_t)::herr_t "Error locking type"
-@bind h5t_open2(loc_id::hid_t, name::Ptr{UInt8}, tapl_id::hid_t)::hid_t string("Error opening type ", h5i_get_name(loc_id), "/", name)
+@bind h5t_open2(loc_id::hid_t, name::Cstring, tapl_id::hid_t)::hid_t string("Error opening type ", h5i_get_name(loc_id), "/", name)
 # @bind h5t_pack
 # @bind h5t_reclaim
 # @bind h5t_refresh
@@ -600,7 +601,7 @@
 @bind h5ds_is_attached(did::hid_t, dsid::hid_t, idx::Cuint)::htri_t "Unable to check if dimension is attached"
 @bind h5ds_is_scale(did::hid_t)::htri_t "Unable to check if dataset is scale"
 @bind h5ds_set_label(did::hid_t, idx::Cuint, label::Ref{UInt8})::herr_t "Unable to set label"
-@bind h5ds_set_scale(dsid::hid_t, dimname::Ptr{UInt8})::herr_t "Unable to set scale"
+@bind h5ds_set_scale(dsid::hid_t, dimname::Cstring)::herr_t "Unable to set scale"
 
 
 ###
@@ -612,14 +613,14 @@
 ###
 ### Table Interface
 ###
-@bind h5tb_append_records(loc_id::hid_t, dset_name::Ptr{UInt8}, nrecords::hsize_t, type_size::Csize_t, field_offset::Ptr{Csize_t}, field_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})::herr_t "Error adding record to table"
-@bind h5tb_get_field_info(loc_id::hid_t, table_name::Ptr{UInt8}, field_names::Ptr{Ptr{UInt8}}, field_sizes::Ptr{Csize_t}, field_offsets::Ptr{Csize_t}, type_size::Ptr{Csize_t})::herr_t "Error getting field information"
-@bind h5tb_get_table_info(loc_id::hid_t, table_name::Ptr{UInt8}, nfields::Ptr{hsize_t}, nrecords::Ptr{hsize_t})::herr_t "Error getting table information"
+@bind h5tb_append_records(loc_id::hid_t, dset_name::Cstring, nrecords::hsize_t, type_size::Csize_t, field_offset::Ptr{Csize_t}, field_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})::herr_t "Error adding record to table"
+@bind h5tb_get_field_info(loc_id::hid_t, table_name::Cstring, field_names::Ptr{Ptr{UInt8}}, field_sizes::Ptr{Csize_t}, field_offsets::Ptr{Csize_t}, type_size::Ptr{Csize_t})::herr_t "Error getting field information"
+@bind h5tb_get_table_info(loc_id::hid_t, table_name::Cstring, nfields::Ptr{hsize_t}, nrecords::Ptr{hsize_t})::herr_t "Error getting table information"
 # NOTE: The HDF5 docs incorrectly specify type_size::hsize_t where as it should be type_size::Csize_t
-@bind h5tb_make_table(table_title::Ptr{UInt8}, loc_id::hid_t, dset_name::Ptr{UInt8}, nfields::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_names::Ptr{Ptr{UInt8}}, field_offset::Ptr{Csize_t}, field_types::Ptr{hid_t}, chunk_size::hsize_t, fill_data::Ptr{Cvoid}, compress::Cint, data::Ptr{Cvoid})::herr_t "Error creating and writing dataset to table"
-@bind h5tb_read_records(loc_id::hid_t, table_name::Ptr{UInt8}, start::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_offsets::Ptr{Csize_t}, dst_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})::herr_t "Error reading record from table"
-@bind h5tb_read_table(loc_id::hid_t, table_name::Ptr{UInt8}, dst_size::Csize_t, dst_offset::Ptr{Csize_t}, dst_sizes::Ptr{Csize_t}, dst_buf::Ptr{Cvoid})::herr_t "Error reading table"
-@bind h5tb_write_records(loc_id::hid_t, table_name::Ptr{UInt8}, start::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_offsets::Ptr{UInt8}, field_sizes::Ptr{UInt8}, data::Ptr{Cvoid})::herr_t "Error writing record to table"
+@bind h5tb_make_table(table_title::Cstring, loc_id::hid_t, dset_name::Cstring, nfields::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_names::Ptr{Cstring}, field_offset::Ptr{Csize_t}, field_types::Ptr{hid_t}, chunk_size::hsize_t, fill_data::Ptr{Cvoid}, compress::Cint, data::Ptr{Cvoid})::herr_t "Error creating and writing dataset to table"
+@bind h5tb_read_records(loc_id::hid_t, table_name::Cstring, start::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_offsets::Ptr{Csize_t}, dst_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})::herr_t "Error reading record from table"
+@bind h5tb_read_table(loc_id::hid_t, table_name::Cstring, dst_size::Csize_t, dst_offset::Ptr{Csize_t}, dst_sizes::Ptr{Csize_t}, dst_buf::Ptr{Cvoid})::herr_t "Error reading table"
+@bind h5tb_write_records(loc_id::hid_t, table_name::Cstring, start::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_offsets::Ptr{Csize_t}, field_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})::herr_t "Error writing record to table"
 
 ###
 ### Filter Interface

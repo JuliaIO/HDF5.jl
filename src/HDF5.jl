@@ -6,6 +6,7 @@ using Mmap: Mmap
 # needed for filter(f, tuple) in julia 1.3
 using Compat
 using UUIDs: uuid4
+using Printf: @sprintf
 
 ### PUBLIC API ###
 
@@ -116,11 +117,8 @@ function __init__()
     ASCII_ATTRIBUTE_PROPERTIES.char_encoding = :ascii
     UTF8_ATTRIBUTE_PROPERTIES.char_encoding = :utf8
 
-    @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" begin
-        @require OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d" include(
-            "fileio.jl"
-        )
-    end
+    @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" include("fileio.jl")
+
     @require H5Zblosc = "c8ec2601-a99c-407f-b158-e79c03c2f5f7" begin
         set_blosc!(p::Properties, val::Bool) =
             val && push!(Filters.FilterPipeline(p), H5Zblosc.BloscFilter())

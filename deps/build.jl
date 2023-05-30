@@ -57,10 +57,10 @@ else
 
     function check_deps()
         if libhdf5_size != filesize(Libdl.dlpath(libhdf5))
-            error("HDF5 library has changed, re-run Pkg.build(\\\"HDF5\\\")")
+            @error("HDF5 library has changed, re-run Pkg.build(\\\"HDF5\\\")")
         end
         if h5_get_libversion() < v"1.10.4"
-            error("HDF5.jl requires ≥ v1.10.4 of the HDF5 library.")
+            @error("HDF5.jl requires ≥ v1.10.4 of the HDF5 library.")
         end
     end
     $(:(const libhdf5 = $libhdf5))

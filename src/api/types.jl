@@ -72,6 +72,12 @@ end
     H5_ITER_NATIVE = 2
     H5_ITER_N = 3
 end
+@enum H5_iter_t::Cint begin
+    H5_ITER_CONT  = 0
+    H5_ITER_ERROR = -1
+    H5_ITER_STOP  = 1
+end
+Base.convert(::Type{H5_iter_t}, x::Integer) = H5_iter_t(x)
 
 const H5O_iterate1_t = Ptr{Cvoid}
 const H5O_iterate2_t = Ptr{Cvoid}
@@ -249,7 +255,7 @@ _read_const(sym::Symbol) = unsafe_load(cglobal(Libdl.dlsym(libhdf5handle[], sym)
 _has_symbol(sym::Symbol) = Libdl.dlsym(libhdf5handle[], sym; throw_error=false) !== nothing
 
 # iteration order constants
-# Moved to H5_iter_t enum
+# Moved to H5_iter_order_t enum
 #const H5_ITER_UNKNOWN = -1
 #const H5_ITER_INC     = 0
 #const H5_ITER_DEC     = 1
@@ -310,7 +316,9 @@ const H5F_ACC_SWMR_READ  = 0x0040
     H5F_LIBVER_V18 = 1
     H5F_LIBVER_V110 = 2
     H5F_LIBVER_V112 = 3
-    H5F_LIBVER_NBOUNDS = 4
+    H5F_LIBVER_V114 = 4
+    H5F_LIBVER_V116 = 5
+    H5F_LIBVER_NBOUNDS = 6
 end
 # H5F_LIBVER_LATEST defined in helpers.jl
 
