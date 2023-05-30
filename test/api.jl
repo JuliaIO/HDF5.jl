@@ -103,3 +103,9 @@ end
         @assert false
     end
 end
+
+@testset "h5dchunk_iter" begin
+    @test convert(HDF5.API.H5_iter_t, 0) == HDF5.API.H5_ITER_CONT
+    @test convert(HDF5.API.H5_iter_t, 1) == HDF5.API.H5_ITER_STOP
+    @test convert(HDF5.API.H5_iter_t, -1) == HDF5.API.H5_ITER_ERROR
+end

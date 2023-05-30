@@ -72,6 +72,12 @@ end
     H5_ITER_NATIVE = 2
     H5_ITER_N = 3
 end
+@enum H5_iter_t::Cint begin
+    H5_ITER_CONT  = 0
+    H5_ITER_ERROR = -1
+    H5_ITER_STOP  = 1
+end
+Base.convert(::Type{H5_iter_t}, x::Integer) = H5_iter_t(x)
 
 const H5O_iterate1_t = Ptr{Cvoid}
 const H5O_iterate2_t = Ptr{Cvoid}
@@ -249,7 +255,7 @@ _read_const(sym::Symbol) = unsafe_load(cglobal(dlsym(libhdf5handle[], sym), hid_
 _has_symbol(sym::Symbol) = dlsym(libhdf5handle[], sym; throw_error=false) !== nothing
 
 # iteration order constants
-# Moved to H5_iter_t enum
+# Moved to H5_iter_order_t enum
 #const H5_ITER_UNKNOWN = -1
 #const H5_ITER_INC     = 0
 #const H5_ITER_DEC     = 1

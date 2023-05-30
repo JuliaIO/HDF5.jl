@@ -523,6 +523,13 @@ b[1:10000] = collect(1:10000)
 
 when dimensions are reduced, the truncated data is lost. A maximum dimension of -1 is often referred to as unlimited dimensions, though it is limited by the maximum size of an unsigned integer.
 
+You can copy data from one file to another:
+
+```julia
+copy_object(source, data_name, target, name)
+copy_object(source[data_name], target, name)
+```
+
 Finally, it's possible to delete objects:
 
 ```julia
