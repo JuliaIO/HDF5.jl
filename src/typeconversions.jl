@@ -351,18 +351,35 @@ function _typed_load(::Type{T}, buf::AbstractVector{UInt8}) where {T}
     return @inbounds reinterpret(T, buf)[1]
 end
 # fast-path for common concrete types with simple layout (which should be nearly all cases)
-function _typed_load(
-    ::Type{T}, buf::V
-) where {T,V<:Union{Vector{UInt8},Base.FastContiguousSubArray{UInt8,1}}}
-    dest = Ref{T}()
-    GC.@preserve dest buf Base._memcpy!(
-        unsafe_convert(Ptr{Cvoid}, dest), pointer(buf), sizeof(T)
-    )
-    return dest[]
-    # TODO: The above can maybe be replaced with
-    #   return GC.@preserve buf unsafe_load(convert(Ptr{t}, pointer(buf)))
-    # dependent on data elements being properly aligned for all datatypes, on all
-    # platforms.
+@static if VERSION ≤ v"1.10.0-DEV.1390" # Maybe a few dev versions earlier
+    function _typed_load(
+        ::Type{T}, buf::V
+    ) where {T,V<:Union{Vector{UInt8},Base.FastContiguousSubArray{UInt8,1}}}
+        dest = Ref{T}()
+        GC.@preserve dest buf Base._memcpy!(
+            unsafe_convert(Ptr{Cvoid}, dest), pointer(buf), sizeof(T)
+        )
+        return dest[]
+        # TODO: The above can maybe be replaced with
+        #   return GC.@preserve buf unsafe_load(convert(Ptr{t}, pointer(buf)))
+        # dependent on data elements being properly aligned for all datatypes, on all
+        # platforms.
+    end
+else
+    # TODO reimplement fast path _typed_load for Julia 1.10, consider refactor
+    function _typed_load(
+        ::Type{T}, buf::V
+    ) where {T,V<:Union{Vector{UInt8},Base.FastContiguousSubArray{UInt8,1}}}
+        dest = Ref{T}()
+        GC.@preserve dest buf Libc.memcpy(
+            unsafe_convert(Ptr{Cvoid}, dest), pointer(buf), sizeof(T)
+        )
+        return dest[]
+        # TODO: The above can maybe be replaced with
+        #   return GC.@preserve buf unsafe_load(convert(Ptr{t}, pointer(buf)))
+        # dependent on data elements being properly aligned for all datatypes, on all
+        # platforms.
+    end
 end
 
 _normalize_types(::Type{T}, buf::AbstractVector{UInt8}) where {T} = _typed_load(T, buf)
