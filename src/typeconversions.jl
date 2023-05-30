@@ -351,7 +351,7 @@ function _typed_load(::Type{T}, buf::AbstractVector{UInt8}) where {T}
     return @inbounds reinterpret(T, buf)[1]
 end
 # fast-path for common concrete types with simple layout (which should be nearly all cases)
-@static if VERSION < v"1.10"
+@static if VERSION ≤ v"1.10.0-DEV.1394" # Maybe a few dev versions earlier
     function _typed_load(
         ::Type{T}, buf::V
     ) where {T,V<:Union{Vector{UInt8},Base.FastContiguousSubArray{UInt8,1}}}
