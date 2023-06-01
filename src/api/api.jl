@@ -4,6 +4,10 @@ using Libdl: dlopen, dlclose, dlpath, dlsym, RTLD_LAZY, RTLD_NODELETE
 using Base: StringVector
 using Preferences: @load_preference
 
+if haskey(ENV, "JULIA_HDF5_PATH")
+  @warn "The environment variable JULIA_HDF5_PATH is deprecated. Use preferences instead."
+end
+
 const _PREFERENCE_LIBHDF5 = @load_preference("libhdf5", nothing)
 const _PREFERENCE_LIBHDF5_HL = @load_preference("libhdf5_hl", nothing)
 if _PREFERENCE_LIBHDF5 === nothing && _PREFERENCE_LIBHDF5_HL === nothing
