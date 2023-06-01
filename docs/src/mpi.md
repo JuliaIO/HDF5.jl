@@ -82,7 +82,8 @@ libmpi = "/software/mpi/lib/libmpi.so"
 mpiexec = "/software/mpi/bin/mpiexec"
 
 [HDF5]
-libhdf5path = "/path/to/your/hdf5/binaries/"
+libhdf5 = "/path/to/your/libhdf5.so"
+libhdf5_hl = "/path/to/your/libhdf5_hl.so"
 ```
 
 ### Reading and writing data in parallel
