@@ -60,6 +60,8 @@ set_preferences!(
     "libhdf5_hl" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5_hl.so", force = true)
 ```
 
+Also see the file `test/configure_packages.jl` for an example.
+
 Both, the MPI preferences and the preferences for HDF5.jl write to a file called LocalPreferences.toml in the project directory. After performing the described steps this file could look like the following:
 
 ```toml
