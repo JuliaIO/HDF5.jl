@@ -2,7 +2,7 @@ module MPIExt
 
 isdefined(Base, :get_extension) ? (using MPI) : (using ..MPI)
 import Libdl
-import HDF5: HDF5, API, Drivers, Drivers.Driver, Properties, h5doc, h5open
+using HDF5: HDF5, API, Drivers, Drivers.Driver, Properties, h5doc, h5open
 
 ###
 ### MPIO
@@ -63,7 +63,7 @@ function Drivers.set_driver!(fapl::Properties, mpio::MPIO)
     )
     # Note: HDF5 creates a COPY of the comm and info objects, so we don't need to keep a reference around.
     API.h5p_set_fapl_mpio(fapl, mpio.comm, mpio.info)
-    DRIVERS[API.h5p_get_driver(fapl)] = MPIO
+    Drivers.DRIVERS[API.h5p_get_driver(fapl)] = MPIO
     return nothing
 end
 
