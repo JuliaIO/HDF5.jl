@@ -16,11 +16,7 @@ MPIPreferences.use_system_binary()
 import UUIDs, Preferences
 Preferences.set_preferences!(
     UUIDs.UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
-    "libhdf5" => joinpath(JULIA_HDF5_PATH, "libhdf5." * Libdl.dlext);
-    force=true
-)
-Preferences.set_preferences!(
-    UUIDs.UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
+    "libhdf5" => joinpath(JULIA_HDF5_PATH, "libhdf5." * Libdl.dlext),
     "libhdf5_hl" => joinpath(JULIA_HDF5_PATH, "libhdf5_hl." * Libdl.dlext);
     force=true
 )

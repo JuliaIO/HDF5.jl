@@ -4,7 +4,6 @@ using Libdl: dlopen, dlclose, dlpath, dlsym, RTLD_LAZY, RTLD_NODELETE
 using Base: StringVector
 using Preferences: @load_preference
 
-
 const _PREFERENCE_LIBHDF5 = @load_preference("libhdf5", nothing)
 const _PREFERENCE_LIBHDF5_HL = @load_preference("libhdf5_hl", nothing)
 if _PREFERENCE_LIBHDF5 === nothing && _PREFERENCE_LIBHDF5_HL === nothing
@@ -40,7 +39,7 @@ function __init__()
         if _PREFERENCE_LIBHDF5 === nothing
             @warn "The environment variable JULIA_HDF5_PATH is deprecated and ignored. Use Preferences.jl as detailed in the documentation." ENV["JULIA_HDF5_PATH"] _PREFERENCE_LIBHDF5
         elseif !startswith(_PREFERENCE_LIBHDF5, ENV["JULIA_HDF5_PATH"])
-            @warn "The environment variable JULIA_HDF5_PATH is deprecated and does not agree with the Preferences.jl setting. ENV["JULIA_HDF5_PATH"] _PREFERENCE_LIBHDF5
+            @warn "The environment variable JULIA_HDF5_PATH is deprecated and does not agree with the Preferences.jl setting." ENV["JULIA_HDF5_PATH"] _PREFERENCE_LIBHDF5
         else
             @debug "The environment variable JULIA_HDF5_PATH is set and agrees with the Preferences.jl setting." ENV["JULIA_HDF5_PATH"] _PREFERENCE_LIBHDF5
         end
