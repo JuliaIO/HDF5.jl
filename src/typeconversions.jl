@@ -64,6 +64,8 @@ end
 
 # These will use finalizers. Close them eagerly to avoid issues.
 datatype(::T) where {T} = Datatype(hdf5_type_id(T), true)
+
+datatype(::Type{T}) where {T} = Datatype(hdf5_type_id(T), true)
 datatype(x::AbstractArray{T}) where {T} = Datatype(hdf5_type_id(T), true)
 
 hdf5_type_id(::Type{T}) where {T} = hdf5_type_id(T, Val(isstructtype(T)))
@@ -71,7 +73,7 @@ function hdf5_type_id(::Type{T}, isstruct::Val{true}) where {T}
     dtype = API.h5t_create(API.H5T_COMPOUND, sizeof(T))
     for (idx, fn) in enumerate(fieldnames(T))
         ftype = fieldtype(T, idx)
-        API.h5t_insert(dtype, fn, fieldoffset(T, idx), hdf5_type_id(ftype))
+        API.h5t_insert(dtype, Symbol(fn), fieldoffset(T, idx), hdf5_type_id(ftype))
     end
     return dtype
 end
@@ -214,6 +216,12 @@ function datatype(str::AbstractString)
     API.h5t_set_cset(type_id, cset(typeof(str)))
     Datatype(type_id)
 end
+function datatype(::Type{S}) where {S<:AbstractString}
+    type_id = API.h5t_copy(hdf5_type_id(S))
+    API.h5t_set_size(type_id, API.H5T_VARIABLE)
+    API.h5t_set_cset(type_id, cset(S))
+    Datatype(type_id)
+end
 function datatype(::Array{S}) where {S<:AbstractString}
     type_id = API.h5t_copy(hdf5_type_id(S))
     API.h5t_set_size(type_id, API.H5T_VARIABLE)
@@ -343,18 +351,35 @@ function _typed_load(::Type{T}, buf::AbstractVector{UInt8}) where {T}
     return @inbounds reinterpret(T, buf)[1]
 end
 # fast-path for common concrete types with simple layout (which should be nearly all cases)
-function _typed_load(
-    ::Type{T}, buf::V
-) where {T,V<:Union{Vector{UInt8},Base.FastContiguousSubArray{UInt8,1}}}
-    dest = Ref{T}()
-    GC.@preserve dest buf Base._memcpy!(
-        unsafe_convert(Ptr{Cvoid}, dest), pointer(buf), sizeof(T)
-    )
-    return dest[]
-    # TODO: The above can maybe be replaced with
-    #   return GC.@preserve buf unsafe_load(convert(Ptr{t}, pointer(buf)))
-    # dependent on data elements being properly aligned for all datatypes, on all
-    # platforms.
+@static if VERSION ≤ v"1.10.0-DEV.1390" # Maybe a few dev versions earlier
+    function _typed_load(
+        ::Type{T}, buf::V
+    ) where {T,V<:Union{Vector{UInt8},Base.FastContiguousSubArray{UInt8,1}}}
+        dest = Ref{T}()
+        GC.@preserve dest buf Base._memcpy!(
+            unsafe_convert(Ptr{Cvoid}, dest), pointer(buf), sizeof(T)
+        )
+        return dest[]
+        # TODO: The above can maybe be replaced with
+        #   return GC.@preserve buf unsafe_load(convert(Ptr{t}, pointer(buf)))
+        # dependent on data elements being properly aligned for all datatypes, on all
+        # platforms.
+    end
+else
+    # TODO reimplement fast path _typed_load for Julia 1.10, consider refactor
+    function _typed_load(
+        ::Type{T}, buf::V
+    ) where {T,V<:Union{Vector{UInt8},Base.FastContiguousSubArray{UInt8,1}}}
+        dest = Ref{T}()
+        GC.@preserve dest buf Libc.memcpy(
+            unsafe_convert(Ptr{Cvoid}, dest), pointer(buf), sizeof(T)
+        )
+        return dest[]
+        # TODO: The above can maybe be replaced with
+        #   return GC.@preserve buf unsafe_load(convert(Ptr{t}, pointer(buf)))
+        # dependent on data elements being properly aligned for all datatypes, on all
+        # platforms.
+    end
 end
 
 _normalize_types(::Type{T}, buf::AbstractVector{UInt8}) where {T} = _typed_load(T, buf)

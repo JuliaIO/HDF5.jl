@@ -12,6 +12,13 @@ end
 
 # Generic read functions
 
+"""
+    read(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString; pv...)
+    read(parent::Union{HDF5.File, HDF5.Group}, name::AbstractString => dt::HDF5.Datatype; pv...)
+
+Read a dataset or attribute from a HDF5 file of group identified by `name`.
+Optionally, specify the [`HDF5.Datatype`](@ref) to be read.
+"""
 function Base.read(parent::Union{File,Group}, name::AbstractString; pv...)
     obj = getindex(parent, name; pv...)
     val = read(obj)
@@ -33,6 +40,11 @@ end
 # This infers the Julia type from the HDF5.Datatype. Specific file formats should provide their own read(dset).
 const DatasetOrAttribute = Union{Dataset,Attribute}
 
+"""
+    read(obj::HDF5.DatasetOrAttribute}
+
+Read the data within a [`HDF5.Dataset`](@ref) or [`HDF5.Attribute`](@ref).
+"""
 function Base.read(obj::DatasetOrAttribute)
     dtype = datatype(obj)
     T = get_jl_type(dtype)
@@ -298,6 +310,10 @@ if the size matches.
     end
 
     return memtype
+end
+
+@inline function _memtype(filetype::Datatype, ::Type{S}) where {S<:AbstractString}
+    return datatype(S)
 end
 
 #=

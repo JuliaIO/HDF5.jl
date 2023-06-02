@@ -443,6 +443,24 @@ function h5a_write(attr_hid, mem_type_id, buf)
     return nothing
 end
 
+@static if v"1.12.3" ≤ _libhdf5_build_ver
+    @doc """
+        h5d_chunk_iter(dset_id::hid_t, dxpl_id::hid_t, cb::Ptr{Nothing}, op_data::Any)
+
+    See `libhdf5` documentation for [`H5Dchunk_iter`](https://portal.hdfgroup.org/display/HDF5/H5D_CHUNK_ITER).
+    """
+    function h5d_chunk_iter(dset_id, dxpl_id, cb, op_data)
+        lock(liblock)
+        var"#status#" = try
+                ccall((:H5Dchunk_iter, libhdf5), herr_t, (hid_t, hid_t, Ptr{Nothing}, Any), dset_id, dxpl_id, cb, op_data)
+            finally
+                unlock(liblock)
+            end
+        var"#status#" < 0 && @h5error("Error iterating over chunks")
+        return nothing
+    end
+end
+
 """
     h5d_close(dataset_id::hid_t)
 

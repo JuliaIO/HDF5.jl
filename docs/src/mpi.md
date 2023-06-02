@@ -20,7 +20,7 @@ In practice, this means that in Julia code, `MPI` must be imported _before_
 The following step-by-step guide assumes one already has access to
 parallel-enabled HDF5 libraries linked to an existent MPI installation.
 
-### 1. Using system-provided MPI libraries
+### [1. Using system-provided MPI libraries](@id using_system_MPI)
 
 Using a system-provided MPI library can be done with MPIPreferences.jl.
 After installing MPIPreferences.jl and running
@@ -31,12 +31,28 @@ See the [MPI.jl
 docs](https://juliaparallel.org/MPI.jl/stable/configuration/#Using-a-system-provided-MPI-backend)
 for details.
 
-### 2. Using parallel HDF5 libraries
+### [2. Using parallel HDF5 libraries](@id using_parallel_HDF5)
+
+!!! note "Migration from HDF5.jl v0.16 and earlier"
+    How to use a system-provided HDF5 library has been changed in HDF5.jl v0.17. Previously,
+    the library path was set by the environment variable `JULIA_HDF5_PATH`, which required to
+    rebuild HDF5.jl afterwards. The environment variable has been removed and no longer has an
+    effect (for backward compatibility it is still recommended to **also** set the environment
+    variable). Instead, proceed as described below.
 
 As detailed in [Using custom or system provided HDF5 binaries](@ref), set the
-`JULIA_HDF5_PATH` environment variable to the path where the parallel HDF5
-binaries are located.
-Then run `]build HDF5` from Julia.
+preferences `libhdf5` and `libhdf5_hl` to the full path, where the parallel HDF5 binaries are located.
+This can be done by:
+
+```julia
+julia> using Preferences, UUIDs
+
+julia> set_preferences!(
+           UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
+           "libhdf5" => "/path/to/your/libhdf5.so",
+           "libhdf5_hl" => "/path/to/your/libhdf5_hl.so",
+           force = true)
+```
 
 ### 3. Loading MPI-enabled HDF5
 
@@ -48,6 +64,25 @@ using MPI
 using HDF5
 
 @assert HDF5.has_parallel()
+```
+
+### Notes to HPC cluster administrators
+
+More information for a setup at an HPC cluster can be found in the [docs of MPI.jl](https://juliaparallel.org/MPI.jl/stable/configuration/#Notes-to-HPC-cluster-administrators).
+After performing the steps [1.](@ref using_system_MPI) and [2.](@ref using_parallel_HDF5) the
+LocalPreferences.toml file could look something like the following:
+
+```toml
+[MPIPreferences]
+_format = "1.0"
+abi = "OpenMPI"
+binary = "system"
+libmpi = "/software/mpi/lib/libmpi.so"
+mpiexec = "/software/mpi/bin/mpiexec"
+
+[HDF5]
+libhdf5 = "/path/to/your/libhdf5.so"
+libhdf5_hl = "/path/to/your/libhdf5_hl.so"
 ```
 
 ### Reading and writing data in parallel
