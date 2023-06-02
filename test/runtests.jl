@@ -1,3 +1,14 @@
+# Work around JuliaLang/Pkg.jl#2500
+if VERSION < v"1.8-"
+    test_project = first(Base.load_path())
+    preferences_file = "../LocalPreferences.toml"
+    test_preferences_file = joinpath(dirname(test_project), "LocalPreferences.toml")
+    if isfile(preferences_file) && !isfile(test_preferences_file)
+        cp(preferences_file, test_preferences_file)
+        @info "copied LocalPreferences.toml to $test_preferences_file"
+    end
+end
+
 using HDF5
 using Test
 using Pkg
@@ -64,7 +75,9 @@ end
     include("filters/FilterTestUtils.jl")
     @debug "objects"
     include("objects.jl")
-    if VERSION ≥ v"1.6"
+    # `h5d_get_space` seems to be broken for virtual datasets for libhdf5 1.10,
+    # see https://github.com/JuliaIO/HDF5.jl/pull/1061#issuecomment-1571009149
+    if HDF5.API.h5_get_libversion() >= v"1.12"
         @debug "virtual datasets"
         include("virtual_dataset.jl")
     end
