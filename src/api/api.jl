@@ -4,9 +4,6 @@ using Libdl: dlopen, dlclose, dlpath, dlsym, RTLD_LAZY, RTLD_NODELETE
 using Base: StringVector
 using Preferences: @load_preference
 
-if haskey(ENV, "JULIA_HDF5_PATH")
-    @warn "The environment variable JULIA_HDF5_PATH is deprecated. Use preferences instead."
-end
 
 const _PREFERENCE_LIBHDF5 = @load_preference("libhdf5", nothing)
 const _PREFERENCE_LIBHDF5_HL = @load_preference("libhdf5_hl", nothing)
@@ -38,6 +35,16 @@ function __init__()
     # Ensure this is reinitialized on using
     libhdf5handle[] = dlopen(libhdf5)
 
+    # Warn if the environment is set and does not agree with Preferences.jl 
+    if haskey(ENV, "JULIA_HDF5_PATH")
+        if _PREFERENCE_LIBHDF5 === nothing
+            @warn "The environment variable JULIA_HDF5_PATH is deprecated and ignored. Use Preferences.jl as detailed in the documentation." ENV["JULIA_HDF5_PATH"] _PREFERENCE_LIBHDF5
+        elseif !startswith(_PREFERENCE_LIBHDF5, ENV["JULIA_HDF5_PATH"])
+            @warn "The environment variable JULIA_HDF5_PATH is deprecated and does not agree with the Preferences.jl setting. ENV["JULIA_HDF5_PATH"] _PREFERENCE_LIBHDF5
+        else
+            @debug "The environment variable JULIA_HDF5_PATH is set and agrees with the Preferences.jl setting." ENV["JULIA_HDF5_PATH"] _PREFERENCE_LIBHDF5
+        end
+    end
     # Disable file locking as that can cause problems with mmap'ing.
     # File locking is disabled in HDF5.init!(::FileAccessPropertyList)
     # or here if h5p_set_file_locking is not available

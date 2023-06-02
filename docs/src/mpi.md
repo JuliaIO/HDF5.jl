@@ -49,10 +49,9 @@ julia> using Preferences, UUIDs
 
 julia> set_preferences!(
            UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
-           "libhdf5" => "/path/to/your/libhdf5.so", force = true)
-julia> set_preferences!(
-           UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
-           "libhdf5_hl" => "/path/to/your/libhdf5_hl.so", force = true)
+           "libhdf5" => "/path/to/your/libhdf5.so",
+           "libhdf5_hl" => "/path/to/your/libhdf5_hl.so",
+           force = true)
 ```
 
 ### 3. Loading MPI-enabled HDF5
