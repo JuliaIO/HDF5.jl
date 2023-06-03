@@ -41,6 +41,9 @@ function h5open(
     if cr && (tr || !isfile(filename))
         flag = swmr ? API.H5F_ACC_TRUNC | API.H5F_ACC_SWMR_WRITE : API.H5F_ACC_TRUNC
         fid = API.h5f_create(filename, flag, fcpl, fapl)
+    elseif fapl.driver isa Drivers.Core && fapl.driver.backing_store == 0
+        flag = wr ? API.H5F_ACC_RDWR : API.H5F_ACC_RDONLY
+        fid = API.h5f_open(filename, flag, fapl)
     else
         occursin(r"(s3a?|https?)://", filename) ||
             ishdf5(filename) ||
@@ -77,7 +80,7 @@ function h5open(
 end
 
 """
-    function h5open(f::Function, args...; pv...)
+    h5open(f::Function, args...; pv...)
 
 Apply the function f to the result of `h5open(args...; kwargs...)` and close the resulting
 `HDF5.File` upon completion.
@@ -101,6 +104,46 @@ function h5open(f::Function, args...; context=copy(CONTEXT), pv...)
             close(context)
         end
     end
+end
+
+"""
+    h5open(file_image::Vector{UInt8}, mode::AbstractString="r";
+        name=nothing,
+        fapl=FileAccessProperties(),
+        increment=8192,
+        backing_store=false,
+        write_tracking=false,
+        page_size=524288,
+        pv...
+    )
+
+Open a file image contained in a `Vector{UInt8}`. See [`API.h5p_set_file_image`](@ref).
+
+Unlike [`Drivers.Core`](@ref) the default here is not to use a backing store.
+"""
+function h5open(
+    file_image::Vector{UInt8},
+    mode::AbstractString="r";
+    name=nothing,
+    fapl=FileAccessProperties(),
+    increment=8192,
+    backing_store=false,
+    write_tracking=false,
+    page_size=524288,
+    pv...
+)
+    fapl.driver = Drivers.Core(; increment, backing_store, write_tracking, page_size)
+    fapl.file_image = file_image
+    if isnothing(name)
+        if fapl.driver.backing_store != 0
+            # The temporary file will be used as a backing store
+            name = tempname()
+        else
+            # Provide it with a unique name based on the objectid
+            name = "<memory objectid>: " * repr(objectid(file_image))
+        end
+    end
+    h5open(name, mode; fapl, pv...)
 end
 
 function h5rewrite(f::Function, filename::AbstractString, args...)
@@ -169,3 +212,15 @@ start_swmr_write(h5::File) = API.h5f_start_swmr_write(h5)
 # Flush buffers
 Base.flush(f::Union{Object,Attribute,Datatype,File}, scope=API.H5F_SCOPE_GLOBAL) =
     API.h5f_flush(checkvalid(f), scope)
+
+# File image conversion
+
+function Vector{UInt8}(h5f::File)
+    flush(h5f)
+    API.h5f_get_file_image(h5f)
+end
+function File(file_image::Vector{UInt8}, name=nothing)
+    h5open(file_image; name)
+end
+Base.convert(::Type{Vector{UInt8}}, h5f::File) = Vector{UInt8}(h5f)
+Base.convert(::Type{File}, file_image::Vector{UInt8}) = File(file_image)
