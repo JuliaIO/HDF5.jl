@@ -6,7 +6,9 @@ import ..API
 import ..HDF5: HDF5, Properties, h5doc
 
 using Libdl: dlopen, dlsym
-using Requires: @require
+if !isdefined(Base, :get_extension)
+    using Requires: @require
+end
 
 function get_driver(p::Properties)
     driver_id = API.h5p_get_driver(p)
@@ -89,8 +91,37 @@ function __init__()
     HDF5.HAS_PARALLEL[] = API._has_symbol(:H5Pset_fapl_mpio)
     HDF5.HAS_ROS3[] = API._has_symbol(:H5Pset_fapl_ros3)
 
-    @require MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195" include("mpio.jl")
+    @static if !isdefined(Base, :get_extension)
+        @require MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195" include("../../ext/MPIExt.jl")
+    end
 end
+
+# The docstring for `MPIO` basically belongs to the struct `MPIO` in
+# ext/MPIExt/MPIExt.jl. However, we need to document it here to make it
+# work smoothly both for Julia without package extensions (up to v1.8) and
+# with package extensions (v1.9 and newer).
+@doc """
+    MPIO(comm::MPI.Comm, info::MPI.Info)
+    MPIO(comm::MPI.Comm; kwargs....)
+
+The parallel MPI file driver. This requires the use of
+[MPI.jl](https://github.com/JuliaParallel/MPI.jl), and a custom HDF5 binary that has been
+built with MPI support.
+
+- `comm` is the communicator over which the file will be opened.
+- `info`/`kwargs` are MPI-IO options, and are passed to `MPI_FILE_OPEN`.
+
+# See also
+
+- [`HDF5.has_parallel`](@ref)
+- [Parallel HDF5](@ref)
+
+# External links
+
+- $(h5doc("H5P_SET_FAPL_MPIO"))
+- [Parallel HDF5](https://portal.hdfgroup.org/display/HDF5/Parallel+HDF5)
+"""
+function MPIO end
 
 include("ros3.jl")
 end # module
