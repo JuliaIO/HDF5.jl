@@ -27,6 +27,6 @@ jobs:
           julia -e 'using Pkg; Pkg.add(PackageSpec(name="JuliaFormatter"))'
           julia -e 'using JuliaFormatter; format(["src", "test", "filters", "gen"], verbose=true)'
 
-      - name: Check formatting diff
+      - name: Format check
         run: |
           git diff --color=always --exit-code
