@@ -77,7 +77,7 @@ dataspace(n::Nothing) = Dataspace(API.h5s_create(API.H5S_NULL))
 
 # for giving sizes explicitly
 """
-    dataspace(dims::Tuple; maxdims::Tuple=dims)
+    dataspace(dims::Tuple; max_dims::Tuple=dims)
 
 Construct a simple `Dataspace` for the given dimensions `dims`. The maximum
 dimensions `maxdims` specifies the maximum possible size: `-1` can be used to
