@@ -112,6 +112,13 @@ create_dataset(
     dspace_dims::Int...;
     pv...
 ) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
+create_dataset(
+    parent::Union{File,Group},
+    path::Union{AbstractString,Nothing},
+    dtype::Type,
+    dspace::Dataspace;
+    pv...
+) = create_dataset(checkvalid(parent), path, datatype(dtype), dspace; pv...)
 
 # Get the datatype of a dataset
 datatype(dset::Dataset) = Datatype(API.h5d_get_type(checkvalid(dset)), file(dset))
