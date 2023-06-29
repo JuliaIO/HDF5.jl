@@ -14,7 +14,7 @@ using Test
 using Pkg
 filter_path = joinpath(dirname(pathof(HDF5)), "..", "filters")
 if !Base.BinaryPlatforms.CPUID.test_cpu_feature(Base.BinaryPlatforms.CPUID.JL_X86_avx2)
-    Pkg.add(PackageSpec(name="Blosc_jll", version=v"1.21.2+0"))
+    Pkg.add(PackageSpec(; name="Blosc_jll", version=v"1.21.2+0"))
 end
 Pkg.develop([
     PackageSpec(; path=joinpath(filter_path, "H5Zblosc")),
