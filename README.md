@@ -1,5 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JuliaIO/HDF5.jl/master/docs/src/assets/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/JuliaIO/HDF5.jl/master/docs/src/assets/logo.svg">
+</picture>
 
-<h1><img alt="HDF5.jl" src="https://raw.githubusercontent.com/JuliaIO/HDF5.jl/master/docs/src/assets/logo.svg" width=300 height=74 ></h1>
 
 _HDF5 interface for the Julia language_
 
