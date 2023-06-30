@@ -6,19 +6,19 @@
 </p>
 
 _HDF5 interface for the Julia language_
----
-&nbsp;
+-
+
 
 [HDF5](https://www.hdfgroup.org/solutions/hdf5/) is a file format and library for storing and
 accessing data, commonly used for scientific data. HDF5 files can be created and read by numerous
 [programming languages](https://en.wikipedia.org/wiki/Hierarchical_Data_Format#Interfaces). This
 package provides an interface to the HDF5 library for the Julia language.
 
+
 [![Stable](https://img.shields.io/badge/documentation-blue.svg)](https://JuliaIO.github.io/HDF5.jl/stable)
 [![Build Status](https://github.com/JuliaIO/HDF5.jl/workflows/CI/badge.svg?branch=master)](https://github.com/JuliaIO/HDF5.jl/actions)
 [![Coverage](https://codecov.io/gh/JuliaIO/HDF5.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaIO/HDF5.jl)
 <!-- [![Coverage](https://coveralls.io/repos/github/JuliaIO/HDF5.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaIO/HDF5.jl?branch=master) -->
-&nbsp;
 
 
 ### Changelog
