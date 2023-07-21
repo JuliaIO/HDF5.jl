@@ -33,14 +33,17 @@ HDF5 stands for Hierarchial Data Format version 5 and is maintained by The HDF G
 
 * Store numeric array and attributes in nested groups
 * Use it when you want to compactly store lot of binary data
-* Do not use it when you have a lot of variable length strings
-* Consider other formats when using tables
+
+## When not to use HDF5
+* Arrays of variable-length strings
+* Tables of heterogeneous data
 
 ---
 
-# What is HDF5? - Related Formats
+# Related formats
 
-* NetCDF - Network Common Data Form (Unidata, UCAR)
+HDF5 is used as a base for other formats
+* NetCDF - Network Common Data Form v4 (Unidata, UCAR)
 * MAT - MATLAB data files v7.3+
 * PyTables - Pandas
 
@@ -104,7 +107,7 @@ It consists of
 
 * Mustafa Mohamad is the current lead maintainer 
 * Mark Kittisopikul has been expanding API coverage, especially with chunking
-* Simon Byrne has been working on package organization, filter interface
+* Simon Byrne has been working on package organization, filter interface, virtual datasets, and parallelization
 * Other recent contributors: t-bltg, Henrik Ranocha, Nathan Zimmerberg, Joshua Lampert, Tamas Gal, David MacMahon, Juan Ignacio Polanco, Michale Schlottke-Lakemper, linwaytin, Dmitri Iouchtchenko, Lorenzo Van Munoz, Jared Wahlstrand, Julian Samaroo, machakann, James Hester, Ralph Kube, Kristoffer Carlsson
 
 ---
@@ -126,7 +129,7 @@ using HDF5
 # Write a HDF5 file
 h5open("mydata.h5", "w") do h5f
     h5f["group_A/group_B/array_C"] = rand(1024,1024)
-    attributes(h5f["group_A"])["access_date"] = "2023_07_21"
+    attrs(h5f["group_A"])["access_date"] = "2023_07_21"
 end
 
 # Read a HDF5 file
