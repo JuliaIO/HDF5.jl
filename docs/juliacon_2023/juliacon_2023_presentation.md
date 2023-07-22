@@ -8,17 +8,6 @@ Mark Kittisopikul, Simon Byrne, Mustafa Mohamad
 
 ---
 
-# To Simon and Mustafa
-
-I'm using https://marp.app/
-If you use VS Code, I recommend getting the Marp VS Code Extension
-https://marketplace.visualstudio.com/items?itemName=marp-team.marp-vscode
-
-From VS Code you can do Ctrl-Shift-V to view a PDF preview of the slide deck
-Also see "Marp: Export slide deck" to save a PDF
-
----
-
 # What is HDF5?
 
 HDF5 stands for Hierarchial Data Format version 5 and is maintained by The HDF Group.
@@ -100,12 +89,13 @@ It consists of
 * Konrad Hisen initiated Julia's support for HDF5
 * Tim Holy and Simon Kornblith were the initial primary authors
 * Tom Short, Blake Johnson, Isaih Norton, Elliot Saba, Steven Johnson, Mike Nolta, Jameson Nash
+* Justin Willmert improved many aspects C to Julia API interface
 
 ---
 
 # HDF5.jl Current Developers
 
-* Mustafa Mohamad is the current lead maintainer 
+* Mustafa Mohamad, Mark Kittisopikul, and Simon Byrne are the current maintainers
 * Mark Kittisopikul has been expanding API coverage, especially with chunking
 * Simon Byrne has been working on package organization, filter interface, virtual datasets, and parallelization
 * Other recent contributors: t-bltg, Henrik Ranocha, Nathan Zimmerberg, Joshua Lampert, Tamas Gal, David MacMahon, Juan Ignacio Polanco, Michale Schlottke-Lakemper, linwaytin, Dmitri Iouchtchenko, Lorenzo Van Munoz, Jared Wahlstrand, Julian Samaroo, machakann, James Hester, Ralph Kube, Kristoffer Carlsson
@@ -203,6 +193,8 @@ julia> h5open("mystruct.h5", "r") do h5f
 
 # Compression Filter Plugin Packages
 
+<!--During the talk explain what these do and when/why you would want to use them-->
+
 Glue code written in Julia.
 
 * H5Zblosc.jl - Blosc.jl (Thank you, Steven G. Johnson)
@@ -214,6 +206,7 @@ Glue code written in Julia.
 ---
 
 # Chunking and Built-in Gzip Compression Usage
+
 
 ```julia
 using HDF5
