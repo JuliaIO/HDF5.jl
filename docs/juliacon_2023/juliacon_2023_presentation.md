@@ -10,22 +10,22 @@ Mark Kittisopikul, Simon Byrne, Mustafa Mohamad
 
 # What is HDF5?
 
-HDF5 stands for Hierarchial Data Format version 5 and is maintained by The HDF Group.
+HDF5 stands for Hierarchial Data Format version 5 and is maintained by The HDF Group, formerly part of the National Center for Supercomputing Appplications (NCSA).
 
-* HDF5 is a file format with an open specification
-* HDF5 is a C Library and API
-* HDF5 is a data model
+* HDF5 is a file format with an open specification.
+* HDF5 is a C Library and API.
+* HDF5 is a data model.
 
 ---
 
 # When to use HDF5
 
-* Store numeric array and attributes in nested groups
-* Use it when you want to compactly store lot of binary data
+* Store numeric array and attributes in nested groups.
+* Use it when you want to compactly store binary data.
 
 ## When not to use HDF5
-* Arrays of variable-length strings
-* Tables of heterogeneous data
+* You have arrays of variable-length strings. Used fixed lengths strings instead.
+* You have tables of heterogeneous data. Consider using columnar layouts. Other formats are more optimized for tables.
 
 ---
 
@@ -40,6 +40,8 @@ HDF5 is used as a base for other formats
 
 # HDF5 Specification
 
+The HDF5 specification is open and freely available.
+
 ![](specification_toc.png)
 
 https://docs.hdfgroup.org/hdf5/v1_14/_f_m_t3.html
@@ -47,6 +49,8 @@ https://docs.hdfgroup.org/hdf5/v1_14/_f_m_t3.html
 ---
 
 # HDF5 Specification: Superblock
+
+HDF5 structures are variably sized and use Bob Jenkin's Lookup3 checksum for metadata integrity.
 
 ![](superblock.png)
 
@@ -102,12 +106,14 @@ It consists of
 
 ---
 
-# How does HDF5.jl compare to h5py?
+# What advantages does Julia bring to HDF5.jl?
 
-* h5py is a Python library that wraps the HDF5 C library.
-* h5py uses Cython to build low-level wrappers
-* HDF5.jl wraps the C library directly via `@ccall`
-* HDF5.jl takes advantages of types and multiple dispatch
+* HDF5.jl wraps the C library directly in Julia via `@ccall`.
+    * This is partially automated via Clang.jl and https://github.com/mkitti/LibHDF5.jl .
+* HDF5.jl dynamically create types to match the stored HDF5 types.
+* HDF5.jl can use Julia's reflection capabilities to create corresponding HDF5 types.
+* HDF5.jl is easily extensible using multiple dispatch.
+* HDF5.jl can create callbacks for C for efficient iteration.
 
 ---
 
@@ -118,13 +124,17 @@ using HDF5
 
 # Write a HDF5 file
 h5open("mydata.h5", "w") do h5f
+    # Store an array
     h5f["group_A/group_B/array_C"] = rand(1024,1024)
+    # Store an attribute
     attrs(h5f["group_A"])["access_date"] = "2023_07_21"
 end
 
 # Read a HDF5 file
 C = h5open("mydata.h5") do h5f
+    # Access an attribute
     println(attrs(h5f["group_A"])["access_date"])
+    # Load an array and return it as C
     h5f["group_A/group_B/array_C"][:,:]
 end
 ```
@@ -239,12 +249,47 @@ Future: Loading CodecZstd.jl will trigger a package extension
 
 ---
 
-# Other Related Julia Packages
+# Using External Native Plugin Filters
 
-* HDF5_jll.jl, C Library from HDF Group
-* MAT.jl, MATLAB files
-* JLD.jl, Julia Data Format
-* JLD2.jl, Julia Data Format 2, Pure Julia implementation
+The HDF5 C library has a filter plugin mechanism. Plugins are shared libraries located in `/usr/local/hdf5/lib/plugin` or as specified by `$HDF5_PLUGIN_DIR`.
+
+```
+using HDF5.Filters
+
+bitshuf = ExternalFilter(32008, Cuint[0, 0])
+bitshuf_comp = ExternalFilter(32008, Cuint[0, 2])
+
+data_A = rand(0:31, 1024)
+data_B = rand(32:63, 1024)
+
+filename, _ = mktemp()
+h5open(filename, "w") do h5f
+    # Indexing style
+    h5f["ex_data_A", chunk=(32,), filters=bitshuf] = data_A
+    # Procedural style
+    d, dt = create_dataset(h5f, "ex_data_B", data_B, chunk=(32,), filters=[bitshuf_comp])
+    write(d, data_B)
+end
+```
+---
+
+# Iteration
+
+For accessing data has two kinds of interfaces for accessing enumerated data:
+1. `h5a_get_name_by_idx(loc_id, obj_name, index_type, order, idx, name, size, lapl_id)`
+2. `h5a_iterate(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)`, `op` is function pointer
+
+The `_by_idx` calls are easy to use via a simple `for` loop but are very inefficient for iterating over many items.
+
+The `_iterate` calls require a C callback, `op`, and can be challenging to use but are efficient.
+
+---
+
+# Multithreading
+
+* The HDF5 C library is not directly compatible with multithreading for parallel I/O. The preferred parallelization is via MPI.
+* There is a `H5_HAVE_THREADSAFE` compile time option that uses a recursive lock.
+* In HDF5.jl we have applied a `ReentrantLock` on all API calls.
 
 ---
 
@@ -253,3 +298,13 @@ Future: Loading CodecZstd.jl will trigger a package extension
 <!--Simon Byrne, please elaborate-->
 
 ---
+
+# Other Related Julia Packages
+
+* HDF5_jll.jl, C Library from HDF Group
+* MAT.jl, MATLAB files
+* JLD.jl, Julia Data Format
+* JLD2.jl, Julia Data Format 2, Pure Julia implementation of a subset of HDF5
+
+---
+
