@@ -42,7 +42,7 @@ HDF5 is used as a base for other formats
 
 The HDF5 specification is open and freely available.
 
-![](specification_toc.png)
+![width:600px](images/specification_toc.png)
 
 https://docs.hdfgroup.org/hdf5/v1_14/_f_m_t3.html
 
@@ -52,7 +52,7 @@ https://docs.hdfgroup.org/hdf5/v1_14/_f_m_t3.html
 
 HDF5 structures are variably sized and use Bob Jenkin's Lookup3 checksum for metadata integrity.
 
-![](superblock.png)
+![width:800px](images/superblock.png)
 
 https://docs.hdfgroup.org/hdf5/v1_14/_f_m_t3.html#Superblock
 
@@ -72,7 +72,7 @@ https://docs.hdfgroup.org/hdf5/v1_14/_f_m_t3.html#Superblock
 00000080  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
 ```
 
-![](format_signature.png)
+![](images/format_signature.png)
 
 ---
 
@@ -201,6 +201,23 @@ julia> h5open("mystruct.h5", "r") do h5f
 
 ---
 
+# Chunking and Built-in Gzip Compression Usage
+
+In HDF5.jl version 0.16 we introduced a new general filter keyword allowing for the definition of filter pipelines.
+```julia
+using HDF5
+
+h5open("simple_chunked.h5", "w", libver_bounds=v"1.12") do h5f
+    h5ds = create_dataset(h5f, "gzipped_data", UInt8, (16,16),
+        chunk=(4,4),
+        filters=[HDF5.Filters.Deflate()],
+        alloc_time = :early
+    )
+end
+```
+
+---
+
 # Compression Filter Plugin Packages
 
 <!--During the talk explain what these do and when/why you would want to use them-->
@@ -213,22 +230,7 @@ Glue code written in Julia.
 * H5Zbzip2.jl - CodecBzip2.jl
 * H5Zbitshuffle.jl
 
----
-
-# Chunking and Built-in Gzip Compression Usage
-
-
-```julia
-using HDF5
-
-h5open("simple_chunked.h5", "w", libver_bounds=v"1.12") do h5f
-    h5ds = create_dataset(h5f, "gzipped_data", UInt8, (16,16),
-        chunk=(4,4),
-        filters=[HDF5.Filters.Deflate()],
-        alloc_time = :early
-    )
-end
-```
+Future: Let's figure out how to share these with JLD2.jl!
 
 ---
 
@@ -245,7 +247,7 @@ h5open("zstd_chunked.h5", "w", libver_bounds=v"1.12") do h5f
 end
 ```
 
-Future: Loading CodecZstd.jl will trigger a package extension
+TODO: Use a package extension loading mechanism when CodecZstd.jl is present.
 
 ---
 
@@ -285,6 +287,12 @@ The `_iterate` calls require a C callback, `op`, and can be challenging to use b
 
 ---
 
+# New with HDF5 1.12.3 and 1.14.0: Efficient Chunk Based Iteration
+
+
+
+---
+
 # Multithreading
 
 * The HDF5 C library is not directly compatible with multithreading for parallel I/O. The preferred parallelization is via MPI.
@@ -307,4 +315,3 @@ The `_iterate` calls require a C callback, `op`, and can be challenging to use b
 * JLD2.jl, Julia Data Format 2, Pure Julia implementation of a subset of HDF5
 
 ---
-
