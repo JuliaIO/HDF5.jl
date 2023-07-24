@@ -60,6 +60,8 @@ https://docs.hdfgroup.org/hdf5/v1_14/_f_m_t3.html#Superblock
 
 # A HDF5 Hex Dump
 
+<!--Move to the end-->
+
 ```
 00000000  89 48 44 46 0d 0a 1a 0a  03 08 08 00 00 00 00 00  |.HDF............|
 00000010  00 00 00 00 ff ff ff ff  ff ff ff ff 82 08 01 00  |................|
@@ -107,6 +109,8 @@ It consists of
 ---
 
 # What advantages does Julia bring to HDF5.jl?
+
+<!--reorder-->
 
 * HDF5.jl wraps the C library directly in Julia via `@ccall`.
     * This is partially automated via Clang.jl and https://github.com/mkitti/LibHDF5.jl .
@@ -276,6 +280,8 @@ end
 ---
 
 # Iteration
+
+<!--move to end-->
 
 For accessing data has two kinds of interfaces for accessing enumerated data:
 1. `h5a_get_name_by_idx(loc_id, obj_name, index_type, order, idx, name, size, lapl_id)`
