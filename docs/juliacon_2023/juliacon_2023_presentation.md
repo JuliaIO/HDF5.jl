@@ -87,6 +87,9 @@ It consists of
 * Mark Kittisopikul has been expanding API coverage, especially with chunking
 * Simon Byrne has been working on package organization, filter interface, virtual datasets, and parallelization
 
+## Special mention
+- Erik Schnetter for building HDF5 in Yggdrasil
+
 ---
 
 # What advantages does Julia bring to HDF5.jl?
