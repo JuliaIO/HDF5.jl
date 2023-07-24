@@ -4,7 +4,7 @@ marp: true
 
 # HDF5.jl: Hierarchical Data Storage for Julia
 
-Mark Kittisopikul, Simon Byrne, Mustafa Mohamad
+Mark Kittisopikul (HHMI), Simon Byrne (Caltech), Mustafa Mohamad (UCalgary)
 
 ---
 
@@ -93,8 +93,8 @@ It consists of
 * HDF5_jll.jl, C Library from HDF Group (dependency of HDF5.jl)
 * MAT.jl, MATLAB files (depends on HDF5.jl)
 * JLD.jl, Julia Data Format (depends on HDF5.jl)
-* JLD2.jl, Julia Data Format 2, Pure Julia implementation of a subset of HDF5
-* NetCDF.jl, a wrapper for the NetCDF C library, which incorporates HDF5
+* JLD2.jl, Julia Data Format 2: pure Julia implementation of a subset of HDF5
+* NetCDF.jl & NCDatasets.jl: wrappers for the NetCDF C library, which incorporates HDF5
 
 ---
 
