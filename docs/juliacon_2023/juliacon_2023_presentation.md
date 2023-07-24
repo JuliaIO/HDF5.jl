@@ -49,36 +49,6 @@ https://docs.hdfgroup.org/hdf5/v1_14/_f_m_t3.html
 
 ---
 
-# HDF5 Specification: Superblock
-
-HDF5 structures are variably sized and use Bob Jenkin's Lookup3 checksum for metadata integrity.
-
-![width:800px](images/superblock.png)
-
-https://docs.hdfgroup.org/hdf5/v1_14/_f_m_t3.html#Superblock
-
----
-
-# A HDF5 Hex Dump
-
-<!--Move to the end-->
-
-```
-00000000  89 48 44 46 0d 0a 1a 0a  03 08 08 00 00 00 00 00  |.HDF............|
-00000010  00 00 00 00 ff ff ff ff  ff ff ff ff 82 08 01 00  |................|
-00000020  00 00 00 00 30 00 00 00  00 00 00 00 92 3c c0 2c  |....0........<.,|
-00000030  4f 48 44 52 02 20 a3 5c  ae 64 a3 5c ae 64 a3 5c  |OHDR. .\.d.\.d.\|
-00000040  ae 64 a3 5c ae 64 78 02  12 00 00 00 00 ff ff ff  |.d.\.dx.........|
-00000050  ff ff ff ff ff ff ff ff  ff ff ff ff ff 0a 02 00  |................|
-00000060  01 00 00 06 14 00 00 01  00 09 7a 61 72 72 73 68  |..........zarrsh|
-00000070  61 72 64 c3 00 00 00 00  00 00 00 00 40 00 00 00  |ard.........@...|
-00000080  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-```
-
-![](images/format_signature.png)
-
----
-
 # What is HDF5.jl?
 
 HDF5.jl is a wrapper around the HDF5 C Library.
@@ -100,13 +70,14 @@ It consists of
 
 ---
 
-# HDF5.jl Early Contributors
+# HDF5.jl Early and Recent Contributors
 
 * There are many contributors
 * Konrad Hisen initiated Julia's support for HDF5
 * Tim Holy and Simon Kornblith were the initial primary authors
 * Tom Short, Blake Johnson, Isaih Norton, Elliot Saba, Steven Johnson, Mike Nolta, Jameson Nash
 * Justin Willmert improved many aspects C to Julia API interface
+* Other recent contributors: t-bltg, Henrik Ranocha, Nathan Zimmerberg, Joshua Lampert, Tamas Gal, David MacMahon, Juan Ignacio Polanco, Michale Schlottke-Lakemper, linwaytin, Dmitri Iouchtchenko, Lorenzo Van Munoz, Jared Wahlstrand, Julian Samaroo, machakann, James Hester, Ralph Kube, Kristoffer Carlsson
 
 ---
 
@@ -115,7 +86,6 @@ It consists of
 * Mustafa Mohamad, Mark Kittisopikul, and Simon Byrne are the current maintainers
 * Mark Kittisopikul has been expanding API coverage, especially with chunking
 * Simon Byrne has been working on package organization, filter interface, virtual datasets, and parallelization
-* Other recent contributors: t-bltg, Henrik Ranocha, Nathan Zimmerberg, Joshua Lampert, Tamas Gal, David MacMahon, Juan Ignacio Polanco, Michale Schlottke-Lakemper, linwaytin, Dmitri Iouchtchenko, Lorenzo Van Munoz, Jared Wahlstrand, Julian Samaroo, machakann, James Hester, Ralph Kube, Kristoffer Carlsson
 
 ---
 
@@ -123,12 +93,12 @@ It consists of
 
 <!--reorder-->
 
-* HDF5.jl wraps the C library directly in Julia via `@ccall`.
-    * This is partially automated via Clang.jl and https://github.com/mkitti/LibHDF5.jl .
 * HDF5.jl dynamically create types to match the stored HDF5 types.
 * HDF5.jl can use Julia's reflection capabilities to create corresponding HDF5 types.
 * HDF5.jl is easily extensible using multiple dispatch.
 * HDF5.jl can create callbacks for C for efficient iteration.
+* HDF5.jl wraps the C library directly in Julia via `@ccall`.
+    * This is partially automated via Clang.jl and https://github.com/mkitti/LibHDF5.jl .
 
 ---
 
@@ -290,22 +260,6 @@ end
 ```
 ---
 
-# Iteration
-
-<!--move to end-->
-
-For accessing data has two kinds of interfaces for accessing enumerated data:
-1. `h5a_get_name_by_idx(loc_id, obj_name, index_type, order, idx, name, size, lapl_id)`
-2. `h5a_iterate(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)`, `op` is function pointer
-
-The `_by_idx` calls are easy to use via a simple `for` loop but are very inefficient for iterating over many items.
-
-The `_iterate` calls require a C callback, `op`, and can be challenging to use but are efficient.
-
-Based on `h5a_iterate` we have created a new `attrs` API replacing the former `attributes` API.
-
----
-
 # New with HDF5 1.12.3 and 1.14.0: Efficient Chunk Based Iteration
 
 Where are the compressed chunks and can we decompress them in parallel? 
@@ -326,14 +280,6 @@ Where are the compressed chunks and can we decompress them in parallel?
 * There is a `H5_HAVE_THREADSAFE` compile time option that uses a recursive lock.
 * In HDF5.jl we have applied a `ReentrantLock` on all API calls.
   * It is now safe to use HDF5.jl with multithreading, but you may not see much of an improvement.
-
----
-
-# Concurrency with Direct I/O
-
-* The HDF5 C library provides byte offsets for continguous and chunked datasets
-* Currently, HDF5.jl allows contiguous datasets to be memory mapped into arrays allowing for multithreaded reads.
-* With efficient chunk iteration, could we perform parallel decompression in HDF5.jl by reading compressed chunks directly?
 
 ---
 
@@ -415,3 +361,67 @@ Usage otherwise same as normal:
 * HDF5.jl is a wrapper providing high and low level access to the HDF5 library.
 * HDF5.jl now allows for multithreaded capability through locks and may expand capabilities beyond that of HDF5 C library
 * HDF5.jl works with MPI.jl to allow for distributed multiprocessing
+
+---
+
+# Questions?
+
+---
+
+# Extra Slides and Advanced Topics
+* HDF5 Specification: Superblock and Hex Dump
+* Iteration
+
+---
+
+# HDF5 Specification: Superblock
+
+HDF5 structures are variably sized and use Bob Jenkin's Lookup3 checksum for metadata integrity.
+
+![width:800px](images/superblock.png)
+
+https://docs.hdfgroup.org/hdf5/v1_14/_f_m_t3.html#Superblock
+
+---
+
+# A HDF5 Hex Dump
+
+<!--Move to the end-->
+
+```
+00000000  89 48 44 46 0d 0a 1a 0a  03 08 08 00 00 00 00 00  |.HDF............|
+00000010  00 00 00 00 ff ff ff ff  ff ff ff ff 82 08 01 00  |................|
+00000020  00 00 00 00 30 00 00 00  00 00 00 00 92 3c c0 2c  |....0........<.,|
+00000030  4f 48 44 52 02 20 a3 5c  ae 64 a3 5c ae 64 a3 5c  |OHDR. .\.d.\.d.\|
+00000040  ae 64 a3 5c ae 64 78 02  12 00 00 00 00 ff ff ff  |.d.\.dx.........|
+00000050  ff ff ff ff ff ff ff ff  ff ff ff ff ff 0a 02 00  |................|
+00000060  01 00 00 06 14 00 00 01  00 09 7a 61 72 72 73 68  |..........zarrsh|
+00000070  61 72 64 c3 00 00 00 00  00 00 00 00 40 00 00 00  |ard.........@...|
+00000080  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+```
+
+![](images/format_signature.png)
+
+---
+
+# Iteration
+
+<!--move to end-->
+
+For accessing data has two kinds of interfaces for accessing enumerated data:
+1. `h5a_get_name_by_idx(loc_id, obj_name, index_type, order, idx, name, size, lapl_id)`
+2. `h5a_iterate(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)`, `op` is function pointer
+
+The `_by_idx` calls are easy to use via a simple `for` loop but are very inefficient for iterating over many items.
+
+The `_iterate` calls require a C callback, `op`, and can be challenging to use but are efficient.
+
+Based on `h5a_iterate` we have created a new `attrs` API replacing the former `attributes` API.
+
+---
+
+# Concurrency with Direct I/O
+
+* The HDF5 C library provides byte offsets for continguous and chunked datasets
+* Currently, HDF5.jl allows contiguous datasets to be memory mapped into arrays allowing for multithreaded reads.
+* With efficient chunk iteration, could we perform parallel decompression in HDF5.jl by reading compressed chunks directly?
