@@ -57,6 +57,7 @@ It consists of
 * A low level interface, a direct mapping to the C API
 * A mid level interface, lightweight helpers
 * A high level interface, a Julia API
+<!-- give examples ? -->
 
 ---
 
@@ -286,13 +287,6 @@ Where are the compressed chunks and can we decompress them in parallel?
 
 ---
 
-# Concurrency with Direct I/O
-
-* The HDF5 C library provides byte offsets for continguous and chunked datasets
-* Currently, HDF5.jl allows contiguous datasets to be memory mapped into arrays allowing for multithreaded reads.
-* With efficient chunk iteration, could we perform parallel decompression in HDF5.jl by reading compressed chunks directly?
-
----
 # Virtual datasets
 
 - Maps multiple datasets into a single dataset
