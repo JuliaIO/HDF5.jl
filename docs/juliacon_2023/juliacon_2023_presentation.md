@@ -308,6 +308,7 @@ Where are the compressed chunks and can we decompress them in parallel?
 * The HDF5 C library is not directly compatible with multithreading for parallel I/O. The preferred parallelization is via MPI.
 * There is a `H5_HAVE_THREADSAFE` compile time option that uses a recursive lock.
 * In HDF5.jl we have applied a `ReentrantLock` on all API calls.
+  * It is now safe to use HDF5.jl with multithreading, but you may not see much of an improvement.
 
 ---
 
@@ -321,7 +322,74 @@ Where are the compressed chunks and can we decompress them in parallel?
 
 # Parallelization via Message Passing Interface (MPI)
 
-<!--Simon Byrne, please elaborate-->
+- Message Passing Interface (MPI) is an interface for single-program, multiple-data (SPMD) parallelism.
+  - Launch multiple processes running the same program
+  ```sh
+  mpiexec -n <nprocs> program ...
+  ```
+  - Programs determine what they should do based on their identifier (_rank_).
+  - Each process determines what communication operations it should do (messages)
+   - Multiple implementations (Open MPI, MPICH, vendor-specific)
+   - Widely used in HPC for large-scale distributed parallelism.
+- MPI.jl provides Julia bindings
+
+----
+
+## Configuring HDF5 with MPI (in upcoming 0.17 release)
+
+- Now works with default MPI & HDF5 JLLs
+- On HPC clusters, will typically want to use the system-provided MPI library
+  - Integrate with resource manager, make use of specialized network hardware, GPU-aware interfaces
+
+### Option 1: use MPItrampoline
+Requires building a wrapper library around your MPI library.
+   ```julia
+   MPIPreferences.use_jll_binary("MPItrampoline_jll")
+   ```
+   - HDF5.jl should work directly.
+
+----
+### Option 2: use system binary directly
+Requires system-provided MPI + HDF5 libraries.
+
+```julia
+using MPIPreferences
+MPIPreferences.use_system_binary()
+```
+Need to set corresponding preferences for HDF5
+```julia
+using Preferences, HDF5
+set_preferences!(HDF5,
+        "libhdf5" => "/path/to/your/libhdf5.so",
+        "libhdf5_hl" => "/path/to/your/libhdf5_hl.so",
+        force = true)
+```
+
+---
+## Using MPI + HDF5
+
+Load and initialize MPI
+```julia
+using MPI, HDF5
+MPI.Init()
+```
+
+Pass MPI communicator to `h5open`, e.g.
+```julia
+h5 = h5open("data.h5", "w", MPI.COMM_WORLD)
+```
+- Needs to be _collective_ (all processes at the same time), with the same arguments.
+- File needs to be on accessible from all processes (e.g. on a shared file system if distributed).
+
+---
+
+Usage otherwise same as normal:
+- metadata operatrions(`create_dataset`, writing attributes) should be done collectively, with the same arguments.
+- reading/writing data can be independently per-process.
+  - try to align chunks with processes
+  - if collective, use `dxpl_mpio=:collective` option with `create_dataset`/`open_dataset`
+- some limitations (e.g no datasets with variable-length strings).
+
 
 ---
 
