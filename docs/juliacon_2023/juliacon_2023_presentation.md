@@ -336,6 +336,28 @@ Where are the compressed chunks and can we decompress them in parallel?
 * With efficient chunk iteration, could we perform parallel decompression in HDF5.jl by reading compressed chunks directly?
 
 ---
+# Virtual datasets
+
+- Maps multiple datasets into a single dataset
+  - Can be same or different files
+  - Supports patterns for sequentially numbered files/datasets
+
+- e.g. consider a dataset made up of 100&times;10 blocks, across 4 files
+  - `data00.h5`, `data01.h5`, etc.
+
+```julia
+space = dataspace((100,40))
+create_dataset(h5f, "dataset", datatype, space;
+    virtual=[HDF5.VirtualMapping(
+        HDF5.hyperslab(space, (1:100, HDF5.BlockRange(1:10; count = -1))), # block pattern
+        "./data0%b.h5",       # filenames (%b block pattern)
+        "data",               # path to source dataset in file
+        dataspace((100,10))   # view into source dataset
+    )]
+)
+```
+
+---
 
 # Parallelization via MPI
 
