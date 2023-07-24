@@ -283,50 +283,52 @@ Where are the compressed chunks and can we decompress them in parallel?
 
 ---
 
+<<<<<<< HEAD
 # Parallelization via Message Passing Interface (MPI)
+=======
+# Concurrency with Direct I/O
+
+* The HDF5 C library provides byte offsets for continguous and chunked datasets
+* Currently, HDF5.jl allows contiguous datasets to be memory mapped into arrays allowing for multithreaded reads.
+* With efficient chunk iteration, could we perform parallel decompression in HDF5.jl by reading compressed chunks directly?
+
+---
+# Virtual datasets
+
+- Maps multiple datasets into a single dataset
+  - Can be same or different files
+  - Supports patterns for sequentially numbered files/datasets
+
+- e.g. consider a dataset made up of 100&times;10 blocks, across 4 files
+  - `data00.h5`, `data01.h5`, etc.
+
+```julia
+space = dataspace((100,40))
+create_dataset(h5f, "dataset", datatype, space;
+    virtual=[HDF5.VirtualMapping(
+        HDF5.hyperslab(space, (1:100, HDF5.BlockRange(1:10; count = -1))), # block pattern
+        "./data0%b.h5",       # filenames (%b block pattern)
+        "data",               # path to source dataset in file
+        dataspace((100,10))   # view into source dataset
+    )]
+)
+```
+
+---
+
+# Parallelization via MPI
+>>>>>>> e0d07a75b1dec46114997a076069748edab6d75d
 
 - Message Passing Interface (MPI) is an interface for single-program, multiple-data (SPMD) parallelism.
   - Launch multiple processes running the same program
-  ```sh
-  mpiexec -n <nprocs> program ...
-  ```
+    ```sh
+     mpiexec -n <nprocs> program ...
+     ```
   - Programs determine what they should do based on their identifier (_rank_).
   - Each process determines what communication operations it should do (messages)
    - Multiple implementations (Open MPI, MPICH, vendor-specific)
    - Widely used in HPC for large-scale distributed parallelism.
 - MPI.jl provides Julia bindings
-
-----
-
-## Configuring HDF5 with MPI (in upcoming 0.17 release)
-
-- Now works with default MPI & HDF5 JLLs
-- On HPC clusters, will typically want to use the system-provided MPI library
-  - Integrate with resource manager, make use of specialized network hardware, GPU-aware interfaces
-
-### Option 1: use MPItrampoline
-Requires building a wrapper library around your MPI library.
-   ```julia
-   MPIPreferences.use_jll_binary("MPItrampoline_jll")
-   ```
-   - HDF5.jl should work directly.
-
-----
-### Option 2: use system binary directly
-Requires system-provided MPI + HDF5 libraries.
-
-```julia
-using MPIPreferences
-MPIPreferences.use_system_binary()
-```
-Need to set corresponding preferences for HDF5
-```julia
-using Preferences, HDF5
-set_preferences!(HDF5,
-        "libhdf5" => "/path/to/your/libhdf5.so",
-        "libhdf5_hl" => "/path/to/your/libhdf5_hl.so",
-        force = true)
-```
 
 ---
 ## Using MPI + HDF5
@@ -352,6 +354,24 @@ Usage otherwise same as normal:
   - try to align chunks with processes
   - if collective, use `dxpl_mpio=:collective` option with `create_dataset`/`open_dataset`
 - some limitations (e.g no datasets with variable-length strings).
+
+---
+
+# Configuring HDF5 (in upcoming 0.17 release)
+
+- May want to use specific HDF5 library
+  - interoperability with other languages (e.g. h5py)
+  - linked against custom MPI binary
+  - specific hardware features (burst buffers)
+
+- Preferences.jl to specify custom HDF5 binary
+```julia
+using Preferences, HDF5
+set_preferences!(HDF5,
+        "libhdf5" => "/path/to/your/libhdf5.so",
+        "libhdf5_hl" => "/path/to/your/libhdf5_hl.so",
+        force = true)
+```
 
 ---
 
