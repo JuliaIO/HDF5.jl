@@ -35,6 +35,7 @@ HDF5 is used as a base for other formats
 * NetCDF - Network Common Data Form v4 (Unidata, UCAR)
 * MAT - MATLAB data files v7.3+
 * PyTables - Pandas
+* JLD/JLD2 - Julia Data Format
 
 ---
 
@@ -84,6 +85,16 @@ It consists of
 * A low level interface, a direct mapping to the C API
 * A mid level interface, lightweight helpers
 * A high level interface, a Julia API
+
+---
+
+# Related Julia Packages
+
+* HDF5_jll.jl, C Library from HDF Group (dependency of HDF5.jl)
+* MAT.jl, MATLAB files (depends on HDF5.jl)
+* JLD.jl, Julia Data Format (depends on HDF5.jl)
+* JLD2.jl, Julia Data Format 2, Pure Julia implementation of a subset of HDF5
+* NetCDF.jl, a wrapper for the NetCDF C library, which incorporates HDF5
 
 ---
 
@@ -389,17 +400,6 @@ Usage otherwise same as normal:
   - try to align chunks with processes
   - if collective, use `dxpl_mpio=:collective` option with `create_dataset`/`open_dataset`
 - some limitations (e.g no datasets with variable-length strings).
-
-
----
-
-# Other Related Julia Packages
-
-* HDF5_jll.jl, C Library from HDF Group (dependency of HDF5.jl)
-* MAT.jl, MATLAB files (depends on HDF5.jl)
-* JLD.jl, Julia Data Format (depends on HDF5.jl)
-* JLD2.jl, Julia Data Format 2, Pure Julia implementation of a subset of HDF5
-* NetCDF.jl, a wrapper for the NetCDF C library, which incorporates HDF5
 
 ---
 
