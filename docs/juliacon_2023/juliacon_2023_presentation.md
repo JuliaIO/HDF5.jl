@@ -255,7 +255,7 @@ TODO: Use a package extension loading mechanism when CodecZstd.jl is present.
 
 The HDF5 C library has a filter plugin mechanism. Plugins are shared libraries located in `/usr/local/hdf5/lib/plugin` or as specified by `$HDF5_PLUGIN_DIR`.
 
-```
+```julia
 using HDF5.Filters
 
 bitshuf = ExternalFilter(32008, Cuint[0, 0])
@@ -285,19 +285,37 @@ The `_by_idx` calls are easy to use via a simple `for` loop but are very ineffic
 
 The `_iterate` calls require a C callback, `op`, and can be challenging to use but are efficient.
 
+Based on `h5a_iterate` we have created a new `attrs` API replacing the former `attributes` API.
+
 ---
 
 # New with HDF5 1.12.3 and 1.14.0: Efficient Chunk Based Iteration
 
+Where are the compressed chunks and can we decompress them in parallel? 
 
+| N Chunks | H5Dchunk_iter | H5Dget_chunk_info | Ratio |
+|---|---|---|---|
+| 64 | 2e-4 s | 5e-4 s | 2.4 |
+| 256 | 7e-4 s | 5e-3 s | 6 |
+| 1024 | 3e-3 s | 5e-2 s | 16 |
+| 4096 | 1e-2 s | 7e-1 s | 57 |
+| 16384 | 6e-2 s | 1e2 s | 208 |
 
 ---
 
-# Multithreading
+# The HDF5 C API does not allow for multithreaded concurrency
 
 * The HDF5 C library is not directly compatible with multithreading for parallel I/O. The preferred parallelization is via MPI.
 * There is a `H5_HAVE_THREADSAFE` compile time option that uses a recursive lock.
 * In HDF5.jl we have applied a `ReentrantLock` on all API calls.
+
+---
+
+# Concurrency with Direct I/O
+
+* The HDF5 C library provides byte offsets for continguous and chunked datasets
+* Currently, HDF5.jl allows contiguous datasets to be memory mapped into arrays allowing for multithreaded reads.
+* With efficient chunk iteration, could we perform parallel decompression in HDF5.jl by reading compressed chunks directly?
 
 ---
 
@@ -309,9 +327,17 @@ The `_iterate` calls require a C callback, `op`, and can be challenging to use b
 
 # Other Related Julia Packages
 
-* HDF5_jll.jl, C Library from HDF Group
-* MAT.jl, MATLAB files
-* JLD.jl, Julia Data Format
+* HDF5_jll.jl, C Library from HDF Group (dependency of HDF5.jl)
+* MAT.jl, MATLAB files (depends on HDF5.jl)
+* JLD.jl, Julia Data Format (depends on HDF5.jl)
 * JLD2.jl, Julia Data Format 2, Pure Julia implementation of a subset of HDF5
+* NetCDF.jl, a wrapper for the NetCDF C library, which incorporates HDF5
 
 ---
+
+# Summary
+
+* HDF5 is a format, C library, and data model for storing hierarchical information.
+* HDF5.jl is a wrapper providing high and low level access to the HDF5 library.
+* HDF5.jl now allows for multithreaded capability through locks and may expand capabilities beyond that of HDF5 C library
+* HDF5.jl works with MPI.jl to allow for distributed multiprocessing
