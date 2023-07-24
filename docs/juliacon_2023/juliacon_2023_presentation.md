@@ -283,9 +283,6 @@ Where are the compressed chunks and can we decompress them in parallel?
 
 ---
 
-<<<<<<< HEAD
-# Parallelization via Message Passing Interface (MPI)
-=======
 # Concurrency with Direct I/O
 
 * The HDF5 C library provides byte offsets for continguous and chunked datasets
@@ -317,7 +314,6 @@ create_dataset(h5f, "dataset", datatype, space;
 ---
 
 # Parallelization via MPI
->>>>>>> e0d07a75b1dec46114997a076069748edab6d75d
 
 - Message Passing Interface (MPI) is an interface for single-program, multiple-data (SPMD) parallelism.
   - Launch multiple processes running the same program
