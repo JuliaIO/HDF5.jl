@@ -368,6 +368,15 @@ set_preferences!(HDF5,
 
 ---
 
+# Applications
+
+* CliMa
+* Plots.jl backend
+* JLD.jl (dependency) and JLD2.jl (interop reference)
+* Checkpointing.jl
+
+---
+
 # Summary
 
 * HDF5 is a format, C library, and data model for storing hierarchical information.
