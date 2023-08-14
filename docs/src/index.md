@@ -360,7 +360,7 @@ read_attribute(parent, name)
 ```
 You can also access the value of an attribute by indexing, like so:
 ```julia
-julia> attr = attribute(parent)[name];
+julia> attr = attributes(parent)[name];
 julia> attr[]
 ```
 
