@@ -7,19 +7,21 @@ using Preferences: @load_preference
 const _PREFERENCE_LIBHDF5 = @load_preference("libhdf5", nothing)
 const _PREFERENCE_LIBHDF5_HL = @load_preference("libhdf5_hl", nothing)
 if _PREFERENCE_LIBHDF5 === nothing && _PREFERENCE_LIBHDF5_HL === nothing
-    using HDF5_jll
+    import HDF5_jll
+    const libhdf5 = HDF5_jll.libhdf5
+    const libhdf5_hl = HDF5_jll.libhdf5_hl
 elseif _PREFERENCE_LIBHDF5 !== nothing && _PREFERENCE_LIBHDF5_HL === nothing
     error("You have only set a preference for the path of libhdf5, but not of libhdf5_hl.")
 elseif _PREFERENCE_LIBHDF5 === nothing && _PREFERENCE_LIBHDF5_HL !== nothing
     error("You have only set a preference for the path of libhdf5_hl, but not of libhdf5.")
 else
-    libhdf5 = _PREFERENCE_LIBHDF5
-    libhdf5_hl = _PREFERENCE_LIBHDF5_HL
+    const libhdf5 = _PREFERENCE_LIBHDF5
+    const libhdf5_hl = _PREFERENCE_LIBHDF5_HL
     # Check whether we can open the libraries
-    flags = RTLD_LAZY | RTLD_NODELETE
+    const flags = RTLD_LAZY | RTLD_NODELETE
     dlopen(libhdf5, flags; throw_error=true)
     dlopen(libhdf5_hl, flags; throw_error=true)
-    libhdf5_size = filesize(dlpath(libhdf5))
+    const libhdf5_size = filesize(dlpath(libhdf5))
 end
 
 include("lock.jl")
