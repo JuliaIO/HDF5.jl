@@ -16,7 +16,7 @@ Test the combination of arguments to create_dataset.
             #  Test file and group
             parents = (h5f, h5g)
             # Test anonymous dattaset, String, and SubString
-            names = (nothing, "test_dataset", @view("test_dataset"[1:4]))
+            names = (nothing, "test_dataset", SubString("test_dataset",1:4))
             # Test primitive, HDF5.Datatype, non-primitive, non-primitive HDF5.Datatype
             types = (UInt8, datatype(UInt8), Complex{Float32}, datatype(Complex{Float32}))
             # Test Tuple, HDF5.Dataspace, two tuples (extendible), extendible HDF5.Dataspace
