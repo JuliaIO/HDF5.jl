@@ -244,8 +244,7 @@ using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenab
     @static if Sys.iswindow()
         # This broke again on Windows
         @test_broken HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
-    elseif VERSION ≤ v"1.6" ||
-        HDF5.API.h5_get_libversion() >= v"1.14.0"
+    elseif VERSION ≤ v"1.6" || HDF5.API.h5_get_libversion() >= v"1.14.0"
         # SZIP via libaec_jll should be available in HDF5_jll 1.14 builds and beyond
         @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
     elseif HDF5.API.h5_get_libversion() >= v"1.12.0"

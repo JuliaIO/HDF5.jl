@@ -2,7 +2,7 @@ using HDF5
 using Test
 using Pkg
 filter_path = joinpath(dirname(pathof(HDF5)), "..", "filters")
-@static if VERSION > v"1.3"
+@static if VERSION ≥ v"1.6"
     if !Base.BinaryPlatforms.CPUID.test_cpu_feature(Base.BinaryPlatforms.CPUID.JL_X86_avx2)
         Pkg.add(PackageSpec(; name="Blosc_jll", version=v"1.21.2+0"))
     end
