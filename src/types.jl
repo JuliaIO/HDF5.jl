@@ -5,7 +5,13 @@
 # Supertype of HDF5.File, HDF5.Group, JldFile, JldGroup, Matlabv5File, and MatlabHDF5File.
 abstract type H5DataStore end
 
-# Read a list of variables, read(parent, "A", "B", "x", ...)
+"""
+    read(parent::H5DataStore)
+    read(parent::H5DataStore, names...)
+
+Read a list of variables, read(parent, "A", "B", "x", ...).
+If no variables are specified, read every variable in the file.
+"""
 function Base.read(parent::H5DataStore, name::AbstractString...)
     tuple((read(parent, x) for x in name)...)
 end
@@ -62,6 +68,11 @@ end
 Base.cconvert(::Type{API.hid_t}, g::Group) = g
 Base.unsafe_convert(::Type{API.hid_t}, g::Group) = g.id
 
+"""
+    HDF5.Dataset
+
+A mutable wrapper for a HDF5 Dataset `HDF5.API.hid_t`.
+"""
 mutable struct Dataset
     id::API.hid_t
     file::File
@@ -76,6 +87,12 @@ end
 Base.cconvert(::Type{API.hid_t}, dset::Dataset) = dset
 Base.unsafe_convert(::Type{API.hid_t}, dset::Dataset) = dset.id
 
+"""
+    HDF5.Datatype(id, toclose = true)
+
+Wrapper for a HDF5 datatype id. If `toclose` is true, the finalizer will close
+the datatype.
+"""
 mutable struct Datatype
     id::API.hid_t
     toclose::Bool

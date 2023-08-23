@@ -2,10 +2,17 @@ using HDF5
 using Test
 using Pkg
 filter_path = joinpath(dirname(pathof(HDF5)), "..", "filters")
-Pkg.develop(PackageSpec(; path=joinpath(filter_path, "H5Zblosc")))
-Pkg.develop(PackageSpec(; path=joinpath(filter_path, "H5Zbzip2")))
-Pkg.develop(PackageSpec(; path=joinpath(filter_path, "H5Zlz4")))
-Pkg.develop(PackageSpec(; path=joinpath(filter_path, "H5Zzstd")))
+@static if VERSION ≥ v"1.6"
+    if !Base.BinaryPlatforms.CPUID.test_cpu_feature(Base.BinaryPlatforms.CPUID.JL_X86_avx2)
+        Pkg.add(PackageSpec(; name="Blosc_jll", version=v"1.21.2+0"))
+    end
+end
+Pkg.develop([
+    PackageSpec(; path=joinpath(filter_path, "H5Zblosc")),
+    PackageSpec(; path=joinpath(filter_path, "H5Zbzip2")),
+    PackageSpec(; path=joinpath(filter_path, "H5Zlz4")),
+    PackageSpec(; path=joinpath(filter_path, "H5Zzstd")),
+])
 @static if VERSION >= v"1.6"
     Pkg.develop(PackageSpec(; path=joinpath(filter_path, "H5Zbitshuffle")))
 end
@@ -18,6 +25,8 @@ end
 @testset "HDF5.jl" begin
     @debug "plain"
     include("plain.jl")
+    @debug "create_dataset"
+    include("create_dataset.jl")
     @debug "strings"
     include("strings.jl")
     @debug "api"

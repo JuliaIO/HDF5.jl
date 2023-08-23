@@ -247,7 +247,7 @@ creates a Float64 dataset in the file or group `g`, with dimensions 1000x100x10,
 writes to just the first 1000 element slice.
 If you know the typical size of subset reasons you'll be reading/writing, it can be beneficial to set the chunk dimensions appropriately.
 
-More [fine-grained control](#mid-level-routines) is also available.
+For fine-grained control of filter and compression pipelines, please use the [`filters`](@ref Filters) keyword to define a filter pipeline. For example, this can be used to include external filter packages. This enables the use of Blosc, Bzip2, LZ4, ZStandard, or custom filter plugins.
 
 ## Memory mapping
 
@@ -360,7 +360,7 @@ read_attribute(parent, name)
 ```
 You can also access the value of an attribute by indexing, like so:
 ```julia
-julia> attr = attribute(parent)[name];
+julia> attr = attributes(parent)[name];
 julia> attr[]
 ```
 

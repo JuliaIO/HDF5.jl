@@ -103,7 +103,11 @@ using Test
     @test dataspace((5,)) == ds_vector
     @test dataspace((5, 7)) == ds_matrix != ds_maxdim
     @test dataspace((5, 7); max_dims=(20, 20)) == ds_maxdim != ds_matrix
+    @test dataspace((5, 7), (20, 20)) == ds_maxdim
+    @test dataspace(((5, 7), (20, 20))) == ds_maxdim
     @test dataspace((1,); max_dims=(-1,)) == ds_unlim
+    @test dataspace((1,), (-1,)) == ds_unlim
+    @test dataspace(((1,), (-1,))) == ds_unlim
     # for ≥ 2 numbers, same as single tuple argument
     @test dataspace(5, 7) == ds_matrix
     @test dataspace(5, 7, 1) == dataspace((5, 7, 1))

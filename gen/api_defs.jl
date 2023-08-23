@@ -59,6 +59,7 @@
 ### Dataset Interface
 ###
 
+@bind h5d_chunk_iter(dset_id::hid_t, dxpl_id::hid_t, cb::Ptr{Nothing}, op_data::Any)::herr_t "Error iterating over chunks" (v"1.12.3", nothing)
 @bind h5d_close(dataset_id::hid_t)::herr_t "Error closing dataset"
 @bind h5d_create2(loc_id::hid_t, pathname::Cstring, dtype_id::hid_t, space_id::hid_t, lcpl_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)::hid_t string("Error creating dataset ", h5i_get_name(loc_id), "/", pathname)
 @bind h5d_create_anon(loc_id::hid_t, type_id::hid_t, space_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t)::hid_t "Error in creating anonymous dataset"
