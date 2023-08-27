@@ -100,9 +100,7 @@ function hdf5_func_url(info::HDF5FunctionInfo; prefix=DEFAULT_URL_PREFIX)
     return prefix * info.anchorfile * "#" * info.anchor
 end
 
-function hdf5_group_url(
-    info::HDF5GroupInfo; prefix="https://docs.hdfgroup.org/hdf5/v1_14/"
-)
+function hdf5_group_url(info::HDF5GroupInfo; prefix="https://docs.hdfgroup.org/hdf5/v1_14/")
     return prefix * info.filename
 end
 
