@@ -18,7 +18,7 @@ struct HDF5GroupInfo
     filename::String
 end
 
-const DEFAULT_URL_PREFIX = "https://docs.hdfgroup.org/hdf5/develop/"
+const DEFAULT_URL_PREFIX = "https://docs.hdfgroup.org/hdf5/v1_14/"
 const HDF5_TAG_URL = "$(DEFAULT_URL_PREFIX)hdf5.tag"
 
 """
