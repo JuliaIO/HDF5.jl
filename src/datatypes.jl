@@ -12,10 +12,21 @@ end
 datatype(dt::Datatype) = dt
 
 open_datatype(
-    parent::Union{File,Group},
-    name::AbstractString,
-    tapl::DatatypeAccessProperties=DatatypeAccessProperties()
+    parent::Union{File,Group}, name::AbstractString, tapl::DatatypeAccessProperties
 ) = Datatype(API.h5t_open(checkvalid(parent), name, tapl), file(parent))
+
+"""
+    open_datatype(parent::Union{File,Group}, path::AbstractString; properties...)
+
+Open an existing [`Datatype`](@ref) at `path` under the `parent` object.
+
+Optional keyword arguments include any keywords that that belong to
+[`DatatypeAccessProperties`](@ref).
+"""
+function open_datatype(parent::Union{File,Group}, name::AbstractString; pv...)
+    tapl = DatatypeAccessProperties(; pv...)
+    return open_datatype(parent, name, tapl)
+end
 
 # Note that H5Tcreate is very different; H5Tcommit is the analog of these others
 create_datatype(class_id, sz) = Datatype(API.h5t_create(class_id, sz))

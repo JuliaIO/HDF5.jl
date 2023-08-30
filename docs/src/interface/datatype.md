@@ -6,4 +6,5 @@ CurrentModule = HDF5
 
 ```@docs
 Datatype
+open_datatype
 ```

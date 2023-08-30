@@ -50,16 +50,21 @@ function create_group(parent::Union{File,Group}, path::AbstractString; pv...)
 end
 
 """
-    open_group(parent::Union{File,Group}, path::AbstratString)
+    open_group(parent::Union{File,Group}, path::AbstratString; properties...)
 
 Open an existing [`Group`](@ref) at `path` under the `parent` object.
+
+Optional keyword arguments include any keywords that that belong to
+[`GroupAccessProperties`](@ref).
 """
 function open_group(
-    parent::Union{File,Group},
-    name::AbstractString,
-    gapl::GroupAccessProperties=GroupAccessProperties()
+    parent::Union{File,Group}, name::AbstractString, gapl::GroupAccessProperties
 )
     return Group(API.h5g_open(checkvalid(parent), name, gapl), file(parent))
+end
+function open_group(parent::Union{File,Group}, name::AbstractString; pv...)
+    gapl = GroupAccessProperties(; pv...)
+    return open_group(parent, path, gapl)
 end
 
 # Get the root group

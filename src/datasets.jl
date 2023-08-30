@@ -4,17 +4,27 @@
 dataspace(dset::Dataset) = Dataspace(API.h5d_get_space(checkvalid(dset)))
 
 """
-    open_dataset(parent::Union{File, Group}, name::AbstractString, [dapl, dxpl])
+    open_dataset(parent::Union{File, Group}, path::AbstractString; properties...)
 
-Open a dataset and return a [`HDF5.Dataset`](@ref) handle. Alternatively , just use index
-a file or group with `name`.
+Open an existing [`HDF5.Dataset`](@ref) at `path` under `parent`
+
+Optional keyword arguments include any keywords that that belong to
+[`DatasetAccessProperties`](@ref) or [`DatasetTransferProperties`](@ref).
 """
 open_dataset(
     parent::Union{File,Group},
     name::AbstractString,
-    dapl::DatasetAccessProperties=DatasetAccessProperties(),
-    dxpl::DatasetTransferProperties=DatasetTransferProperties()
+    dapl::DatasetAccessProperties,
+    dxpl::DatasetTransferProperties
 ) = Dataset(API.h5d_open(checkvalid(parent), name, dapl), file(parent), dxpl)
+
+function open_dataset(parent::Union{File,Group}, name::AbstractString; pv...)
+    dapl = DatasetAccessProperties()
+    dxpl = DatasetTransferProperties()
+    pv = setproperties!(dapl, dxpl; pv...)
+    isempty(pv) || error("invalid keyword options $(keys(pv))")
+    open_dataset(parent, name, dapl, dxpl)
+end
 
 # Setting dset creation properties with name/value pairs
 """
