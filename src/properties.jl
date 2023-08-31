@@ -408,6 +408,8 @@ Properties used when creating a new `Dataset`. Inherits from
    - `:never`: Never fill
    - `:ifset`: Fill if a value is set
 
+- `fill_value`: the fill value for a dataset. See $(h5doc("H5P_SET_FILL_VALUE")).
+
 - `chunk`: a tuple containing the size of the chunks to store each dimension.
   See $(h5doc("H5P_SET_CHUNK")) (note that this uses Julia's column-major
   ordering).
@@ -772,9 +774,19 @@ end
 
 @propertyclass LinkAccessProperties API.H5P_LINK_ACCESS
 
+"""
+    GroupAccessProperties(;kws...)
+
+Properties used when accessing datatypes. None are currently defined.
+"""
 @propertyclass GroupAccessProperties API.H5P_GROUP_ACCESS
 superclass(::Type{GroupAccessProperties}) = LinkAccessProperties
 
+"""
+    DatatypeAccessProperties(;kws...)
+
+Properties used when accessing datatypes. None are currently defined.
+"""
 @propertyclass DatatypeAccessProperties API.H5P_DATATYPE_ACCESS
 superclass(::Type{DatatypeAccessProperties}) = LinkAccessProperties
 
