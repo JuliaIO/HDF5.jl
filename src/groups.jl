@@ -50,7 +50,7 @@ function create_group(parent::Union{File,Group}, path::AbstractString; pv...)
 end
 
 """
-    open_group(parent::Union{File,Group}, path::AbstratString; properties...)
+    open_group(parent::Union{File,Group}, path::AbstractString; properties...)
 
 Open an existing [`Group`](@ref) at `path` under the `parent` object.
 
