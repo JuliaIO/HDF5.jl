@@ -64,7 +64,7 @@ function open_group(
 end
 function open_group(parent::Union{File,Group}, name::AbstractString; pv...)
     gapl = GroupAccessProperties(; pv...)
-    return open_group(parent, path, gapl)
+    return open_group(parent, name, gapl)
 end
 
 # Get the root group
