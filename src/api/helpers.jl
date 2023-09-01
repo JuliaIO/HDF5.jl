@@ -819,7 +819,9 @@ Retrieve a file image of the appropriate size in a `Vector{UInt8}`.
 function h5p_get_file_image(fapl_id)::Vector{UInt8}
     cb = h5p_get_file_image_callbacks(fapl_id)
     if cb.image_free != C_NULL
-        error("File image callback image_free is not C_NULL. Use the three argument method of h5p_get_file_image when setting file image callbacks.")
+        error(
+            "File image callback image_free is not C_NULL. Use the three argument method of h5p_get_file_image when setting file image callbacks."
+        )
     end
     buf_ptr_ref = Ref{Ptr{Nothing}}()
     buf_len_ref = Ref{Csize_t}(0)
@@ -842,19 +844,11 @@ end
 Retrieve the file image callbacks for memory operations
 """
 function h5p_get_file_image_callbacks(fapl_id)
-    cb = H5FD_file_image_callbacks_t(
-        C_NULL,
-        C_NULL,
-        C_NULL,
-        C_NULL,
-        C_NULL,
-        C_NULL,
-        C_NULL)
+    cb = H5FD_file_image_callbacks_t(C_NULL, C_NULL, C_NULL, C_NULL, C_NULL, C_NULL, C_NULL)
     r = Ref(cb)
     h5p_get_file_image_callbacks(fapl_id, r)
     return r[]
 end
-
 
 # Note: The following function(s) implement direct ccalls because the binding generator
 # cannot (yet) do the string wrapping and memory freeing.
