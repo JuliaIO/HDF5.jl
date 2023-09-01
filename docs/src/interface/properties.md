@@ -25,9 +25,11 @@ setproperties!
 AttributeCreateProperties
 FileAccessProperties
 FileCreateProperties
+GroupAccessProperties
 GroupCreateProperties
 DatasetCreateProperties
 DatasetAccessProperties
+DatatypeAccessProperties
 DatasetTransferProperties
 LinkCreateProperties
 ObjectCreateProperties

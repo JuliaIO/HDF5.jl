@@ -77,17 +77,11 @@ function Base.getindex(parent::Union{File,Group}, path::AbstractString; pv...)
     isempty(pv) && return open_object(parent, path)
     obj_type = gettype(parent, path)
     if obj_type == API.H5I_DATASET
-        dapl = DatasetAccessProperties()
-        dxpl = DatasetTransferProperties()
-        pv = setproperties!(dapl, dxpl; pv...)
-        isempty(pv) || error("invalid keyword options $pv")
-        return open_dataset(parent, path, dapl, dxpl)
+        return open_dataset(parent, path; pv...)
     elseif obj_type == API.H5I_GROUP
-        gapl = GroupAccessProperties(; pv...)
-        return open_group(parent, path, gapl)
+        return open_group(parent, path; pv...)
     else#if obj_type == API.H5I_DATATYPE # only remaining choice
-        tapl = DatatypeAccessProperties(; pv...)
-        return open_datatype(parent, path, tapl)
+        return open_datatype(parent, path; pv...)
     end
 end
 
