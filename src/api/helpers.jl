@@ -819,6 +819,8 @@ Retrieve a file image of the appropriate size in a `Vector{UInt8}`.
 function h5p_get_file_image(fapl_id)::Vector{UInt8}
     cb = h5p_get_file_image_callbacks(fapl_id)
     if cb.image_free != C_NULL
+        # The user has configured their own memory deallocation routines.
+        # The user should use a lower level call to properly handle deallocation
         error(
             "File image callback image_free is not C_NULL. Use the three argument method of h5p_get_file_image when setting file image callbacks."
         )
@@ -826,7 +828,12 @@ function h5p_get_file_image(fapl_id)::Vector{UInt8}
     buf_ptr_ref = Ref{Ptr{Nothing}}()
     buf_len_ref = Ref{Csize_t}(0)
     h5p_get_file_image(fapl_id, buf_ptr_ref, buf_len_ref)
-    unsafe_wrap(Array{UInt8}, Ptr{UInt8}(buf_ptr_ref[]), buf_len_ref[]; own=true)
+    image = unsafe_wrap(Array{UInt8}, Ptr{UInt8}(buf_ptr_ref[]), buf_len_ref[]; own=false)
+    finalizer(image) do image
+        # Use h5_free_memory to ensure we are using the correct free
+        h5_free_memory(image)
+    end
+    return image
 end
 
 """
