@@ -515,6 +515,7 @@
 @bind h5s_is_simple(space_id::hid_t)::htri_t "Error determining whether dataspace is simple"
 @bind h5s_modify_select(space_id::hid_t, op::H5S_seloper_t, space2_id::hid_t)::herr_t "Error modifying selection"
 @bind h5s_offset_simple(space_id::hid_t, offset::Ptr{hssize_t})::herr_t "Error offsetting simple dataspace extent"
+@bind h5s_select_adjust(space_id::hid_t, offset::Ptr{hssize_t})::herr_t "Error adjusting selection offset"
 @bind h5s_select_all(space_id::hid_t)::herr_t "Error selecting all of dataspace"
 @bind h5s_select_copy(dst::hid_t, src::hid_t)::herr_t "Error copying selection"
 @bind h5s_select_elements(space_id::hid_t, op::H5S_seloper_t, num_elem::Csize_t, coord::Ptr{hsize_t})::herr_t "Error selecting elements"

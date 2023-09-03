@@ -6786,6 +6786,22 @@ function h5s_offset_simple(space_id, offset)
 end
 
 """
+    h5s_select_adjust(space_id::hid_t, offset::Ptr{hssize_t})
+
+See `libhdf5` documentation for [`H5Sselect_adjust`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga64f08c187b899f2728d4ac016d44f890).
+"""
+function h5s_select_adjust(space_id, offset)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sselect_adjust, libhdf5), herr_t, (hid_t, Ptr{hssize_t}), space_id, offset)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < herr_t(0) && @h5error("Error adjusting selection offset")
+    return nothing
+end
+
+"""
     h5s_select_all(space_id::hid_t)
 
 See `libhdf5` documentation for [`H5Sselect_all`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#gae183b79831506fd4b0c3ba9821eab33e).

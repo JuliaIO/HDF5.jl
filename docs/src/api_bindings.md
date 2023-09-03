@@ -898,6 +898,7 @@ h5r_get_region
 - [`h5s_is_simple`](@ref h5s_is_simple)
 - [`h5s_modify_select`](@ref h5s_modify_select)
 - [`h5s_offset_simple`](@ref h5s_offset_simple)
+- [`h5s_select_adjust`](@ref h5s_select_adjust)
 - [`h5s_select_all`](@ref h5s_select_all)
 - [`h5s_select_copy`](@ref h5s_select_copy)
 - [`h5s_select_elements`](@ref h5s_select_elements)
@@ -931,6 +932,7 @@ h5s_is_regular_hyperslab
 h5s_is_simple
 h5s_modify_select
 h5s_offset_simple
+h5s_select_adjust
 h5s_select_all
 h5s_select_copy
 h5s_select_elements
