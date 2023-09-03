@@ -6431,16 +6431,32 @@ function h5s_close(space_id)
     return nothing
 end
 
+"""
+    h5s_combine_hyperslab(dspace_id::hid_t, seloper::H5S_seloper_t, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Scombine_hyperslab`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#gae7578a93bb7b22989bcb737f26b60ad1).
+"""
+function h5s_combine_hyperslab(dspace_id, seloper, start, stride, count, block)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Scombine_hyperslab, libhdf5), herr_t, (hid_t, H5S_seloper_t, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}), dspace_id, seloper, start, stride, count, block)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error selecting hyperslab")
+    return nothing
+end
+
 @static if v"1.10.7" ≤ _libhdf5_build_ver
     @doc """
-        h5s_combine_select(space1_id::hid_t, op::Cint, space2_id::hid_t) -> hid_t
+        h5s_combine_select(space1_id::hid_t, op::H5S_seloper_t, space2_id::hid_t) -> hid_t
 
     See `libhdf5` documentation for [`H5Scombine_select`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga356600d12d3cf0db53cc27b212d75b08).
     """
     function h5s_combine_select(space1_id, op, space2_id)
         lock(liblock)
         var"#status#" = try
-                ccall((:H5Scombine_select, libhdf5), hid_t, (hid_t, Cint, hid_t), space1_id, op, space2_id)
+                ccall((:H5Scombine_select, libhdf5), hid_t, (hid_t, H5S_seloper_t, hid_t), space1_id, op, space2_id)
             finally
                 unlock(liblock)
             end
@@ -6498,6 +6514,22 @@ function h5s_create_simple(rank, current_dims, maximum_dims)
 end
 
 """
+    h5s_extent_copy(dst::hid_t, src::hid_t)
+
+See `libhdf5` documentation for [`H5Sextent_copy`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga0eae5447eaabaa9444fac0464cd1b8d5).
+"""
+function h5s_extent_copy(dst, src)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sextent_copy, libhdf5), herr_t, (hid_t, hid_t), dst, src)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error copying extent")
+    return nothing
+end
+
+"""
     h5s_extent_equal(space1_id::hid_t, space2_id::hid_t) -> Bool
 
 See `libhdf5` documentation for [`H5Sextent_equal`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#gae58bca0c154ceaed9ad36c58c78e145c).
@@ -6530,51 +6562,67 @@ function h5s_get_regular_hyperslab(space_id, start, stride, count, block)
 end
 
 """
-    h5s_get_simple_extent_dims(space_id::hid_t, dims::Ptr{hsize_t}, maxdims::Ptr{hsize_t}) -> Int
+    h5s_get_select_bounds(space_id::hid_t, starts::Ptr{hsize_t}, ends::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Sget_simple_extent_dims`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#gac494409b615d8e67c5edd9eb2848b2f3).
+See `libhdf5` documentation for [`H5Sget_select_bounds`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga645591ec939b89732c10efd5867a6205).
 """
-function h5s_get_simple_extent_dims(space_id, dims, maxdims)
+function h5s_get_select_bounds(space_id, starts, ends)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Sget_simple_extent_dims, libhdf5), Cint, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}), space_id, dims, maxdims)
+            ccall((:H5Sget_select_bounds, libhdf5), herr_t, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}), space_id, starts, ends)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting the dimensions for a dataspace")
-    return Int(var"#status#")
+    var"#status#" < 0 && @h5error("Error getting bounding box for selection")
+    return nothing
 end
 
 """
-    h5s_get_simple_extent_ndims(space_id::hid_t) -> Int
+    h5s_get_select_elem_npoints(space_id::hid_t) -> hssize_t
 
-See `libhdf5` documentation for [`H5Sget_simple_extent_ndims`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#gae5282a81692b80b5b19dd12d05b9b28e).
+See `libhdf5` documentation for [`H5Sget_select_elem_npoints`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga217b839584cd7c7995b47fc30fe92f4c).
 """
-function h5s_get_simple_extent_ndims(space_id)
+function h5s_get_select_elem_npoints(space_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Sget_simple_extent_ndims, libhdf5), Cint, (hid_t,), space_id)
+            ccall((:H5Sget_select_elem_npoints, libhdf5), hssize_t, (hid_t,), space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting the number of dimensions for a dataspace")
-    return Int(var"#status#")
+    var"#status#" < 0 && @h5error("Error getting number of elements in dataspace selection")
+    return var"#status#"
 end
 
 """
-    h5s_get_simple_extent_type(space_id::hid_t) -> Int
+    h5s_get_select_elem_pointlist(space_id::hid_t, startpoint::hsize_t, numpoints::hsize_t, buf::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Sget_simple_extent_type`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#gaf63af02b385e80c8c10b1c43763c251f).
+See `libhdf5` documentation for [`H5Sget_select_elem_pointlist`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga61459c488147254d1d06537a9ab6e2d4).
 """
-function h5s_get_simple_extent_type(space_id)
+function h5s_get_select_elem_pointlist(space_id, startpoint, numpoints, buf)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Sget_simple_extent_type, libhdf5), Cint, (hid_t,), space_id)
+            ccall((:H5Sget_select_elem_pointlist, libhdf5), herr_t, (hid_t, hsize_t, hsize_t, Ptr{hsize_t}), space_id, startpoint, numpoints, buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting the dataspace type")
-    return Int(var"#status#")
+    var"#status#" < 0 && @h5error("Error getting list of element points")
+    return nothing
+end
+
+"""
+    h5s_get_select_hyper_blocklist(space_id::hid_t, startblock::hsize_t, numblocks::hsize_t, buf::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Sget_select_hyper_blocklist`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga8534829a8db2eca8e987bb9fe8a3d628).
+"""
+function h5s_get_select_hyper_blocklist(space_id, startblock, numblocks, buf)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sget_select_hyper_blocklist, libhdf5), herr_t, (hid_t, hsize_t, hsize_t, Ptr{hsize_t}), space_id, startblock, numblocks, buf)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error getting list of hyperslab blocks")
+    return nothing
 end
 
 """
@@ -6610,19 +6658,67 @@ function h5s_get_select_npoints(space_id)
 end
 
 """
-    h5s_get_select_type(space_id::hid_t) -> Int
+    h5s_get_select_type(space_id::hid_t) -> H5S_sel_type
 
 See `libhdf5` documentation for [`H5Sget_select_type`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga51ae555e5b2492d95c7fefab2e0d5018).
 """
 function h5s_get_select_type(space_id)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Sget_select_type, libhdf5), Cint, (hid_t,), space_id)
+            ccall((:H5Sget_select_type, libhdf5), H5S_sel_type, (hid_t,), space_id)
         finally
             unlock(liblock)
         end
     var"#status#" < 0 && @h5error("Error getting the selection type")
+    return var"#status#"
+end
+
+"""
+    h5s_get_simple_extent_dims(space_id::hid_t, dims::Ptr{hsize_t}, maxdims::Ptr{hsize_t}) -> Int
+
+See `libhdf5` documentation for [`H5Sget_simple_extent_dims`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#gac494409b615d8e67c5edd9eb2848b2f3).
+"""
+function h5s_get_simple_extent_dims(space_id, dims, maxdims)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sget_simple_extent_dims, libhdf5), Cint, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}), space_id, dims, maxdims)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error getting the dimensions for a dataspace")
     return Int(var"#status#")
+end
+
+"""
+    h5s_get_simple_extent_ndims(space_id::hid_t) -> Int
+
+See `libhdf5` documentation for [`H5Sget_simple_extent_ndims`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#gae5282a81692b80b5b19dd12d05b9b28e).
+"""
+function h5s_get_simple_extent_ndims(space_id)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sget_simple_extent_ndims, libhdf5), Cint, (hid_t,), space_id)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error getting the number of dimensions for a dataspace")
+    return Int(var"#status#")
+end
+
+"""
+    h5s_get_simple_extent_type(space_id::hid_t) -> H5S_class_t
+
+See `libhdf5` documentation for [`H5Sget_simple_extent_type`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#gaf63af02b385e80c8c10b1c43763c251f).
+"""
+function h5s_get_simple_extent_type(space_id)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sget_simple_extent_type, libhdf5), H5S_class_t, (hid_t,), space_id)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error getting the dataspace type")
+    return var"#status#"
 end
 
 """
@@ -6658,18 +6754,162 @@ function h5s_is_simple(space_id)
 end
 
 """
-    h5s_select_hyperslab(dspace_id::hid_t, seloper::Cint, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})
+    h5s_modify_select(space_id::hid_t, op::H5S_seloper_t, space2_id::hid_t)
+
+See `libhdf5` documentation for [`H5Smodify_select`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga0ccb190f72fe41a927407ffb9f19ef1b).
+"""
+function h5s_modify_select(space_id, op, space2_id)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Smodify_select, libhdf5), herr_t, (hid_t, H5S_seloper_t, hid_t), space_id, op, space2_id)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error modifying selection")
+    return nothing
+end
+
+"""
+    h5s_offset_simple(space_id::hid_t, offset::Ptr{hssize_t})
+
+See `libhdf5` documentation for [`H5Soffset_simple`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga8e31da08f4110c3c7dfb18e9758e180d).
+"""
+function h5s_offset_simple(space_id, offset)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Soffset_simple, libhdf5), herr_t, (hid_t, Ptr{hssize_t}), space_id, offset)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error offsetting simple dataspace extent")
+    return nothing
+end
+
+"""
+    h5s_select_all(space_id::hid_t)
+
+See `libhdf5` documentation for [`H5Sselect_all`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#gae183b79831506fd4b0c3ba9821eab33e).
+"""
+function h5s_select_all(space_id)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sselect_all, libhdf5), herr_t, (hid_t,), space_id)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error selecting all of dataspace")
+    return nothing
+end
+
+"""
+    h5s_select_copy(dst::hid_t, src::hid_t)
+
+See `libhdf5` documentation for [`H5Sselect_copy`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga57e5eba2d1b282803835ba3f7e0b9bfa).
+"""
+function h5s_select_copy(dst, src)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sselect_copy, libhdf5), herr_t, (hid_t, hid_t), dst, src)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error copying selection")
+    return nothing
+end
+
+"""
+    h5s_select_elements(space_id::hid_t, op::H5S_seloper_t, num_elem::Csize_t, coord::Ptr{hsize_t})
+
+See `libhdf5` documentation for [`H5Sselect_elements`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga2f4407dd73d0ec37e5d9e80e4382483d).
+"""
+function h5s_select_elements(space_id, op, num_elem, coord)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sselect_elements, libhdf5), herr_t, (hid_t, H5S_seloper_t, Csize_t, Ptr{hsize_t}), space_id, op, num_elem, coord)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error selecting elements")
+    return nothing
+end
+
+"""
+    h5s_select_hyperslab(dspace_id::hid_t, seloper::H5S_seloper_t, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})
 
 See `libhdf5` documentation for [`H5Sselect_hyperslab`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d).
 """
 function h5s_select_hyperslab(dspace_id, seloper, start, stride, count, block)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5Sselect_hyperslab, libhdf5), herr_t, (hid_t, Cint, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}), dspace_id, seloper, start, stride, count, block)
+            ccall((:H5Sselect_hyperslab, libhdf5), herr_t, (hid_t, H5S_seloper_t, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}, Ptr{hsize_t}), dspace_id, seloper, start, stride, count, block)
         finally
             unlock(liblock)
         end
     var"#status#" < 0 && @h5error("Error selecting hyperslab")
+    return nothing
+end
+
+"""
+    h5s_select_intersect_block(space_id::hid_t, starts::Ptr{hsize_t}, ends::Ptr{hsize_t}) -> Bool
+
+See `libhdf5` documentation for [`H5Sselect_intersect_block`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga51472bcb9af024675fba6294a6aefa5e).
+"""
+function h5s_select_intersect_block(space_id, starts, ends)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sselect_intersect_block, libhdf5), htri_t, (hid_t, Ptr{hsize_t}, Ptr{hsize_t}), space_id, starts, ends)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error determining whether selection intersects block")
+    return var"#status#" > 0
+end
+
+"""
+    h5s_select_shape_same(space1_id::hid_t, space2_id::hid_t) -> Bool
+
+See `libhdf5` documentation for [`H5Sselect_shape_same`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#gafc6cafae877900ee060709eaa0b9b261).
+"""
+function h5s_select_shape_same(space1_id, space2_id)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sselect_shape_same, libhdf5), htri_t, (hid_t, hid_t), space1_id, space2_id)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error determining whether dataspace shapes are the same")
+    return var"#status#" > 0
+end
+
+"""
+    h5s_select_valid(spaceid::hid_t) -> Bool
+
+See `libhdf5` documentation for [`H5Sselect_valid`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#ga1abfdec1248c262ca8791b5308e67d4b).
+"""
+function h5s_select_valid(spaceid)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sselect_valid, libhdf5), htri_t, (hid_t,), spaceid)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error determining whether selection is within extent")
+    return var"#status#" > 0
+end
+
+"""
+    h5s_set_extent_none(space_id::hid_t)
+
+See `libhdf5` documentation for [`H5Sset_extent_none`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html#gacf8a5c48d7b7edb5ff73d9d02dbd073d).
+"""
+function h5s_set_extent_none(space_id)
+    lock(liblock)
+    var"#status#" = try
+            ccall((:H5Sset_extent_none, libhdf5), herr_t, (hid_t,), space_id)
+        finally
+            unlock(liblock)
+        end
+    var"#status#" < 0 && @h5error("Error setting dataspace extent to none")
     return nothing
 end
 

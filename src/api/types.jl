@@ -418,25 +418,36 @@ const H5S_ALL       = hid_t(0)
 const H5S_UNLIMITED = typemax(hsize_t)
 
 # Dataspace classes (C enum H5S_class_t)
-const H5S_SCALAR = 0
-const H5S_SIMPLE = 1
-const H5S_NULL   = 2
+@enum H5S_class_t::Cint begin
+    H5S_NO_CLASS = -1
+    H5S_SCALAR = 0
+    H5S_SIMPLE = 1
+    H5S_NULL = 2
+end
 
 # Dataspace selection constants (C enum H5S_seloper_t)
-const H5S_SELECT_SET     = 0
-const H5S_SELECT_OR      = 1
-const H5S_SELECT_AND     = 2
-const H5S_SELECT_XOR     = 3
-const H5S_SELECT_NOTB    = 4
-const H5S_SELECT_NOTA    = 5
-const H5S_SELECT_APPEND  = 6
-const H5S_SELECT_PREPEND = 7
+@enum H5S_seloper_t::Cint begin
+    H5S_SELECT_NOOP = -1
+    H5S_SELECT_SET = 0
+    H5S_SELECT_OR = 1
+    H5S_SELECT_AND = 2
+    H5S_SELECT_XOR = 3
+    H5S_SELECT_NOTB = 4
+    H5S_SELECT_NOTA = 5
+    H5S_SELECT_APPEND = 6
+    H5S_SELECT_PREPEND = 7
+    H5S_SELECT_INVALID = 8
+end
 
 # Dataspace selection types (C enum H5S_sel_type)
-const H5S_SEL_NONE       = 0
-const H5S_SEL_POINTS     = 1
-const H5S_SEL_HYPERSLABS = 2
-const H5S_SEL_ALL        = 3
+@enum H5S_sel_type::Cint begin
+    H5S_SEL_ERROR = -1
+    H5S_SEL_NONE = 0
+    H5S_SEL_POINTS = 1
+    H5S_SEL_HYPERSLABS = 2
+    H5S_SEL_ALL = 3
+    H5S_SEL_N = 4
+end
 
 # type classes (C enum H5T_class_t)
 const H5T_NO_CLASS  = hid_t(-1)
