@@ -23,7 +23,7 @@ function h5_close()
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error closing the HDF5 resources")
+    var"#status#" < herr_t(0) && @h5error("Error closing the HDF5 resources")
     return nothing
 end
 
@@ -39,7 +39,7 @@ function h5_dont_atexit()
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error calling dont_atexit")
+    var"#status#" < herr_t(0) && @h5error("Error calling dont_atexit")
     return nothing
 end
 
@@ -55,7 +55,7 @@ function h5_free_memory(buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error freeing memory")
+    var"#status#" < herr_t(0) && @h5error("Error freeing memory")
     return nothing
 end
 
@@ -71,7 +71,7 @@ function h5_garbage_collect()
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error on garbage collect")
+    var"#status#" < herr_t(0) && @h5error("Error on garbage collect")
     return nothing
 end
 
@@ -87,7 +87,7 @@ function h5_get_libversion(majnum, minnum, relnum)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting HDF5 library version")
+    var"#status#" < herr_t(0) && @h5error("Error getting HDF5 library version")
     return nothing
 end
 
@@ -103,7 +103,7 @@ function h5_is_library_threadsafe(is_ts)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error determining thread safety")
+    var"#status#" < herr_t(0) && @h5error("Error determining thread safety")
     return nothing
 end
 
@@ -119,7 +119,7 @@ function h5_open()
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error initializing the HDF5 library")
+    var"#status#" < herr_t(0) && @h5error("Error initializing the HDF5 library")
     return nothing
 end
 
@@ -135,7 +135,7 @@ function h5_set_free_list_limits(reg_global_lim, reg_list_lim, arr_global_lim, a
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting limits on free lists")
+    var"#status#" < herr_t(0) && @h5error("Error setting limits on free lists")
     return nothing
 end
 
@@ -151,7 +151,7 @@ function h5a_close(id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error closing attribute")
+    var"#status#" < herr_t(0) && @h5error("Error closing attribute")
     return nothing
 end
 
@@ -167,7 +167,7 @@ function h5a_create(loc_id, attr_name, type_id, space_id, acpl_id, aapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error creating attribute ", attr_name, " for object ", h5i_get_name(loc_id)))
+    var"#status#" < hid_t(0) && @h5error(string("Error creating attribute ", attr_name, " for object ", h5i_get_name(loc_id)))
     return var"#status#"
 end
 
@@ -183,7 +183,7 @@ function h5a_create_by_name(loc_id, obj_name, attr_name, type_id, space_id, acpl
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error creating attribute ", attr_name, " for object ", obj_name))
+    var"#status#" < hid_t(0) && @h5error(string("Error creating attribute ", attr_name, " for object ", obj_name))
     return var"#status#"
 end
 
@@ -199,7 +199,7 @@ function h5a_delete(loc_id, attr_name)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error deleting attribute ", attr_name))
+    var"#status#" < herr_t(0) && @h5error(string("Error deleting attribute ", attr_name))
     return nothing
 end
 
@@ -215,7 +215,7 @@ function h5a_delete_by_idx(loc_id, obj_name, idx_type, order, n, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error deleting attribute ", n, " from object ", obj_name))
+    var"#status#" < herr_t(0) && @h5error(string("Error deleting attribute ", n, " from object ", obj_name))
     return nothing
 end
 
@@ -231,7 +231,7 @@ function h5a_delete_by_name(loc_id, obj_name, attr_name, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error removing attribute ", attr_name, " from object ", obj_name))
+    var"#status#" < herr_t(0) && @h5error(string("Error removing attribute ", attr_name, " from object ", obj_name))
     return nothing
 end
 
@@ -247,7 +247,7 @@ function h5a_exists(obj_id, attr_name)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error checking whether attribute ", attr_name, " exists"))
+    var"#status#" < htri_t(0) && @h5error(string("Error checking whether attribute ", attr_name, " exists"))
     return var"#status#" > 0
 end
 
@@ -263,7 +263,7 @@ function h5a_exists_by_name(loc_id, obj_name, attr_name, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error checking whether object ", obj_name, " has attribute ", attr_name))
+    var"#status#" < htri_t(0) && @h5error(string("Error checking whether object ", obj_name, " has attribute ", attr_name))
     return var"#status#" > 0
 end
 
@@ -279,7 +279,7 @@ function h5a_get_create_plist(attr_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Cannot get creation property list")
+    var"#status#" < hid_t(0) && @h5error("Cannot get creation property list")
     return var"#status#"
 end
 
@@ -295,7 +295,7 @@ function h5a_get_name(attr_id, buf_size, buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting attribute name")
+    var"#status#" < Cssize_t(0) && @h5error("Error getting attribute name")
     return var"#status#"
 end
 
@@ -311,7 +311,7 @@ function h5a_get_name_by_idx(loc_id, obj_name, index_type, order, idx, name, siz
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting attribute name")
+    var"#status#" < Cssize_t(0) && @h5error("Error getting attribute name")
     return var"#status#"
 end
 
@@ -327,7 +327,7 @@ function h5a_get_space(attr_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting attribute dataspace")
+    var"#status#" < hid_t(0) && @h5error("Error getting attribute dataspace")
     return var"#status#"
 end
 
@@ -343,7 +343,7 @@ function h5a_get_type(attr_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting attribute type")
+    var"#status#" < hid_t(0) && @h5error("Error getting attribute type")
     return var"#status#"
 end
 
@@ -359,7 +359,7 @@ function h5a_iterate(obj_id, idx_type, order, n, op, op_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error iterating attributes in object ", h5i_get_name(obj_id)))
+    var"#status#" < herr_t(0) && @h5error(string("Error iterating attributes in object ", h5i_get_name(obj_id)))
     return nothing
 end
 
@@ -375,7 +375,7 @@ function h5a_open(obj_id, attr_name, aapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error opening attribute ", attr_name, " for object ", h5i_get_name(obj_id)))
+    var"#status#" < hid_t(0) && @h5error(string("Error opening attribute ", attr_name, " for object ", h5i_get_name(obj_id)))
     return var"#status#"
 end
 
@@ -391,7 +391,7 @@ function h5a_open_by_idx(obj_id, pathname, idx_type, order, n, aapl_id, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error opening attribute ", n, " of ", h5i_get_name(obj_id), "/", pathname))
+    var"#status#" < hid_t(0) && @h5error(string("Error opening attribute ", n, " of ", h5i_get_name(obj_id), "/", pathname))
     return var"#status#"
 end
 
@@ -407,7 +407,7 @@ function h5a_read(attr_id, mem_type_id, buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error reading attribute ", h5a_get_name(attr_id)))
+    var"#status#" < herr_t(0) && @h5error(string("Error reading attribute ", h5a_get_name(attr_id)))
     return nothing
 end
 
@@ -423,7 +423,7 @@ function h5a_rename(loc_id, old_attr_name, new_attr_name)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Could not rename attribute"))
+    var"#status#" < herr_t(0) && @h5error(string("Could not rename attribute"))
     return nothing
 end
 
@@ -439,7 +439,7 @@ function h5a_write(attr_hid, mem_type_id, buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error writing attribute data")
+    var"#status#" < herr_t(0) && @h5error("Error writing attribute data")
     return nothing
 end
 
@@ -456,7 +456,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error iterating over chunks")
+        var"#status#" < herr_t(0) && @h5error("Error iterating over chunks")
         return nothing
     end
 end
@@ -473,7 +473,7 @@ function h5d_close(dataset_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error closing dataset")
+    var"#status#" < herr_t(0) && @h5error("Error closing dataset")
     return nothing
 end
 
@@ -489,7 +489,7 @@ function h5d_create(loc_id, pathname, dtype_id, space_id, lcpl_id, dcpl_id, dapl
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error creating dataset ", h5i_get_name(loc_id), "/", pathname))
+    var"#status#" < hid_t(0) && @h5error(string("Error creating dataset ", h5i_get_name(loc_id), "/", pathname))
     return var"#status#"
 end
 
@@ -505,7 +505,7 @@ function h5d_create_anon(loc_id, type_id, space_id, dcpl_id, dapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in creating anonymous dataset")
+    var"#status#" < hid_t(0) && @h5error("Error in creating anonymous dataset")
     return var"#status#"
 end
 
@@ -521,7 +521,7 @@ function h5d_extend(dataset_id, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error extending dataset")
+    var"#status#" < herr_t(0) && @h5error("Error extending dataset")
     return nothing
 end
 
@@ -537,7 +537,7 @@ function h5d_fill(fill, fill_type_id, buf, buf_type_id, space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error filling dataset")
+    var"#status#" < herr_t(0) && @h5error("Error filling dataset")
     return nothing
 end
 
@@ -553,7 +553,7 @@ function h5d_flush(dataset_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error flushing dataset")
+    var"#status#" < herr_t(0) && @h5error("Error flushing dataset")
     return nothing
 end
 
@@ -569,7 +569,7 @@ function h5d_gather(src_space_id, src_buf, type_id, dst_buf_size, dst_buf, op, o
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error gathering dataset")
+    var"#status#" < herr_t(0) && @h5error("Error gathering dataset")
     return nothing
 end
 
@@ -585,7 +585,7 @@ function h5d_get_access_plist(dataset_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting dataset access property list")
+    var"#status#" < hid_t(0) && @h5error("Error getting dataset access property list")
     return var"#status#"
 end
 
@@ -601,7 +601,7 @@ function h5d_get_chunk_info(dataset_id, fspace_id, index, offset, filter_mask, a
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting chunk info")
+    var"#status#" < herr_t(0) && @h5error("Error getting chunk info")
     return nothing
 end
 
@@ -618,7 +618,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error getting chunk info by coord")
+        var"#status#" < herr_t(0) && @h5error("Error getting chunk info by coord")
         return nothing
     end
 end
@@ -635,7 +635,7 @@ function h5d_get_chunk_storage_size(dataset_id, offset, chunk_nbytes)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting chunk storage size")
+    var"#status#" < herr_t(0) && @h5error("Error getting chunk storage size")
     return nothing
 end
 
@@ -651,7 +651,7 @@ function h5d_get_create_plist(dataset_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting dataset create property list")
+    var"#status#" < hid_t(0) && @h5error("Error getting dataset create property list")
     return var"#status#"
 end
 
@@ -668,7 +668,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error getting number of chunks")
+        var"#status#" < herr_t(0) && @h5error("Error getting number of chunks")
         return nothing
     end
 end
@@ -701,7 +701,7 @@ function h5d_get_space(dataset_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting dataspace")
+    var"#status#" < hid_t(0) && @h5error("Error getting dataspace")
     return var"#status#"
 end
 
@@ -717,7 +717,7 @@ function h5d_get_space_status(dataset_id, status)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting dataspace status")
+    var"#status#" < herr_t(0) && @h5error("Error getting dataspace status")
     return nothing
 end
 
@@ -749,7 +749,7 @@ function h5d_get_type(dataset_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting dataspace type")
+    var"#status#" < hid_t(0) && @h5error("Error getting dataspace type")
     return var"#status#"
 end
 
@@ -765,7 +765,7 @@ function h5d_iterate(buf, type_id, space_id, operator, operator_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error iterating dataset")
+    var"#status#" < herr_t(0) && @h5error("Error iterating dataset")
     return nothing
 end
 
@@ -781,7 +781,7 @@ function h5d_open(loc_id, pathname, dapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error opening dataset ", h5i_get_name(loc_id), "/", pathname))
+    var"#status#" < hid_t(0) && @h5error(string("Error opening dataset ", h5i_get_name(loc_id), "/", pathname))
     return var"#status#"
 end
 
@@ -797,7 +797,7 @@ function h5d_read(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_pli
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error reading dataset ", h5i_get_name(dataset_id)))
+    var"#status#" < herr_t(0) && @h5error(string("Error reading dataset ", h5i_get_name(dataset_id)))
     return nothing
 end
 
@@ -813,7 +813,7 @@ function h5d_read_chunk(dset, dxpl_id, offset, filters, buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error reading chunk")
+    var"#status#" < herr_t(0) && @h5error("Error reading chunk")
     return nothing
 end
 
@@ -829,7 +829,7 @@ function h5d_refresh(dataset_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error refreshing dataset")
+    var"#status#" < herr_t(0) && @h5error("Error refreshing dataset")
     return nothing
 end
 
@@ -845,7 +845,7 @@ function h5d_scatter(op, op_data, type_id, dst_space_id, dst_buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error scattering to dataset")
+    var"#status#" < herr_t(0) && @h5error("Error scattering to dataset")
     return nothing
 end
 
@@ -861,7 +861,7 @@ function h5d_set_extent(dataset_id, new_dims)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error extending dataset dimensions")
+    var"#status#" < herr_t(0) && @h5error("Error extending dataset dimensions")
     return nothing
 end
 
@@ -877,7 +877,7 @@ function h5d_vlen_get_buf_size(dset_id, type_id, space_id, buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting vlen buffer size")
+    var"#status#" < herr_t(0) && @h5error("Error getting vlen buffer size")
     return nothing
 end
 
@@ -893,7 +893,7 @@ function h5d_vlen_reclaim(type_id, space_id, plist_id, buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error reclaiming vlen buffer")
+    var"#status#" < herr_t(0) && @h5error("Error reclaiming vlen buffer")
     return nothing
 end
 
@@ -909,7 +909,7 @@ function h5d_write(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_pl
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error writing dataset")
+    var"#status#" < herr_t(0) && @h5error("Error writing dataset")
     return nothing
 end
 
@@ -925,7 +925,7 @@ function h5d_write_chunk(dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error writing chunk")
+    var"#status#" < herr_t(0) && @h5error("Error writing chunk")
     return nothing
 end
 
@@ -941,7 +941,7 @@ function h5e_get_auto(estack_id, func, client_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting error reporting behavior")
+    var"#status#" < herr_t(0) && @h5error("Error getting error reporting behavior")
     return nothing
 end
 
@@ -957,7 +957,7 @@ function h5e_set_auto(estack_id, func, client_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting error reporting behavior")
+    var"#status#" < herr_t(0) && @h5error("Error setting error reporting behavior")
     return nothing
 end
 
@@ -973,7 +973,7 @@ function h5e_get_current_stack()
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to return current error stack")
+    var"#status#" < hid_t(0) && @h5error("Unable to return current error stack")
     return var"#status#"
 end
 
@@ -989,7 +989,7 @@ function h5e_get_msg(mesg_id, mesg_type, mesg, len)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting message")
+    var"#status#" < Cssize_t(0) && @h5error("Error getting message")
     return var"#status#"
 end
 
@@ -1005,7 +1005,7 @@ function h5e_get_num(estack_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting stack length")
+    var"#status#" < Cssize_t(0) && @h5error("Error getting stack length")
     return var"#status#"
 end
 
@@ -1021,7 +1021,7 @@ function h5e_close_stack(stack_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error closing stack")
+    var"#status#" < herr_t(0) && @h5error("Error closing stack")
     return nothing
 end
 
@@ -1037,7 +1037,7 @@ function h5e_walk(stack_id, direction, op, op_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error walking stack")
+    var"#status#" < herr_t(0) && @h5error("Error walking stack")
     return nothing
 end
 
@@ -1053,7 +1053,7 @@ function h5f_clear_elink_file_cache(file_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_clear_elink_file_cache (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_clear_elink_file_cache (not annotated)")
     return nothing
 end
 
@@ -1069,7 +1069,7 @@ function h5f_close(file_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error closing file")
+    var"#status#" < herr_t(0) && @h5error("Error closing file")
     return nothing
 end
 
@@ -1085,7 +1085,7 @@ function h5f_create(pathname, flags, fcpl_id, fapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error creating file $(pathname)")
+    var"#status#" < hid_t(0) && @h5error("Error creating file $(pathname)")
     return var"#status#"
 end
 
@@ -1101,7 +1101,7 @@ function h5f_delete(filename, fapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_delete (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_delete (not annotated)")
     return nothing
 end
 
@@ -1117,7 +1117,7 @@ function h5f_flush(object_id, scope)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error flushing object to file")
+    var"#status#" < herr_t(0) && @h5error("Error flushing object to file")
     return nothing
 end
 
@@ -1133,7 +1133,7 @@ function h5f_format_convert(fid)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_format_convert (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_format_convert (not annotated)")
     return nothing
 end
 
@@ -1149,7 +1149,7 @@ function h5f_get_access_plist(file_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting file access property list")
+    var"#status#" < hid_t(0) && @h5error("Error getting file access property list")
     return var"#status#"
 end
 
@@ -1165,7 +1165,7 @@ function h5f_get_create_plist(file_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting file create property list")
+    var"#status#" < hid_t(0) && @h5error("Error getting file create property list")
     return var"#status#"
 end
 
@@ -1181,7 +1181,7 @@ function h5f_get_dset_no_attrs_hint(file_id, minimize)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting dataset no attributes hint")
+    var"#status#" < herr_t(0) && @h5error("Error getting dataset no attributes hint")
     return nothing
 end
 
@@ -1197,7 +1197,7 @@ function h5f_get_eoa(file_id, eoa)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_eoa (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_get_eoa (not annotated)")
     return nothing
 end
 
@@ -1213,7 +1213,7 @@ function h5f_get_file_image(file_id, buf_ptr, buf_len)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_file_image (not annotated)")
+    var"#status#" < Cssize_t(0) && @h5error("Error in h5f_get_file_image (not annotated)")
     return var"#status#"
 end
 
@@ -1229,7 +1229,7 @@ function h5f_get_fileno(file_id, fileno)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_fileno (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_get_fileno (not annotated)")
     return nothing
 end
 
@@ -1245,7 +1245,7 @@ function h5f_get_filesize(file_id, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_filesize (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_get_filesize (not annotated)")
     return nothing
 end
 
@@ -1261,7 +1261,7 @@ function h5f_get_free_sections(file_id, type, nsects, sect_info)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_free_sections (not annotated)")
+    var"#status#" < Cssize_t(0) && @h5error("Error in h5f_get_free_sections (not annotated)")
     return var"#status#"
 end
 
@@ -1277,7 +1277,7 @@ function h5f_get_freespace(file_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_freespace (not annotated)")
+    var"#status#" < hssize_t(0) && @h5error("Error in h5f_get_freespace (not annotated)")
     return var"#status#"
 end
 
@@ -1293,7 +1293,7 @@ function h5f_get_intent(file_id, intent)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting file intent")
+    var"#status#" < herr_t(0) && @h5error("Error getting file intent")
     return nothing
 end
 
@@ -1309,7 +1309,7 @@ function h5f_get_info(obj_id, file_info)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_info2 (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_get_info2 (not annotated)")
     return nothing
 end
 
@@ -1325,7 +1325,7 @@ function h5f_get_mdc_config(file_id, config_ptr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_mdc_config (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_get_mdc_config (not annotated)")
     return nothing
 end
 
@@ -1341,7 +1341,7 @@ function h5f_get_mdc_hit_rate(file_id, hit_rate_ptr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_mdc_hit_rate (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_get_mdc_hit_rate (not annotated)")
     return nothing
 end
 
@@ -1357,7 +1357,7 @@ function h5f_get_mdc_image_info(file_id, image_addr, image_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_mdc_image_info (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_get_mdc_image_info (not annotated)")
     return nothing
 end
 
@@ -1373,7 +1373,7 @@ function h5f_get_mdc_logging_status(file_id, is_enabled, is_currently_logging)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_mdc_logging_status (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_get_mdc_logging_status (not annotated)")
     return nothing
 end
 
@@ -1389,7 +1389,7 @@ function h5f_get_mdc_size(file_id, max_size_ptr, min_clean_size_ptr, cur_size_pt
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_mdc_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_get_mdc_size (not annotated)")
     return nothing
 end
 
@@ -1405,7 +1405,7 @@ function h5f_get_metadata_read_retry_info(file_id, info)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_metadata_read_retry_info (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_get_metadata_read_retry_info (not annotated)")
     return nothing
 end
 
@@ -1421,7 +1421,7 @@ function h5f_get_mpi_atomicity(file_id, flag)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_mpi_atomicity (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_get_mpi_atomicity (not annotated)")
     return nothing
 end
 
@@ -1437,7 +1437,7 @@ function h5f_get_name(obj_id, buf, buf_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting file name")
+    var"#status#" < Cssize_t(0) && @h5error("Error getting file name")
     return var"#status#"
 end
 
@@ -1453,7 +1453,7 @@ function h5f_get_obj_count(file_id, types)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting object count")
+    var"#status#" < Cssize_t(0) && @h5error("Error getting object count")
     return var"#status#"
 end
 
@@ -1469,7 +1469,7 @@ function h5f_get_obj_ids(file_id, types, max_objs, obj_id_list)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting objects")
+    var"#status#" < Cssize_t(0) && @h5error("Error getting objects")
     return var"#status#"
 end
 
@@ -1485,7 +1485,7 @@ function h5f_get_page_buffering_stats(file_id, accesses, hits, misses, evictions
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_get_page_buffering_stats (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_get_page_buffering_stats (not annotated)")
     return nothing
 end
 
@@ -1501,7 +1501,7 @@ function h5f_get_vfd_handle(file_id, fapl_id, file_handle)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting VFD handle")
+    var"#status#" < herr_t(0) && @h5error("Error getting VFD handle")
     return nothing
 end
 
@@ -1517,7 +1517,7 @@ function h5f_increment_filesize(file_id, increment)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_increment_filesize (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_increment_filesize (not annotated)")
     return nothing
 end
 
@@ -1533,7 +1533,7 @@ function h5f_is_accessible(container_name, fapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_is_accessible (not annotated)")
+    var"#status#" < htri_t(0) && @h5error("Error in h5f_is_accessible (not annotated)")
     return var"#status#" > 0
 end
 
@@ -1549,7 +1549,7 @@ function h5f_is_hdf5(pathname)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to access file $(pathname)")
+    var"#status#" < htri_t(0) && @h5error("Unable to access file $(pathname)")
     return var"#status#" > 0
 end
 
@@ -1565,7 +1565,7 @@ function h5f_mount(loc, name, child, plist)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_mount (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_mount (not annotated)")
     return nothing
 end
 
@@ -1581,7 +1581,7 @@ function h5f_open(pathname, flags, fapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error opening file $(pathname)")
+    var"#status#" < hid_t(0) && @h5error("Error opening file $(pathname)")
     return var"#status#"
 end
 
@@ -1597,7 +1597,7 @@ function h5f_reopen(file_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_reopen (not annotated)")
+    var"#status#" < hid_t(0) && @h5error("Error in h5f_reopen (not annotated)")
     return var"#status#"
 end
 
@@ -1613,7 +1613,7 @@ function h5f_reset_mdc_hit_rate_stats(file_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_reset_mdc_hit_rate_stats (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_reset_mdc_hit_rate_stats (not annotated)")
     return nothing
 end
 
@@ -1629,7 +1629,7 @@ function h5f_reset_page_buffering_stats(file_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_reset_page_buffering_stats (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_reset_page_buffering_stats (not annotated)")
     return nothing
 end
 
@@ -1645,7 +1645,7 @@ function h5f_set_dset_no_attrs_hint(file_id, minimize)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in setting dataset no attributes hint")
+    var"#status#" < herr_t(0) && @h5error("Error in setting dataset no attributes hint")
     return nothing
 end
 
@@ -1661,7 +1661,7 @@ function h5f_set_libver_bounds(file_id, low, high)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_set_libver_bounds (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_set_libver_bounds (not annotated)")
     return nothing
 end
 
@@ -1677,7 +1677,7 @@ function h5f_set_mdc_config(file_id, config_ptr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_set_mdc_config (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_set_mdc_config (not annotated)")
     return nothing
 end
 
@@ -1693,7 +1693,7 @@ function h5f_set_mpi_atomicity(file_id, flag)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_set_mpi_atomicity (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_set_mpi_atomicity (not annotated)")
     return nothing
 end
 
@@ -1709,7 +1709,7 @@ function h5f_start_mdc_logging(file_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_start_mdc_logging (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_start_mdc_logging (not annotated)")
     return nothing
 end
 
@@ -1725,7 +1725,7 @@ function h5f_start_swmr_write(id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error starting SWMR write")
+    var"#status#" < herr_t(0) && @h5error("Error starting SWMR write")
     return nothing
 end
 
@@ -1741,7 +1741,7 @@ function h5f_stop_mdc_logging(file_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_stop_mdc_logging (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_stop_mdc_logging (not annotated)")
     return nothing
 end
 
@@ -1757,7 +1757,7 @@ function h5f_unmount(loc, name)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5f_unmount (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5f_unmount (not annotated)")
     return nothing
 end
 
@@ -1773,7 +1773,7 @@ function h5g_close(group_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error closing group")
+    var"#status#" < herr_t(0) && @h5error("Error closing group")
     return nothing
 end
 
@@ -1789,7 +1789,7 @@ function h5g_create(loc_id, pathname, lcpl_id, gcpl_id, gapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error creating group $(h5i_get_name(loc_id))/$(pathname)")
+    var"#status#" < hid_t(0) && @h5error("Error creating group $(h5i_get_name(loc_id))/$(pathname)")
     return var"#status#"
 end
 
@@ -1805,7 +1805,7 @@ function h5g_get_create_plist(group_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting group create property list")
+    var"#status#" < hid_t(0) && @h5error("Error getting group create property list")
     return var"#status#"
 end
 
@@ -1821,7 +1821,7 @@ function h5g_get_info(group_id, buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting group info")
+    var"#status#" < herr_t(0) && @h5error("Error getting group info")
     return nothing
 end
 
@@ -1837,7 +1837,7 @@ function h5g_get_num_objs(loc_id, num_obj)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting group length")
+    var"#status#" < hid_t(0) && @h5error("Error getting group length")
     return var"#status#"
 end
 
@@ -1853,7 +1853,7 @@ function h5g_get_objname_by_idx(loc_id, idx, pathname, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting group object name $(h5i_get_name(loc_id))/$(pathname)")
+    var"#status#" < Cssize_t(0) && @h5error("Error getting group object name $(h5i_get_name(loc_id))/$(pathname)")
     return var"#status#"
 end
 
@@ -1869,7 +1869,7 @@ function h5g_open(loc_id, pathname, gapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error opening group $(h5i_get_name(loc_id))/$(pathname)")
+    var"#status#" < hid_t(0) && @h5error("Error opening group $(h5i_get_name(loc_id))/$(pathname)")
     return var"#status#"
 end
 
@@ -1885,7 +1885,7 @@ function h5i_dec_ref(obj_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error decementing reference")
+    var"#status#" < Cint(0) && @h5error("Error decementing reference")
     return Int(var"#status#")
 end
 
@@ -1901,7 +1901,7 @@ function h5i_get_file_id(obj_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting file identifier")
+    var"#status#" < hid_t(0) && @h5error("Error getting file identifier")
     return var"#status#"
 end
 
@@ -1917,7 +1917,7 @@ function h5i_get_name(obj_id, buf, buf_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting object name")
+    var"#status#" < Cssize_t(0) && @h5error("Error getting object name")
     return var"#status#"
 end
 
@@ -1933,7 +1933,7 @@ function h5i_get_ref(obj_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting reference count")
+    var"#status#" < Cint(0) && @h5error("Error getting reference count")
     return Int(var"#status#")
 end
 
@@ -1949,7 +1949,7 @@ function h5i_get_type(obj_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting type")
+    var"#status#" < Cint(0) && @h5error("Error getting type")
     return Int(var"#status#")
 end
 
@@ -1965,7 +1965,7 @@ function h5i_inc_ref(obj_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error incrementing identifier refcount")
+    var"#status#" < Cint(0) && @h5error("Error incrementing identifier refcount")
     return Int(var"#status#")
 end
 
@@ -1981,7 +1981,7 @@ function h5i_is_valid(obj_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Cannot determine whether object is valid")
+    var"#status#" < htri_t(0) && @h5error("Cannot determine whether object is valid")
     return var"#status#" > 0
 end
 
@@ -1997,7 +1997,7 @@ function h5l_create_external(target_file_name, target_obj_name, link_loc_id, lin
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name))
+    var"#status#" < herr_t(0) && @h5error(string("Error creating external link ", link_name, " pointing to ", target_obj_name, " in file ", target_file_name))
     return nothing
 end
 
@@ -2013,7 +2013,7 @@ function h5l_create_hard(obj_loc_id, obj_name, link_loc_id, link_name, lcpl_id, 
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error creating hard link ", link_name, " pointing to ", obj_name))
+    var"#status#" < herr_t(0) && @h5error(string("Error creating hard link ", link_name, " pointing to ", obj_name))
     return nothing
 end
 
@@ -2029,7 +2029,7 @@ function h5l_create_soft(target_path, link_loc_id, link_name, lcpl_id, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error creating soft link ", link_name, " pointing to ", target_path))
+    var"#status#" < herr_t(0) && @h5error(string("Error creating soft link ", link_name, " pointing to ", target_path))
     return nothing
 end
 
@@ -2045,7 +2045,7 @@ function h5l_delete(obj_id, pathname, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error deleting ", h5i_get_name(obj_id), "/", pathname))
+    var"#status#" < herr_t(0) && @h5error(string("Error deleting ", h5i_get_name(obj_id), "/", pathname))
     return nothing
 end
 
@@ -2061,7 +2061,7 @@ function h5l_move(src_obj_id, src_name, dest_obj_id, dest_name, lcpl_id, lapl_id
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error moving ", h5i_get_name(src_obj_id), "/", src_name, " to ", h5i_get_name(dest_obj_id), "/", dest_name))
+    var"#status#" < herr_t(0) && @h5error(string("Error moving ", h5i_get_name(src_obj_id), "/", src_name, " to ", h5i_get_name(dest_obj_id), "/", dest_name))
     return nothing
 end
 
@@ -2077,7 +2077,7 @@ function h5l_exists(loc_id, pathname, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Cannot determine whether ", pathname, " exists"))
+    var"#status#" < htri_t(0) && @h5error(string("Cannot determine whether ", pathname, " exists"))
     return var"#status#" > 0
 end
 
@@ -2093,7 +2093,7 @@ function h5l_get_info(link_loc_id, link_name, link_buf, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error getting info for link ", link_name))
+    var"#status#" < herr_t(0) && @h5error(string("Error getting info for link ", link_name))
     return nothing
 end
 
@@ -2109,7 +2109,7 @@ function h5l_get_name_by_idx(loc_id, group_name, index_field, order, n, name, si
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting object name")
+    var"#status#" < Cssize_t(0) && @h5error("Error getting object name")
     return var"#status#"
 end
 
@@ -2126,7 +2126,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error(string("Error iterating through links in group ", h5i_get_name(group_id)))
+        var"#status#" < herr_t(0) && @h5error(string("Error iterating through links in group ", h5i_get_name(group_id)))
         return nothing
     end
 end
@@ -2144,7 +2144,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error(string("Error iterating through links in group ", h5i_get_name(group_id)))
+        var"#status#" < herr_t(0) && @h5error(string("Error iterating through links in group ", h5i_get_name(group_id)))
         return nothing
     end
 end
@@ -2161,7 +2161,7 @@ function h5o_are_mdc_flushes_disabled(object_id, are_disabled)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_are_mdc_flushes_disabled (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_are_mdc_flushes_disabled (not annotated)")
     return nothing
 end
 
@@ -2177,7 +2177,7 @@ function h5o_close(object_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error closing object")
+    var"#status#" < herr_t(0) && @h5error("Error closing object")
     return nothing
 end
 
@@ -2193,7 +2193,7 @@ function h5o_copy(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error copying object ", h5i_get_name(src_loc_id), "/", src_name, " to ", h5i_get_name(dst_loc_id), "/", dst_name))
+    var"#status#" < herr_t(0) && @h5error(string("Error copying object ", h5i_get_name(src_loc_id), "/", src_name, " to ", h5i_get_name(dst_loc_id), "/", dst_name))
     return nothing
 end
 
@@ -2209,7 +2209,7 @@ function h5o_decr_refcount(object_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_decr_refcount (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_decr_refcount (not annotated)")
     return nothing
 end
 
@@ -2225,7 +2225,7 @@ function h5o_disable_mdc_flushes(object_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_disable_mdc_flushes (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_disable_mdc_flushes (not annotated)")
     return nothing
 end
 
@@ -2241,7 +2241,7 @@ function h5o_enable_mdc_flushes(object_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_enable_mdc_flushes (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_enable_mdc_flushes (not annotated)")
     return nothing
 end
 
@@ -2257,7 +2257,7 @@ function h5o_exists_by_name(loc_id, name, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_exists_by_name (not annotated)")
+    var"#status#" < htri_t(0) && @h5error("Error in h5o_exists_by_name (not annotated)")
     return var"#status#" > 0
 end
 
@@ -2273,7 +2273,7 @@ function h5o_flush(obj_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_flush (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_flush (not annotated)")
     return nothing
 end
 
@@ -2289,7 +2289,7 @@ function h5o_get_comment(obj_id, comment, bufsize)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_get_comment (not annotated)")
+    var"#status#" < Cssize_t(0) && @h5error("Error in h5o_get_comment (not annotated)")
     return var"#status#"
 end
 
@@ -2305,7 +2305,7 @@ function h5o_get_comment_by_name(loc_id, name, comment, bufsize, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_get_comment_by_name (not annotated)")
+    var"#status#" < Cssize_t(0) && @h5error("Error in h5o_get_comment_by_name (not annotated)")
     return var"#status#"
 end
 
@@ -2322,7 +2322,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error getting object info")
+        var"#status#" < herr_t(0) && @h5error("Error getting object info")
         return nothing
     end
 end
@@ -2340,7 +2340,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error in h5o_get_info2 (not annotated)")
+        var"#status#" < herr_t(0) && @h5error("Error in h5o_get_info2 (not annotated)")
         return nothing
     end
 end
@@ -2358,7 +2358,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error in h5o_get_info3 (not annotated)")
+        var"#status#" < herr_t(0) && @h5error("Error in h5o_get_info3 (not annotated)")
         return nothing
     end
 end
@@ -2376,7 +2376,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error in h5o_get_info_by_idx1 (not annotated)")
+        var"#status#" < herr_t(0) && @h5error("Error in h5o_get_info_by_idx1 (not annotated)")
         return nothing
     end
 end
@@ -2394,7 +2394,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error in h5o_get_info_by_idx2 (not annotated)")
+        var"#status#" < herr_t(0) && @h5error("Error in h5o_get_info_by_idx2 (not annotated)")
         return nothing
     end
 end
@@ -2412,7 +2412,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error in h5o_get_info_by_idx3 (not annotated)")
+        var"#status#" < herr_t(0) && @h5error("Error in h5o_get_info_by_idx3 (not annotated)")
         return nothing
     end
 end
@@ -2430,7 +2430,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error in h5o_get_info_by_name1 (not annotated)")
+        var"#status#" < herr_t(0) && @h5error("Error in h5o_get_info_by_name1 (not annotated)")
         return nothing
     end
 end
@@ -2448,7 +2448,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error in h5o_get_info_by_name2 (not annotated)")
+        var"#status#" < herr_t(0) && @h5error("Error in h5o_get_info_by_name2 (not annotated)")
         return nothing
     end
 end
@@ -2466,7 +2466,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error in h5o_get_info_by_name3 (not annotated)")
+        var"#status#" < herr_t(0) && @h5error("Error in h5o_get_info_by_name3 (not annotated)")
         return nothing
     end
 end
@@ -2483,7 +2483,7 @@ function h5o_get_native_info(loc_id, oinfo, fields)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_get_native_info (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_get_native_info (not annotated)")
     return nothing
 end
 
@@ -2499,7 +2499,7 @@ function h5o_get_native_info_by_idx(loc_id, group_name, idx_type, order, n, oinf
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_get_native_info_by_idx (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_get_native_info_by_idx (not annotated)")
     return nothing
 end
 
@@ -2515,7 +2515,7 @@ function h5o_get_native_info_by_name(loc_id, name, oinfo, fields, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_get_native_info_by_name (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_get_native_info_by_name (not annotated)")
     return nothing
 end
 
@@ -2531,7 +2531,7 @@ function h5o_incr_refcount(object_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_incr_refcount (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_incr_refcount (not annotated)")
     return nothing
 end
 
@@ -2547,7 +2547,7 @@ function h5o_link(obj_id, new_loc_id, new_name, lcpl_id, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_link (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_link (not annotated)")
     return nothing
 end
 
@@ -2563,7 +2563,7 @@ function h5o_open(loc_id, pathname, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error opening object ", h5i_get_name(loc_id), "/", pathname))
+    var"#status#" < hid_t(0) && @h5error(string("Error opening object ", h5i_get_name(loc_id), "/", pathname))
     return var"#status#"
 end
 
@@ -2579,7 +2579,7 @@ function h5o_open_by_addr(loc_id, addr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error opening object by address")
+    var"#status#" < hid_t(0) && @h5error("Error opening object by address")
     return var"#status#"
 end
 
@@ -2595,7 +2595,7 @@ function h5o_open_by_idx(loc_id, group_name, index_type, order, n, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error opening object of index ", n))
+    var"#status#" < hid_t(0) && @h5error(string("Error opening object of index ", n))
     return var"#status#"
 end
 
@@ -2611,7 +2611,7 @@ function h5o_refresh(oid)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_refresh (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_refresh (not annotated)")
     return nothing
 end
 
@@ -2627,7 +2627,7 @@ function h5o_set_comment(obj_id, comment)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_set_comment (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_set_comment (not annotated)")
     return nothing
 end
 
@@ -2643,7 +2643,7 @@ function h5o_set_comment_by_name(loc_id, name, comment, lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_set_comment_by_name (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_set_comment_by_name (not annotated)")
     return nothing
 end
 
@@ -2659,7 +2659,7 @@ function h5o_token_cmp(loc_id, token1, token2, cmp_value)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_token_cmp (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_token_cmp (not annotated)")
     return nothing
 end
 
@@ -2675,7 +2675,7 @@ function h5o_token_from_str(loc_id, token_str, token)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_token_from_str (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_token_from_str (not annotated)")
     return nothing
 end
 
@@ -2691,7 +2691,7 @@ function h5o_token_to_str(loc_id, token, token_str)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5o_token_to_str (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5o_token_to_str (not annotated)")
     return nothing
 end
 
@@ -2708,7 +2708,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error in h5o_visit1 (not annotated)")
+        var"#status#" < herr_t(0) && @h5error("Error in h5o_visit1 (not annotated)")
         return nothing
     end
 end
@@ -2726,7 +2726,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error in h5o_visit3 (not annotated)")
+        var"#status#" < herr_t(0) && @h5error("Error in h5o_visit3 (not annotated)")
         return nothing
     end
 end
@@ -2744,7 +2744,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error in h5o_visit_by_name1 (not annotated)")
+        var"#status#" < herr_t(0) && @h5error("Error in h5o_visit_by_name1 (not annotated)")
         return nothing
     end
 end
@@ -2762,7 +2762,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error in h5o_visit_by_name3 (not annotated)")
+        var"#status#" < herr_t(0) && @h5error("Error in h5o_visit_by_name3 (not annotated)")
         return nothing
     end
 end
@@ -2779,7 +2779,7 @@ function h5p_get(plist_id, name, value)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get (not annotated)")
     return nothing
 end
 
@@ -2795,7 +2795,7 @@ function h5p_get_alignment(fapl_id, threshold, alignment)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting alignment")
+    var"#status#" < herr_t(0) && @h5error("Error getting alignment")
     return nothing
 end
 
@@ -2811,7 +2811,7 @@ function h5p_get_alloc_time(plist_id, alloc_time)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting allocation timing")
+    var"#status#" < herr_t(0) && @h5error("Error getting allocation timing")
     return nothing
 end
 
@@ -2827,7 +2827,7 @@ function h5p_get_append_flush(dapl_id, dims, boundary, func, udata)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_append_flush (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_append_flush (not annotated)")
     return nothing
 end
 
@@ -2843,7 +2843,7 @@ function h5p_get_attr_creation_order(plist_id, crt_order_flags)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting attribute creation order")
+    var"#status#" < herr_t(0) && @h5error("Error getting attribute creation order")
     return nothing
 end
 
@@ -2859,7 +2859,7 @@ function h5p_get_attr_phase_change(plist_id, max_compact, min_dense)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_attr_phase_change (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_attr_phase_change (not annotated)")
     return nothing
 end
 
@@ -2875,7 +2875,7 @@ function h5p_get_btree_ratios(plist_id, left, middle, right)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_btree_ratios (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_btree_ratios (not annotated)")
     return nothing
 end
 
@@ -2907,7 +2907,7 @@ function h5p_get_cache(plist_id, mdc_nelmts, rdcc_nslots, rdcc_nbytes, rdcc_w0)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_cache (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_cache (not annotated)")
     return nothing
 end
 
@@ -2923,7 +2923,7 @@ function h5p_get_char_encoding(plist_id, encoding)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting char encoding")
+    var"#status#" < herr_t(0) && @h5error("Error getting char encoding")
     return nothing
 end
 
@@ -2939,7 +2939,7 @@ function h5p_get_chunk(plist_id, n_dims, dims)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting chunk size")
+    var"#status#" < Cint(0) && @h5error("Error getting chunk size")
     return Int(var"#status#")
 end
 
@@ -2955,7 +2955,7 @@ function h5p_get_chunk_cache(dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_chunk_cache (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_chunk_cache (not annotated)")
     return nothing
 end
 
@@ -2971,7 +2971,7 @@ function h5p_get_chunk_opts(plist_id, opts)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_chunk_opts (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_chunk_opts (not annotated)")
     return nothing
 end
 
@@ -2987,7 +2987,7 @@ function h5p_get_class(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_class (not annotated)")
+    var"#status#" < hid_t(0) && @h5error("Error in h5p_get_class (not annotated)")
     return var"#status#"
 end
 
@@ -3003,7 +3003,7 @@ function h5p_get_class_parent(pclass_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_class_parent (not annotated)")
+    var"#status#" < hid_t(0) && @h5error("Error in h5p_get_class_parent (not annotated)")
     return var"#status#"
 end
 
@@ -3019,7 +3019,7 @@ function h5p_get_copy_object(plist_id, copy_options)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_copy_object (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_copy_object (not annotated)")
     return nothing
 end
 
@@ -3035,7 +3035,7 @@ function h5p_get_core_write_tracking(fapl_id, is_enabled, page_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_core_write_tracking (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_core_write_tracking (not annotated)")
     return nothing
 end
 
@@ -3051,7 +3051,7 @@ function h5p_get_create_intermediate_group(lcpl_id, crt_intermed_group)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting create intermediate group property")
+    var"#status#" < herr_t(0) && @h5error("Error getting create intermediate group property")
     return nothing
 end
 
@@ -3067,7 +3067,7 @@ function h5p_get_data_transform(plist_id, expression, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_data_transform (not annotated)")
+    var"#status#" < Cssize_t(0) && @h5error("Error in h5p_get_data_transform (not annotated)")
     return var"#status#"
 end
 
@@ -3083,7 +3083,7 @@ function h5p_get_driver(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting driver identifier")
+    var"#status#" < hid_t(0) && @h5error("Error getting driver identifier")
     return var"#status#"
 end
 
@@ -3115,7 +3115,7 @@ function h5p_get_dset_no_attrs_hint(dcpl_id, minimize)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in getting dataset no attributes hint property")
+    var"#status#" < herr_t(0) && @h5error("Error in getting dataset no attributes hint property")
     return nothing
 end
 
@@ -3131,7 +3131,7 @@ function h5p_get_dxpl_mpio(dxpl_id, xfer_mode)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting MPIO transfer mode")
+    var"#status#" < herr_t(0) && @h5error("Error getting MPIO transfer mode")
     return nothing
 end
 
@@ -3147,7 +3147,7 @@ function h5p_get_edc_check(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_edc_check (not annotated)")
+    var"#status#" < H5Z_EDC_t(0) && @h5error("Error in h5p_get_edc_check (not annotated)")
     return var"#status#"
 end
 
@@ -3163,7 +3163,7 @@ function h5p_get_efile_prefix(dapl_id, prefix, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting external file prefix")
+    var"#status#" < Cssize_t(0) && @h5error("Error getting external file prefix")
     return var"#status#"
 end
 
@@ -3179,7 +3179,7 @@ function h5p_get_elink_acc_flags(lapl_id, flags)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_elink_acc_flags (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_elink_acc_flags (not annotated)")
     return nothing
 end
 
@@ -3195,7 +3195,7 @@ function h5p_get_elink_cb(lapl_id, func, op_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_elink_cb (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_elink_cb (not annotated)")
     return nothing
 end
 
@@ -3211,7 +3211,7 @@ function h5p_get_elink_fapl(lapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_elink_fapl (not annotated)")
+    var"#status#" < hid_t(0) && @h5error("Error in h5p_get_elink_fapl (not annotated)")
     return var"#status#"
 end
 
@@ -3227,7 +3227,7 @@ function h5p_get_elink_file_cache_size(plist_id, efc_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_elink_file_cache_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_elink_file_cache_size (not annotated)")
     return nothing
 end
 
@@ -3243,7 +3243,7 @@ function h5p_get_elink_prefix(plist_id, prefix, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_elink_prefix (not annotated)")
+    var"#status#" < Cssize_t(0) && @h5error("Error in h5p_get_elink_prefix (not annotated)")
     return var"#status#"
 end
 
@@ -3259,7 +3259,7 @@ function h5p_get_est_link_info(plist_id, est_num_entries, est_name_len)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_est_link_info (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_est_link_info (not annotated)")
     return nothing
 end
 
@@ -3275,7 +3275,7 @@ function h5p_get_evict_on_close(fapl_id, evict_on_close)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_evict_on_close (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_evict_on_close (not annotated)")
     return nothing
 end
 
@@ -3291,7 +3291,7 @@ function h5p_get_external(plist, idx, name_size, name, offset, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting external file properties")
+    var"#status#" < herr_t(0) && @h5error("Error getting external file properties")
     return nothing
 end
 
@@ -3307,7 +3307,7 @@ function h5p_get_external_count(plist)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting external count")
+    var"#status#" < Cint(0) && @h5error("Error getting external count")
     return Int(var"#status#")
 end
 
@@ -3323,7 +3323,7 @@ function h5p_get_family_offset(fapl_id, offset)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_family_offset (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_family_offset (not annotated)")
     return nothing
 end
 
@@ -3339,7 +3339,7 @@ function h5p_get_fapl_core(fapl_id, increment, backing_store)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_core (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_fapl_core (not annotated)")
     return nothing
 end
 
@@ -3355,7 +3355,7 @@ function h5p_get_fapl_family(fapl_id, memb_size, memb_fapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_family (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_fapl_family (not annotated)")
     return nothing
 end
 
@@ -3371,7 +3371,7 @@ function h5p_get_fapl_hdfs(fapl_id, fa_out)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_hdfs (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_fapl_hdfs (not annotated)")
     return nothing
 end
 
@@ -3387,7 +3387,7 @@ function h5p_get_fapl_multi(fapl_id, memb_map, memb_fapl, memb_name, memb_addr, 
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_multi (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_fapl_multi (not annotated)")
     return nothing
 end
 
@@ -3403,7 +3403,7 @@ function h5p_get_fapl_splitter(fapl_id, config_ptr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_fapl_splitter (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_fapl_splitter (not annotated)")
     return nothing
 end
 
@@ -3419,7 +3419,7 @@ function h5p_get_fapl_ros3(fapl_id, fa_out)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in getting ros3 properties")
+    var"#status#" < herr_t(0) && @h5error("Error in getting ros3 properties")
     return nothing
 end
 
@@ -3435,7 +3435,7 @@ function h5p_get_fclose_degree(fapl_id, fc_degree)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting close degree")
+    var"#status#" < herr_t(0) && @h5error("Error getting close degree")
     return nothing
 end
 
@@ -3451,7 +3451,7 @@ function h5p_get_file_image(fapl_id, buf_ptr_ptr, buf_len_ptr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_file_image (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_file_image (not annotated)")
     return nothing
 end
 
@@ -3467,7 +3467,7 @@ function h5p_get_file_image_callbacks(fapl_id, callbacks_ptr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_file_image_callbacks (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_file_image_callbacks (not annotated)")
     return nothing
 end
 
@@ -3483,7 +3483,7 @@ function h5p_get_file_locking(fapl_id, use_file_locking, ignore_when_disabled)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_file_locking (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_file_locking (not annotated)")
     return nothing
 end
 
@@ -3499,7 +3499,7 @@ function h5p_get_file_space(plist_id, strategy, threshold)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_file_space (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_file_space (not annotated)")
     return nothing
 end
 
@@ -3515,7 +3515,7 @@ function h5p_get_file_space_page_size(plist_id, fsp_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_file_space_page_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_file_space_page_size (not annotated)")
     return nothing
 end
 
@@ -3531,7 +3531,7 @@ function h5p_get_file_space_strategy(plist_id, strategy, persist, threshold)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_file_space_strategy (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_file_space_strategy (not annotated)")
     return nothing
 end
 
@@ -3547,7 +3547,7 @@ function h5p_get_fill_time(plist_id, fill_time)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_fill_time (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_fill_time (not annotated)")
     return nothing
 end
 
@@ -3563,7 +3563,7 @@ function h5p_get_fill_value(plist_id, type_id, value)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_fill_value (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_fill_value (not annotated)")
     return nothing
 end
 
@@ -3579,7 +3579,7 @@ function h5p_get_filter(plist_id, idx, flags, cd_nemlts, cd_values, namelen, nam
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting filter")
+    var"#status#" < H5Z_filter_t(0) && @h5error("Error getting filter")
     return var"#status#"
 end
 
@@ -3595,7 +3595,7 @@ function h5p_get_filter_by_id(plist_id, filter_id, flags, cd_nelmts, cd_values, 
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting filter ID")
+    var"#status#" < herr_t(0) && @h5error("Error getting filter ID")
     return nothing
 end
 
@@ -3611,7 +3611,7 @@ function h5p_get_gc_references(fapl_id, gc_ref)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_gc_references (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_gc_references (not annotated)")
     return nothing
 end
 
@@ -3627,7 +3627,7 @@ function h5p_get_hyper_vector_size(fapl_id, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_hyper_vector_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_hyper_vector_size (not annotated)")
     return nothing
 end
 
@@ -3643,7 +3643,7 @@ function h5p_get_istore_k(plist_id, ik)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_istore_k (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_istore_k (not annotated)")
     return nothing
 end
 
@@ -3659,7 +3659,7 @@ function h5p_get_layout(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error getting layout"))
+    var"#status#" < Cint(0) && @h5error(string("Error getting layout"))
     return Int(var"#status#")
 end
 
@@ -3675,7 +3675,7 @@ function h5p_get_libver_bounds(fapl_id, low, high)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting library version bounds")
+    var"#status#" < herr_t(0) && @h5error("Error getting library version bounds")
     return nothing
 end
 
@@ -3691,7 +3691,7 @@ function h5p_get_link_creation_order(plist_id, crt_order_flags)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting link creation order")
+    var"#status#" < herr_t(0) && @h5error("Error getting link creation order")
     return nothing
 end
 
@@ -3707,7 +3707,7 @@ function h5p_get_link_phase_change(plist_id, max_compact, min_dense)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_link_phase_change (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_link_phase_change (not annotated)")
     return nothing
 end
 
@@ -3723,7 +3723,7 @@ function h5p_get_local_heap_size_hint(plist_id, size_hint)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting local heap size hint")
+    var"#status#" < herr_t(0) && @h5error("Error getting local heap size hint")
     return nothing
 end
 
@@ -3739,7 +3739,7 @@ function h5p_get_mcdt_search_cb(plist_id, func, op_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_mcdt_search_cb (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_mcdt_search_cb (not annotated)")
     return nothing
 end
 
@@ -3755,7 +3755,7 @@ function h5p_get_mdc_config(plist_id, config_ptr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_mdc_config (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_mdc_config (not annotated)")
     return nothing
 end
 
@@ -3771,7 +3771,7 @@ function h5p_get_mdc_image_config(plist_id, config_ptr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_mdc_image_config (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_mdc_image_config (not annotated)")
     return nothing
 end
 
@@ -3787,7 +3787,7 @@ function h5p_get_mdc_log_options(plist_id, is_enabled, location, location_size, 
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_mdc_log_options (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_mdc_log_options (not annotated)")
     return nothing
 end
 
@@ -3803,7 +3803,7 @@ function h5p_get_meta_block_size(fapl_id, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_meta_block_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_meta_block_size (not annotated)")
     return nothing
 end
 
@@ -3819,7 +3819,7 @@ function h5p_get_metadata_read_attempts(plist_id, attempts)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_metadata_read_attempts (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_metadata_read_attempts (not annotated)")
     return nothing
 end
 
@@ -3835,7 +3835,7 @@ function h5p_get_multi_type(fapl_id, type)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_multi_type (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_multi_type (not annotated)")
     return nothing
 end
 
@@ -3851,7 +3851,7 @@ function h5p_get_nfilters(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting nfilters")
+    var"#status#" < Cint(0) && @h5error("Error getting nfilters")
     return Int(var"#status#")
 end
 
@@ -3867,7 +3867,7 @@ function h5p_get_nlinks(plist_id, nlinks)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_nlinks (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_nlinks (not annotated)")
     return nothing
 end
 
@@ -3883,7 +3883,7 @@ function h5p_get_nprops(id, nprops)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_nprops (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_nprops (not annotated)")
     return nothing
 end
 
@@ -3899,7 +3899,7 @@ function h5p_get_obj_track_times(plist_id, track_times)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting object time tracking")
+    var"#status#" < herr_t(0) && @h5error("Error getting object time tracking")
     return nothing
 end
 
@@ -3915,7 +3915,7 @@ function h5p_get_object_flush_cb(plist_id, func, udata)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_object_flush_cb (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_object_flush_cb (not annotated)")
     return nothing
 end
 
@@ -3931,7 +3931,7 @@ function h5p_get_page_buffer_size(plist_id, buf_size, min_meta_perc, min_raw_per
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_page_buffer_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_page_buffer_size (not annotated)")
     return nothing
 end
 
@@ -3947,7 +3947,7 @@ function h5p_get_preserve(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_preserve (not annotated)")
+    var"#status#" < Cint(0) && @h5error("Error in h5p_get_preserve (not annotated)")
     return Int(var"#status#")
 end
 
@@ -3963,7 +3963,7 @@ function h5p_get_shared_mesg_index(plist_id, index_num, mesg_type_flags, min_mes
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_shared_mesg_index (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_shared_mesg_index (not annotated)")
     return nothing
 end
 
@@ -3979,7 +3979,7 @@ function h5p_get_shared_mesg_nindexes(plist_id, nindexes)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_shared_mesg_nindexes (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_shared_mesg_nindexes (not annotated)")
     return nothing
 end
 
@@ -3995,7 +3995,7 @@ function h5p_get_shared_mesg_phase_change(plist_id, max_list, min_btree)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_shared_mesg_phase_change (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_shared_mesg_phase_change (not annotated)")
     return nothing
 end
 
@@ -4011,7 +4011,7 @@ function h5p_get_sieve_buf_size(fapl_id, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_sieve_buf_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_sieve_buf_size (not annotated)")
     return nothing
 end
 
@@ -4027,7 +4027,7 @@ function h5p_get_size(id, name, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_size (not annotated)")
     return nothing
 end
 
@@ -4043,7 +4043,7 @@ function h5p_get_sizes(plist_id, sizeof_addr, sizeof_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_sizes (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_sizes (not annotated)")
     return nothing
 end
 
@@ -4059,7 +4059,7 @@ function h5p_get_small_data_block_size(fapl_id, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_small_data_block_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_small_data_block_size (not annotated)")
     return nothing
 end
 
@@ -4075,7 +4075,7 @@ function h5p_get_sym_k(plist_id, ik, lk)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_sym_k (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_sym_k (not annotated)")
     return nothing
 end
 
@@ -4091,7 +4091,7 @@ function h5p_get_type_conv_cb(dxpl_id, op, operate_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_type_conv_cb (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_type_conv_cb (not annotated)")
     return nothing
 end
 
@@ -4107,7 +4107,7 @@ function h5p_get_userblock(plist_id, len)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting userblock")
+    var"#status#" < herr_t(0) && @h5error("Error getting userblock")
     return nothing
 end
 
@@ -4123,7 +4123,7 @@ function h5p_get_version(plist_id, boot, freelist, stab, shhdr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_version (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_version (not annotated)")
     return nothing
 end
 
@@ -4139,7 +4139,7 @@ function h5p_get_virtual_count(dcpl_id, count)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_virtual_count (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_virtual_count (not annotated)")
     return nothing
 end
 
@@ -4155,7 +4155,7 @@ function h5p_get_virtual_dsetname(dcpl_id, index, name, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_virtual_dsetname (not annotated)")
+    var"#status#" < Cssize_t(0) && @h5error("Error in h5p_get_virtual_dsetname (not annotated)")
     return var"#status#"
 end
 
@@ -4171,7 +4171,7 @@ function h5p_get_virtual_filename(dcpl_id, index, name, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_virtual_filename (not annotated)")
+    var"#status#" < Cssize_t(0) && @h5error("Error in h5p_get_virtual_filename (not annotated)")
     return var"#status#"
 end
 
@@ -4187,7 +4187,7 @@ function h5p_get_virtual_prefix(dapl_id, prefix, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_virtual_prefix (not annotated)")
+    var"#status#" < Cssize_t(0) && @h5error("Error in h5p_get_virtual_prefix (not annotated)")
     return var"#status#"
 end
 
@@ -4203,7 +4203,7 @@ function h5p_get_virtual_printf_gap(dapl_id, gap_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_virtual_printf_gap (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_virtual_printf_gap (not annotated)")
     return nothing
 end
 
@@ -4219,7 +4219,7 @@ function h5p_get_virtual_srcspace(dcpl_id, index)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_virtual_srcspace (not annotated)")
+    var"#status#" < hid_t(0) && @h5error("Error in h5p_get_virtual_srcspace (not annotated)")
     return var"#status#"
 end
 
@@ -4235,7 +4235,7 @@ function h5p_get_virtual_view(dapl_id, view)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_virtual_view (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_virtual_view (not annotated)")
     return nothing
 end
 
@@ -4251,7 +4251,7 @@ function h5p_get_virtual_vspace(dcpl_id, index)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_virtual_vspace (not annotated)")
+    var"#status#" < hid_t(0) && @h5error("Error in h5p_get_virtual_vspace (not annotated)")
     return var"#status#"
 end
 
@@ -4267,7 +4267,7 @@ function h5p_get_vlen_mem_manager(plist_id, alloc_func, alloc_info, free_func, f
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_vlen_mem_manager (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_vlen_mem_manager (not annotated)")
     return nothing
 end
 
@@ -4283,7 +4283,7 @@ function h5p_get_vol_id(plist_id, vol_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_vol_id (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_vol_id (not annotated)")
     return nothing
 end
 
@@ -4299,7 +4299,7 @@ function h5p_get_vol_info(plist_id, vol_info)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_get_vol_info (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_get_vol_info (not annotated)")
     return nothing
 end
 
@@ -4315,7 +4315,7 @@ function h5p_set(plist_id, name, value)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set (not annotated)")
     return nothing
 end
 
@@ -4331,7 +4331,7 @@ function h5p_set_alignment(plist_id, threshold, alignment)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting alignment")
+    var"#status#" < herr_t(0) && @h5error("Error setting alignment")
     return nothing
 end
 
@@ -4347,7 +4347,7 @@ function h5p_set_alloc_time(plist_id, alloc_time)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting allocation timing")
+    var"#status#" < herr_t(0) && @h5error("Error setting allocation timing")
     return nothing
 end
 
@@ -4363,7 +4363,7 @@ function h5p_set_append_flush(dapl_id, ndims, boundary, func, udata)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_append_flush (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_append_flush (not annotated)")
     return nothing
 end
 
@@ -4379,7 +4379,7 @@ function h5p_set_attr_creation_order(plist_id, crt_order_flags)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting attribute creation order")
+    var"#status#" < herr_t(0) && @h5error("Error setting attribute creation order")
     return nothing
 end
 
@@ -4395,7 +4395,7 @@ function h5p_set_attr_phase_change(plist_id, max_compact, min_dense)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_attr_phase_change (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_attr_phase_change (not annotated)")
     return nothing
 end
 
@@ -4411,7 +4411,7 @@ function h5p_set_btree_ratios(plist_id, left, middle, right)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_btree_ratios (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_btree_ratios (not annotated)")
     return nothing
 end
 
@@ -4427,7 +4427,7 @@ function h5p_set_buffer(plist_id, size, tconv, bkg)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_buffer (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_buffer (not annotated)")
     return nothing
 end
 
@@ -4443,7 +4443,7 @@ function h5p_set_cache(plist_id, mdc_nelmts, rdcc_nslots, rdcc_nbytes, rdcc_w0)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_cache (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_cache (not annotated)")
     return nothing
 end
 
@@ -4459,7 +4459,7 @@ function h5p_set_char_encoding(plist_id, encoding)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting char encoding")
+    var"#status#" < herr_t(0) && @h5error("Error setting char encoding")
     return nothing
 end
 
@@ -4475,7 +4475,7 @@ function h5p_set_chunk(plist_id, ndims, dims)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting chunk size")
+    var"#status#" < herr_t(0) && @h5error("Error setting chunk size")
     return nothing
 end
 
@@ -4491,7 +4491,7 @@ function h5p_set_chunk_cache(dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting chunk cache")
+    var"#status#" < herr_t(0) && @h5error("Error setting chunk cache")
     return nothing
 end
 
@@ -4507,7 +4507,7 @@ function h5p_set_chunk_opts(plist_id, opts)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_chunk_opts (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_chunk_opts (not annotated)")
     return nothing
 end
 
@@ -4523,7 +4523,7 @@ function h5p_set_copy_object(plist_id, copy_options)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_copy_object (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_copy_object (not annotated)")
     return nothing
 end
 
@@ -4539,7 +4539,7 @@ function h5p_set_core_write_tracking(fapl_id, is_enabled, page_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_core_write_tracking (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_core_write_tracking (not annotated)")
     return nothing
 end
 
@@ -4555,7 +4555,7 @@ function h5p_set_create_intermediate_group(plist_id, setting)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting create intermediate group")
+    var"#status#" < herr_t(0) && @h5error("Error setting create intermediate group")
     return nothing
 end
 
@@ -4571,7 +4571,7 @@ function h5p_set_data_transform(plist_id, expression)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_data_transform (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_data_transform (not annotated)")
     return nothing
 end
 
@@ -4587,7 +4587,7 @@ function h5p_set_deflate(plist_id, setting)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting compression method and level (deflate)")
+    var"#status#" < herr_t(0) && @h5error("Error setting compression method and level (deflate)")
     return nothing
 end
 
@@ -4603,7 +4603,7 @@ function h5p_set_driver(plist_id, driver_id, driver_info)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_driver (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_driver (not annotated)")
     return nothing
 end
 
@@ -4619,7 +4619,7 @@ function h5p_set_dset_no_attrs_hint(dcpl_id, minimize)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in setting dataset no attributes hint property")
+    var"#status#" < herr_t(0) && @h5error("Error in setting dataset no attributes hint property")
     return nothing
 end
 
@@ -4635,7 +4635,7 @@ function h5p_set_dxpl_mpio(dxpl_id, xfer_mode)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting MPIO transfer mode")
+    var"#status#" < herr_t(0) && @h5error("Error setting MPIO transfer mode")
     return nothing
 end
 
@@ -4651,7 +4651,7 @@ function h5p_set_edc_check(plist_id, check)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_edc_check (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_edc_check (not annotated)")
     return nothing
 end
 
@@ -4667,7 +4667,7 @@ function h5p_set_efile_prefix(plist_id, prefix)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting external file prefix")
+    var"#status#" < herr_t(0) && @h5error("Error setting external file prefix")
     return nothing
 end
 
@@ -4683,7 +4683,7 @@ function h5p_set_elink_acc_flags(lapl_id, flags)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_elink_acc_flags (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_elink_acc_flags (not annotated)")
     return nothing
 end
 
@@ -4699,7 +4699,7 @@ function h5p_set_elink_cb(lapl_id, func, op_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_elink_cb (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_elink_cb (not annotated)")
     return nothing
 end
 
@@ -4715,7 +4715,7 @@ function h5p_set_elink_fapl(lapl_id, fapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_elink_fapl (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_elink_fapl (not annotated)")
     return nothing
 end
 
@@ -4731,7 +4731,7 @@ function h5p_set_elink_file_cache_size(plist_id, efc_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_elink_file_cache_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_elink_file_cache_size (not annotated)")
     return nothing
 end
 
@@ -4747,7 +4747,7 @@ function h5p_set_elink_prefix(plist_id, prefix)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_elink_prefix (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_elink_prefix (not annotated)")
     return nothing
 end
 
@@ -4763,7 +4763,7 @@ function h5p_set_est_link_info(plist_id, est_num_entries, est_name_len)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_est_link_info (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_est_link_info (not annotated)")
     return nothing
 end
 
@@ -4779,7 +4779,7 @@ function h5p_set_evict_on_close(fapl_id, evict_on_close)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_evict_on_close (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_evict_on_close (not annotated)")
     return nothing
 end
 
@@ -4795,7 +4795,7 @@ function h5p_set_external(plist_id, name, offset, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting external property")
+    var"#status#" < herr_t(0) && @h5error("Error setting external property")
     return nothing
 end
 
@@ -4811,7 +4811,7 @@ function h5p_set_family_offset(fapl_id, offset)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_family_offset (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_family_offset (not annotated)")
     return nothing
 end
 
@@ -4827,7 +4827,7 @@ function h5p_set_fapl_core(fapl_id, increment, backing_store)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_core (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_fapl_core (not annotated)")
     return nothing
 end
 
@@ -4843,7 +4843,7 @@ function h5p_set_fapl_family(fapl_id, memb_size, memb_fapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_family (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_fapl_family (not annotated)")
     return nothing
 end
 
@@ -4859,7 +4859,7 @@ function h5p_set_fapl_hdfs(fapl_id, fa)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_hdfs (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_fapl_hdfs (not annotated)")
     return nothing
 end
 
@@ -4875,7 +4875,7 @@ function h5p_set_fapl_log(fapl_id, logfile, flags, buf_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_log (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_fapl_log (not annotated)")
     return nothing
 end
 
@@ -4891,7 +4891,7 @@ function h5p_set_fapl_multi(fapl_id, memb_map, memb_fapl, memb_name, memb_addr, 
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_multi (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_fapl_multi (not annotated)")
     return nothing
 end
 
@@ -4907,7 +4907,7 @@ function h5p_set_fapl_sec2(fapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting Sec2 properties")
+    var"#status#" < herr_t(0) && @h5error("Error setting Sec2 properties")
     return nothing
 end
 
@@ -4923,7 +4923,7 @@ function h5p_set_fapl_ros3(fapl_id, fa)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in setting ros3 properties")
+    var"#status#" < herr_t(0) && @h5error("Error in setting ros3 properties")
     return nothing
 end
 
@@ -4939,7 +4939,7 @@ function h5p_set_fapl_split(fapl, meta_ext, meta_plist_id, raw_ext, raw_plist_id
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_split (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_fapl_split (not annotated)")
     return nothing
 end
 
@@ -4955,7 +4955,7 @@ function h5p_set_fapl_splitter(fapl_id, config_ptr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_splitter (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_fapl_splitter (not annotated)")
     return nothing
 end
 
@@ -4971,7 +4971,7 @@ function h5p_set_fapl_stdio(fapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_stdio (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_fapl_stdio (not annotated)")
     return nothing
 end
 
@@ -4987,7 +4987,7 @@ function h5p_set_fapl_windows(fapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_fapl_windows (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_fapl_windows (not annotated)")
     return nothing
 end
 
@@ -5003,7 +5003,7 @@ function h5p_set_fclose_degree(plist_id, fc_degree)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting close degree")
+    var"#status#" < herr_t(0) && @h5error("Error setting close degree")
     return nothing
 end
 
@@ -5019,7 +5019,7 @@ function h5p_set_file_image(fapl_id, buf_ptr, buf_len)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_file_image (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_file_image (not annotated)")
     return nothing
 end
 
@@ -5035,7 +5035,7 @@ function h5p_set_file_image_callbacks(fapl_id, callbacks_ptr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_file_image_callbacks (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_file_image_callbacks (not annotated)")
     return nothing
 end
 
@@ -5051,7 +5051,7 @@ function h5p_set_file_locking(fapl_id, use_file_locking, ignore_when_disabled)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_file_locking (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_file_locking (not annotated)")
     return nothing
 end
 
@@ -5067,7 +5067,7 @@ function h5p_set_file_space(plist_id, strategy, threshold)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_file_space (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_file_space (not annotated)")
     return nothing
 end
 
@@ -5083,7 +5083,7 @@ function h5p_set_file_space_page_size(plist_id, fsp_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_file_space_page_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_file_space_page_size (not annotated)")
     return nothing
 end
 
@@ -5099,7 +5099,7 @@ function h5p_set_file_space_strategy(plist_id, strategy, persist, threshold)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_file_space_strategy (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_file_space_strategy (not annotated)")
     return nothing
 end
 
@@ -5115,7 +5115,7 @@ function h5p_set_fill_time(plist_id, fill_time)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_fill_time (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_fill_time (not annotated)")
     return nothing
 end
 
@@ -5131,7 +5131,7 @@ function h5p_set_fill_value(plist_id, type_id, value)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_fill_value (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_fill_value (not annotated)")
     return nothing
 end
 
@@ -5147,7 +5147,7 @@ function h5p_set_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting filter")
+    var"#status#" < herr_t(0) && @h5error("Error setting filter")
     return nothing
 end
 
@@ -5163,7 +5163,7 @@ function h5p_set_filter_callback(plist_id, func, op_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_filter_callback (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_filter_callback (not annotated)")
     return nothing
 end
 
@@ -5179,7 +5179,7 @@ function h5p_set_fletcher32(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error enabling Fletcher32 filter")
+    var"#status#" < herr_t(0) && @h5error("Error enabling Fletcher32 filter")
     return nothing
 end
 
@@ -5195,7 +5195,7 @@ function h5p_set_gc_references(fapl_id, gc_ref)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_gc_references (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_gc_references (not annotated)")
     return nothing
 end
 
@@ -5211,7 +5211,7 @@ function h5p_set_hyper_vector_size(plist_id, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_hyper_vector_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_hyper_vector_size (not annotated)")
     return nothing
 end
 
@@ -5227,7 +5227,7 @@ function h5p_set_istore_k(plist_id, ik)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_istore_k (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_istore_k (not annotated)")
     return nothing
 end
 
@@ -5243,7 +5243,7 @@ function h5p_set_layout(plist_id, setting)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting layout")
+    var"#status#" < herr_t(0) && @h5error("Error setting layout")
     return nothing
 end
 
@@ -5259,7 +5259,7 @@ function h5p_set_libver_bounds(fapl_id, low, high)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting library version bounds")
+    var"#status#" < herr_t(0) && @h5error("Error setting library version bounds")
     return nothing
 end
 
@@ -5275,7 +5275,7 @@ function h5p_set_link_creation_order(plist_id, crt_order_flags)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting link creation order")
+    var"#status#" < herr_t(0) && @h5error("Error setting link creation order")
     return nothing
 end
 
@@ -5291,7 +5291,7 @@ function h5p_set_link_phase_change(plist_id, max_compact, min_dense)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_link_phase_change (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_link_phase_change (not annotated)")
     return nothing
 end
 
@@ -5307,7 +5307,7 @@ function h5p_set_local_heap_size_hint(plist_id, size_hint)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting local heap size hint")
+    var"#status#" < herr_t(0) && @h5error("Error setting local heap size hint")
     return nothing
 end
 
@@ -5323,7 +5323,7 @@ function h5p_set_mcdt_search_cb(plist_id, func, op_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_mcdt_search_cb (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_mcdt_search_cb (not annotated)")
     return nothing
 end
 
@@ -5339,7 +5339,7 @@ function h5p_set_mdc_config(plist_id, config_ptr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_mdc_config (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_mdc_config (not annotated)")
     return nothing
 end
 
@@ -5355,7 +5355,7 @@ function h5p_set_mdc_image_config(plist_id, config_ptr)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_mdc_image_config (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_mdc_image_config (not annotated)")
     return nothing
 end
 
@@ -5371,7 +5371,7 @@ function h5p_set_mdc_log_options(plist_id, is_enabled, location, start_on_access
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_mdc_log_options (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_mdc_log_options (not annotated)")
     return nothing
 end
 
@@ -5387,7 +5387,7 @@ function h5p_set_meta_block_size(fapl_id, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_meta_block_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_meta_block_size (not annotated)")
     return nothing
 end
 
@@ -5403,7 +5403,7 @@ function h5p_set_metadata_read_attempts(plist_id, attempts)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_metadata_read_attempts (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_metadata_read_attempts (not annotated)")
     return nothing
 end
 
@@ -5419,7 +5419,7 @@ function h5p_set_multi_type(fapl_id, type)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_multi_type (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_multi_type (not annotated)")
     return nothing
 end
 
@@ -5435,7 +5435,7 @@ function h5p_set_nbit(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error enabling nbit filter")
+    var"#status#" < herr_t(0) && @h5error("Error enabling nbit filter")
     return nothing
 end
 
@@ -5451,7 +5451,7 @@ function h5p_set_nlinks(plist_id, nlinks)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_nlinks (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_nlinks (not annotated)")
     return nothing
 end
 
@@ -5467,7 +5467,7 @@ function h5p_set_obj_track_times(plist_id, track_times)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting object time tracking")
+    var"#status#" < herr_t(0) && @h5error("Error setting object time tracking")
     return nothing
 end
 
@@ -5483,7 +5483,7 @@ function h5p_set_object_flush_cb(plist_id, func, udata)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_object_flush_cb (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_object_flush_cb (not annotated)")
     return nothing
 end
 
@@ -5499,7 +5499,7 @@ function h5p_set_page_buffer_size(plist_id, buf_size, min_meta_per, min_raw_per)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_page_buffer_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_page_buffer_size (not annotated)")
     return nothing
 end
 
@@ -5515,7 +5515,7 @@ function h5p_set_preserve(plist_id, status)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_preserve (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_preserve (not annotated)")
     return nothing
 end
 
@@ -5531,7 +5531,7 @@ function h5p_set_scaleoffset(plist_id, scale_type, scale_factor)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error enabling szip filter")
+    var"#status#" < herr_t(0) && @h5error("Error enabling szip filter")
     return nothing
 end
 
@@ -5547,7 +5547,7 @@ function h5p_set_shared_mesg_index(plist_id, index_num, mesg_type_flags, min_mes
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_shared_mesg_index (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_shared_mesg_index (not annotated)")
     return nothing
 end
 
@@ -5563,7 +5563,7 @@ function h5p_set_shared_mesg_nindexes(plist_id, nindexes)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_shared_mesg_nindexes (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_shared_mesg_nindexes (not annotated)")
     return nothing
 end
 
@@ -5579,7 +5579,7 @@ function h5p_set_shared_mesg_phase_change(plist_id, max_list, min_btree)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_shared_mesg_phase_change (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_shared_mesg_phase_change (not annotated)")
     return nothing
 end
 
@@ -5595,7 +5595,7 @@ function h5p_set_shuffle(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error enabling shuffle filter")
+    var"#status#" < herr_t(0) && @h5error("Error enabling shuffle filter")
     return nothing
 end
 
@@ -5611,7 +5611,7 @@ function h5p_set_sieve_buf_size(fapl_id, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_sieve_buf_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_sieve_buf_size (not annotated)")
     return nothing
 end
 
@@ -5627,7 +5627,7 @@ function h5p_set_sizes(plist_id, sizeof_addr, sizeof_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_sizes (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_sizes (not annotated)")
     return nothing
 end
 
@@ -5643,7 +5643,7 @@ function h5p_set_small_data_block_size(fapl_id, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_small_data_block_size (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_small_data_block_size (not annotated)")
     return nothing
 end
 
@@ -5659,7 +5659,7 @@ function h5p_set_sym_k(plist_id, ik, lk)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_sym_k (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_sym_k (not annotated)")
     return nothing
 end
 
@@ -5675,7 +5675,7 @@ function h5p_set_szip(plist_id, options_mask, pixels_per_block)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error enabling szip filter")
+    var"#status#" < herr_t(0) && @h5error("Error enabling szip filter")
     return nothing
 end
 
@@ -5691,7 +5691,7 @@ function h5p_set_type_conv_cb(dxpl_id, op, operate_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_type_conv_cb (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_type_conv_cb (not annotated)")
     return nothing
 end
 
@@ -5707,7 +5707,7 @@ function h5p_set_userblock(plist_id, len)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting userblock")
+    var"#status#" < herr_t(0) && @h5error("Error setting userblock")
     return nothing
 end
 
@@ -5723,7 +5723,7 @@ function h5p_set_virtual(dcpl_id, vspace_id, src_file_name, src_dset_name, src_s
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting virtual")
+    var"#status#" < herr_t(0) && @h5error("Error setting virtual")
     return nothing
 end
 
@@ -5739,7 +5739,7 @@ function h5p_set_virtual_prefix(dapl_id, prefix)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_virtual_prefix (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_virtual_prefix (not annotated)")
     return nothing
 end
 
@@ -5755,7 +5755,7 @@ function h5p_set_virtual_printf_gap(dapl_id, gap_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_virtual_printf_gap (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_virtual_printf_gap (not annotated)")
     return nothing
 end
 
@@ -5771,7 +5771,7 @@ function h5p_set_virtual_view(dapl_id, view)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_virtual_view (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_virtual_view (not annotated)")
     return nothing
 end
 
@@ -5787,7 +5787,7 @@ function h5p_set_vlen_mem_manager(plist_id, alloc_func, alloc_info, free_func, f
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_vlen_mem_manager (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_vlen_mem_manager (not annotated)")
     return nothing
 end
 
@@ -5803,7 +5803,7 @@ function h5p_set_vol(plist_id, new_vol_id, new_vol_info)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_set_vol (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_set_vol (not annotated)")
     return nothing
 end
 
@@ -5819,7 +5819,7 @@ function h5p_add_merge_committed_dtype_path(plist_id, path)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_add_merge_committed_dtype_path (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_add_merge_committed_dtype_path (not annotated)")
     return nothing
 end
 
@@ -5835,7 +5835,7 @@ function h5p_all_filters_avail(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_all_filters_avail (not annotated)")
+    var"#status#" < htri_t(0) && @h5error("Error in h5p_all_filters_avail (not annotated)")
     return var"#status#" > 0
 end
 
@@ -5851,7 +5851,7 @@ function h5p_close(id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error closing property list")
+    var"#status#" < herr_t(0) && @h5error("Error closing property list")
     return nothing
 end
 
@@ -5867,7 +5867,7 @@ function h5p_close_class(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_close_class (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_close_class (not annotated)")
     return nothing
 end
 
@@ -5883,7 +5883,7 @@ function h5p_copy(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_copy (not annotated)")
+    var"#status#" < hid_t(0) && @h5error("Error in h5p_copy (not annotated)")
     return var"#status#"
 end
 
@@ -5899,7 +5899,7 @@ function h5p_copy_prop(dst_id, src_id, name)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_copy_prop (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_copy_prop (not annotated)")
     return nothing
 end
 
@@ -5915,7 +5915,7 @@ function h5p_create(cls_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error creating property list")
+    var"#status#" < hid_t(0) && @h5error("Error creating property list")
     return var"#status#"
 end
 
@@ -5931,7 +5931,7 @@ function h5p_create_class(parent, name, create, create_data, copy, copy_data, cl
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_create_class (not annotated)")
+    var"#status#" < hid_t(0) && @h5error("Error in h5p_create_class (not annotated)")
     return var"#status#"
 end
 
@@ -5947,7 +5947,7 @@ function h5p_decode(buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_decode (not annotated)")
+    var"#status#" < hid_t(0) && @h5error("Error in h5p_decode (not annotated)")
     return var"#status#"
 end
 
@@ -5963,7 +5963,7 @@ function h5p_encode(plist_id, buf, nalloc)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_encode1 (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_encode1 (not annotated)")
     return nothing
 end
 
@@ -5979,7 +5979,7 @@ function h5p_encode(plist_id, buf, nalloc, fapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_encode2 (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_encode2 (not annotated)")
     return nothing
 end
 
@@ -5995,7 +5995,7 @@ function h5p_equal(id1, id2)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_equal (not annotated)")
+    var"#status#" < htri_t(0) && @h5error("Error in h5p_equal (not annotated)")
     return var"#status#" > 0
 end
 
@@ -6011,7 +6011,7 @@ function h5p_exist(plist_id, name)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_exist (not annotated)")
+    var"#status#" < htri_t(0) && @h5error("Error in h5p_exist (not annotated)")
     return var"#status#" > 0
 end
 
@@ -6027,7 +6027,7 @@ function h5p_fill_value_defined(plist, status)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_fill_value_defined (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_fill_value_defined (not annotated)")
     return nothing
 end
 
@@ -6043,7 +6043,7 @@ function h5p_free_merge_committed_dtype_paths(plist_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_free_merge_committed_dtype_paths (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_free_merge_committed_dtype_paths (not annotated)")
     return nothing
 end
 
@@ -6059,7 +6059,7 @@ function h5p_insert(plist_id, name, size, value, prp_set, prp_get, prp_delete, p
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_insert1 (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_insert1 (not annotated)")
     return nothing
 end
 
@@ -6075,7 +6075,7 @@ function h5p_insert(plist_id, name, size, value, set, get, prp_del, copy, compar
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_insert2 (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_insert2 (not annotated)")
     return nothing
 end
 
@@ -6091,7 +6091,7 @@ function h5p_isa_class(plist_id, pclass_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_isa_class (not annotated)")
+    var"#status#" < htri_t(0) && @h5error("Error in h5p_isa_class (not annotated)")
     return var"#status#" > 0
 end
 
@@ -6107,7 +6107,7 @@ function h5p_iterate(id, idx, iter_func, iter_data)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_iterate (not annotated)")
+    var"#status#" < Cint(0) && @h5error("Error in h5p_iterate (not annotated)")
     return Int(var"#status#")
 end
 
@@ -6123,7 +6123,7 @@ function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error modifying filter")
+    var"#status#" < herr_t(0) && @h5error("Error modifying filter")
     return nothing
 end
 
@@ -6139,7 +6139,7 @@ function h5p_register(cls_id, name, size, def_value, prp_create, prp_set, prp_ge
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_register1 (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_register1 (not annotated)")
     return nothing
 end
 
@@ -6155,7 +6155,7 @@ function h5p_register(cls_id, name, size, def_value, create, set, get, prp_del, 
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_register2 (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_register2 (not annotated)")
     return nothing
 end
 
@@ -6171,7 +6171,7 @@ function h5p_remove(plist_id, name)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_remove (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_remove (not annotated)")
     return nothing
 end
 
@@ -6187,7 +6187,7 @@ function h5p_remove_filter(plist_id, filter_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error removing filter")
+    var"#status#" < herr_t(0) && @h5error("Error removing filter")
     return nothing
 end
 
@@ -6203,7 +6203,7 @@ function h5p_unregister(pclass_id, name)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in h5p_unregister (not annotated)")
+    var"#status#" < herr_t(0) && @h5error("Error in h5p_unregister (not annotated)")
     return nothing
 end
 
@@ -6219,7 +6219,7 @@ function h5pl_set_loading_state(plugin_control_mask)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting plugin loading state")
+    var"#status#" < herr_t(0) && @h5error("Error setting plugin loading state")
     return nothing
 end
 
@@ -6235,7 +6235,7 @@ function h5pl_get_loading_state(plugin_control_mask)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting plugin loading state")
+    var"#status#" < herr_t(0) && @h5error("Error getting plugin loading state")
     return nothing
 end
 
@@ -6251,7 +6251,7 @@ function h5pl_append(search_path)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error appending plugin path")
+    var"#status#" < herr_t(0) && @h5error("Error appending plugin path")
     return nothing
 end
 
@@ -6267,7 +6267,7 @@ function h5pl_prepend(search_path)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error prepending plugin path")
+    var"#status#" < herr_t(0) && @h5error("Error prepending plugin path")
     return nothing
 end
 
@@ -6283,7 +6283,7 @@ function h5pl_replace(search_path, index)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error replacing plugin path")
+    var"#status#" < herr_t(0) && @h5error("Error replacing plugin path")
     return nothing
 end
 
@@ -6299,7 +6299,7 @@ function h5pl_insert(search_path, index)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error inserting plugin path")
+    var"#status#" < herr_t(0) && @h5error("Error inserting plugin path")
     return nothing
 end
 
@@ -6315,7 +6315,7 @@ function h5pl_remove(index)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error removing plugin path")
+    var"#status#" < herr_t(0) && @h5error("Error removing plugin path")
     return nothing
 end
 
@@ -6331,7 +6331,7 @@ function h5pl_get(index, path_buf, buf_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting plugin path")
+    var"#status#" < Cssize_t(0) && @h5error("Error getting plugin path")
     return var"#status#"
 end
 
@@ -6347,7 +6347,7 @@ function h5pl_size(num_paths)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error in getting number of plugins paths")
+    var"#status#" < herr_t(0) && @h5error("Error in getting number of plugins paths")
     return nothing
 end
 
@@ -6363,7 +6363,7 @@ function h5r_create(ref, loc_id, pathname, ref_type, space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error creating reference to object ", h5i_get_name(loc_id), "/", pathname))
+    var"#status#" < herr_t(0) && @h5error(string("Error creating reference to object ", h5i_get_name(loc_id), "/", pathname))
     return nothing
 end
 
@@ -6379,7 +6379,7 @@ function h5r_dereference(obj_id, oapl_id, ref_type, ref)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error dereferencing object")
+    var"#status#" < hid_t(0) && @h5error("Error dereferencing object")
     return var"#status#"
 end
 
@@ -6395,7 +6395,7 @@ function h5r_get_obj_type(loc_id, ref_type, ref, obj_type)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting object type")
+    var"#status#" < herr_t(0) && @h5error("Error getting object type")
     return nothing
 end
 
@@ -6411,7 +6411,7 @@ function h5r_get_region(loc_id, ref_type, ref)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting region from reference")
+    var"#status#" < hid_t(0) && @h5error("Error getting region from reference")
     return var"#status#"
 end
 
@@ -6427,7 +6427,7 @@ function h5s_close(space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error closing dataspace")
+    var"#status#" < herr_t(0) && @h5error("Error closing dataspace")
     return nothing
 end
 
@@ -6443,7 +6443,7 @@ function h5s_combine_hyperslab(dspace_id, seloper, start, stride, count, block)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error selecting hyperslab")
+    var"#status#" < herr_t(0) && @h5error("Error selecting hyperslab")
     return nothing
 end
 
@@ -6460,7 +6460,7 @@ end
             finally
                 unlock(liblock)
             end
-        var"#status#" < 0 && @h5error("Error combining dataspaces")
+        var"#status#" < hid_t(0) && @h5error("Error combining dataspaces")
         return var"#status#"
     end
 end
@@ -6477,7 +6477,7 @@ function h5s_copy(space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error copying dataspace")
+    var"#status#" < hid_t(0) && @h5error("Error copying dataspace")
     return var"#status#"
 end
 
@@ -6493,7 +6493,7 @@ function h5s_create(class)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error creating dataspace")
+    var"#status#" < hid_t(0) && @h5error("Error creating dataspace")
     return var"#status#"
 end
 
@@ -6509,7 +6509,7 @@ function h5s_create_simple(rank, current_dims, maximum_dims)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error creating simple dataspace")
+    var"#status#" < hid_t(0) && @h5error("Error creating simple dataspace")
     return var"#status#"
 end
 
@@ -6525,7 +6525,7 @@ function h5s_extent_copy(dst, src)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error copying extent")
+    var"#status#" < herr_t(0) && @h5error("Error copying extent")
     return nothing
 end
 
@@ -6541,7 +6541,7 @@ function h5s_extent_equal(space1_id, space2_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error comparing dataspaces")
+    var"#status#" < htri_t(0) && @h5error("Error comparing dataspaces")
     return var"#status#" > 0
 end
 
@@ -6557,7 +6557,7 @@ function h5s_get_regular_hyperslab(space_id, start, stride, count, block)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting regular hyperslab selection")
+    var"#status#" < herr_t(0) && @h5error("Error getting regular hyperslab selection")
     return nothing
 end
 
@@ -6573,7 +6573,7 @@ function h5s_get_select_bounds(space_id, starts, ends)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting bounding box for selection")
+    var"#status#" < herr_t(0) && @h5error("Error getting bounding box for selection")
     return nothing
 end
 
@@ -6589,7 +6589,7 @@ function h5s_get_select_elem_npoints(space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting number of elements in dataspace selection")
+    var"#status#" < hssize_t(0) && @h5error("Error getting number of elements in dataspace selection")
     return var"#status#"
 end
 
@@ -6605,7 +6605,7 @@ function h5s_get_select_elem_pointlist(space_id, startpoint, numpoints, buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting list of element points")
+    var"#status#" < herr_t(0) && @h5error("Error getting list of element points")
     return nothing
 end
 
@@ -6621,7 +6621,7 @@ function h5s_get_select_hyper_blocklist(space_id, startblock, numblocks, buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting list of hyperslab blocks")
+    var"#status#" < herr_t(0) && @h5error("Error getting list of hyperslab blocks")
     return nothing
 end
 
@@ -6637,7 +6637,7 @@ function h5s_get_select_hyper_nblocks(space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting number of selected blocks")
+    var"#status#" < hssize_t(0) && @h5error("Error getting number of selected blocks")
     return var"#status#"
 end
 
@@ -6669,7 +6669,7 @@ function h5s_get_select_type(space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting the selection type")
+    var"#status#" < H5S_sel_type(0) && @h5error("Error getting the selection type")
     return var"#status#"
 end
 
@@ -6685,7 +6685,7 @@ function h5s_get_simple_extent_dims(space_id, dims, maxdims)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting the dimensions for a dataspace")
+    var"#status#" < Cint(0) && @h5error("Error getting the dimensions for a dataspace")
     return Int(var"#status#")
 end
 
@@ -6701,7 +6701,7 @@ function h5s_get_simple_extent_ndims(space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting the number of dimensions for a dataspace")
+    var"#status#" < Cint(0) && @h5error("Error getting the number of dimensions for a dataspace")
     return Int(var"#status#")
 end
 
@@ -6717,7 +6717,7 @@ function h5s_get_simple_extent_type(space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting the dataspace type")
+    var"#status#" < H5S_class_t(0) && @h5error("Error getting the dataspace type")
     return var"#status#"
 end
 
@@ -6733,7 +6733,7 @@ function h5s_is_regular_hyperslab(space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error determining whether datapace is regular hyperslab")
+    var"#status#" < htri_t(0) && @h5error("Error determining whether datapace is regular hyperslab")
     return var"#status#" > 0
 end
 
@@ -6749,7 +6749,7 @@ function h5s_is_simple(space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error determining whether dataspace is simple")
+    var"#status#" < htri_t(0) && @h5error("Error determining whether dataspace is simple")
     return var"#status#" > 0
 end
 
@@ -6765,7 +6765,7 @@ function h5s_modify_select(space_id, op, space2_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error modifying selection")
+    var"#status#" < herr_t(0) && @h5error("Error modifying selection")
     return nothing
 end
 
@@ -6781,7 +6781,7 @@ function h5s_offset_simple(space_id, offset)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error offsetting simple dataspace extent")
+    var"#status#" < herr_t(0) && @h5error("Error offsetting simple dataspace extent")
     return nothing
 end
 
@@ -6797,7 +6797,7 @@ function h5s_select_all(space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error selecting all of dataspace")
+    var"#status#" < herr_t(0) && @h5error("Error selecting all of dataspace")
     return nothing
 end
 
@@ -6813,7 +6813,7 @@ function h5s_select_copy(dst, src)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error copying selection")
+    var"#status#" < herr_t(0) && @h5error("Error copying selection")
     return nothing
 end
 
@@ -6829,7 +6829,7 @@ function h5s_select_elements(space_id, op, num_elem, coord)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error selecting elements")
+    var"#status#" < herr_t(0) && @h5error("Error selecting elements")
     return nothing
 end
 
@@ -6845,7 +6845,7 @@ function h5s_select_hyperslab(dspace_id, seloper, start, stride, count, block)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error selecting hyperslab")
+    var"#status#" < herr_t(0) && @h5error("Error selecting hyperslab")
     return nothing
 end
 
@@ -6861,7 +6861,7 @@ function h5s_select_intersect_block(space_id, starts, ends)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error determining whether selection intersects block")
+    var"#status#" < htri_t(0) && @h5error("Error determining whether selection intersects block")
     return var"#status#" > 0
 end
 
@@ -6877,7 +6877,7 @@ function h5s_select_shape_same(space1_id, space2_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error determining whether dataspace shapes are the same")
+    var"#status#" < htri_t(0) && @h5error("Error determining whether dataspace shapes are the same")
     return var"#status#" > 0
 end
 
@@ -6893,7 +6893,7 @@ function h5s_select_valid(spaceid)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error determining whether selection is within extent")
+    var"#status#" < htri_t(0) && @h5error("Error determining whether selection is within extent")
     return var"#status#" > 0
 end
 
@@ -6909,7 +6909,7 @@ function h5s_set_extent_none(space_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting dataspace extent to none")
+    var"#status#" < herr_t(0) && @h5error("Error setting dataspace extent to none")
     return nothing
 end
 
@@ -6925,7 +6925,7 @@ function h5s_set_extent_simple(dspace_id, rank, current_size, maximum_size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting dataspace size")
+    var"#status#" < herr_t(0) && @h5error("Error setting dataspace size")
     return nothing
 end
 
@@ -6941,7 +6941,7 @@ function h5t_array_create(basetype_id, ndims, sz)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz))
+    var"#status#" < hid_t(0) && @h5error(string("Error creating H5T_ARRAY of id ", basetype_id, " and size ", sz))
     return var"#status#"
 end
 
@@ -6957,7 +6957,7 @@ function h5t_close(dtype_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error closing datatype")
+    var"#status#" < herr_t(0) && @h5error("Error closing datatype")
     return nothing
 end
 
@@ -6973,7 +6973,7 @@ function h5t_committed(dtype_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error determining whether datatype is committed")
+    var"#status#" < htri_t(0) && @h5error("Error determining whether datatype is committed")
     return var"#status#" > 0
 end
 
@@ -6989,7 +6989,7 @@ function h5t_commit(loc_id, name, dtype_id, lcpl_id, tcpl_id, tapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error committing type")
+    var"#status#" < herr_t(0) && @h5error("Error committing type")
     return nothing
 end
 
@@ -7005,7 +7005,7 @@ function h5t_copy(dtype_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error copying datatype")
+    var"#status#" < hid_t(0) && @h5error("Error copying datatype")
     return var"#status#"
 end
 
@@ -7021,7 +7021,7 @@ function h5t_create(class_id, sz)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error creating datatype of id ", class_id))
+    var"#status#" < hid_t(0) && @h5error(string("Error creating datatype of id ", class_id))
     return var"#status#"
 end
 
@@ -7037,7 +7037,7 @@ function h5t_enum_insert(dtype_id, name, value)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error adding ", name, " to enum datatype"))
+    var"#status#" < herr_t(0) && @h5error(string("Error adding ", name, " to enum datatype"))
     return nothing
 end
 
@@ -7053,7 +7053,7 @@ function h5t_equal(dtype_id1, dtype_id2)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error checking datatype equality")
+    var"#status#" < htri_t(0) && @h5error("Error checking datatype equality")
     return var"#status#" > 0
 end
 
@@ -7069,7 +7069,7 @@ function h5t_get_array_dims(dtype_id, dims)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting dimensions of array")
+    var"#status#" < Cint(0) && @h5error("Error getting dimensions of array")
     return Int(var"#status#")
 end
 
@@ -7085,7 +7085,7 @@ function h5t_get_array_ndims(dtype_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting ndims of array")
+    var"#status#" < Cint(0) && @h5error("Error getting ndims of array")
     return Int(var"#status#")
 end
 
@@ -7101,7 +7101,7 @@ function h5t_get_class(dtype_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting class")
+    var"#status#" < Cint(0) && @h5error("Error getting class")
     return Int(var"#status#")
 end
 
@@ -7117,7 +7117,7 @@ function h5t_get_cset(dtype_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting character set encoding")
+    var"#status#" < Cint(0) && @h5error("Error getting character set encoding")
     return Int(var"#status#")
 end
 
@@ -7149,7 +7149,7 @@ function h5t_get_fields(dtype_id, spos, epos, esize, mpos, msize)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting datatype floating point bit positions")
+    var"#status#" < herr_t(0) && @h5error("Error getting datatype floating point bit positions")
     return nothing
 end
 
@@ -7165,7 +7165,7 @@ function h5t_get_member_class(dtype_id, index)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error getting class of compound datatype member #", index))
+    var"#status#" < Cint(0) && @h5error(string("Error getting class of compound datatype member #", index))
     return Int(var"#status#")
 end
 
@@ -7181,7 +7181,7 @@ function h5t_get_member_index(dtype_id, membername)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error getting index of compound datatype member \"", membername, "\""))
+    var"#status#" < Cint(0) && @h5error(string("Error getting index of compound datatype member \"", membername, "\""))
     return Int(var"#status#")
 end
 
@@ -7213,7 +7213,7 @@ function h5t_get_member_type(dtype_id, index)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error getting type of compound datatype member #", index))
+    var"#status#" < hid_t(0) && @h5error(string("Error getting type of compound datatype member #", index))
     return var"#status#"
 end
 
@@ -7229,7 +7229,7 @@ function h5t_get_native_type(dtype_id, direction)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting native type")
+    var"#status#" < hid_t(0) && @h5error("Error getting native type")
     return var"#status#"
 end
 
@@ -7245,7 +7245,7 @@ function h5t_get_nmembers(dtype_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting the number of members")
+    var"#status#" < Cint(0) && @h5error("Error getting the number of members")
     return Int(var"#status#")
 end
 
@@ -7261,7 +7261,7 @@ function h5t_get_offset(dtype_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting offset")
+    var"#status#" < Cint(0) && @h5error("Error getting offset")
     return Int(var"#status#")
 end
 
@@ -7277,7 +7277,7 @@ function h5t_get_order(dtype_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting order")
+    var"#status#" < Cint(0) && @h5error("Error getting order")
     return Int(var"#status#")
 end
 
@@ -7309,7 +7309,7 @@ function h5t_get_sign(dtype_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting sign")
+    var"#status#" < Cint(0) && @h5error("Error getting sign")
     return Int(var"#status#")
 end
 
@@ -7341,7 +7341,7 @@ function h5t_get_strpad(dtype_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting string padding")
+    var"#status#" < Cint(0) && @h5error("Error getting string padding")
     return Int(var"#status#")
 end
 
@@ -7357,7 +7357,7 @@ function h5t_get_super(dtype_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting super type")
+    var"#status#" < hid_t(0) && @h5error("Error getting super type")
     return var"#status#"
 end
 
@@ -7373,7 +7373,7 @@ function h5t_insert(dtype_id, fieldname, offset, field_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error adding field ", fieldname, " to compound datatype"))
+    var"#status#" < herr_t(0) && @h5error(string("Error adding field ", fieldname, " to compound datatype"))
     return nothing
 end
 
@@ -7389,7 +7389,7 @@ function h5t_is_variable_str(type_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error determining whether string is of variable length")
+    var"#status#" < htri_t(0) && @h5error("Error determining whether string is of variable length")
     return var"#status#" > 0
 end
 
@@ -7405,7 +7405,7 @@ function h5t_lock(type_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error locking type")
+    var"#status#" < herr_t(0) && @h5error("Error locking type")
     return nothing
 end
 
@@ -7421,7 +7421,7 @@ function h5t_open(loc_id, name, tapl_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error(string("Error opening type ", h5i_get_name(loc_id), "/", name))
+    var"#status#" < hid_t(0) && @h5error(string("Error opening type ", h5i_get_name(loc_id), "/", name))
     return var"#status#"
 end
 
@@ -7437,7 +7437,7 @@ function h5t_set_cset(dtype_id, cset)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting character set in datatype")
+    var"#status#" < herr_t(0) && @h5error("Error setting character set in datatype")
     return nothing
 end
 
@@ -7453,7 +7453,7 @@ function h5t_set_ebias(dtype_id, ebias)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting datatype floating point exponent bias")
+    var"#status#" < herr_t(0) && @h5error("Error setting datatype floating point exponent bias")
     return nothing
 end
 
@@ -7469,7 +7469,7 @@ function h5t_set_fields(dtype_id, spos, epos, esize, mpos, msize)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting datatype floating point bit positions")
+    var"#status#" < herr_t(0) && @h5error("Error setting datatype floating point bit positions")
     return nothing
 end
 
@@ -7485,7 +7485,7 @@ function h5t_set_offset(dtype_id, offset)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting offset")
+    var"#status#" < herr_t(0) && @h5error("Error setting offset")
     return nothing
 end
 
@@ -7501,7 +7501,7 @@ function h5t_set_order(dtype_id, order)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting order")
+    var"#status#" < herr_t(0) && @h5error("Error setting order")
     return nothing
 end
 
@@ -7517,7 +7517,7 @@ function h5t_set_precision(dtype_id, sz)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting precision of datatype")
+    var"#status#" < herr_t(0) && @h5error("Error setting precision of datatype")
     return nothing
 end
 
@@ -7533,7 +7533,7 @@ function h5t_set_size(dtype_id, sz)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting size of datatype")
+    var"#status#" < herr_t(0) && @h5error("Error setting size of datatype")
     return nothing
 end
 
@@ -7549,7 +7549,7 @@ function h5t_set_strpad(dtype_id, sz)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting size of datatype")
+    var"#status#" < herr_t(0) && @h5error("Error setting size of datatype")
     return nothing
 end
 
@@ -7565,7 +7565,7 @@ function h5t_set_tag(dtype_id, tag)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error setting opaque tag")
+    var"#status#" < herr_t(0) && @h5error("Error setting opaque tag")
     return nothing
 end
 
@@ -7581,7 +7581,7 @@ function h5t_vlen_create(base_type_id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error creating vlen type")
+    var"#status#" < hid_t(0) && @h5error("Error creating vlen type")
     return var"#status#"
 end
 
@@ -7597,7 +7597,7 @@ function h5do_append(dset_id, dxpl_id, index, num_elem, memtype, buffer)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("error appending")
+    var"#status#" < herr_t(0) && @h5error("error appending")
     return nothing
 end
 
@@ -7613,7 +7613,7 @@ function h5do_write_chunk(dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error writing chunk")
+    var"#status#" < herr_t(0) && @h5error("Error writing chunk")
     return nothing
 end
 
@@ -7629,7 +7629,7 @@ function h5ds_attach_scale(did, dsid, idx)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to attach scale")
+    var"#status#" < herr_t(0) && @h5error("Unable to attach scale")
     return nothing
 end
 
@@ -7645,7 +7645,7 @@ function h5ds_detach_scale(did, dsid, idx)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to detach scale")
+    var"#status#" < herr_t(0) && @h5error("Unable to detach scale")
     return nothing
 end
 
@@ -7661,7 +7661,7 @@ function h5ds_get_label(did, idx, label, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to get label")
+    var"#status#" < herr_t(0) && @h5error("Unable to get label")
     return nothing
 end
 
@@ -7677,7 +7677,7 @@ function h5ds_get_num_scales(did, idx)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting number of scales")
+    var"#status#" < Cint(0) && @h5error("Error getting number of scales")
     return Int(var"#status#")
 end
 
@@ -7693,7 +7693,7 @@ function h5ds_get_scale_name(did, name, size)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to get scale name")
+    var"#status#" < Cssize_t(0) && @h5error("Unable to get scale name")
     return var"#status#"
 end
 
@@ -7709,7 +7709,7 @@ function h5ds_is_attached(did, dsid, idx)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to check if dimension is attached")
+    var"#status#" < htri_t(0) && @h5error("Unable to check if dimension is attached")
     return var"#status#" > 0
 end
 
@@ -7725,7 +7725,7 @@ function h5ds_is_scale(did)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to check if dataset is scale")
+    var"#status#" < htri_t(0) && @h5error("Unable to check if dataset is scale")
     return var"#status#" > 0
 end
 
@@ -7741,7 +7741,7 @@ function h5ds_set_label(did, idx, label)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to set label")
+    var"#status#" < herr_t(0) && @h5error("Unable to set label")
     return nothing
 end
 
@@ -7757,7 +7757,7 @@ function h5ds_set_scale(dsid, dimname)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to set scale")
+    var"#status#" < herr_t(0) && @h5error("Unable to set scale")
     return nothing
 end
 
@@ -7773,7 +7773,7 @@ function h5lt_dtype_to_text(datatype, str, lang_type, len)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting datatype text representation")
+    var"#status#" < herr_t(0) && @h5error("Error getting datatype text representation")
     return nothing
 end
 
@@ -7789,7 +7789,7 @@ function h5tb_append_records(loc_id, dset_name, nrecords, type_size, field_offse
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error adding record to table")
+    var"#status#" < herr_t(0) && @h5error("Error adding record to table")
     return nothing
 end
 
@@ -7805,7 +7805,7 @@ function h5tb_get_field_info(loc_id, table_name, field_names, field_sizes, field
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting field information")
+    var"#status#" < herr_t(0) && @h5error("Error getting field information")
     return nothing
 end
 
@@ -7821,7 +7821,7 @@ function h5tb_get_table_info(loc_id, table_name, nfields, nrecords)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting table information")
+    var"#status#" < herr_t(0) && @h5error("Error getting table information")
     return nothing
 end
 
@@ -7837,7 +7837,7 @@ function h5tb_make_table(table_title, loc_id, dset_name, nfields, nrecords, type
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error creating and writing dataset to table")
+    var"#status#" < herr_t(0) && @h5error("Error creating and writing dataset to table")
     return nothing
 end
 
@@ -7853,7 +7853,7 @@ function h5tb_read_records(loc_id, table_name, start, nrecords, type_size, field
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error reading record from table")
+    var"#status#" < herr_t(0) && @h5error("Error reading record from table")
     return nothing
 end
 
@@ -7869,7 +7869,7 @@ function h5tb_read_table(loc_id, table_name, dst_size, dst_offset, dst_sizes, ds
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error reading table")
+    var"#status#" < herr_t(0) && @h5error("Error reading table")
     return nothing
 end
 
@@ -7885,7 +7885,7 @@ function h5tb_write_records(loc_id, table_name, start, nrecords, type_size, fiel
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error writing record to table")
+    var"#status#" < herr_t(0) && @h5error("Error writing record to table")
     return nothing
 end
 
@@ -7901,7 +7901,7 @@ function h5z_register(filter_class)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to register new filter")
+    var"#status#" < herr_t(0) && @h5error("Unable to register new filter")
     return nothing
 end
 
@@ -7917,7 +7917,7 @@ function h5z_unregister(id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to unregister filter")
+    var"#status#" < herr_t(0) && @h5error("Unable to unregister filter")
     return nothing
 end
 
@@ -7933,7 +7933,7 @@ function h5z_filter_avail(id)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Unable to get check filter availability")
+    var"#status#" < htri_t(0) && @h5error("Unable to get check filter availability")
     return var"#status#" > 0
 end
 
@@ -7949,7 +7949,7 @@ function h5z_get_filter_info(filter, filter_config_flags)
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error getting filter information")
+    var"#status#" < herr_t(0) && @h5error("Error getting filter information")
     return nothing
 end
 
@@ -7965,7 +7965,7 @@ function h5fd_core_init()
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error initializing file driver")
+    var"#status#" < hid_t(0) && @h5error("Error initializing file driver")
     return var"#status#"
 end
 
@@ -7981,7 +7981,7 @@ function h5fd_family_init()
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error initializing file driver")
+    var"#status#" < hid_t(0) && @h5error("Error initializing file driver")
     return var"#status#"
 end
 
@@ -7997,7 +7997,7 @@ function h5fd_log_init()
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error initializing file driver")
+    var"#status#" < hid_t(0) && @h5error("Error initializing file driver")
     return var"#status#"
 end
 
@@ -8013,7 +8013,7 @@ function h5fd_mpio_init()
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error initializing file driver")
+    var"#status#" < hid_t(0) && @h5error("Error initializing file driver")
     return var"#status#"
 end
 
@@ -8029,7 +8029,7 @@ function h5fd_multi_init()
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error initializing file driver")
+    var"#status#" < hid_t(0) && @h5error("Error initializing file driver")
     return var"#status#"
 end
 
@@ -8045,7 +8045,7 @@ function h5fd_sec2_init()
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error initializing file driver")
+    var"#status#" < hid_t(0) && @h5error("Error initializing file driver")
     return var"#status#"
 end
 
@@ -8061,6 +8061,6 @@ function h5fd_stdio_init()
         finally
             unlock(liblock)
         end
-    var"#status#" < 0 && @h5error("Error initializing file driver")
+    var"#status#" < hid_t(0) && @h5error("Error initializing file driver")
     return var"#status#"
 end
