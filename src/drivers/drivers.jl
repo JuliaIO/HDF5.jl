@@ -45,8 +45,8 @@ Core(; increment=8192, backing_store=true, write_tracking=false, page_size=52428
 
 function get_driver(p::Properties, ::Type{Core})
     r_increment = Ref{Csize_t}(0)
-    r_backing_store = Ref{Cuint}(0)
-    r_write_tracking = Ref{Cuint}(0)
+    r_backing_store = Ref{Bool}(0)
+    r_write_tracking = Ref{Bool}(0)
     r_page_size = Ref{Csize_t}(0)
     API.h5p_get_fapl_core(p, r_increment, r_backing_store)
     API.h5p_get_core_write_tracking(p, r_write_tracking, r_page_size)

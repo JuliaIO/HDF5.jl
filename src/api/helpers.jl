@@ -30,6 +30,27 @@ function h5f_get_dset_no_attrs_hint(file_id)::Bool
     return minimize[]
 end
 
+"""
+    h5f_get_file_image(file_id)
+
+Return a `Vector{UInt8}` containing the file image. Does not include the user block.
+"""
+function h5f_get_file_image(file_id)
+    buffer_length = h5f_get_file_image(file_id, C_NULL, 0)
+    buffer = Vector{UInt8}(undef, buffer_length)
+    h5f_get_file_image(file_id, buffer, buffer_length)
+    return buffer
+end
+
+"""
+    h5f_get_file_image(file_id, buffer::Vector{UInt8})
+
+Store the file image in the provided buffer.
+"""
+function h5f_get_file_image(file_id, buffer::Vector{UInt8})
+    h5f_get_file_image(fild_id, buffer, length(buffer))
+end
+
 ###
 ### Attribute Interface
 ###
@@ -788,6 +809,52 @@ function h5p_get_virtual_view(dapl_id)
     view = Ref{H5D_vds_view_t}()
     h5p_get_virtual_view(dapl_id, view)
     return view[]
+end
+
+"""
+    h5p_get_file_image(fapl_id)::Vector{UInt8}
+
+Retrieve a file image of the appropriate size in a `Vector{UInt8}`.
+"""
+function h5p_get_file_image(fapl_id)::Vector{UInt8}
+    cb = h5p_get_file_image_callbacks(fapl_id)
+    if cb.image_free != C_NULL
+        # The user has configured their own memory deallocation routines.
+        # The user should use a lower level call to properly handle deallocation
+        error(
+            "File image callback image_free is not C_NULL. Use the three argument method of h5p_get_file_image when setting file image callbacks."
+        )
+    end
+    buf_ptr_ref = Ref{Ptr{Nothing}}()
+    buf_len_ref = Ref{Csize_t}(0)
+    h5p_get_file_image(fapl_id, buf_ptr_ref, buf_len_ref)
+    image = unsafe_wrap(Array{UInt8}, Ptr{UInt8}(buf_ptr_ref[]), buf_len_ref[]; own=false)
+    finalizer(image) do image
+        # Use h5_free_memory to ensure we are using the correct free
+        h5_free_memory(image)
+    end
+    return image
+end
+
+"""
+    h5p_set_file_image(fapl_id, image::Vector{UInt8})
+
+Set the file image from a `Vector{UInt8}`.
+"""
+function h5p_set_file_image(fapl_id, image::Vector{UInt8})
+    h5p_set_file_image(fapl_id, image, length(image))
+end
+
+"""
+    h5p_get_file_image_callbacks(fapl_id)
+
+Retrieve the file image callbacks for memory operations
+"""
+function h5p_get_file_image_callbacks(fapl_id)
+    cb = H5FD_file_image_callbacks_t(C_NULL, C_NULL, C_NULL, C_NULL, C_NULL, C_NULL, C_NULL)
+    r = Ref(cb)
+    h5p_get_file_image_callbacks(fapl_id, r)
+    return r[]
 end
 
 # Note: The following function(s) implement direct ccalls because the binding generator

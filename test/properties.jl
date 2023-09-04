@@ -121,5 +121,20 @@ using Test
         nothing
     end
 
+    file_image = read(fn)
+
+    rm(fn; force=true)
+
+    fapl = HDF5.FileAccessProperties()
+    fapl.driver = HDF5.Drivers.Core(; backing_store=false)
+    fapl.file_image = copy(file_image)
+    @test fapl.file_image == file_image
+    file_image2 = h5open(fn, "r"; fapl) do f
+        @test haskey(f, "group")
+        convert(Vector{UInt8}, f)
+    end
+    # file_image2 does not include user block
+    @test file_image2 == @view(file_image[1025:end])
+
     rm(fn; force=true)
 end

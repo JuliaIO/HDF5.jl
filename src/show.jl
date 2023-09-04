@@ -36,7 +36,20 @@ function Base.show(io::IO, prop::Properties)
             # or always well-defined (e.g. chunk if layout != :chunked, dxpl_mpio if no MPI)
             try
                 val = getproperty(prop, name)
-                print(io, "\n  ", rpad(name, 15), " = ", repr(val), ",")
+                if name == :file_image
+                    print(
+                        io,
+                        "\n  ",
+                        rpad(name, 15),
+                        " = ",
+                        repr(typeof(val)),
+                        ", length = ",
+                        length(val),
+                        ","
+                    )
+                else
+                    print(io, "\n  ", rpad(name, 15), " = ", repr(val), ",")
+                end
             catch e
             end
         end

@@ -14,8 +14,18 @@ using Test
     end
 
     fn = tempname()
-    h5open(fn, "w"; driver=Drivers.Core(; backing_store=false)) do f
+    file_image = h5open(fn, "w"; driver=Drivers.Core(; backing_store=false)) do f
         ds = write_dataset(f, "core_dataset", A)
+        Vector{UInt8}(f)
     end
     @test !isfile(fn)
+
+    h5open(file_image) do f
+        @test f["core_dataset"][] == A
+    end
+
+    fn = tempname()
+    h5open(fn, "r"; driver=Drivers.Core(; backing_store=false), file_image) do f
+        @test f["core_dataset"][] == A
+    end
 end

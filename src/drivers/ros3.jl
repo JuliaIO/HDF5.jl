@@ -54,7 +54,7 @@ function Base.convert(::Type{API.H5FD_ros3_fapl_t}, driver::ROS3)
 end
 
 function get_driver(fapl::Properties, ::Type{ROS3})
-    r_fa = Ref{H5FD_ros3_fapl_t}()
+    r_fa = Ref{API.H5FD_ros3_fapl_t}()
     API.h5p_get_fapl_ros3(fapl, r_fa)
     return ROS3(r_fa[])
 end
