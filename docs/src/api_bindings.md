@@ -876,12 +876,18 @@ h5r_get_region
 
 ## [[`H5S`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5_s.html) — Dataspace Interface](@id H5S)
 - [`h5s_close`](@ref h5s_close)
+- [`h5s_combine_hyperslab`](@ref h5s_combine_hyperslab)
 - [`h5s_combine_select`](@ref h5s_combine_select)
 - [`h5s_copy`](@ref h5s_copy)
 - [`h5s_create`](@ref h5s_create)
 - [`h5s_create_simple`](@ref h5s_create_simple)
+- [`h5s_extent_copy`](@ref h5s_extent_copy)
 - [`h5s_extent_equal`](@ref h5s_extent_equal)
 - [`h5s_get_regular_hyperslab`](@ref h5s_get_regular_hyperslab)
+- [`h5s_get_select_bounds`](@ref h5s_get_select_bounds)
+- [`h5s_get_select_elem_npoints`](@ref h5s_get_select_elem_npoints)
+- [`h5s_get_select_elem_pointlist`](@ref h5s_get_select_elem_pointlist)
+- [`h5s_get_select_hyper_blocklist`](@ref h5s_get_select_hyper_blocklist)
 - [`h5s_get_select_hyper_nblocks`](@ref h5s_get_select_hyper_nblocks)
 - [`h5s_get_select_npoints`](@ref h5s_get_select_npoints)
 - [`h5s_get_select_type`](@ref h5s_get_select_type)
@@ -890,16 +896,32 @@ h5r_get_region
 - [`h5s_get_simple_extent_type`](@ref h5s_get_simple_extent_type)
 - [`h5s_is_regular_hyperslab`](@ref h5s_is_regular_hyperslab)
 - [`h5s_is_simple`](@ref h5s_is_simple)
+- [`h5s_modify_select`](@ref h5s_modify_select)
+- [`h5s_offset_simple`](@ref h5s_offset_simple)
+- [`h5s_select_adjust`](@ref h5s_select_adjust)
+- [`h5s_select_all`](@ref h5s_select_all)
+- [`h5s_select_copy`](@ref h5s_select_copy)
+- [`h5s_select_elements`](@ref h5s_select_elements)
 - [`h5s_select_hyperslab`](@ref h5s_select_hyperslab)
+- [`h5s_select_intersect_block`](@ref h5s_select_intersect_block)
+- [`h5s_select_shape_same`](@ref h5s_select_shape_same)
+- [`h5s_select_valid`](@ref h5s_select_valid)
+- [`h5s_set_extent_none`](@ref h5s_set_extent_none)
 - [`h5s_set_extent_simple`](@ref h5s_set_extent_simple)
 ```@docs
 h5s_close
+h5s_combine_hyperslab
 h5s_combine_select
 h5s_copy
 h5s_create
 h5s_create_simple
+h5s_extent_copy
 h5s_extent_equal
 h5s_get_regular_hyperslab
+h5s_get_select_bounds
+h5s_get_select_elem_npoints
+h5s_get_select_elem_pointlist
+h5s_get_select_hyper_blocklist
 h5s_get_select_hyper_nblocks
 h5s_get_select_npoints
 h5s_get_select_type
@@ -908,7 +930,17 @@ h5s_get_simple_extent_ndims
 h5s_get_simple_extent_type
 h5s_is_regular_hyperslab
 h5s_is_simple
+h5s_modify_select
+h5s_offset_simple
+h5s_select_adjust
+h5s_select_all
+h5s_select_copy
+h5s_select_elements
 h5s_select_hyperslab
+h5s_select_intersect_block
+h5s_select_shape_same
+h5s_select_valid
+h5s_set_extent_none
 h5s_set_extent_simple
 ```
 

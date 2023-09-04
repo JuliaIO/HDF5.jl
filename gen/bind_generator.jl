@@ -206,7 +206,7 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
     elseif isexpr(rettype, :curly) && rettype.args[1] === :Ptr
         errexpr = :($statsym == C_NULL && $errexpr)
     else
-        errexpr = :($statsym < 0 && $errexpr)
+        errexpr = :($statsym < $rettype(0) && $errexpr)
     end
 
     # Three cases for handling the return type
