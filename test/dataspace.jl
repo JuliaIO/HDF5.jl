@@ -2,7 +2,7 @@ using HDF5
 using Test
 
 @testset "null dataspace" begin
-    ds_null = HDF5.Dataspace()
+    ds_null = HDF5.Dataspace(nothing)
 
     @test isvalid(ds_null)
     @test HDF5.isnull(ds_null)
@@ -15,11 +15,11 @@ using Test
 
     @test HDF5.get_extent_dims(ds_null) === ((), ())
 
-    @test Dataspace() == ds_null
+    @test Dataspace(nothing) == ds_null
     @test dataspace(nothing) == ds_null
     @test dataspace(HDF5.EmptyArray{Bool}()) == ds_null
 
-    @test repr(ds_null) == "HDF5.Dataspace(): null dataspace"
+    @test repr(ds_null) == "HDF5.Dataspace(nothing): null dataspace"
 end
 
 @testset "scalar dataspace" begin
@@ -36,7 +36,7 @@ end
 
     @test HDF5.get_extent_dims(ds_scalar) === ((), ())
 
-    @test Dataspace() != ds_scalar
+    @test Dataspace(nothing) != ds_scalar
     @test Dataspace(()) == ds_scalar
 
     @test dataspace(fill(1.0)) == ds_scalar

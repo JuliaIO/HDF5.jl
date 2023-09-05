@@ -186,12 +186,12 @@ function print_dims_unlimited(io::IO, dims::Dims)
 end
 function Base.show(io::IO, dspace::Dataspace)
     if !isvalid(dspace)
-        print(io, "HDF5.Dataspace(): (invalid)")
+        print(io, "HDF5.Dataspace: (invalid)")
         return nothing
     end
     type = API.h5s_get_simple_extent_type(dspace)
     if type == API.H5S_NULL
-        print(io, "HDF5.Dataspace(): null dataspace")
+        print(io, "HDF5.Dataspace(nothing): null dataspace")
         return nothing
     elseif type == API.H5S_SCALAR
         print(io, "HDF5.Dataspace(()): scalar dataspace")

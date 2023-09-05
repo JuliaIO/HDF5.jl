@@ -16,7 +16,7 @@ be used to indicate unlimited dimensions.
 
 Construct a scalar `Dataspace`. This is a dataspace containing a single element.
 
-    Dataspace()
+    Dataspace(nothing)
 
 Construct a null `Dataspace`. This is a dataspace containing no elements.
 
@@ -62,7 +62,7 @@ function Base.close(obj::Dataspace)
 end
 
 # null dataspace constructor
-Dataspace() = Dataspace(API.h5s_create(API.H5S_NULL))
+Dataspace(nothing) = Dataspace(API.h5s_create(API.H5S_NULL))
 
 # reverese dims order, convert to hsize_t
 _to_h5_dims(dims::Dims{N}) where {N} = API.hsize_t[dims[i] for i in N:-1:1]
@@ -125,8 +125,8 @@ dataspace(A::AbstractArray{T,N}; max_dims::Union{Dims{N},Nothing}=nothing) where
 dataspace(v::VLen; max_dims::Union{Dims,Nothing}=nothing) =
     Dataspace(size(v.data); max_dims)
 
-dataspace(A::EmptyArray) = Dataspace()
-dataspace(n::Nothing) = Dataspace()
+dataspace(A::EmptyArray) = Dataspace(nothing)
+dataspace(n::Nothing) = Dataspace(nothing)
 
 # convenience function
 function dataspace(fn, obj::Union{Dataset,Attribute}, args...)
@@ -175,7 +175,7 @@ Determines whether the given object has no size (consistent with the `API.H5S_NU
 
 # Examples
 ```julia-repl
-julia> HDF5.isnull(Dataspace())
+julia> HDF5.isnull(Dataspace(nothing))
 true
 
 julia> HDF5.isnull(Dataspace(()))

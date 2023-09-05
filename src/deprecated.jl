@@ -100,3 +100,36 @@ Base.@deprecate(
     dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()),
     Dataspace(tuple(sz1, sz2, sz3...); max_dims=max_dims == () ? nothing : max_dims)
 )
+
+Base.@deprecate(
+    create_dataset(
+        parent::Union{File,Group},
+        path::Union{AbstractString,Nothing},
+        dtype::Datatype,
+        (dims, max_dims)::Tuple{Dims,Dims};
+        pv...
+    ),
+    create_dataset(checkvalid(parent), path, dtype, Dataspace(dims; max_dims); pv...)
+)
+Base.@deprecate(
+    create_dataset(
+        parent::Union{File,Group},
+        path::Union{AbstractString,Nothing},
+        dtype::Type,
+        (dims, max_dims)::Tuple{Dims,Dims};
+        pv...
+    ),
+    create_dataset(
+        checkvalid(parent), path, datatype(dtype), Dataspace(dims; max_dims); pv...
+    )
+)
+Base.@deprecate(
+    create_dataset(
+        parent::Union{File,Group},
+        path::Union{AbstractString,Nothing},
+        dtype::Type,
+        dspace_dims::Int...;
+        pv...
+    ),
+    create_dataset(checkvalid(parent), path, datatype(dtype), dspace_dims; pv...)
+)

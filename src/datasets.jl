@@ -79,49 +79,17 @@ create_dataset(
     parent::Union{File,Group},
     path::Union{AbstractString,Nothing},
     dtype::Datatype,
-    dspace_dims::Dims;
+    dspace_dims::Union{Dims,Nothing};
     pv...
-) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
-create_dataset(
-    parent::Union{File,Group},
-    path::Union{AbstractString,Nothing},
-    dtype::Datatype,
-    dspace_dims::Tuple{Dims,Dims};
-    pv...
-) = create_dataset(
-    checkvalid(parent),
-    path,
-    dtype,
-    dataspace(dspace_dims[1]; max_dims=dspace_dims[2]);
-    pv...
-)
+) = create_dataset(checkvalid(parent), path, dtype, Dataspace(dspace_dims); pv...)
+
 create_dataset(
     parent::Union{File,Group},
     path::Union{AbstractString,Nothing},
     dtype::Type,
-    dspace_dims::Tuple{Dims,Dims};
+    dspace_dims::Union{Dims,Nothing};
     pv...
-) = create_dataset(
-    checkvalid(parent),
-    path,
-    datatype(dtype),
-    dataspace(dspace_dims[1]; max_dims=dspace_dims[2]);
-    pv...
-)
-create_dataset(
-    parent::Union{File,Group},
-    path::Union{AbstractString,Nothing},
-    dtype::Type,
-    dspace_dims::Dims;
-    pv...
-) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
-create_dataset(
-    parent::Union{File,Group},
-    path::Union{AbstractString,Nothing},
-    dtype::Type,
-    dspace_dims::Int...;
-    pv...
-) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
+) = create_dataset(checkvalid(parent), path, datatype(dtype), Dataspace(dspace_dims); pv...)
 create_dataset(
     parent::Union{File,Group},
     path::Union{AbstractString,Nothing},

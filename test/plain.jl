@@ -65,7 +65,7 @@ end
         dtype = HDF5.Datatype(HDF5.API.h5t_copy(HDF5.API.H5T_C_S1))
         HDF5.API.h5t_set_size(dtype, HDF5.API.H5T_VARIABLE)
         HDF5.API.h5t_set_cset(dtype, HDF5.cset(typeof(salut)))
-        dspace = dataspace(salut)
+        dspace = Dataspace(salut)
         dset = create_dataset(f, "salut-vlen", dtype, dspace)
         GC.@preserve salut begin
             HDF5.API.h5d_write(
@@ -138,14 +138,14 @@ end
     close(g)
     # Writing hyperslabs
     dset = create_dataset(
-        f, "slab", datatype(Float64), dataspace(20, 20, 5); chunk=(5, 5, 1)
+        f, "slab", datatype(Float64), (20, 20, 5); chunk=(5, 5, 1)
     )
     Xslab = randn(20, 20, 5)
     for i in 1:5
         dset[:, :, i] = Xslab[:, :, i]
     end
     dset = create_dataset(
-        f, nothing, datatype(Float64), dataspace(20, 20, 5); chunk=(5, 5, 1)
+        f, nothing, datatype(Float64), (20, 20, 5); chunk=(5, 5, 1)
     )
     dset[:, :, :] = 3.0
     # More complex hyperslab and assignment with "incorrect" types (issue #34)
@@ -329,7 +329,7 @@ end
     @test !haskey(hid, "A")
     @test_throws ArgumentError write(hid, "A", A)
     @test !haskey(hid, "A")
-    dset = create_dataset(hid, "attr", datatype(Int), dataspace(0))
+    dset = create_dataset(hid, "attr", datatype(Int), (0))
     @test !haskey(attributes(dset), "attr")
     # broken test - writing attributes does not check that the stride is correct
     @test_skip @test_throws ArgumentError write(dset, "attr", A)
@@ -458,7 +458,7 @@ end
     @testset "h5d_fill" begin
         val = 5
         h5open(fn, "w") do f
-            d = create_dataset(f, "dataset", datatype(Int), dataspace(6, 6); chunk=(2, 3))
+            d = create_dataset(f, "dataset", datatype(Int), (6, 6); chunk=(2, 3))
             buf = Array{Int,2}(undef, (6, 6))
             dtype = datatype(Int)
             HDF5.API.h5d_fill(Ref(val), dtype, buf, datatype(Int), dataspace(d))
@@ -477,7 +477,7 @@ end
         src_buf = rand(Int, (4, 4))
         dst_buf = Array{Int,2}(undef, (4, 4))
         h5open(fn, "w") do f
-            d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4); chunk=(2, 2))
+            d = create_dataset(f, "dataset", datatype(Int), (4, 4); chunk=(2, 2))
             @test isnothing(
                 HDF5.API.h5d_gather(
                     dataspace(d),
@@ -546,7 +546,7 @@ end
     @testset "h5d_scatter" begin
         h5open(fn, "w") do f
             dst_buf = Array{Int,2}(undef, (4, 4))
-            d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 4); chunk=(2, 2))
+            d = create_dataset(f, "dataset", datatype(Int), (4, 4); chunk=(2, 2))
             scatterf_ptr = @cfunction(
                 scatterf, HDF5.API.herr_t, (Ptr{Ptr{Nothing}}, Ptr{Csize_t}, Ptr{Nothing})
             )
@@ -875,10 +875,10 @@ end # generic read of native types
     group = create_group(hfile, "group")
     @test sprint(show, group) == "HDF5.Group: /group (file: $fn)"
 
-    dset = create_dataset(group, "dset", datatype(Int), dataspace((1,)))
+    dset = create_dataset(group, "dset", datatype(Int), (1,))
     @test sprint(show, dset) == "HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
 
-    meta = create_attribute(dset, "meta", datatype(Bool), dataspace((1,)))
+    meta = create_attribute(dset, "meta", datatype(Bool), (1,))
     @test sprint(show, meta) == "HDF5.Attribute: meta"
 
     dsetattrs = attributes(dset)
@@ -900,7 +900,7 @@ end # generic read of native types
     commit_datatype(hfile, "type", dtype)
     @test sprint(show, dtype) == "HDF5.Datatype: /type H5T_IEEE_F64LE"
 
-    dtypemeta = create_attribute(dtype, "dtypemeta", datatype(Bool), dataspace((1,)))
+    dtypemeta = create_attribute(dtype, "dtypemeta", datatype(Bool), (1,))
     @test sprint(show, dtypemeta) == "HDF5.Attribute: dtypemeta"
 
     dtypeattrs = attributes(dtype)
@@ -908,15 +908,15 @@ end # generic read of native types
 
     dspace_null = HDF5.Dataspace(HDF5.API.h5s_create(HDF5.API.H5S_NULL))
     dspace_scal = HDF5.Dataspace(HDF5.API.h5s_create(HDF5.API.H5S_SCALAR))
-    dspace_norm = dataspace((100, 4))
-    dspace_maxd = dataspace((100, 4); max_dims=(256, 4))
-    dspace_slab = HDF5.hyperslab(dataspace((100, 4)), 1:20:100, 1:4)
+    dspace_norm = Dataspace((100, 4))
+    dspace_maxd = Dataspace((100, 4); max_dims=(256, 4))
+    dspace_slab = HDF5.hyperslab(Dataspace((100, 4)), 1:20:100, 1:4)
     if HDF5.libversion ≥ v"1.10.7"
         dspace_irrg = HDF5.Dataspace(
             HDF5.API.h5s_combine_select(
                 HDF5.API.h5s_copy(dspace_slab),
                 HDF5.API.H5S_SELECT_OR,
-                HDF5.hyperslab(dataspace((100, 4)), 2, 2)
+                HDF5.hyperslab(Dataspace((100, 4)), 2, 2)
             )
         )
         @test sprint(show, dspace_irrg) == "HDF5.Dataspace: (100, 4) [irregular selection]"
@@ -1123,7 +1123,7 @@ end # generic read of native types
 
     # group with a large number of children; tests child entry truncation heuristic
     h5open(fn, "w") do hfile
-        dt, ds = datatype(Int), dataspace(())
+        dt, ds = datatype(Int), Dataspace(())
         opts = Iterators.product('A':'Z', 1:9)
         for ii in opts
             create_dataset(hfile, string(ii...), dt, ds)
@@ -1235,15 +1235,15 @@ end # split1 tests
     @test !haskey(hfile, "group1/groupna")
     @test_throws KeyError hfile["nothing"]
 
-    dset1 = create_dataset(hfile, "dset1", datatype(Int), dataspace((1,)))
-    dset2 = create_dataset(group1, "dset2", datatype(Int), dataspace((1,)))
+    dset1 = create_dataset(hfile, "dset1", datatype(Int), (1,))
+    dset2 = create_dataset(group1, "dset2", datatype(Int), (1,))
 
     @test haskey(hfile, "dset1")
     @test !haskey(hfile, "dsetna")
     @test haskey(hfile, "group1/dset2")
     @test !haskey(hfile, "group1/dsetna")
 
-    meta1 = create_attribute(dset1, "meta1", datatype(Bool), dataspace((1,)))
+    meta1 = create_attribute(dset1, "meta1", datatype(Bool), (1,))
     @test haskey(dset1, "meta1")
     @test !haskey(dset1, "metana")
     @test_throws KeyError dset1["nothing"]
@@ -1275,7 +1275,7 @@ end # haskey tests
 
     @test_nowarn create_group(hfile, GenericString("group1"))
     @test_nowarn create_dataset(
-        hfile, GenericString("dset1"), datatype(Int), dataspace((1,))
+        hfile, GenericString("dset1"), datatype(Int), (1,)
     )
     @test_nowarn create_dataset(hfile, GenericString("dset2"), 1)
 
@@ -1284,7 +1284,7 @@ end # haskey tests
 
     dset1 = hfile["dset1"]
     @test_nowarn create_attribute(
-        dset1, GenericString("meta1"), datatype(Bool), dataspace((1,))
+        dset1, GenericString("meta1"), datatype(Bool), (1,)
     )
     @test_nowarn create_attribute(dset1, GenericString("meta2"), 1)
     @test_nowarn dset1[GenericString("meta1")]
@@ -1310,7 +1310,7 @@ end # haskey tests
     @test HDF5.API.h5t_committed(dt)
 
     dt = datatype(Int)
-    ds = dataspace(0)
+    ds = Dataspace((0,))
     d = create_dataset(hfile, GenericString("d"), dt, ds)
     g = create_group(hfile, GenericString("g"))
     a = create_attribute(hfile, GenericString("a"), dt, ds)
@@ -1403,7 +1403,7 @@ end
 
         # scalar
         dat0 = rand(UInt8, olen)
-        create_dataset(fid, "scalar", otype, dataspace(()))
+        create_dataset(fid, "scalar", otype, ())
         write_dataset(fid["scalar"], otype, dat0)
         # vector
         dat1 = [rand(UInt8, olen) for _ in 1:4]
@@ -1423,7 +1423,7 @@ end
         HDF5.API.h5t_insert(ctype, "v", 0, datatype(num))
         HDF5.API.h5t_insert(ctype, "d", sizeof(num), otype)
         cdat = vcat(reinterpret(UInt8, [num]), dat0)
-        create_dataset(fid, "compound", ctype, dataspace(()))
+        create_dataset(fid, "compound", ctype, ())
         write_dataset(fid["compound"], ctype, cdat)
 
         opaque0 = read(fid["scalar"])
@@ -1466,7 +1466,7 @@ end
         )
         HDF5.API.h5t_insert(compound_dtype, "n", 0, datatype(num))
         HDF5.API.h5t_insert(compound_dtype, "a", sizeof(num), datatype(ref))
-        c = create_dataset(fid, "compoundlongstring", compound_dtype, dataspace(()))
+        c = create_dataset(fid, "compoundlongstring", compound_dtype, ())
         # normally this is done with a `struct name{N}; n::Int64; a::NTuple{N,Char}; end`,
         # but we need to not actually instantiate the `NTuple`.
         buf = IOBuffer()
@@ -1501,10 +1501,9 @@ end
         t = HDF5.Datatype(
             HDF5.API.h5t_array_create(datatype(Float64), ndims(ref), collect(size(ref)))
         )
-        scalarspace = dataspace(())
 
         fid = h5open(path, "w")
-        d = create_dataset(fid, "longnums", t, scalarspace)
+        d = create_dataset(fid, "longnums", t, ())
         write_dataset(d, t, ref)
 
         T = HDF5.get_jl_type(d)
