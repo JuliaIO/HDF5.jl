@@ -137,16 +137,12 @@ end
     copy_object(f["mygroup/BloscA"], g, "BloscA")
     close(g)
     # Writing hyperslabs
-    dset = create_dataset(
-        f, "slab", datatype(Float64), (20, 20, 5); chunk=(5, 5, 1)
-    )
+    dset = create_dataset(f, "slab", datatype(Float64), (20, 20, 5); chunk=(5, 5, 1))
     Xslab = randn(20, 20, 5)
     for i in 1:5
         dset[:, :, i] = Xslab[:, :, i]
     end
-    dset = create_dataset(
-        f, nothing, datatype(Float64), (20, 20, 5); chunk=(5, 5, 1)
-    )
+    dset = create_dataset(f, nothing, datatype(Float64), (20, 20, 5); chunk=(5, 5, 1))
     dset[:, :, :] = 3.0
     # More complex hyperslab and assignment with "incorrect" types (issue #34)
     d = create_dataset(f, "slab2", datatype(Float64), ((10, 20), (100, 200)); chunk=(1, 1))
@@ -906,9 +902,7 @@ end # generic read of native types
     dtypeattrs = attributes(dtype)
     @test sprint(show, dtypeattrs) == "Attributes of HDF5.Datatype: /type H5T_IEEE_F64LE"
 
-
     # Now test printing after closing each object
-
 
     close(dtype)
     @test sprint(show, dtype) == "HDF5.Datatype: (invalid)"
@@ -1252,18 +1246,14 @@ end # haskey tests
     hfile = h5open(fn, "w")
 
     @test_nowarn create_group(hfile, GenericString("group1"))
-    @test_nowarn create_dataset(
-        hfile, GenericString("dset1"), datatype(Int), (1,)
-    )
+    @test_nowarn create_dataset(hfile, GenericString("dset1"), datatype(Int), (1,))
     @test_nowarn create_dataset(hfile, GenericString("dset2"), 1)
 
     @test_nowarn hfile[GenericString("group1")]
     @test_nowarn hfile[GenericString("dset1")]
 
     dset1 = hfile["dset1"]
-    @test_nowarn create_attribute(
-        dset1, GenericString("meta1"), datatype(Bool), (1,)
-    )
+    @test_nowarn create_attribute(dset1, GenericString("meta1"), datatype(Bool), (1,))
     @test_nowarn create_attribute(dset1, GenericString("meta2"), 1)
     @test_nowarn dset1[GenericString("meta1")]
     @test_nowarn dset1[GenericString("x")] = 2

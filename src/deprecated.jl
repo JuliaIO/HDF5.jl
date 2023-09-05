@@ -85,6 +85,7 @@ import .Filters: ExternalFilter
     p::Properties, val::Bool
 ) false
 
+### Changed in PR #1104
 Base.@deprecate(
     dataspace(sz::Dims{N}; max_dims::Union{Dims{N},Tuple{}}=()) where {N},
     Dataspace(sz; max_dims=max_dims == () ? nothing : max_dims)
