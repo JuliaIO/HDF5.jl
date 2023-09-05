@@ -84,3 +84,19 @@ import .Filters: ExternalFilter
 @deprecate set_track_order(p::Properties, val::Bool) set_track_order!(
     p::Properties, val::Bool
 ) false
+
+Base.@deprecate(
+    dataspace(sz::Dims{N}; max_dims::Union{Dims{N},Tuple{}}=()) where {N},
+    Dataspace(sz; max_dims=max_dims == () ? nothing : max_dims)
+)
+Base.@deprecate(
+    dataspace(sz::Dims{N}, max_dims::Union{Dims{N},Tuple{}}) where {N},
+    Dataspace(sz; max_dims=max_dims == () ? nothing : max_dims)
+)
+Base.@deprecate(
+    dataspace((dims, max_dims)::Tuple{Dims{N},Dims{N}}) where {N}, Dataspace(dims; max_dims)
+)
+Base.@deprecate(
+    dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()),
+    Dataspace(tuple(sz1, sz2, sz3...); max_dims=max_dims == () ? nothing : max_dims)
+)

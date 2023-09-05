@@ -137,13 +137,7 @@ function Base.show(io::IO, br::BlockRange)
     start = Int(br.start0 + 1)
     # choose the simplest possible representation
     if br.count == 1
-        if br.block == 1
-            # integer
-            r = start
-        else
-            # UnitRange
-            r = range(start; length=Int(br.block))
-        end
+        r = range(start; length=Int(br.block))
     elseif br.block == 1 && br.count != API.H5S_UNLIMITED
         # StepRange
         r = range(start; step=Int(br.stride), length=Int(br.count))
@@ -154,7 +148,11 @@ function Base.show(io::IO, br::BlockRange)
             print(io, ", stride=", Int(br.stride))
         end
         if br.count != 1
-            print(io, ", count=", br.count == API.API.H5S_UNLIMITED ? -1 : Int(br.count))
+            print(
+                io,
+                ", count=",
+                br.count == API.API.H5S_UNLIMITED ? "HDF5.UNLIMITED" : Int(br.count)
+            )
         end
         if br.block != 1
             print(io, ", block=", Int(br.block))
@@ -169,43 +167,57 @@ function Base.show(io::IO, br::BlockRange)
     return nothing
 end
 
+function print_dims_unlimited(io::IO, dims::Dims)
+    print(io, "(")
+    for ii in 1:length(dims)
+        if dims[ii] == HDF5.UNLIMITED
+            print(io, "HDF5.UNLIMITED")
+        else
+            print(io, dims[ii])
+        end
+        if ii < length(dims)
+            print(io, ", ")
+        elseif ii == 1
+            print(io, ",")
+        end
+    end
+    print(io, ")")
+    return nothing
+end
 function Base.show(io::IO, dspace::Dataspace)
     if !isvalid(dspace)
-        print(io, "HDF5.Dataspace: (invalid)")
+        print(io, "HDF5.Dataspace(): (invalid)")
         return nothing
     end
-    print(io, "HDF5.Dataspace: ")
     type = API.h5s_get_simple_extent_type(dspace)
     if type == API.H5S_NULL
-        print(io, "H5S_NULL")
+        print(io, "HDF5.Dataspace(): null dataspace")
         return nothing
     elseif type == API.H5S_SCALAR
-        print(io, "H5S_SCALAR")
+        print(io, "HDF5.Dataspace(()): scalar dataspace")
         return nothing
     end
     # otherwise type == API.H5S_SIMPLE
     sz, maxsz = get_extent_dims(dspace)
+    print(io, "HDF5.Dataspace(", sz)
+    if maxsz != sz
+        print(io, "; max_dims=")
+        print_dims_unlimited(io, maxsz)
+    end
+    print(io, "): ")
+    print(io, Base.ndims(dspace), "-dimensional dataspace")
     sel = API.h5s_get_select_type(dspace)
     if sel == API.H5S_SEL_HYPERSLABS && API.h5s_is_regular_hyperslab(dspace)
         io_compact = IOContext(io, :compact => true)
         blockranges = get_regular_hyperslab(dspace)
         ndims = length(blockranges)
-        print(io_compact, "(")
+        print(io_compact, "\n  hyperslab selection: (")
         for ii in 1:ndims
             print(io_compact, blockranges[ii])
             ii != ndims && print(io_compact, ", ")
         end
-        print(io_compact, ") / (")
-        for ii in 1:ndims
-            print(io_compact, 1:maxsz[ii])
-            ii != ndims && print(io_compact, ", ")
-        end
         print(io_compact, ")")
     else
-        print(io, sz)
-        if maxsz != sz
-            print(io, " / ", maxsz)
-        end
         if sel != API.H5S_SEL_ALL
             print(io, " [irregular selection]")
         end

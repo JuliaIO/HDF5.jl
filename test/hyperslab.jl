@@ -7,8 +7,8 @@ using Random, Test, HDF5
     @test convert(AbstractRange, br) === 2:2
     @test convert(UnitRange, br) === 2:2
     @test convert(StepRange, br) === 2:1:2
-    @test repr(br) == "HDF5.BlockRange(2)"
-    @test repr(br; context=:compact => true) == "2"
+    @test repr(br) == "HDF5.BlockRange(2:2)"
+    @test repr(br; context=:compact => true) == "2:2"
 
     br = HDF5.BlockRange(Base.OneTo(3))
     @test length(br) == 3
