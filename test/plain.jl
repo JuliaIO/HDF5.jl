@@ -1253,7 +1253,9 @@ end # haskey tests
     @test_nowarn hfile[GenericString("dset1")]
 
     dset1 = hfile["dset1"]
-    @test_nowarn create_attribute(dset1, GenericString("meta1"), datatype(Bool), Dataspace((1,)))
+    @test_nowarn create_attribute(
+        dset1, GenericString("meta1"), datatype(Bool), Dataspace((1,))
+    )
     @test_nowarn create_attribute(dset1, GenericString("meta2"), 1)
     @test_nowarn dset1[GenericString("meta1")]
     @test_nowarn dset1[GenericString("x")] = 2
