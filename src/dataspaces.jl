@@ -18,7 +18,7 @@ Construct a scalar `Dataspace`. This is a dataspace containing a single element.
 
     Dataspace()
 
-Construct a null `Dataspace`
+Construct a null `Dataspace`. This is a dataspace containing no elements.
 
 See also [`dataspace`](@ref).
 
@@ -37,12 +37,12 @@ Dataspace # defined in types.jl
 """
     HDF5.UNLIMITED
 
-A special value which can be used to indicate an unlimited dimension in a
+A sentinel value which can be used to indicate an unlimited dimension in a
 [`Dataspace`](@ref).
 
-Can be used as the [`max_dims`](@ref) argument in the [`dataspace`](@ref)
-constructor, or as the `count` argument in [`BlockRange`](@ref) when selecting
-virtual dataset mappings.
+Can be used as the `max_dims` argument in the [`Dataspace`](@ref) constructor,
+or as the `count` argument in [`BlockRange`](@ref) when selecting virtual
+dataset mappings.
 """
 const UNLIMITED = reinterpret(Int64, API.H5S_UNLIMITED)
 
@@ -64,14 +64,14 @@ end
 # null dataspace constructor
 Dataspace() = Dataspace(API.h5s_create(API.H5S_NULL))
 
-# reverese dims order
+# reverese dims order, convert to hsize_t
 _to_h5_dims(dims::Dims{N}) where {N} = API.hsize_t[dims[i] for i in N:-1:1]
 function _from_h5_dims(h5_dims::Vector{API.hsize_t})
     N = length(h5_dims)
     ntuple(i -> @inbounds(Int(h5_dims[N - i + 1])), N)
 end
 
-# reverse dims order and convert UNLIMITED to H5S_UNLIMITED
+# reverse dims order, convert to hsize_t, map UNLIMITED to H5S_UNLIMITED
 _to_h5_maxdims(max_dims::Dims{N}) where {N} = API.hsize_t[
     max_dims[i] == HDF5.UNLIMITED ? API.H5S_UNLIMITED : API.hsize_t(max_dims[i]) for
     i in N:-1:1
@@ -156,7 +156,7 @@ function Base.size(dspace::Dataspace, d::Integer)
     h5_dims = API.h5s_get_simple_extent_dims(dspace, nothing)
     return @inbounds Int(h5_dims[N - d + 1])
 end
-Base.size(obj::Union{Dataset,Attribute}, d::Integer) = dataspace(ndims, obj, d)
+Base.size(obj::Union{Dataset,Attribute}, d::Integer) = dataspace(size, obj, d)
 
 function Base.length(dspace::Dataspace)
     isnull(dspace) && return 0
