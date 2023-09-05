@@ -44,7 +44,7 @@ Can be used as the `max_dims` argument in the [`Dataspace`](@ref) constructor,
 or as the `count` argument in [`BlockRange`](@ref) when selecting virtual
 dataset mappings.
 """
-const UNLIMITED = reinterpret(Int64, API.H5S_UNLIMITED)
+const UNLIMITED = -1
 
 Base.:(==)(dspace1::Dataspace, dspace2::Dataspace) =
     API.h5s_extent_equal(checkvalid(dspace1), checkvalid(dspace2))
