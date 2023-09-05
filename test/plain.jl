@@ -65,7 +65,7 @@ end
         dtype = HDF5.Datatype(HDF5.API.h5t_copy(HDF5.API.H5T_C_S1))
         HDF5.API.h5t_set_size(dtype, HDF5.API.H5T_VARIABLE)
         HDF5.API.h5t_set_cset(dtype, HDF5.cset(typeof(salut)))
-        dspace = Dataspace(salut)
+        dspace = dataspace(salut)
         dset = create_dataset(f, "salut-vlen", dtype, dspace)
         GC.@preserve salut begin
             HDF5.API.h5d_write(
@@ -906,31 +906,9 @@ end # generic read of native types
     dtypeattrs = attributes(dtype)
     @test sprint(show, dtypeattrs) == "Attributes of HDF5.Datatype: /type H5T_IEEE_F64LE"
 
-    dspace_null = HDF5.Dataspace(HDF5.API.h5s_create(HDF5.API.H5S_NULL))
-    dspace_scal = HDF5.Dataspace(HDF5.API.h5s_create(HDF5.API.H5S_SCALAR))
-    dspace_norm = Dataspace((100, 4))
-    dspace_maxd = Dataspace((100, 4); max_dims=(256, 4))
-    dspace_slab = HDF5.hyperslab(Dataspace((100, 4)), 1:20:100, 1:4)
-    if HDF5.libversion ≥ v"1.10.7"
-        dspace_irrg = HDF5.Dataspace(
-            HDF5.API.h5s_combine_select(
-                HDF5.API.h5s_copy(dspace_slab),
-                HDF5.API.H5S_SELECT_OR,
-                HDF5.hyperslab(Dataspace((100, 4)), 2, 2)
-            )
-        )
-        @test sprint(show, dspace_irrg) == "HDF5.Dataspace: (100, 4) [irregular selection]"
-    end
-    @test sprint(show, dspace_null) == "HDF5.Dataspace: H5S_NULL"
-    @test sprint(show, dspace_scal) == "HDF5.Dataspace: H5S_SCALAR"
-    @test sprint(show, dspace_norm) == "HDF5.Dataspace: (100, 4)"
-    @test sprint(show, dspace_maxd) == "HDF5.Dataspace: (100, 4) / (256, 4)"
-    @test sprint(show, dspace_slab) == "HDF5.Dataspace: (1:20:81, 1:4) / (1:100, 1:4)"
 
     # Now test printing after closing each object
 
-    close(dspace_null)
-    @test sprint(show, dspace_null) == "HDF5.Dataspace: (invalid)"
 
     close(dtype)
     @test sprint(show, dtype) == "HDF5.Datatype: (invalid)"

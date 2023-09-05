@@ -20,6 +20,9 @@ using Test
     @test dataspace(HDF5.EmptyArray{Bool}()) == ds_null
 
     @test repr(ds_null) == "HDF5.Dataspace(nothing): null dataspace"
+
+    close(ds_null)
+    @test repr(ds_null) == "HDF5.Dataspace: (invalid)"
 end
 
 @testset "scalar dataspace" begin
@@ -215,4 +218,17 @@ end
     HDF5.set_extent_dims(dspace_maxd, (3, 1), (-1, -1)) # unlimited max size
     @test HDF5.get_extent_dims(dspace_maxd)[1] == (3, 1)
     @test HDF5.get_extent_dims(dspace_maxd)[2] == (-1, -1)
+end
+
+@testset "hyperslab" begin
+    dspace_slab = HDF5.hyperslab(Dataspace((100, 4)), 1:20:100, 1:4)
+    @test repr(dspace_slab) == """
+    HDF5.Dataspace((100, 4)): 2-dimensional dataspace
+      hyperslab selection: (1:20:81, 1:4)"""
+
+    if HDF5.libversion ≥ v"1.10.7"
+        dspace_irrg = HDF5.select_hyperslab!(copy(dspace_slab), :or, (2, 2),)
+        @test repr(dspace_irrg) ==
+            "HDF5.Dataspace((100, 4)): 2-dimensional dataspace [irregular selection]"
+    end
 end

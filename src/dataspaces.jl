@@ -62,7 +62,7 @@ function Base.close(obj::Dataspace)
 end
 
 # null dataspace constructor
-Dataspace(nothing) = Dataspace(API.h5s_create(API.H5S_NULL))
+Dataspace(::Nothing) = Dataspace(API.h5s_create(API.H5S_NULL))
 
 # reverese dims order, convert to hsize_t
 _to_h5_dims(dims::Dims{N}) where {N} = API.hsize_t[dims[i] for i in N:-1:1]
