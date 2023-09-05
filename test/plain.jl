@@ -325,7 +325,7 @@ end
     @test !haskey(hid, "A")
     @test_throws ArgumentError write(hid, "A", A)
     @test !haskey(hid, "A")
-    dset = create_dataset(hid, "attr", datatype(Int), (0))
+    dset = create_dataset(hid, "attr", datatype(Int), (0,))
     @test !haskey(attributes(dset), "attr")
     # broken test - writing attributes does not check that the stride is correct
     @test_skip @test_throws ArgumentError write(dset, "attr", A)
@@ -874,7 +874,7 @@ end # generic read of native types
     dset = create_dataset(group, "dset", datatype(Int), (1,))
     @test sprint(show, dset) == "HDF5.Dataset: /group/dset (file: $fn xfer_mode: 0)"
 
-    meta = create_attribute(dset, "meta", datatype(Bool), (1,))
+    meta = create_attribute(dset, "meta", datatype(Bool), Dataspace((1,)))
     @test sprint(show, meta) == "HDF5.Attribute: meta"
 
     dsetattrs = attributes(dset)
@@ -896,7 +896,7 @@ end # generic read of native types
     commit_datatype(hfile, "type", dtype)
     @test sprint(show, dtype) == "HDF5.Datatype: /type H5T_IEEE_F64LE"
 
-    dtypemeta = create_attribute(dtype, "dtypemeta", datatype(Bool), (1,))
+    dtypemeta = create_attribute(dtype, "dtypemeta", datatype(Bool), Dataspace((1,)))
     @test sprint(show, dtypemeta) == "HDF5.Attribute: dtypemeta"
 
     dtypeattrs = attributes(dtype)
@@ -1215,7 +1215,7 @@ end # split1 tests
     @test haskey(hfile, "group1/dset2")
     @test !haskey(hfile, "group1/dsetna")
 
-    meta1 = create_attribute(dset1, "meta1", datatype(Bool), (1,))
+    meta1 = create_attribute(dset1, "meta1", datatype(Bool), Dataspace((1,)))
     @test haskey(dset1, "meta1")
     @test !haskey(dset1, "metana")
     @test_throws KeyError dset1["nothing"]
@@ -1253,7 +1253,7 @@ end # haskey tests
     @test_nowarn hfile[GenericString("dset1")]
 
     dset1 = hfile["dset1"]
-    @test_nowarn create_attribute(dset1, GenericString("meta1"), datatype(Bool), (1,))
+    @test_nowarn create_attribute(dset1, GenericString("meta1"), datatype(Bool), Dataspace((1,)))
     @test_nowarn create_attribute(dset1, GenericString("meta2"), 1)
     @test_nowarn dset1[GenericString("meta1")]
     @test_nowarn dset1[GenericString("x")] = 2

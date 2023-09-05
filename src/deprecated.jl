@@ -91,8 +91,10 @@ Base.@deprecate(
     Dataspace(sz; max_dims=max_dims == () ? nothing : max_dims)
 )
 Base.@deprecate(
-    dataspace(sz::Dims{N}, max_dims::Union{Dims{N},Tuple{}}) where {N},
-    Dataspace(sz; max_dims=max_dims == () ? nothing : max_dims)
+    dataspace(sz::Dims{N}, max_dims::Dims{N}) where {N}, Dataspace(sz; max_dims=max_dims)
+)
+Base.@deprecate(
+    dataspace(sz::Dims{N}, max_dims::Tuple{}) where {N}, Dataspace(sz; max_dims=nothing)
 )
 Base.@deprecate(
     dataspace((dims, max_dims)::Tuple{Dims{N},Dims{N}}) where {N}, Dataspace(dims; max_dims)
