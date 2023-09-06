@@ -86,10 +86,27 @@ import .Filters: ExternalFilter
 ) false
 
 ### Changed in PR #1104
-Base.@deprecate(
-    dataspace(sz::Dims{N}; max_dims::Union{Dims{N},Tuple{}}=()) where {N},
-    Dataspace(sz; max_dims=max_dims == () ? nothing : max_dims)
-)
+@noinline function dataspace(
+    sz::Dims{N}; max_dims::Union{Dims{N},Tuple{},Nothing}=nothing
+) where {N}
+    if isnothing(max_dims)
+        depwarn(
+            "`dataspace(dims)` is deprecated, use `Dataspace(dims)` instead.", :dataspace
+        )
+    elseif max_dims == ()
+        depwarn(
+            "`dataspace(dims; max_dims=())` is deprecated, use `Dataspace(dims; max_dims=nothing)` instead.",
+            :dataspace
+        )
+        max_dims = nothing
+    else
+        depwarn(
+            "`dataspace(dims; max_dims)` is deprecated, use `Dataspace(dims; max_dims)` instead.",
+            :dataspace
+        )
+    end
+    Dataspace(sz; max_dims)
+end
 Base.@deprecate(
     dataspace(sz::Dims{N}, max_dims::Dims{N}) where {N}, Dataspace(sz; max_dims=max_dims)
 )
