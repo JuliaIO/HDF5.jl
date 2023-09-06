@@ -20,12 +20,7 @@ Test the combination of arguments to create_dataset.
             # Test primitive, HDF5.Datatype, non-primitive, non-primitive HDF5.Datatype
             types = (UInt8, datatype(UInt8), Complex{Float32}, datatype(Complex{Float32}))
             # Test Tuple, HDF5.Dataspace, two tuples (extendible), extendible HDF5.Dataspace
-            spaces = (
-                (3, 4),
-                dataspace((16, 16)),
-                ((4, 4), (8, 8)),
-                dataspace((16, 16); max_dims=(32, 32))
-            )
+            spaces = ((3, 4), Dataspace((16, 16)), Dataspace((16, 16); max_dims=(32, 32)))
             # TODO: test keywords
 
             # Create argument cross product
@@ -36,7 +31,11 @@ Test the combination of arguments to create_dataset.
                     # create a chunked dataset since contiguous datasets are not extendible
                     ds = create_dataset(parent, name, type, space; chunk=(2, 2))
                     @test datatype(ds) == datatype(type)
-                    @test dataspace(ds) == dataspace(space)
+                    if ds isa Dataspace
+                        @test ds == dataspace(space)
+                    else
+                        @test Dataspace(ds) == dataspace(space)
+                    end
                     @test isvalid(ds)
                     close(ds)
                     if !isnothing(name)

@@ -29,7 +29,13 @@ end
     @testset "h5d_oappend" begin
         h5open(fname, "w") do h5
             g = create_group(h5, "shoe")
-            d = create_dataset(g, "bar", datatype(Float64), ((1,), (-1,)); chunk=(100,))
+            d = create_dataset(
+                g,
+                "bar",
+                datatype(Float64),
+                Dataspace((1,); max_dims=(HDF5.UNLIMITED,));
+                chunk=(100,)
+            )
             dxpl_id = HDF5.get_create_properties(d)
             v = [1.0, 2.0]
             memtype = datatype(Float64)
@@ -91,7 +97,9 @@ end
 
     # create datasets and attributes before staring swmr writing
     function prep_h5_file(h5)
-        d = create_dataset(h5, "foo", datatype(Int), ((1,), (100,)); chunk=(1,))
+        d = create_dataset(
+            h5, "foo", datatype(Int), Dataspace((1,); max_dims=(100,)); chunk=(1,)
+        )
         attributes(h5)["bar"] = "bar"
         g = create_group(h5, "group")
     end

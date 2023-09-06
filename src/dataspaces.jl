@@ -37,12 +37,12 @@ Dataspace # defined in types.jl
 """
     HDF5.UNLIMITED
 
-A sentinel value which can be used to indicate an unlimited dimension in a
+A sentinel value which indicates an unlimited dimension in a
 [`Dataspace`](@ref).
 
-Can be used as the `max_dims` argument in the [`Dataspace`](@ref) constructor,
-or as the `count` argument in [`BlockRange`](@ref) when selecting virtual
-dataset mappings.
+Can be used as an entry in the `max_dims` argument in the [`Dataspace`](@ref)
+constructor or [`create_dataset`](@ref), or as a `count` argument in
+[`BlockRange`](@ref) when selecting virtual dataset mappings.
 """
 const UNLIMITED = -1
 
@@ -62,7 +62,7 @@ function Base.close(obj::Dataspace)
 end
 
 # null dataspace constructor
-Dataspace(::Nothing) = Dataspace(API.h5s_create(API.H5S_NULL))
+Dataspace(::Nothing; max_dims::Nothing=nothing) = Dataspace(API.h5s_create(API.H5S_NULL))
 
 # reverese dims order, convert to hsize_t
 _to_h5_dims(dims::Dims{N}) where {N} = API.hsize_t[dims[i] for i in N:-1:1]
@@ -179,7 +179,7 @@ julia> HDF5.isnull(Dataspace(nothing))
 true
 
 julia> HDF5.isnull(Dataspace(()))
-true
+false
 
 julia> HDF5.isnull(Dataspace((0,)))
 false

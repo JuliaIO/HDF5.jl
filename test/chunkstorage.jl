@@ -7,7 +7,7 @@ using Test
     # Direct chunk write is no longer dependent on HL library
     # Test direct chunk writing Cartesian index
     h5open(fn, "w") do f
-        d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 5); chunk=(2, 2))
+        d = create_dataset(f, "dataset", datatype(Int), (4, 5); chunk=(2, 2))
         HDF5.API.h5d_extend(d, HDF5.API.hsize_t[3, 3]) # should do nothing (deprecated call)
         HDF5.API.h5d_extend(d, HDF5.API.hsize_t[4, 4]) # should do nothing (deprecated call)
         raw = HDF5.ChunkStorage(d)
@@ -84,7 +84,7 @@ using Test
 
     # Test direct write chunk writing via linear indexing
     h5open(fn, "w") do f
-        d = create_dataset(f, "dataset", datatype(Int64), dataspace(4, 5); chunk=(2, 3))
+        d = create_dataset(f, "dataset", datatype(Int64), (4, 5); chunk=(2, 3))
         raw = HDF5.ChunkStorage{IndexLinear}(d)
         raw[1] = 0, collect(reinterpret(UInt8, Int64[1, 2, 5, 6, 9, 10]))
         raw[2] = 0, collect(reinterpret(UInt8, Int64[3, 4, 7, 8, 11, 12]))
@@ -181,7 +181,7 @@ using Test
         # CartesianIndices does not accept StepRange
 
         h5open(fn, "w") do f
-            d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 5); chunk=(2, 3))
+            d = create_dataset(f, "dataset", datatype(Int), (4, 5); chunk=(2, 3))
             raw = HDF5.ChunkStorage(d)
             data = permutedims(reshape(1:24, 2, 2, 3, 2), (1, 3, 2, 4))
             ci = CartesianIndices(raw)
@@ -197,7 +197,7 @@ using Test
 
     # Test direct write chunk writing via linear indexing, using views and without filter flag
     h5open(fn, "w") do f
-        d = create_dataset(f, "dataset", datatype(Int), dataspace(4, 5); chunk=(2, 3))
+        d = create_dataset(f, "dataset", datatype(Int), (4, 5); chunk=(2, 3))
         raw = HDF5.ChunkStorage{IndexLinear}(d)
         data = permutedims(reshape(1:24, 2, 2, 3, 2), (1, 3, 2, 4))
         chunks = Iterators.partition(data, 6)
@@ -215,12 +215,7 @@ using Test
     # Test chunk info retrieval method performance
     h5open(fn, "w") do f
         d = create_dataset(
-            f,
-            "dataset",
-            datatype(UInt8),
-            dataspace(256, 256);
-            chunk=(16, 16),
-            alloc_time=:early
+            f, "dataset", datatype(UInt8), (256, 256); chunk=(16, 16), alloc_time=:early
         )
         if v"1.10.5" ≤ HDF5.API._libhdf5_build_ver
             HDF5._get_chunk_info_all_by_index(d)

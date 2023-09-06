@@ -16,8 +16,8 @@ using Test, HDF5
         f1["x"] = fill(2.0, 3)
         close(f1)
 
-        srcspace = dataspace((3,))
-        vspace = dataspace((3, 2); max_dims=(3, -1))
+        srcspace = Dataspace((3,))
+        vspace = Dataspace((3, 2); max_dims=(3, -1))
         HDF5.select_hyperslab!(vspace, (1:3, HDF5.BlockRange(1; count=-1)))
 
         d = create_dataset(

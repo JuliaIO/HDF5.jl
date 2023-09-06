@@ -161,7 +161,9 @@ end
     bars = [Bar(1, 2, true), Bar(3, 4, false), Bar(5, 6, true), Bar(7, 8, false)]
     fn = tempname()
     h5open(fn, "w") do h5f
-        d = create_dataset(h5f, "the/bars", Bar, ((2,), (-1,)); chunk=(100,))
+        d = create_dataset(
+            h5f, "the/bars", Bar, (2,); max_dims=(HDF5.UNLIMITED,), chunk=(100,)
+        )
         d[1:2] = bars[1:2]
     end
 

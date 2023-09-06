@@ -48,6 +48,8 @@ end
 
 There are many keyword properties that can be set. Below are a few select
 keywords.
+* `max_dims` - `Dims` describing the maximum size of the dataset. Required for
+  resizable datasets. Unlimited dimensions are denoted by `HDF5.UNLIMITED`.
 * `chunk` - `Dims` describing the size of a chunk. Needed to apply filters.
 * `filters` - `AbstractVector{<: Filters.Filter}` describing the order of the
   filters to apply to the data. See [`Filters`](@ref)
@@ -93,8 +95,9 @@ create_dataset(
     path::Union{AbstractString,Nothing},
     dtype::Datatype,
     dspace_dims::Union{Dims,Nothing};
+    max_dims=nothing,
     pv...
-) = create_dataset(parent, path, dtype, Dataspace(dspace_dims); pv...)
+) = create_dataset(parent, path, dtype, Dataspace(dspace_dims; max_dims); pv...)
 create_dataset(
     parent::Union{File,Group},
     path::Union{AbstractString,Nothing},
@@ -432,7 +435,7 @@ function create_external_dataset(
     sz::Dims,
     offset::Integer=0
 )
-    create_external_dataset(parent, name, filepath, datatype(t), dataspace(sz), offset)
+    create_external_dataset(parent, name, filepath, datatype(t), Dataspace(sz), offset)
 end
 function create_external_dataset(
     parent::Union{File,Group},

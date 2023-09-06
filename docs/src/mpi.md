@@ -110,7 +110,7 @@ A = fill(myrank, M)  # local data
 dims = (M, Nproc)    # dimensions of global data
 
 # Create dataset
-dset = create_dataset(ff, "/data", datatype(eltype(A)), dataspace(dims))
+dset = create_dataset(ff, "/data", eltype(A), dims)
 
 # Write local data
 dset[:, myrank + 1] = A
