@@ -45,6 +45,7 @@ makedocs(;
         ],
         "mpi.md",
         "Low-level library bindings" => "api_bindings.md",
+        "Additional Resources" => "resources.md",
     ]
 )
 
