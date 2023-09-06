@@ -220,15 +220,84 @@ end
     @test HDF5.get_extent_dims(dspace_maxd)[2] == (-1, -1)
 end
 
+@testset "BlockRange" begin
+    br = HDF5.BlockRange(2)
+    @test length(br) == 1
+    @test range(br) === 2:2
+    @test convert(AbstractRange, br) === 2:2
+    @test convert(UnitRange, br) === 2:2
+    @test convert(StepRange, br) === 2:1:2
+    @test repr(br) == "HDF5.BlockRange(2:2)"
+    @test repr(br; context=:compact => true) == "2:2"
+
+    br = HDF5.BlockRange(Base.OneTo(3))
+    @test length(br) == 3
+    @test range(br) == 1:3
+    @test convert(AbstractRange, br) === 1:3
+    @test convert(UnitRange, br) === 1:3
+    @test convert(StepRange, br) === 1:1:3
+    @test repr(br) == "HDF5.BlockRange(1:3)"
+    @test repr(br; context=:compact => true) == "1:3"
+
+    br = HDF5.BlockRange(2:7)
+    @test length(br) == 6
+    @test range(br) == 2:7
+    @test convert(AbstractRange, br) === 2:7
+    @test convert(UnitRange, br) === 2:7
+    @test convert(StepRange, br) === 2:1:7
+    @test repr(br) == "HDF5.BlockRange(2:7)"
+    @test repr(br; context=:compact => true) == "2:7"
+
+    br = HDF5.BlockRange(1:2:7)
+    @test length(br) == 4
+    @test range(br) == 1:2:7
+    @test convert(AbstractRange, br) === 1:2:7
+    @test_throws Exception convert(UnitRange, br)
+    @test convert(StepRange, br) === 1:2:7
+    @test repr(br) == "HDF5.BlockRange(1:2:7)"
+    @test repr(br; context=:compact => true) == "1:2:7"
+
+    br = HDF5.BlockRange(; start=2, stride=8, count=3, block=2)
+    @test length(br) == 6
+    @test_throws Exception range(br)
+    @test_throws Exception convert(AbstractRange, br)
+    @test_throws Exception convert(UnitRange, br)
+    @test_throws Exception convert(StepRange, br)
+    @test repr(br) == "HDF5.BlockRange(start=2, stride=8, count=3, block=2)"
+    @test repr(br; context=:compact => true) ==
+        "BlockRange(start=2, stride=8, count=3, block=2)"
+
+    br = HDF5.BlockRange(; start=1, count=HDF5.UNLIMITED)
+    @test_throws Exception length(d)
+    @test_throws Exception range(br)
+    @test_throws Exception convert(AbstractRange, br)
+    @test_throws Exception convert(UnitRange, br)
+    @test_throws Exception convert(StepRange, br)
+
+    @test repr(br) == "HDF5.BlockRange(start=1, count=HDF5.UNLIMITED)"
+    @test repr(br; context=:compact => true) == "BlockRange(start=1, count=HDF5.UNLIMITED)"
+end
+
 @testset "hyperslab" begin
-    dspace_slab = HDF5.hyperslab(Dataspace((100, 4)), 1:20:100, 1:4)
+    dspace_slab = HDF5.hyperslab(Dataspace((100, 4)), (1:20:100, :))
+    @test HDF5.is_selection_valid(dspace_slab)
     @test repr(dspace_slab) == """
     HDF5.Dataspace((100, 4)): 2-dimensional dataspace
       hyperslab selection: (1:20:81, 1:4)"""
 
     if HDF5.libversion ≥ v"1.10.7"
-        dspace_irrg = HDF5.select_hyperslab!(copy(dspace_slab), :or, (2, 2),)
+        dspace_irrg = HDF5.select_hyperslab!(copy(dspace_slab), :or, (2, 2))
+        @test HDF5.is_selection_valid(dspace_irrg)
         @test repr(dspace_irrg) ==
             "HDF5.Dataspace((100, 4)): 2-dimensional dataspace [irregular selection]"
     end
+
+    dspace_unlimited = HDF5.hyperslab(
+        Dataspace((100, 0); max_dims=(100, HDF5.UNLIMITED)),
+        (:, HDF5.BlockRange(; start=1, count=HDF5.UNLIMITED))
+    )
+    @test !HDF5.is_selection_valid(dspace_unlimited)
+    @test repr(dspace_unlimited) == """
+    HDF5.Dataspace((100, 0); max_dims=(100, HDF5.UNLIMITED)): 2-dimensional dataspace
+      hyperslab selection: (1:100, BlockRange(start=1, count=HDF5.UNLIMITED))"""
 end

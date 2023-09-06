@@ -323,46 +323,60 @@ integers, ranges or [`BlockRange`](@ref) objects.
     new selection. Alias: `setdiff`.
   - `:nota`: retains only elements of the new selection that are not in the
     existing selection.
-
 """
-function select_hyperslab!(
-    dspace::Dataspace, op::Union{Symbol,typeof.((&, |, ⊻, ∪, ∩, setdiff))...}, idxs::Tuple
-)
+function select_hyperslab!(dspace::Dataspace, op::API.H5S_seloper_t, idxs::Tuple)
     N = ndims(dspace)
     length(idxs) == N || error("Number of indices does not match dimension of Dataspace")
 
-    blockranges = map(BlockRange, idxs)
+    blockranges = map(idxs, size(dspace)) do idx, dim
+        if idx isa Colon
+            BlockRange(Base.OneTo(dim))
+        else
+            BlockRange(idx)
+        end
+    end
     _start0 = API.hsize_t[blockranges[N - i + 1].start0 for i in 1:N]
     _stride = API.hsize_t[blockranges[N - i + 1].stride for i in 1:N]
     _count = API.hsize_t[blockranges[N - i + 1].count for i in 1:N]
     _block = API.hsize_t[blockranges[N - i + 1].block for i in 1:N]
 
-    _op = if op == :select
+    API.h5s_select_hyperslab(dspace, op, _start0, _stride, _count, _block)
+    return dspace
+end
+select_hyperslab!(dspace::Dataspace, op, idxs::Tuple) =
+    select_hyperslab!(dspace, _seloper(op), idxs)
+
+# convert to API.H5S_seloper_t value
+function _seloper(op::Symbol)
+    if op == :select
         API.H5S_SELECT_SET
-    elseif (op == :or || op === (|) || op === (∪))
+    elseif op == :or
         API.H5S_SELECT_OR
-    elseif (op == :and || op === (&) || op === (∩))
+    elseif op == :and
         API.H5S_SELECT_AND
-    elseif (op == :xor || op === (⊻))
+    elseif op == :xor
         API.H5S_SELECT_XOR
-    elseif op == :notb || op === setdiff
+    elseif op == :notb
         API.H5S_SELECT_NOTB
     elseif op == :nota
         API.H5S_SELECT_NOTA
     else
         error("invalid operator $op")
     end
-
-    API.h5s_select_hyperslab(dspace, _op, _start0, _stride, _count, _block)
-    return dspace
 end
-select_hyperslab!(dspace::Dataspace, idxs::Tuple) = select_hyperslab!(dspace, :select, idxs)
+_seloper(::typeof(|)) = API.H5S_SELECT_OR
+_seloper(::typeof(∪)) = API.H5S_SELECT_OR
+_seloper(::typeof(&)) = API.H5S_SELECT_AND
+_seloper(::typeof(∩)) = API.H5S_SELECT_AND
+_seloper(::typeof(⊻)) = API.H5S_SELECT_XOR
+_seloper(::typeof(setdiff)) = API.H5S_SELECT_NOTB
 
-hyperslab(dspace::Dataspace, I::Union{AbstractRange{Int},Integer,BlockRange}...) =
-    hyperslab(dspace, I)
+select_hyperslab!(dspace::Dataspace, idxs::Tuple) = select_hyperslab!(dspace, :select, idxs)
 
 function hyperslab(dspace::Dataspace, I::Tuple)
     select_hyperslab!(copy(dspace), I)
 end
 
+hyperslab(dspace::Dataspace, I::Union{AbstractRange{Int},Integer,BlockRange}...) =
+    hyperslab(dspace, I)
 hyperslab(dset::Dataset, I...) = dataspace(hyperslab, dset, I...)
