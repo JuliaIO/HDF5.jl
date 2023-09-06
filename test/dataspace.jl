@@ -198,7 +198,7 @@ end
 
     # Test mid-level routines: set/get_extent_dims
 
-    dspace_norm = dataspace((100, 4))
+    dspace_norm = Dataspace((100, 4))
     @test HDF5.get_extent_dims(dspace_norm)[1] ==
         HDF5.get_extent_dims(dspace_norm)[2] ==
         (100, 4)
@@ -207,7 +207,7 @@ end
         HDF5.get_extent_dims(dspace_norm)[2] ==
         (8, 2)
 
-    dspace_maxd = dataspace((100, 4); max_dims=(256, 5))
+    dspace_maxd = Dataspace((100, 4); max_dims=(256, 5))
     @test HDF5.get_extent_dims(dspace_maxd)[1] == (100, 4)
     @test HDF5.get_extent_dims(dspace_maxd)[2] == (256, 5)
     HDF5.set_extent_dims(dspace_maxd, (8, 2))

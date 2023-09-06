@@ -31,10 +31,10 @@ Test the combination of arguments to create_dataset.
                     # create a chunked dataset since contiguous datasets are not extendible
                     ds = create_dataset(parent, name, type, space; chunk=(2, 2))
                     @test datatype(ds) == datatype(type)
-                    if ds isa Dataspace
-                        @test ds == dataspace(space)
+                    if space isa Dataspace
+                        @test dataspace(ds) == space
                     else
-                        @test Dataspace(ds) == dataspace(space)
+                        @test dataspace(ds) == Dataspace(space)
                     end
                     @test isvalid(ds)
                     close(ds)
