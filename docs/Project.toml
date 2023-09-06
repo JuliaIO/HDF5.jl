@@ -1,6 +1,7 @@
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+H5Zbitshuffle = "51b4e782-877f-4ccf-958a-27bf628210da"
 H5Zblosc = "c8ec2601-a99c-407f-b158-e79c03c2f5f7"
 H5Zbzip2 = "094576f2-1e46-4c84-8e32-c46c042eaaa2"
 H5Zlz4 = "eb20ec05-5464-47b5-ba41-098e3c1068a3"

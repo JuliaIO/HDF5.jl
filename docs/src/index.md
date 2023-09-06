@@ -1,5 +1,8 @@
 ```@meta
 CurrentModule = HDF5
+DocTestSetup = quote
+    using HDF5
+end
 ```
 
 # HDF5.jl
@@ -334,11 +337,28 @@ mtx = HDF5.readmmap(mtx_dset) # succeeds immediately
 
 ## Supported data types
 
-`HDF5.jl` knows how to store values of the following types: signed and unsigned integers of 8, 16, 32, and 64 bits, `Float32`, `Float64`; `Complex` versions of these numeric types; `Array`s of these numeric types (including complex versions); `ASCIIString` and `UTF8String`; and `Array`s of these two string types.
+`HDF5.jl` knows how to store values of the following types: signed and unsigned integers of 8, 16, 32, and 64 bits, `Float32`, `Float64`; `Complex` versions of these numeric types; `Array`s of these numeric types (including complex versions); `String`; and `Array`s of `String`.
 `Array`s of strings are supported using HDF5's variable-length-strings facility.
 By default `Complex` numbers are stored as compound types with `r` and `i` fields following the `h5py` convention.
 When reading data, compound types with matching field names will be loaded as the corresponding `Complex` Julia type.
 These field names are configurable with the `HDF5.set_complex_field_names(real::AbstractString, imag::AbstractString)` function and complex support can be completely enabled/disabled with `HDF5.enable/disable_complex_support()`.
+
+As of HDF5.jl version 0.16.13, support was added to map Julia structs to compound HDF5 datatypes.
+
+```jldoctest
+julia> struct Point3{T}
+           x::T
+           y::T
+           z::T
+       end
+
+julia> datatype(Point3{Float64})
+HDF5.Datatype: H5T_COMPOUND {
+      H5T_IEEE_F64LE "x" : 0;
+      H5T_IEEE_F64LE "y" : 8;
+      H5T_IEEE_F64LE "z" : 16;
+   }
+```
 
 For `Array`s, note that the array dimensionality is preserved, including 0-length
 dimensions:
