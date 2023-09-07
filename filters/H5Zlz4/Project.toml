@@ -1,6 +1,6 @@
 name = "H5Zlz4"
 uuid = "eb20ec05-5464-47b5-ba41-098e3c1068a3"
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 CodecLz4 = "5ba52731-8f18-5e0d-9241-30f10d1ec561"
