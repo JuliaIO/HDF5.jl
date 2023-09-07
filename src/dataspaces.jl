@@ -1,26 +1,8 @@
 """
     Dataspace
 
-A dataspace defines the size and the shape of a dataset or an attribute, and is
-also used for selecting a subset of a dataset.
-
-# Constructors
-
-    Dataspace(dims::Tuple; max_dims::Tuple=dims)
-
-Construct a simple array `Dataspace` for the given dimensions `dims`. The maximum
-dimensions `max_dims` specifies the maximum possible size: `HDF5.UNLIMITED` can
-be used to indicate unlimited dimensions.
-        
-    Dataspace(())
-
-Construct a scalar `Dataspace`. This is a dataspace containing a single element.
-
-    Dataspace(nothing)
-
-Construct a null `Dataspace`. This is a dataspace containing no elements.
-
-See also [`dataspace`](@ref).
+A dataspace defines the size and the shape of a [`Dataset`](@ref) or an
+[`Attribute`](@ref), and is also used for selecting a subset of a dataset.
 
 # Usage
 
@@ -62,6 +44,15 @@ function Base.close(obj::Dataspace)
 end
 
 # null dataspace constructor
+
+# Constructors
+"""
+    Dataspace(nothing)
+
+Construct a null `Dataspace`. This is a dataspace containing no elements.
+
+See also [`dataspace`](@ref).
+"""
 Dataspace(::Nothing; max_dims::Nothing=nothing) = Dataspace(API.h5s_create(API.H5S_NULL))
 
 # reverese dims order, convert to hsize_t
@@ -85,6 +76,20 @@ function _from_h5_maxdims(h5_maxdims::Vector{API.hsize_t})
     end
 end
 
+"""
+    Dataspace(())
+
+Construct a scalar `Dataspace`. This is a dataspace containing a single element.
+"""
+Dataspace(::Tuple{})
+
+"""
+    Dataspace(dims::Tuple; [max_dims::Tuple=dims])
+
+Construct a simple array `Dataspace` for the given dimensions `dims`. The
+maximum dimensions `max_dims` specifies the maximum possible size:
+[`HDF5.UNLIMITED`](@ref) can be used to indicate unlimited dimensions.
+"""
 function Dataspace(dims::Dims{N}; max_dims::Union{Dims{N},Nothing}=nothing) where {N}
     return Dataspace(API.h5s_create_simple(N, _to_h5_dims(dims), _to_h5_maxdims(max_dims)))
 end
@@ -264,14 +269,8 @@ selecting multiple contiguous blocks.
 
 - `block`: the number of elements in each block.
 
-
-    HDF5.BlockRange(obj::Union{Integer, OrdinalRange})
-
-Convert `obj` to a `BlockRange` object.
-
 # External links
-- [HDF5 User Guide, section 7.4.2.1 "Selecting
-  Hyperslabs"](https://support.hdfgroup.org/HDF5/doc/UG/HDF5_Users_Guide-Responsive%20HTML5/index.html#t=HDF5_Users_Guide%2FDataspaces%2FHDF5_Dataspaces_and_Partial_I_O.htm%23TOC_7_4_2_Programming_Modelbc-8&rhtocid=7.2.0_2)
+- [HDF5 User Guide, section 7.4.2.1 "Selecting Hyperslabs"](https://support.hdfgroup.org/HDF5/doc/UG/HDF5_Users_Guide-Responsive%20HTML5/index.html#t=HDF5_Users_Guide%2FDataspaces%2FHDF5_Dataspaces_and_Partial_I_O.htm%23TOC_7_4_2_Programming_Modelbc-8&rhtocid=7.2.0_2)
 """
 function BlockRange(; start::Integer, stride::Integer=1, count::Integer=1, block::Integer=1)
     if count == UNLIMITED
@@ -281,6 +280,14 @@ function BlockRange(; start::Integer, stride::Integer=1, count::Integer=1, block
 end
 BlockRange(start::Integer; stride=1, count=1, block=1) =
     BlockRange(; start=start, stride=stride, count=count, block=block)
+
+"""
+    HDF5.BlockRange(obj::Union{Integer, OrdinalRange})
+
+Convert `obj` to a [`BlockRange`](@ref) object.
+"""
+BlockRange(obj::Union{Integer,OrdinalRange})
+
 BlockRange(r::AbstractUnitRange; stride=max(length(r), 1), count=1) =
     BlockRange(; start=first(r), stride=stride, count=count, block=length(r))
 BlockRange(r::OrdinalRange) = BlockRange(; start=first(r), stride=step(r), count=length(r))

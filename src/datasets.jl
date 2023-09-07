@@ -49,7 +49,7 @@ end
 There are many keyword properties that can be set. Below are a few select
 keywords.
 * `max_dims` - `Dims` describing the maximum size of the dataset. Required for
-  resizable datasets. Unlimited dimensions are denoted by `HDF5.UNLIMITED`.
+  resizable datasets. Unlimited dimensions are denoted by [`HDF5.UNLIMITED`](@ref).
 * `chunk` - `Dims` describing the size of a chunk. Needed to apply filters.
 * `filters` - `AbstractVector{<: Filters.Filter}` describing the order of the
   filters to apply to the data. See [`Filters`](@ref)
