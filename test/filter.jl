@@ -243,7 +243,7 @@ using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenab
     @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SCALEOFFSET)
     @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SHUFFLE)
     if !Preferences.has_preference(HDF5, "libhdf5")
-        if HDF5.API.h5_get_libversion() < v"1.14" || Sys.iswindows()
+        if HDF5.API.h5_get_libversion() < v"1.14"
             @test_broken HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
         else
             @test HDF5.API.h5z_filter_avail(HDF5.API.H5Z_FILTER_SZIP)
