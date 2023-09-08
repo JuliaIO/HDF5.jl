@@ -34,14 +34,18 @@ Pass the paths pointing to the libraries `libhdf5` and `libhdf5_hl` as strings
 to set the preference. If `libhdf5` and `libhdf5_hl` are `nothing` use the default,
 i.e. the binaries provided by HDF5_jll.jl.
 """
-function set_libraries!(libhdf5 = nothing, libhdf5_hl = nothing; force = true)
+function set_libraries!(libhdf5=nothing, libhdf5_hl=nothing; force=true)
     if isnothing(libhdf5) && isnothing(libhdf5_hl)
         delete_preferences!(HDF5_JL_UUID, "libhdf5"; force)
         delete_preferences!(HDF5_JL_UUID, "libhdf5_hl"; force)
         delete_preferences!(HDF5_JLL_JL_UUID, "libhdf5_path", "libhdf5_hl_path"; force)
         @info "The libraries from HDF5_jll will be used."
     elseif isnothing(libhdf5) || isnothing(libhdf5_hl)
-        throw(ArgumentError("Specify either no positional arguments or both positional arguments."))
+        throw(
+            ArgumentError(
+                "Specify either no positional arguments or both positional arguments."
+            )
+        )
     else
         isfile(libhdf5) || throw(ArgumentError("$libhdf5 is not a file that exists."))
         isfile(libhdf5_hl) || throw(ArgumentError("$libhdf5_hl is not a file that exists."))
@@ -49,9 +53,7 @@ function set_libraries!(libhdf5 = nothing, libhdf5_hl = nothing; force = true)
         set_preferences!(HDF5_JL_UUID, "libhdf5_hl" => libhdf5_hl; force)
         # Also set the HDF5_jll override settings in case some other package tries to use HDF5_jll
         set_preferences!(
-            HDF5_JLL_JL_UUID,
-            "libhdf5_path" => libhdf5,
-            "libhdf5_hl_path" => libhdf5_hl
+            HDF5_JLL_JL_UUID, "libhdf5_path" => libhdf5, "libhdf5_hl_path" => libhdf5_hl
         )
     end
     @info "Please restart Julia and reload HDF5.jl for the library changes to take effect"
