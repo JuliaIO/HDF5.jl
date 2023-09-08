@@ -55,6 +55,17 @@ MPIPreferences.use_system_binary()
 to set the MPI preferences, see the [documentation of MPI.jl](https://juliaparallel.org/MPI.jl/stable/configuration/). You can set the path to the system library using [Preferences.jl](https://github.com/JuliaPackaging/Preferences.jl) by:
 
 ```julia
+using Preferences, HDF5
+
+set_preferences!(
+    HDF5,
+    "libhdf5" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5.so",
+    "libhdf5_hl" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5_hl.so", force = true)
+```
+
+If HDF5 cannot be loaded, it may be useful to use the UUID to change these settings:
+
+```julia
 using Preferences, UUIDs
 
 set_preferences!(
