@@ -69,7 +69,7 @@ If HDF5 cannot be loaded, it may be useful to use the UUID to change these setti
 using Preferences, UUIDs
 
 set_preferences!(
-    UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl,
+    UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"), # UUID of HDF5.jl
     "libhdf5" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5.so",
     "libhdf5_hl" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5_hl.so", force = true)
 ```
