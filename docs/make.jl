@@ -7,7 +7,6 @@ using H5Zzstd
 using MPI  # needed to generate docs for parallel HDF5 API
 
 # Used in index.md to filter the autodocs list
-not_low_level_api(::typeof(HDF5.API.set_libraries!)) = true
 not_low_level_api(m::Method) = !endswith(String(m.file), "src/api.jl")
 not_low_level_api(f::Function) = all(not_low_level_api, methods(f))
 not_low_level_api(o) = true
