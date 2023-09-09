@@ -37,18 +37,18 @@ using HDF5, Test
     end == 1
     @test names == ["a"]
 
-    # HDF5 error
-    @test_throws HDF5.API.H5Error HDF5.API.h5a_iterate(
-        f, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC
-    ) do loc, name, info
-        return -1
-    end
-
     # Julia error
     @test_throws AssertionError HDF5.API.h5a_iterate(
         f, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC
     ) do loc, name, info
         @assert false
+    end
+
+    # HDF5 error
+    @test_throws HDF5.API.H5Error HDF5.API.h5a_iterate(
+        f, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC
+    ) do loc, name, info
+        return -1
     end
 end
 
