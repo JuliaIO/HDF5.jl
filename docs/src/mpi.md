@@ -45,7 +45,7 @@ preferences `libhdf5` and `libhdf5_hl` to the full path, where the parallel HDF5
 This can be done by:
 
 ```julia
-julia> HDF5
+julia> using HDF5
 
 julia> HDF5.API.set_libraries!("/path/to/your/libhdf5.so", "/path/to/your/libhdf5_hl.so")
 ```

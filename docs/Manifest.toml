@@ -144,7 +144,7 @@ version = "0.1.1"
 
 [[deps.HDF5]]
 deps = ["Compat", "HDF5_jll", "Libdl", "MPIPreferences", "Mmap", "Preferences", "Printf", "Random", "Requires", "UUIDs"]
-path = ".."
+path = "/home/ldebsao6/.julia/dev/HDF5.jl"
 uuid = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 version = "0.17.0"
 weakdeps = ["MPI"]
