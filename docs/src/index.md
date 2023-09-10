@@ -63,7 +63,7 @@ set_preferences!(
     "libhdf5_hl" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5_hl.so", force = true)
 ```
 
-Alternatively, HDF5.jl provides a convenience function `HDF5.API.set_libraries` that can be used as follows:
+Alternatively, HDF5.jl provides a convenience function [`HDF5.API.set_libraries!`](@ref) that can be used as follows:
 ```julia
 using HDF5
 
