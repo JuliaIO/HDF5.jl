@@ -29,7 +29,7 @@ const DRIVERS = Dict{API.hid_t,Type{<:Driver}}()
 # Arguments
 
 * `increment`: specifies the increment by which allocated memory is to be increased each time more memory is required. (default: 8192)
-* `backing_store`: Boolean flag indicating whether to write the file contents to disk when the file is closed. (default: false)
+* `backing_store`: Boolean flag indicating whether to write the file contents to disk when the file is closed. (default: true)
 * `write_tracking`: Boolean flag indicating whether write tracking is enabled. (default: false)
 * `page_size`: Size, in bytes, of write aggregation pages. (default: 524288)
 """
