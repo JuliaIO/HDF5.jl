@@ -346,6 +346,32 @@ mtx_dset = create_dataset(g, "M", datatype(Float64), dataspace(100, 1000),
 mtx = HDF5.readmmap(mtx_dset) # succeeds immediately
 ```
 
+## In-memory HDF5 files
+
+It is possible to use HDF5 files without writing or reading from disk. This is useful when receiving or sending data over the network. Typically, when sending data, one might want to
+1) Create a new file in memory. This can be achieved by passing `Drivers.Core(; backing_store=false)` to `h5open(...)`
+2) Add data to the `HDF5.File` object
+3) Get a representation of the file as a byte vector. This can be achieved by calling `Vector{UInt8}(...)` on the file object.
+
+This is illustrated on the example below
+```julia
+using HDF5
+
+fid = h5open("AnyName_InMemory", "w"; driver=Drivers.Core(; backing_store=false)) # Create a new file object without storing to disk
+fid["MyData"] = randn(5, 5) # add some data
+file_as_bytes = Vector{UInt8}(fid) # get a byte vector to send, e.g., using HTTP, MQTT or similar.
+close(fid)
+```
+
+The same way, when receiving data as a vector of bytes that represent a HDF5 file, one can use `h5open(...)` to get a file object. Creating a file object from a byte vector will also by default open the file in memory, without saving a copy on disk.
+ ```julia
+using HDF5
+
+...
+fid = h5open(file_as_bytes, "r"; name = "in_memory.h5")
+...
+```
+
 ## Supported data types
 
 `HDF5.jl` knows how to store values of the following types: signed and unsigned integers of 8, 16, 32, and 64 bits, `Float32`, `Float64`; `Complex` versions of these numeric types; `Array`s of these numeric types (including complex versions); `String`; and `Array`s of `String`.
