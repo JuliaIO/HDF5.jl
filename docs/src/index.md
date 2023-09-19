@@ -357,18 +357,22 @@ This is illustrated on the example below
 ```julia
 using HDF5
 
-fid = h5open("AnyName_InMemory", "w"; driver=Drivers.Core(; backing_store=false)) # Create a new file object without storing to disk
-fid["MyData"] = randn(5, 5) # add some data
-file_as_bytes = Vector{UInt8}(fid) # get a byte vector to send, e.g., using HTTP, MQTT or similar.
-close(fid)
+# Creates a new file object without storing to disk by setting `backing_store=false`
+file_as_bytes = h5open("AnyName_InMemory", "w"; driver=Drivers.Core(; backing_store=false)) do fid
+   fid["MyData"] = randn(5, 5) # add some data
+   return Vector{UInt8}(fid) # get a byte vector to send, e.g., using HTTP, MQTT or similar.
+end
 ```
 
-The same way, when receiving data as a vector of bytes that represent a HDF5 file, one can use `h5open(...)` to get a file object. Creating a file object from a byte vector will also by default open the file in memory, without saving a copy on disk.
+The same way, when receiving data as a vector of bytes that represent a HDF5 file, one can use `h5open(...)` with the byte vector as first argument to get a file object.
+Creating a file object from a byte vector will also by default open the file in memory, without saving a copy on disk.
  ```julia
 using HDF5
 
 ...
-fid = h5open(file_as_bytes, "r"; name = "in_memory.h5")
+h5open(file_as_bytes, "r"; name = "in_memory.h5") do fid
+... # Do things with the data
+end
 ...
 ```
 
