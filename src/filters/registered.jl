@@ -86,52 +86,58 @@ const _REGISTERED_FILTERIDS_DICT = Dict{H5Z_filter_t,Symbol}(
     32027 => :FLAC
 )
 
-const REGISTERED_FILTERS = Dict{H5Z_filter_t, Function}()
+const REGISTERED_FILTERS = Dict{H5Z_filter_t,Function}()
 
 for (filter_id, filter_name) in _REGISTERED_FILTERIDS_DICT
     fn = Symbol(String(filter_name) * "Filter")
     filter_name_string = String(filter_name)
-    docstr = 
-    """
-        $fn(flags::Cuint, data::Vector{Cuint}, config::Cuint)
-        $fn(flags, data::Integer...)
-        $fn(data::AbstractVector{<:Integer} = Cuint[])
+    docstr = """
+                 $fn(flags::Cuint, data::Vector{Cuint}, config::Cuint)
+                 $fn(flags, data::Integer...)
+                 $fn(data::AbstractVector{<:Integer} = Cuint[])
 
-        Create an [`HDF5.Filter.ExternalFilter`](@ref) for $filter_name with filter id $filter_id.
-        Allows the quick creation of filters without subtyping `HDF5.Filters.Filter`.
-        $(haskey(EXTERNAL_FILTER_JULIA_PACKAGES, filter_id) ?
-            "Users are instead encouraged to use the Julia package $(EXTERNAL_FILTER_JULIA_PACKAGES[filter_id])." :
-            "Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`."
-        )
+                 Create an [`HDF5.Filter.ExternalFilter`](@ref) for $filter_name with filter id $filter_id.
+                 Allows the quick creation of filters without subtyping `HDF5.Filters.Filter`.
+                 $(haskey(EXTERNAL_FILTER_JULIA_PACKAGES, filter_id) ?
+                     "Users are instead encouraged to use the Julia package $(EXTERNAL_FILTER_JULIA_PACKAGES[filter_id])." :
+                     "Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`."
+                 )
 
-        # Fields / Arguments
-        * `flags` -     (optional) bit vector describing general properties of the filter. Defaults to `API.H5Z_FLAG_MANDATORY`
-        * `data` -      (optional) auxillary data for the filter. See [`cd_values`](@ref API.h5p_set_filter). Defaults to `Cuint[]`
-        * `config` -    (optional) bit vector representing information about the filter regarding whether it is able to encode data, decode data, neither, or both. Defaults to `0`.
+                 # Fields / Arguments
+                 * `flags` -     (optional) bit vector describing general properties of the filter. Defaults to `API.H5Z_FLAG_MANDATORY`
+                 * `data` -      (optional) auxillary data for the filter. See [`cd_values`](@ref API.h5p_set_filter). Defaults to `Cuint[]`
+                 * `config` -    (optional) bit vector representing information about the filter regarding whether it is able to encode data, decode data, neither, or both. Defaults to `0`.
 
-        # See also:
-        * [`API.h5p_set_filter`](@ref)
-        * [`H5Z_GET_FILTER_INFO`](https://portal.hdfgroup.org/display/HDF5/H5Z_GET_FILTER_INFO).
-        * [Registered Filter Plugins](https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins)
-        `flags` bits
-        * `API.H5Z_FLAG_OPTIONAL`
-        * `API.H5Z_FLAG_MANDATORY`
-        `config` bits 
-        * `API.H5Z_FILTER_CONFIG_ENCODE_ENABLED`
-        * `API.H5Z_FILTER_CONFIG_DECODE_ENABLED`
-    """
-    eval(quote
-        docstr = $docstr
-        export $fn
-        """
-        $docstr
-        """
-        $fn(flags, data::AbstractVector{<:Integer}) = ExternalFilter($filter_id, flags, Cuint.(data), $filter_name_string, 0)
-        $fn(flags, data::Integer...) = ExternalFilter($filter_id, flags, Cuint[data...], $filter_name_string, 0)
-        $fn(data::AbstractVector{<:Integer}=Cuint[]) = ExternalFilter($filter_id, H5Z_FLAG_MANDATORY, Cuint.(data), $filter_name_string, 0)
-        $fn(flags, data, config) = ExternalFilter($filter_id, flags, data, $filter_name_string, config)
-        REGISTERED_FILTERS[$filter_id] =  $fn
-    end)
+                 # See also:
+                 * [`API.h5p_set_filter`](@ref)
+                 * [`H5Z_GET_FILTER_INFO`](https://portal.hdfgroup.org/display/HDF5/H5Z_GET_FILTER_INFO).
+                 * [Registered Filter Plugins](https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins)
+                 `flags` bits
+                 * `API.H5Z_FLAG_OPTIONAL`
+                 * `API.H5Z_FLAG_MANDATORY`
+                 `config` bits 
+                 * `API.H5Z_FILTER_CONFIG_ENCODE_ENABLED`
+                 * `API.H5Z_FILTER_CONFIG_DECODE_ENABLED`
+             """
+    eval(
+        quote
+            docstr = $docstr
+            export $fn
+            """
+            $docstr
+            """
+            $fn(flags, data::AbstractVector{<:Integer}) =
+                ExternalFilter($filter_id, flags, Cuint.(data), $filter_name_string, 0)
+            $fn(flags, data::Integer...) =
+                ExternalFilter($filter_id, flags, Cuint[data...], $filter_name_string, 0)
+            $fn(data::AbstractVector{<:Integer}=Cuint[]) = ExternalFilter(
+                $filter_id, H5Z_FLAG_MANDATORY, Cuint.(data), $filter_name_string, 0
+            )
+            $fn(flags, data, config) =
+                ExternalFilter($filter_id, flags, data, $filter_name_string, config)
+            REGISTERED_FILTERS[$filter_id] = $fn
+        end
+    )
 end
 
 """
@@ -141,7 +147,7 @@ Return a `Dict{H5Z_filter_t, Function}` listing the available filter ids and
 their corresponding convenience function.
 """
 function available_registered_filters()
-    filter(p->isavailable(first(p)), REGISTERED_FILTERS)
+    filter(p -> isavailable(first(p)), REGISTERED_FILTERS)
 end
 
 end
