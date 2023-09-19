@@ -428,7 +428,7 @@ end
 function Base.convert(::Type{I}, ::Type{F}) where {I<:Integer,F<:Filter}
     Base.convert(I, filterid(F))
 end
-function Base.convert(::Type{I}, f::Filter) where {I <:Integer}
+function Base.convert(::Type{I}, f::Filter) where {I<:Integer}
     Base.convert(I, filterid(f))
 end
 

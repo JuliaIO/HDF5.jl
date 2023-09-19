@@ -1,5 +1,6 @@
 using HDF5
 using HDF5.Filters
+import HDF5.Filters.Registered
 using Test
 using H5Zblosc, H5Zlz4, H5Zbzip2, H5Zzstd
 using Preferences
@@ -253,6 +254,23 @@ using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenab
     @test HDF5.API.h5z_filter_avail(H5Z_FILTER_LZ4)
     @test HDF5.API.h5z_filter_avail(H5Z_FILTER_ZSTD)
     @test HDF5.API.h5z_filter_avail(H5Z_FILTER_BLOSC)
+
+    # Test the RegisteredFilter module for filters we know to be loaded
+    reg_loaded = [
+        Registered.BZIP2Filter,
+        Registered.LZ4Filter,
+        Registered.ZstandardFilter,
+        Registered.BLOSCFilter
+    ]
+    for func in reg_loaded
+        f = func()
+        @test HDF5.API.h5z_filter_avail(f)
+        @test (Filters.filterid(f) => func) in Registered.available_registered_filters()
+        @test func(HDF5.API.H5Z_FLAG_OPTIONAL) isa ExternalFilter
+        @test func(
+            HDF5.API.H5Z_FLAG_OPTIONAL, Cuint[], HDF5.API.H5Z_FILTER_CONFIG_ENCODE_ENABLED
+        ) isa ExternalFilter
+    end
     HDF5.API.h5z_unregister(H5Z_FILTER_LZ4)
     HDF5.Filters.register_filter(H5Zlz4.Lz4Filter)
     @test isavailable(H5Z_FILTER_LZ4)
