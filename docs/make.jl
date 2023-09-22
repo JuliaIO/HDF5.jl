@@ -19,6 +19,8 @@ not_low_level_api(::typeof(HDF5.API.h5p_get_class_name)) = false
 not_low_level_api(::typeof(HDF5.API.h5t_get_member_name)) = false
 not_low_level_api(::typeof(HDF5.API.h5t_get_tag)) = false
 
+DocMeta.setdocmeta!(HDF5, :DocTestSetup, :(using HDF5); recursive=true)
+
 makedocs(;
     sitename="HDF5.jl",
     modules=[HDF5, H5Zblosc, H5Zbzip2, H5Zlz4, H5Zzstd],
