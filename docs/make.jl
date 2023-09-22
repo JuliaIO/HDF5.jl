@@ -6,6 +6,8 @@ using H5Zlz4
 using H5Zzstd
 using MPI  # needed to generate docs for parallel HDF5 API
 
+DocMeta.setdocmeta!(HDF5, :DocTestSetup, :(using HDF5); recursive=true)
+
 makedocs(;
     sitename="HDF5.jl",
     modules=[HDF5, H5Zblosc, H5Zbzip2, H5Zlz4, H5Zzstd],

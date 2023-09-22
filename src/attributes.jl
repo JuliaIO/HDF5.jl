@@ -242,7 +242,7 @@ function h5writeattr(filename, name::AbstractString, data::Dict)
 end
 
 """
-    h5readattr(filename, name::AbstractString, data::Dict)
+    h5readattr(filename, name::AbstractString)
 
 Read the attributes of the object at `name` in the HDF5 file `filename`, returning a `Dict`.
 """

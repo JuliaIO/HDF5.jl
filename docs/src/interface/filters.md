@@ -125,6 +125,12 @@ h5open(filename, "w") do h5f
 end
 ```
 
+### Registered Filter Helpers
+
+The HDF Group maintains a list of registered filters which have been assigned a filter ID number.
+The module [`Filters.Registered`](@ref) contains information about registered filters including functions
+to create an `ExternalFilter` for each registered filter.
+
 ### Creating a new Filter type
 
 Examining the [bitshuffle filter source code](https://github.com/kiyo-masui/bitshuffle/blob/0aee87e142c71407aa097c660727f2621c71c493/src/bshuf_h5filter.c#L47-L64) we see that three additional data components get prepended to the options. These are
@@ -190,6 +196,12 @@ set_local_cfunc
 filter_func
 filter_cfunc
 register_filter
+```
+
+## Registered Filters
+
+```@autodocs
+Modules = [Registered]
 ```
 
 ## External Links

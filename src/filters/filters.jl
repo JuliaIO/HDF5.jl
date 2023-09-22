@@ -428,6 +428,9 @@ end
 function Base.convert(::Type{I}, ::Type{F}) where {I<:Integer,F<:Filter}
     Base.convert(I, filterid(F))
 end
+function Base.convert(::Type{I}, f::Filter) where {I<:Integer}
+    Base.convert(I, filterid(f))
+end
 
 """
     EXTERNAL_FILTER_JULIA_PACKAGES
@@ -479,5 +482,6 @@ end
 
 include("builtin.jl")
 include("filters_midlevel.jl")
+include("registered.jl")
 
 end # module
