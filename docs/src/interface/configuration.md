@@ -24,3 +24,9 @@ get_context_property
 CONTEXT
 HDF5Context
 ```
+
+## System Libraries
+
+```@docs
+API.set_libraries!
+```

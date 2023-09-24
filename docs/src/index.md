@@ -63,6 +63,13 @@ set_preferences!(
     "libhdf5_hl" => "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5_hl.so", force = true)
 ```
 
+Alternatively, HDF5.jl provides a convenience function [`HDF5.API.set_libraries!`](@ref) that can be used as follows:
+```julia
+using HDF5
+
+HDF5.API.set_libraries!("/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5.so", "/usr/lib/x86_64-linux-gnu/hdf5/mpich/libhdf5_hl.so")
+```
+Going back to the default, i.e. deleting the preferences again, can be done by calling `HDF5.API.set_libraries!()`.
 If HDF5 cannot be loaded, it may be useful to use the UUID to change these settings:
 
 ```julia
