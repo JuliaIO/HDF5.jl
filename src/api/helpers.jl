@@ -674,8 +674,12 @@ end
 
 function h5p_get_dxpl_mpio(dxpl_id)
     xfer_mode = Ref{Cint}()
-    h5p_get_dxpl_mpio(dxpl_id, xfer_mode)
-    return xfer_mode[]
+    try
+        h5p_get_dxpl_mpio(dxpl_id, xfer_mode)
+        return xfer_mode[]
+    catch err
+        return Cint(0)
+    end
 end
 
 function h5p_get_efile_prefix(plist)
