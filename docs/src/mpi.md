@@ -11,9 +11,10 @@ They are also available via the package manager of a number of Linux
 distributions.
 
 Finally, note that the MPI.jl package is lazy-loaded by HDF5.jl
-using [Requires](https://github.com/JuliaPackaging/Requires.jl).
+using [Requires](https://github.com/JuliaPackaging/Requires.jl) up to Julia v1.8.
 In practice, this means that in Julia code, `MPI` must be imported _before_
 `HDF5` for parallel functionality to be available.
+In Julia v1.9 and newer, a package extension is used to reduce the latency.
 
 ## Setting-up Parallel HDF5
 
