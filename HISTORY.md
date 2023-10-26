@@ -2,6 +2,11 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.17.1
+* Added `set_libraries!` to conveniently set the preferences for a custom HDF5 library
+* Added new `HDF5.Filters.Registered` module containing information about registered filters
+* Miscellaneous documentation fixes
+
 ## v0.17.0
 * Replace build step by using Preferences.jl to use system HDF5 library
 
