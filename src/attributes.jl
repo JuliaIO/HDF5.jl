@@ -173,13 +173,8 @@ end
 function write_attribute(attr::Attribute, memtype::Datatype, str::AbstractString)
     strbuf = Base.cconvert(Cstring, str)
     GC.@preserve strbuf begin
-        if API.h5t_is_variable_str(memtype)
-            ptr = Base.unsafe_convert(Cstring, strbuf)
-            write_attribute(attr, memtype, Ref(ptr))
-        else
-            ptr = Base.unsafe_convert(Ptr{UInt8}, strbuf)
-            write_attribute(attr, memtype, ptr)
-        end
+        buf = Base.unsafe_convert(Ptr{UInt8}, strbuf)
+        write_attribute(attr, memtype, buf)
     end
 end
 function write_attribute(

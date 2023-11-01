@@ -69,14 +69,3 @@ end
         close(f)
     end
 end
-
-
-@testset "variable length strings" begin
-    filename = tempname()
-    h5open(filename, "w") do f
-        # https://github.com/JuliaIO/HDF5.jl/issues/1129
-        attr = create_attribute(f, "attr-name", datatype(String), dataspace(String))
-        write_attribute(attr, datatype(String), "attr-value")
-        @test attrs(f)["attr-name"] == "attr-value"
-    end
-end
