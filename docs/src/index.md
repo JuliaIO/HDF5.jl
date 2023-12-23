@@ -294,11 +294,11 @@ useful to incrementally save to very large datasets you don't want to keep in
 memory. For example,
 
 ```julia
-dset = create_dataset(g, "B", datatype(Float64), dataspace(1000,100,10), chunk=(100,100,1))
+dset = create_dataset(g, "B", Float64, (1000,100,10), chunk=(100,100,1))
 dset[:,1,1] = rand(1000)
 ```
 
-creates a Float64 dataset in the file or group `g`, with dimensions 1000x100x10, and then
+creates a `Float64` dataset in the file or group `g`, with dimensions 1000x100x10, and then
 writes to just the first 1000 element slice.
 If you know the typical size of subset reasons you'll be reading/writing, it can be beneficial to set the chunk dimensions appropriately.
 
@@ -330,7 +330,7 @@ to.
 The following fails:
 
 ```julia
-vec_dset = create_dataset(g, "v", datatype(Float64), dataspace(10_000,1))
+vec_dset = create_dataset(g, "v", Float64, (10_000,1))
 HDF5.ismmappable(vec_dset)    # == true
 vec = HDF5.readmmap(vec_dset) # throws ErrorException("Error mmapping array")
 ```
@@ -348,7 +348,7 @@ Alternatively, the policy can be set so that the space is allocated immediately 
 creation of the data set with the `alloc_time` keyword:
 
 ```julia
-mtx_dset = create_dataset(g, "M", datatype(Float64), dataspace(100, 1000),
+mtx_dset = create_dataset(g, "M", Float64, (100, 1000),
                     alloc_time = HDF5.H5D_ALLOC_TIME_EARLY)
 mtx = HDF5.readmmap(mtx_dset) # succeeds immediately
 ```
@@ -577,14 +577,14 @@ write_attribute(parent, name, data)
 You can use extendible dimensions,
 
 ```julia
-d = create_dataset(parent, name, dtype, (dims, max_dims), chunk=(chunk_dims))
+d = create_dataset(parent, name, dtype, dims; max_dims=max_dims, chunk=(chunk_dims))
 HDF5.set_extent_dims(d, new_dims)
 ```
 
 where dims is a tuple of integers. For example
 
 ```julia
-b = create_dataset(fid, "b", Int, ((1000,),(-1,)), chunk=(100,)) #-1 is equivalent to typemax(hsize_t)
+b = create_dataset(fid, "b", Int, (1000,); max_dims=(HDF5.UNLIMITED,), chunk=(100,)) # HDF5.UNLIMITED is equivalent to typemax(hsize_t)
 HDF5.set_extent_dims(b, (10000,))
 b[1:10000] = collect(1:10000)
 ```

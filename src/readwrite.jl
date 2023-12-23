@@ -173,7 +173,7 @@ function _generic_read(
     end
 
     memtype = _memtype(filetype, T)
-    memspace = isempty(I) ? dspace : dataspace(sz)
+    memspace = isempty(I) ? dspace : Dataspace(sz)
 
     try
         if obj isa Dataset

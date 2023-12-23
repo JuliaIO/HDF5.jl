@@ -84,3 +84,72 @@ import .Filters: ExternalFilter
 @deprecate set_track_order(p::Properties, val::Bool) set_track_order!(
     p::Properties, val::Bool
 ) false
+
+### Changed in PR #1104
+@noinline function dataspace(
+    sz::Dims{N}; max_dims::Union{Dims{N},Tuple{},Nothing}=nothing
+) where {N}
+    if isnothing(max_dims)
+        depwarn(
+            "`dataspace(dims)` is deprecated, use `Dataspace(dims)` instead.", :dataspace
+        )
+    elseif max_dims == ()
+        depwarn(
+            "`dataspace(dims; max_dims=())` is deprecated, use `Dataspace(dims; max_dims=nothing)` instead.",
+            :dataspace
+        )
+        max_dims = nothing
+    else
+        depwarn(
+            "`dataspace(dims; max_dims)` is deprecated, use `Dataspace(dims; max_dims)` instead.",
+            :dataspace
+        )
+    end
+    Dataspace(sz; max_dims)
+end
+Base.@deprecate(
+    dataspace(sz::Dims{N}, max_dims::Dims{N}) where {N}, Dataspace(sz; max_dims=max_dims)
+)
+Base.@deprecate(
+    dataspace(sz::Dims{N}, max_dims::Tuple{}) where {N}, Dataspace(sz; max_dims=nothing)
+)
+Base.@deprecate(
+    dataspace((dims, max_dims)::Tuple{Dims{N},Dims{N}}) where {N}, Dataspace(dims; max_dims)
+)
+Base.@deprecate(
+    dataspace(sz1::Int, sz2::Int, sz3::Int...; max_dims::Union{Dims,Tuple{}}=()),
+    Dataspace(tuple(sz1, sz2, sz3...); max_dims=max_dims == () ? nothing : max_dims)
+)
+
+Base.@deprecate(
+    create_dataset(
+        parent::Union{File,Group},
+        path::Union{AbstractString,Nothing},
+        dtype::Datatype,
+        (dims, max_dims)::Tuple{Dims,Dims};
+        pv...
+    ),
+    create_dataset(checkvalid(parent), path, dtype, Dataspace(dims; max_dims); pv...)
+)
+Base.@deprecate(
+    create_dataset(
+        parent::Union{File,Group},
+        path::Union{AbstractString,Nothing},
+        dtype::Type,
+        (dims, max_dims)::Tuple{Dims,Dims};
+        pv...
+    ),
+    create_dataset(
+        checkvalid(parent), path, datatype(dtype), Dataspace(dims; max_dims); pv...
+    )
+)
+Base.@deprecate(
+    create_dataset(
+        parent::Union{File,Group},
+        path::Union{AbstractString,Nothing},
+        dtype::Type,
+        dspace_dims::Int...;
+        pv...
+    ),
+    create_dataset(checkvalid(parent), path, datatype(dtype), dspace_dims; pv...)
+)

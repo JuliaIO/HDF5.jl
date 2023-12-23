@@ -35,7 +35,7 @@ end
         HDF5.API.h5t_insert(memtype_id, "imag", sizeof(Float64), HDF5.hdf5_type_id(Float64))
         dt = HDF5.Datatype(memtype_id)
         commit_datatype(file, "dt", dt)
-        ds = dataspace((2,))
+        ds = Dataspace((2,))
         d = create_dataset(file, "d", dt, ds)
         g = create_group(file, "g")
         a = create_attribute(file, "a", dt, ds)

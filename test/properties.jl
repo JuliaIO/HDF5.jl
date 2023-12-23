@@ -26,7 +26,7 @@ using Test
             g,
             "dataset",
             datatype(Int),
-            dataspace((500, 50));
+            Dataspace((500, 50));
             alloc_time=HDF5.API.H5D_ALLOC_TIME_EARLY,
             chunk=(5, 10),
             fill_value=1,

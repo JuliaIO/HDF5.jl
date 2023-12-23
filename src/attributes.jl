@@ -70,13 +70,49 @@ open_attribute(
 ) = Attribute(API.h5a_open(checkvalid(parent), name, aapl), file(parent))
 
 """
-    create_attribute(parent::Union{File,Object}, name::AbstractString, dtype::Datatype, space::Dataspace)
-    create_attribute(parent::Union{File,Object}, name::AbstractString, data)
+    create_attribute(
+        parent::Union{File,Object},
+        name::AbstractString,
+        dtype::Union{Datatype, Type},
+        dspace::Union{Dataspace, Dims, Nothing}
+    )
 
 Create a new [`Attribute`](@ref) object named `name` on the object `parent`,
-either by specifying the `Datatype` and `Dataspace` of the attribute, or by
-providing the data. Note that no data will be written: use
-[`write_attribute`](@ref) to write the data.
+with the corresponding [`Datatype`](@ref) and [`Dataspace`](@ref).
+"""
+function create_attribute(
+    parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace
+)
+    attrid = API.h5a_create(
+        checkvalid(parent), name, dtype, dspace, _attr_properties(name), API.H5P_DEFAULT
+    )
+    return Attribute(attrid, file(parent))
+end
+create_attribute(
+    parent::Union{File,Object},
+    name::AbstractString,
+    dtype::Datatype,
+    dspace::Union{Dims,Nothing}
+) = create_attribute(parent, name, dtype, Dataspace(dspace))
+create_attribute(
+    parent::Union{File,Object},
+    name::AbstractString,
+    dtype::Type,
+    dspace::Union{Dataspace,Dims,Nothing}
+) = create_attribute(parent, name, datatype(dtype), dspace)
+
+"""
+    create_attribute(
+        parent::Union{File,Object},
+        name::AbstractString,
+        data
+    ) -> Attribute, Datatype
+
+Create a new [`Attribute`](@ref) object named `name` on the object `parent` for
+the object `data`, returning both the `Attribute` and the [`Datatype`](@ref).
+
+Note that no data will be written: use [`write_attribute`](@ref) to write the
+data.
 """
 function create_attribute(parent::Union{File,Object}, name::AbstractString, data; pv...)
     dtype = datatype(data)
@@ -87,14 +123,6 @@ function create_attribute(parent::Union{File,Object}, name::AbstractString, data
         close(dspace)
     end
     return obj, dtype
-end
-function create_attribute(
-    parent::Union{File,Object}, name::AbstractString, dtype::Datatype, dspace::Dataspace
-)
-    attrid = API.h5a_create(
-        checkvalid(parent), name, dtype, dspace, _attr_properties(name), API.H5P_DEFAULT
-    )
-    return Attribute(attrid, file(parent))
 end
 
 # generic method

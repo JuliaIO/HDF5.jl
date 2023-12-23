@@ -1,53 +1,5 @@
 using Random, Test, HDF5
 
-@testset "BlockRange" begin
-    br = HDF5.BlockRange(2)
-    @test length(br) == 1
-    @test range(br) === 2:2
-    @test convert(AbstractRange, br) === 2:2
-    @test convert(UnitRange, br) === 2:2
-    @test convert(StepRange, br) === 2:1:2
-    @test repr(br) == "HDF5.BlockRange(2)"
-    @test repr(br; context=:compact => true) == "2"
-
-    br = HDF5.BlockRange(Base.OneTo(3))
-    @test length(br) == 3
-    @test range(br) == 1:3
-    @test convert(AbstractRange, br) === 1:3
-    @test convert(UnitRange, br) === 1:3
-    @test convert(StepRange, br) === 1:1:3
-    @test repr(br) == "HDF5.BlockRange(1:3)"
-    @test repr(br; context=:compact => true) == "1:3"
-
-    br = HDF5.BlockRange(2:7)
-    @test length(br) == 6
-    @test range(br) == 2:7
-    @test convert(AbstractRange, br) === 2:7
-    @test convert(UnitRange, br) === 2:7
-    @test convert(StepRange, br) === 2:1:7
-    @test repr(br) == "HDF5.BlockRange(2:7)"
-    @test repr(br; context=:compact => true) == "2:7"
-
-    br = HDF5.BlockRange(1:2:7)
-    @test length(br) == 4
-    @test range(br) == 1:2:7
-    @test convert(AbstractRange, br) === 1:2:7
-    @test_throws Exception convert(UnitRange, br)
-    @test convert(StepRange, br) === 1:2:7
-    @test repr(br) == "HDF5.BlockRange(1:2:7)"
-    @test repr(br; context=:compact => true) == "1:2:7"
-
-    br = HDF5.BlockRange(; start=2, stride=8, count=3, block=2)
-    @test length(br) == 6
-    @test_throws Exception range(br)
-    @test_throws Exception convert(AbstractRange, br)
-    @test_throws Exception convert(UnitRange, br)
-    @test_throws Exception convert(StepRange, br)
-    @test repr(br) == "HDF5.BlockRange(start=2, stride=8, count=3, block=2)"
-    @test repr(br; context=:compact => true) ==
-        "BlockRange(start=2, stride=8, count=3, block=2)"
-end
-
 @testset "hyperslab" begin
     N = 10
     v = [randstring(rand(5:10)) for i in 1:N, j in 1:N]

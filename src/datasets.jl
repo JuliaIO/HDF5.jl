@@ -28,24 +28,37 @@ end
 
 # Setting dset creation properties with name/value pairs
 """
-    create_dataset(parent, path, datatype, dataspace; properties...)
+    create_dataset(
+        parent::Union{File, Group}, 
+        path::Union{AbstractString, Nothing},
+        datatype::Union{Datatype, Type},
+        dataspace::Union{Dataspace, Dims, Nothing};
+        properties...)
 
 # Arguments
-* `parent` - `File` or `Group`
-* `path` - `String` describing the path of the dataset within the HDF5 file or
-           `nothing` to create an anonymous dataset
-* `datatype` - `Datatype` or `Type` or the dataset
-* `dataspace` - `Dataspace` or `Dims` of the dataset
+* `parent`: parent file `File` or `Group`.
+* `path`: `String` describing the path of the dataset within the HDF5 file, or
+    `nothing` to create an anonymous dataset
+* `datatype` - [`Datatype`](@ref) or `Type` or the dataset
+* `dataspace` - [`Dataspace`](@ref) or `Dims` of the dataset. If `nothing`, then
+    it will create a null (empty) dataset.
 * `properties` - keyword name-value pairs set properties of the dataset
 
 # Keywords
 
-There are many keyword properties that can be set. Below are a few select keywords.
+There are many keyword properties that can be set. Below are a few select
+keywords.
+* `max_dims` - `Dims` describing the maximum size of the dataset. Required for
+  resizable datasets. Unlimited dimensions are denoted by [`HDF5.UNLIMITED`](@ref).
 * `chunk` - `Dims` describing the size of a chunk. Needed to apply filters.
-* `filters` - `AbstractVector{<: Filters.Filter}` describing the order of the filters to apply to the data. See [`Filters`](@ref)
-* `external` - `Tuple{AbstractString, Intger, Integer}` `(filepath, offset, filesize)` External dataset file location, data offset, and file size. See [`API.h5p_set_external`](@ref).
+* `filters` - `AbstractVector{<: Filters.Filter}` describing the order of the
+  filters to apply to the data. See [`Filters`](@ref)
+* `external` - `Tuple{AbstractString, Intger, Integer}` `(filepath, offset,
+  filesize)` External dataset file location, data offset, and file size. See
+  [`API.h5p_set_external`](@ref).
 
-Additionally, the initial create, transfer, and access properties can be provided as a keyword:
+Additionally, the initial create, transfer, and access properties can be
+provided as a keyword:
 * `dcpl` - [`DatasetCreateProperties`](@ref)
 * `dxpl` - [`DatasetTransferProperties`](@ref)
 * `dapl` - [`DatasetAccessProperties`](@ref)
@@ -69,9 +82,11 @@ function create_dataset(
     pv = setproperties!(dcpl, dxpl, dapl; pv...)
     isempty(pv) || error("invalid keyword options")
     if isnothing(path)
-        ds = API.h5d_create_anon(parent, dtype, dspace, dcpl, dapl)
+        ds = API.h5d_create_anon(checkvalid(parent), dtype, dspace, dcpl, dapl)
     else
-        ds = API.h5d_create(parent, path, dtype, dspace, _link_properties(path), dcpl, dapl)
+        ds = API.h5d_create(
+            checkvalid(parent), path, dtype, dspace, _link_properties(path), dcpl, dapl
+        )
     end
     Dataset(ds, file(parent), dxpl)
 end
@@ -79,54 +94,15 @@ create_dataset(
     parent::Union{File,Group},
     path::Union{AbstractString,Nothing},
     dtype::Datatype,
-    dspace_dims::Dims;
+    dspace_dims::Union{Dims,Nothing};
+    max_dims=nothing,
     pv...
-) = create_dataset(checkvalid(parent), path, dtype, dataspace(dspace_dims); pv...)
-create_dataset(
-    parent::Union{File,Group},
-    path::Union{AbstractString,Nothing},
-    dtype::Datatype,
-    dspace_dims::Tuple{Dims,Dims};
-    pv...
-) = create_dataset(
-    checkvalid(parent),
-    path,
-    dtype,
-    dataspace(dspace_dims[1]; max_dims=dspace_dims[2]);
-    pv...
-)
+) = create_dataset(parent, path, dtype, Dataspace(dspace_dims; max_dims); pv...)
 create_dataset(
     parent::Union{File,Group},
     path::Union{AbstractString,Nothing},
     dtype::Type,
-    dspace_dims::Tuple{Dims,Dims};
-    pv...
-) = create_dataset(
-    checkvalid(parent),
-    path,
-    datatype(dtype),
-    dataspace(dspace_dims[1]; max_dims=dspace_dims[2]);
-    pv...
-)
-create_dataset(
-    parent::Union{File,Group},
-    path::Union{AbstractString,Nothing},
-    dtype::Type,
-    dspace_dims::Dims;
-    pv...
-) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
-create_dataset(
-    parent::Union{File,Group},
-    path::Union{AbstractString,Nothing},
-    dtype::Type,
-    dspace_dims::Int...;
-    pv...
-) = create_dataset(checkvalid(parent), path, datatype(dtype), dataspace(dspace_dims); pv...)
-create_dataset(
-    parent::Union{File,Group},
-    path::Union{AbstractString,Nothing},
-    dtype::Type,
-    dspace::Dataspace;
+    dspace::Union{Dataspace,Dims,Nothing};
     pv...
 ) = create_dataset(checkvalid(parent), path, datatype(dtype), dspace; pv...)
 
@@ -459,7 +435,7 @@ function create_external_dataset(
     sz::Dims,
     offset::Integer=0
 )
-    create_external_dataset(parent, name, filepath, datatype(t), dataspace(sz), offset)
+    create_external_dataset(parent, name, filepath, datatype(t), Dataspace(sz), offset)
 end
 function create_external_dataset(
     parent::Union{File,Group},

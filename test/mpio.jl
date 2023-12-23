@@ -43,12 +43,7 @@ using Test
             @test isopen(f)
             g = create_group(f, "mygroup")
             dset = create_dataset(
-                g,
-                "B",
-                datatype(Int64),
-                dataspace(10, nprocs);
-                chunk=(10, 1),
-                dxpl_mpio=:collective
+                g, "B", datatype(Int64), (10, nprocs); chunk=(10, 1), dxpl_mpio=:collective
             )
             dset[:, myrank + 1] = A
         end

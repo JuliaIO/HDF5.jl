@@ -10,9 +10,9 @@ using Test
 
     # Create two datasets, one with late allocation (the default for contiguous
     # datasets) and the other with explicit early allocation.
-    hdf5_A = create_dataset(f, "A", datatype(Int64), dataspace(3, 3))
+    hdf5_A = create_dataset(f, "A", datatype(Int64), (3, 3))
     hdf5_B = create_dataset(
-        f, "B", datatype(Float64), dataspace(3, 3); alloc_time=HDF5.API.H5D_ALLOC_TIME_EARLY
+        f, "B", datatype(Float64), (3, 3); alloc_time=HDF5.API.H5D_ALLOC_TIME_EARLY
     )
     # The late case cannot be mapped yet.
     @test_throws ErrorException("Error getting offset") HDF5.readmmap(f["A"])
