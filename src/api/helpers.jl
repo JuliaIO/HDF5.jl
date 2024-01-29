@@ -16,7 +16,7 @@ function h5_get_libversion()
 end
 
 function h5_is_library_threadsafe()
-    is_ts = Ref{Cuint}(0)
+    is_ts = Ref{Cuchar}(0)
     h5_is_library_threadsafe(is_ts)
     return is_ts[] > 0
 end
