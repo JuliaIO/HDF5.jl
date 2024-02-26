@@ -60,6 +60,8 @@ function set_libraries!(libhdf5=nothing, libhdf5_hl=nothing; force=true)
 end
 
 include("lock.jl")
+include("gen.jl")
+
 include("types.jl")
 include("error.jl")
 include("functions.jl") # core API ccall wrappers
