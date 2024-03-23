@@ -70,7 +70,7 @@ using Test
         @test fapl.driver == Drivers.POSIX()
         @test_throws HDF5.API.H5Error fapl.driver_info
         @test fapl.fclose_degree == :strong
-        @test fapl.libver_bounds == (:earliest, Base.thisminor(HDF5.libversion))
+        @test fapl.libver_bounds == (:earliest, HDF5.libver_bound_from_enum(HDF5.API.H5F_LIBVER_LATEST))
         @test fapl.meta_block_size == 1024
 
         @test gcpl.local_heap_size_hint == 0
