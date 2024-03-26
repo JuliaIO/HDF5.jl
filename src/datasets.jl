@@ -541,6 +541,20 @@ function write_dataset(
         end
     end
 end
+
+function write_dataset(
+    dataset::Dataset,
+    memtype::Datatype,
+    buf::Base.ReinterpretArray,
+    xfer::DatasetTransferProperties=dataset.xfer
+) where {T}
+    # We cannot obtain a pointer of a ReinterpretArrayin Julia 1.11 and beyond
+    # https://github.com/JuliaLang/julia/issues/51962
+    buf_copy = copy(buf)
+    @assert !(typeof(buf_copy) <: Base.ReinterpretArray) "Copying $(typeof(buf)) resulted in another Base.ReinterpretArray"
+    write_dataset(dataset, memtype, buf_copy, xfer)
+end
+
 function write_dataset(
     dataset::Dataset,
     memtype::Datatype,
