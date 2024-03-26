@@ -92,14 +92,14 @@ function h5_get_libversion(majnum, minnum, relnum)
 end
 
 """
-    h5_is_library_threadsafe(is_ts::Ref{Cuint})
+    h5_is_library_threadsafe(is_ts::Ref{Cuchar})
 
 See `libhdf5` documentation for [`H5is_library_threadsafe`](https://docs.hdfgroup.org/hdf5/v1_14/group___h5.html#ga70bfde4acd009cdd7bcd2f54c594e28a).
 """
 function h5_is_library_threadsafe(is_ts)
     lock(liblock)
     var"#status#" = try
-            ccall((:H5is_library_threadsafe, libhdf5), herr_t, (Ref{Cuint},), is_ts)
+            ccall((:H5is_library_threadsafe, libhdf5), herr_t, (Ref{Cuchar},), is_ts)
         finally
             unlock(liblock)
         end
