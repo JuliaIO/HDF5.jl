@@ -702,7 +702,7 @@ end
 libver_bound_to_enum(val::Integer) = val
 libver_bound_to_enum(val::API.H5F_libver_t) = val
 function libver_bound_to_enum(val::VersionNumber)
-    val >= v"1.16"   ? API.H5F_LIBVER_V116 :
+    val >= v"1.15"   ? API.H5F_LIBVER_V116 :
     val >= v"1.14"   ? API.H5F_LIBVER_V114 :
     val >= v"1.12"   ? API.H5F_LIBVER_V112 :
     val >= v"1.10"   ? API.H5F_LIBVER_V110 :
@@ -711,7 +711,7 @@ function libver_bound_to_enum(val::VersionNumber)
 end
 function libver_bound_to_enum(val::Symbol)
     val == :earliest ? API.H5F_LIBVER_EARLIEST :
-    val == :latest   ? libver_bound_to_enum(libversion) :
+    val == :latest   ? API.H5F_LIBVER_LATEST :
     throw(ArgumentError("Invalid libver_bound $val."))
 end
 function libver_bound_from_enum(enum::API.H5F_libver_t)
