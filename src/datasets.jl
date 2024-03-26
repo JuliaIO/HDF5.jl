@@ -547,7 +547,7 @@ function write_dataset(
     memtype::Datatype,
     buf::Base.ReinterpretArray,
     xfer::DatasetTransferProperties=dataset.xfer
-) where {T}
+)
     # We cannot obtain a pointer of a ReinterpretArrayin Julia 1.11 and beyond
     # https://github.com/JuliaLang/julia/issues/51962
     buf_copy = copy(buf)
