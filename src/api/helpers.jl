@@ -3,7 +3,17 @@
 # For instance, many property getters return values through pointer output arguments,
 # so the methods here handle making the appropriate `Ref`s and return them (as tuples).
 
-const H5F_LIBVER_LATEST = _libhdf5_build_ver >= v"1.12" ? H5F_LIBVER_V112 : H5F_LIBVER_V110
+const H5F_LIBVER_LATEST = if _libhdf5_build_ver >= v"1.15"
+    H5F_LIBVER_V116
+elseif _libhdf5_build_ver >= v"1.14"
+    H5F_LIBVER_V114
+elseif _libhdf5_build_ver >= v"1.12"
+    H5F_LIBVER_V112
+elseif _libhdf5_build_ver >= v"1.10"
+    H5F_LIBVER_V110
+else
+    H5F_LIBVER_V108
+end
 
 ###
 ### HDF5 General library functions
