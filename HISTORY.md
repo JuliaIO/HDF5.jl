@@ -2,6 +2,17 @@
 
 Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases) for additional details.
 
+## v0.18.0 (in development)
+* Refactor Dataspaces (#1104)
+
+## v0.17.2
+* Fix variable length strings as attributes (#1130)
+* Fix `h5_is_library_threadsafe` (#1138)
+* Fix `HF5_LIBVER_LATEST` up to HDF5 v1.15 (#1145)
+* Add Julia 1.11 nightly to tests (#1146)
+* Add fix for `Base.ReinterpretArrays` in Julia 1.11 (#1146)
+* Marked Windows virtual dataset tests as broken (#1146)
+
 ## v0.17.1
 * Added `set_libraries!` to conveniently set the preferences for a custom HDF5 library
 * Added new `HDF5.Filters.Registered` module containing information about registered filters
