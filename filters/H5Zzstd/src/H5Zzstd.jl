@@ -89,7 +89,6 @@ function H5Z_filter_zstd(
         #  "In the case of failure, the return value is 0 (zero) and all pointer arguments are left unchanged."
         ret_value = Csize_t(0)
         @error "H5Zzstd Non-Fatal ERROR: " exception=(e, catch_backtrace())
-        #display(stacktrace(catch_backtrace()))
     finally
         if outbuf != C_NULL
             Libc.free(outbuf)
