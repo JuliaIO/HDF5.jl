@@ -38,6 +38,11 @@ function H5Z_filter_zstd(
             #decompresssion
 
             decompSize = LibZstd.ZSTD_getDecompressedSize(inbuf, origSize)
+            if decompSize == 0
+                error(
+                    "zstd_h5plugin: Cannot retrieve decompressed chunk size"
+                )
+            end
             outbuf = Libc.malloc(decompSize)
             if outbuf == C_NULL
                 error(
@@ -83,11 +88,11 @@ function H5Z_filter_zstd(
     catch e
         #  "In the case of failure, the return value is 0 (zero) and all pointer arguments are left unchanged."
         ret_value = Csize_t(0)
-        @error "H5Zzstd Non-Fatal ERROR: " err
-        display(stacktrace(catch_backtrace()))
+        @error "H5Zzstd Non-Fatal ERROR: " exception=(e, catch_backtrace())
+        #display(stacktrace(catch_backtrace()))
     finally
         if outbuf != C_NULL
-            free(outbuf)
+            Libc.free(outbuf)
         end
     end # try catch finally
     return Csize_t(ret_value)
