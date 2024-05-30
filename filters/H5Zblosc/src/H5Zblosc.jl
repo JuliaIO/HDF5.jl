@@ -122,7 +122,7 @@ function blosc_filter(
         # See https://github.com/JuliaLang/julia/issues/43402
         # Resolved in https://github.com/JuliaLang/julia/pull/43408
         outbuf_size, cbytes, blocksize = Blosc.cbuffer_sizes(in)
-        outbuf_size <= && return Csize_t(0)
+        outbuf_size <= 0 && return Csize_t(0)
         outbuf = Libc.malloc(outbuf_size)
         outbuf == C_NULL && return Csize_t(0)
         status = Blosc.blosc_decompress(in, outbuf, outbuf_size)
