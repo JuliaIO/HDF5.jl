@@ -62,7 +62,7 @@ end
 
         create_group(f, "a")
         create_group(f, "b")
-        
+
         # iterate over groups
         names = String[]
         @test HDF5.API.h5l_iterate(
@@ -110,4 +110,3 @@ end
         close(f)
     end
 end
-
