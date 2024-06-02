@@ -70,10 +70,26 @@ datatype(x::AbstractArray{T}) where {T} = Datatype(hdf5_type_id(T), true)
 
 hdf5_type_id(::Type{T}) where {T} = hdf5_type_id(T, Val(isstructtype(T)))
 function hdf5_type_id(::Type{T}, isstruct::Val{true}) where {T}
+    cache = try
+        task_local_storage(:hdf5_type_id_cache)::Dict{DataType,Int}
+    catch
+        task_local_storage(:hdf5_type_id_cache, Dict{DataType,Int}())
+    end
+    if haskey(cache, T)
+        error("Cannot create a HDF5 datatype with fields containing that datatype.")
+    end
     dtype = API.h5t_create(API.H5T_COMPOUND, sizeof(T))
-    for (idx, fn) in enumerate(fieldnames(T))
-        ftype = fieldtype(T, idx)
-        API.h5t_insert(dtype, Symbol(fn), fieldoffset(T, idx), hdf5_type_id(ftype))
+    cache[T] = dtype
+    try
+        for (idx, fn) in enumerate(fieldnames(T))
+            ftype = fieldtype(T, idx)
+            _hdf5_type_id = hdf5_type_id(ftype)
+            API.h5t_insert(dtype, Symbol(fn), fieldoffset(T, idx), _hdf5_type_id)
+        end
+    catch err
+        rethrow(err)
+    finally
+        delete!(cache, T)
     end
     return dtype
 end
