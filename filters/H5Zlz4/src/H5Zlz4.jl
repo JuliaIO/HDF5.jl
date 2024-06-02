@@ -66,7 +66,9 @@ function H5Z_filter_lz4(
             # malloc a byte buffer of origSize
             # outBuf = Vector{UInt8}(undef, origSize)
             @debug "OrigSize" origSize
+            origSize <= 0 && error("H5Zlz4: Non-positive origSize for malloc: $origSize")
             outBuf = Libc.malloc(origSize)
+            outBuf == C_NULL && error("H5Zlz4: Could not allocate memory via malloc")
             # Julia should throw an error if it cannot allocate this
             roBuf = Ptr{UInt8}(outBuf)
             decompSize = 0
@@ -126,7 +128,9 @@ function H5Z_filter_lz4(
             nBlocks = (nbytes - 1) ÷ blockSize + 1
             maxDestSize =
                 nBlocks * CodecLz4.LZ4_compressBound(blockSize) + 4 + 8 + nBlocks * 4
+            maxDestSize <= 0 && error("H5Zlz4: Non-positive maxDestSize for malloc: $maxDestSize")
             outBuf = Libc.malloc(maxDestSize)
+            outBuf == C_NULL && error("H5Zlz4: Could not allocate memory via malloc")
 
             rpos = Ptr{UInt8}(unsafe_load(buf))
             roBuf = Ptr{UInt8}(outBuf)
@@ -189,7 +193,7 @@ function H5Z_filter_lz4(
     catch err
         #  "In the case of failure, the return value is 0 (zero) and all pointer arguments are left unchanged."
         ret_value = Csize_t(0)
-        @error "H5Zlz4.jl Non-Fatal ERROR: " err
+        @async @error "H5Zlz4.jl Non-Fatal ERROR: " err
         display(stacktrace(catch_backtrace()))
     finally
         if outBuf != C_NULL
