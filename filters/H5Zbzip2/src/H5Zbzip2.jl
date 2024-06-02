@@ -40,6 +40,7 @@ function H5Z_filter_bzip2(
             # Decompress
 
             outbuflen = nbytes * 3 + 1
+            outbuflen <= 0 && error("H5Zbzip2: Non-positive outbuflen for malloc: $outbuflen.")
             outbuf = Libc.malloc(outbuflen)
             if outbuf == C_NULL
                 error("H5Zbzip2: memory allocation failed for bzip2 decompression.")
@@ -106,6 +107,7 @@ function H5Z_filter_bzip2(
 
             # Prepare the output buffer
             outbuflen = nbytes + nbytes ÷ 100 + 600 # worse case (bzip2 docs)
+            outbuflen <= 0 && error("H5Zbzip2: Non-positive outbuflen for malloc: $outbuflen.")
             outbuf = Libc.malloc(outbuflen)
             @debug "Allocated" outbuflen outbuf
             if outbuf == C_NULL
