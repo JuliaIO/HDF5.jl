@@ -41,7 +41,7 @@ using HDF5, Test
     @test_throws AssertionError HDF5.API.h5a_iterate(
         f, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC
     ) do loc, name, info
-        @assert false
+        throw(AssertionError("False is not true"))
     end
 
     # HDF5 error
@@ -100,7 +100,7 @@ end
     @test_throws AssertionError HDF5.API.h5l_iterate(
         f, HDF5.API.H5_INDEX_NAME, HDF5.API.H5_ITER_INC
     ) do loc, name, info
-        @assert false
+        throw(AssertionError("False is not true"))
     end
 end
 
