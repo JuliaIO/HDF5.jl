@@ -16,12 +16,27 @@ MPIPreferences = "3da0fdf6-3ccc-4f1b-acd9-58baa6c99267"
 
 [weakdeps]
 MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"
+bitshuffle_jll = "228fe19c-1b83-5282-a626-13744502a320"
+Blosc = "a74b3585-a348-5f62-a45c-50e91977d574"
+CodecBzip2 = "523fee87-0ab8-5b00-afb7-3ecf72e48cfd"
+CodecLz4 = "5ba52731-8f18-5e0d-9241-30f10d1ec561"
+CodecZstd = "6b39b394-51ab-5f42-8807-6242bab2b4c2"
 
 [extensions]
 MPIExt = "MPI"
+CodecBzip2Ext = "CodecBzip2"
+CodecLz4Ext = "CodecLz4"
+CodecZstdExt = "CodecZstd"
+bitshuffle_jll_ext = "bitshuffle_jll"
+BloscExt = "Blosc"
 
 [compat]
+bitshuffle_jll = "0.4.2, 0.5"
+Blosc = "0.7.3"
 Compat = "3.1.0, 4"
+CodecBzip2 = "0.7, 0.8"
+CodecLz4 = "0.4"
+CodecZstd = "0.7, 0.8"
 HDF5_jll = "~1.10.5, ~1.12.0, ~1.14.0"
 MPI = "0.20"
 MPIPreferences = "0.1.7"
