@@ -2,6 +2,7 @@
 Julia code wrapping the bitshuffle filter for HDF5. A rough translation of
 bshuf_h5filter.c by Kiyoshi Masui, see
 https://github.com/kiyo-masui/bitshuffle.
+Originally authored by "James.Hester <jxh@ansto.gov.au>" as H5Zbitshuffle
 ==#
 """
 The bitshuffle filter for HDF5. See https://portal.hdfgroup.org/display/support/Filters#Filters-32008
