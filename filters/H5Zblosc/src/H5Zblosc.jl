@@ -3,6 +3,8 @@ module H5Zblosc
 
 import Blosc
 using HDF5: HDF5
+
+# The next block of lines can be removed
 using HDF5.API
 import HDF5.Filters: Filter, FilterPipeline
 import HDF5.Filters:
@@ -22,11 +24,11 @@ import Blosc: NOSHUFFLE, SHUFFLE, BITSHUFFLE
 
 const BloscExt = Base.get_extension(HDF5, :BloscExt)
 
-const blosc_filter = BloscExt.blosc_filter
-const BloscFilter = BloscExt.BloscFilter
+using .BloscExt: blosc_filter
+using .BloscExt: BloscFilter
 
-const H5Z_FILTER_BLOSC = BloscExt.H5Z_FILTER_BLOSC
-const FILTER_BLOSC_VERSION = BloscExt.FILTER_BLOSC_VERSION
-const blosc_name = BloscExt.blosc_name
+using .BloscExt: H5Z_FILTER_BLOSC
+using .BloscExt: FILTER_BLOSC_VERSION
+using .BloscExt: blosc_name
 
 end # module H5Zblosc
