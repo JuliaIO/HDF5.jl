@@ -1,4 +1,4 @@
-H5Zlz4.jl is derived from H5Zlz4.c from HDF5 Group
+CodecLz4Ext.jl is derived from H5Zlz4.c from HDF5 Group
 
 ================================================================================
 LZ4 filter plugin license
