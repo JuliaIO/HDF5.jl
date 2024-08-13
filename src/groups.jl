@@ -98,9 +98,12 @@ function Base.parent(obj::Union{File,Group,Dataset})
     if length(path) == 1
         return f
     end
-    parentname = dirname(path)
+    # Only split on / not \
+    # See "HDF5 Path Names and Navigation" under "The HDF5 Data Model and File Structure"
+    path_parts = split(path, "/")
+    parentname = join(path_parts[1:(end - 1)], "/")
     if !isempty(parentname)
-        return open_object(f, dirname(path))
+        return open_object(f, parentname)
     else
         return root(f)
     end
