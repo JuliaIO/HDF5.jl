@@ -3,6 +3,8 @@ module H5Zblosc
 
 import Blosc
 using HDF5.API
+import HDF5: Properties
+import HDF5: set_blosc!
 import HDF5.Filters: Filter, FilterPipeline
 import HDF5.Filters:
     filterid,
@@ -213,6 +215,10 @@ function Base.push!(f::FilterPipeline, blosc::BloscFilter)
     end
     return f
 end
+
+set_blosc!(p::Properties, val::Bool) = val && push!(FilterPipeline(p), BloscFilter())
+set_blosc!(p::Properties, level::Integer) =
+    push!(FilterPipeline(p), BloscFilter(; level=level))
 
 function __init__()
     register_filter(BloscFilter)

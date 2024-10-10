@@ -123,7 +123,14 @@ jobs:
             using Pkg
             try
               # force it to use this PR's version of the package
-              Pkg.develop(PackageSpec(path="."))  # resolver may fail with main deps
+              Pkg.develop(PackageSpec[ # resolver may fail with main deps
+                PackageSpec(path="."),
+                PackageSpec(path="./filters/H5Zbitshuffle"),
+                PackageSpec(path="./filters/H5Zblosc"),
+                PackageSpec(path="./filters/H5Zbzip2"),
+                PackageSpec(path="./filters/H5Zlz4"),
+                PackageSpec(path="./filters/H5Zzstd"),
+              ])
               Pkg.update()
               Pkg.test()  # resolver may fail with test time deps
             catch err

@@ -22,6 +22,7 @@ MPIExt = "MPI"
 
 [compat]
 Compat = "3.1.0, 4"
+H5Zblosc = "≥ 0.1.3"
 HDF5_jll = "~1.10.5, ~1.12.0, ~1.14.0"
 MPI = "0.20"
 MPIPreferences = "0.1.7"
