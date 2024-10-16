@@ -4,4 +4,5 @@
 *.jl.mem
 /docs/build/
 Manifest.toml
+docs/Manifest.toml
 LocalPreferences.toml

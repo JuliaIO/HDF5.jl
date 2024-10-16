@@ -8,3 +8,6 @@ H5Zlz4 = "eb20ec05-5464-47b5-ba41-098e3c1068a3"
 H5Zzstd = "f6f2d980-1ec6-471c-a70d-0270e22f1103"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"
+
+[compat]
+Documenter = "1"
