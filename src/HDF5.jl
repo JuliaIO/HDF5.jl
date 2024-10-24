@@ -107,6 +107,11 @@ Returns `true` if the HDF5 libraries were compiled with ros3 support
 """
 has_ros3() = HAS_ROS3[]
 
+# Functions implemented by extensions
+function _infer_track_order end
+function fileio_save end
+function fileio_load end
+
 function __init__()
     # HDF5.API.__init__() is run first
     #
@@ -118,7 +123,11 @@ function __init__()
     ASCII_ATTRIBUTE_PROPERTIES.char_encoding = :ascii
     UTF8_ATTRIBUTE_PROPERTIES.char_encoding = :utf8
 
-    @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" include("fileio.jl")
+    @static if !isdefined(Base, :get_extension)
+        @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" include(
+            "../ext/FileIOExt.jl"
+        )
+    end
 
     @require H5Zblosc = "c8ec2601-a99c-407f-b158-e79c03c2f5f7" begin
         set_blosc!(p::Properties, val::Bool) =
