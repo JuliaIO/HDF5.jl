@@ -15,10 +15,10 @@ makedocs(;
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://JuliaIO.github.io/HDF5.jl",
+        size_threshold=1024 * 1024, # 1 MiB
         assets=String[],
         sidebar_sitename=false
     ),
-    strict=true,
     pages=[
         "Home" => "index.md",
         "Interface" => [
