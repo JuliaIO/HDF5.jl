@@ -33,7 +33,9 @@ BloscExt = "Blosc"
 CodecBzip2Ext = "CodecBzip2"
 CodecLz4Ext = "CodecLz4"
 CodecZstdExt = "CodecZstd"
+FileIOExt = "FileIO"
 MPIExt = "MPI"
+OrderedCollectionsFileIOExt = ["FileIO", "OrderedCollections"]
 bitshuffle_jll_ext = "bitshuffle_jll"
 
 [extras]
@@ -63,5 +65,7 @@ Blosc = "a74b3585-a348-5f62-a45c-50e91977d574"
 CodecBzip2 = "523fee87-0ab8-5b00-afb7-3ecf72e48cfd"
 CodecLz4 = "5ba52731-8f18-5e0d-9241-30f10d1ec561"
 CodecZstd = "6b39b394-51ab-5f42-8807-6242bab2b4c2"
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"
+OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 bitshuffle_jll = "228fe19c-1b83-5282-a626-13744502a320"

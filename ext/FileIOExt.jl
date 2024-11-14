@@ -1,4 +1,12 @@
-import .FileIO
+module FileIOExt
+
+import HDF5: File, Group, h5open, fileio_save, fileio_load, _infer_track_order
+@static if isdefined(Base, :get_extension)
+    import FileIO
+else
+    import ..FileIO
+    import Requires: @require
+end
 
 function loadtodict!(d::AbstractDict, g::Union{File,Group}, prefix::String="")
     for k in keys(g)
@@ -14,10 +22,10 @@ end
 _infer_track_order(track_order::Union{Nothing,Bool}, dict::AbstractDict) =
     something(track_order, false)
 
-@require OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d" begin
-    _infer_track_order(
-        track_order::Union{Nothing,Bool}, dict::OrderedCollections.OrderedDict
-    ) = something(track_order, true)
+@static if !isdefined(Base, :get_extension)
+    @require OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d" include(
+        "OrderedCollectionsFileIOExt.jl"
+    )
 end
 
 # load with just a filename returns a flat dictionary containing all the variables
@@ -74,4 +82,6 @@ function fileio_save(
             write(file, String(k), v)
         end
     end
+end
+
 end
