@@ -16,9 +16,10 @@ makedocs(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://JuliaIO.github.io/HDF5.jl",
         assets=String[],
-        sidebar_sitename=false
+        sidebar_sitename=false,
+        # api_bindings.md will be large, consider splitting it up
+        size_threshold_ignore = ["api_bindings.md"],
     ),
-    strict=true,
     pages=[
         "Home" => "index.md",
         "Interface" => [
