@@ -19,8 +19,19 @@ DocMeta.setdocmeta!(HDF5, :DocTestSetup, :(using HDF5); recursive=true)
 
 makedocs(;
     sitename="HDF5.jl",
-    modules=[HDF5, H5Zblosc, H5Zbzip2, H5Zlz4, H5Zzstd, H5Zbitshuffle,
-             bitshuffle_jll_ext, BloscExt, CodecBzip2Ext, CodecLz4Ext, CodecZstdExt],
+    modules=[
+        HDF5,
+        H5Zblosc,
+        H5Zbzip2,
+        H5Zlz4,
+        H5Zzstd,
+        H5Zbitshuffle,
+        bitshuffle_jll_ext,
+        BloscExt,
+        CodecBzip2Ext,
+        CodecLz4Ext,
+        CodecZstdExt
+    ],
     authors="Mustafa Mohamad <mus-m@outlook.com> and contributors",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
