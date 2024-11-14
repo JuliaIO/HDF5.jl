@@ -129,13 +129,6 @@ function __init__()
         )
     end
 
-    @require H5Zblosc = "c8ec2601-a99c-407f-b158-e79c03c2f5f7" begin
-        set_blosc!(p::Properties, val::Bool) =
-            val && push!(Filters.FilterPipeline(p), H5Zblosc.BloscFilter())
-        set_blosc!(p::Properties, level::Integer) =
-            push!(Filters.FilterPipeline(p), H5Zblosc.BloscFilter(; level=level))
-    end
-
     return nothing
 end
 

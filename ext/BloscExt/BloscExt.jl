@@ -13,6 +13,8 @@ import HDF5.Filters:
     set_local_func,
     set_local_cfunc
 import HDF5.Filters.Shuffle
+import HDF5: Properties
+import HDF5: set_blosc!
 
 export H5Z_FILTER_BLOSC, blosc_filter, BloscFilter
 
@@ -215,6 +217,11 @@ function Base.push!(f::FilterPipeline, blosc::BloscFilter)
     end
     return f
 end
+
+# legacy support
+set_blosc!(p::Properties, val::Bool) = val && push!(FilterPipeline(p), BloscFilter())
+set_blosc!(p::Properties, level::Integer) =
+    push!(FilterPipeline(p), BloscFilter(; level=level))
 
 function __init__()
     register_filter(BloscFilter)
