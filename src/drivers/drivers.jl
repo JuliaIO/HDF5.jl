@@ -87,7 +87,6 @@ function __init__()
     # Check whether the libhdf5 was compiled with parallel support.
     HDF5.HAS_PARALLEL[] = API._has_symbol(:H5Pset_fapl_mpio)
     HDF5.HAS_ROS3[] = API._has_symbol(:H5Pset_fapl_ros3)
-
 end
 
 # The docstring for `MPIO` basically belongs to the struct `MPIO` in
