@@ -128,7 +128,8 @@ function H5Z_filter_lz4(
             nBlocks = (nbytes - 1) ÷ blockSize + 1
             maxDestSize =
                 nBlocks * CodecLz4.LZ4_compressBound(blockSize) + 4 + 8 + nBlocks * 4
-            maxDestSize <= 0 && error("H5Zlz4: Non-positive maxDestSize for malloc: $maxDestSize")
+            maxDestSize <= 0 &&
+                error("H5Zlz4: Non-positive maxDestSize for malloc: $maxDestSize")
             outBuf = Libc.malloc(maxDestSize)
             outBuf == C_NULL && error("H5Zlz4: Could not allocate memory via malloc")
 
