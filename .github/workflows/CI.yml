@@ -51,9 +51,9 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.6'
+          - '1.9'
+          - '1.10'
           - '1'
-          - '1.11-nightly'
           - 'nightly'
         os:
           - ubuntu-latest
@@ -67,14 +67,8 @@ jobs:
             arch: x86
           - os: ubuntu-latest # excluded because HDF5_jll v1.12 does not support i686
             arch: x86
-          - version: '1.6'
-            arch: x86
           - version: 'nightly'
             arch: x86
-          - version: '1.6'
-            os: macOS-latest
-          - version: '1.6'
-            os: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
