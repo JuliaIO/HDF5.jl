@@ -16,7 +16,8 @@ jobs:
     strategy:
       matrix:
         version:
-          - '1.6'
+          - '1.9'
+          - '1.10'
           - '1'
         os:
           - ubuntu-20.04 # required for libhdf5 v1.10.4 support

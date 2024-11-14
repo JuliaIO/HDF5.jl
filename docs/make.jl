@@ -36,7 +36,6 @@ makedocs(;
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://JuliaIO.github.io/HDF5.jl",
-        size_threshold=1024 * 1024, # 1 MiB
         assets=String[],
         sidebar_sitename=false,
         # api_bindings.md will be large, consider splitting it up

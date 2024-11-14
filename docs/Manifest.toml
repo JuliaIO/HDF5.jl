@@ -34,7 +34,6 @@ version = "0.7.3"
 
 [[deps.Blosc_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Lz4_jll", "Zlib_jll", "Zstd_jll"]
-
 git-tree-sha1 = "ef12cdd1c7fb7e1dfd6fa8fd60d4db6bc61d2f23"
 uuid = "0b7ba130-8d10-5ba8-a3d6-c5182647fed9"
 version = "1.21.6+0"
@@ -142,18 +141,6 @@ git-tree-sha1 = "ea372033d09e4552a04fd38361cd019f9003f4f4"
 uuid = "f8c6e375-362e-5223-8a59-34ff63f689eb"
 version = "2.46.2+0"
 
-[[deps.Git]]
-deps = ["Git_jll"]
-git-tree-sha1 = "04eff47b1354d702c3a85e8ab23d539bb7d5957e"
-uuid = "d7ba0133-e1db-5d97-8f8c-041e4b3a1eb2"
-version = "1.3.1"
-
-[[deps.Git_jll]]
-deps = ["Artifacts", "Expat_jll", "JLLWrappers", "LibCURL_jll", "Libdl", "Libiconv_jll", "OpenSSL_jll", "PCRE2_jll", "Zlib_jll"]
-git-tree-sha1 = "ea372033d09e4552a04fd38361cd019f9003f4f4"
-uuid = "f8c6e375-362e-5223-8a59-34ff63f689eb"
-version = "2.46.2+0"
-
 [[deps.H5Zbitshuffle]]
 deps = ["HDF5", "bitshuffle_jll"]
 path = "../filters/H5Zbitshuffle"
@@ -185,7 +172,7 @@ uuid = "f6f2d980-1ec6-471c-a70d-0270e22f1103"
 version = "0.2.0"
 
 [[deps.HDF5]]
-deps = ["Compat", "H5Zblosc", "HDF5_jll", "Libdl", "MPIPreferences", "Mmap", "Preferences", "Printf", "Random", "Requires", "UUIDs"]
+deps = ["Compat", "HDF5_jll", "Libdl", "MPIPreferences", "Mmap", "Preferences", "Printf", "Random", "Requires", "UUIDs"]
 path = ".."
 uuid = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 version = "0.17.1"
@@ -285,12 +272,6 @@ git-tree-sha1 = "61dfdba58e585066d8bce214c5a51eaa0539f269"
 uuid = "94ce4f54-9a6c-5748-9c1c-f9c7231a4531"
 version = "1.17.0+1"
 
-[[deps.Libiconv_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "f9557a255370125b405568f9767d6d195822a175"
-uuid = "94ce4f54-9a6c-5748-9c1c-f9c7231a4531"
-version = "1.17.0+0"
-
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 version = "1.11.0"
@@ -337,12 +318,6 @@ version = "5.5.1+0"
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 version = "1.11.0"
-
-[[deps.MarkdownAST]]
-deps = ["AbstractTrees", "Markdown"]
-git-tree-sha1 = "465a70f0fc7d443a00dcdc3267a497397b8a3899"
-uuid = "d0879d2d-cac2-40c8-9cee-1863dc0c7391"
-version = "0.1.2"
 
 [[deps.MarkdownAST]]
 deps = ["AbstractTrees", "Markdown"]
@@ -437,12 +412,6 @@ version = "1.11.0"
 deps = ["SHA"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 version = "1.11.0"
-
-[[deps.RegistryInstances]]
-deps = ["LazilyInitializedFields", "Pkg", "TOML", "Tar"]
-git-tree-sha1 = "ffd19052caf598b8653b99404058fce14828be51"
-uuid = "2792f1a3-b283-48e8-9a74-f99dce5104f3"
-version = "0.1.0"
 
 [[deps.RegistryInstances]]
 deps = ["LazilyInitializedFields", "Pkg", "TOML", "Tar"]

@@ -6,8 +6,6 @@ using HDF5: HDF5
 
 # The next block of lines can be removed
 using HDF5.API
-import HDF5: Properties
-import HDF5: set_blosc!
 import HDF5.Filters: Filter, FilterPipeline
 import HDF5.Filters:
     filterid,
@@ -28,10 +26,6 @@ const BloscExt = Base.get_extension(HDF5, :BloscExt)
 
 using .BloscExt: blosc_filter
 using .BloscExt: BloscFilter
-
-set_blosc!(p::Properties, val::Bool) = val && push!(FilterPipeline(p), BloscFilter())
-set_blosc!(p::Properties, level::Integer) =
-    push!(FilterPipeline(p), BloscFilter(; level=level))
 
 using .BloscExt: H5Z_FILTER_BLOSC
 using .BloscExt: FILTER_BLOSC_VERSION
