@@ -198,7 +198,7 @@ function H5Z_filter_bitshuffle(
 
         size = nbytes_uncomp ÷ elem_size
         buf_size_out <= 0 && error(
-             "bitshuffle_h5plugin: Non-positive buf_size_out for malloc: $buf_size_out"
+            "bitshuffle_h5plugin: Non-positive buf_size_out for malloc: $buf_size_out"
         )
         out_buf = Libc.malloc(buf_size_out)
         if out_buf == C_NULL
