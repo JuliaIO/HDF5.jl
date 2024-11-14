@@ -145,41 +145,46 @@ version = "2.46.2+0"
 deps = ["HDF5", "bitshuffle_jll"]
 path = "../filters/H5Zbitshuffle"
 uuid = "51b4e782-877f-4ccf-958a-27bf628210da"
-version = "0.1.3"
+version = "0.2.0"
 
 [[deps.H5Zblosc]]
 deps = ["Blosc", "HDF5"]
 path = "../filters/H5Zblosc"
 uuid = "c8ec2601-a99c-407f-b158-e79c03c2f5f7"
-version = "0.1.2"
+version = "0.2.0"
 
 [[deps.H5Zbzip2]]
 deps = ["CodecBzip2", "HDF5"]
 path = "../filters/H5Zbzip2"
 uuid = "094576f2-1e46-4c84-8e32-c46c042eaaa2"
-version = "0.1.2"
+version = "0.2.0"
 
 [[deps.H5Zlz4]]
 deps = ["CodecLz4", "HDF5"]
 path = "../filters/H5Zlz4"
 uuid = "eb20ec05-5464-47b5-ba41-098e3c1068a3"
-version = "0.1.1"
+version = "0.2.0"
 
 [[deps.H5Zzstd]]
 deps = ["CodecZstd", "HDF5"]
 path = "../filters/H5Zzstd"
 uuid = "f6f2d980-1ec6-471c-a70d-0270e22f1103"
-version = "0.1.2"
+version = "0.2.0"
 
 [[deps.HDF5]]
 deps = ["Compat", "HDF5_jll", "Libdl", "MPIPreferences", "Mmap", "Preferences", "Printf", "Random", "Requires", "UUIDs"]
 path = ".."
 uuid = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 version = "0.17.1"
-weakdeps = ["MPI"]
+weakdeps = ["Blosc", "CodecBzip2", "CodecLz4", "CodecZstd", "MPI", "bitshuffle_jll"]
 
     [deps.HDF5.extensions]
+    BloscExt = "Blosc"
+    CodecBzip2Ext = "CodecBzip2"
+    CodecLz4Ext = "CodecLz4"
+    CodecZstdExt = "CodecZstd"
     MPIExt = "MPI"
+    bitshuffle_jll_ext = "bitshuffle_jll"
 
 [[deps.HDF5_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "LazyArtifacts", "LibCURL_jll", "Libdl", "MPICH_jll", "MPIPreferences", "MPItrampoline_jll", "MicrosoftMPI_jll", "OpenMPI_jll", "OpenSSL_jll", "TOML", "Zlib_jll", "libaec_jll"]
