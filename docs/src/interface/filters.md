@@ -39,11 +39,28 @@ Several external Julia packages implement HDF5 filter plugins in Julia.
 As they are independent of HDF5.jl, they must be installed in order to use their plugins.
 
 The
+[H5Zbitshuffle.jl](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5Zbitshuffle),
 [H5Zblosc.jl](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5Zblosc),
 [H5Zbzip2.jl](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5Zbzip2),
 [H5Zlz4.jl](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5Zlz4), and
 [H5Zzstd.jl](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5Zzstd) packages are maintained as
 independent subdirectory packages within the HDF5.jl repository.
+
+### Extension packages
+
+For Julia 1.9 and greater, the external filter packages listed above at version 0.2 and greater are loose wrappers around extension packages. The filter extension packages currently implemented are as follows:
+* bitshuffle_jll_ext
+* H5Zblosc_ext
+* H5Zbzip2_ext
+* H5Zlz4_ext
+* H5Zzstd_ext
+
+```
+using HDF5, CodecZstd
+const CodecZstdExt = Base.get_extension(HDF5, :CodecZstdExt)
+using .CodecZstdExt
+filter = ZstdFilter(5)
+```
 
 ### H5Zblosc.jl
 
@@ -83,6 +100,19 @@ CurrentModule = H5Zzstd
 
 ```@docs
 ZstdFilter
+H5Zzstd
+```
+
+### H5Zbitshuffle
+
+```@meta
+CurrentModule = H5Zbitshuffle
+```
+
+```@docs
+BitshuffleFilter
+H5Zbitshuffle
+bitshuffle_jll_ext
 ```
 
 ## Other External Filters
