@@ -451,7 +451,7 @@ Properties used when creating a new `Dataset`. Inherits from
 The following options are shortcuts for the various filters, and are set-only.
 They will be appended to the filter pipeline in the order in which they appear
 
-- `blosc = true | level`: set the [`H5Zblosc.BloscFilter`](@ref) compression
+- `blosc = true | level`: set the [`BloscExt.BloscFilter`](@ref) compression
   filter; argument can be either `true`, or the compression level.
 
 - `deflate = true | level`: set the [`Filters.Deflate`](@ref) compression
