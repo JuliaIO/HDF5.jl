@@ -628,12 +628,10 @@ See `libhdf5` documentation for [`H5Oget_info1`](https://portal.hdfgroup.org/dis
 function h5o_get_info1(object_id, buf)
     lock(liblock)
     var"#status#" = try
-            ccall(
-                (:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info_t}), object_id, buf
-            )
-        finally
-            unlock(liblock)
-        end
+        ccall((:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info_t}), object_id, buf)
+    finally
+        unlock(liblock)
+    end
     var"#status#" < 0 && @h5error("Error getting object info")
     return nothing
 end
@@ -883,10 +881,10 @@ See `libhdf5` documentation for [`H5P_GET_CLASS_NAME`](https://portal.hdfgroup.o
 function h5p_get_class_name(pcid)
     lock(liblock)
     pc = try
-            ccall((:H5Pget_class_name, libhdf5), Ptr{UInt8}, (hid_t,), pcid)
-        finally
-            unlock(liblock)
-        end
+        ccall((:H5Pget_class_name, libhdf5), Ptr{UInt8}, (hid_t,), pcid)
+    finally
+        unlock(liblock)
+    end
     if pc == C_NULL
         @h5error("Error getting class name")
     end
@@ -999,10 +997,10 @@ See `libhdf5` documentation for [`H5Oopen`](https://portal.hdfgroup.org/display/
 function h5t_get_member_name(type_id, index)
     lock(liblock)
     pn = try
-            ccall((:H5Tget_member_name, libhdf5), Ptr{UInt8}, (hid_t, Cuint), type_id, index)
-        finally
-            unlock(liblock)
-        end
+        ccall((:H5Tget_member_name, libhdf5), Ptr{UInt8}, (hid_t, Cuint), type_id, index)
+    finally
+        unlock(liblock)
+    end
     if pn == C_NULL
         @h5error("Error getting name of compound datatype member #$index")
     end
@@ -1019,10 +1017,10 @@ See `libhdf5` documentation for [`H5Oopen`](https://portal.hdfgroup.org/display/
 function h5t_get_tag(type_id)
     lock(liblock)
     pc = try
-            ccall((:H5Tget_tag, libhdf5), Ptr{UInt8}, (hid_t,), type_id)
-        finally
-            unlock(liblock)
-        end
+        ccall((:H5Tget_tag, libhdf5), Ptr{UInt8}, (hid_t,), type_id)
+    finally
+        unlock(liblock)
+    end
     if pc == C_NULL
         @h5error("Error getting opaque tag")
     end
