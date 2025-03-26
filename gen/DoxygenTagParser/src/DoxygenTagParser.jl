@@ -18,8 +18,24 @@ struct HDF5GroupInfo
     filename::String
 end
 
-const DEFAULT_URL_PREFIX = "https://docs.hdfgroup.org/hdf5/v1_14/"
-const HDF5_TAG_URL = "$(DEFAULT_URL_PREFIX)hdf5.tag"
+const DEFAULT_URL_PREFIX = "https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/documentation/doxygen/"
+
+"""
+To generate hdf5.tag from the HDF5 source code execute the following script.
+
+```
+curl -fsSL https://pixi.sh/install.sh | bash
+pixi global install cmake
+pixi global install doxygen
+git clone https://github.com/HDFGroup/hdf5.git
+cd hdf5
+git checkout hdf5-1.14.6
+mkdir build
+cmake -D HDF5_BUILD_DOCS=ON ..
+make -j hdf5hllib_doc
+```
+"""
+const HDF5_TAG_URL = joinpath(dirname(@__DIR__), "hdf5.tag")
 
 """
     parse_tag_file(url)

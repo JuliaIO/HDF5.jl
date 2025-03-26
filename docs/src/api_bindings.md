@@ -1052,7 +1052,7 @@ h5z_unregister
 
 ---
 
-## [[`H5FD`](https://docs.hdfgroup.org/hdf5/v1_14/_v_f_l.html) — File Drivers](@id H5FD)
+## [[`H5FD`](https://docs.hdfgroup.org/hdf5/v1_14/) — File Drivers](@id H5FD)
 - [`h5fd_core_init`](@ref h5fd_core_init)
 - [`h5fd_family_init`](@ref h5fd_family_init)
 - [`h5fd_log_init`](@ref h5fd_log_init)
