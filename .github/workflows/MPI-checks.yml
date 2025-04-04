@@ -1,0 +1,49 @@
+name: MPI checks
+
+on:
+  push:
+    branches:
+      - master
+      - release-*
+    tags: '*'
+  pull_request:
+
+jobs:
+  mpi-checks:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest]
+        mpi: [MPICH_jll, OpenMPI_jll, MPItrampoline_jll]
+      fail-fast: false
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: '1'
+      - name: MPI checks
+        run: |
+          touch Project.toml
+          julia -e 'import Pkg; Pkg.add("MPIPreferences"); using MPIPreferences; MPIPreferences.use_jll_binary("${{ matrix.mpi }}")'
+          julia -e 'import Pkg; Pkg.add("HDF5_jll"); using HDF5_jll'
+
+  mpi-checks-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        mpi: [MicrosoftMPI_jll]
+      fail-fast: false
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: '1'
+      - name: MPI checks
+        run: |
+          touch Project.toml
+          julia -e 'import Pkg; Pkg.add("MPIPreferences"); using MPIPreferences; MPIPreferences.use_jll_binary("${{ matrix.mpi }}")'
+          julia -e 'import Pkg; Pkg.add("HDF5_jll"); using HDF5_jll'
