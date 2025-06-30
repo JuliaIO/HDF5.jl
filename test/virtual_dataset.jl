@@ -28,13 +28,8 @@ using Test, HDF5
             virtual=[HDF5.VirtualMapping(vspace, "./sub-%b.hdf5", "x", srcspace)]
         )
 
-        if Sys.iswindows()
-            @test_broken size(d) == (3, 2)
-            @test_broken read(d) == hcat(fill(1.0, 3), fill(2.0, 3))
-        else
-            @test size(d) == (3, 2)
-            @test read(d) == hcat(fill(1.0, 3), fill(2.0, 3))
-        end
+        @test size(d) == (3, 2)
+        @test read(d) == hcat(fill(1.0, 3), fill(2.0, 3))
 
         dcpl = HDF5.get_create_properties(d)
 
