@@ -11,3 +11,11 @@ MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"
 
 [compat]
 Documenter = "1"
+
+[sources]
+H5Zbitshuffle = {path = "../filters/H5Zbitshuffle"}
+H5Zblosc = {path = "../filters/H5Zblosc"}
+H5Zbzip2 = {path = "../filters/H5Zbzip2"}
+H5Zlz4 = {path = "../filters/H5Zlz4"}
+H5Zzstd = {path = "../filters/H5Zzstd"}
+HDF5 = {path = ".."}
