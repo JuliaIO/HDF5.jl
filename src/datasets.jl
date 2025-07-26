@@ -29,7 +29,7 @@ end
 # Setting dset creation properties with name/value pairs
 """
     create_dataset(
-        parent::Union{File, Group}, 
+        parent::Union{File, Group},
         path::Union{AbstractString, Nothing},
         datatype::Union{Datatype, Type},
         dataspace::Union{Dataspace, Dims, Nothing};
