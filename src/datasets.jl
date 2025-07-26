@@ -620,8 +620,8 @@ heuristic_chunk(x) = Int[]
     do_write_chunk(dataset::Dataset, offset, chunk_bytes::AbstractArray, filter_mask=0)
 
 Write a raw chunk at a given offset.
-`chunk_bytes` is an AbstractArray that can be converted to a pointer, Ptr{Cvoid}.
-`offset` is a 1-based list of rank `ndims(dataset)` and must fall on a chunk boundary.
+* `chunk_bytes` is an AbstractArray that can be converted to a pointer, `Ptr{Cvoid}`.
+* `offset` is a 1-based list of rank `ndims(dataset)` and must fall on a chunk boundary.
 """
 function do_write_chunk(dataset::Dataset, offset, chunk_bytes::AbstractArray, filter_mask=0)
     checkvalid(dataset)
@@ -633,8 +633,8 @@ end
     do_write_chunk(dataset::Dataset, index, chunk_bytes::AbstractArray, filter_mask=0)
 
 Write a raw chunk at a given linear index.
-`chunk_bytes` is an AbstractArray that can be converted to a pointer, Ptr{Cvoid}.
-`index` is 1-based and consecutive up to the number of chunks.
+* `chunk_bytes` is an AbstractArray that can be converted to a pointer, `Ptr{Cvoid}`.
+* `index` is 1-based and consecutive up to the number of chunks.
 """
 function do_write_chunk(
     dataset::Dataset, index::Integer, chunk_bytes::AbstractArray, filter_mask=0
@@ -648,7 +648,7 @@ end
     do_read_chunk(dataset::Dataset, offset)
 
 Read a raw chunk at a given offset.
-`offset` is a 1-based list of rank `ndims(dataset)` and must fall on a chunk boundary.
+* `offset` is a 1-based list of rank `ndims(dataset)` and must fall on a chunk boundary.
 """
 function do_read_chunk(dataset::Dataset, offset)
     checkvalid(dataset)
@@ -662,7 +662,7 @@ end
     do_read_chunk(dataset::Dataset, index::Integer)
 
 Read a raw chunk at a given index.
-`index` is 1-based and consecutive up to the number of chunks.
+* `index` is 1-based and consecutive up to the number of chunks.
 """
 function do_read_chunk(dataset::Dataset, index::Integer)
     checkvalid(dataset)
@@ -792,10 +792,10 @@ end
 
 Obtain information on all the chunks in a dataset. Returns a
 `Vector{ChunkInfo{N}}`.  The fields of `ChunkInfo{N}` are
-* offset - `NTuple{N, Int}` indicating the offset of the chunk in terms of elements, reversed to F-order
-* filter_mask - Cuint, 32-bit flags indicating whether filters have been applied to the cunk
-* addr - haddr_t, byte-offset of the chunk in the file
-* size - hsize_t, size of the chunk in bytes
+* `offset` - `NTuple{N, Int}` indicating the offset of the chunk in terms of elements, reversed to F-order
+* `filter_mask` - `Cuint`, 32-bit flags indicating whether filters have been applied to the cunk
+* `addr` - `haddr_t`, byte-offset of the chunk in the file
+* `size` - `hsize_t`, size of the chunk in bytes
 """
 function get_chunk_info_all(dataset, dxpl=API.H5P_DEFAULT)
     @static if hasmethod(API.h5d_chunk_iter, Tuple{API.hid_t})
