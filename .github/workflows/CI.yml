@@ -30,6 +30,7 @@ jobs:
           sudo apt-get install mpich libhdf5-mpich-dev
           echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/" >> $GITHUB_ENV
       - uses: actions/checkout@v4
+      - uses: julia-actions/cache@v2
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
@@ -71,6 +72,7 @@ jobs:
             arch: x86
     steps:
       - uses: actions/checkout@v4
+      - uses: julia-actions/cache@v2
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
