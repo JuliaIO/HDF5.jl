@@ -21,8 +21,8 @@ Language wrappers for HDF5 are often described as either "low level" or "high le
 
 ## Installation
 
-```julia
-julia>]
+```julia-repl
+julia> ] # Press `]` to enter pkg-mode
 pkg> add HDF5
 ```
 
@@ -110,12 +110,12 @@ fid = h5open(filename, mode)
 
 The mode can be any one of the following:
 
-| mode | Meaning                                                             |
-| :--- | :------------------------------------------------------------------ |
-| "r"  | read-only                                                           |
-| "r+" | read-write, preserving any existing contents                        |
-| "cw" | read-write, create file if not existing, preserve existing contents |
-| "w"  | read-write, destroying any existing contents (if any)               |
+|  mode  | Meaning                                                             |
+| :----- | :------------------------------------------------------------------ |
+| `"r"`  | read-only                                                           |
+| `"r+"` | read-write, preserving any existing contents                        |
+| `"cw"` | read-write, create file if not existing, preserve existing contents |
+| `"w"`  | read-write, destroying any existing contents (if any)               |
 
 For example
 
@@ -219,9 +219,11 @@ write(g, "mydataset", rand(3,5))
 
 One can use the high level interface `load` and `save` from `FileIO`, where an optional `OrderedDict` can be passed (`track_order` inferred). Note that using `track_order=true` or passing an `OrderedDict` is a promise that the read file has been created with the appropriate ordering flags.
 
-```julia
+```julia-repl
 julia> using OrderedCollections, FileIO
+
 julia> save("track_order.h5", OrderedDict("z"=>1, "a"=>2, "g/f"=>3, "g/b"=>4))
+
 julia> load("track_order.h5"; dict=OrderedDict())
 OrderedDict{Any, Any} with 4 entries:
   "z"   => 1

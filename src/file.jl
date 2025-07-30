@@ -2,10 +2,10 @@
     h5open(filename::AbstractString, mode::AbstractString="r"; swmr=false, pv...)
 
 Open or create an HDF5 file where `mode` is one of:
- - "r"  read only
- - "r+" read and write
- - "cw" read and write, create file if not existing, do not truncate
- - "w"  read and write, create a new file (destroys any existing contents)
+ - `"r"`  read only
+ - `"r+"` read and write
+ - `"cw"` read and write, create file if not existing, do not truncate
+ - `"w"`  read and write, create a new file (destroys any existing contents)
 
 Pass `swmr=true` to enable (Single Writer Multiple Reader) SWMR write access for "w" and
 "r+", or SWMR read access for "r".
@@ -86,10 +86,11 @@ Apply the function f to the result of `h5open(args...; kwargs...)` and close the
 `HDF5.File` upon completion.
 For example with a `do` block:
 
-    h5open("foo.h5","w") do h5
-        h5["foo"]=[1,2,3]
-    end
-
+```julia
+h5open("foo.h5","w") do h5
+    h5["foo"] = [1,2,3]
+end
+```
 """
 function h5open(f::Function, args...; context=copy(CONTEXT), pv...)
     file = h5open(args...; pv...)
@@ -169,7 +170,7 @@ function Base.close(obj::File)
 end
 
 """
-  isopen(obj::HDF5.File)
+    isopen(obj::HDF5.File)
 
 Returns `true` if `obj` has not been closed, `false` if it has been closed.
 """

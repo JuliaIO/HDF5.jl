@@ -9,7 +9,7 @@ abstract type H5DataStore end
     read(parent::H5DataStore)
     read(parent::H5DataStore, names...)
 
-Read a list of variables, read(parent, "A", "B", "x", ...).
+Read a list of variables, `read(parent, "A", "B", "x", ...)`.
 If no variables are specified, read every variable in the file.
 """
 function Base.read(parent::H5DataStore, name::AbstractString...)
