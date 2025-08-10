@@ -16,7 +16,7 @@ UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [compat]
 Blosc = "0.7.3"
-CodecBzip2 = "0.7, 0.8"
+ChunkCodecLibBzip2 = "0.2"
 CodecLz4 = "0.4"
 CodecZstd = "0.7, 0.8"
 Compat = "3.1.0, 4"
@@ -30,7 +30,7 @@ julia = "1.9"
 
 [extensions]
 BloscExt = "Blosc"
-CodecBzip2Ext = "CodecBzip2"
+ChunkCodecLibBzip2Ext = "ChunkCodecLibBzip2"
 CodecLz4Ext = "CodecLz4"
 CodecZstdExt = "CodecZstd"
 FileIOExt = "FileIO"
@@ -41,7 +41,6 @@ bitshuffle_jll_ext = "bitshuffle_jll"
 [extras]
 Blosc = "a74b3585-a348-5f62-a45c-50e91977d574"
 CRC32c = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
-CodecBzip2 = "523fee87-0ab8-5b00-afb7-3ecf72e48cfd"
 CodecLz4 = "5ba52731-8f18-5e0d-9241-30f10d1ec561"
 CodecZstd = "6b39b394-51ab-5f42-8807-6242bab2b4c2"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
@@ -62,10 +61,10 @@ test = ["Test", "MPI", "Distributed", "LinearAlgebra", "OrderedCollections", "Pk
 
 [weakdeps]
 Blosc = "a74b3585-a348-5f62-a45c-50e91977d574"
-CodecBzip2 = "523fee87-0ab8-5b00-afb7-3ecf72e48cfd"
 CodecLz4 = "5ba52731-8f18-5e0d-9241-30f10d1ec561"
 CodecZstd = "6b39b394-51ab-5f42-8807-6242bab2b4c2"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"
 OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
+ChunkCodecLibBzip2 = "2b723af9-f480-4e8d-a1e4-4a9f5a906122"
 bitshuffle_jll = "228fe19c-1b83-5282-a626-13744502a320"

@@ -3,7 +3,7 @@ Copyright (c) 2021 Mark Kittisopikul and Howard Hughes Medical Institute. Licens
 =#
 module H5Zbzip2
 
-using CodecBzip2: libbzip2
+using ChunkCodecLibBzip2: ChunkCodecLibBzip2
 using HDF5: HDF5
 
 # Remove the next three lines in the future
@@ -13,11 +13,11 @@ import HDF5.Filters:
 
 export H5Z_FILTER_BZIP2, H5Z_filter_bzip2, Bzip2Filter
 
-const CodecBzip2Ext = Base.get_extension(HDF5, :CodecBzip2Ext)
+const ChunkCodecLibBzip2Ext = Base.get_extension(HDF5, :ChunkCodecLibBzip2Ext)
 
-using .CodecBzip2Ext: H5Z_FILTER_BZIP2
-using .CodecBzip2Ext: H5Z_filter_bzip2
-using .CodecBzip2Ext: Bzip2Filter
-using .CodecBzip2Ext: bzip2_name
+using .ChunkCodecLibBzip2Ext: H5Z_FILTER_BZIP2
+using .ChunkCodecLibBzip2Ext: H5Z_filter_bzip2
+using .ChunkCodecLibBzip2Ext: Bzip2Filter
+using .ChunkCodecLibBzip2Ext: bzip2_name
 
 end # module H5Zbzip2
