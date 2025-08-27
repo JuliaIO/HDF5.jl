@@ -7,6 +7,6 @@ ChunkCodecLibBzip2 = "2b723af9-f480-4e8d-a1e4-4a9f5a906122"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 
 [compat]
-ChunkCodecLibBzip2 = "0.2"
+ChunkCodecLibBzip2 = "0.3"
 HDF5 = "0.17"
 julia = "1.9"

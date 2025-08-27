@@ -43,7 +43,7 @@ function H5Z_filter_bzip2(
             # Decompress
             outbuflen = Int64(nbytes) * 3 + 1
             resize!(dst, outbuflen)
-            outdatalen = try_resize_decode!(BZ2Codec(), dst, src, typemax(Int64))
+            outdatalen = Int64(try_resize_decode!(BZ2Codec(), dst, src, typemax(Int64)))
         else
             # Compress data
             blockSize100k = 9
@@ -54,7 +54,7 @@ function H5Z_filter_bzip2(
             encoder = BZ2EncodeOptions(;blockSize100k)
             # Prepare the output buffer
             resize!(dst, encode_bound(encoder, Int64(nbytes)))
-            outdatalen = try_encode!(encoder, dst, src)
+            outdatalen = Int64(try_encode!(encoder, dst, src))
         end # if flags & API.H5Z_FLAG_REVERSE != 0
         resize!(src, Int64(0))
         unsafe_store!(buf, dst.p)

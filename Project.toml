@@ -16,7 +16,7 @@ UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [compat]
 Blosc = "0.7.3"
-ChunkCodecLibBzip2 = "0.2"
+ChunkCodecLibBzip2 = "0.3"
 CodecLz4 = "0.4"
 CodecZstd = "0.7, 0.8"
 Compat = "3.1.0, 4"
