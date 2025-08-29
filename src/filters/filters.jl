@@ -480,6 +480,63 @@ function ensure_filters_available(f::FilterPipeline)
     error("unreachable")
 end
 
+"""
+    mutable struct UnsafeBuffer <: AbstractVector{UInt8}
+
+A unsafe vector of bytes that can be used by filters to resize buffers.
+
+"""
+mutable struct UnsafeBuffer <: AbstractVector{UInt8}
+    p::Ptr{UInt8}
+    size::Csize_t
+end
+function UnsafeBuffer()
+    UnsafeBuffer(Ptr{UInt8}(), 0)
+end
+function Base.size(A::UnsafeBuffer)
+    (A.size,)
+end
+@inline function Base.getindex(A::UnsafeBuffer, i::Integer)
+    @boundscheck checkbounds(A, i)
+    unsafe_load(A.p, i)
+end
+@inline function Base.setindex!(A::UnsafeBuffer, v::UInt8, i::Integer)
+    @boundscheck checkbounds(A, i)
+    unsafe_store!(A.p, v, i)
+    nothing
+end
+function Base.strides(A::UnsafeBuffer)
+    (1,)
+end
+function Base.cconvert(::Type{Ptr{UInt8}}, A::UnsafeBuffer)
+    A
+end
+function Base.unsafe_convert(::Type{Ptr{UInt8}}, A::UnsafeBuffer)
+    A.p
+end
+function Base.elsize(::Type{UnsafeBuffer})
+    1
+end
+function Base.resize!(A::UnsafeBuffer, n::Int64)
+    @assert A.size ≥ 0
+    _n = Csize_t(n)
+    if _n != A.size
+        A.p = if _n == 0
+            Libc.free(A.p) # maybe this should use H5free_memory
+            A.size = _n
+            C_NULL
+        else
+            newp = Libc.realloc(A.p, _n) # maybe this should use H5resize_memory
+            if newp == C_NULL
+                throw(OutOfMemoryError())
+            end
+            newp
+        end
+        A.size = _n
+    end
+    A
+end
+
 include("builtin.jl")
 include("filters_midlevel.jl")
 include("registered.jl")

@@ -11,7 +11,7 @@ using MPI  # needed to generate docs for parallel HDF5 API
 const BloscExt = Base.get_extension(HDF5, :BloscExt)
 const bitshuffle_jll_ext = Base.get_extension(HDF5, :bitshuffle_jll_ext)
 const BloscExt = Base.get_extension(HDF5, :BloscExt)
-const CodecBzip2Ext = Base.get_extension(HDF5, :CodecBzip2Ext)
+const ChunkCodecLibBzip2Ext = Base.get_extension(HDF5, :ChunkCodecLibBzip2Ext)
 const CodecLz4Ext = Base.get_extension(HDF5, :CodecLz4Ext)
 const CodecZstdExt = Base.get_extension(HDF5, :CodecZstdExt)
 
