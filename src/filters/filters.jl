@@ -509,6 +509,9 @@ function Base.strides(A::UnsafeBuffer)
     (1,)
 end
 function Base.cconvert(::Type{Ptr{UInt8}}, A::UnsafeBuffer)
+    A
+end
+function Base.unsafe_convert(::Type{Ptr{UInt8}}, A::UnsafeBuffer)
     A.p
 end
 function Base.elsize(::Type{UnsafeBuffer})
