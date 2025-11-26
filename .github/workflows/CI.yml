@@ -52,23 +52,33 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - {version: '1.9', os: ubuntu-24.04, arch: x64}
+          - {version: '1.9', os: ubuntu-24.04, arch: x86}
+          - {version: '1.9', os: ubuntu-24.04-arm, arch: aarch64}
+          - {version: '1.9', os: macOS-15-intel, arch: x64}
+          - {version: '1.9', os: macOS-26, arch: aarch64}
+          - {version: '1.9', os: windows-2025, arch: x64}
+          - {version: '1.9', os: windows-2025, arch: x86}
           - {version: '1.10', os: ubuntu-24.04, arch: x64}
           - {version: '1.10', os: ubuntu-24.04, arch: x86}
           - {version: '1.10', os: ubuntu-24.04-arm, arch: aarch64}
           - {version: '1.10', os: macOS-15-intel, arch: x64}
           - {version: '1.10', os: macOS-26, arch: aarch64}
+          - {version: '1.10', os: windows-2025, arch: x64}
           - {version: '1.10', os: windows-2025, arch: x86}
           - {version: '1', os: ubuntu-24.04, arch: x64}
           - {version: '1', os: ubuntu-24.04, arch: x86}
           - {version: '1', os: ubuntu-24.04-arm, arch: aarch64}
           - {version: '1', os: macOS-15-intel, arch: x64}
           - {version: '1', os: macOS-26, arch: aarch64}
+          - {version: '1', os: windows-2025, arch: x64}
           - {version: '1', os: windows-2025, arch: x86}
           - {version: 'nightly', os: ubuntu-24.04, arch: x64}
           - {version: 'nightly', os: ubuntu-24.04, arch: x86}
           - {version: 'nightly', os: ubuntu-24.04-arm, arch: aarch64}
           - {version: 'nightly', os: macOS-15-intel, arch: x64}
           - {version: 'nightly', os: macOS-26, arch: aarch64}
+          - {version: 'nightly', os: windows-2025, arch: x64}
           - {version: 'nightly', os: windows-2025, arch: x86}
     steps:
       - uses: actions/checkout@v6
@@ -104,6 +114,7 @@ jobs:
           - {user: JuliaIO, repo: JLD.jl}
     steps:
       - uses: actions/checkout@v6
+      - uses: julia-actions/cache@v2
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
