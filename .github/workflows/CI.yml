@@ -32,17 +32,17 @@ jobs:
   #TODO         echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
   #TODO     - uses: actions/checkout@v6
   #TODO     - uses: julia-actions/cache@v2
-  #TODO     - uses: julia-actions/setup-julia@2
+  #TODO     - uses: julia-actions/setup-julia@v2
   #TODO       with:
   #TODO         version: ${{ matrix.version }}
   #TODO         arch: ${{ matrix.arch }}
-  #TODO     - uses: julia-actions/julia-buildpkg@1
+  #TODO     - uses: julia-actions/julia-buildpkg@v1
   #TODO     - name: Configure MPI.jl
   #TODO       shell: julia --color=yes {0}
   #TODO       run: |
   #TODO         @show pwd()
   #TODO         include(joinpath(pwd(), "test", "configure_packages.jl"))
-  #TODO     - uses: julia-actions/julia-runtest@1
+  #TODO     - uses: julia-actions/julia-runtest@v1
 
   HDF5:
     name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
@@ -76,15 +76,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: julia-actions/cache@v2
-      - uses: julia-actions/setup-julia@2
+      - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: julia-actions/julia-buildpkg@1
-      - uses: julia-actions/julia-runtest@1
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
         env:
           JULIA_DEBUG: Main
-      - uses: julia-actions/julia-processcoverage@1
+      - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v5
         with:
           files: lcov.info
@@ -107,11 +107,11 @@ jobs:
   #TODO         - {user: JuliaIO, repo: JLD.jl}
   #TODO   steps:
   #TODO     - uses: actions/checkout@v6
-  #TODO     - uses: julia-actions/setup-julia@2
+  #TODO     - uses: julia-actions/setup-julia@v2
   #TODO       with:
   #TODO         version: ${{ matrix.version }}
   #TODO         arch: ${{ matrix.arch }}
-  #TODO     - uses: julia-actions/julia-buildpkg@1
+  #TODO     - uses: julia-actions/julia-buildpkg@v1
   #TODO     - name: Clone ${{ matrix.package.repo }}
   #TODO       uses: actions/checkout@v6
   #TODO       with:
