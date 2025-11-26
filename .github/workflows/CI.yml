@@ -9,40 +9,38 @@ on:
   pull_request:
 
 jobs:
-  #TODO HDF5-system-libs:
-  #TODO   name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} (system libhdf5 + mpich)
-  #TODO   runs-on: ${{ matrix.os }}
-  #TODO   timeout-minutes: 20
-  #TODO   strategy:
-  #TODO     matrix:
-  #TODO       version:
-  #TODO         - '1.9'
-  #TODO         - '1.10'
-  #TODO         - '1.11'
-  #TODO         - '1'
-  #TODO       os:
-  #TODO         - ubuntu-22.04
-  #TODO       arch:
-  #TODO         - x64
-  #TODO   steps:
-  #TODO     - name: Install libraries
-  #TODO       run: |
-  #TODO         sudo apt-get update
-  #TODO         sudo apt-get install mpich libhdf5-mpich-dev
-  #TODO         echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
-  #TODO     - uses: actions/checkout@v6
-  #TODO     - uses: julia-actions/cache@v2
-  #TODO     - uses: julia-actions/setup-julia@v2
-  #TODO       with:
-  #TODO         version: ${{ matrix.version }}
-  #TODO         arch: ${{ matrix.arch }}
-  #TODO     - uses: julia-actions/julia-buildpkg@v1
-  #TODO     - name: Configure MPI.jl
-  #TODO       shell: julia --color=yes {0}
-  #TODO       run: |
-  #TODO         @show pwd()
-  #TODO         include(joinpath(pwd(), "test", "configure_packages.jl"))
-  #TODO     - uses: julia-actions/julia-runtest@v1
+  HDF5-system-libs:
+    name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} (system libhdf5 + mpich)
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        version:
+          - '1.10'
+          - '1'
+        os:
+          - ubuntu-22.04
+        arch:
+          - x64
+    steps:
+      - name: Install libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install mpich libhdf5-mpich-dev
+          echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
+      - uses: actions/checkout@v6
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/julia-buildpkg@v1
+      - name: Configure MPI.jl
+        shell: julia --color=yes {0}
+        run: |
+          @show pwd()
+          include(joinpath(pwd(), "test", "configure_packages.jl"))
+      - uses: julia-actions/julia-runtest@v1
 
   HDF5:
     name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
@@ -52,34 +50,29 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.9'
           - '1.10'
-          - '1.11'
           - '1'
           - 'nightly'
-        os:
-          #TODO - ubuntu-24.04
-          - ubuntu-24.04-arm
-          - macOS-15-intel
-          #TODO - macOS-26
-          #TODO - windows-2025
-        arch:
-          - x64
-          - x86
-        #TODO exclude:
-        #TODO   - os: macOS-latest
-        #TODO     arch: x86
-        #TODO   - os: ubuntu-latest # excluded because HDF5_jll v1.12 does not support i686
-        #TODO     arch: x86
-        #TODO   - version: 'nightly'
-        #TODO     arch: x86
+        osarch:
+          - os: ubuntu-24.04
+            arch: x64
+          - os: ubuntu-24.04
+            arch: x86
+          - os: ubuntu-24.04-arm
+            arch: aarch64
+          - os: macOS-15-intel
+            arch: x64
+          - os: macOS-26
+            arch: aarch64
+          - os: windows-2025
+            arch: x86
     steps:
       - uses: actions/checkout@v6
       - uses: julia-actions/cache@v2
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
+          arch: ${{ matrix.osarch.arch }}
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         env:
@@ -89,55 +82,55 @@ jobs:
         with:
           files: lcov.info
 
-  #TODO integration:
-  #TODO   name: ${{ matrix.package.repo }} - julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
-  #TODO   runs-on: ${{ matrix.os }}
-  #TODO   timeout-minutes: 30
-  #TODO   strategy:
-  #TODO     fail-fast: false
-  #TODO     matrix:
-  #TODO       version:
-  #TODO         - '1'
-  #TODO       os:
-  #TODO         - ubuntu-latest
-  #TODO       arch:
-  #TODO         - x64
-  #TODO       package:
-  #TODO         - {user: JuliaIO, repo: MAT.jl}
-  #TODO         - {user: JuliaIO, repo: JLD.jl}
-  #TODO   steps:
-  #TODO     - uses: actions/checkout@v6
-  #TODO     - uses: julia-actions/setup-julia@v2
-  #TODO       with:
-  #TODO         version: ${{ matrix.version }}
-  #TODO         arch: ${{ matrix.arch }}
-  #TODO     - uses: julia-actions/julia-buildpkg@v1
-  #TODO     - name: Clone ${{ matrix.package.repo }}
-  #TODO       uses: actions/checkout@v6
-  #TODO       with:
-  #TODO         repository: ${{ matrix.package.user }}/${{ matrix.package.repo }}
-  #TODO         path: downstream
-  #TODO     - name: Run ${{ matrix.package.repo }} tests
-  #TODO       shell: julia --project=downstream {0}
-  #TODO       run: |
-  #TODO           using Pkg
-  #TODO           try
-  #TODO             # force it to use this PR's version of the package
-  #TODO             Pkg.develop(PackageSpec[ # resolver may fail with main deps
-  #TODO               PackageSpec(path="."),
-  #TODO               PackageSpec(path="./filters/H5Zbitshuffle"),
-  #TODO               PackageSpec(path="./filters/H5Zblosc"),
-  #TODO               PackageSpec(path="./filters/H5Zbzip2"),
-  #TODO               PackageSpec(path="./filters/H5Zlz4"),
-  #TODO               PackageSpec(path="./filters/H5Zzstd"),
-  #TODO             ])
-  #TODO             Pkg.update()
-  #TODO             Pkg.test()  # resolver may fail with test time deps
-  #TODO           catch err
-  #TODO             err isa Pkg.Resolve.ResolverError || rethrow()
-  #TODO             # If we can't resolve that means this is incompatible by SemVer and this is fine
-  #TODO             # It means we marked this as a breaking change, so we don't need to worry about
-  #TODO             # Mistakenly introducing a breaking change, as we have intentionally made one
-  #TODO             @info "Not compatible with this release. No problem." exception=err
-  #TODO             exit(0)  #  Exit immediately, as a success
-  #TODO           end
+  integration:
+    name: ${{ matrix.package.repo }} - julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1'
+        os:
+          - ubuntu-latest
+        arch:
+          - x64
+        package:
+          - {user: JuliaIO, repo: MAT.jl}
+          - {user: JuliaIO, repo: JLD.jl}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/julia-buildpkg@v1
+      - name: Clone ${{ matrix.package.repo }}
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ matrix.package.user }}/${{ matrix.package.repo }}
+          path: downstream
+      - name: Run ${{ matrix.package.repo }} tests
+        shell: julia --project=downstream {0}
+        run: |
+            using Pkg
+            try
+              # force it to use this PR's version of the package
+              Pkg.develop(PackageSpec[ # resolver may fail with main deps
+                PackageSpec(path="."),
+                PackageSpec(path="./filters/H5Zbitshuffle"),
+                PackageSpec(path="./filters/H5Zblosc"),
+                PackageSpec(path="./filters/H5Zbzip2"),
+                PackageSpec(path="./filters/H5Zlz4"),
+                PackageSpec(path="./filters/H5Zzstd"),
+              ])
+              Pkg.update()
+              Pkg.test()  # resolver may fail with test time deps
+            catch err
+              err isa Pkg.Resolve.ResolverError || rethrow()
+              # If we can't resolve that means this is incompatible by SemVer and this is fine
+              # It means we marked this as a breaking change, so we don't need to worry about
+              # Mistakenly introducing a breaking change, as we have intentionally made one
+              @info "Not compatible with this release. No problem." exception=err
+              exit(0)  #  Exit immediately, as a success
+            end
