@@ -726,20 +726,6 @@ function h5p_get_external(plist, idx=0)
             break
         end
     end
-    #TODO # Heuristic for 32-bit Windows bug
-    #TODO # Possibly related:
-    #TODO # https://github.com/HDFGroup/hdf5/pull/1821
-    #TODO # Quote:
-    #TODO # The offset parameter is of type off_t and the offset field of H5O_efl_entry_t
-    #TODO # is HDoff_t which is a different type on Windows (off_t is a 32-bit long,
-    #TODO # HDoff_t is __int64, a 64-bit type).
-    #TODO @static if Sys.iswindows() && sizeof(Int) == 4
-    #TODO     lower = 0xffffffff & sz[]
-    #TODO     upper = 0xffffffff & (sz[] >> 32)
-    #TODO     # Scenario 1: The size is in the lower 32 bits, upper 32 bits contains garbage v1.12.2
-    #TODO     # Scenario 2: The size is in the upper 32 bits, lower 32 bits is 0 as of HDF5 v1.12.1
-    #TODO     sz[] = lower == 0 && upper != 0xffffffff ? upper : lower
-    #TODO end
     return (name=String(name), offset=offset[], size=sz[])
 end
 
