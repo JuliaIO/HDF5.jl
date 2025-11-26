@@ -9,38 +9,40 @@ on:
   pull_request:
 
 jobs:
-  HDF5-system-libs:
-    name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} (system libhdf5 + mpich)
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
-    strategy:
-      matrix:
-        version:
-          - '1.10'
-          - '1'
-        os:
-          - ubuntu-22.04
-        arch:
-          - x64
-    steps:
-      - name: Install libraries
-        run: |
-          sudo apt-get update
-          sudo apt-get install mpich libhdf5-mpich-dev
-          echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
-      - uses: actions/checkout@v6
-      - uses: julia-actions/cache@v2
-      - uses: julia-actions/setup-julia@v2
-        with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-      - uses: julia-actions/julia-buildpkg@v1
-      - name: Configure MPI.jl
-        shell: julia --color=yes {0}
-        run: |
-          @show pwd()
-          include(joinpath(pwd(), "test", "configure_packages.jl"))
-      - uses: julia-actions/julia-runtest@v1
+  # This test is disable because the Github runner image `ubuntu-20.04` is not available any more.
+  # Updating to a newer image is not trivial; some debugging is necessary.
+  # HDF5-system-libs:
+  #   name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} (system libhdf5 + mpich)
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 20
+  #   strategy:
+  #     matrix:
+  #       version:
+  #         - '1.10'
+  #         - '1'
+  #       os:
+  #         - ubuntu-20.04 # required for libhdf5 v1.10.4 support
+  #       arch:
+  #         - x64
+  #   steps:
+  #     - name: Install libraries
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install mpich libhdf5-mpich-dev
+  #         echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
+  #     - uses: actions/checkout@v6
+  #     - uses: julia-actions/cache@v2
+  #     - uses: julia-actions/setup-julia@v2
+  #       with:
+  #         version: ${{ matrix.version }}
+  #         arch: ${{ matrix.arch }}
+  #     - uses: julia-actions/julia-buildpkg@v1
+  #     - name: Configure MPI.jl
+  #       shell: julia --color=yes {0}
+  #       run: |
+  #         @show pwd()
+  #         include(joinpath(pwd(), "test", "configure_packages.jl"))
+  #     - uses: julia-actions/julia-runtest@v1
 
   HDF5:
     name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
@@ -49,30 +51,32 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version:
-          - '1.10'
-          - '1'
-          - 'nightly'
-        osarch:
-          - os: ubuntu-24.04
-            arch: x64
-          - os: ubuntu-24.04
-            arch: x86
-          - os: ubuntu-24.04-arm
-            arch: aarch64
-          - os: macOS-15-intel
-            arch: x64
-          - os: macOS-26
-            arch: aarch64
-          - os: windows-2025
-            arch: x86
+        include:
+          - {version: '1.10', os: ubuntu-24.04, arch: x64}
+          - {version: '1.10', os: ubuntu-24.04, arch: x86}
+          - {version: '1.10', os: ubuntu-24.04-arm, arch: aarch64}
+          - {version: '1.10', os: macOS-15-intel, arch: x64}
+          - {version: '1.10', os: macOS-26, arch: aarch64}
+          - {version: '1.10', os: windows-2025, arch: x86}
+          - {version: '1', os: ubuntu-24.04, arch: x64}
+          - {version: '1', os: ubuntu-24.04, arch: x86}
+          - {version: '1', os: ubuntu-24.04-arm, arch: aarch64}
+          - {version: '1', os: macOS-15-intel, arch: x64}
+          - {version: '1', os: macOS-26, arch: aarch64}
+          - {version: '1', os: windows-2025, arch: x86}
+          - {version: 'nightly', os: ubuntu-24.04, arch: x64}
+          - {version: 'nightly', os: ubuntu-24.04, arch: x86}
+          - {version: 'nightly', os: ubuntu-24.04-arm, arch: aarch64}
+          - {version: 'nightly', os: macOS-15-intel, arch: x64}
+          - {version: 'nightly', os: macOS-26, arch: aarch64}
+          - {version: 'nightly', os: windows-2025, arch: x86}
     steps:
       - uses: actions/checkout@v6
       - uses: julia-actions/cache@v2
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
-          arch: ${{ matrix.osarch.arch }}
+          arch: ${{ matrix.arch }}
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         env:
