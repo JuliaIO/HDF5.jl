@@ -4,7 +4,7 @@
 # so the methods here handle making the appropriate `Ref`s and return them (as tuples).
 
 const H5F_LIBVER_LATEST = if _libhdf5_build_ver >= v"1.15"
-    H5F_LIBVER_V116
+    H5F_LIBVER_V200
 elseif _libhdf5_build_ver >= v"1.14"
     H5F_LIBVER_V114
 elseif _libhdf5_build_ver >= v"1.12"
@@ -733,7 +733,7 @@ function h5p_get_external(plist, idx=0)
     # The offset parameter is of type off_t and the offset field of H5O_efl_entry_t
     # is HDoff_t which is a different type on Windows (off_t is a 32-bit long,
     # HDoff_t is __int64, a 64-bit type).
-    @static if Sys.iswindows() && sizeof(Int) == 4
+    @static if v"2.0" ≤ _libhdf5_build_ver && Sys.iswindows() && sizeof(Int) == 4
         lower = 0xffffffff & sz[]
         upper = 0xffffffff & (sz[] >> 32)
         # Scenario 1: The size is in the lower 32 bits, upper 32 bits contains garbage v1.12.2

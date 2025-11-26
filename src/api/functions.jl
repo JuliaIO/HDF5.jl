@@ -801,20 +801,40 @@ function h5d_read(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_pli
     return nothing
 end
 
-"""
-    h5d_read_chunk(dset::hid_t, dxpl_id::hid_t, offset::Ptr{hsize_t}, filters::Ptr{UInt32}, buf::Ptr{Cvoid})
+@static if _libhdf5_build_ver < v"2.0"
+    @doc """
+        h5d_read_chunk(dset::hid_t, dxpl_id::hid_t, offset::Ptr{hsize_t}, filters::Ptr{UInt32}, buf::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Dread_chunk`](https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/documentation/doxygen/group___h5_d.html#gac1092a63b718ec949d6539590a914b60).
-"""
-function h5d_read_chunk(dset, dxpl_id, offset, filters, buf)
-    lock(liblock)
-    var"#status#" = try
-            ccall((:H5Dread_chunk, libhdf5), herr_t, (hid_t, hid_t, Ptr{hsize_t}, Ptr{UInt32}, Ptr{Cvoid}), dset, dxpl_id, offset, filters, buf)
-        finally
-            unlock(liblock)
-        end
-    var"#status#" < herr_t(0) && @h5error("Error reading chunk")
-    return nothing
+    See `libhdf5` documentation for [`H5Dread_chunk`](https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/documentation/doxygen/group___h5_d.html#gac1092a63b718ec949d6539590a914b60).
+    """
+    function h5d_read_chunk(dset, dxpl_id, offset, filters, buf)
+        lock(liblock)
+        var"#status#" = try
+                ccall((:H5Dread_chunk, libhdf5), herr_t, (hid_t, hid_t, Ptr{hsize_t}, Ptr{UInt32}, Ptr{Cvoid}), dset, dxpl_id, offset, filters, buf)
+            finally
+                unlock(liblock)
+            end
+        var"#status#" < herr_t(0) && @h5error("Error reading chunk")
+        return nothing
+    end
+end
+
+@static if v"2.0" ≤ _libhdf5_build_ver
+    @doc """
+        h5d_read_chunk(dset::hid_t, dxpl_id::hid_t, offset::Ptr{hsize_t}, filters::Ptr{UInt32}, buf::Ptr{Cvoid})
+
+    See `libhdf5` documentation for [`H5Dread_chunk1`](https://docs.hdfgroup.org/hdf5/v1_14/).
+    """
+    function h5d_read_chunk(dset, dxpl_id, offset, filters, buf)
+        lock(liblock)
+        var"#status#" = try
+                ccall((:H5Dread_chunk1, libhdf5), herr_t, (hid_t, hid_t, Ptr{hsize_t}, Ptr{UInt32}, Ptr{Cvoid}), dset, dxpl_id, offset, filters, buf)
+            finally
+                unlock(liblock)
+            end
+        var"#status#" < herr_t(0) && @h5error("Error reading chunk")
+        return nothing
+    end
 end
 
 """
@@ -3279,20 +3299,40 @@ function h5p_get_evict_on_close(fapl_id, evict_on_close)
     return nothing
 end
 
-"""
-    h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{hsize_t})
+@static if _libhdf5_build_ver < v"2.0"
+    @doc """
+        h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Pget_external`](https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/documentation/doxygen/group___d_c_p_l.html#ga78253b80b6c86faf7ff0db135146521d).
-"""
-function h5p_get_external(plist, idx, name_size, name, offset, size)
-    lock(liblock)
-    var"#status#" = try
-            ccall((:H5Pget_external, libhdf5), herr_t, (hid_t, Cuint, Csize_t, Ptr{Cuchar}, Ptr{off_t}, Ptr{hsize_t}), plist, idx, name_size, name, offset, size)
-        finally
-            unlock(liblock)
-        end
-    var"#status#" < herr_t(0) && @h5error("Error getting external file properties")
-    return nothing
+    See `libhdf5` documentation for [`H5Pget_external`](https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/documentation/doxygen/group___d_c_p_l.html#ga78253b80b6c86faf7ff0db135146521d).
+    """
+    function h5p_get_external(plist, idx, name_size, name, offset, size)
+        lock(liblock)
+        var"#status#" = try
+                ccall((:H5Pget_external, libhdf5), herr_t, (hid_t, Cuint, Csize_t, Ptr{Cuchar}, Ptr{off_t}, Ptr{hsize_t}), plist, idx, name_size, name, offset, size)
+            finally
+                unlock(liblock)
+            end
+        var"#status#" < herr_t(0) && @h5error("Error getting external file properties")
+        return nothing
+    end
+end
+
+@static if v"2.0" ≤ _libhdf5_build_ver
+    @doc """
+        h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{H5Doff_t}, size::Ptr{hsize_t})
+
+    See `libhdf5` documentation for [`H5Pget_external`](https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/documentation/doxygen/group___d_c_p_l.html#ga78253b80b6c86faf7ff0db135146521d).
+    """
+    function h5p_get_external(plist, idx, name_size, name, offset, size)
+        lock(liblock)
+        var"#status#" = try
+                ccall((:H5Pget_external, libhdf5), herr_t, (hid_t, Cuint, Csize_t, Ptr{Cuchar}, Ptr{H5Doff_t}, Ptr{hsize_t}), plist, idx, name_size, name, offset, size)
+            finally
+                unlock(liblock)
+            end
+        var"#status#" < herr_t(0) && @h5error("Error getting external file properties")
+        return nothing
+    end
 end
 
 """
@@ -4783,20 +4823,40 @@ function h5p_set_evict_on_close(fapl_id, evict_on_close)
     return nothing
 end
 
-"""
-    h5p_set_external(plist_id::hid_t, name::Cstring, offset::off_t, size::hsize_t)
+@static if _libhdf5_build_ver < v"2.0"
+    @doc """
+        h5p_set_external(plist_id::hid_t, name::Cstring, offset::off_t, size::hsize_t)
 
-See `libhdf5` documentation for [`H5Pset_external`](https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/documentation/doxygen/group___d_c_p_l.html#ga85ff7c9c827fa524041cd58c199b77b8).
-"""
-function h5p_set_external(plist_id, name, offset, size)
-    lock(liblock)
-    var"#status#" = try
-            ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Cstring, off_t, hsize_t), plist_id, name, offset, size)
-        finally
-            unlock(liblock)
-        end
-    var"#status#" < herr_t(0) && @h5error("Error setting external property")
-    return nothing
+    See `libhdf5` documentation for [`H5Pset_external`](https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/documentation/doxygen/group___d_c_p_l.html#ga85ff7c9c827fa524041cd58c199b77b8).
+    """
+    function h5p_set_external(plist_id, name, offset, size)
+        lock(liblock)
+        var"#status#" = try
+                ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Cstring, off_t, hsize_t), plist_id, name, offset, size)
+            finally
+                unlock(liblock)
+            end
+        var"#status#" < herr_t(0) && @h5error("Error setting external property")
+        return nothing
+    end
+end
+
+@static if v"2.0" ≤ _libhdf5_build_ver
+    @doc """
+        h5p_set_external(plist_id::hid_t, name::Cstring, offset::H5Doff_t, size::hsize_t)
+
+    See `libhdf5` documentation for [`H5Pset_external`](https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/documentation/doxygen/group___d_c_p_l.html#ga85ff7c9c827fa524041cd58c199b77b8).
+    """
+    function h5p_set_external(plist_id, name, offset, size)
+        lock(liblock)
+        var"#status#" = try
+                ccall((:H5Pset_external, libhdf5), herr_t, (hid_t, Cstring, H5Doff_t, hsize_t), plist_id, name, offset, size)
+            finally
+                unlock(liblock)
+            end
+        var"#status#" < herr_t(0) && @h5error("Error setting external property")
+        return nothing
+    end
 end
 
 """
@@ -5462,6 +5522,7 @@ See `libhdf5` documentation for [`H5Pset_obj_track_times`](https://support.hdfgr
 """
 function h5p_set_obj_track_times(plist_id, track_times)
     lock(liblock)
+    @show :h5p_set_obj_track_times track_times
     var"#status#" = try
             ccall((:H5Pset_obj_track_times, libhdf5), herr_t, (hid_t, UInt8), plist_id, track_times)
         finally

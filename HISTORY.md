@@ -6,6 +6,7 @@ Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases)
 * Refactor Dataspaces (#1104)
 * Convert filter packages into package extensions (#1160)
 * Julia 1.9 is the minimum supported Julia version (#1176)
+* Support HDF5 2.0
 
 ## v0.17.2
 * Fix variable length strings as attributes (#1130)

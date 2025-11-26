@@ -14,6 +14,8 @@ const htri_t   = Cint   # pseudo-boolean (negative if error)
 else
     const off_t = Int
 end
+# Introduced in HDF5 v2.0
+const H5Doff_t = Int64
 
 const H5Z_filter_t = Cint
 
@@ -317,7 +319,7 @@ const H5F_ACC_SWMR_READ  = 0x0040
     H5F_LIBVER_V110 = 2
     H5F_LIBVER_V112 = 3
     H5F_LIBVER_V114 = 4
-    H5F_LIBVER_V116 = 5
+    H5F_LIBVER_V200 = 5
     H5F_LIBVER_NBOUNDS = 6
 end
 # H5F_LIBVER_LATEST defined in helpers.jl
