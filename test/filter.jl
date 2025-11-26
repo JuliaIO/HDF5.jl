@@ -147,6 +147,13 @@ using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenab
             @testset "$name" begin
                 @debug "Filter Dataset" HDF5.name(ds)
                 @test ds[] == data
+                if !(ds[] == data)
+                    @show typeof(ds[]) size(ds[])
+                    @show typeof(data) size(data)
+                    @show ds[]
+                    @show data
+                end
+                @assert ds[] == data
                 filters = HDF5.get_create_properties(ds).filters
                 if startswith(name, "shuffle+")
                     @test filters[1] isa Shuffle
