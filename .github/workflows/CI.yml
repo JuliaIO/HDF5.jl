@@ -9,40 +9,42 @@ on:
   pull_request:
 
 jobs:
-  HDF5-system-libs:
-    name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} (system libhdf5 + mpich)
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
-    strategy:
-      matrix:
-        version:
-          - '1.9'
-          - '1.10'
-          - '1'
-        os:
-          - ubuntu-20.04 # required for libhdf5 v1.10.4 support
-        arch:
-          - x64
-    steps:
-      - name: Install libraries
-        run: |
-          sudo apt-get update
-          sudo apt-get install mpich libhdf5-mpich-dev
-          echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich/" >> $GITHUB_ENV
-      - uses: actions/checkout@v4
-      - uses: julia-actions/cache@v2
-      - uses: julia-actions/setup-julia@latest
-        with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-      - uses: julia-actions/julia-buildpkg@latest
-      - name: Configure MPI.jl
-        shell: julia --color=yes {0}
-        run: |
-          @show pwd()
-          include(joinpath(pwd(), "test", "configure_packages.jl"))
-      - uses: julia-actions/julia-runtest@latest
-
+  # This test is disabled because the Github runner image
+  # `ubuntu-20.04` is not available any more. Updating to a newer
+  # image is not trivial; some debugging is necessary.
+  #
+  # HDF5-system-libs:
+  #   name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} (system libhdf5 + mpich)
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 20
+  #   strategy:
+  #     matrix:
+  #       version:
+  #         - '1.10'
+  #         - '1'
+  #       os:
+  #         - ubuntu-20.04 # required for libhdf5 v1.10.4 support
+  #       arch:
+  #         - x64
+  #   steps:
+  #     - name: Install libraries
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install mpich libhdf5-mpich-dev
+  #         echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
+  #     - uses: actions/checkout@v6
+  #     - uses: julia-actions/cache@v2
+  #     - uses: julia-actions/setup-julia@v2
+  #       with:
+  #         version: ${{ matrix.version }}
+  #         arch: ${{ matrix.arch }}
+  #     - uses: julia-actions/julia-buildpkg@v1
+  #     - name: Configure MPI.jl
+  #       shell: julia --color=yes {0}
+  #       run: |
+  #         @show pwd()
+  #         include(joinpath(pwd(), "test", "configure_packages.jl"))
+  #     - uses: julia-actions/julia-runtest@v1
 
   HDF5:
     name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
@@ -51,37 +53,50 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version:
-          - '1.9'
-          - '1.10'
-          - '1'
-          - 'nightly'
-        os:
-          - ubuntu-latest
-          - macOS-latest
-          - windows-latest
-        arch:
-          - x64
-          - x86
-        exclude:
-          - os: macOS-latest
-            arch: x86
-          - os: ubuntu-latest # excluded because HDF5_jll v1.12 does not support i686
-            arch: x86
-          - version: 'nightly'
-            arch: x86
+        include:
+          # We need to keep the association between OS and ARCH, and
+          # there is no good way to express this as a matrix. Hence we
+          # duplicate for all Julia versions.
+          - {version: '1.9', os: ubuntu-24.04, arch: x64}
+          - {version: '1.9', os: ubuntu-24.04, arch: x86}
+          - {version: '1.9', os: ubuntu-24.04-arm, arch: aarch64}
+          - {version: '1.9', os: macOS-15-intel, arch: x64}
+          - {version: '1.9', os: macOS-26, arch: aarch64}
+          - {version: '1.9', os: windows-2025, arch: x64}
+          - {version: '1.9', os: windows-2025, arch: x86}
+          - {version: '1.10', os: ubuntu-24.04, arch: x64}
+          - {version: '1.10', os: ubuntu-24.04, arch: x86}
+          - {version: '1.10', os: ubuntu-24.04-arm, arch: aarch64}
+          - {version: '1.10', os: macOS-15-intel, arch: x64}
+          - {version: '1.10', os: macOS-26, arch: aarch64}
+          - {version: '1.10', os: windows-2025, arch: x64}
+          - {version: '1.10', os: windows-2025, arch: x86}
+          - {version: '1', os: ubuntu-24.04, arch: x64}
+          - {version: '1', os: ubuntu-24.04, arch: x86}
+          - {version: '1', os: ubuntu-24.04-arm, arch: aarch64}
+          - {version: '1', os: macOS-15-intel, arch: x64}
+          - {version: '1', os: macOS-26, arch: aarch64}
+          - {version: '1', os: windows-2025, arch: x64}
+          - {version: '1', os: windows-2025, arch: x86}
+          - {version: 'nightly', os: ubuntu-24.04, arch: x64}
+          - {version: 'nightly', os: ubuntu-24.04, arch: x86}
+          - {version: 'nightly', os: ubuntu-24.04-arm, arch: aarch64}
+          - {version: 'nightly', os: macOS-15-intel, arch: x64}
+          - {version: 'nightly', os: macOS-26, arch: aarch64}
+          - {version: 'nightly', os: windows-2025, arch: x64}
+          - {version: 'nightly', os: windows-2025, arch: x86}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: julia-actions/cache@v2
-      - uses: julia-actions/setup-julia@latest
+      - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: julia-actions/julia-buildpkg@latest
-      - uses: julia-actions/julia-runtest@latest
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
         env:
           JULIA_DEBUG: Main
-      - uses: julia-actions/julia-processcoverage@latest
+      - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v5
         with:
           files: lcov.info
@@ -103,14 +118,15 @@ jobs:
           - {user: JuliaIO, repo: MAT.jl}
           - {user: JuliaIO, repo: JLD.jl}
     steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@latest
+      - uses: actions/checkout@v6
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: julia-actions/julia-buildpkg@latest
+      - uses: julia-actions/julia-buildpkg@v1
       - name: Clone ${{ matrix.package.repo }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ matrix.package.user }}/${{ matrix.package.repo }}
           path: downstream
