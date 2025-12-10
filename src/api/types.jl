@@ -10,9 +10,9 @@ const hsize_t  = UInt64
 const hssize_t = Int64
 const htri_t   = Cint   # pseudo-boolean (negative if error)
 @static if Sys.iswindows()
-    const off_t = Int64
-else
     const off_t = Int
+else
+    const off_t = Int64
 end
 # Introduced in HDF5 v2.0
 const H5Doff_t = Int64
