@@ -711,7 +711,11 @@ function h5p_set_efile_prefix(plist, sym::Symbol)
 end
 
 function h5p_get_external(plist, idx=0)
-    Offset_t = @static if v"2.0" ≤ _libhdf5_build_ver H5Doff_t else off_t end
+    Offset_t = @static if v"2.0" ≤ _libhdf5_build_ver
+        H5Doff_t
+    else
+        off_t
+    end
     offset = Ref{Offset_t}(0)
     sz = Ref{hsize_t}(0)
     name_size = 64
