@@ -1,5 +1,5 @@
 # Generate ../src/api/functions.jl
-# Run `julia --project=.. gen_wrappers.jl`` to execute this script
+# Run `julia --project=.. gen_wrappers.jl` to execute this script
 
 const group_url_dict = Dict{String,String}([
     func_urls[1] => func_urls[2] for

@@ -585,7 +585,16 @@ end
     h5open(fn2, "w") do f
         f["x", obj_track_times=false] = [1, 2, 3]
     end
-    @test open(crc32c, fn1) == open(crc32c, fn2)
+    if HDF5.API.h5_get_libversion() < v"2.0.0"
+        @test open(crc32c, fn1) == open(crc32c, fn2)
+    else
+        # @eschnett 2025-11-26: The generated files differ in the 4
+        # bytes starting at offset 0x36. In the case I examined these
+        # values were 0x69272bef and 0x69272bf0 for the first and
+        # second file, respectively, and these are clearly time stamps
+        # for the OHDR header.
+        @test_broken open(crc32c, fn1) == open(crc32c, fn2)
+    end
     rm(fn1)
     rm(fn2)
 end # testset plain
