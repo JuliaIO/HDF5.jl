@@ -4,7 +4,7 @@
 # so the methods here handle making the appropriate `Ref`s and return them (as tuples).
 
 const H5F_LIBVER_LATEST = if _libhdf5_build_ver >= v"1.15"
-    H5F_LIBVER_V116
+    H5F_LIBVER_V200
 elseif _libhdf5_build_ver >= v"1.14"
     H5F_LIBVER_V114
 elseif _libhdf5_build_ver >= v"1.12"
@@ -711,7 +711,12 @@ function h5p_set_efile_prefix(plist, sym::Symbol)
 end
 
 function h5p_get_external(plist, idx=0)
-    offset = Ref{off_t}(0)
+    Offset_t = @static if v"2.0" ≤ _libhdf5_build_ver
+        H5Doff_t
+    else
+        off_t
+    end
+    offset = Ref{Offset_t}(0)
     sz = Ref{hsize_t}(0)
     name_size = 64
     name = Base.StringVector(name_size)

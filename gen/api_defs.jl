@@ -81,7 +81,9 @@
 @bind h5d_iterate(buf::Ptr{Cvoid}, type_id::hid_t, space_id::hid_t, operator::Ptr{Cvoid}, operator_data::Any)::herr_t "Error iterating dataset"
 @bind h5d_open2(loc_id::hid_t, pathname::Cstring, dapl_id::hid_t)::hid_t string("Error opening dataset ", h5i_get_name(loc_id), "/", pathname)
 @bind h5d_read(dataset_id::hid_t, mem_type_id::hid_t, mem_space_id::hid_t, file_space_id::hid_t, xfer_plist_id::hid_t, buf::Ptr{Cvoid})::herr_t string("Error reading dataset ", h5i_get_name(dataset_id))
-@bind h5d_read_chunk(dset::hid_t, dxpl_id::hid_t, offset::Ptr{hsize_t}, filters::Ptr{UInt32}, buf::Ptr{Cvoid})::herr_t "Error reading chunk"
+# The function was renamed to H5Dread_chunk1 in v2.0
+@bind h5d_read_chunk(dset::hid_t, dxpl_id::hid_t, offset::Ptr{hsize_t}, filters::Ptr{UInt32}, buf::Ptr{Cvoid})::herr_t "Error reading chunk" (nothing, v"2.0")
+@bind h5d_read_chunk1(dset::hid_t, dxpl_id::hid_t, offset::Ptr{hsize_t}, filters::Ptr{UInt32}, buf::Ptr{Cvoid})::herr_t "Error reading chunk" (v"2.0", nothing)
 @bind h5d_refresh(dataset_id::hid_t)::herr_t "Error refreshing dataset"
 @bind h5d_scatter(op::Ptr{Cvoid}, op_data::Any, type_id::hid_t, dst_space_id::hid_t, dst_buf::Ptr{Cvoid})::herr_t "Error scattering to dataset"
 @bind h5d_set_extent(dataset_id::hid_t, new_dims::Ptr{hsize_t})::herr_t "Error extending dataset dimensions"
@@ -276,7 +278,9 @@
 @bind h5p_get_elink_prefix(plist_id::hid_t, prefix::Ptr{Cchar}, size::Csize_t)::Cssize_t "Error in h5p_get_elink_prefix (not annotated)"
 @bind h5p_get_est_link_info(plist_id::hid_t, est_num_entries::Ptr{Cuint}, est_name_len::Ptr{Cuint})::herr_t "Error in h5p_get_est_link_info (not annotated)"
 @bind h5p_get_evict_on_close(fapl_id::hid_t, evict_on_close::Ptr{hbool_t})::herr_t "Error in h5p_get_evict_on_close (not annotated)"
-@bind h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{hsize_t})::herr_t "Error getting external file properties"
+# Argument type changed for Windows in v2.0
+@bind h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{hsize_t})::herr_t "Error getting external file properties" (nothing, v"2.0")
+@bind h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{H5Doff_t}, size::Ptr{hsize_t})::herr_t "Error getting external file properties" (v"2.0", nothing)
 @bind h5p_get_external_count(plist::hid_t)::Cint "Error getting external count"
 @bind h5p_get_family_offset(fapl_id::hid_t, offset::Ptr{hsize_t})::herr_t "Error in h5p_get_family_offset (not annotated)"
 @bind h5p_get_fapl_core(fapl_id::hid_t, increment::Ptr{Csize_t}, backing_store::Ptr{hbool_t})::herr_t "Error in h5p_get_fapl_core (not annotated)"
@@ -372,7 +376,9 @@
 @bind h5p_set_elink_prefix(plist_id::hid_t, prefix::Cstring)::herr_t "Error in h5p_set_elink_prefix (not annotated)"
 @bind h5p_set_est_link_info(plist_id::hid_t, est_num_entries::Cuint, est_name_len::Cuint)::herr_t "Error in h5p_set_est_link_info (not annotated)"
 @bind h5p_set_evict_on_close(fapl_id::hid_t, evict_on_close::hbool_t)::herr_t "Error in h5p_set_evict_on_close (not annotated)"
-@bind h5p_set_external(plist_id::hid_t, name::Cstring, offset::off_t, size::hsize_t)::herr_t "Error setting external property"
+# Argument type changed for Windows in v2.0
+@bind h5p_set_external(plist_id::hid_t, name::Cstring, offset::off_t, size::hsize_t)::herr_t "Error setting external property" (nothing, v"2.0")
+@bind h5p_set_external(plist_id::hid_t, name::Cstring, offset::H5Doff_t, size::hsize_t)::herr_t "Error setting external property" (v"2.0", nothing)
 @bind h5p_set_family_offset(fapl_id::hid_t, offset::hsize_t)::herr_t "Error in h5p_set_family_offset (not annotated)"
 @bind h5p_set_fapl_core(fapl_id::hid_t, increment::Csize_t, backing_store::hbool_t)::herr_t "Error in h5p_set_fapl_core (not annotated)"
 @bind h5p_set_fapl_family(fapl_id::hid_t, memb_size::hsize_t, memb_fapl_id::hid_t)::herr_t "Error in h5p_set_fapl_family (not annotated)"

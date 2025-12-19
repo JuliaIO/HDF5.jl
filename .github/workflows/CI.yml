@@ -57,13 +57,6 @@ jobs:
           # We need to keep the association between OS and ARCH, and
           # there is no good way to express this as a matrix. Hence we
           # duplicate for all Julia versions.
-          - {version: '1.9', os: ubuntu-24.04, arch: x64}
-          - {version: '1.9', os: ubuntu-24.04, arch: x86}
-          - {version: '1.9', os: ubuntu-24.04-arm, arch: aarch64}
-          - {version: '1.9', os: macOS-15-intel, arch: x64}
-          - {version: '1.9', os: macOS-26, arch: aarch64}
-          - {version: '1.9', os: windows-2025, arch: x64}
-          - {version: '1.9', os: windows-2025, arch: x86}
           - {version: '1.10', os: ubuntu-24.04, arch: x64}
           - {version: '1.10', os: ubuntu-24.04, arch: x86}
           - {version: '1.10', os: ubuntu-24.04-arm, arch: aarch64}
