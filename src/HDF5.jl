@@ -50,28 +50,30 @@ export @read,
 ### The following public methods require module scoping ###
 
 @static if VERSION ≥ v"1.11.0"
-    eval(Expr(
-        :public,
-        :create_external,
-        :create_external_dataset,
-        :file,
-        :filename,
-        :get_access_properties,
-        :get_create_properties,
-        :get_chunk,
-        :get_datasets,
-        :iscompact,
-        :ischunked,
-        :iscontiguous,
-        :ishdf5,
-        :ismmappable,
-        :name,
-        :readmmap,
-        :refresh,
-        :root,
-        :set_dims!,
-        :start_swmr_write,
-    ))
+    eval(
+        Expr(
+            :public,
+            :create_external,
+            :create_external_dataset,
+            :file,
+            :filename,
+            :get_access_properties,
+            :get_create_properties,
+            :get_chunk,
+            :get_datasets,
+            :iscompact,
+            :ischunked,
+            :iscontiguous,
+            :ishdf5,
+            :ismmappable,
+            :name,
+            :readmmap,
+            :refresh,
+            :root,
+            :set_dims!,
+            :start_swmr_write,
+        )
+    )
 end
 
 ### Types
