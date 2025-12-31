@@ -72,6 +72,7 @@ export @read,
         :set_dims!,
         :start_swmr_write,
     ))
+end
 
 ### Types
 # H5DataStore, Attribute, File, Group, Dataset, Datatype, Opaque,
