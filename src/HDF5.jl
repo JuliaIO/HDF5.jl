@@ -51,6 +51,7 @@ export @read,
 
 @static if VERSION ≥ v"1.11.0"
     eval(Expr(
+        :public,
         :create_external,
         :create_external_dataset,
         :file,
