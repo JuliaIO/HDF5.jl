@@ -84,8 +84,8 @@ h5doc(name) = "[`$name`](https://portal.hdfgroup.org/display/HDF5/$(name))"
 
 include("api/api.jl")
 include("properties.jl")
-include("context.jl")
 include("types.jl")
+include("context.jl")
 include("file.jl")
 include("objects.jl")
 include("groups.jl")
