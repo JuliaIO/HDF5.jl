@@ -33,7 +33,7 @@ jobs:
   #         sudo apt-get install mpich libhdf5-mpich-dev
   #         echo "JULIA_HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
   #     - uses: actions/checkout@v6
-  #     - uses: julia-actions/cache@v2
+  #     - uses: julia-actions/cache@v3
   #     - uses: julia-actions/setup-julia@v2
   #       with:
   #         version: ${{ matrix.version }}
@@ -80,7 +80,7 @@ jobs:
           - {version: 'nightly', os: windows-2025, arch: x86}
     steps:
       - uses: actions/checkout@v6
-      - uses: julia-actions/cache@v2
+      - uses: julia-actions/cache@v3
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
@@ -112,7 +112,7 @@ jobs:
           - {user: JuliaIO, repo: JLD.jl}
     steps:
       - uses: actions/checkout@v6
-      - uses: julia-actions/cache@v2
+      - uses: julia-actions/cache@v3
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
