@@ -20,7 +20,7 @@ jobs:
       with:
         version: '1.10'
     - uses: actions/checkout@v6
-    - uses: julia-actions/cache@v2
+    - uses: julia-actions/cache@v3
     - uses: julia-actions/julia-buildpkg@v1
     - uses: julia-actions/julia-invalidations@v1
       id: invs_pr
