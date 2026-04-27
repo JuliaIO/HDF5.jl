@@ -152,7 +152,7 @@ Base.cconvert(
 ) where {T<:Union{Reference,API.hobj_ref_t,Cvoid}} = Ref(ref)
 
 const BitsType = Union{
-    Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64
+    Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float16,Float32,Float64
 }
 const ScalarType = Union{BitsType,Reference}
 

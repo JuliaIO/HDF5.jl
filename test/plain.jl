@@ -41,6 +41,7 @@ end
     A = randn(3, 5)
     write(f, "Afloat64", convert(Matrix{Float64}, A))
     write(f, "Afloat32", convert(Matrix{Float32}, A))
+    write(f, "Afloat16", convert(Matrix{Float16}, A))
     Ai = rand(1:20, 2, 4)
     write(f, "Aint8", convert(Matrix{Int8}, Ai))
     f["Aint16"] = convert(Matrix{Int16}, Ai)
@@ -176,6 +177,9 @@ end
     @test zerodim == 42 && isa(zerodim, Int32)
     bloscempty = read(fr, "bloscempty")
     @test bloscempty == Int64[] && isa(bloscempty, Vector{Int64})
+    Af16 = read(fr, "Afloat16")
+    @test convert(Matrix{Float16}, A) == Af16
+    @test eltype(Af16) == Float16
     Af32 = read(fr, "Afloat32")
     @test convert(Matrix{Float32}, A) == Af32
     @test eltype(Af32) == Float32
@@ -611,6 +615,7 @@ end # testset plain
     Acmplx = rand(ComplexF64, 3, 5)
     write(f, "Acmplx64", convert(Matrix{ComplexF64}, Acmplx))
     write(f, "Acmplx32", convert(Matrix{ComplexF32}, Acmplx))
+    write(f, "Acmplx16", convert(Matrix{ComplexF16}, Acmplx))
 
     dset = create_dataset(
         f, "Acmplx64_hyperslab", datatype(Complex{Float64}), dataspace(Acmplx)
@@ -623,6 +628,7 @@ end # testset plain
     @test_throws ErrorException f["_ComplexF64"] = 1.0 + 2.0im
     @test_throws ErrorException write(f, "_Acmplx64", convert(Matrix{ComplexF64}, Acmplx))
     @test_throws ErrorException write(f, "_Acmplx32", convert(Matrix{ComplexF32}, Acmplx))
+    @test_throws ErrorException write(f, "_Acmplx16", convert(Matrix{ComplexF16}, Acmplx))
     HDF5.enable_complex_support()
 
     close(f)
@@ -633,6 +639,9 @@ end # testset plain
     z_attrs = attributes(fr["ComplexF64"])
     @test read(z_attrs["ComplexInt64"]) == 1im
 
+    Acmplx16 = read(fr, "Acmplx16")
+    @test convert(Matrix{ComplexF16}, Acmplx) == Acmplx16
+    @test eltype(Acmplx16) == ComplexF16
     Acmplx32 = read(fr, "Acmplx32")
     @test convert(Matrix{ComplexF32}, Acmplx) == Acmplx32
     @test eltype(Acmplx32) == ComplexF32
@@ -651,6 +660,8 @@ end # testset plain
     z = read(fr, "ComplexF64")
     @test isa(z, NamedTuple{(:r, :i),Tuple{Float64,Float64}})
 
+    Acmplx16 = read(fr, "Acmplx16")
+    @test eltype(Acmplx16) == NamedTuple{(:r, :i),Tuple{Float16,Float16}}
     Acmplx32 = read(fr, "Acmplx32")
     @test eltype(Acmplx32) == NamedTuple{(:r, :i),Tuple{Float32,Float32}}
     Acmplx64 = read(fr, "Acmplx64")

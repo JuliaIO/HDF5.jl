@@ -142,6 +142,7 @@ hdf5_type_id(::Type{Int32})     = API.H5T_NATIVE_INT32
 hdf5_type_id(::Type{UInt32})    = API.H5T_NATIVE_UINT32
 hdf5_type_id(::Type{Int64})     = API.H5T_NATIVE_INT64
 hdf5_type_id(::Type{UInt64})    = API.H5T_NATIVE_UINT64
+hdf5_type_id(::Type{Float16})   = API.H5T_NATIVE_FLOAT16
 hdf5_type_id(::Type{Float32})   = API.H5T_NATIVE_FLOAT
 hdf5_type_id(::Type{Float64})   = API.H5T_NATIVE_DOUBLE
 hdf5_type_id(::Type{Reference}) = API.H5T_STD_REF_OBJ
@@ -177,7 +178,9 @@ function _hdf5_type_map(class_id, is_signed, native_size)
             end
         end
     else
-        return if native_size == 4
+        return if native_size == 2
+            Float16
+        elseif native_size == 4
             Float32
         elseif native_size == 8
             Float64

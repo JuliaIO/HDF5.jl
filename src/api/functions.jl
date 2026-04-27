@@ -5522,7 +5522,6 @@ See `libhdf5` documentation for [`H5Pset_obj_track_times`](https://support.hdfgr
 """
 function h5p_set_obj_track_times(plist_id, track_times)
     lock(liblock)
-    @show :h5p_set_obj_track_times track_times
     var"#status#" = try
             ccall((:H5Pset_obj_track_times, libhdf5), herr_t, (hid_t, UInt8), plist_id, track_times)
         finally
