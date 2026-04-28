@@ -47,7 +47,7 @@ jobs:
   #     - uses: julia-actions/julia-runtest@v1
 
   HDF5:
-    name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    name: julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.hdf5_jll }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     strategy:
@@ -57,27 +57,31 @@ jobs:
           # We need to keep the association between OS and ARCH, and
           # there is no good way to express this as a matrix. Hence we
           # duplicate for all Julia versions.
-          - {version: '1.10', os: ubuntu-24.04, arch: x64}
-          - {version: '1.10', os: ubuntu-24.04, arch: x86}
-          - {version: '1.10', os: ubuntu-24.04-arm, arch: aarch64}
-          - {version: '1.10', os: macOS-15-intel, arch: x64}
-          - {version: '1.10', os: macOS-26, arch: aarch64}
-          - {version: '1.10', os: windows-2025, arch: x64}
-          - {version: '1.10', os: windows-2025, arch: x86}
-          - {version: '1', os: ubuntu-24.04, arch: x64}
-          - {version: '1', os: ubuntu-24.04, arch: x86}
-          - {version: '1', os: ubuntu-24.04-arm, arch: aarch64}
-          - {version: '1', os: macOS-15-intel, arch: x64}
-          - {version: '1', os: macOS-26, arch: aarch64}
-          - {version: '1', os: windows-2025, arch: x64}
-          - {version: '1', os: windows-2025, arch: x86}
-          - {version: 'nightly', os: ubuntu-24.04, arch: x64}
-          - {version: 'nightly', os: ubuntu-24.04, arch: x86}
-          - {version: 'nightly', os: ubuntu-24.04-arm, arch: aarch64}
-          - {version: 'nightly', os: macOS-15-intel, arch: x64}
-          - {version: 'nightly', os: macOS-26, arch: aarch64}
-          - {version: 'nightly', os: windows-2025, arch: x64}
-          - {version: 'nightly', os: windows-2025, arch: x86}
+          # Keep coverage for Julia 1.10 with HDF5_jll 1.12
+          # The known-bad combination is Julia 1.12 or later with HDF5_jll 1.12
+          - {version: '1.10', os: ubuntu-24.04, arch: x64, hdf5_jll: '1.12'}
+          - {version: '1.10', os: ubuntu-24.04, arch: x64, hdf5_jll: 'latest'}
+          - {version: '1.10', os: ubuntu-24.04, arch: x86, hdf5_jll: 'latest'}
+          - {version: '1.10', os: ubuntu-24.04-arm, arch: aarch64, hdf5_jll: 'latest'}
+          - {version: '1.10', os: macOS-15-intel, arch: x64, hdf5_jll: 'latest'}
+          - {version: '1.10', os: macOS-26, arch: aarch64, hdf5_jll: 'latest'}
+          - {version: '1.10', os: windows-2025, arch: x64, hdf5_jll: 'latest'}
+          - {version: '1.10', os: windows-2025, arch: x86, hdf5_jll: 'latest'}
+          - {version: '1', os: ubuntu-24.04, arch: x64, hdf5_jll: '1.14'}
+          - {version: '1', os: ubuntu-24.04, arch: x64, hdf5_jll: 'latest'}
+          - {version: '1', os: ubuntu-24.04, arch: x86, hdf5_jll: 'latest'}
+          - {version: '1', os: ubuntu-24.04-arm, arch: aarch64, hdf5_jll: 'latest'}
+          - {version: '1', os: macOS-15-intel, arch: x64, hdf5_jll: 'latest'}
+          - {version: '1', os: macOS-26, arch: aarch64, hdf5_jll: 'latest'}
+          - {version: '1', os: windows-2025, arch: x64, hdf5_jll: 'latest'}
+          - {version: '1', os: windows-2025, arch: x86, hdf5_jll: 'latest'}
+          - {version: 'nightly', os: ubuntu-24.04, arch: x64, hdf5_jll: 'latest'}
+          - {version: 'nightly', os: ubuntu-24.04, arch: x86, hdf5_jll: 'latest'}
+          - {version: 'nightly', os: ubuntu-24.04-arm, arch: aarch64, hdf5_jll: 'latest'}
+          - {version: 'nightly', os: macOS-15-intel, arch: x64, hdf5_jll: 'latest'}
+          - {version: 'nightly', os: macOS-26, arch: aarch64, hdf5_jll: 'latest'}
+          - {version: 'nightly', os: windows-2025, arch: x64, hdf5_jll: 'latest'}
+          - {version: 'nightly', os: windows-2025, arch: x86, hdf5_jll: 'latest'}
     steps:
       - uses: actions/checkout@v6
       - uses: julia-actions/cache@v3
@@ -86,6 +90,14 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/julia-buildpkg@v1
+      - name: Pin HDF5_jll to ${{ matrix.hdf5_jll }}
+        if: ${{ matrix.hdf5_jll != 'latest' }}
+        shell: julia --project=@. {0}
+        run: |
+          using Pkg
+          Pkg.pin(PackageSpec(name="HDF5_jll", version="${{ matrix.hdf5_jll }}"))
+          Pkg.instantiate()  # ensures Manifest/artifacts match the pin
+
       - uses: julia-actions/julia-runtest@v1
         env:
           JULIA_DEBUG: Main

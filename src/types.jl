@@ -151,8 +151,20 @@ Base.cconvert(
     ::Type{Ptr{T}}, ref::Reference
 ) where {T<:Union{Reference,API.hobj_ref_t,Cvoid}} = Ref(ref)
 
+const hdf5_supports_Float16 = API.H5T_NATIVE_FLOAT16 != API.hid_t(-1)
 const BitsType = Union{
-    Bool,Int8,UInt8,Int16,UInt16,Int32,UInt32,Int64,UInt64,Float32,Float64
+    Bool,
+    Int8,
+    UInt8,
+    Int16,
+    UInt16,
+    Int32,
+    UInt32,
+    Int64,
+    UInt64,
+    Float32,
+    Float64,
+    (hdf5_supports_Float16 ? Float16 : Union{})
 }
 const ScalarType = Union{BitsType,Reference}
 
