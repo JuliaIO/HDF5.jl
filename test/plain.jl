@@ -637,7 +637,9 @@ end # testset plain
     @test_throws ErrorException write(f, "_Acmplx64", convert(Matrix{ComplexF64}, Acmplx))
     @test_throws ErrorException write(f, "_Acmplx32", convert(Matrix{ComplexF32}, Acmplx))
     if test_Float16
-        @test_throws ErrorException write(f, "_Acmplx16", convert(Matrix{ComplexF16}, Acmplx))
+        @test_throws ErrorException write(
+            f, "_Acmplx16", convert(Matrix{ComplexF16}, Acmplx)
+        )
     end
     HDF5.enable_complex_support()
 
