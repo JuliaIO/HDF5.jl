@@ -57,7 +57,9 @@ jobs:
           # We need to keep the association between OS and ARCH, and
           # there is no good way to express this as a matrix. Hence we
           # duplicate for all Julia versions.
-          - {version: '1.10', os: ubuntu-24.04, arch: x64, hdf5_jll: '1.12'} # HDF5_jll 1.12 does not work with Julia 1.12
+          #
+          # HDF5_jll 1.12 does not work with Julia 1.12. Keep coverage for Julia 1.10 with HDF5_jll 1.12.
+          - {version: '1.10', os: ubuntu-24.04, arch: x64, hdf5_jll: '1.12'}
           - {version: '1.10', os: ubuntu-24.04, arch: x64, hdf5_jll: 'latest'}
           - {version: '1.10', os: ubuntu-24.04, arch: x86, hdf5_jll: 'latest'}
           - {version: '1.10', os: ubuntu-24.04-arm, arch: aarch64, hdf5_jll: 'latest'}
@@ -88,10 +90,7 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/julia-buildpkg@v1
-      # - uses: julia-actions/julia-runtest@v1
-      #   env:
-      #     JULIA_DEBUG: Main
-      - name: Run ${{ matrix.package.repo }} tests with HDF5_jll ${{ matrix.hdf5_jll }}
+      - name: Run tests
         env:
           JULIA_DEBUG: Main
           HDF5_jll: ${{ matrix.hdf5_jll }}
