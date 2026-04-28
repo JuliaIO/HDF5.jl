@@ -57,6 +57,7 @@ jobs:
           # We need to keep the association between OS and ARCH, and
           # there is no good way to express this as a matrix. Hence we
           # duplicate for all Julia versions.
+          - {version: '1.10', os: ubuntu-24.04, arch: x64, hdf5_jll: '1.12'} # HDF5_jll 1.12 does not work with Julia 1.12
           - {version: '1.10', os: ubuntu-24.04, arch: x64, hdf5_jll: 'latest'}
           - {version: '1.10', os: ubuntu-24.04, arch: x86, hdf5_jll: 'latest'}
           - {version: '1.10', os: ubuntu-24.04-arm, arch: aarch64, hdf5_jll: 'latest'}
@@ -64,7 +65,6 @@ jobs:
           - {version: '1.10', os: macOS-26, arch: aarch64, hdf5_jll: 'latest'}
           - {version: '1.10', os: windows-2025, arch: x64, hdf5_jll: 'latest'}
           - {version: '1.10', os: windows-2025, arch: x86, hdf5_jll: 'latest'}
-          - {version: '1', os: ubuntu-24.04, arch: x64, hdf5_jll: '1.12'}
           - {version: '1', os: ubuntu-24.04, arch: x64, hdf5_jll: '1.14'}
           - {version: '1', os: ubuntu-24.04, arch: x64, hdf5_jll: 'latest'}
           - {version: '1', os: ubuntu-24.04, arch: x86, hdf5_jll: 'latest'}
