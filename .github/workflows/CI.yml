@@ -95,7 +95,7 @@ jobs:
         env:
           JULIA_DEBUG: Main
           HDF5_jll: ${{ matrix.hdf5_jll }}
-        shell: julia --project=downstream {0}
+        shell: julia --project=@. {0}
         run: |
             using Pkg
             # use a specific `HDF5_jll` if required
