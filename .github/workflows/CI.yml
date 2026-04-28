@@ -57,7 +57,9 @@ jobs:
           # We need to keep the association between OS and ARCH, and
           # there is no good way to express this as a matrix. Hence we
           # duplicate for all Julia versions.
-          - {version: '1.10', os: ubuntu-24.04, arch: x64, hdf5_jll: '1.12'} # HDF5_jll 1.12 does not work with Julia 1.12
+          # Keep coverage for Julia 1.10 with HDF5_jll 1.12
+          # The known-bad combination is Julia 1.12 or later with HDF5_jll 1.12
+          - {version: '1.10', os: ubuntu-24.04, arch: x64, hdf5_jll: '1.12'}
           - {version: '1.10', os: ubuntu-24.04, arch: x64, hdf5_jll: 'latest'}
           - {version: '1.10', os: ubuntu-24.04, arch: x86, hdf5_jll: 'latest'}
           - {version: '1.10', os: ubuntu-24.04-arm, arch: aarch64, hdf5_jll: 'latest'}
@@ -88,21 +90,19 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/julia-buildpkg@v1
-      # - uses: julia-actions/julia-runtest@v1
-      #   env:
-      #     JULIA_DEBUG: Main
-      - name: Run ${{ matrix.package.repo }} tests with HDF5_jll ${{ matrix.hdf5_jll }}
-        env:
-          JULIA_DEBUG: Main
-          HDF5_jll: ${{ matrix.hdf5_jll }}
+      - uses: julia-actions/julia-buildpkg@v1
+
+      - name: Pin HDF5_jll to ${{ matrix.hdf5_jll }}
+        if: ${{ matrix.hdf5_jll != 'latest' }}
         shell: julia --project=@. {0}
         run: |
-            using Pkg
-            # use a specific `HDF5_jll` if required
-            if ENV["HDF5_jll"] != "latest"
-              Pkg.pin(PackageSpec(name="HDF5_jll", version=ENV["HDF5_jll"]))
-            end
-            Pkg.test()
+          using Pkg
+          Pkg.pin(PackageSpec(name="HDF5_jll", version="${{ matrix.hdf5_jll }}"))
+          Pkg.instantiate()  # ensures Manifest/artifacts match the pin
+
+      - uses: julia-actions/julia-runtest@v1
+        env:
+          JULIA_DEBUG: Main
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v6
         with:
