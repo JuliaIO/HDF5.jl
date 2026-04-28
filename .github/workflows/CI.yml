@@ -90,8 +90,6 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-buildpkg@v1
-
       - name: Pin HDF5_jll to ${{ matrix.hdf5_jll }}
         if: ${{ matrix.hdf5_jll != 'latest' }}
         shell: julia --project=@. {0}
