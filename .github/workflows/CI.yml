@@ -57,27 +57,29 @@ jobs:
           # We need to keep the association between OS and ARCH, and
           # there is no good way to express this as a matrix. Hence we
           # duplicate for all Julia versions.
-          - {version: '1.10', os: ubuntu-24.04, arch: x64}
-          - {version: '1.10', os: ubuntu-24.04, arch: x86}
-          - {version: '1.10', os: ubuntu-24.04-arm, arch: aarch64}
-          - {version: '1.10', os: macOS-15-intel, arch: x64}
-          - {version: '1.10', os: macOS-26, arch: aarch64}
-          - {version: '1.10', os: windows-2025, arch: x64}
-          - {version: '1.10', os: windows-2025, arch: x86}
-          - {version: '1', os: ubuntu-24.04, arch: x64}
-          - {version: '1', os: ubuntu-24.04, arch: x86}
-          - {version: '1', os: ubuntu-24.04-arm, arch: aarch64}
-          - {version: '1', os: macOS-15-intel, arch: x64}
-          - {version: '1', os: macOS-26, arch: aarch64}
-          - {version: '1', os: windows-2025, arch: x64}
-          - {version: '1', os: windows-2025, arch: x86}
-          - {version: 'nightly', os: ubuntu-24.04, arch: x64}
-          - {version: 'nightly', os: ubuntu-24.04, arch: x86}
-          - {version: 'nightly', os: ubuntu-24.04-arm, arch: aarch64}
-          - {version: 'nightly', os: macOS-15-intel, arch: x64}
-          - {version: 'nightly', os: macOS-26, arch: aarch64}
-          - {version: 'nightly', os: windows-2025, arch: x64}
-          - {version: 'nightly', os: windows-2025, arch: x86}
+          - {version: '1.10', os: ubuntu-24.04, arch: x64, hdf5_jll: latest}
+          - {version: '1.10', os: ubuntu-24.04, arch: x86, hdf5_jll: latest}
+          - {version: '1.10', os: ubuntu-24.04-arm, arch: aarch64, hdf5_jll: latest}
+          - {version: '1.10', os: macOS-15-intel, arch: x64, hdf5_jll: latest}
+          - {version: '1.10', os: macOS-26, arch: aarch64, hdf5_jll: latest}
+          - {version: '1.10', os: windows-2025, arch: x64, hdf5_jll: latest}
+          - {version: '1.10', os: windows-2025, arch: x86, hdf5_jll: latest}
+          - {version: '1', os: ubuntu-24.04, arch: x64, hdf5_jll: '1.12'}
+          - {version: '1', os: ubuntu-24.04, arch: x64, hdf5_jll: '1.14'}
+          - {version: '1', os: ubuntu-24.04, arch: x64, hdf5_jll: latest}
+          - {version: '1', os: ubuntu-24.04, arch: x86, hdf5_jll: latest}
+          - {version: '1', os: ubuntu-24.04-arm, arch: aarch64, hdf5_jll: latest}
+          - {version: '1', os: macOS-15-intel, arch: x64, hdf5_jll: latest}
+          - {version: '1', os: macOS-26, arch: aarch64, hdf5_jll: latest}
+          - {version: '1', os: windows-2025, arch: x64, hdf5_jll: latest}
+          - {version: '1', os: windows-2025, arch: x86, hdf5_jll: latest}
+          - {version: 'nightly', os: ubuntu-24.04, arch: x64, hdf5_jll: latest}
+          - {version: 'nightly', os: ubuntu-24.04, arch: x86, hdf5_jll: latest}
+          - {version: 'nightly', os: ubuntu-24.04-arm, arch: aarch64, hdf5_jll: latest}
+          - {version: 'nightly', os: macOS-15-intel, arch: x64, hdf5_jll: latest}
+          - {version: 'nightly', os: macOS-26, arch: aarch64, hdf5_jll: latest}
+          - {version: 'nightly', os: windows-2025, arch: x64, hdf5_jll: latest}
+          - {version: 'nightly', os: windows-2025, arch: x86, hdf5_jll: latest}
     steps:
       - uses: actions/checkout@v6
       - uses: julia-actions/cache@v3
@@ -123,10 +125,16 @@ jobs:
         with:
           repository: ${{ matrix.package.user }}/${{ matrix.package.repo }}
           path: downstream
-      - name: Run ${{ matrix.package.repo }} tests
+      - name: Run ${{ matrix.package.repo }} tests with HDF5_jll ${{ matrix.hdf5_jll }}
+        env:
+          HDF5_jll: ${{ matrix.hdf5_jll }}
         shell: julia --project=downstream {0}
         run: |
             using Pkg
+            # use a specific `HDF5_jll` if required
+            if ENV["HDF5_jll"] != "latest"
+              Pkg.pin(PackageSpec(name="HDF5_jll", version=ENV["HDF5_jll"]))
+            end
             try
               # force it to use this PR's version of the package
               Pkg.develop(PackageSpec[ # resolver may fail with main deps
