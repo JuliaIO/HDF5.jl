@@ -142,7 +142,13 @@ hdf5_type_id(::Type{Int32})     = API.H5T_NATIVE_INT32
 hdf5_type_id(::Type{UInt32})    = API.H5T_NATIVE_UINT32
 hdf5_type_id(::Type{Int64})     = API.H5T_NATIVE_INT64
 hdf5_type_id(::Type{UInt64})    = API.H5T_NATIVE_UINT64
-hdf5_type_id(::Type{Float16})   = API.H5T_NATIVE_FLOAT16
+function hdf5_type_id(::Type{Float16})
+    if hdf5_supports_Float16
+        return API.H5T_NATIVE_FLOAT16
+    else
+        throw(ArgumentError("Float16 HDF5 datatypes are not supported by the linked HDF5 library"))
+    end
+end
 hdf5_type_id(::Type{Float32})   = API.H5T_NATIVE_FLOAT
 hdf5_type_id(::Type{Float64})   = API.H5T_NATIVE_DOUBLE
 hdf5_type_id(::Type{Reference}) = API.H5T_STD_REF_OBJ

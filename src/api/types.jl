@@ -532,7 +532,7 @@ const H5T_NATIVE_INT32   = _read_const(:H5T_NATIVE_INT32_g)
 const H5T_NATIVE_UINT32  = _read_const(:H5T_NATIVE_UINT32_g)
 const H5T_NATIVE_INT64   = _read_const(:H5T_NATIVE_INT64_g)
 const H5T_NATIVE_UINT64  = _read_const(:H5T_NATIVE_UINT64_g)
-const H5T_NATIVE_FLOAT16 = _read_const(:H5T_NATIVE_FLOAT16_g)
+const H5T_NATIVE_FLOAT16 = _has_symbol(:H5T_NATIVE_FLOAT16_g) ? _read_const(:H5T_NATIVE_FLOAT16_g) : hid_t(-1)
 const H5T_NATIVE_FLOAT   = _read_const(:H5T_NATIVE_FLOAT_g)
 const H5T_NATIVE_DOUBLE  = _read_const(:H5T_NATIVE_DOUBLE_g)
 # Other type constants
