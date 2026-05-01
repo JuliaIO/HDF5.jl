@@ -253,7 +253,7 @@ end
 # we can precompile for improved latency.
 const libhdf5handle = Ref(dlopen(libhdf5))
 ccall(dlsym(libhdf5handle[], :H5open), herr_t, ())
-_read_const(sym::Symbol) = unsafe_load(cglobal(dlsym(libhdf5handle[], sym), hid_t))
+_read_const(sym::Symbol) = unsafe_load(Ptr{hid_t}(dlsym(libhdf5handle[], sym)))
 _has_symbol(sym::Symbol) = dlsym(libhdf5handle[], sym; throw_error=false) !== nothing
 
 # iteration order constants
