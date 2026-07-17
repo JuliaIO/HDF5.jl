@@ -18,22 +18,12 @@ struct HDF5GroupInfo
     filename::String
 end
 
-const DEFAULT_URL_PREFIX = "https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/documentation/doxygen/"
+const DEFAULT_URL_PREFIX = "https://support.hdfgroup.org/documentation/hdf5/latest/"
 
 """
-To generate hdf5.tag from the HDF5 source code execute the following script.
-
-```
-curl -fsSL https://pixi.sh/install.sh | bash
-pixi global install cmake
-pixi global install doxygen
-git clone https://github.com/HDFGroup/hdf5.git
-cd hdf5
-git checkout hdf5-1.14.6
-mkdir build
-cmake -D HDF5_BUILD_DOCS=ON ..
-make -j hdf5hllib_doc
-```
+To generate hdf5.tag from the HDF5 source code, run `scripts/generate_hdf5_tag.sh`
+(see that script for setup requirements). It writes the tag file to
+`joinpath(dirname(@__DIR__), "hdf5.tag")`, i.e. `HDF5_TAG_URL` below.
 """
 const HDF5_TAG_URL = joinpath(dirname(@__DIR__), "hdf5.tag")
 
@@ -81,9 +71,6 @@ function parse_tag_file(hdf5_tag_url=HDF5_TAG_URL)
                             func_arglist = content(func_child)
                         end
                     end
-                    if func_name == "H5Pget_chunk"
-                        println(compound_element)
-                    end
                     funcdict[func_name] = HDF5FunctionInfo(
                         func_name, func_anchorfile, func_anchor, func_arglist
                     )
@@ -116,7 +103,7 @@ function hdf5_func_url(info::HDF5FunctionInfo; prefix=DEFAULT_URL_PREFIX)
     return prefix * info.anchorfile * "#" * info.anchor
 end
 
-function hdf5_group_url(info::HDF5GroupInfo; prefix="https://docs.hdfgroup.org/hdf5/v1_14/")
+function hdf5_group_url(info::HDF5GroupInfo; prefix=DEFAULT_URL_PREFIX)
     return prefix * info.filename
 end
 
@@ -145,18 +132,12 @@ function save_to_tab_separated_values(
     end
 end
 
-function __init__()
-    if abspath(PROGRAM_FILE) == @__FILE__()
-        main()
-    end
-end
-
 """
     main()
 
-Executed when `julia --project=. src/DoxygenTagParser` is run from the shell.
+Executed when `julia --project -m DoxygenTagParser` is run from the shell.
 """
-function main()
+function (@main)(ARGS)
     nargs = length(ARGS)
     tsv_file = nargs > 0 ? ARGS[1] : "hdf5_func_urls.tsv"
     group_file = nargs > 1 ? ARGS[2] : "hdf5_group_urls.tsv"
