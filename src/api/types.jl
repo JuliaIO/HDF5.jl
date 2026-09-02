@@ -10,10 +10,12 @@ const hsize_t  = UInt64
 const hssize_t = Int64
 const htri_t   = Cint   # pseudo-boolean (negative if error)
 @static if Sys.iswindows()
-    const off_t = Int64
-else
     const off_t = Int
+else
+    const off_t = Int64
 end
+# Introduced in HDF5 v2.0
+const H5Doff_t = Int64
 
 const H5Z_filter_t = Cint
 
@@ -251,7 +253,7 @@ end
 # we can precompile for improved latency.
 const libhdf5handle = Ref(dlopen(libhdf5))
 ccall(dlsym(libhdf5handle[], :H5open), herr_t, ())
-_read_const(sym::Symbol) = unsafe_load(cglobal(dlsym(libhdf5handle[], sym), hid_t))
+_read_const(sym::Symbol) = unsafe_load(Ptr{hid_t}(dlsym(libhdf5handle[], sym)))
 _has_symbol(sym::Symbol) = dlsym(libhdf5handle[], sym; throw_error=false) !== nothing
 
 # iteration order constants
@@ -317,7 +319,7 @@ const H5F_ACC_SWMR_READ  = 0x0040
     H5F_LIBVER_V110 = 2
     H5F_LIBVER_V112 = 3
     H5F_LIBVER_V114 = 4
-    H5F_LIBVER_V116 = 5
+    H5F_LIBVER_V200 = 5
     H5F_LIBVER_NBOUNDS = 6
 end
 # H5F_LIBVER_LATEST defined in helpers.jl
@@ -521,17 +523,18 @@ const H5T_C_S1            = _read_const(:H5T_C_S1_g)
 const H5T_STD_REF_OBJ     = _read_const(:H5T_STD_REF_OBJ_g)
 const H5T_STD_REF_DSETREG = _read_const(:H5T_STD_REF_DSETREG_g)
 # Native types
-const H5T_NATIVE_B8     = _read_const(:H5T_NATIVE_B8_g)
-const H5T_NATIVE_INT8   = _read_const(:H5T_NATIVE_INT8_g)
-const H5T_NATIVE_UINT8  = _read_const(:H5T_NATIVE_UINT8_g)
-const H5T_NATIVE_INT16  = _read_const(:H5T_NATIVE_INT16_g)
-const H5T_NATIVE_UINT16 = _read_const(:H5T_NATIVE_UINT16_g)
-const H5T_NATIVE_INT32  = _read_const(:H5T_NATIVE_INT32_g)
-const H5T_NATIVE_UINT32 = _read_const(:H5T_NATIVE_UINT32_g)
-const H5T_NATIVE_INT64  = _read_const(:H5T_NATIVE_INT64_g)
-const H5T_NATIVE_UINT64 = _read_const(:H5T_NATIVE_UINT64_g)
-const H5T_NATIVE_FLOAT  = _read_const(:H5T_NATIVE_FLOAT_g)
-const H5T_NATIVE_DOUBLE = _read_const(:H5T_NATIVE_DOUBLE_g)
+const H5T_NATIVE_B8      = _read_const(:H5T_NATIVE_B8_g)
+const H5T_NATIVE_INT8    = _read_const(:H5T_NATIVE_INT8_g)
+const H5T_NATIVE_UINT8   = _read_const(:H5T_NATIVE_UINT8_g)
+const H5T_NATIVE_INT16   = _read_const(:H5T_NATIVE_INT16_g)
+const H5T_NATIVE_UINT16  = _read_const(:H5T_NATIVE_UINT16_g)
+const H5T_NATIVE_INT32   = _read_const(:H5T_NATIVE_INT32_g)
+const H5T_NATIVE_UINT32  = _read_const(:H5T_NATIVE_UINT32_g)
+const H5T_NATIVE_INT64   = _read_const(:H5T_NATIVE_INT64_g)
+const H5T_NATIVE_UINT64  = _read_const(:H5T_NATIVE_UINT64_g)
+const H5T_NATIVE_FLOAT16 = _has_symbol(:H5T_NATIVE_FLOAT16_g) ? _read_const(:H5T_NATIVE_FLOAT16_g) : hid_t(-1)
+const H5T_NATIVE_FLOAT   = _read_const(:H5T_NATIVE_FLOAT_g)
+const H5T_NATIVE_DOUBLE  = _read_const(:H5T_NATIVE_DOUBLE_g)
 # Other type constants
 const H5T_VARIABLE = reinterpret(UInt, -1)
 

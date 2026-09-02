@@ -4,7 +4,7 @@
 # so the methods here handle making the appropriate `Ref`s and return them (as tuples).
 
 const H5F_LIBVER_LATEST = if _libhdf5_build_ver >= v"1.15"
-    H5F_LIBVER_V116
+    H5F_LIBVER_V200
 elseif _libhdf5_build_ver >= v"1.14"
     H5F_LIBVER_V114
 elseif _libhdf5_build_ver >= v"1.12"
@@ -626,9 +626,12 @@ Deprecated HDF5 function. Use [`h5o_get_info`](@ref) or [`h5o_get_native_info`](
 See `libhdf5` documentation for [`H5Oget_info1`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO1).
 """
 function h5o_get_info1(object_id, buf)
-    var"#status#" = ccall(
-        (:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info_t}), object_id, buf
-    )
+    lock(liblock)
+    var"#status#" = try
+        ccall((:H5Oget_info1, libhdf5), herr_t, (hid_t, Ptr{H5O_info_t}), object_id, buf)
+    finally
+        unlock(liblock)
+    end
     var"#status#" < 0 && @h5error("Error getting object info")
     return nothing
 end
@@ -708,7 +711,12 @@ function h5p_set_efile_prefix(plist, sym::Symbol)
 end
 
 function h5p_get_external(plist, idx=0)
-    offset = Ref{off_t}(0)
+    Offset_t = @static if v"2.0" ≤ _libhdf5_build_ver
+        H5Doff_t
+    else
+        off_t
+    end
+    offset = Ref{Offset_t}(0)
     sz = Ref{hsize_t}(0)
     name_size = 64
     name = Base.StringVector(name_size)
@@ -722,20 +730,6 @@ function h5p_get_external(plist, idx=0)
             resize!(name, null_id - 1)
             break
         end
-    end
-    # Heuristic for 32-bit Windows bug
-    # Possibly related:
-    # https://github.com/HDFGroup/hdf5/pull/1821
-    # Quote:
-    # The offset parameter is of type off_t and the offset field of H5O_efl_entry_t
-    # is HDoff_t which is a different type on Windows (off_t is a 32-bit long,
-    # HDoff_t is __int64, a 64-bit type).
-    @static if Sys.iswindows() && sizeof(Int) == 4
-        lower = 0xffffffff & sz[]
-        upper = 0xffffffff & (sz[] >> 32)
-        # Scenario 1: The size is in the lower 32 bits, upper 32 bits contains garbage v1.12.2
-        # Scenario 2: The size is in the upper 32 bits, lower 32 bits is 0 as of HDF5 v1.12.1
-        sz[] = lower == 0 && upper != 0xffffffff ? upper : lower
     end
     return (name=String(name), offset=offset[], size=sz[])
 end
@@ -876,7 +870,12 @@ end
 See `libhdf5` documentation for [`H5P_GET_CLASS_NAME`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CLASS_NAME).
 """
 function h5p_get_class_name(pcid)
-    pc = ccall((:H5Pget_class_name, libhdf5), Ptr{UInt8}, (hid_t,), pcid)
+    lock(liblock)
+    pc = try
+        ccall((:H5Pget_class_name, libhdf5), Ptr{UInt8}, (hid_t,), pcid)
+    finally
+        unlock(liblock)
+    end
     if pc == C_NULL
         @h5error("Error getting class name")
     end
@@ -987,7 +986,12 @@ end
 See `libhdf5` documentation for [`H5Oopen`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_MEMBER_NAME).
 """
 function h5t_get_member_name(type_id, index)
-    pn = ccall((:H5Tget_member_name, libhdf5), Ptr{UInt8}, (hid_t, Cuint), type_id, index)
+    lock(liblock)
+    pn = try
+        ccall((:H5Tget_member_name, libhdf5), Ptr{UInt8}, (hid_t, Cuint), type_id, index)
+    finally
+        unlock(liblock)
+    end
     if pn == C_NULL
         @h5error("Error getting name of compound datatype member #$index")
     end
@@ -1002,7 +1006,12 @@ end
 See `libhdf5` documentation for [`H5Oopen`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_TAG).
 """
 function h5t_get_tag(type_id)
-    pc = ccall((:H5Tget_tag, libhdf5), Ptr{UInt8}, (hid_t,), type_id)
+    lock(liblock)
+    pc = try
+        ccall((:H5Tget_tag, libhdf5), Ptr{UInt8}, (hid_t,), type_id)
+    finally
+        unlock(liblock)
+    end
     if pc == C_NULL
         @h5error("Error getting opaque tag")
     end

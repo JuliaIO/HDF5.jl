@@ -5,3 +5,4 @@
 /docs/build/
 Manifest.toml
 LocalPreferences.toml
+/gen/DoxygenTagParser/scripts/hdf5/
