@@ -92,6 +92,8 @@ end
         @debug "virtual datasets"
         include("virtual_dataset.jl")
     end
+    @debug "api lock"
+    include("apilock.jl")
 
     # basic MPI tests, for actual parallel tests we need to run in MPI mode
     include("mpio.jl")

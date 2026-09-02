@@ -268,12 +268,13 @@ function H5Z_filter_bitshuffle(
                     err = ccall(
                         (:bshuf_compress_zstd, libbitshuffle),
                         Int64,
-                        (Ptr{Cvoid}, Ptr{Cvoid}, Csize_t, Csize_t, Csize_t),
+                        (Ptr{Cvoid}, Ptr{Cvoid}, Csize_t, Csize_t, Csize_t, Cint),
                         in_buf,
                         out_buf + 12,
                         size,
                         elem_size,
-                        block_size
+                        block_size,
+                        Cint(comp_lvl)
                     )
                 end
 

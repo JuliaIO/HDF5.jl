@@ -1,7 +1,6 @@
 module HDF5
 
 using Base: unsafe_convert
-using Requires: @require
 using Mmap: Mmap
 # needed for filter(f, tuple) in julia 1.3
 using Compat
@@ -48,17 +47,34 @@ export @read,
     Filters,
     Drivers
 
-### The following require module scoping ###
+### The following public methods require module scoping ###
 
-# file, filename, name,
-# get_chunk, get_datasets,
-# get_access_properties, get_create_properties,
-# root, readmmap,
-# iscontiguous, iscompact, ischunked,
-# ishdf5, ismmappable,
-# refresh
-# start_swmr_write
-# create_external, create_external_dataset
+@static if VERSION ≥ v"1.11.0"
+    eval(
+        Expr(
+            :public,
+            :create_external,
+            :create_external_dataset,
+            :file,
+            :filename,
+            :get_access_properties,
+            :get_create_properties,
+            :get_chunk,
+            :get_datasets,
+            :iscompact,
+            :ischunked,
+            :iscontiguous,
+            :ishdf5,
+            :ismmappable,
+            :name,
+            :readmmap,
+            :refresh,
+            :root,
+            :set_dims!,
+            :start_swmr_write,
+        )
+    )
+end
 
 ### Types
 # H5DataStore, Attribute, File, Group, Dataset, Datatype, Opaque,
@@ -122,12 +138,6 @@ function __init__()
     UTF8_LINK_PROPERTIES.create_intermediate_group = true
     ASCII_ATTRIBUTE_PROPERTIES.char_encoding = :ascii
     UTF8_ATTRIBUTE_PROPERTIES.char_encoding = :utf8
-
-    @static if !isdefined(Base, :get_extension)
-        @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" include(
-            "../ext/FileIOExt.jl"
-        )
-    end
 
     return nothing
 end
