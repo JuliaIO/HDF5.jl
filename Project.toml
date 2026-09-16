@@ -25,7 +25,8 @@ OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 bitshuffle_jll = "228fe19c-1b83-5282-a626-13744502a320"
 
 [sources]
-HDF5DocURLs = {rev = "main", url = "https://github.com/mkitti/HDF5DocURLs.jl"}
+# TODO: remove once HDF5DocURLs is registered in General with subdir="HDF5DocURLs"
+HDF5DocURLs = {path = "HDF5DocURLs"}
 
 [extensions]
 BloscExt = "Blosc"
