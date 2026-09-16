@@ -14,7 +14,7 @@ _libhdf5_build_ver = let
 """
     h5_close()
 
-See `libhdf5` documentation for [`H5close`]($(_hdf5_func_doc_url("H5close"))).
+See `libhdf5` documentation for [`H5close`]($(HDF5DocURLs.func_url("H5close"))).
 """
 function h5_close()
     lock(liblock)
@@ -30,7 +30,7 @@ end
 """
     h5_dont_atexit()
 
-See `libhdf5` documentation for [`H5dont_atexit`]($(_hdf5_func_doc_url("H5dont_atexit"))).
+See `libhdf5` documentation for [`H5dont_atexit`]($(HDF5DocURLs.func_url("H5dont_atexit"))).
 """
 function h5_dont_atexit()
     lock(liblock)
@@ -46,7 +46,7 @@ end
 """
     h5_free_memory(buf::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5free_memory`]($(_hdf5_func_doc_url("H5free_memory"))).
+See `libhdf5` documentation for [`H5free_memory`]($(HDF5DocURLs.func_url("H5free_memory"))).
 """
 function h5_free_memory(buf)
     lock(liblock)
@@ -62,7 +62,7 @@ end
 """
     h5_garbage_collect()
 
-See `libhdf5` documentation for [`H5garbage_collect`]($(_hdf5_func_doc_url("H5garbage_collect"))).
+See `libhdf5` documentation for [`H5garbage_collect`]($(HDF5DocURLs.func_url("H5garbage_collect"))).
 """
 function h5_garbage_collect()
     lock(liblock)
@@ -78,7 +78,7 @@ end
 """
     h5_get_libversion(majnum::Ref{Cuint}, minnum::Ref{Cuint}, relnum::Ref{Cuint})
 
-See `libhdf5` documentation for [`H5get_libversion`]($(_hdf5_func_doc_url("H5get_libversion"))).
+See `libhdf5` documentation for [`H5get_libversion`]($(HDF5DocURLs.func_url("H5get_libversion"))).
 """
 function h5_get_libversion(majnum, minnum, relnum)
     lock(liblock)
@@ -94,7 +94,7 @@ end
 """
     h5_is_library_threadsafe(is_ts::Ref{Cuchar})
 
-See `libhdf5` documentation for [`H5is_library_threadsafe`]($(_hdf5_func_doc_url("H5is_library_threadsafe"))).
+See `libhdf5` documentation for [`H5is_library_threadsafe`]($(HDF5DocURLs.func_url("H5is_library_threadsafe"))).
 """
 function h5_is_library_threadsafe(is_ts)
     lock(liblock)
@@ -110,7 +110,7 @@ end
 """
     h5_open()
 
-See `libhdf5` documentation for [`H5open`]($(_hdf5_func_doc_url("H5open"))).
+See `libhdf5` documentation for [`H5open`]($(HDF5DocURLs.func_url("H5open"))).
 """
 function h5_open()
     lock(liblock)
@@ -126,7 +126,7 @@ end
 """
     h5_set_free_list_limits(reg_global_lim::Cint, reg_list_lim::Cint, arr_global_lim::Cint, arr_list_lim::Cint, blk_global_lim::Cint, blk_list_lim::Cint)
 
-See `libhdf5` documentation for [`H5set_free_list_limits`]($(_hdf5_func_doc_url("H5set_free_list_limits"))).
+See `libhdf5` documentation for [`H5set_free_list_limits`]($(HDF5DocURLs.func_url("H5set_free_list_limits"))).
 """
 function h5_set_free_list_limits(reg_global_lim, reg_list_lim, arr_global_lim, arr_list_lim, blk_global_lim, blk_list_lim)
     lock(liblock)
@@ -142,7 +142,7 @@ end
 """
     h5a_close(id::hid_t)
 
-See `libhdf5` documentation for [`H5Aclose`]($(_hdf5_func_doc_url("H5Aclose"))).
+See `libhdf5` documentation for [`H5Aclose`]($(HDF5DocURLs.func_url("H5Aclose"))).
 """
 function h5a_close(id)
     lock(liblock)
@@ -158,7 +158,7 @@ end
 """
     h5a_create(loc_id::hid_t, attr_name::Cstring, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Acreate2`]($(_hdf5_func_doc_url("H5Acreate2"))).
+See `libhdf5` documentation for [`H5Acreate2`]($(HDF5DocURLs.func_url("H5Acreate2"))).
 """
 function h5a_create(loc_id, attr_name, type_id, space_id, acpl_id, aapl_id)
     lock(liblock)
@@ -174,7 +174,7 @@ end
 """
     h5a_create_by_name(loc_id::hid_t, obj_name::Cstring, attr_name::Cstring, type_id::hid_t, space_id::hid_t, acpl_id::hid_t, aapl_id::hid_t, lapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Acreate_by_name`]($(_hdf5_func_doc_url("H5Acreate_by_name"))).
+See `libhdf5` documentation for [`H5Acreate_by_name`]($(HDF5DocURLs.func_url("H5Acreate_by_name"))).
 """
 function h5a_create_by_name(loc_id, obj_name, attr_name, type_id, space_id, acpl_id, aapl_id, lapl_id)
     lock(liblock)
@@ -190,7 +190,7 @@ end
 """
     h5a_delete(loc_id::hid_t, attr_name::Cstring)
 
-See `libhdf5` documentation for [`H5Adelete`]($(_hdf5_func_doc_url("H5Adelete"))).
+See `libhdf5` documentation for [`H5Adelete`]($(HDF5DocURLs.func_url("H5Adelete"))).
 """
 function h5a_delete(loc_id, attr_name)
     lock(liblock)
@@ -206,7 +206,7 @@ end
 """
     h5a_delete_by_idx(loc_id::hid_t, obj_name::Cstring, idx_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Adelete_by_idx`]($(_hdf5_func_doc_url("H5Adelete_by_idx"))).
+See `libhdf5` documentation for [`H5Adelete_by_idx`]($(HDF5DocURLs.func_url("H5Adelete_by_idx"))).
 """
 function h5a_delete_by_idx(loc_id, obj_name, idx_type, order, n, lapl_id)
     lock(liblock)
@@ -222,7 +222,7 @@ end
 """
     h5a_delete_by_name(loc_id::hid_t, obj_name::Cstring, attr_name::Cstring, lapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Adelete_by_name`]($(_hdf5_func_doc_url("H5Adelete_by_name"))).
+See `libhdf5` documentation for [`H5Adelete_by_name`]($(HDF5DocURLs.func_url("H5Adelete_by_name"))).
 """
 function h5a_delete_by_name(loc_id, obj_name, attr_name, lapl_id)
     lock(liblock)
@@ -238,7 +238,7 @@ end
 """
     h5a_exists(obj_id::hid_t, attr_name::Cstring) -> Bool
 
-See `libhdf5` documentation for [`H5Aexists`]($(_hdf5_func_doc_url("H5Aexists"))).
+See `libhdf5` documentation for [`H5Aexists`]($(HDF5DocURLs.func_url("H5Aexists"))).
 """
 function h5a_exists(obj_id, attr_name)
     lock(liblock)
@@ -254,7 +254,7 @@ end
 """
     h5a_exists_by_name(loc_id::hid_t, obj_name::Cstring, attr_name::Cstring, lapl_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Aexists_by_name`]($(_hdf5_func_doc_url("H5Aexists_by_name"))).
+See `libhdf5` documentation for [`H5Aexists_by_name`]($(HDF5DocURLs.func_url("H5Aexists_by_name"))).
 """
 function h5a_exists_by_name(loc_id, obj_name, attr_name, lapl_id)
     lock(liblock)
@@ -270,7 +270,7 @@ end
 """
     h5a_get_create_plist(attr_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Aget_create_plist`]($(_hdf5_func_doc_url("H5Aget_create_plist"))).
+See `libhdf5` documentation for [`H5Aget_create_plist`]($(HDF5DocURLs.func_url("H5Aget_create_plist"))).
 """
 function h5a_get_create_plist(attr_id)
     lock(liblock)
@@ -286,7 +286,7 @@ end
 """
     h5a_get_name(attr_id::hid_t, buf_size::Csize_t, buf::Ptr{UInt8}) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Aget_name`]($(_hdf5_func_doc_url("H5Aget_name"))).
+See `libhdf5` documentation for [`H5Aget_name`]($(HDF5DocURLs.func_url("H5Aget_name"))).
 """
 function h5a_get_name(attr_id, buf_size, buf)
     lock(liblock)
@@ -302,7 +302,7 @@ end
 """
     h5a_get_name_by_idx(loc_id::hid_t, obj_name::Cstring, index_type::Cint, order::Cint, idx::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Aget_name_by_idx`]($(_hdf5_func_doc_url("H5Aget_name_by_idx"))).
+See `libhdf5` documentation for [`H5Aget_name_by_idx`]($(HDF5DocURLs.func_url("H5Aget_name_by_idx"))).
 """
 function h5a_get_name_by_idx(loc_id, obj_name, index_type, order, idx, name, size, lapl_id)
     lock(liblock)
@@ -318,7 +318,7 @@ end
 """
     h5a_get_space(attr_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Aget_space`]($(_hdf5_func_doc_url("H5Aget_space"))).
+See `libhdf5` documentation for [`H5Aget_space`]($(HDF5DocURLs.func_url("H5Aget_space"))).
 """
 function h5a_get_space(attr_id)
     lock(liblock)
@@ -334,7 +334,7 @@ end
 """
     h5a_get_type(attr_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Aget_type`]($(_hdf5_func_doc_url("H5Aget_type"))).
+See `libhdf5` documentation for [`H5Aget_type`]($(HDF5DocURLs.func_url("H5Aget_type"))).
 """
 function h5a_get_type(attr_id)
     lock(liblock)
@@ -350,7 +350,7 @@ end
 """
     h5a_iterate(obj_id::hid_t, idx_type::Cint, order::Cint, n::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)
 
-See `libhdf5` documentation for [`H5Aiterate2`]($(_hdf5_func_doc_url("H5Aiterate2"))).
+See `libhdf5` documentation for [`H5Aiterate2`]($(HDF5DocURLs.func_url("H5Aiterate2"))).
 """
 function h5a_iterate(obj_id, idx_type, order, n, op, op_data)
     lock(liblock)
@@ -366,7 +366,7 @@ end
 """
     h5a_open(obj_id::hid_t, attr_name::Cstring, aapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Aopen`]($(_hdf5_func_doc_url("H5Aopen"))).
+See `libhdf5` documentation for [`H5Aopen`]($(HDF5DocURLs.func_url("H5Aopen"))).
 """
 function h5a_open(obj_id, attr_name, aapl_id)
     lock(liblock)
@@ -382,7 +382,7 @@ end
 """
     h5a_open_by_idx(obj_id::hid_t, pathname::Cstring, idx_type::Cint, order::Cint, n::hsize_t, aapl_id::hid_t, lapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Aopen_by_idx`]($(_hdf5_func_doc_url("H5Aopen_by_idx"))).
+See `libhdf5` documentation for [`H5Aopen_by_idx`]($(HDF5DocURLs.func_url("H5Aopen_by_idx"))).
 """
 function h5a_open_by_idx(obj_id, pathname, idx_type, order, n, aapl_id, lapl_id)
     lock(liblock)
@@ -398,7 +398,7 @@ end
 """
     h5a_read(attr_id::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Aread`]($(_hdf5_func_doc_url("H5Aread"))).
+See `libhdf5` documentation for [`H5Aread`]($(HDF5DocURLs.func_url("H5Aread"))).
 """
 function h5a_read(attr_id, mem_type_id, buf)
     lock(liblock)
@@ -414,7 +414,7 @@ end
 """
     h5a_rename(loc_id::hid_t, old_attr_name::Cstring, new_attr_name::Cstring)
 
-See `libhdf5` documentation for [`H5Arename`]($(_hdf5_func_doc_url("H5Arename"))).
+See `libhdf5` documentation for [`H5Arename`]($(HDF5DocURLs.func_url("H5Arename"))).
 """
 function h5a_rename(loc_id, old_attr_name, new_attr_name)
     lock(liblock)
@@ -430,7 +430,7 @@ end
 """
     h5a_write(attr_hid::hid_t, mem_type_id::hid_t, buf::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Awrite`]($(_hdf5_func_doc_url("H5Awrite"))).
+See `libhdf5` documentation for [`H5Awrite`]($(HDF5DocURLs.func_url("H5Awrite"))).
 """
 function h5a_write(attr_hid, mem_type_id, buf)
     lock(liblock)
@@ -447,7 +447,7 @@ end
     @doc """
         h5d_chunk_iter(dset_id::hid_t, dxpl_id::hid_t, cb::Ptr{Nothing}, op_data::Any)
 
-    See `libhdf5` documentation for [`H5Dchunk_iter`]($(_hdf5_func_doc_url("H5Dchunk_iter"))).
+    See `libhdf5` documentation for [`H5Dchunk_iter`]($(HDF5DocURLs.func_url("H5Dchunk_iter"))).
     """
     function h5d_chunk_iter(dset_id, dxpl_id, cb, op_data)
         lock(liblock)
@@ -464,7 +464,7 @@ end
 """
     h5d_close(dataset_id::hid_t)
 
-See `libhdf5` documentation for [`H5Dclose`]($(_hdf5_func_doc_url("H5Dclose"))).
+See `libhdf5` documentation for [`H5Dclose`]($(HDF5DocURLs.func_url("H5Dclose"))).
 """
 function h5d_close(dataset_id)
     lock(liblock)
@@ -480,7 +480,7 @@ end
 """
     h5d_create(loc_id::hid_t, pathname::Cstring, dtype_id::hid_t, space_id::hid_t, lcpl_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Dcreate2`]($(_hdf5_func_doc_url("H5Dcreate2"))).
+See `libhdf5` documentation for [`H5Dcreate2`]($(HDF5DocURLs.func_url("H5Dcreate2"))).
 """
 function h5d_create(loc_id, pathname, dtype_id, space_id, lcpl_id, dcpl_id, dapl_id)
     lock(liblock)
@@ -496,7 +496,7 @@ end
 """
     h5d_create_anon(loc_id::hid_t, type_id::hid_t, space_id::hid_t, dcpl_id::hid_t, dapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Dcreate_anon`]($(_hdf5_func_doc_url("H5Dcreate_anon"))).
+See `libhdf5` documentation for [`H5Dcreate_anon`]($(HDF5DocURLs.func_url("H5Dcreate_anon"))).
 """
 function h5d_create_anon(loc_id, type_id, space_id, dcpl_id, dapl_id)
     lock(liblock)
@@ -512,7 +512,7 @@ end
 """
     h5d_extend(dataset_id::hid_t, size::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Dextend`]($(_hdf5_func_doc_url("H5Dextend"))).
+See `libhdf5` documentation for [`H5Dextend`]($(HDF5DocURLs.func_url("H5Dextend"))).
 """
 function h5d_extend(dataset_id, size)
     lock(liblock)
@@ -528,7 +528,7 @@ end
 """
     h5d_fill(fill::Ptr{Cvoid}, fill_type_id::hid_t, buf::Ptr{Cvoid}, buf_type_id::hid_t, space_id::hid_t)
 
-See `libhdf5` documentation for [`H5Dfill`]($(_hdf5_func_doc_url("H5Dfill"))).
+See `libhdf5` documentation for [`H5Dfill`]($(HDF5DocURLs.func_url("H5Dfill"))).
 """
 function h5d_fill(fill, fill_type_id, buf, buf_type_id, space_id)
     lock(liblock)
@@ -544,7 +544,7 @@ end
 """
     h5d_flush(dataset_id::hid_t)
 
-See `libhdf5` documentation for [`H5Dflush`]($(_hdf5_func_doc_url("H5Dflush"))).
+See `libhdf5` documentation for [`H5Dflush`]($(HDF5DocURLs.func_url("H5Dflush"))).
 """
 function h5d_flush(dataset_id)
     lock(liblock)
@@ -560,7 +560,7 @@ end
 """
     h5d_gather(src_space_id::hid_t, src_buf::Ptr{Cvoid}, type_id::hid_t, dst_buf_size::Csize_t, dst_buf::Ptr{Cvoid}, op::Ptr{Cvoid}, op_data::Any)
 
-See `libhdf5` documentation for [`H5Dgather`]($(_hdf5_func_doc_url("H5Dgather"))).
+See `libhdf5` documentation for [`H5Dgather`]($(HDF5DocURLs.func_url("H5Dgather"))).
 """
 function h5d_gather(src_space_id, src_buf, type_id, dst_buf_size, dst_buf, op, op_data)
     lock(liblock)
@@ -576,7 +576,7 @@ end
 """
     h5d_get_access_plist(dataset_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Dget_access_plist`]($(_hdf5_func_doc_url("H5Dget_access_plist"))).
+See `libhdf5` documentation for [`H5Dget_access_plist`]($(HDF5DocURLs.func_url("H5Dget_access_plist"))).
 """
 function h5d_get_access_plist(dataset_id)
     lock(liblock)
@@ -592,7 +592,7 @@ end
 """
     h5d_get_chunk_info(dataset_id::hid_t, fspace_id::hid_t, index::hsize_t, offset::Ptr{hsize_t}, filter_mask::Ptr{Cuint}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Dget_chunk_info`]($(_hdf5_func_doc_url("H5Dget_chunk_info"))).
+See `libhdf5` documentation for [`H5Dget_chunk_info`]($(HDF5DocURLs.func_url("H5Dget_chunk_info"))).
 """
 function h5d_get_chunk_info(dataset_id, fspace_id, index, offset, filter_mask, addr, size)
     lock(liblock)
@@ -609,7 +609,7 @@ end
     @doc """
         h5d_get_chunk_info_by_coord(dataset_id::hid_t, offset::Ptr{hsize_t}, filter_mask::Ptr{Cuint}, addr::Ptr{haddr_t}, size::Ptr{hsize_t})
 
-    See `libhdf5` documentation for [`H5Dget_chunk_info_by_coord`]($(_hdf5_func_doc_url("H5Dget_chunk_info_by_coord"))).
+    See `libhdf5` documentation for [`H5Dget_chunk_info_by_coord`]($(HDF5DocURLs.func_url("H5Dget_chunk_info_by_coord"))).
     """
     function h5d_get_chunk_info_by_coord(dataset_id, offset, filter_mask, addr, size)
         lock(liblock)
@@ -626,7 +626,7 @@ end
 """
     h5d_get_chunk_storage_size(dataset_id::hid_t, offset::Ptr{hsize_t}, chunk_nbytes::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Dget_chunk_storage_size`]($(_hdf5_func_doc_url("H5Dget_chunk_storage_size"))).
+See `libhdf5` documentation for [`H5Dget_chunk_storage_size`]($(HDF5DocURLs.func_url("H5Dget_chunk_storage_size"))).
 """
 function h5d_get_chunk_storage_size(dataset_id, offset, chunk_nbytes)
     lock(liblock)
@@ -642,7 +642,7 @@ end
 """
     h5d_get_create_plist(dataset_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Dget_create_plist`]($(_hdf5_func_doc_url("H5Dget_create_plist"))).
+See `libhdf5` documentation for [`H5Dget_create_plist`]($(HDF5DocURLs.func_url("H5Dget_create_plist"))).
 """
 function h5d_get_create_plist(dataset_id)
     lock(liblock)
@@ -659,7 +659,7 @@ end
     @doc """
         h5d_get_num_chunks(dataset_id::hid_t, fspace_id::hid_t, nchunks::Ptr{hsize_t})
 
-    See `libhdf5` documentation for [`H5Dget_num_chunks`]($(_hdf5_func_doc_url("H5Dget_num_chunks"))).
+    See `libhdf5` documentation for [`H5Dget_num_chunks`]($(HDF5DocURLs.func_url("H5Dget_num_chunks"))).
     """
     function h5d_get_num_chunks(dataset_id, fspace_id, nchunks)
         lock(liblock)
@@ -676,7 +676,7 @@ end
 """
     h5d_get_offset(dataset_id::hid_t) -> haddr_t
 
-See `libhdf5` documentation for [`H5Dget_offset`]($(_hdf5_func_doc_url("H5Dget_offset"))).
+See `libhdf5` documentation for [`H5Dget_offset`]($(HDF5DocURLs.func_url("H5Dget_offset"))).
 """
 function h5d_get_offset(dataset_id)
     lock(liblock)
@@ -692,7 +692,7 @@ end
 """
     h5d_get_space(dataset_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Dget_space`]($(_hdf5_func_doc_url("H5Dget_space"))).
+See `libhdf5` documentation for [`H5Dget_space`]($(HDF5DocURLs.func_url("H5Dget_space"))).
 """
 function h5d_get_space(dataset_id)
     lock(liblock)
@@ -708,7 +708,7 @@ end
 """
     h5d_get_space_status(dataset_id::hid_t, status::Ref{Cint})
 
-See `libhdf5` documentation for [`H5Dget_space_status`]($(_hdf5_func_doc_url("H5Dget_space_status"))).
+See `libhdf5` documentation for [`H5Dget_space_status`]($(HDF5DocURLs.func_url("H5Dget_space_status"))).
 """
 function h5d_get_space_status(dataset_id, status)
     lock(liblock)
@@ -724,7 +724,7 @@ end
 """
     h5d_get_storage_size(dataset_id::hid_t) -> hsize_t
 
-See `libhdf5` documentation for [`H5Dget_storage_size`]($(_hdf5_func_doc_url("H5Dget_storage_size"))).
+See `libhdf5` documentation for [`H5Dget_storage_size`]($(HDF5DocURLs.func_url("H5Dget_storage_size"))).
 """
 function h5d_get_storage_size(dataset_id)
     lock(liblock)
@@ -740,7 +740,7 @@ end
 """
     h5d_get_type(dataset_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Dget_type`]($(_hdf5_func_doc_url("H5Dget_type"))).
+See `libhdf5` documentation for [`H5Dget_type`]($(HDF5DocURLs.func_url("H5Dget_type"))).
 """
 function h5d_get_type(dataset_id)
     lock(liblock)
@@ -756,7 +756,7 @@ end
 """
     h5d_iterate(buf::Ptr{Cvoid}, type_id::hid_t, space_id::hid_t, operator::Ptr{Cvoid}, operator_data::Any)
 
-See `libhdf5` documentation for [`H5Diterate`]($(_hdf5_func_doc_url("H5Diterate"))).
+See `libhdf5` documentation for [`H5Diterate`]($(HDF5DocURLs.func_url("H5Diterate"))).
 """
 function h5d_iterate(buf, type_id, space_id, operator, operator_data)
     lock(liblock)
@@ -772,7 +772,7 @@ end
 """
     h5d_open(loc_id::hid_t, pathname::Cstring, dapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Dopen2`]($(_hdf5_func_doc_url("H5Dopen2"))).
+See `libhdf5` documentation for [`H5Dopen2`]($(HDF5DocURLs.func_url("H5Dopen2"))).
 """
 function h5d_open(loc_id, pathname, dapl_id)
     lock(liblock)
@@ -788,7 +788,7 @@ end
 """
     h5d_read(dataset_id::hid_t, mem_type_id::hid_t, mem_space_id::hid_t, file_space_id::hid_t, xfer_plist_id::hid_t, buf::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Dread`]($(_hdf5_func_doc_url("H5Dread"))).
+See `libhdf5` documentation for [`H5Dread`]($(HDF5DocURLs.func_url("H5Dread"))).
 """
 function h5d_read(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf)
     lock(liblock)
@@ -805,7 +805,7 @@ end
     @doc """
         h5d_read_chunk(dset::hid_t, dxpl_id::hid_t, offset::Ptr{hsize_t}, filters::Ptr{UInt32}, buf::Ptr{Cvoid})
 
-    See `libhdf5` documentation for [`H5Dread_chunk`]($(_hdf5_func_doc_url("H5Dread_chunk"))).
+    See `libhdf5` documentation for [`H5Dread_chunk`]($(HDF5DocURLs.func_url("H5Dread_chunk"))).
     """
     function h5d_read_chunk(dset, dxpl_id, offset, filters, buf)
         lock(liblock)
@@ -823,7 +823,7 @@ end
     @doc """
         h5d_read_chunk(dset::hid_t, dxpl_id::hid_t, offset::Ptr{hsize_t}, filters::Ptr{UInt32}, buf::Ptr{Cvoid})
 
-    See `libhdf5` documentation for [`H5Dread_chunk1`]($(_hdf5_func_doc_url("H5Dread_chunk1"))).
+    See `libhdf5` documentation for [`H5Dread_chunk1`]($(HDF5DocURLs.func_url("H5Dread_chunk1"))).
     """
     function h5d_read_chunk(dset, dxpl_id, offset, filters, buf)
         lock(liblock)
@@ -840,7 +840,7 @@ end
 """
     h5d_refresh(dataset_id::hid_t)
 
-See `libhdf5` documentation for [`H5Drefresh`]($(_hdf5_func_doc_url("H5Drefresh"))).
+See `libhdf5` documentation for [`H5Drefresh`]($(HDF5DocURLs.func_url("H5Drefresh"))).
 """
 function h5d_refresh(dataset_id)
     lock(liblock)
@@ -856,7 +856,7 @@ end
 """
     h5d_scatter(op::Ptr{Cvoid}, op_data::Any, type_id::hid_t, dst_space_id::hid_t, dst_buf::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Dscatter`]($(_hdf5_func_doc_url("H5Dscatter"))).
+See `libhdf5` documentation for [`H5Dscatter`]($(HDF5DocURLs.func_url("H5Dscatter"))).
 """
 function h5d_scatter(op, op_data, type_id, dst_space_id, dst_buf)
     lock(liblock)
@@ -872,7 +872,7 @@ end
 """
     h5d_set_extent(dataset_id::hid_t, new_dims::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Dset_extent`]($(_hdf5_func_doc_url("H5Dset_extent"))).
+See `libhdf5` documentation for [`H5Dset_extent`]($(HDF5DocURLs.func_url("H5Dset_extent"))).
 """
 function h5d_set_extent(dataset_id, new_dims)
     lock(liblock)
@@ -888,7 +888,7 @@ end
 """
     h5d_vlen_get_buf_size(dset_id::hid_t, type_id::hid_t, space_id::hid_t, buf::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Dvlen_get_buf_size`]($(_hdf5_func_doc_url("H5Dvlen_get_buf_size"))).
+See `libhdf5` documentation for [`H5Dvlen_get_buf_size`]($(HDF5DocURLs.func_url("H5Dvlen_get_buf_size"))).
 """
 function h5d_vlen_get_buf_size(dset_id, type_id, space_id, buf)
     lock(liblock)
@@ -904,7 +904,7 @@ end
 """
     h5d_vlen_reclaim(type_id::hid_t, space_id::hid_t, plist_id::hid_t, buf::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Dvlen_reclaim`]($(_hdf5_func_doc_url("H5Dvlen_reclaim"))).
+See `libhdf5` documentation for [`H5Dvlen_reclaim`]($(HDF5DocURLs.func_url("H5Dvlen_reclaim"))).
 """
 function h5d_vlen_reclaim(type_id, space_id, plist_id, buf)
     lock(liblock)
@@ -920,7 +920,7 @@ end
 """
     h5d_write(dataset_id::hid_t, mem_type_id::hid_t, mem_space_id::hid_t, file_space_id::hid_t, xfer_plist_id::hid_t, buf::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Dwrite`]($(_hdf5_func_doc_url("H5Dwrite"))).
+See `libhdf5` documentation for [`H5Dwrite`]($(HDF5DocURLs.func_url("H5Dwrite"))).
 """
 function h5d_write(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf)
     lock(liblock)
@@ -936,7 +936,7 @@ end
 """
     h5d_write_chunk(dset_id::hid_t, dxpl_id::hid_t, filter_mask::UInt32, offset::Ptr{hsize_t}, bufsize::Csize_t, buf::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Dwrite_chunk`]($(_hdf5_func_doc_url("H5Dwrite_chunk"))).
+See `libhdf5` documentation for [`H5Dwrite_chunk`]($(HDF5DocURLs.func_url("H5Dwrite_chunk"))).
 """
 function h5d_write_chunk(dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
     lock(liblock)
@@ -952,7 +952,7 @@ end
 """
     h5e_get_auto(estack_id::hid_t, func::Ref{Ptr{Cvoid}}, client_data::Ref{Ptr{Cvoid}})
 
-See `libhdf5` documentation for [`H5Eget_auto2`]($(_hdf5_func_doc_url("H5Eget_auto2"))).
+See `libhdf5` documentation for [`H5Eget_auto2`]($(HDF5DocURLs.func_url("H5Eget_auto2"))).
 """
 function h5e_get_auto(estack_id, func, client_data)
     lock(liblock)
@@ -968,7 +968,7 @@ end
 """
     h5e_set_auto(estack_id::hid_t, func::Ptr{Cvoid}, client_data::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Eset_auto2`]($(_hdf5_func_doc_url("H5Eset_auto2"))).
+See `libhdf5` documentation for [`H5Eset_auto2`]($(HDF5DocURLs.func_url("H5Eset_auto2"))).
 """
 function h5e_set_auto(estack_id, func, client_data)
     lock(liblock)
@@ -984,7 +984,7 @@ end
 """
     h5e_get_current_stack() -> hid_t
 
-See `libhdf5` documentation for [`H5Eget_current_stack`]($(_hdf5_func_doc_url("H5Eget_current_stack"))).
+See `libhdf5` documentation for [`H5Eget_current_stack`]($(HDF5DocURLs.func_url("H5Eget_current_stack"))).
 """
 function h5e_get_current_stack()
     lock(liblock)
@@ -1000,7 +1000,7 @@ end
 """
     h5e_get_msg(mesg_id::hid_t, mesg_type::Ref{Cint}, mesg::Ref{UInt8}, len::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Eget_msg`]($(_hdf5_func_doc_url("H5Eget_msg"))).
+See `libhdf5` documentation for [`H5Eget_msg`]($(HDF5DocURLs.func_url("H5Eget_msg"))).
 """
 function h5e_get_msg(mesg_id, mesg_type, mesg, len)
     lock(liblock)
@@ -1016,7 +1016,7 @@ end
 """
     h5e_get_num(estack_id::hid_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Eget_num`]($(_hdf5_func_doc_url("H5Eget_num"))).
+See `libhdf5` documentation for [`H5Eget_num`]($(HDF5DocURLs.func_url("H5Eget_num"))).
 """
 function h5e_get_num(estack_id)
     lock(liblock)
@@ -1032,7 +1032,7 @@ end
 """
     h5e_close_stack(stack_id::hid_t)
 
-See `libhdf5` documentation for [`H5Eclose_stack`]($(_hdf5_func_doc_url("H5Eclose_stack"))).
+See `libhdf5` documentation for [`H5Eclose_stack`]($(HDF5DocURLs.func_url("H5Eclose_stack"))).
 """
 function h5e_close_stack(stack_id)
     lock(liblock)
@@ -1048,7 +1048,7 @@ end
 """
     h5e_walk(stack_id::hid_t, direction::Cint, op::Ptr{Cvoid}, op_data::Any)
 
-See `libhdf5` documentation for [`H5Ewalk2`]($(_hdf5_func_doc_url("H5Ewalk2"))).
+See `libhdf5` documentation for [`H5Ewalk2`]($(HDF5DocURLs.func_url("H5Ewalk2"))).
 """
 function h5e_walk(stack_id, direction, op, op_data)
     lock(liblock)
@@ -1064,7 +1064,7 @@ end
 """
     h5f_clear_elink_file_cache(file_id::hid_t)
 
-See `libhdf5` documentation for [`H5Fclear_elink_file_cache`]($(_hdf5_func_doc_url("H5Fclear_elink_file_cache"))).
+See `libhdf5` documentation for [`H5Fclear_elink_file_cache`]($(HDF5DocURLs.func_url("H5Fclear_elink_file_cache"))).
 """
 function h5f_clear_elink_file_cache(file_id)
     lock(liblock)
@@ -1080,7 +1080,7 @@ end
 """
     h5f_close(file_id::hid_t)
 
-See `libhdf5` documentation for [`H5Fclose`]($(_hdf5_func_doc_url("H5Fclose"))).
+See `libhdf5` documentation for [`H5Fclose`]($(HDF5DocURLs.func_url("H5Fclose"))).
 """
 function h5f_close(file_id)
     lock(liblock)
@@ -1096,7 +1096,7 @@ end
 """
     h5f_create(pathname::Cstring, flags::Cuint, fcpl_id::hid_t, fapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Fcreate`]($(_hdf5_func_doc_url("H5Fcreate"))).
+See `libhdf5` documentation for [`H5Fcreate`]($(HDF5DocURLs.func_url("H5Fcreate"))).
 """
 function h5f_create(pathname, flags, fcpl_id, fapl_id)
     lock(liblock)
@@ -1112,7 +1112,7 @@ end
 """
     h5f_delete(filename::Cstring, fapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Fdelete`]($(_hdf5_func_doc_url("H5Fdelete"))).
+See `libhdf5` documentation for [`H5Fdelete`]($(HDF5DocURLs.func_url("H5Fdelete"))).
 """
 function h5f_delete(filename, fapl_id)
     lock(liblock)
@@ -1128,7 +1128,7 @@ end
 """
     h5f_flush(object_id::hid_t, scope::Cint)
 
-See `libhdf5` documentation for [`H5Fflush`]($(_hdf5_func_doc_url("H5Fflush"))).
+See `libhdf5` documentation for [`H5Fflush`]($(HDF5DocURLs.func_url("H5Fflush"))).
 """
 function h5f_flush(object_id, scope)
     lock(liblock)
@@ -1144,7 +1144,7 @@ end
 """
     h5f_format_convert(fid::hid_t)
 
-See `libhdf5` documentation for [`H5Fformat_convert`]($(_hdf5_func_doc_url("H5Fformat_convert"))).
+See `libhdf5` documentation for [`H5Fformat_convert`]($(HDF5DocURLs.func_url("H5Fformat_convert"))).
 """
 function h5f_format_convert(fid)
     lock(liblock)
@@ -1160,7 +1160,7 @@ end
 """
     h5f_get_access_plist(file_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Fget_access_plist`]($(_hdf5_func_doc_url("H5Fget_access_plist"))).
+See `libhdf5` documentation for [`H5Fget_access_plist`]($(HDF5DocURLs.func_url("H5Fget_access_plist"))).
 """
 function h5f_get_access_plist(file_id)
     lock(liblock)
@@ -1176,7 +1176,7 @@ end
 """
     h5f_get_create_plist(file_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Fget_create_plist`]($(_hdf5_func_doc_url("H5Fget_create_plist"))).
+See `libhdf5` documentation for [`H5Fget_create_plist`]($(HDF5DocURLs.func_url("H5Fget_create_plist"))).
 """
 function h5f_get_create_plist(file_id)
     lock(liblock)
@@ -1192,7 +1192,7 @@ end
 """
     h5f_get_dset_no_attrs_hint(file_id::hid_t, minimize::Ptr{hbool_t})
 
-See `libhdf5` documentation for [`H5Fget_dset_no_attrs_hint`]($(_hdf5_func_doc_url("H5Fget_dset_no_attrs_hint"))).
+See `libhdf5` documentation for [`H5Fget_dset_no_attrs_hint`]($(HDF5DocURLs.func_url("H5Fget_dset_no_attrs_hint"))).
 """
 function h5f_get_dset_no_attrs_hint(file_id, minimize)
     lock(liblock)
@@ -1208,7 +1208,7 @@ end
 """
     h5f_get_eoa(file_id::hid_t, eoa::Ptr{haddr_t})
 
-See `libhdf5` documentation for [`H5Fget_eoa`]($(_hdf5_func_doc_url("H5Fget_eoa"))).
+See `libhdf5` documentation for [`H5Fget_eoa`]($(HDF5DocURLs.func_url("H5Fget_eoa"))).
 """
 function h5f_get_eoa(file_id, eoa)
     lock(liblock)
@@ -1224,7 +1224,7 @@ end
 """
     h5f_get_file_image(file_id::hid_t, buf_ptr::Ptr{Cvoid}, buf_len::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Fget_file_image`]($(_hdf5_func_doc_url("H5Fget_file_image"))).
+See `libhdf5` documentation for [`H5Fget_file_image`]($(HDF5DocURLs.func_url("H5Fget_file_image"))).
 """
 function h5f_get_file_image(file_id, buf_ptr, buf_len)
     lock(liblock)
@@ -1240,7 +1240,7 @@ end
 """
     h5f_get_fileno(file_id::hid_t, fileno::Ptr{Culong})
 
-See `libhdf5` documentation for [`H5Fget_fileno`]($(_hdf5_func_doc_url("H5Fget_fileno"))).
+See `libhdf5` documentation for [`H5Fget_fileno`]($(HDF5DocURLs.func_url("H5Fget_fileno"))).
 """
 function h5f_get_fileno(file_id, fileno)
     lock(liblock)
@@ -1256,7 +1256,7 @@ end
 """
     h5f_get_filesize(file_id::hid_t, size::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Fget_filesize`]($(_hdf5_func_doc_url("H5Fget_filesize"))).
+See `libhdf5` documentation for [`H5Fget_filesize`]($(HDF5DocURLs.func_url("H5Fget_filesize"))).
 """
 function h5f_get_filesize(file_id, size)
     lock(liblock)
@@ -1272,7 +1272,7 @@ end
 """
     h5f_get_free_sections(file_id::hid_t, type::H5F_mem_t, nsects::Csize_t, sect_info::Ptr{H5F_sect_info_t}) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Fget_free_sections`]($(_hdf5_func_doc_url("H5Fget_free_sections"))).
+See `libhdf5` documentation for [`H5Fget_free_sections`]($(HDF5DocURLs.func_url("H5Fget_free_sections"))).
 """
 function h5f_get_free_sections(file_id, type, nsects, sect_info)
     lock(liblock)
@@ -1288,7 +1288,7 @@ end
 """
     h5f_get_freespace(file_id::hid_t) -> hssize_t
 
-See `libhdf5` documentation for [`H5Fget_freespace`]($(_hdf5_func_doc_url("H5Fget_freespace"))).
+See `libhdf5` documentation for [`H5Fget_freespace`]($(HDF5DocURLs.func_url("H5Fget_freespace"))).
 """
 function h5f_get_freespace(file_id)
     lock(liblock)
@@ -1304,7 +1304,7 @@ end
 """
     h5f_get_intent(file_id::hid_t, intent::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Fget_intent`]($(_hdf5_func_doc_url("H5Fget_intent"))).
+See `libhdf5` documentation for [`H5Fget_intent`]($(HDF5DocURLs.func_url("H5Fget_intent"))).
 """
 function h5f_get_intent(file_id, intent)
     lock(liblock)
@@ -1320,7 +1320,7 @@ end
 """
     h5f_get_info(obj_id::hid_t, file_info::Ptr{H5F_info2_t})
 
-See `libhdf5` documentation for [`H5Fget_info2`]($(_hdf5_func_doc_url("H5Fget_info2"))).
+See `libhdf5` documentation for [`H5Fget_info2`]($(HDF5DocURLs.func_url("H5Fget_info2"))).
 """
 function h5f_get_info(obj_id, file_info)
     lock(liblock)
@@ -1336,7 +1336,7 @@ end
 """
     h5f_get_mdc_config(file_id::hid_t, config_ptr::Ptr{H5AC_cache_config_t})
 
-See `libhdf5` documentation for [`H5Fget_mdc_config`]($(_hdf5_func_doc_url("H5Fget_mdc_config"))).
+See `libhdf5` documentation for [`H5Fget_mdc_config`]($(HDF5DocURLs.func_url("H5Fget_mdc_config"))).
 """
 function h5f_get_mdc_config(file_id, config_ptr)
     lock(liblock)
@@ -1352,7 +1352,7 @@ end
 """
     h5f_get_mdc_hit_rate(file_id::hid_t, hit_rate_ptr::Ptr{Cdouble})
 
-See `libhdf5` documentation for [`H5Fget_mdc_hit_rate`]($(_hdf5_func_doc_url("H5Fget_mdc_hit_rate"))).
+See `libhdf5` documentation for [`H5Fget_mdc_hit_rate`]($(HDF5DocURLs.func_url("H5Fget_mdc_hit_rate"))).
 """
 function h5f_get_mdc_hit_rate(file_id, hit_rate_ptr)
     lock(liblock)
@@ -1368,7 +1368,7 @@ end
 """
     h5f_get_mdc_image_info(file_id::hid_t, image_addr::Ptr{haddr_t}, image_size::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Fget_mdc_image_info`]($(_hdf5_func_doc_url("H5Fget_mdc_image_info"))).
+See `libhdf5` documentation for [`H5Fget_mdc_image_info`]($(HDF5DocURLs.func_url("H5Fget_mdc_image_info"))).
 """
 function h5f_get_mdc_image_info(file_id, image_addr, image_size)
     lock(liblock)
@@ -1384,7 +1384,7 @@ end
 """
     h5f_get_mdc_logging_status(file_id::hid_t, is_enabled::Ptr{hbool_t}, is_currently_logging::Ptr{hbool_t})
 
-See `libhdf5` documentation for [`H5Fget_mdc_logging_status`]($(_hdf5_func_doc_url("H5Fget_mdc_logging_status"))).
+See `libhdf5` documentation for [`H5Fget_mdc_logging_status`]($(HDF5DocURLs.func_url("H5Fget_mdc_logging_status"))).
 """
 function h5f_get_mdc_logging_status(file_id, is_enabled, is_currently_logging)
     lock(liblock)
@@ -1400,7 +1400,7 @@ end
 """
     h5f_get_mdc_size(file_id::hid_t, max_size_ptr::Ptr{Csize_t}, min_clean_size_ptr::Ptr{Csize_t}, cur_size_ptr::Ptr{Csize_t}, cur_num_entries_ptr::Ptr{Cint})
 
-See `libhdf5` documentation for [`H5Fget_mdc_size`]($(_hdf5_func_doc_url("H5Fget_mdc_size"))).
+See `libhdf5` documentation for [`H5Fget_mdc_size`]($(HDF5DocURLs.func_url("H5Fget_mdc_size"))).
 """
 function h5f_get_mdc_size(file_id, max_size_ptr, min_clean_size_ptr, cur_size_ptr, cur_num_entries_ptr)
     lock(liblock)
@@ -1416,7 +1416,7 @@ end
 """
     h5f_get_metadata_read_retry_info(file_id::hid_t, info::Ptr{H5F_retry_info_t})
 
-See `libhdf5` documentation for [`H5Fget_metadata_read_retry_info`]($(_hdf5_func_doc_url("H5Fget_metadata_read_retry_info"))).
+See `libhdf5` documentation for [`H5Fget_metadata_read_retry_info`]($(HDF5DocURLs.func_url("H5Fget_metadata_read_retry_info"))).
 """
 function h5f_get_metadata_read_retry_info(file_id, info)
     lock(liblock)
@@ -1432,7 +1432,7 @@ end
 """
     h5f_get_mpi_atomicity(file_id::hid_t, flag::Ptr{hbool_t})
 
-See `libhdf5` documentation for [`H5Fget_mpi_atomicity`]($(_hdf5_func_doc_url("H5Fget_mpi_atomicity"))).
+See `libhdf5` documentation for [`H5Fget_mpi_atomicity`]($(HDF5DocURLs.func_url("H5Fget_mpi_atomicity"))).
 """
 function h5f_get_mpi_atomicity(file_id, flag)
     lock(liblock)
@@ -1448,7 +1448,7 @@ end
 """
     h5f_get_name(obj_id::hid_t, buf::Ptr{UInt8}, buf_size::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Fget_name`]($(_hdf5_func_doc_url("H5Fget_name"))).
+See `libhdf5` documentation for [`H5Fget_name`]($(HDF5DocURLs.func_url("H5Fget_name"))).
 """
 function h5f_get_name(obj_id, buf, buf_size)
     lock(liblock)
@@ -1464,7 +1464,7 @@ end
 """
     h5f_get_obj_count(file_id::hid_t, types::Cuint) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Fget_obj_count`]($(_hdf5_func_doc_url("H5Fget_obj_count"))).
+See `libhdf5` documentation for [`H5Fget_obj_count`]($(HDF5DocURLs.func_url("H5Fget_obj_count"))).
 """
 function h5f_get_obj_count(file_id, types)
     lock(liblock)
@@ -1480,7 +1480,7 @@ end
 """
     h5f_get_obj_ids(file_id::hid_t, types::Cuint, max_objs::Csize_t, obj_id_list::Ptr{hid_t}) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Fget_obj_ids`]($(_hdf5_func_doc_url("H5Fget_obj_ids"))).
+See `libhdf5` documentation for [`H5Fget_obj_ids`]($(HDF5DocURLs.func_url("H5Fget_obj_ids"))).
 """
 function h5f_get_obj_ids(file_id, types, max_objs, obj_id_list)
     lock(liblock)
@@ -1496,7 +1496,7 @@ end
 """
     h5f_get_page_buffering_stats(file_id::hid_t, accesses::Ptr{Cuint}, hits::Ptr{Cuint}, misses::Ptr{Cuint}, evictions::Ptr{Cuint}, bypasses::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Fget_page_buffering_stats`]($(_hdf5_func_doc_url("H5Fget_page_buffering_stats"))).
+See `libhdf5` documentation for [`H5Fget_page_buffering_stats`]($(HDF5DocURLs.func_url("H5Fget_page_buffering_stats"))).
 """
 function h5f_get_page_buffering_stats(file_id, accesses, hits, misses, evictions, bypasses)
     lock(liblock)
@@ -1512,7 +1512,7 @@ end
 """
     h5f_get_vfd_handle(file_id::hid_t, fapl_id::hid_t, file_handle::Ref{Ptr{Cvoid}})
 
-See `libhdf5` documentation for [`H5Fget_vfd_handle`]($(_hdf5_func_doc_url("H5Fget_vfd_handle"))).
+See `libhdf5` documentation for [`H5Fget_vfd_handle`]($(HDF5DocURLs.func_url("H5Fget_vfd_handle"))).
 """
 function h5f_get_vfd_handle(file_id, fapl_id, file_handle)
     lock(liblock)
@@ -1528,7 +1528,7 @@ end
 """
     h5f_increment_filesize(file_id::hid_t, increment::hsize_t)
 
-See `libhdf5` documentation for [`H5Fincrement_filesize`]($(_hdf5_func_doc_url("H5Fincrement_filesize"))).
+See `libhdf5` documentation for [`H5Fincrement_filesize`]($(HDF5DocURLs.func_url("H5Fincrement_filesize"))).
 """
 function h5f_increment_filesize(file_id, increment)
     lock(liblock)
@@ -1544,7 +1544,7 @@ end
 """
     h5f_is_accessible(container_name::Cstring, fapl_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Fis_accessible`]($(_hdf5_func_doc_url("H5Fis_accessible"))).
+See `libhdf5` documentation for [`H5Fis_accessible`]($(HDF5DocURLs.func_url("H5Fis_accessible"))).
 """
 function h5f_is_accessible(container_name, fapl_id)
     lock(liblock)
@@ -1560,7 +1560,7 @@ end
 """
     h5f_is_hdf5(pathname::Cstring) -> Bool
 
-See `libhdf5` documentation for [`H5Fis_hdf5`]($(_hdf5_func_doc_url("H5Fis_hdf5"))).
+See `libhdf5` documentation for [`H5Fis_hdf5`]($(HDF5DocURLs.func_url("H5Fis_hdf5"))).
 """
 function h5f_is_hdf5(pathname)
     lock(liblock)
@@ -1576,7 +1576,7 @@ end
 """
     h5f_mount(loc::hid_t, name::Cstring, child::hid_t, plist::hid_t)
 
-See `libhdf5` documentation for [`H5Fmount`]($(_hdf5_func_doc_url("H5Fmount"))).
+See `libhdf5` documentation for [`H5Fmount`]($(HDF5DocURLs.func_url("H5Fmount"))).
 """
 function h5f_mount(loc, name, child, plist)
     lock(liblock)
@@ -1592,7 +1592,7 @@ end
 """
     h5f_open(pathname::Cstring, flags::Cuint, fapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Fopen`]($(_hdf5_func_doc_url("H5Fopen"))).
+See `libhdf5` documentation for [`H5Fopen`]($(HDF5DocURLs.func_url("H5Fopen"))).
 """
 function h5f_open(pathname, flags, fapl_id)
     lock(liblock)
@@ -1608,7 +1608,7 @@ end
 """
     h5f_reopen(file_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Freopen`]($(_hdf5_func_doc_url("H5Freopen"))).
+See `libhdf5` documentation for [`H5Freopen`]($(HDF5DocURLs.func_url("H5Freopen"))).
 """
 function h5f_reopen(file_id)
     lock(liblock)
@@ -1624,7 +1624,7 @@ end
 """
     h5f_reset_mdc_hit_rate_stats(file_id::hid_t)
 
-See `libhdf5` documentation for [`H5Freset_mdc_hit_rate_stats`]($(_hdf5_func_doc_url("H5Freset_mdc_hit_rate_stats"))).
+See `libhdf5` documentation for [`H5Freset_mdc_hit_rate_stats`]($(HDF5DocURLs.func_url("H5Freset_mdc_hit_rate_stats"))).
 """
 function h5f_reset_mdc_hit_rate_stats(file_id)
     lock(liblock)
@@ -1640,7 +1640,7 @@ end
 """
     h5f_reset_page_buffering_stats(file_id::hid_t)
 
-See `libhdf5` documentation for [`H5Freset_page_buffering_stats`]($(_hdf5_func_doc_url("H5Freset_page_buffering_stats"))).
+See `libhdf5` documentation for [`H5Freset_page_buffering_stats`]($(HDF5DocURLs.func_url("H5Freset_page_buffering_stats"))).
 """
 function h5f_reset_page_buffering_stats(file_id)
     lock(liblock)
@@ -1656,7 +1656,7 @@ end
 """
     h5f_set_dset_no_attrs_hint(file_id::hid_t, minimize::hbool_t)
 
-See `libhdf5` documentation for [`H5Fset_dset_no_attrs_hint`]($(_hdf5_func_doc_url("H5Fset_dset_no_attrs_hint"))).
+See `libhdf5` documentation for [`H5Fset_dset_no_attrs_hint`]($(HDF5DocURLs.func_url("H5Fset_dset_no_attrs_hint"))).
 """
 function h5f_set_dset_no_attrs_hint(file_id, minimize)
     lock(liblock)
@@ -1672,7 +1672,7 @@ end
 """
     h5f_set_libver_bounds(file_id::hid_t, low::H5F_libver_t, high::H5F_libver_t)
 
-See `libhdf5` documentation for [`H5Fset_libver_bounds`]($(_hdf5_func_doc_url("H5Fset_libver_bounds"))).
+See `libhdf5` documentation for [`H5Fset_libver_bounds`]($(HDF5DocURLs.func_url("H5Fset_libver_bounds"))).
 """
 function h5f_set_libver_bounds(file_id, low, high)
     lock(liblock)
@@ -1688,7 +1688,7 @@ end
 """
     h5f_set_mdc_config(file_id::hid_t, config_ptr::Ptr{H5AC_cache_config_t})
 
-See `libhdf5` documentation for [`H5Fset_mdc_config`]($(_hdf5_func_doc_url("H5Fset_mdc_config"))).
+See `libhdf5` documentation for [`H5Fset_mdc_config`]($(HDF5DocURLs.func_url("H5Fset_mdc_config"))).
 """
 function h5f_set_mdc_config(file_id, config_ptr)
     lock(liblock)
@@ -1704,7 +1704,7 @@ end
 """
     h5f_set_mpi_atomicity(file_id::hid_t, flag::hbool_t)
 
-See `libhdf5` documentation for [`H5Fset_mpi_atomicity`]($(_hdf5_func_doc_url("H5Fset_mpi_atomicity"))).
+See `libhdf5` documentation for [`H5Fset_mpi_atomicity`]($(HDF5DocURLs.func_url("H5Fset_mpi_atomicity"))).
 """
 function h5f_set_mpi_atomicity(file_id, flag)
     lock(liblock)
@@ -1720,7 +1720,7 @@ end
 """
     h5f_start_mdc_logging(file_id::hid_t)
 
-See `libhdf5` documentation for [`H5Fstart_mdc_logging`]($(_hdf5_func_doc_url("H5Fstart_mdc_logging"))).
+See `libhdf5` documentation for [`H5Fstart_mdc_logging`]($(HDF5DocURLs.func_url("H5Fstart_mdc_logging"))).
 """
 function h5f_start_mdc_logging(file_id)
     lock(liblock)
@@ -1736,7 +1736,7 @@ end
 """
     h5f_start_swmr_write(id::hid_t)
 
-See `libhdf5` documentation for [`H5Fstart_swmr_write`]($(_hdf5_func_doc_url("H5Fstart_swmr_write"))).
+See `libhdf5` documentation for [`H5Fstart_swmr_write`]($(HDF5DocURLs.func_url("H5Fstart_swmr_write"))).
 """
 function h5f_start_swmr_write(id)
     lock(liblock)
@@ -1752,7 +1752,7 @@ end
 """
     h5f_stop_mdc_logging(file_id::hid_t)
 
-See `libhdf5` documentation for [`H5Fstop_mdc_logging`]($(_hdf5_func_doc_url("H5Fstop_mdc_logging"))).
+See `libhdf5` documentation for [`H5Fstop_mdc_logging`]($(HDF5DocURLs.func_url("H5Fstop_mdc_logging"))).
 """
 function h5f_stop_mdc_logging(file_id)
     lock(liblock)
@@ -1768,7 +1768,7 @@ end
 """
     h5f_unmount(loc::hid_t, name::Cstring)
 
-See `libhdf5` documentation for [`H5Funmount`]($(_hdf5_func_doc_url("H5Funmount"))).
+See `libhdf5` documentation for [`H5Funmount`]($(HDF5DocURLs.func_url("H5Funmount"))).
 """
 function h5f_unmount(loc, name)
     lock(liblock)
@@ -1784,7 +1784,7 @@ end
 """
     h5g_close(group_id::hid_t)
 
-See `libhdf5` documentation for [`H5Gclose`]($(_hdf5_func_doc_url("H5Gclose"))).
+See `libhdf5` documentation for [`H5Gclose`]($(HDF5DocURLs.func_url("H5Gclose"))).
 """
 function h5g_close(group_id)
     lock(liblock)
@@ -1800,7 +1800,7 @@ end
 """
     h5g_create(loc_id::hid_t, pathname::Cstring, lcpl_id::hid_t, gcpl_id::hid_t, gapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Gcreate2`]($(_hdf5_func_doc_url("H5Gcreate2"))).
+See `libhdf5` documentation for [`H5Gcreate2`]($(HDF5DocURLs.func_url("H5Gcreate2"))).
 """
 function h5g_create(loc_id, pathname, lcpl_id, gcpl_id, gapl_id)
     lock(liblock)
@@ -1816,7 +1816,7 @@ end
 """
     h5g_get_create_plist(group_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Gget_create_plist`]($(_hdf5_func_doc_url("H5Gget_create_plist"))).
+See `libhdf5` documentation for [`H5Gget_create_plist`]($(HDF5DocURLs.func_url("H5Gget_create_plist"))).
 """
 function h5g_get_create_plist(group_id)
     lock(liblock)
@@ -1832,7 +1832,7 @@ end
 """
     h5g_get_info(group_id::hid_t, buf::Ptr{H5G_info_t})
 
-See `libhdf5` documentation for [`H5Gget_info`]($(_hdf5_func_doc_url("H5Gget_info"))).
+See `libhdf5` documentation for [`H5Gget_info`]($(HDF5DocURLs.func_url("H5Gget_info"))).
 """
 function h5g_get_info(group_id, buf)
     lock(liblock)
@@ -1848,7 +1848,7 @@ end
 """
     h5g_get_num_objs(loc_id::hid_t, num_obj::Ptr{hsize_t}) -> hid_t
 
-See `libhdf5` documentation for [`H5Gget_num_objs`]($(_hdf5_func_doc_url("H5Gget_num_objs"))).
+See `libhdf5` documentation for [`H5Gget_num_objs`]($(HDF5DocURLs.func_url("H5Gget_num_objs"))).
 """
 function h5g_get_num_objs(loc_id, num_obj)
     lock(liblock)
@@ -1864,7 +1864,7 @@ end
 """
     h5g_get_objname_by_idx(loc_id::hid_t, idx::hsize_t, pathname::Ptr{UInt8}, size::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Gget_objname_by_idx`]($(_hdf5_func_doc_url("H5Gget_objname_by_idx"))).
+See `libhdf5` documentation for [`H5Gget_objname_by_idx`]($(HDF5DocURLs.func_url("H5Gget_objname_by_idx"))).
 """
 function h5g_get_objname_by_idx(loc_id, idx, pathname, size)
     lock(liblock)
@@ -1880,7 +1880,7 @@ end
 """
     h5g_open(loc_id::hid_t, pathname::Cstring, gapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Gopen2`]($(_hdf5_func_doc_url("H5Gopen2"))).
+See `libhdf5` documentation for [`H5Gopen2`]($(HDF5DocURLs.func_url("H5Gopen2"))).
 """
 function h5g_open(loc_id, pathname, gapl_id)
     lock(liblock)
@@ -1896,7 +1896,7 @@ end
 """
     h5i_dec_ref(obj_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Idec_ref`]($(_hdf5_func_doc_url("H5Idec_ref"))).
+See `libhdf5` documentation for [`H5Idec_ref`]($(HDF5DocURLs.func_url("H5Idec_ref"))).
 """
 function h5i_dec_ref(obj_id)
     lock(liblock)
@@ -1912,7 +1912,7 @@ end
 """
     h5i_get_file_id(obj_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Iget_file_id`]($(_hdf5_func_doc_url("H5Iget_file_id"))).
+See `libhdf5` documentation for [`H5Iget_file_id`]($(HDF5DocURLs.func_url("H5Iget_file_id"))).
 """
 function h5i_get_file_id(obj_id)
     lock(liblock)
@@ -1928,7 +1928,7 @@ end
 """
     h5i_get_name(obj_id::hid_t, buf::Ptr{UInt8}, buf_size::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Iget_name`]($(_hdf5_func_doc_url("H5Iget_name"))).
+See `libhdf5` documentation for [`H5Iget_name`]($(HDF5DocURLs.func_url("H5Iget_name"))).
 """
 function h5i_get_name(obj_id, buf, buf_size)
     lock(liblock)
@@ -1944,7 +1944,7 @@ end
 """
     h5i_get_ref(obj_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Iget_ref`]($(_hdf5_func_doc_url("H5Iget_ref"))).
+See `libhdf5` documentation for [`H5Iget_ref`]($(HDF5DocURLs.func_url("H5Iget_ref"))).
 """
 function h5i_get_ref(obj_id)
     lock(liblock)
@@ -1960,7 +1960,7 @@ end
 """
     h5i_get_type(obj_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Iget_type`]($(_hdf5_func_doc_url("H5Iget_type"))).
+See `libhdf5` documentation for [`H5Iget_type`]($(HDF5DocURLs.func_url("H5Iget_type"))).
 """
 function h5i_get_type(obj_id)
     lock(liblock)
@@ -1976,7 +1976,7 @@ end
 """
     h5i_inc_ref(obj_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Iinc_ref`]($(_hdf5_func_doc_url("H5Iinc_ref"))).
+See `libhdf5` documentation for [`H5Iinc_ref`]($(HDF5DocURLs.func_url("H5Iinc_ref"))).
 """
 function h5i_inc_ref(obj_id)
     lock(liblock)
@@ -1992,7 +1992,7 @@ end
 """
     h5i_is_valid(obj_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Iis_valid`]($(_hdf5_func_doc_url("H5Iis_valid"))).
+See `libhdf5` documentation for [`H5Iis_valid`]($(HDF5DocURLs.func_url("H5Iis_valid"))).
 """
 function h5i_is_valid(obj_id)
     lock(liblock)
@@ -2008,7 +2008,7 @@ end
 """
     h5l_create_external(target_file_name::Cstring, target_obj_name::Cstring, link_loc_id::hid_t, link_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Lcreate_external`]($(_hdf5_func_doc_url("H5Lcreate_external"))).
+See `libhdf5` documentation for [`H5Lcreate_external`]($(HDF5DocURLs.func_url("H5Lcreate_external"))).
 """
 function h5l_create_external(target_file_name, target_obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
     lock(liblock)
@@ -2024,7 +2024,7 @@ end
 """
     h5l_create_hard(obj_loc_id::hid_t, obj_name::Cstring, link_loc_id::hid_t, link_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Lcreate_hard`]($(_hdf5_func_doc_url("H5Lcreate_hard"))).
+See `libhdf5` documentation for [`H5Lcreate_hard`]($(HDF5DocURLs.func_url("H5Lcreate_hard"))).
 """
 function h5l_create_hard(obj_loc_id, obj_name, link_loc_id, link_name, lcpl_id, lapl_id)
     lock(liblock)
@@ -2040,7 +2040,7 @@ end
 """
     h5l_create_soft(target_path::Cstring, link_loc_id::hid_t, link_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Lcreate_soft`]($(_hdf5_func_doc_url("H5Lcreate_soft"))).
+See `libhdf5` documentation for [`H5Lcreate_soft`]($(HDF5DocURLs.func_url("H5Lcreate_soft"))).
 """
 function h5l_create_soft(target_path, link_loc_id, link_name, lcpl_id, lapl_id)
     lock(liblock)
@@ -2056,7 +2056,7 @@ end
 """
     h5l_delete(obj_id::hid_t, pathname::Cstring, lapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Ldelete`]($(_hdf5_func_doc_url("H5Ldelete"))).
+See `libhdf5` documentation for [`H5Ldelete`]($(HDF5DocURLs.func_url("H5Ldelete"))).
 """
 function h5l_delete(obj_id, pathname, lapl_id)
     lock(liblock)
@@ -2072,7 +2072,7 @@ end
 """
     h5l_move(src_obj_id::hid_t, src_name::Cstring, dest_obj_id::hid_t, dest_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Lmove`]($(_hdf5_func_doc_url("H5Lmove"))).
+See `libhdf5` documentation for [`H5Lmove`]($(HDF5DocURLs.func_url("H5Lmove"))).
 """
 function h5l_move(src_obj_id, src_name, dest_obj_id, dest_name, lcpl_id, lapl_id)
     lock(liblock)
@@ -2088,7 +2088,7 @@ end
 """
     h5l_exists(loc_id::hid_t, pathname::Cstring, lapl_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Lexists`]($(_hdf5_func_doc_url("H5Lexists"))).
+See `libhdf5` documentation for [`H5Lexists`]($(HDF5DocURLs.func_url("H5Lexists"))).
 """
 function h5l_exists(loc_id, pathname, lapl_id)
     lock(liblock)
@@ -2104,7 +2104,7 @@ end
 """
     h5l_get_info(link_loc_id::hid_t, link_name::Cstring, link_buf::Ptr{H5L_info_t}, lapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Lget_info`]($(_hdf5_func_doc_url("H5Lget_info"))).
+See `libhdf5` documentation for [`H5Lget_info`]($(HDF5DocURLs.func_url("H5Lget_info"))).
 """
 function h5l_get_info(link_loc_id, link_name, link_buf, lapl_id)
     lock(liblock)
@@ -2120,7 +2120,7 @@ end
 """
     h5l_get_name_by_idx(loc_id::hid_t, group_name::Cstring, index_field::Cint, order::Cint, n::hsize_t, name::Ptr{UInt8}, size::Csize_t, lapl_id::hid_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Lget_name_by_idx`]($(_hdf5_func_doc_url("H5Lget_name_by_idx"))).
+See `libhdf5` documentation for [`H5Lget_name_by_idx`]($(HDF5DocURLs.func_url("H5Lget_name_by_idx"))).
 """
 function h5l_get_name_by_idx(loc_id, group_name, index_field, order, n, name, size, lapl_id)
     lock(liblock)
@@ -2137,7 +2137,7 @@ end
     @doc """
         h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)
 
-    See `libhdf5` documentation for [`H5Literate`]($(_hdf5_func_doc_url("H5Literate"))).
+    See `libhdf5` documentation for [`H5Literate`]($(HDF5DocURLs.func_url("H5Literate"))).
     """
     function h5l_iterate(group_id, idx_type, order, idx, op, op_data)
         lock(liblock)
@@ -2155,7 +2155,7 @@ end
     @doc """
         h5l_iterate(group_id::hid_t, idx_type::Cint, order::Cint, idx::Ptr{hsize_t}, op::Ptr{Cvoid}, op_data::Any)
 
-    See `libhdf5` documentation for [`H5Literate1`]($(_hdf5_func_doc_url("H5Literate1"))).
+    See `libhdf5` documentation for [`H5Literate1`]($(HDF5DocURLs.func_url("H5Literate1"))).
     """
     function h5l_iterate(group_id, idx_type, order, idx, op, op_data)
         lock(liblock)
@@ -2172,7 +2172,7 @@ end
 """
     h5o_are_mdc_flushes_disabled(object_id::hid_t, are_disabled::Ptr{hbool_t})
 
-See `libhdf5` documentation for [`H5Oare_mdc_flushes_disabled`]($(_hdf5_func_doc_url("H5Oare_mdc_flushes_disabled"))).
+See `libhdf5` documentation for [`H5Oare_mdc_flushes_disabled`]($(HDF5DocURLs.func_url("H5Oare_mdc_flushes_disabled"))).
 """
 function h5o_are_mdc_flushes_disabled(object_id, are_disabled)
     lock(liblock)
@@ -2188,7 +2188,7 @@ end
 """
     h5o_close(object_id::hid_t)
 
-See `libhdf5` documentation for [`H5Oclose`]($(_hdf5_func_doc_url("H5Oclose"))).
+See `libhdf5` documentation for [`H5Oclose`]($(HDF5DocURLs.func_url("H5Oclose"))).
 """
 function h5o_close(object_id)
     lock(liblock)
@@ -2204,7 +2204,7 @@ end
 """
     h5o_copy(src_loc_id::hid_t, src_name::Cstring, dst_loc_id::hid_t, dst_name::Cstring, ocpypl_id::hid_t, lcpl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Ocopy`]($(_hdf5_func_doc_url("H5Ocopy"))).
+See `libhdf5` documentation for [`H5Ocopy`]($(HDF5DocURLs.func_url("H5Ocopy"))).
 """
 function h5o_copy(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id)
     lock(liblock)
@@ -2220,7 +2220,7 @@ end
 """
     h5o_decr_refcount(object_id::hid_t)
 
-See `libhdf5` documentation for [`H5Odecr_refcount`]($(_hdf5_func_doc_url("H5Odecr_refcount"))).
+See `libhdf5` documentation for [`H5Odecr_refcount`]($(HDF5DocURLs.func_url("H5Odecr_refcount"))).
 """
 function h5o_decr_refcount(object_id)
     lock(liblock)
@@ -2236,7 +2236,7 @@ end
 """
     h5o_disable_mdc_flushes(object_id::hid_t)
 
-See `libhdf5` documentation for [`H5Odisable_mdc_flushes`]($(_hdf5_func_doc_url("H5Odisable_mdc_flushes"))).
+See `libhdf5` documentation for [`H5Odisable_mdc_flushes`]($(HDF5DocURLs.func_url("H5Odisable_mdc_flushes"))).
 """
 function h5o_disable_mdc_flushes(object_id)
     lock(liblock)
@@ -2252,7 +2252,7 @@ end
 """
     h5o_enable_mdc_flushes(object_id::hid_t)
 
-See `libhdf5` documentation for [`H5Oenable_mdc_flushes`]($(_hdf5_func_doc_url("H5Oenable_mdc_flushes"))).
+See `libhdf5` documentation for [`H5Oenable_mdc_flushes`]($(HDF5DocURLs.func_url("H5Oenable_mdc_flushes"))).
 """
 function h5o_enable_mdc_flushes(object_id)
     lock(liblock)
@@ -2268,7 +2268,7 @@ end
 """
     h5o_exists_by_name(loc_id::hid_t, name::Cstring, lapl_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Oexists_by_name`]($(_hdf5_func_doc_url("H5Oexists_by_name"))).
+See `libhdf5` documentation for [`H5Oexists_by_name`]($(HDF5DocURLs.func_url("H5Oexists_by_name"))).
 """
 function h5o_exists_by_name(loc_id, name, lapl_id)
     lock(liblock)
@@ -2284,7 +2284,7 @@ end
 """
     h5o_flush(obj_id::hid_t)
 
-See `libhdf5` documentation for [`H5Oflush`]($(_hdf5_func_doc_url("H5Oflush"))).
+See `libhdf5` documentation for [`H5Oflush`]($(HDF5DocURLs.func_url("H5Oflush"))).
 """
 function h5o_flush(obj_id)
     lock(liblock)
@@ -2300,7 +2300,7 @@ end
 """
     h5o_get_comment(obj_id::hid_t, comment::Ptr{Cchar}, bufsize::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Oget_comment`]($(_hdf5_func_doc_url("H5Oget_comment"))).
+See `libhdf5` documentation for [`H5Oget_comment`]($(HDF5DocURLs.func_url("H5Oget_comment"))).
 """
 function h5o_get_comment(obj_id, comment, bufsize)
     lock(liblock)
@@ -2316,7 +2316,7 @@ end
 """
     h5o_get_comment_by_name(loc_id::hid_t, name::Cstring, comment::Ptr{Cchar}, bufsize::Csize_t, lapl_id::hid_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Oget_comment_by_name`]($(_hdf5_func_doc_url("H5Oget_comment_by_name"))).
+See `libhdf5` documentation for [`H5Oget_comment_by_name`]($(HDF5DocURLs.func_url("H5Oget_comment_by_name"))).
 """
 function h5o_get_comment_by_name(loc_id, name, comment, bufsize, lapl_id)
     lock(liblock)
@@ -2333,7 +2333,7 @@ end
     @doc """
         h5o_get_info(object_id::hid_t, buf::Ptr{H5O_info1_t})
 
-    See `libhdf5` documentation for [`H5Oget_info1`]($(_hdf5_func_doc_url("H5Oget_info1"))).
+    See `libhdf5` documentation for [`H5Oget_info1`]($(HDF5DocURLs.func_url("H5Oget_info1"))).
     """
     function h5o_get_info(object_id, buf)
         lock(liblock)
@@ -2351,7 +2351,7 @@ end
     @doc """
         h5o_get_info(loc_id::hid_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint)
 
-    See `libhdf5` documentation for [`H5Oget_info2`]($(_hdf5_func_doc_url("H5Oget_info2"))).
+    See `libhdf5` documentation for [`H5Oget_info2`]($(HDF5DocURLs.func_url("H5Oget_info2"))).
     """
     function h5o_get_info(loc_id, oinfo, fields)
         lock(liblock)
@@ -2369,7 +2369,7 @@ end
     @doc """
         h5o_get_info(loc_id::hid_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint)
 
-    See `libhdf5` documentation for [`H5Oget_info3`]($(_hdf5_func_doc_url("H5Oget_info3"))).
+    See `libhdf5` documentation for [`H5Oget_info3`]($(HDF5DocURLs.func_url("H5Oget_info3"))).
     """
     function h5o_get_info(loc_id, oinfo, fields)
         lock(liblock)
@@ -2387,7 +2387,7 @@ end
     @doc """
         h5o_get_info_by_idx(loc_id::hid_t, group_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)
 
-    See `libhdf5` documentation for [`H5Oget_info_by_idx1`]($(_hdf5_func_doc_url("H5Oget_info_by_idx1"))).
+    See `libhdf5` documentation for [`H5Oget_info_by_idx1`]($(HDF5DocURLs.func_url("H5Oget_info_by_idx1"))).
     """
     function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, lapl_id)
         lock(liblock)
@@ -2405,7 +2405,7 @@ end
     @doc """
         h5o_get_info_by_idx(loc_id::hid_t, group_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)
 
-    See `libhdf5` documentation for [`H5Oget_info_by_idx2`]($(_hdf5_func_doc_url("H5Oget_info_by_idx2"))).
+    See `libhdf5` documentation for [`H5Oget_info_by_idx2`]($(HDF5DocURLs.func_url("H5Oget_info_by_idx2"))).
     """
     function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
         lock(liblock)
@@ -2423,7 +2423,7 @@ end
     @doc """
         h5o_get_info_by_idx(loc_id::hid_t, group_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)
 
-    See `libhdf5` documentation for [`H5Oget_info_by_idx3`]($(_hdf5_func_doc_url("H5Oget_info_by_idx3"))).
+    See `libhdf5` documentation for [`H5Oget_info_by_idx3`]($(HDF5DocURLs.func_url("H5Oget_info_by_idx3"))).
     """
     function h5o_get_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
         lock(liblock)
@@ -2441,7 +2441,7 @@ end
     @doc """
         h5o_get_info_by_name(loc_id::hid_t, name::Cstring, oinfo::Ptr{H5O_info1_t}, lapl_id::hid_t)
 
-    See `libhdf5` documentation for [`H5Oget_info_by_name1`]($(_hdf5_func_doc_url("H5Oget_info_by_name1"))).
+    See `libhdf5` documentation for [`H5Oget_info_by_name1`]($(HDF5DocURLs.func_url("H5Oget_info_by_name1"))).
     """
     function h5o_get_info_by_name(loc_id, name, oinfo, lapl_id)
         lock(liblock)
@@ -2459,7 +2459,7 @@ end
     @doc """
         h5o_get_info_by_name(loc_id::hid_t, name::Cstring, oinfo::Ptr{H5O_info1_t}, fields::Cuint, lapl_id::hid_t)
 
-    See `libhdf5` documentation for [`H5Oget_info_by_name2`]($(_hdf5_func_doc_url("H5Oget_info_by_name2"))).
+    See `libhdf5` documentation for [`H5Oget_info_by_name2`]($(HDF5DocURLs.func_url("H5Oget_info_by_name2"))).
     """
     function h5o_get_info_by_name(loc_id, name, oinfo, fields, lapl_id)
         lock(liblock)
@@ -2477,7 +2477,7 @@ end
     @doc """
         h5o_get_info_by_name(loc_id::hid_t, name::Cstring, oinfo::Ptr{H5O_info2_t}, fields::Cuint, lapl_id::hid_t)
 
-    See `libhdf5` documentation for [`H5Oget_info_by_name3`]($(_hdf5_func_doc_url("H5Oget_info_by_name3"))).
+    See `libhdf5` documentation for [`H5Oget_info_by_name3`]($(HDF5DocURLs.func_url("H5Oget_info_by_name3"))).
     """
     function h5o_get_info_by_name(loc_id, name, oinfo, fields, lapl_id)
         lock(liblock)
@@ -2494,7 +2494,7 @@ end
 """
     h5o_get_native_info(loc_id::hid_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint)
 
-See `libhdf5` documentation for [`H5Oget_native_info`]($(_hdf5_func_doc_url("H5Oget_native_info"))).
+See `libhdf5` documentation for [`H5Oget_native_info`]($(HDF5DocURLs.func_url("H5Oget_native_info"))).
 """
 function h5o_get_native_info(loc_id, oinfo, fields)
     lock(liblock)
@@ -2510,7 +2510,7 @@ end
 """
     h5o_get_native_info_by_idx(loc_id::hid_t, group_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, n::hsize_t, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Oget_native_info_by_idx`]($(_hdf5_func_doc_url("H5Oget_native_info_by_idx"))).
+See `libhdf5` documentation for [`H5Oget_native_info_by_idx`]($(HDF5DocURLs.func_url("H5Oget_native_info_by_idx"))).
 """
 function h5o_get_native_info_by_idx(loc_id, group_name, idx_type, order, n, oinfo, fields, lapl_id)
     lock(liblock)
@@ -2526,7 +2526,7 @@ end
 """
     h5o_get_native_info_by_name(loc_id::hid_t, name::Cstring, oinfo::Ptr{H5O_native_info_t}, fields::Cuint, lapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Oget_native_info_by_name`]($(_hdf5_func_doc_url("H5Oget_native_info_by_name"))).
+See `libhdf5` documentation for [`H5Oget_native_info_by_name`]($(HDF5DocURLs.func_url("H5Oget_native_info_by_name"))).
 """
 function h5o_get_native_info_by_name(loc_id, name, oinfo, fields, lapl_id)
     lock(liblock)
@@ -2542,7 +2542,7 @@ end
 """
     h5o_incr_refcount(object_id::hid_t)
 
-See `libhdf5` documentation for [`H5Oincr_refcount`]($(_hdf5_func_doc_url("H5Oincr_refcount"))).
+See `libhdf5` documentation for [`H5Oincr_refcount`]($(HDF5DocURLs.func_url("H5Oincr_refcount"))).
 """
 function h5o_incr_refcount(object_id)
     lock(liblock)
@@ -2558,7 +2558,7 @@ end
 """
     h5o_link(obj_id::hid_t, new_loc_id::hid_t, new_name::Cstring, lcpl_id::hid_t, lapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Olink`]($(_hdf5_func_doc_url("H5Olink"))).
+See `libhdf5` documentation for [`H5Olink`]($(HDF5DocURLs.func_url("H5Olink"))).
 """
 function h5o_link(obj_id, new_loc_id, new_name, lcpl_id, lapl_id)
     lock(liblock)
@@ -2574,7 +2574,7 @@ end
 """
     h5o_open(loc_id::hid_t, pathname::Cstring, lapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Oopen`]($(_hdf5_func_doc_url("H5Oopen"))).
+See `libhdf5` documentation for [`H5Oopen`]($(HDF5DocURLs.func_url("H5Oopen"))).
 """
 function h5o_open(loc_id, pathname, lapl_id)
     lock(liblock)
@@ -2590,7 +2590,7 @@ end
 """
     h5o_open_by_addr(loc_id::hid_t, addr::haddr_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Oopen_by_addr`]($(_hdf5_func_doc_url("H5Oopen_by_addr"))).
+See `libhdf5` documentation for [`H5Oopen_by_addr`]($(HDF5DocURLs.func_url("H5Oopen_by_addr"))).
 """
 function h5o_open_by_addr(loc_id, addr)
     lock(liblock)
@@ -2606,7 +2606,7 @@ end
 """
     h5o_open_by_idx(loc_id::hid_t, group_name::Cstring, index_type::Cint, order::Cint, n::hsize_t, lapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Oopen_by_idx`]($(_hdf5_func_doc_url("H5Oopen_by_idx"))).
+See `libhdf5` documentation for [`H5Oopen_by_idx`]($(HDF5DocURLs.func_url("H5Oopen_by_idx"))).
 """
 function h5o_open_by_idx(loc_id, group_name, index_type, order, n, lapl_id)
     lock(liblock)
@@ -2622,7 +2622,7 @@ end
 """
     h5o_refresh(oid::hid_t)
 
-See `libhdf5` documentation for [`H5Orefresh`]($(_hdf5_func_doc_url("H5Orefresh"))).
+See `libhdf5` documentation for [`H5Orefresh`]($(HDF5DocURLs.func_url("H5Orefresh"))).
 """
 function h5o_refresh(oid)
     lock(liblock)
@@ -2638,7 +2638,7 @@ end
 """
     h5o_set_comment(obj_id::hid_t, comment::Cstring)
 
-See `libhdf5` documentation for [`H5Oset_comment`]($(_hdf5_func_doc_url("H5Oset_comment"))).
+See `libhdf5` documentation for [`H5Oset_comment`]($(HDF5DocURLs.func_url("H5Oset_comment"))).
 """
 function h5o_set_comment(obj_id, comment)
     lock(liblock)
@@ -2654,7 +2654,7 @@ end
 """
     h5o_set_comment_by_name(loc_id::hid_t, name::Cstring, comment::Cstring, lapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Oset_comment_by_name`]($(_hdf5_func_doc_url("H5Oset_comment_by_name"))).
+See `libhdf5` documentation for [`H5Oset_comment_by_name`]($(HDF5DocURLs.func_url("H5Oset_comment_by_name"))).
 """
 function h5o_set_comment_by_name(loc_id, name, comment, lapl_id)
     lock(liblock)
@@ -2670,7 +2670,7 @@ end
 """
     h5o_token_cmp(loc_id::hid_t, token1::Ptr{H5O_token_t}, token2::Ptr{H5O_token_t}, cmp_value::Ptr{Cint})
 
-See `libhdf5` documentation for [`H5Otoken_cmp`]($(_hdf5_func_doc_url("H5Otoken_cmp"))).
+See `libhdf5` documentation for [`H5Otoken_cmp`]($(HDF5DocURLs.func_url("H5Otoken_cmp"))).
 """
 function h5o_token_cmp(loc_id, token1, token2, cmp_value)
     lock(liblock)
@@ -2686,7 +2686,7 @@ end
 """
     h5o_token_from_str(loc_id::hid_t, token_str::Cstring, token::Ptr{H5O_token_t})
 
-See `libhdf5` documentation for [`H5Otoken_from_str`]($(_hdf5_func_doc_url("H5Otoken_from_str"))).
+See `libhdf5` documentation for [`H5Otoken_from_str`]($(HDF5DocURLs.func_url("H5Otoken_from_str"))).
 """
 function h5o_token_from_str(loc_id, token_str, token)
     lock(liblock)
@@ -2702,7 +2702,7 @@ end
 """
     h5o_token_to_str(loc_id::hid_t, token::Ptr{H5O_token_t}, token_str::Ptr{Ptr{Cchar}})
 
-See `libhdf5` documentation for [`H5Otoken_to_str`]($(_hdf5_func_doc_url("H5Otoken_to_str"))).
+See `libhdf5` documentation for [`H5Otoken_to_str`]($(HDF5DocURLs.func_url("H5Otoken_to_str"))).
 """
 function h5o_token_to_str(loc_id, token, token_str)
     lock(liblock)
@@ -2719,7 +2719,7 @@ end
     @doc """
         h5o_visit(obj_id::hid_t, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid})
 
-    See `libhdf5` documentation for [`H5Ovisit1`]($(_hdf5_func_doc_url("H5Ovisit1"))).
+    See `libhdf5` documentation for [`H5Ovisit1`]($(HDF5DocURLs.func_url("H5Ovisit1"))).
     """
     function h5o_visit(obj_id, idx_type, order, op, op_data)
         lock(liblock)
@@ -2737,7 +2737,7 @@ end
     @doc """
         h5o_visit(obj_id::hid_t, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint)
 
-    See `libhdf5` documentation for [`H5Ovisit3`]($(_hdf5_func_doc_url("H5Ovisit3"))).
+    See `libhdf5` documentation for [`H5Ovisit3`]($(HDF5DocURLs.func_url("H5Ovisit3"))).
     """
     function h5o_visit(obj_id, idx_type, order, op, op_data, fields)
         lock(liblock)
@@ -2755,7 +2755,7 @@ end
     @doc """
         h5o_visit_by_name(loc_id::hid_t, obj_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate1_t, op_data::Ptr{Cvoid}, lapl_id::hid_t)
 
-    See `libhdf5` documentation for [`H5Ovisit_by_name1`]($(_hdf5_func_doc_url("H5Ovisit_by_name1"))).
+    See `libhdf5` documentation for [`H5Ovisit_by_name1`]($(HDF5DocURLs.func_url("H5Ovisit_by_name1"))).
     """
     function h5o_visit_by_name(loc_id, obj_name, idx_type, order, op, op_data, lapl_id)
         lock(liblock)
@@ -2773,7 +2773,7 @@ end
     @doc """
         h5o_visit_by_name(loc_id::hid_t, obj_name::Cstring, idx_type::H5_index_t, order::H5_iter_order_t, op::H5O_iterate2_t, op_data::Ptr{Cvoid}, fields::Cuint, lapl_id::hid_t)
 
-    See `libhdf5` documentation for [`H5Ovisit_by_name3`]($(_hdf5_func_doc_url("H5Ovisit_by_name3"))).
+    See `libhdf5` documentation for [`H5Ovisit_by_name3`]($(HDF5DocURLs.func_url("H5Ovisit_by_name3"))).
     """
     function h5o_visit_by_name(loc_id, obj_name, idx_type, order, op, op_data, fields, lapl_id)
         lock(liblock)
@@ -2790,7 +2790,7 @@ end
 """
     h5p_get(plist_id::hid_t, name::Cstring, value::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pget`]($(_hdf5_func_doc_url("H5Pget"))).
+See `libhdf5` documentation for [`H5Pget`]($(HDF5DocURLs.func_url("H5Pget"))).
 """
 function h5p_get(plist_id, name, value)
     lock(liblock)
@@ -2806,7 +2806,7 @@ end
 """
     h5p_get_alignment(fapl_id::hid_t, threshold::Ref{hsize_t}, alignment::Ref{hsize_t})
 
-See `libhdf5` documentation for [`H5Pget_alignment`]($(_hdf5_func_doc_url("H5Pget_alignment"))).
+See `libhdf5` documentation for [`H5Pget_alignment`]($(HDF5DocURLs.func_url("H5Pget_alignment"))).
 """
 function h5p_get_alignment(fapl_id, threshold, alignment)
     lock(liblock)
@@ -2822,7 +2822,7 @@ end
 """
     h5p_get_alloc_time(plist_id::hid_t, alloc_time::Ptr{Cint})
 
-See `libhdf5` documentation for [`H5Pget_alloc_time`]($(_hdf5_func_doc_url("H5Pget_alloc_time"))).
+See `libhdf5` documentation for [`H5Pget_alloc_time`]($(HDF5DocURLs.func_url("H5Pget_alloc_time"))).
 """
 function h5p_get_alloc_time(plist_id, alloc_time)
     lock(liblock)
@@ -2838,7 +2838,7 @@ end
 """
     h5p_get_append_flush(dapl_id::hid_t, dims::Cuint, boundary::Ptr{hsize_t}, func::Ptr{H5D_append_cb_t}, udata::Ptr{Ptr{Cvoid}})
 
-See `libhdf5` documentation for [`H5Pget_append_flush`]($(_hdf5_func_doc_url("H5Pget_append_flush"))).
+See `libhdf5` documentation for [`H5Pget_append_flush`]($(HDF5DocURLs.func_url("H5Pget_append_flush"))).
 """
 function h5p_get_append_flush(dapl_id, dims, boundary, func, udata)
     lock(liblock)
@@ -2854,7 +2854,7 @@ end
 """
     h5p_get_attr_creation_order(plist_id::hid_t, crt_order_flags::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_attr_creation_order`]($(_hdf5_func_doc_url("H5Pget_attr_creation_order"))).
+See `libhdf5` documentation for [`H5Pget_attr_creation_order`]($(HDF5DocURLs.func_url("H5Pget_attr_creation_order"))).
 """
 function h5p_get_attr_creation_order(plist_id, crt_order_flags)
     lock(liblock)
@@ -2870,7 +2870,7 @@ end
 """
     h5p_get_attr_phase_change(plist_id::hid_t, max_compact::Ptr{Cuint}, min_dense::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_attr_phase_change`]($(_hdf5_func_doc_url("H5Pget_attr_phase_change"))).
+See `libhdf5` documentation for [`H5Pget_attr_phase_change`]($(HDF5DocURLs.func_url("H5Pget_attr_phase_change"))).
 """
 function h5p_get_attr_phase_change(plist_id, max_compact, min_dense)
     lock(liblock)
@@ -2886,7 +2886,7 @@ end
 """
     h5p_get_btree_ratios(plist_id::hid_t, left::Ptr{Cdouble}, middle::Ptr{Cdouble}, right::Ptr{Cdouble})
 
-See `libhdf5` documentation for [`H5Pget_btree_ratios`]($(_hdf5_func_doc_url("H5Pget_btree_ratios"))).
+See `libhdf5` documentation for [`H5Pget_btree_ratios`]($(HDF5DocURLs.func_url("H5Pget_btree_ratios"))).
 """
 function h5p_get_btree_ratios(plist_id, left, middle, right)
     lock(liblock)
@@ -2902,7 +2902,7 @@ end
 """
     h5p_get_buffer(plist_id::hid_t, tconv::Ptr{Ptr{Cvoid}}, bkg::Ptr{Ptr{Cvoid}}) -> Csize_t
 
-See `libhdf5` documentation for [`H5Pget_buffer`]($(_hdf5_func_doc_url("H5Pget_buffer"))).
+See `libhdf5` documentation for [`H5Pget_buffer`]($(HDF5DocURLs.func_url("H5Pget_buffer"))).
 """
 function h5p_get_buffer(plist_id, tconv, bkg)
     lock(liblock)
@@ -2918,7 +2918,7 @@ end
 """
     h5p_get_cache(plist_id::hid_t, mdc_nelmts::Ptr{Cint}, rdcc_nslots::Ptr{Csize_t}, rdcc_nbytes::Ptr{Csize_t}, rdcc_w0::Ptr{Cdouble})
 
-See `libhdf5` documentation for [`H5Pget_cache`]($(_hdf5_func_doc_url("H5Pget_cache"))).
+See `libhdf5` documentation for [`H5Pget_cache`]($(HDF5DocURLs.func_url("H5Pget_cache"))).
 """
 function h5p_get_cache(plist_id, mdc_nelmts, rdcc_nslots, rdcc_nbytes, rdcc_w0)
     lock(liblock)
@@ -2934,7 +2934,7 @@ end
 """
     h5p_get_char_encoding(plist_id::hid_t, encoding::Ref{Cint})
 
-See `libhdf5` documentation for [`H5Pget_char_encoding`]($(_hdf5_func_doc_url("H5Pget_char_encoding"))).
+See `libhdf5` documentation for [`H5Pget_char_encoding`]($(HDF5DocURLs.func_url("H5Pget_char_encoding"))).
 """
 function h5p_get_char_encoding(plist_id, encoding)
     lock(liblock)
@@ -2950,7 +2950,7 @@ end
 """
     h5p_get_chunk(plist_id::hid_t, n_dims::Cint, dims::Ptr{hsize_t}) -> Int
 
-See `libhdf5` documentation for [`H5Pget_chunk`]($(_hdf5_func_doc_url("H5Pget_chunk"))).
+See `libhdf5` documentation for [`H5Pget_chunk`]($(HDF5DocURLs.func_url("H5Pget_chunk"))).
 """
 function h5p_get_chunk(plist_id, n_dims, dims)
     lock(liblock)
@@ -2966,7 +2966,7 @@ end
 """
     h5p_get_chunk_cache(dapl_id::hid_t, rdcc_nslots::Ptr{Csize_t}, rdcc_nbytes::Ptr{Csize_t}, rdcc_w0::Ptr{Cdouble})
 
-See `libhdf5` documentation for [`H5Pget_chunk_cache`]($(_hdf5_func_doc_url("H5Pget_chunk_cache"))).
+See `libhdf5` documentation for [`H5Pget_chunk_cache`]($(HDF5DocURLs.func_url("H5Pget_chunk_cache"))).
 """
 function h5p_get_chunk_cache(dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
     lock(liblock)
@@ -2982,7 +2982,7 @@ end
 """
     h5p_get_chunk_opts(plist_id::hid_t, opts::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_chunk_opts`]($(_hdf5_func_doc_url("H5Pget_chunk_opts"))).
+See `libhdf5` documentation for [`H5Pget_chunk_opts`]($(HDF5DocURLs.func_url("H5Pget_chunk_opts"))).
 """
 function h5p_get_chunk_opts(plist_id, opts)
     lock(liblock)
@@ -2998,7 +2998,7 @@ end
 """
     h5p_get_class(plist_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Pget_class`]($(_hdf5_func_doc_url("H5Pget_class"))).
+See `libhdf5` documentation for [`H5Pget_class`]($(HDF5DocURLs.func_url("H5Pget_class"))).
 """
 function h5p_get_class(plist_id)
     lock(liblock)
@@ -3014,7 +3014,7 @@ end
 """
     h5p_get_class_parent(pclass_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Pget_class_parent`]($(_hdf5_func_doc_url("H5Pget_class_parent"))).
+See `libhdf5` documentation for [`H5Pget_class_parent`]($(HDF5DocURLs.func_url("H5Pget_class_parent"))).
 """
 function h5p_get_class_parent(pclass_id)
     lock(liblock)
@@ -3030,7 +3030,7 @@ end
 """
     h5p_get_copy_object(plist_id::hid_t, copy_options::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_copy_object`]($(_hdf5_func_doc_url("H5Pget_copy_object"))).
+See `libhdf5` documentation for [`H5Pget_copy_object`]($(HDF5DocURLs.func_url("H5Pget_copy_object"))).
 """
 function h5p_get_copy_object(plist_id, copy_options)
     lock(liblock)
@@ -3046,7 +3046,7 @@ end
 """
     h5p_get_core_write_tracking(fapl_id::hid_t, is_enabled::Ptr{hbool_t}, page_size::Ptr{Csize_t})
 
-See `libhdf5` documentation for [`H5Pget_core_write_tracking`]($(_hdf5_func_doc_url("H5Pget_core_write_tracking"))).
+See `libhdf5` documentation for [`H5Pget_core_write_tracking`]($(HDF5DocURLs.func_url("H5Pget_core_write_tracking"))).
 """
 function h5p_get_core_write_tracking(fapl_id, is_enabled, page_size)
     lock(liblock)
@@ -3062,7 +3062,7 @@ end
 """
     h5p_get_create_intermediate_group(lcpl_id::hid_t, crt_intermed_group::Ref{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_create_intermediate_group`]($(_hdf5_func_doc_url("H5Pget_create_intermediate_group"))).
+See `libhdf5` documentation for [`H5Pget_create_intermediate_group`]($(HDF5DocURLs.func_url("H5Pget_create_intermediate_group"))).
 """
 function h5p_get_create_intermediate_group(lcpl_id, crt_intermed_group)
     lock(liblock)
@@ -3078,7 +3078,7 @@ end
 """
     h5p_get_data_transform(plist_id::hid_t, expression::Ptr{Cchar}, size::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Pget_data_transform`]($(_hdf5_func_doc_url("H5Pget_data_transform"))).
+See `libhdf5` documentation for [`H5Pget_data_transform`]($(HDF5DocURLs.func_url("H5Pget_data_transform"))).
 """
 function h5p_get_data_transform(plist_id, expression, size)
     lock(liblock)
@@ -3094,7 +3094,7 @@ end
 """
     h5p_get_driver(plist_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Pget_driver`]($(_hdf5_func_doc_url("H5Pget_driver"))).
+See `libhdf5` documentation for [`H5Pget_driver`]($(HDF5DocURLs.func_url("H5Pget_driver"))).
 """
 function h5p_get_driver(plist_id)
     lock(liblock)
@@ -3110,7 +3110,7 @@ end
 """
     h5p_get_driver_info(plist_id::hid_t) -> Ptr{Cvoid}
 
-See `libhdf5` documentation for [`H5Pget_driver_info`]($(_hdf5_func_doc_url("H5Pget_driver_info"))).
+See `libhdf5` documentation for [`H5Pget_driver_info`]($(HDF5DocURLs.func_url("H5Pget_driver_info"))).
 """
 function h5p_get_driver_info(plist_id)
     lock(liblock)
@@ -3126,7 +3126,7 @@ end
 """
     h5p_get_dset_no_attrs_hint(dcpl_id::hid_t, minimize::Ptr{hbool_t})
 
-See `libhdf5` documentation for [`H5Pget_dset_no_attrs_hint`]($(_hdf5_func_doc_url("H5Pget_dset_no_attrs_hint"))).
+See `libhdf5` documentation for [`H5Pget_dset_no_attrs_hint`]($(HDF5DocURLs.func_url("H5Pget_dset_no_attrs_hint"))).
 """
 function h5p_get_dset_no_attrs_hint(dcpl_id, minimize)
     lock(liblock)
@@ -3142,7 +3142,7 @@ end
 """
     h5p_get_dxpl_mpio(dxpl_id::hid_t, xfer_mode::Ptr{Cint})
 
-See `libhdf5` documentation for [`H5Pget_dxpl_mpio`]($(_hdf5_func_doc_url("H5Pget_dxpl_mpio"))).
+See `libhdf5` documentation for [`H5Pget_dxpl_mpio`]($(HDF5DocURLs.func_url("H5Pget_dxpl_mpio"))).
 """
 function h5p_get_dxpl_mpio(dxpl_id, xfer_mode)
     lock(liblock)
@@ -3158,7 +3158,7 @@ end
 """
     h5p_get_edc_check(plist_id::hid_t) -> H5Z_EDC_t
 
-See `libhdf5` documentation for [`H5Pget_edc_check`]($(_hdf5_func_doc_url("H5Pget_edc_check"))).
+See `libhdf5` documentation for [`H5Pget_edc_check`]($(HDF5DocURLs.func_url("H5Pget_edc_check"))).
 """
 function h5p_get_edc_check(plist_id)
     lock(liblock)
@@ -3174,7 +3174,7 @@ end
 """
     h5p_get_efile_prefix(dapl_id::hid_t, prefix::Ptr{UInt8}, size::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Pget_efile_prefix`]($(_hdf5_func_doc_url("H5Pget_efile_prefix"))).
+See `libhdf5` documentation for [`H5Pget_efile_prefix`]($(HDF5DocURLs.func_url("H5Pget_efile_prefix"))).
 """
 function h5p_get_efile_prefix(dapl_id, prefix, size)
     lock(liblock)
@@ -3190,7 +3190,7 @@ end
 """
     h5p_get_elink_acc_flags(lapl_id::hid_t, flags::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_elink_acc_flags`]($(_hdf5_func_doc_url("H5Pget_elink_acc_flags"))).
+See `libhdf5` documentation for [`H5Pget_elink_acc_flags`]($(HDF5DocURLs.func_url("H5Pget_elink_acc_flags"))).
 """
 function h5p_get_elink_acc_flags(lapl_id, flags)
     lock(liblock)
@@ -3206,7 +3206,7 @@ end
 """
     h5p_get_elink_cb(lapl_id::hid_t, func::Ptr{H5L_elink_traverse_t}, op_data::Ptr{Ptr{Cvoid}})
 
-See `libhdf5` documentation for [`H5Pget_elink_cb`]($(_hdf5_func_doc_url("H5Pget_elink_cb"))).
+See `libhdf5` documentation for [`H5Pget_elink_cb`]($(HDF5DocURLs.func_url("H5Pget_elink_cb"))).
 """
 function h5p_get_elink_cb(lapl_id, func, op_data)
     lock(liblock)
@@ -3222,7 +3222,7 @@ end
 """
     h5p_get_elink_fapl(lapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Pget_elink_fapl`]($(_hdf5_func_doc_url("H5Pget_elink_fapl"))).
+See `libhdf5` documentation for [`H5Pget_elink_fapl`]($(HDF5DocURLs.func_url("H5Pget_elink_fapl"))).
 """
 function h5p_get_elink_fapl(lapl_id)
     lock(liblock)
@@ -3238,7 +3238,7 @@ end
 """
     h5p_get_elink_file_cache_size(plist_id::hid_t, efc_size::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_elink_file_cache_size`]($(_hdf5_func_doc_url("H5Pget_elink_file_cache_size"))).
+See `libhdf5` documentation for [`H5Pget_elink_file_cache_size`]($(HDF5DocURLs.func_url("H5Pget_elink_file_cache_size"))).
 """
 function h5p_get_elink_file_cache_size(plist_id, efc_size)
     lock(liblock)
@@ -3254,7 +3254,7 @@ end
 """
     h5p_get_elink_prefix(plist_id::hid_t, prefix::Ptr{Cchar}, size::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Pget_elink_prefix`]($(_hdf5_func_doc_url("H5Pget_elink_prefix"))).
+See `libhdf5` documentation for [`H5Pget_elink_prefix`]($(HDF5DocURLs.func_url("H5Pget_elink_prefix"))).
 """
 function h5p_get_elink_prefix(plist_id, prefix, size)
     lock(liblock)
@@ -3270,7 +3270,7 @@ end
 """
     h5p_get_est_link_info(plist_id::hid_t, est_num_entries::Ptr{Cuint}, est_name_len::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_est_link_info`]($(_hdf5_func_doc_url("H5Pget_est_link_info"))).
+See `libhdf5` documentation for [`H5Pget_est_link_info`]($(HDF5DocURLs.func_url("H5Pget_est_link_info"))).
 """
 function h5p_get_est_link_info(plist_id, est_num_entries, est_name_len)
     lock(liblock)
@@ -3286,7 +3286,7 @@ end
 """
     h5p_get_evict_on_close(fapl_id::hid_t, evict_on_close::Ptr{hbool_t})
 
-See `libhdf5` documentation for [`H5Pget_evict_on_close`]($(_hdf5_func_doc_url("H5Pget_evict_on_close"))).
+See `libhdf5` documentation for [`H5Pget_evict_on_close`]($(HDF5DocURLs.func_url("H5Pget_evict_on_close"))).
 """
 function h5p_get_evict_on_close(fapl_id, evict_on_close)
     lock(liblock)
@@ -3303,7 +3303,7 @@ end
     @doc """
         h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{off_t}, size::Ptr{hsize_t})
 
-    See `libhdf5` documentation for [`H5Pget_external`]($(_hdf5_func_doc_url("H5Pget_external"))).
+    See `libhdf5` documentation for [`H5Pget_external`]($(HDF5DocURLs.func_url("H5Pget_external"))).
     """
     function h5p_get_external(plist, idx, name_size, name, offset, size)
         lock(liblock)
@@ -3321,7 +3321,7 @@ end
     @doc """
         h5p_get_external(plist::hid_t, idx::Cuint, name_size::Csize_t, name::Ptr{Cuchar}, offset::Ptr{H5Doff_t}, size::Ptr{hsize_t})
 
-    See `libhdf5` documentation for [`H5Pget_external`]($(_hdf5_func_doc_url("H5Pget_external"))).
+    See `libhdf5` documentation for [`H5Pget_external`]($(HDF5DocURLs.func_url("H5Pget_external"))).
     """
     function h5p_get_external(plist, idx, name_size, name, offset, size)
         lock(liblock)
@@ -3338,7 +3338,7 @@ end
 """
     h5p_get_external_count(plist::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Pget_external_count`]($(_hdf5_func_doc_url("H5Pget_external_count"))).
+See `libhdf5` documentation for [`H5Pget_external_count`]($(HDF5DocURLs.func_url("H5Pget_external_count"))).
 """
 function h5p_get_external_count(plist)
     lock(liblock)
@@ -3354,7 +3354,7 @@ end
 """
     h5p_get_family_offset(fapl_id::hid_t, offset::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Pget_family_offset`]($(_hdf5_func_doc_url("H5Pget_family_offset"))).
+See `libhdf5` documentation for [`H5Pget_family_offset`]($(HDF5DocURLs.func_url("H5Pget_family_offset"))).
 """
 function h5p_get_family_offset(fapl_id, offset)
     lock(liblock)
@@ -3370,7 +3370,7 @@ end
 """
     h5p_get_fapl_core(fapl_id::hid_t, increment::Ptr{Csize_t}, backing_store::Ptr{hbool_t})
 
-See `libhdf5` documentation for [`H5Pget_fapl_core`]($(_hdf5_func_doc_url("H5Pget_fapl_core"))).
+See `libhdf5` documentation for [`H5Pget_fapl_core`]($(HDF5DocURLs.func_url("H5Pget_fapl_core"))).
 """
 function h5p_get_fapl_core(fapl_id, increment, backing_store)
     lock(liblock)
@@ -3386,7 +3386,7 @@ end
 """
     h5p_get_fapl_family(fapl_id::hid_t, memb_size::Ptr{hsize_t}, memb_fapl_id::Ptr{hid_t})
 
-See `libhdf5` documentation for [`H5Pget_fapl_family`]($(_hdf5_func_doc_url("H5Pget_fapl_family"))).
+See `libhdf5` documentation for [`H5Pget_fapl_family`]($(HDF5DocURLs.func_url("H5Pget_fapl_family"))).
 """
 function h5p_get_fapl_family(fapl_id, memb_size, memb_fapl_id)
     lock(liblock)
@@ -3402,7 +3402,7 @@ end
 """
     h5p_get_fapl_hdfs(fapl_id::hid_t, fa_out::Ptr{H5FD_hdfs_fapl_t})
 
-See `libhdf5` documentation for [`H5Pget_fapl_hdfs`]($(_hdf5_func_doc_url("H5Pget_fapl_hdfs"))).
+See `libhdf5` documentation for [`H5Pget_fapl_hdfs`]($(HDF5DocURLs.func_url("H5Pget_fapl_hdfs"))).
 """
 function h5p_get_fapl_hdfs(fapl_id, fa_out)
     lock(liblock)
@@ -3418,7 +3418,7 @@ end
 """
     h5p_get_fapl_multi(fapl_id::hid_t, memb_map::Ptr{H5FD_mem_t}, memb_fapl::Ptr{hid_t}, memb_name::Ptr{Ptr{Cchar}}, memb_addr::Ptr{haddr_t}, relax::Ptr{hbool_t})
 
-See `libhdf5` documentation for [`H5Pget_fapl_multi`]($(_hdf5_func_doc_url("H5Pget_fapl_multi"))).
+See `libhdf5` documentation for [`H5Pget_fapl_multi`]($(HDF5DocURLs.func_url("H5Pget_fapl_multi"))).
 """
 function h5p_get_fapl_multi(fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
     lock(liblock)
@@ -3434,7 +3434,7 @@ end
 """
     h5p_get_fapl_splitter(fapl_id::hid_t, config_ptr::Ptr{H5FD_splitter_vfd_config_t})
 
-See `libhdf5` documentation for [`H5Pget_fapl_splitter`]($(_hdf5_func_doc_url("H5Pget_fapl_splitter"))).
+See `libhdf5` documentation for [`H5Pget_fapl_splitter`]($(HDF5DocURLs.func_url("H5Pget_fapl_splitter"))).
 """
 function h5p_get_fapl_splitter(fapl_id, config_ptr)
     lock(liblock)
@@ -3450,7 +3450,7 @@ end
 """
     h5p_get_fapl_ros3(fapl_id::hid_t, fa_out::Ptr{H5FD_ros3_fapl_t})
 
-See `libhdf5` documentation for [`H5Pget_fapl_ros3`]($(_hdf5_func_doc_url("H5Pget_fapl_ros3"))).
+See `libhdf5` documentation for [`H5Pget_fapl_ros3`]($(HDF5DocURLs.func_url("H5Pget_fapl_ros3"))).
 """
 function h5p_get_fapl_ros3(fapl_id, fa_out)
     lock(liblock)
@@ -3466,7 +3466,7 @@ end
 """
     h5p_get_fclose_degree(fapl_id::hid_t, fc_degree::Ref{Cint})
 
-See `libhdf5` documentation for [`H5Pget_fclose_degree`]($(_hdf5_func_doc_url("H5Pget_fclose_degree"))).
+See `libhdf5` documentation for [`H5Pget_fclose_degree`]($(HDF5DocURLs.func_url("H5Pget_fclose_degree"))).
 """
 function h5p_get_fclose_degree(fapl_id, fc_degree)
     lock(liblock)
@@ -3482,7 +3482,7 @@ end
 """
     h5p_get_file_image(fapl_id::hid_t, buf_ptr_ptr::Ptr{Ptr{Cvoid}}, buf_len_ptr::Ptr{Csize_t})
 
-See `libhdf5` documentation for [`H5Pget_file_image`]($(_hdf5_func_doc_url("H5Pget_file_image"))).
+See `libhdf5` documentation for [`H5Pget_file_image`]($(HDF5DocURLs.func_url("H5Pget_file_image"))).
 """
 function h5p_get_file_image(fapl_id, buf_ptr_ptr, buf_len_ptr)
     lock(liblock)
@@ -3498,7 +3498,7 @@ end
 """
     h5p_get_file_image_callbacks(fapl_id::hid_t, callbacks_ptr::Ptr{H5FD_file_image_callbacks_t})
 
-See `libhdf5` documentation for [`H5Pget_file_image_callbacks`]($(_hdf5_func_doc_url("H5Pget_file_image_callbacks"))).
+See `libhdf5` documentation for [`H5Pget_file_image_callbacks`]($(HDF5DocURLs.func_url("H5Pget_file_image_callbacks"))).
 """
 function h5p_get_file_image_callbacks(fapl_id, callbacks_ptr)
     lock(liblock)
@@ -3514,7 +3514,7 @@ end
 """
     h5p_get_file_locking(fapl_id::hid_t, use_file_locking::Ptr{hbool_t}, ignore_when_disabled::Ptr{hbool_t})
 
-See `libhdf5` documentation for [`H5Pget_file_locking`]($(_hdf5_func_doc_url("H5Pget_file_locking"))).
+See `libhdf5` documentation for [`H5Pget_file_locking`]($(HDF5DocURLs.func_url("H5Pget_file_locking"))).
 """
 function h5p_get_file_locking(fapl_id, use_file_locking, ignore_when_disabled)
     lock(liblock)
@@ -3530,7 +3530,7 @@ end
 """
     h5p_get_file_space(plist_id::hid_t, strategy::Ptr{H5F_file_space_type_t}, threshold::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Pget_file_space`]($(_hdf5_func_doc_url("H5Pget_file_space"))).
+See `libhdf5` documentation for [`H5Pget_file_space`]($(HDF5DocURLs.func_url("H5Pget_file_space"))).
 """
 function h5p_get_file_space(plist_id, strategy, threshold)
     lock(liblock)
@@ -3546,7 +3546,7 @@ end
 """
     h5p_get_file_space_page_size(plist_id::hid_t, fsp_size::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Pget_file_space_page_size`]($(_hdf5_func_doc_url("H5Pget_file_space_page_size"))).
+See `libhdf5` documentation for [`H5Pget_file_space_page_size`]($(HDF5DocURLs.func_url("H5Pget_file_space_page_size"))).
 """
 function h5p_get_file_space_page_size(plist_id, fsp_size)
     lock(liblock)
@@ -3562,7 +3562,7 @@ end
 """
     h5p_get_file_space_strategy(plist_id::hid_t, strategy::Ptr{H5F_fspace_strategy_t}, persist::Ptr{hbool_t}, threshold::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Pget_file_space_strategy`]($(_hdf5_func_doc_url("H5Pget_file_space_strategy"))).
+See `libhdf5` documentation for [`H5Pget_file_space_strategy`]($(HDF5DocURLs.func_url("H5Pget_file_space_strategy"))).
 """
 function h5p_get_file_space_strategy(plist_id, strategy, persist, threshold)
     lock(liblock)
@@ -3578,7 +3578,7 @@ end
 """
     h5p_get_fill_time(plist_id::hid_t, fill_time::Ptr{H5D_fill_time_t})
 
-See `libhdf5` documentation for [`H5Pget_fill_time`]($(_hdf5_func_doc_url("H5Pget_fill_time"))).
+See `libhdf5` documentation for [`H5Pget_fill_time`]($(HDF5DocURLs.func_url("H5Pget_fill_time"))).
 """
 function h5p_get_fill_time(plist_id, fill_time)
     lock(liblock)
@@ -3594,7 +3594,7 @@ end
 """
     h5p_get_fill_value(plist_id::hid_t, type_id::hid_t, value::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pget_fill_value`]($(_hdf5_func_doc_url("H5Pget_fill_value"))).
+See `libhdf5` documentation for [`H5Pget_fill_value`]($(HDF5DocURLs.func_url("H5Pget_fill_value"))).
 """
 function h5p_get_fill_value(plist_id, type_id, value)
     lock(liblock)
@@ -3610,7 +3610,7 @@ end
 """
     h5p_get_filter(plist_id::hid_t, idx::Cuint, flags::Ptr{Cuint}, cd_nemlts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{Cchar}, filter_config::Ptr{Cuint}) -> H5Z_filter_t
 
-See `libhdf5` documentation for [`H5Pget_filter2`]($(_hdf5_func_doc_url("H5Pget_filter2"))).
+See `libhdf5` documentation for [`H5Pget_filter2`]($(HDF5DocURLs.func_url("H5Pget_filter2"))).
 """
 function h5p_get_filter(plist_id, idx, flags, cd_nemlts, cd_values, namelen, name, filter_config)
     lock(liblock)
@@ -3626,7 +3626,7 @@ end
 """
     h5p_get_filter_by_id(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Ref{Cuint}, cd_nelmts::Ref{Csize_t}, cd_values::Ptr{Cuint}, namelen::Csize_t, name::Ptr{UInt8}, filter_config::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_filter_by_id2`]($(_hdf5_func_doc_url("H5Pget_filter_by_id2"))).
+See `libhdf5` documentation for [`H5Pget_filter_by_id2`]($(HDF5DocURLs.func_url("H5Pget_filter_by_id2"))).
 """
 function h5p_get_filter_by_id(plist_id, filter_id, flags, cd_nelmts, cd_values, namelen, name, filter_config)
     lock(liblock)
@@ -3642,7 +3642,7 @@ end
 """
     h5p_get_gc_references(fapl_id::hid_t, gc_ref::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_gc_references`]($(_hdf5_func_doc_url("H5Pget_gc_references"))).
+See `libhdf5` documentation for [`H5Pget_gc_references`]($(HDF5DocURLs.func_url("H5Pget_gc_references"))).
 """
 function h5p_get_gc_references(fapl_id, gc_ref)
     lock(liblock)
@@ -3658,7 +3658,7 @@ end
 """
     h5p_get_hyper_vector_size(fapl_id::hid_t, size::Ptr{Csize_t})
 
-See `libhdf5` documentation for [`H5Pget_hyper_vector_size`]($(_hdf5_func_doc_url("H5Pget_hyper_vector_size"))).
+See `libhdf5` documentation for [`H5Pget_hyper_vector_size`]($(HDF5DocURLs.func_url("H5Pget_hyper_vector_size"))).
 """
 function h5p_get_hyper_vector_size(fapl_id, size)
     lock(liblock)
@@ -3674,7 +3674,7 @@ end
 """
     h5p_get_istore_k(plist_id::hid_t, ik::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_istore_k`]($(_hdf5_func_doc_url("H5Pget_istore_k"))).
+See `libhdf5` documentation for [`H5Pget_istore_k`]($(HDF5DocURLs.func_url("H5Pget_istore_k"))).
 """
 function h5p_get_istore_k(plist_id, ik)
     lock(liblock)
@@ -3690,7 +3690,7 @@ end
 """
     h5p_get_layout(plist_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Pget_layout`]($(_hdf5_func_doc_url("H5Pget_layout"))).
+See `libhdf5` documentation for [`H5Pget_layout`]($(HDF5DocURLs.func_url("H5Pget_layout"))).
 """
 function h5p_get_layout(plist_id)
     lock(liblock)
@@ -3706,7 +3706,7 @@ end
 """
     h5p_get_libver_bounds(fapl_id::hid_t, low::Ref{Cint}, high::Ref{Cint})
 
-See `libhdf5` documentation for [`H5Pget_libver_bounds`]($(_hdf5_func_doc_url("H5Pget_libver_bounds"))).
+See `libhdf5` documentation for [`H5Pget_libver_bounds`]($(HDF5DocURLs.func_url("H5Pget_libver_bounds"))).
 """
 function h5p_get_libver_bounds(fapl_id, low, high)
     lock(liblock)
@@ -3722,7 +3722,7 @@ end
 """
     h5p_get_link_creation_order(plist_id::hid_t, crt_order_flags::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_link_creation_order`]($(_hdf5_func_doc_url("H5Pget_link_creation_order"))).
+See `libhdf5` documentation for [`H5Pget_link_creation_order`]($(HDF5DocURLs.func_url("H5Pget_link_creation_order"))).
 """
 function h5p_get_link_creation_order(plist_id, crt_order_flags)
     lock(liblock)
@@ -3738,7 +3738,7 @@ end
 """
     h5p_get_link_phase_change(plist_id::hid_t, max_compact::Ptr{Cuint}, min_dense::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_link_phase_change`]($(_hdf5_func_doc_url("H5Pget_link_phase_change"))).
+See `libhdf5` documentation for [`H5Pget_link_phase_change`]($(HDF5DocURLs.func_url("H5Pget_link_phase_change"))).
 """
 function h5p_get_link_phase_change(plist_id, max_compact, min_dense)
     lock(liblock)
@@ -3754,7 +3754,7 @@ end
 """
     h5p_get_local_heap_size_hint(plist_id::hid_t, size_hint::Ref{Csize_t})
 
-See `libhdf5` documentation for [`H5Pget_local_heap_size_hint`]($(_hdf5_func_doc_url("H5Pget_local_heap_size_hint"))).
+See `libhdf5` documentation for [`H5Pget_local_heap_size_hint`]($(HDF5DocURLs.func_url("H5Pget_local_heap_size_hint"))).
 """
 function h5p_get_local_heap_size_hint(plist_id, size_hint)
     lock(liblock)
@@ -3770,7 +3770,7 @@ end
 """
     h5p_get_mcdt_search_cb(plist_id::hid_t, func::Ptr{H5O_mcdt_search_cb_t}, op_data::Ptr{Ptr{Cvoid}})
 
-See `libhdf5` documentation for [`H5Pget_mcdt_search_cb`]($(_hdf5_func_doc_url("H5Pget_mcdt_search_cb"))).
+See `libhdf5` documentation for [`H5Pget_mcdt_search_cb`]($(HDF5DocURLs.func_url("H5Pget_mcdt_search_cb"))).
 """
 function h5p_get_mcdt_search_cb(plist_id, func, op_data)
     lock(liblock)
@@ -3786,7 +3786,7 @@ end
 """
     h5p_get_mdc_config(plist_id::hid_t, config_ptr::Ptr{H5AC_cache_config_t})
 
-See `libhdf5` documentation for [`H5Pget_mdc_config`]($(_hdf5_func_doc_url("H5Pget_mdc_config"))).
+See `libhdf5` documentation for [`H5Pget_mdc_config`]($(HDF5DocURLs.func_url("H5Pget_mdc_config"))).
 """
 function h5p_get_mdc_config(plist_id, config_ptr)
     lock(liblock)
@@ -3802,7 +3802,7 @@ end
 """
     h5p_get_mdc_image_config(plist_id::hid_t, config_ptr::Ptr{H5AC_cache_image_config_t})
 
-See `libhdf5` documentation for [`H5Pget_mdc_image_config`]($(_hdf5_func_doc_url("H5Pget_mdc_image_config"))).
+See `libhdf5` documentation for [`H5Pget_mdc_image_config`]($(HDF5DocURLs.func_url("H5Pget_mdc_image_config"))).
 """
 function h5p_get_mdc_image_config(plist_id, config_ptr)
     lock(liblock)
@@ -3818,7 +3818,7 @@ end
 """
     h5p_get_mdc_log_options(plist_id::hid_t, is_enabled::Ptr{hbool_t}, location::Ptr{Cchar}, location_size::Ptr{Csize_t}, start_on_access::Ptr{hbool_t})
 
-See `libhdf5` documentation for [`H5Pget_mdc_log_options`]($(_hdf5_func_doc_url("H5Pget_mdc_log_options"))).
+See `libhdf5` documentation for [`H5Pget_mdc_log_options`]($(HDF5DocURLs.func_url("H5Pget_mdc_log_options"))).
 """
 function h5p_get_mdc_log_options(plist_id, is_enabled, location, location_size, start_on_access)
     lock(liblock)
@@ -3834,7 +3834,7 @@ end
 """
     h5p_get_meta_block_size(fapl_id::hid_t, size::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Pget_meta_block_size`]($(_hdf5_func_doc_url("H5Pget_meta_block_size"))).
+See `libhdf5` documentation for [`H5Pget_meta_block_size`]($(HDF5DocURLs.func_url("H5Pget_meta_block_size"))).
 """
 function h5p_get_meta_block_size(fapl_id, size)
     lock(liblock)
@@ -3850,7 +3850,7 @@ end
 """
     h5p_get_metadata_read_attempts(plist_id::hid_t, attempts::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_metadata_read_attempts`]($(_hdf5_func_doc_url("H5Pget_metadata_read_attempts"))).
+See `libhdf5` documentation for [`H5Pget_metadata_read_attempts`]($(HDF5DocURLs.func_url("H5Pget_metadata_read_attempts"))).
 """
 function h5p_get_metadata_read_attempts(plist_id, attempts)
     lock(liblock)
@@ -3866,7 +3866,7 @@ end
 """
     h5p_get_multi_type(fapl_id::hid_t, type::Ptr{H5FD_mem_t})
 
-See `libhdf5` documentation for [`H5Pget_multi_type`]($(_hdf5_func_doc_url("H5Pget_multi_type"))).
+See `libhdf5` documentation for [`H5Pget_multi_type`]($(HDF5DocURLs.func_url("H5Pget_multi_type"))).
 """
 function h5p_get_multi_type(fapl_id, type)
     lock(liblock)
@@ -3882,7 +3882,7 @@ end
 """
     h5p_get_nfilters(plist_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Pget_nfilters`]($(_hdf5_func_doc_url("H5Pget_nfilters"))).
+See `libhdf5` documentation for [`H5Pget_nfilters`]($(HDF5DocURLs.func_url("H5Pget_nfilters"))).
 """
 function h5p_get_nfilters(plist_id)
     lock(liblock)
@@ -3898,7 +3898,7 @@ end
 """
     h5p_get_nlinks(plist_id::hid_t, nlinks::Ptr{Csize_t})
 
-See `libhdf5` documentation for [`H5Pget_nlinks`]($(_hdf5_func_doc_url("H5Pget_nlinks"))).
+See `libhdf5` documentation for [`H5Pget_nlinks`]($(HDF5DocURLs.func_url("H5Pget_nlinks"))).
 """
 function h5p_get_nlinks(plist_id, nlinks)
     lock(liblock)
@@ -3914,7 +3914,7 @@ end
 """
     h5p_get_nprops(id::hid_t, nprops::Ptr{Csize_t})
 
-See `libhdf5` documentation for [`H5Pget_nprops`]($(_hdf5_func_doc_url("H5Pget_nprops"))).
+See `libhdf5` documentation for [`H5Pget_nprops`]($(HDF5DocURLs.func_url("H5Pget_nprops"))).
 """
 function h5p_get_nprops(id, nprops)
     lock(liblock)
@@ -3930,7 +3930,7 @@ end
 """
     h5p_get_obj_track_times(plist_id::hid_t, track_times::Ref{UInt8})
 
-See `libhdf5` documentation for [`H5Pget_obj_track_times`]($(_hdf5_func_doc_url("H5Pget_obj_track_times"))).
+See `libhdf5` documentation for [`H5Pget_obj_track_times`]($(HDF5DocURLs.func_url("H5Pget_obj_track_times"))).
 """
 function h5p_get_obj_track_times(plist_id, track_times)
     lock(liblock)
@@ -3946,7 +3946,7 @@ end
 """
     h5p_get_object_flush_cb(plist_id::hid_t, func::Ptr{H5F_flush_cb_t}, udata::Ptr{Ptr{Cvoid}})
 
-See `libhdf5` documentation for [`H5Pget_object_flush_cb`]($(_hdf5_func_doc_url("H5Pget_object_flush_cb"))).
+See `libhdf5` documentation for [`H5Pget_object_flush_cb`]($(HDF5DocURLs.func_url("H5Pget_object_flush_cb"))).
 """
 function h5p_get_object_flush_cb(plist_id, func, udata)
     lock(liblock)
@@ -3962,7 +3962,7 @@ end
 """
     h5p_get_page_buffer_size(plist_id::hid_t, buf_size::Ptr{Csize_t}, min_meta_perc::Ptr{Cuint}, min_raw_perc::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_page_buffer_size`]($(_hdf5_func_doc_url("H5Pget_page_buffer_size"))).
+See `libhdf5` documentation for [`H5Pget_page_buffer_size`]($(HDF5DocURLs.func_url("H5Pget_page_buffer_size"))).
 """
 function h5p_get_page_buffer_size(plist_id, buf_size, min_meta_perc, min_raw_perc)
     lock(liblock)
@@ -3978,7 +3978,7 @@ end
 """
     h5p_get_preserve(plist_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Pget_preserve`]($(_hdf5_func_doc_url("H5Pget_preserve"))).
+See `libhdf5` documentation for [`H5Pget_preserve`]($(HDF5DocURLs.func_url("H5Pget_preserve"))).
 """
 function h5p_get_preserve(plist_id)
     lock(liblock)
@@ -3994,7 +3994,7 @@ end
 """
     h5p_get_shared_mesg_index(plist_id::hid_t, index_num::Cuint, mesg_type_flags::Ptr{Cuint}, min_mesg_size::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_shared_mesg_index`]($(_hdf5_func_doc_url("H5Pget_shared_mesg_index"))).
+See `libhdf5` documentation for [`H5Pget_shared_mesg_index`]($(HDF5DocURLs.func_url("H5Pget_shared_mesg_index"))).
 """
 function h5p_get_shared_mesg_index(plist_id, index_num, mesg_type_flags, min_mesg_size)
     lock(liblock)
@@ -4010,7 +4010,7 @@ end
 """
     h5p_get_shared_mesg_nindexes(plist_id::hid_t, nindexes::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_shared_mesg_nindexes`]($(_hdf5_func_doc_url("H5Pget_shared_mesg_nindexes"))).
+See `libhdf5` documentation for [`H5Pget_shared_mesg_nindexes`]($(HDF5DocURLs.func_url("H5Pget_shared_mesg_nindexes"))).
 """
 function h5p_get_shared_mesg_nindexes(plist_id, nindexes)
     lock(liblock)
@@ -4026,7 +4026,7 @@ end
 """
     h5p_get_shared_mesg_phase_change(plist_id::hid_t, max_list::Ptr{Cuint}, min_btree::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_shared_mesg_phase_change`]($(_hdf5_func_doc_url("H5Pget_shared_mesg_phase_change"))).
+See `libhdf5` documentation for [`H5Pget_shared_mesg_phase_change`]($(HDF5DocURLs.func_url("H5Pget_shared_mesg_phase_change"))).
 """
 function h5p_get_shared_mesg_phase_change(plist_id, max_list, min_btree)
     lock(liblock)
@@ -4042,7 +4042,7 @@ end
 """
     h5p_get_sieve_buf_size(fapl_id::hid_t, size::Ptr{Csize_t})
 
-See `libhdf5` documentation for [`H5Pget_sieve_buf_size`]($(_hdf5_func_doc_url("H5Pget_sieve_buf_size"))).
+See `libhdf5` documentation for [`H5Pget_sieve_buf_size`]($(HDF5DocURLs.func_url("H5Pget_sieve_buf_size"))).
 """
 function h5p_get_sieve_buf_size(fapl_id, size)
     lock(liblock)
@@ -4058,7 +4058,7 @@ end
 """
     h5p_get_size(id::hid_t, name::Ptr{Cchar}, size::Ptr{Csize_t})
 
-See `libhdf5` documentation for [`H5Pget_size`]($(_hdf5_func_doc_url("H5Pget_size"))).
+See `libhdf5` documentation for [`H5Pget_size`]($(HDF5DocURLs.func_url("H5Pget_size"))).
 """
 function h5p_get_size(id, name, size)
     lock(liblock)
@@ -4074,7 +4074,7 @@ end
 """
     h5p_get_sizes(plist_id::hid_t, sizeof_addr::Ptr{Csize_t}, sizeof_size::Ptr{Csize_t})
 
-See `libhdf5` documentation for [`H5Pget_sizes`]($(_hdf5_func_doc_url("H5Pget_sizes"))).
+See `libhdf5` documentation for [`H5Pget_sizes`]($(HDF5DocURLs.func_url("H5Pget_sizes"))).
 """
 function h5p_get_sizes(plist_id, sizeof_addr, sizeof_size)
     lock(liblock)
@@ -4090,7 +4090,7 @@ end
 """
     h5p_get_small_data_block_size(fapl_id::hid_t, size::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Pget_small_data_block_size`]($(_hdf5_func_doc_url("H5Pget_small_data_block_size"))).
+See `libhdf5` documentation for [`H5Pget_small_data_block_size`]($(HDF5DocURLs.func_url("H5Pget_small_data_block_size"))).
 """
 function h5p_get_small_data_block_size(fapl_id, size)
     lock(liblock)
@@ -4106,7 +4106,7 @@ end
 """
     h5p_get_sym_k(plist_id::hid_t, ik::Ptr{Cuint}, lk::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_sym_k`]($(_hdf5_func_doc_url("H5Pget_sym_k"))).
+See `libhdf5` documentation for [`H5Pget_sym_k`]($(HDF5DocURLs.func_url("H5Pget_sym_k"))).
 """
 function h5p_get_sym_k(plist_id, ik, lk)
     lock(liblock)
@@ -4122,7 +4122,7 @@ end
 """
     h5p_get_type_conv_cb(dxpl_id::hid_t, op::Ptr{H5T_conv_except_func_t}, operate_data::Ptr{Ptr{Cvoid}})
 
-See `libhdf5` documentation for [`H5Pget_type_conv_cb`]($(_hdf5_func_doc_url("H5Pget_type_conv_cb"))).
+See `libhdf5` documentation for [`H5Pget_type_conv_cb`]($(HDF5DocURLs.func_url("H5Pget_type_conv_cb"))).
 """
 function h5p_get_type_conv_cb(dxpl_id, op, operate_data)
     lock(liblock)
@@ -4138,7 +4138,7 @@ end
 """
     h5p_get_userblock(plist_id::hid_t, len::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Pget_userblock`]($(_hdf5_func_doc_url("H5Pget_userblock"))).
+See `libhdf5` documentation for [`H5Pget_userblock`]($(HDF5DocURLs.func_url("H5Pget_userblock"))).
 """
 function h5p_get_userblock(plist_id, len)
     lock(liblock)
@@ -4154,7 +4154,7 @@ end
 """
     h5p_get_version(plist_id::hid_t, boot::Ptr{Cuint}, freelist::Ptr{Cuint}, stab::Ptr{Cuint}, shhdr::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pget_version`]($(_hdf5_func_doc_url("H5Pget_version"))).
+See `libhdf5` documentation for [`H5Pget_version`]($(HDF5DocURLs.func_url("H5Pget_version"))).
 """
 function h5p_get_version(plist_id, boot, freelist, stab, shhdr)
     lock(liblock)
@@ -4170,7 +4170,7 @@ end
 """
     h5p_get_virtual_count(dcpl_id::hid_t, count::Ptr{Csize_t})
 
-See `libhdf5` documentation for [`H5Pget_virtual_count`]($(_hdf5_func_doc_url("H5Pget_virtual_count"))).
+See `libhdf5` documentation for [`H5Pget_virtual_count`]($(HDF5DocURLs.func_url("H5Pget_virtual_count"))).
 """
 function h5p_get_virtual_count(dcpl_id, count)
     lock(liblock)
@@ -4186,7 +4186,7 @@ end
 """
     h5p_get_virtual_dsetname(dcpl_id::hid_t, index::Csize_t, name::Ptr{Cchar}, size::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Pget_virtual_dsetname`]($(_hdf5_func_doc_url("H5Pget_virtual_dsetname"))).
+See `libhdf5` documentation for [`H5Pget_virtual_dsetname`]($(HDF5DocURLs.func_url("H5Pget_virtual_dsetname"))).
 """
 function h5p_get_virtual_dsetname(dcpl_id, index, name, size)
     lock(liblock)
@@ -4202,7 +4202,7 @@ end
 """
     h5p_get_virtual_filename(dcpl_id::hid_t, index::Csize_t, name::Ptr{Cchar}, size::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Pget_virtual_filename`]($(_hdf5_func_doc_url("H5Pget_virtual_filename"))).
+See `libhdf5` documentation for [`H5Pget_virtual_filename`]($(HDF5DocURLs.func_url("H5Pget_virtual_filename"))).
 """
 function h5p_get_virtual_filename(dcpl_id, index, name, size)
     lock(liblock)
@@ -4218,7 +4218,7 @@ end
 """
     h5p_get_virtual_prefix(dapl_id::hid_t, prefix::Ptr{Cchar}, size::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5Pget_virtual_prefix`]($(_hdf5_func_doc_url("H5Pget_virtual_prefix"))).
+See `libhdf5` documentation for [`H5Pget_virtual_prefix`]($(HDF5DocURLs.func_url("H5Pget_virtual_prefix"))).
 """
 function h5p_get_virtual_prefix(dapl_id, prefix, size)
     lock(liblock)
@@ -4234,7 +4234,7 @@ end
 """
     h5p_get_virtual_printf_gap(dapl_id::hid_t, gap_size::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Pget_virtual_printf_gap`]($(_hdf5_func_doc_url("H5Pget_virtual_printf_gap"))).
+See `libhdf5` documentation for [`H5Pget_virtual_printf_gap`]($(HDF5DocURLs.func_url("H5Pget_virtual_printf_gap"))).
 """
 function h5p_get_virtual_printf_gap(dapl_id, gap_size)
     lock(liblock)
@@ -4250,7 +4250,7 @@ end
 """
     h5p_get_virtual_srcspace(dcpl_id::hid_t, index::Csize_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Pget_virtual_srcspace`]($(_hdf5_func_doc_url("H5Pget_virtual_srcspace"))).
+See `libhdf5` documentation for [`H5Pget_virtual_srcspace`]($(HDF5DocURLs.func_url("H5Pget_virtual_srcspace"))).
 """
 function h5p_get_virtual_srcspace(dcpl_id, index)
     lock(liblock)
@@ -4266,7 +4266,7 @@ end
 """
     h5p_get_virtual_view(dapl_id::hid_t, view::Ptr{H5D_vds_view_t})
 
-See `libhdf5` documentation for [`H5Pget_virtual_view`]($(_hdf5_func_doc_url("H5Pget_virtual_view"))).
+See `libhdf5` documentation for [`H5Pget_virtual_view`]($(HDF5DocURLs.func_url("H5Pget_virtual_view"))).
 """
 function h5p_get_virtual_view(dapl_id, view)
     lock(liblock)
@@ -4282,7 +4282,7 @@ end
 """
     h5p_get_virtual_vspace(dcpl_id::hid_t, index::Csize_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Pget_virtual_vspace`]($(_hdf5_func_doc_url("H5Pget_virtual_vspace"))).
+See `libhdf5` documentation for [`H5Pget_virtual_vspace`]($(HDF5DocURLs.func_url("H5Pget_virtual_vspace"))).
 """
 function h5p_get_virtual_vspace(dcpl_id, index)
     lock(liblock)
@@ -4298,7 +4298,7 @@ end
 """
     h5p_get_vlen_mem_manager(plist_id::hid_t, alloc_func::Ptr{H5MM_allocate_t}, alloc_info::Ptr{Ptr{Cvoid}}, free_func::Ptr{H5MM_free_t}, free_info::Ptr{Ptr{Cvoid}})
 
-See `libhdf5` documentation for [`H5Pget_vlen_mem_manager`]($(_hdf5_func_doc_url("H5Pget_vlen_mem_manager"))).
+See `libhdf5` documentation for [`H5Pget_vlen_mem_manager`]($(HDF5DocURLs.func_url("H5Pget_vlen_mem_manager"))).
 """
 function h5p_get_vlen_mem_manager(plist_id, alloc_func, alloc_info, free_func, free_info)
     lock(liblock)
@@ -4314,7 +4314,7 @@ end
 """
     h5p_get_vol_id(plist_id::hid_t, vol_id::Ptr{hid_t})
 
-See `libhdf5` documentation for [`H5Pget_vol_id`]($(_hdf5_func_doc_url("H5Pget_vol_id"))).
+See `libhdf5` documentation for [`H5Pget_vol_id`]($(HDF5DocURLs.func_url("H5Pget_vol_id"))).
 """
 function h5p_get_vol_id(plist_id, vol_id)
     lock(liblock)
@@ -4330,7 +4330,7 @@ end
 """
     h5p_get_vol_info(plist_id::hid_t, vol_info::Ptr{Ptr{Cvoid}})
 
-See `libhdf5` documentation for [`H5Pget_vol_info`]($(_hdf5_func_doc_url("H5Pget_vol_info"))).
+See `libhdf5` documentation for [`H5Pget_vol_info`]($(HDF5DocURLs.func_url("H5Pget_vol_info"))).
 """
 function h5p_get_vol_info(plist_id, vol_info)
     lock(liblock)
@@ -4346,7 +4346,7 @@ end
 """
     h5p_set(plist_id::hid_t, name::Cstring, value::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset`]($(_hdf5_func_doc_url("H5Pset"))).
+See `libhdf5` documentation for [`H5Pset`]($(HDF5DocURLs.func_url("H5Pset"))).
 """
 function h5p_set(plist_id, name, value)
     lock(liblock)
@@ -4362,7 +4362,7 @@ end
 """
     h5p_set_alignment(plist_id::hid_t, threshold::hsize_t, alignment::hsize_t)
 
-See `libhdf5` documentation for [`H5Pset_alignment`]($(_hdf5_func_doc_url("H5Pset_alignment"))).
+See `libhdf5` documentation for [`H5Pset_alignment`]($(HDF5DocURLs.func_url("H5Pset_alignment"))).
 """
 function h5p_set_alignment(plist_id, threshold, alignment)
     lock(liblock)
@@ -4378,7 +4378,7 @@ end
 """
     h5p_set_alloc_time(plist_id::hid_t, alloc_time::Cint)
 
-See `libhdf5` documentation for [`H5Pset_alloc_time`]($(_hdf5_func_doc_url("H5Pset_alloc_time"))).
+See `libhdf5` documentation for [`H5Pset_alloc_time`]($(HDF5DocURLs.func_url("H5Pset_alloc_time"))).
 """
 function h5p_set_alloc_time(plist_id, alloc_time)
     lock(liblock)
@@ -4394,7 +4394,7 @@ end
 """
     h5p_set_append_flush(dapl_id::hid_t, ndims::Cuint, boundary::Ptr{hsize_t}, func::H5D_append_cb_t, udata::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset_append_flush`]($(_hdf5_func_doc_url("H5Pset_append_flush"))).
+See `libhdf5` documentation for [`H5Pset_append_flush`]($(HDF5DocURLs.func_url("H5Pset_append_flush"))).
 """
 function h5p_set_append_flush(dapl_id, ndims, boundary, func, udata)
     lock(liblock)
@@ -4410,7 +4410,7 @@ end
 """
     h5p_set_attr_creation_order(plist_id::hid_t, crt_order_flags::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_attr_creation_order`]($(_hdf5_func_doc_url("H5Pset_attr_creation_order"))).
+See `libhdf5` documentation for [`H5Pset_attr_creation_order`]($(HDF5DocURLs.func_url("H5Pset_attr_creation_order"))).
 """
 function h5p_set_attr_creation_order(plist_id, crt_order_flags)
     lock(liblock)
@@ -4426,7 +4426,7 @@ end
 """
     h5p_set_attr_phase_change(plist_id::hid_t, max_compact::Cuint, min_dense::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_attr_phase_change`]($(_hdf5_func_doc_url("H5Pset_attr_phase_change"))).
+See `libhdf5` documentation for [`H5Pset_attr_phase_change`]($(HDF5DocURLs.func_url("H5Pset_attr_phase_change"))).
 """
 function h5p_set_attr_phase_change(plist_id, max_compact, min_dense)
     lock(liblock)
@@ -4442,7 +4442,7 @@ end
 """
     h5p_set_btree_ratios(plist_id::hid_t, left::Cdouble, middle::Cdouble, right::Cdouble)
 
-See `libhdf5` documentation for [`H5Pset_btree_ratios`]($(_hdf5_func_doc_url("H5Pset_btree_ratios"))).
+See `libhdf5` documentation for [`H5Pset_btree_ratios`]($(HDF5DocURLs.func_url("H5Pset_btree_ratios"))).
 """
 function h5p_set_btree_ratios(plist_id, left, middle, right)
     lock(liblock)
@@ -4458,7 +4458,7 @@ end
 """
     h5p_set_buffer(plist_id::hid_t, size::Csize_t, tconv::Ptr{Cvoid}, bkg::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset_buffer`]($(_hdf5_func_doc_url("H5Pset_buffer"))).
+See `libhdf5` documentation for [`H5Pset_buffer`]($(HDF5DocURLs.func_url("H5Pset_buffer"))).
 """
 function h5p_set_buffer(plist_id, size, tconv, bkg)
     lock(liblock)
@@ -4474,7 +4474,7 @@ end
 """
     h5p_set_cache(plist_id::hid_t, mdc_nelmts::Cint, rdcc_nslots::Csize_t, rdcc_nbytes::Csize_t, rdcc_w0::Cdouble)
 
-See `libhdf5` documentation for [`H5Pset_cache`]($(_hdf5_func_doc_url("H5Pset_cache"))).
+See `libhdf5` documentation for [`H5Pset_cache`]($(HDF5DocURLs.func_url("H5Pset_cache"))).
 """
 function h5p_set_cache(plist_id, mdc_nelmts, rdcc_nslots, rdcc_nbytes, rdcc_w0)
     lock(liblock)
@@ -4490,7 +4490,7 @@ end
 """
     h5p_set_char_encoding(plist_id::hid_t, encoding::Cint)
 
-See `libhdf5` documentation for [`H5Pset_char_encoding`]($(_hdf5_func_doc_url("H5Pset_char_encoding"))).
+See `libhdf5` documentation for [`H5Pset_char_encoding`]($(HDF5DocURLs.func_url("H5Pset_char_encoding"))).
 """
 function h5p_set_char_encoding(plist_id, encoding)
     lock(liblock)
@@ -4506,7 +4506,7 @@ end
 """
     h5p_set_chunk(plist_id::hid_t, ndims::Cint, dims::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Pset_chunk`]($(_hdf5_func_doc_url("H5Pset_chunk"))).
+See `libhdf5` documentation for [`H5Pset_chunk`]($(HDF5DocURLs.func_url("H5Pset_chunk"))).
 """
 function h5p_set_chunk(plist_id, ndims, dims)
     lock(liblock)
@@ -4522,7 +4522,7 @@ end
 """
     h5p_set_chunk_cache(dapl_id::hid_t, rdcc_nslots::Csize_t, rdcc_nbytes::Csize_t, rdcc_w0::Cdouble)
 
-See `libhdf5` documentation for [`H5Pset_chunk_cache`]($(_hdf5_func_doc_url("H5Pset_chunk_cache"))).
+See `libhdf5` documentation for [`H5Pset_chunk_cache`]($(HDF5DocURLs.func_url("H5Pset_chunk_cache"))).
 """
 function h5p_set_chunk_cache(dapl_id, rdcc_nslots, rdcc_nbytes, rdcc_w0)
     lock(liblock)
@@ -4538,7 +4538,7 @@ end
 """
     h5p_set_chunk_opts(plist_id::hid_t, opts::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_chunk_opts`]($(_hdf5_func_doc_url("H5Pset_chunk_opts"))).
+See `libhdf5` documentation for [`H5Pset_chunk_opts`]($(HDF5DocURLs.func_url("H5Pset_chunk_opts"))).
 """
 function h5p_set_chunk_opts(plist_id, opts)
     lock(liblock)
@@ -4554,7 +4554,7 @@ end
 """
     h5p_set_copy_object(plist_id::hid_t, copy_options::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_copy_object`]($(_hdf5_func_doc_url("H5Pset_copy_object"))).
+See `libhdf5` documentation for [`H5Pset_copy_object`]($(HDF5DocURLs.func_url("H5Pset_copy_object"))).
 """
 function h5p_set_copy_object(plist_id, copy_options)
     lock(liblock)
@@ -4570,7 +4570,7 @@ end
 """
     h5p_set_core_write_tracking(fapl_id::hid_t, is_enabled::hbool_t, page_size::Csize_t)
 
-See `libhdf5` documentation for [`H5Pset_core_write_tracking`]($(_hdf5_func_doc_url("H5Pset_core_write_tracking"))).
+See `libhdf5` documentation for [`H5Pset_core_write_tracking`]($(HDF5DocURLs.func_url("H5Pset_core_write_tracking"))).
 """
 function h5p_set_core_write_tracking(fapl_id, is_enabled, page_size)
     lock(liblock)
@@ -4586,7 +4586,7 @@ end
 """
     h5p_set_create_intermediate_group(plist_id::hid_t, setting::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_create_intermediate_group`]($(_hdf5_func_doc_url("H5Pset_create_intermediate_group"))).
+See `libhdf5` documentation for [`H5Pset_create_intermediate_group`]($(HDF5DocURLs.func_url("H5Pset_create_intermediate_group"))).
 """
 function h5p_set_create_intermediate_group(plist_id, setting)
     lock(liblock)
@@ -4602,7 +4602,7 @@ end
 """
     h5p_set_data_transform(plist_id::hid_t, expression::Cstring)
 
-See `libhdf5` documentation for [`H5Pset_data_transform`]($(_hdf5_func_doc_url("H5Pset_data_transform"))).
+See `libhdf5` documentation for [`H5Pset_data_transform`]($(HDF5DocURLs.func_url("H5Pset_data_transform"))).
 """
 function h5p_set_data_transform(plist_id, expression)
     lock(liblock)
@@ -4618,7 +4618,7 @@ end
 """
     h5p_set_deflate(plist_id::hid_t, setting::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_deflate`]($(_hdf5_func_doc_url("H5Pset_deflate"))).
+See `libhdf5` documentation for [`H5Pset_deflate`]($(HDF5DocURLs.func_url("H5Pset_deflate"))).
 """
 function h5p_set_deflate(plist_id, setting)
     lock(liblock)
@@ -4634,7 +4634,7 @@ end
 """
     h5p_set_driver(plist_id::hid_t, driver_id::hid_t, driver_info::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset_driver`]($(_hdf5_func_doc_url("H5Pset_driver"))).
+See `libhdf5` documentation for [`H5Pset_driver`]($(HDF5DocURLs.func_url("H5Pset_driver"))).
 """
 function h5p_set_driver(plist_id, driver_id, driver_info)
     lock(liblock)
@@ -4650,7 +4650,7 @@ end
 """
     h5p_set_dset_no_attrs_hint(dcpl_id::hid_t, minimize::hbool_t)
 
-See `libhdf5` documentation for [`H5Pset_dset_no_attrs_hint`]($(_hdf5_func_doc_url("H5Pset_dset_no_attrs_hint"))).
+See `libhdf5` documentation for [`H5Pset_dset_no_attrs_hint`]($(HDF5DocURLs.func_url("H5Pset_dset_no_attrs_hint"))).
 """
 function h5p_set_dset_no_attrs_hint(dcpl_id, minimize)
     lock(liblock)
@@ -4666,7 +4666,7 @@ end
 """
     h5p_set_dxpl_mpio(dxpl_id::hid_t, xfer_mode::Cint)
 
-See `libhdf5` documentation for [`H5Pset_dxpl_mpio`]($(_hdf5_func_doc_url("H5Pset_dxpl_mpio"))).
+See `libhdf5` documentation for [`H5Pset_dxpl_mpio`]($(HDF5DocURLs.func_url("H5Pset_dxpl_mpio"))).
 """
 function h5p_set_dxpl_mpio(dxpl_id, xfer_mode)
     lock(liblock)
@@ -4682,7 +4682,7 @@ end
 """
     h5p_set_edc_check(plist_id::hid_t, check::H5Z_EDC_t)
 
-See `libhdf5` documentation for [`H5Pset_edc_check`]($(_hdf5_func_doc_url("H5Pset_edc_check"))).
+See `libhdf5` documentation for [`H5Pset_edc_check`]($(HDF5DocURLs.func_url("H5Pset_edc_check"))).
 """
 function h5p_set_edc_check(plist_id, check)
     lock(liblock)
@@ -4698,7 +4698,7 @@ end
 """
     h5p_set_efile_prefix(plist_id::hid_t, prefix::Cstring)
 
-See `libhdf5` documentation for [`H5Pset_efile_prefix`]($(_hdf5_func_doc_url("H5Pset_efile_prefix"))).
+See `libhdf5` documentation for [`H5Pset_efile_prefix`]($(HDF5DocURLs.func_url("H5Pset_efile_prefix"))).
 """
 function h5p_set_efile_prefix(plist_id, prefix)
     lock(liblock)
@@ -4714,7 +4714,7 @@ end
 """
     h5p_set_elink_acc_flags(lapl_id::hid_t, flags::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_elink_acc_flags`]($(_hdf5_func_doc_url("H5Pset_elink_acc_flags"))).
+See `libhdf5` documentation for [`H5Pset_elink_acc_flags`]($(HDF5DocURLs.func_url("H5Pset_elink_acc_flags"))).
 """
 function h5p_set_elink_acc_flags(lapl_id, flags)
     lock(liblock)
@@ -4730,7 +4730,7 @@ end
 """
     h5p_set_elink_cb(lapl_id::hid_t, func::H5L_elink_traverse_t, op_data::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset_elink_cb`]($(_hdf5_func_doc_url("H5Pset_elink_cb"))).
+See `libhdf5` documentation for [`H5Pset_elink_cb`]($(HDF5DocURLs.func_url("H5Pset_elink_cb"))).
 """
 function h5p_set_elink_cb(lapl_id, func, op_data)
     lock(liblock)
@@ -4746,7 +4746,7 @@ end
 """
     h5p_set_elink_fapl(lapl_id::hid_t, fapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pset_elink_fapl`]($(_hdf5_func_doc_url("H5Pset_elink_fapl"))).
+See `libhdf5` documentation for [`H5Pset_elink_fapl`]($(HDF5DocURLs.func_url("H5Pset_elink_fapl"))).
 """
 function h5p_set_elink_fapl(lapl_id, fapl_id)
     lock(liblock)
@@ -4762,7 +4762,7 @@ end
 """
     h5p_set_elink_file_cache_size(plist_id::hid_t, efc_size::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_elink_file_cache_size`]($(_hdf5_func_doc_url("H5Pset_elink_file_cache_size"))).
+See `libhdf5` documentation for [`H5Pset_elink_file_cache_size`]($(HDF5DocURLs.func_url("H5Pset_elink_file_cache_size"))).
 """
 function h5p_set_elink_file_cache_size(plist_id, efc_size)
     lock(liblock)
@@ -4778,7 +4778,7 @@ end
 """
     h5p_set_elink_prefix(plist_id::hid_t, prefix::Cstring)
 
-See `libhdf5` documentation for [`H5Pset_elink_prefix`]($(_hdf5_func_doc_url("H5Pset_elink_prefix"))).
+See `libhdf5` documentation for [`H5Pset_elink_prefix`]($(HDF5DocURLs.func_url("H5Pset_elink_prefix"))).
 """
 function h5p_set_elink_prefix(plist_id, prefix)
     lock(liblock)
@@ -4794,7 +4794,7 @@ end
 """
     h5p_set_est_link_info(plist_id::hid_t, est_num_entries::Cuint, est_name_len::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_est_link_info`]($(_hdf5_func_doc_url("H5Pset_est_link_info"))).
+See `libhdf5` documentation for [`H5Pset_est_link_info`]($(HDF5DocURLs.func_url("H5Pset_est_link_info"))).
 """
 function h5p_set_est_link_info(plist_id, est_num_entries, est_name_len)
     lock(liblock)
@@ -4810,7 +4810,7 @@ end
 """
     h5p_set_evict_on_close(fapl_id::hid_t, evict_on_close::hbool_t)
 
-See `libhdf5` documentation for [`H5Pset_evict_on_close`]($(_hdf5_func_doc_url("H5Pset_evict_on_close"))).
+See `libhdf5` documentation for [`H5Pset_evict_on_close`]($(HDF5DocURLs.func_url("H5Pset_evict_on_close"))).
 """
 function h5p_set_evict_on_close(fapl_id, evict_on_close)
     lock(liblock)
@@ -4827,7 +4827,7 @@ end
     @doc """
         h5p_set_external(plist_id::hid_t, name::Cstring, offset::off_t, size::hsize_t)
 
-    See `libhdf5` documentation for [`H5Pset_external`]($(_hdf5_func_doc_url("H5Pset_external"))).
+    See `libhdf5` documentation for [`H5Pset_external`]($(HDF5DocURLs.func_url("H5Pset_external"))).
     """
     function h5p_set_external(plist_id, name, offset, size)
         lock(liblock)
@@ -4845,7 +4845,7 @@ end
     @doc """
         h5p_set_external(plist_id::hid_t, name::Cstring, offset::H5Doff_t, size::hsize_t)
 
-    See `libhdf5` documentation for [`H5Pset_external`]($(_hdf5_func_doc_url("H5Pset_external"))).
+    See `libhdf5` documentation for [`H5Pset_external`]($(HDF5DocURLs.func_url("H5Pset_external"))).
     """
     function h5p_set_external(plist_id, name, offset, size)
         lock(liblock)
@@ -4862,7 +4862,7 @@ end
 """
     h5p_set_family_offset(fapl_id::hid_t, offset::hsize_t)
 
-See `libhdf5` documentation for [`H5Pset_family_offset`]($(_hdf5_func_doc_url("H5Pset_family_offset"))).
+See `libhdf5` documentation for [`H5Pset_family_offset`]($(HDF5DocURLs.func_url("H5Pset_family_offset"))).
 """
 function h5p_set_family_offset(fapl_id, offset)
     lock(liblock)
@@ -4878,7 +4878,7 @@ end
 """
     h5p_set_fapl_core(fapl_id::hid_t, increment::Csize_t, backing_store::hbool_t)
 
-See `libhdf5` documentation for [`H5Pset_fapl_core`]($(_hdf5_func_doc_url("H5Pset_fapl_core"))).
+See `libhdf5` documentation for [`H5Pset_fapl_core`]($(HDF5DocURLs.func_url("H5Pset_fapl_core"))).
 """
 function h5p_set_fapl_core(fapl_id, increment, backing_store)
     lock(liblock)
@@ -4894,7 +4894,7 @@ end
 """
     h5p_set_fapl_family(fapl_id::hid_t, memb_size::hsize_t, memb_fapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pset_fapl_family`]($(_hdf5_func_doc_url("H5Pset_fapl_family"))).
+See `libhdf5` documentation for [`H5Pset_fapl_family`]($(HDF5DocURLs.func_url("H5Pset_fapl_family"))).
 """
 function h5p_set_fapl_family(fapl_id, memb_size, memb_fapl_id)
     lock(liblock)
@@ -4910,7 +4910,7 @@ end
 """
     h5p_set_fapl_hdfs(fapl_id::hid_t, fa::Ptr{H5FD_hdfs_fapl_t})
 
-See `libhdf5` documentation for [`H5Pset_fapl_hdfs`]($(_hdf5_func_doc_url("H5Pset_fapl_hdfs"))).
+See `libhdf5` documentation for [`H5Pset_fapl_hdfs`]($(HDF5DocURLs.func_url("H5Pset_fapl_hdfs"))).
 """
 function h5p_set_fapl_hdfs(fapl_id, fa)
     lock(liblock)
@@ -4926,7 +4926,7 @@ end
 """
     h5p_set_fapl_log(fapl_id::hid_t, logfile::Cstring, flags::Culonglong, buf_size::Csize_t)
 
-See `libhdf5` documentation for [`H5Pset_fapl_log`]($(_hdf5_func_doc_url("H5Pset_fapl_log"))).
+See `libhdf5` documentation for [`H5Pset_fapl_log`]($(HDF5DocURLs.func_url("H5Pset_fapl_log"))).
 """
 function h5p_set_fapl_log(fapl_id, logfile, flags, buf_size)
     lock(liblock)
@@ -4942,7 +4942,7 @@ end
 """
     h5p_set_fapl_multi(fapl_id::hid_t, memb_map::Ptr{H5FD_mem_t}, memb_fapl::Ptr{hid_t}, memb_name::Ptr{Cstring}, memb_addr::Ptr{haddr_t}, relax::hbool_t)
 
-See `libhdf5` documentation for [`H5Pset_fapl_multi`]($(_hdf5_func_doc_url("H5Pset_fapl_multi"))).
+See `libhdf5` documentation for [`H5Pset_fapl_multi`]($(HDF5DocURLs.func_url("H5Pset_fapl_multi"))).
 """
 function h5p_set_fapl_multi(fapl_id, memb_map, memb_fapl, memb_name, memb_addr, relax)
     lock(liblock)
@@ -4958,7 +4958,7 @@ end
 """
     h5p_set_fapl_sec2(fapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pset_fapl_sec2`]($(_hdf5_func_doc_url("H5Pset_fapl_sec2"))).
+See `libhdf5` documentation for [`H5Pset_fapl_sec2`]($(HDF5DocURLs.func_url("H5Pset_fapl_sec2"))).
 """
 function h5p_set_fapl_sec2(fapl_id)
     lock(liblock)
@@ -4974,7 +4974,7 @@ end
 """
     h5p_set_fapl_ros3(fapl_id::hid_t, fa::Ptr{H5FD_ros3_fapl_t})
 
-See `libhdf5` documentation for [`H5Pset_fapl_ros3`]($(_hdf5_func_doc_url("H5Pset_fapl_ros3"))).
+See `libhdf5` documentation for [`H5Pset_fapl_ros3`]($(HDF5DocURLs.func_url("H5Pset_fapl_ros3"))).
 """
 function h5p_set_fapl_ros3(fapl_id, fa)
     lock(liblock)
@@ -4990,7 +4990,7 @@ end
 """
     h5p_set_fapl_split(fapl::hid_t, meta_ext::Cstring, meta_plist_id::hid_t, raw_ext::Cstring, raw_plist_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pset_fapl_split`]($(_hdf5_func_doc_url("H5Pset_fapl_split"))).
+See `libhdf5` documentation for [`H5Pset_fapl_split`]($(HDF5DocURLs.func_url("H5Pset_fapl_split"))).
 """
 function h5p_set_fapl_split(fapl, meta_ext, meta_plist_id, raw_ext, raw_plist_id)
     lock(liblock)
@@ -5006,7 +5006,7 @@ end
 """
     h5p_set_fapl_splitter(fapl_id::hid_t, config_ptr::Ptr{H5FD_splitter_vfd_config_t})
 
-See `libhdf5` documentation for [`H5Pset_fapl_splitter`]($(_hdf5_func_doc_url("H5Pset_fapl_splitter"))).
+See `libhdf5` documentation for [`H5Pset_fapl_splitter`]($(HDF5DocURLs.func_url("H5Pset_fapl_splitter"))).
 """
 function h5p_set_fapl_splitter(fapl_id, config_ptr)
     lock(liblock)
@@ -5022,7 +5022,7 @@ end
 """
     h5p_set_fapl_stdio(fapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pset_fapl_stdio`]($(_hdf5_func_doc_url("H5Pset_fapl_stdio"))).
+See `libhdf5` documentation for [`H5Pset_fapl_stdio`]($(HDF5DocURLs.func_url("H5Pset_fapl_stdio"))).
 """
 function h5p_set_fapl_stdio(fapl_id)
     lock(liblock)
@@ -5038,7 +5038,7 @@ end
 """
     h5p_set_fapl_windows(fapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pset_fapl_windows`]($(_hdf5_func_doc_url("H5Pset_fapl_windows"))).
+See `libhdf5` documentation for [`H5Pset_fapl_windows`]($(HDF5DocURLs.func_url("H5Pset_fapl_windows"))).
 """
 function h5p_set_fapl_windows(fapl_id)
     lock(liblock)
@@ -5054,7 +5054,7 @@ end
 """
     h5p_set_fclose_degree(plist_id::hid_t, fc_degree::Cint)
 
-See `libhdf5` documentation for [`H5Pset_fclose_degree`]($(_hdf5_func_doc_url("H5Pset_fclose_degree"))).
+See `libhdf5` documentation for [`H5Pset_fclose_degree`]($(HDF5DocURLs.func_url("H5Pset_fclose_degree"))).
 """
 function h5p_set_fclose_degree(plist_id, fc_degree)
     lock(liblock)
@@ -5070,7 +5070,7 @@ end
 """
     h5p_set_file_image(fapl_id::hid_t, buf_ptr::Ptr{Cvoid}, buf_len::Csize_t)
 
-See `libhdf5` documentation for [`H5Pset_file_image`]($(_hdf5_func_doc_url("H5Pset_file_image"))).
+See `libhdf5` documentation for [`H5Pset_file_image`]($(HDF5DocURLs.func_url("H5Pset_file_image"))).
 """
 function h5p_set_file_image(fapl_id, buf_ptr, buf_len)
     lock(liblock)
@@ -5086,7 +5086,7 @@ end
 """
     h5p_set_file_image_callbacks(fapl_id::hid_t, callbacks_ptr::Ptr{H5FD_file_image_callbacks_t})
 
-See `libhdf5` documentation for [`H5Pset_file_image_callbacks`]($(_hdf5_func_doc_url("H5Pset_file_image_callbacks"))).
+See `libhdf5` documentation for [`H5Pset_file_image_callbacks`]($(HDF5DocURLs.func_url("H5Pset_file_image_callbacks"))).
 """
 function h5p_set_file_image_callbacks(fapl_id, callbacks_ptr)
     lock(liblock)
@@ -5102,7 +5102,7 @@ end
 """
     h5p_set_file_locking(fapl_id::hid_t, use_file_locking::hbool_t, ignore_when_disabled::hbool_t)
 
-See `libhdf5` documentation for [`H5Pset_file_locking`]($(_hdf5_func_doc_url("H5Pset_file_locking"))).
+See `libhdf5` documentation for [`H5Pset_file_locking`]($(HDF5DocURLs.func_url("H5Pset_file_locking"))).
 """
 function h5p_set_file_locking(fapl_id, use_file_locking, ignore_when_disabled)
     lock(liblock)
@@ -5118,7 +5118,7 @@ end
 """
     h5p_set_file_space(plist_id::hid_t, strategy::H5F_file_space_type_t, threshold::hsize_t)
 
-See `libhdf5` documentation for [`H5Pset_file_space`]($(_hdf5_func_doc_url("H5Pset_file_space"))).
+See `libhdf5` documentation for [`H5Pset_file_space`]($(HDF5DocURLs.func_url("H5Pset_file_space"))).
 """
 function h5p_set_file_space(plist_id, strategy, threshold)
     lock(liblock)
@@ -5134,7 +5134,7 @@ end
 """
     h5p_set_file_space_page_size(plist_id::hid_t, fsp_size::hsize_t)
 
-See `libhdf5` documentation for [`H5Pset_file_space_page_size`]($(_hdf5_func_doc_url("H5Pset_file_space_page_size"))).
+See `libhdf5` documentation for [`H5Pset_file_space_page_size`]($(HDF5DocURLs.func_url("H5Pset_file_space_page_size"))).
 """
 function h5p_set_file_space_page_size(plist_id, fsp_size)
     lock(liblock)
@@ -5150,7 +5150,7 @@ end
 """
     h5p_set_file_space_strategy(plist_id::hid_t, strategy::H5F_fspace_strategy_t, persist::hbool_t, threshold::hsize_t)
 
-See `libhdf5` documentation for [`H5Pset_file_space_strategy`]($(_hdf5_func_doc_url("H5Pset_file_space_strategy"))).
+See `libhdf5` documentation for [`H5Pset_file_space_strategy`]($(HDF5DocURLs.func_url("H5Pset_file_space_strategy"))).
 """
 function h5p_set_file_space_strategy(plist_id, strategy, persist, threshold)
     lock(liblock)
@@ -5166,7 +5166,7 @@ end
 """
     h5p_set_fill_time(plist_id::hid_t, fill_time::H5D_fill_time_t)
 
-See `libhdf5` documentation for [`H5Pset_fill_time`]($(_hdf5_func_doc_url("H5Pset_fill_time"))).
+See `libhdf5` documentation for [`H5Pset_fill_time`]($(HDF5DocURLs.func_url("H5Pset_fill_time"))).
 """
 function h5p_set_fill_time(plist_id, fill_time)
     lock(liblock)
@@ -5182,7 +5182,7 @@ end
 """
     h5p_set_fill_value(plist_id::hid_t, type_id::hid_t, value::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset_fill_value`]($(_hdf5_func_doc_url("H5Pset_fill_value"))).
+See `libhdf5` documentation for [`H5Pset_fill_value`]($(HDF5DocURLs.func_url("H5Pset_fill_value"))).
 """
 function h5p_set_fill_value(plist_id, type_id, value)
     lock(liblock)
@@ -5198,7 +5198,7 @@ end
 """
     h5p_set_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pset_filter`]($(_hdf5_func_doc_url("H5Pset_filter"))).
+See `libhdf5` documentation for [`H5Pset_filter`]($(HDF5DocURLs.func_url("H5Pset_filter"))).
 """
 function h5p_set_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
     lock(liblock)
@@ -5214,7 +5214,7 @@ end
 """
     h5p_set_filter_callback(plist_id::hid_t, func::H5Z_filter_func_t, op_data::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset_filter_callback`]($(_hdf5_func_doc_url("H5Pset_filter_callback"))).
+See `libhdf5` documentation for [`H5Pset_filter_callback`]($(HDF5DocURLs.func_url("H5Pset_filter_callback"))).
 """
 function h5p_set_filter_callback(plist_id, func, op_data)
     lock(liblock)
@@ -5230,7 +5230,7 @@ end
 """
     h5p_set_fletcher32(plist_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pset_fletcher32`]($(_hdf5_func_doc_url("H5Pset_fletcher32"))).
+See `libhdf5` documentation for [`H5Pset_fletcher32`]($(HDF5DocURLs.func_url("H5Pset_fletcher32"))).
 """
 function h5p_set_fletcher32(plist_id)
     lock(liblock)
@@ -5246,7 +5246,7 @@ end
 """
     h5p_set_gc_references(fapl_id::hid_t, gc_ref::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_gc_references`]($(_hdf5_func_doc_url("H5Pset_gc_references"))).
+See `libhdf5` documentation for [`H5Pset_gc_references`]($(HDF5DocURLs.func_url("H5Pset_gc_references"))).
 """
 function h5p_set_gc_references(fapl_id, gc_ref)
     lock(liblock)
@@ -5262,7 +5262,7 @@ end
 """
     h5p_set_hyper_vector_size(plist_id::hid_t, size::Csize_t)
 
-See `libhdf5` documentation for [`H5Pset_hyper_vector_size`]($(_hdf5_func_doc_url("H5Pset_hyper_vector_size"))).
+See `libhdf5` documentation for [`H5Pset_hyper_vector_size`]($(HDF5DocURLs.func_url("H5Pset_hyper_vector_size"))).
 """
 function h5p_set_hyper_vector_size(plist_id, size)
     lock(liblock)
@@ -5278,7 +5278,7 @@ end
 """
     h5p_set_istore_k(plist_id::hid_t, ik::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_istore_k`]($(_hdf5_func_doc_url("H5Pset_istore_k"))).
+See `libhdf5` documentation for [`H5Pset_istore_k`]($(HDF5DocURLs.func_url("H5Pset_istore_k"))).
 """
 function h5p_set_istore_k(plist_id, ik)
     lock(liblock)
@@ -5294,7 +5294,7 @@ end
 """
     h5p_set_layout(plist_id::hid_t, setting::Cint)
 
-See `libhdf5` documentation for [`H5Pset_layout`]($(_hdf5_func_doc_url("H5Pset_layout"))).
+See `libhdf5` documentation for [`H5Pset_layout`]($(HDF5DocURLs.func_url("H5Pset_layout"))).
 """
 function h5p_set_layout(plist_id, setting)
     lock(liblock)
@@ -5310,7 +5310,7 @@ end
 """
     h5p_set_libver_bounds(fapl_id::hid_t, low::Cint, high::Cint)
 
-See `libhdf5` documentation for [`H5Pset_libver_bounds`]($(_hdf5_func_doc_url("H5Pset_libver_bounds"))).
+See `libhdf5` documentation for [`H5Pset_libver_bounds`]($(HDF5DocURLs.func_url("H5Pset_libver_bounds"))).
 """
 function h5p_set_libver_bounds(fapl_id, low, high)
     lock(liblock)
@@ -5326,7 +5326,7 @@ end
 """
     h5p_set_link_creation_order(plist_id::hid_t, crt_order_flags::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_link_creation_order`]($(_hdf5_func_doc_url("H5Pset_link_creation_order"))).
+See `libhdf5` documentation for [`H5Pset_link_creation_order`]($(HDF5DocURLs.func_url("H5Pset_link_creation_order"))).
 """
 function h5p_set_link_creation_order(plist_id, crt_order_flags)
     lock(liblock)
@@ -5342,7 +5342,7 @@ end
 """
     h5p_set_link_phase_change(plist_id::hid_t, max_compact::Cuint, min_dense::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_link_phase_change`]($(_hdf5_func_doc_url("H5Pset_link_phase_change"))).
+See `libhdf5` documentation for [`H5Pset_link_phase_change`]($(HDF5DocURLs.func_url("H5Pset_link_phase_change"))).
 """
 function h5p_set_link_phase_change(plist_id, max_compact, min_dense)
     lock(liblock)
@@ -5358,7 +5358,7 @@ end
 """
     h5p_set_local_heap_size_hint(plist_id::hid_t, size_hint::Csize_t)
 
-See `libhdf5` documentation for [`H5Pset_local_heap_size_hint`]($(_hdf5_func_doc_url("H5Pset_local_heap_size_hint"))).
+See `libhdf5` documentation for [`H5Pset_local_heap_size_hint`]($(HDF5DocURLs.func_url("H5Pset_local_heap_size_hint"))).
 """
 function h5p_set_local_heap_size_hint(plist_id, size_hint)
     lock(liblock)
@@ -5374,7 +5374,7 @@ end
 """
     h5p_set_mcdt_search_cb(plist_id::hid_t, func::H5O_mcdt_search_cb_t, op_data::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset_mcdt_search_cb`]($(_hdf5_func_doc_url("H5Pset_mcdt_search_cb"))).
+See `libhdf5` documentation for [`H5Pset_mcdt_search_cb`]($(HDF5DocURLs.func_url("H5Pset_mcdt_search_cb"))).
 """
 function h5p_set_mcdt_search_cb(plist_id, func, op_data)
     lock(liblock)
@@ -5390,7 +5390,7 @@ end
 """
     h5p_set_mdc_config(plist_id::hid_t, config_ptr::Ptr{H5AC_cache_config_t})
 
-See `libhdf5` documentation for [`H5Pset_mdc_config`]($(_hdf5_func_doc_url("H5Pset_mdc_config"))).
+See `libhdf5` documentation for [`H5Pset_mdc_config`]($(HDF5DocURLs.func_url("H5Pset_mdc_config"))).
 """
 function h5p_set_mdc_config(plist_id, config_ptr)
     lock(liblock)
@@ -5406,7 +5406,7 @@ end
 """
     h5p_set_mdc_image_config(plist_id::hid_t, config_ptr::Ptr{H5AC_cache_image_config_t})
 
-See `libhdf5` documentation for [`H5Pset_mdc_image_config`]($(_hdf5_func_doc_url("H5Pset_mdc_image_config"))).
+See `libhdf5` documentation for [`H5Pset_mdc_image_config`]($(HDF5DocURLs.func_url("H5Pset_mdc_image_config"))).
 """
 function h5p_set_mdc_image_config(plist_id, config_ptr)
     lock(liblock)
@@ -5422,7 +5422,7 @@ end
 """
     h5p_set_mdc_log_options(plist_id::hid_t, is_enabled::hbool_t, location::Cstring, start_on_access::hbool_t)
 
-See `libhdf5` documentation for [`H5Pset_mdc_log_options`]($(_hdf5_func_doc_url("H5Pset_mdc_log_options"))).
+See `libhdf5` documentation for [`H5Pset_mdc_log_options`]($(HDF5DocURLs.func_url("H5Pset_mdc_log_options"))).
 """
 function h5p_set_mdc_log_options(plist_id, is_enabled, location, start_on_access)
     lock(liblock)
@@ -5438,7 +5438,7 @@ end
 """
     h5p_set_meta_block_size(fapl_id::hid_t, size::hsize_t)
 
-See `libhdf5` documentation for [`H5Pset_meta_block_size`]($(_hdf5_func_doc_url("H5Pset_meta_block_size"))).
+See `libhdf5` documentation for [`H5Pset_meta_block_size`]($(HDF5DocURLs.func_url("H5Pset_meta_block_size"))).
 """
 function h5p_set_meta_block_size(fapl_id, size)
     lock(liblock)
@@ -5454,7 +5454,7 @@ end
 """
     h5p_set_metadata_read_attempts(plist_id::hid_t, attempts::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_metadata_read_attempts`]($(_hdf5_func_doc_url("H5Pset_metadata_read_attempts"))).
+See `libhdf5` documentation for [`H5Pset_metadata_read_attempts`]($(HDF5DocURLs.func_url("H5Pset_metadata_read_attempts"))).
 """
 function h5p_set_metadata_read_attempts(plist_id, attempts)
     lock(liblock)
@@ -5470,7 +5470,7 @@ end
 """
     h5p_set_multi_type(fapl_id::hid_t, type::H5FD_mem_t)
 
-See `libhdf5` documentation for [`H5Pset_multi_type`]($(_hdf5_func_doc_url("H5Pset_multi_type"))).
+See `libhdf5` documentation for [`H5Pset_multi_type`]($(HDF5DocURLs.func_url("H5Pset_multi_type"))).
 """
 function h5p_set_multi_type(fapl_id, type)
     lock(liblock)
@@ -5486,7 +5486,7 @@ end
 """
     h5p_set_nbit(plist_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pset_nbit`]($(_hdf5_func_doc_url("H5Pset_nbit"))).
+See `libhdf5` documentation for [`H5Pset_nbit`]($(HDF5DocURLs.func_url("H5Pset_nbit"))).
 """
 function h5p_set_nbit(plist_id)
     lock(liblock)
@@ -5502,7 +5502,7 @@ end
 """
     h5p_set_nlinks(plist_id::hid_t, nlinks::Csize_t)
 
-See `libhdf5` documentation for [`H5Pset_nlinks`]($(_hdf5_func_doc_url("H5Pset_nlinks"))).
+See `libhdf5` documentation for [`H5Pset_nlinks`]($(HDF5DocURLs.func_url("H5Pset_nlinks"))).
 """
 function h5p_set_nlinks(plist_id, nlinks)
     lock(liblock)
@@ -5518,7 +5518,7 @@ end
 """
     h5p_set_obj_track_times(plist_id::hid_t, track_times::UInt8)
 
-See `libhdf5` documentation for [`H5Pset_obj_track_times`]($(_hdf5_func_doc_url("H5Pset_obj_track_times"))).
+See `libhdf5` documentation for [`H5Pset_obj_track_times`]($(HDF5DocURLs.func_url("H5Pset_obj_track_times"))).
 """
 function h5p_set_obj_track_times(plist_id, track_times)
     lock(liblock)
@@ -5534,7 +5534,7 @@ end
 """
     h5p_set_object_flush_cb(plist_id::hid_t, func::H5F_flush_cb_t, udata::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset_object_flush_cb`]($(_hdf5_func_doc_url("H5Pset_object_flush_cb"))).
+See `libhdf5` documentation for [`H5Pset_object_flush_cb`]($(HDF5DocURLs.func_url("H5Pset_object_flush_cb"))).
 """
 function h5p_set_object_flush_cb(plist_id, func, udata)
     lock(liblock)
@@ -5550,7 +5550,7 @@ end
 """
     h5p_set_page_buffer_size(plist_id::hid_t, buf_size::Csize_t, min_meta_per::Cuint, min_raw_per::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_page_buffer_size`]($(_hdf5_func_doc_url("H5Pset_page_buffer_size"))).
+See `libhdf5` documentation for [`H5Pset_page_buffer_size`]($(HDF5DocURLs.func_url("H5Pset_page_buffer_size"))).
 """
 function h5p_set_page_buffer_size(plist_id, buf_size, min_meta_per, min_raw_per)
     lock(liblock)
@@ -5566,7 +5566,7 @@ end
 """
     h5p_set_preserve(plist_id::hid_t, status::hbool_t)
 
-See `libhdf5` documentation for [`H5Pset_preserve`]($(_hdf5_func_doc_url("H5Pset_preserve"))).
+See `libhdf5` documentation for [`H5Pset_preserve`]($(HDF5DocURLs.func_url("H5Pset_preserve"))).
 """
 function h5p_set_preserve(plist_id, status)
     lock(liblock)
@@ -5582,7 +5582,7 @@ end
 """
     h5p_set_scaleoffset(plist_id::hid_t, scale_type::Cint, scale_factor::Cint)
 
-See `libhdf5` documentation for [`H5Pset_scaleoffset`]($(_hdf5_func_doc_url("H5Pset_scaleoffset"))).
+See `libhdf5` documentation for [`H5Pset_scaleoffset`]($(HDF5DocURLs.func_url("H5Pset_scaleoffset"))).
 """
 function h5p_set_scaleoffset(plist_id, scale_type, scale_factor)
     lock(liblock)
@@ -5598,7 +5598,7 @@ end
 """
     h5p_set_shared_mesg_index(plist_id::hid_t, index_num::Cuint, mesg_type_flags::Cuint, min_mesg_size::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_shared_mesg_index`]($(_hdf5_func_doc_url("H5Pset_shared_mesg_index"))).
+See `libhdf5` documentation for [`H5Pset_shared_mesg_index`]($(HDF5DocURLs.func_url("H5Pset_shared_mesg_index"))).
 """
 function h5p_set_shared_mesg_index(plist_id, index_num, mesg_type_flags, min_mesg_size)
     lock(liblock)
@@ -5614,7 +5614,7 @@ end
 """
     h5p_set_shared_mesg_nindexes(plist_id::hid_t, nindexes::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_shared_mesg_nindexes`]($(_hdf5_func_doc_url("H5Pset_shared_mesg_nindexes"))).
+See `libhdf5` documentation for [`H5Pset_shared_mesg_nindexes`]($(HDF5DocURLs.func_url("H5Pset_shared_mesg_nindexes"))).
 """
 function h5p_set_shared_mesg_nindexes(plist_id, nindexes)
     lock(liblock)
@@ -5630,7 +5630,7 @@ end
 """
     h5p_set_shared_mesg_phase_change(plist_id::hid_t, max_list::Cuint, min_btree::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_shared_mesg_phase_change`]($(_hdf5_func_doc_url("H5Pset_shared_mesg_phase_change"))).
+See `libhdf5` documentation for [`H5Pset_shared_mesg_phase_change`]($(HDF5DocURLs.func_url("H5Pset_shared_mesg_phase_change"))).
 """
 function h5p_set_shared_mesg_phase_change(plist_id, max_list, min_btree)
     lock(liblock)
@@ -5646,7 +5646,7 @@ end
 """
     h5p_set_shuffle(plist_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pset_shuffle`]($(_hdf5_func_doc_url("H5Pset_shuffle"))).
+See `libhdf5` documentation for [`H5Pset_shuffle`]($(HDF5DocURLs.func_url("H5Pset_shuffle"))).
 """
 function h5p_set_shuffle(plist_id)
     lock(liblock)
@@ -5662,7 +5662,7 @@ end
 """
     h5p_set_sieve_buf_size(fapl_id::hid_t, size::Csize_t)
 
-See `libhdf5` documentation for [`H5Pset_sieve_buf_size`]($(_hdf5_func_doc_url("H5Pset_sieve_buf_size"))).
+See `libhdf5` documentation for [`H5Pset_sieve_buf_size`]($(HDF5DocURLs.func_url("H5Pset_sieve_buf_size"))).
 """
 function h5p_set_sieve_buf_size(fapl_id, size)
     lock(liblock)
@@ -5678,7 +5678,7 @@ end
 """
     h5p_set_sizes(plist_id::hid_t, sizeof_addr::Csize_t, sizeof_size::Csize_t)
 
-See `libhdf5` documentation for [`H5Pset_sizes`]($(_hdf5_func_doc_url("H5Pset_sizes"))).
+See `libhdf5` documentation for [`H5Pset_sizes`]($(HDF5DocURLs.func_url("H5Pset_sizes"))).
 """
 function h5p_set_sizes(plist_id, sizeof_addr, sizeof_size)
     lock(liblock)
@@ -5694,7 +5694,7 @@ end
 """
     h5p_set_small_data_block_size(fapl_id::hid_t, size::hsize_t)
 
-See `libhdf5` documentation for [`H5Pset_small_data_block_size`]($(_hdf5_func_doc_url("H5Pset_small_data_block_size"))).
+See `libhdf5` documentation for [`H5Pset_small_data_block_size`]($(HDF5DocURLs.func_url("H5Pset_small_data_block_size"))).
 """
 function h5p_set_small_data_block_size(fapl_id, size)
     lock(liblock)
@@ -5710,7 +5710,7 @@ end
 """
     h5p_set_sym_k(plist_id::hid_t, ik::Cuint, lk::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_sym_k`]($(_hdf5_func_doc_url("H5Pset_sym_k"))).
+See `libhdf5` documentation for [`H5Pset_sym_k`]($(HDF5DocURLs.func_url("H5Pset_sym_k"))).
 """
 function h5p_set_sym_k(plist_id, ik, lk)
     lock(liblock)
@@ -5726,7 +5726,7 @@ end
 """
     h5p_set_szip(plist_id::hid_t, options_mask::Cuint, pixels_per_block::Cuint)
 
-See `libhdf5` documentation for [`H5Pset_szip`]($(_hdf5_func_doc_url("H5Pset_szip"))).
+See `libhdf5` documentation for [`H5Pset_szip`]($(HDF5DocURLs.func_url("H5Pset_szip"))).
 """
 function h5p_set_szip(plist_id, options_mask, pixels_per_block)
     lock(liblock)
@@ -5742,7 +5742,7 @@ end
 """
     h5p_set_type_conv_cb(dxpl_id::hid_t, op::H5T_conv_except_func_t, operate_data::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset_type_conv_cb`]($(_hdf5_func_doc_url("H5Pset_type_conv_cb"))).
+See `libhdf5` documentation for [`H5Pset_type_conv_cb`]($(HDF5DocURLs.func_url("H5Pset_type_conv_cb"))).
 """
 function h5p_set_type_conv_cb(dxpl_id, op, operate_data)
     lock(liblock)
@@ -5758,7 +5758,7 @@ end
 """
     h5p_set_userblock(plist_id::hid_t, len::hsize_t)
 
-See `libhdf5` documentation for [`H5Pset_userblock`]($(_hdf5_func_doc_url("H5Pset_userblock"))).
+See `libhdf5` documentation for [`H5Pset_userblock`]($(HDF5DocURLs.func_url("H5Pset_userblock"))).
 """
 function h5p_set_userblock(plist_id, len)
     lock(liblock)
@@ -5774,7 +5774,7 @@ end
 """
     h5p_set_virtual(dcpl_id::hid_t, vspace_id::hid_t, src_file_name::Cstring, src_dset_name::Cstring, src_space_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pset_virtual`]($(_hdf5_func_doc_url("H5Pset_virtual"))).
+See `libhdf5` documentation for [`H5Pset_virtual`]($(HDF5DocURLs.func_url("H5Pset_virtual"))).
 """
 function h5p_set_virtual(dcpl_id, vspace_id, src_file_name, src_dset_name, src_space_id)
     lock(liblock)
@@ -5790,7 +5790,7 @@ end
 """
     h5p_set_virtual_prefix(dapl_id::hid_t, prefix::Cstring)
 
-See `libhdf5` documentation for [`H5Pset_virtual_prefix`]($(_hdf5_func_doc_url("H5Pset_virtual_prefix"))).
+See `libhdf5` documentation for [`H5Pset_virtual_prefix`]($(HDF5DocURLs.func_url("H5Pset_virtual_prefix"))).
 """
 function h5p_set_virtual_prefix(dapl_id, prefix)
     lock(liblock)
@@ -5806,7 +5806,7 @@ end
 """
     h5p_set_virtual_printf_gap(dapl_id::hid_t, gap_size::hsize_t)
 
-See `libhdf5` documentation for [`H5Pset_virtual_printf_gap`]($(_hdf5_func_doc_url("H5Pset_virtual_printf_gap"))).
+See `libhdf5` documentation for [`H5Pset_virtual_printf_gap`]($(HDF5DocURLs.func_url("H5Pset_virtual_printf_gap"))).
 """
 function h5p_set_virtual_printf_gap(dapl_id, gap_size)
     lock(liblock)
@@ -5822,7 +5822,7 @@ end
 """
     h5p_set_virtual_view(dapl_id::hid_t, view::H5D_vds_view_t)
 
-See `libhdf5` documentation for [`H5Pset_virtual_view`]($(_hdf5_func_doc_url("H5Pset_virtual_view"))).
+See `libhdf5` documentation for [`H5Pset_virtual_view`]($(HDF5DocURLs.func_url("H5Pset_virtual_view"))).
 """
 function h5p_set_virtual_view(dapl_id, view)
     lock(liblock)
@@ -5838,7 +5838,7 @@ end
 """
     h5p_set_vlen_mem_manager(plist_id::hid_t, alloc_func::H5MM_allocate_t, alloc_info::Ptr{Cvoid}, free_func::H5MM_free_t, free_info::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset_vlen_mem_manager`]($(_hdf5_func_doc_url("H5Pset_vlen_mem_manager"))).
+See `libhdf5` documentation for [`H5Pset_vlen_mem_manager`]($(HDF5DocURLs.func_url("H5Pset_vlen_mem_manager"))).
 """
 function h5p_set_vlen_mem_manager(plist_id, alloc_func, alloc_info, free_func, free_info)
     lock(liblock)
@@ -5854,7 +5854,7 @@ end
 """
     h5p_set_vol(plist_id::hid_t, new_vol_id::hid_t, new_vol_info::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Pset_vol`]($(_hdf5_func_doc_url("H5Pset_vol"))).
+See `libhdf5` documentation for [`H5Pset_vol`]($(HDF5DocURLs.func_url("H5Pset_vol"))).
 """
 function h5p_set_vol(plist_id, new_vol_id, new_vol_info)
     lock(liblock)
@@ -5870,7 +5870,7 @@ end
 """
     h5p_add_merge_committed_dtype_path(plist_id::hid_t, path::Cstring)
 
-See `libhdf5` documentation for [`H5Padd_merge_committed_dtype_path`]($(_hdf5_func_doc_url("H5Padd_merge_committed_dtype_path"))).
+See `libhdf5` documentation for [`H5Padd_merge_committed_dtype_path`]($(HDF5DocURLs.func_url("H5Padd_merge_committed_dtype_path"))).
 """
 function h5p_add_merge_committed_dtype_path(plist_id, path)
     lock(liblock)
@@ -5886,7 +5886,7 @@ end
 """
     h5p_all_filters_avail(plist_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Pall_filters_avail`]($(_hdf5_func_doc_url("H5Pall_filters_avail"))).
+See `libhdf5` documentation for [`H5Pall_filters_avail`]($(HDF5DocURLs.func_url("H5Pall_filters_avail"))).
 """
 function h5p_all_filters_avail(plist_id)
     lock(liblock)
@@ -5902,7 +5902,7 @@ end
 """
     h5p_close(id::hid_t)
 
-See `libhdf5` documentation for [`H5Pclose`]($(_hdf5_func_doc_url("H5Pclose"))).
+See `libhdf5` documentation for [`H5Pclose`]($(HDF5DocURLs.func_url("H5Pclose"))).
 """
 function h5p_close(id)
     lock(liblock)
@@ -5918,7 +5918,7 @@ end
 """
     h5p_close_class(plist_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pclose_class`]($(_hdf5_func_doc_url("H5Pclose_class"))).
+See `libhdf5` documentation for [`H5Pclose_class`]($(HDF5DocURLs.func_url("H5Pclose_class"))).
 """
 function h5p_close_class(plist_id)
     lock(liblock)
@@ -5934,7 +5934,7 @@ end
 """
     h5p_copy(plist_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Pcopy`]($(_hdf5_func_doc_url("H5Pcopy"))).
+See `libhdf5` documentation for [`H5Pcopy`]($(HDF5DocURLs.func_url("H5Pcopy"))).
 """
 function h5p_copy(plist_id)
     lock(liblock)
@@ -5950,7 +5950,7 @@ end
 """
     h5p_copy_prop(dst_id::hid_t, src_id::hid_t, name::Cstring)
 
-See `libhdf5` documentation for [`H5Pcopy_prop`]($(_hdf5_func_doc_url("H5Pcopy_prop"))).
+See `libhdf5` documentation for [`H5Pcopy_prop`]($(HDF5DocURLs.func_url("H5Pcopy_prop"))).
 """
 function h5p_copy_prop(dst_id, src_id, name)
     lock(liblock)
@@ -5966,7 +5966,7 @@ end
 """
     h5p_create(cls_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Pcreate`]($(_hdf5_func_doc_url("H5Pcreate"))).
+See `libhdf5` documentation for [`H5Pcreate`]($(HDF5DocURLs.func_url("H5Pcreate"))).
 """
 function h5p_create(cls_id)
     lock(liblock)
@@ -5982,7 +5982,7 @@ end
 """
     h5p_create_class(parent::hid_t, name::Cstring, create::H5P_cls_create_func_t, create_data::Ptr{Cvoid}, copy::H5P_cls_copy_func_t, copy_data::Ptr{Cvoid}, close::H5P_cls_close_func_t, close_data::Ptr{Cvoid}) -> hid_t
 
-See `libhdf5` documentation for [`H5Pcreate_class`]($(_hdf5_func_doc_url("H5Pcreate_class"))).
+See `libhdf5` documentation for [`H5Pcreate_class`]($(HDF5DocURLs.func_url("H5Pcreate_class"))).
 """
 function h5p_create_class(parent, name, create, create_data, copy, copy_data, close, close_data)
     lock(liblock)
@@ -5998,7 +5998,7 @@ end
 """
     h5p_decode(buf::Ptr{Cvoid}) -> hid_t
 
-See `libhdf5` documentation for [`H5Pdecode`]($(_hdf5_func_doc_url("H5Pdecode"))).
+See `libhdf5` documentation for [`H5Pdecode`]($(HDF5DocURLs.func_url("H5Pdecode"))).
 """
 function h5p_decode(buf)
     lock(liblock)
@@ -6014,7 +6014,7 @@ end
 """
     h5p_encode(plist_id::hid_t, buf::Ptr{Cvoid}, nalloc::Ptr{Csize_t})
 
-See `libhdf5` documentation for [`H5Pencode1`]($(_hdf5_func_doc_url("H5Pencode1"))).
+See `libhdf5` documentation for [`H5Pencode1`]($(HDF5DocURLs.func_url("H5Pencode1"))).
 """
 function h5p_encode(plist_id, buf, nalloc)
     lock(liblock)
@@ -6030,7 +6030,7 @@ end
 """
     h5p_encode(plist_id::hid_t, buf::Ptr{Cvoid}, nalloc::Ptr{Csize_t}, fapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pencode2`]($(_hdf5_func_doc_url("H5Pencode2"))).
+See `libhdf5` documentation for [`H5Pencode2`]($(HDF5DocURLs.func_url("H5Pencode2"))).
 """
 function h5p_encode(plist_id, buf, nalloc, fapl_id)
     lock(liblock)
@@ -6046,7 +6046,7 @@ end
 """
     h5p_equal(id1::hid_t, id2::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Pequal`]($(_hdf5_func_doc_url("H5Pequal"))).
+See `libhdf5` documentation for [`H5Pequal`]($(HDF5DocURLs.func_url("H5Pequal"))).
 """
 function h5p_equal(id1, id2)
     lock(liblock)
@@ -6062,7 +6062,7 @@ end
 """
     h5p_exist(plist_id::hid_t, name::Cstring) -> Bool
 
-See `libhdf5` documentation for [`H5Pexist`]($(_hdf5_func_doc_url("H5Pexist"))).
+See `libhdf5` documentation for [`H5Pexist`]($(HDF5DocURLs.func_url("H5Pexist"))).
 """
 function h5p_exist(plist_id, name)
     lock(liblock)
@@ -6078,7 +6078,7 @@ end
 """
     h5p_fill_value_defined(plist::hid_t, status::Ptr{H5D_fill_value_t})
 
-See `libhdf5` documentation for [`H5Pfill_value_defined`]($(_hdf5_func_doc_url("H5Pfill_value_defined"))).
+See `libhdf5` documentation for [`H5Pfill_value_defined`]($(HDF5DocURLs.func_url("H5Pfill_value_defined"))).
 """
 function h5p_fill_value_defined(plist, status)
     lock(liblock)
@@ -6094,7 +6094,7 @@ end
 """
     h5p_free_merge_committed_dtype_paths(plist_id::hid_t)
 
-See `libhdf5` documentation for [`H5Pfree_merge_committed_dtype_paths`]($(_hdf5_func_doc_url("H5Pfree_merge_committed_dtype_paths"))).
+See `libhdf5` documentation for [`H5Pfree_merge_committed_dtype_paths`]($(HDF5DocURLs.func_url("H5Pfree_merge_committed_dtype_paths"))).
 """
 function h5p_free_merge_committed_dtype_paths(plist_id)
     lock(liblock)
@@ -6110,7 +6110,7 @@ end
 """
     h5p_insert(plist_id::hid_t, name::Cstring, size::Csize_t, value::Ptr{Cvoid}, prp_set::H5P_prp_set_func_t, prp_get::H5P_prp_get_func_t, prp_delete::H5P_prp_delete_func_t, prp_copy::H5P_prp_copy_func_t, prp_close::H5P_prp_close_func_t)
 
-See `libhdf5` documentation for [`H5Pinsert1`]($(_hdf5_func_doc_url("H5Pinsert1"))).
+See `libhdf5` documentation for [`H5Pinsert1`]($(HDF5DocURLs.func_url("H5Pinsert1"))).
 """
 function h5p_insert(plist_id, name, size, value, prp_set, prp_get, prp_delete, prp_copy, prp_close)
     lock(liblock)
@@ -6126,7 +6126,7 @@ end
 """
     h5p_insert(plist_id::hid_t, name::Cstring, size::Csize_t, value::Ptr{Cvoid}, set::H5P_prp_set_func_t, get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, copy::H5P_prp_copy_func_t, compare::H5P_prp_compare_func_t, close::H5P_prp_close_func_t)
 
-See `libhdf5` documentation for [`H5Pinsert2`]($(_hdf5_func_doc_url("H5Pinsert2"))).
+See `libhdf5` documentation for [`H5Pinsert2`]($(HDF5DocURLs.func_url("H5Pinsert2"))).
 """
 function h5p_insert(plist_id, name, size, value, set, get, prp_del, copy, compare, close)
     lock(liblock)
@@ -6142,7 +6142,7 @@ end
 """
     h5p_isa_class(plist_id::hid_t, pclass_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Pisa_class`]($(_hdf5_func_doc_url("H5Pisa_class"))).
+See `libhdf5` documentation for [`H5Pisa_class`]($(HDF5DocURLs.func_url("H5Pisa_class"))).
 """
 function h5p_isa_class(plist_id, pclass_id)
     lock(liblock)
@@ -6158,7 +6158,7 @@ end
 """
     h5p_iterate(id::hid_t, idx::Ptr{Cint}, iter_func::H5P_iterate_t, iter_data::Ptr{Cvoid}) -> Int
 
-See `libhdf5` documentation for [`H5Piterate`]($(_hdf5_func_doc_url("H5Piterate"))).
+See `libhdf5` documentation for [`H5Piterate`]($(HDF5DocURLs.func_url("H5Piterate"))).
 """
 function h5p_iterate(id, idx, iter_func, iter_data)
     lock(liblock)
@@ -6174,7 +6174,7 @@ end
 """
     h5p_modify_filter(plist_id::hid_t, filter_id::H5Z_filter_t, flags::Cuint, cd_nelmts::Csize_t, cd_values::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Pmodify_filter`]($(_hdf5_func_doc_url("H5Pmodify_filter"))).
+See `libhdf5` documentation for [`H5Pmodify_filter`]($(HDF5DocURLs.func_url("H5Pmodify_filter"))).
 """
 function h5p_modify_filter(plist_id, filter_id, flags, cd_nelmts, cd_values)
     lock(liblock)
@@ -6190,7 +6190,7 @@ end
 """
     h5p_register(cls_id::hid_t, name::Cstring, size::Csize_t, def_value::Ptr{Cvoid}, prp_create::H5P_prp_create_func_t, prp_set::H5P_prp_set_func_t, prp_get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, prp_copy::H5P_prp_copy_func_t, prp_close::H5P_prp_close_func_t)
 
-See `libhdf5` documentation for [`H5Pregister1`]($(_hdf5_func_doc_url("H5Pregister1"))).
+See `libhdf5` documentation for [`H5Pregister1`]($(HDF5DocURLs.func_url("H5Pregister1"))).
 """
 function h5p_register(cls_id, name, size, def_value, prp_create, prp_set, prp_get, prp_del, prp_copy, prp_close)
     lock(liblock)
@@ -6206,7 +6206,7 @@ end
 """
     h5p_register(cls_id::hid_t, name::Cstring, size::Csize_t, def_value::Ptr{Cvoid}, create::H5P_prp_create_func_t, set::H5P_prp_set_func_t, get::H5P_prp_get_func_t, prp_del::H5P_prp_delete_func_t, copy::H5P_prp_copy_func_t, compare::H5P_prp_compare_func_t, close::H5P_prp_close_func_t)
 
-See `libhdf5` documentation for [`H5Pregister2`]($(_hdf5_func_doc_url("H5Pregister2"))).
+See `libhdf5` documentation for [`H5Pregister2`]($(HDF5DocURLs.func_url("H5Pregister2"))).
 """
 function h5p_register(cls_id, name, size, def_value, create, set, get, prp_del, copy, compare, close)
     lock(liblock)
@@ -6222,7 +6222,7 @@ end
 """
     h5p_remove(plist_id::hid_t, name::Cstring)
 
-See `libhdf5` documentation for [`H5Premove`]($(_hdf5_func_doc_url("H5Premove"))).
+See `libhdf5` documentation for [`H5Premove`]($(HDF5DocURLs.func_url("H5Premove"))).
 """
 function h5p_remove(plist_id, name)
     lock(liblock)
@@ -6238,7 +6238,7 @@ end
 """
     h5p_remove_filter(plist_id::hid_t, filter_id::H5Z_filter_t)
 
-See `libhdf5` documentation for [`H5Premove_filter`]($(_hdf5_func_doc_url("H5Premove_filter"))).
+See `libhdf5` documentation for [`H5Premove_filter`]($(HDF5DocURLs.func_url("H5Premove_filter"))).
 """
 function h5p_remove_filter(plist_id, filter_id)
     lock(liblock)
@@ -6254,7 +6254,7 @@ end
 """
     h5p_unregister(pclass_id::hid_t, name::Cstring)
 
-See `libhdf5` documentation for [`H5Punregister`]($(_hdf5_func_doc_url("H5Punregister"))).
+See `libhdf5` documentation for [`H5Punregister`]($(HDF5DocURLs.func_url("H5Punregister"))).
 """
 function h5p_unregister(pclass_id, name)
     lock(liblock)
@@ -6270,7 +6270,7 @@ end
 """
     h5pl_set_loading_state(plugin_control_mask::Cuint)
 
-See `libhdf5` documentation for [`H5PLset_loading_state`]($(_hdf5_func_doc_url("H5PLset_loading_state"))).
+See `libhdf5` documentation for [`H5PLset_loading_state`]($(HDF5DocURLs.func_url("H5PLset_loading_state"))).
 """
 function h5pl_set_loading_state(plugin_control_mask)
     lock(liblock)
@@ -6286,7 +6286,7 @@ end
 """
     h5pl_get_loading_state(plugin_control_mask::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5PLget_loading_state`]($(_hdf5_func_doc_url("H5PLget_loading_state"))).
+See `libhdf5` documentation for [`H5PLget_loading_state`]($(HDF5DocURLs.func_url("H5PLget_loading_state"))).
 """
 function h5pl_get_loading_state(plugin_control_mask)
     lock(liblock)
@@ -6302,7 +6302,7 @@ end
 """
     h5pl_append(search_path::Cstring)
 
-See `libhdf5` documentation for [`H5PLappend`]($(_hdf5_func_doc_url("H5PLappend"))).
+See `libhdf5` documentation for [`H5PLappend`]($(HDF5DocURLs.func_url("H5PLappend"))).
 """
 function h5pl_append(search_path)
     lock(liblock)
@@ -6318,7 +6318,7 @@ end
 """
     h5pl_prepend(search_path::Cstring)
 
-See `libhdf5` documentation for [`H5PLprepend`]($(_hdf5_func_doc_url("H5PLprepend"))).
+See `libhdf5` documentation for [`H5PLprepend`]($(HDF5DocURLs.func_url("H5PLprepend"))).
 """
 function h5pl_prepend(search_path)
     lock(liblock)
@@ -6334,7 +6334,7 @@ end
 """
     h5pl_replace(search_path::Cstring, index::Cuint)
 
-See `libhdf5` documentation for [`H5PLreplace`]($(_hdf5_func_doc_url("H5PLreplace"))).
+See `libhdf5` documentation for [`H5PLreplace`]($(HDF5DocURLs.func_url("H5PLreplace"))).
 """
 function h5pl_replace(search_path, index)
     lock(liblock)
@@ -6350,7 +6350,7 @@ end
 """
     h5pl_insert(search_path::Cstring, index::Cuint)
 
-See `libhdf5` documentation for [`H5PLinsert`]($(_hdf5_func_doc_url("H5PLinsert"))).
+See `libhdf5` documentation for [`H5PLinsert`]($(HDF5DocURLs.func_url("H5PLinsert"))).
 """
 function h5pl_insert(search_path, index)
     lock(liblock)
@@ -6366,7 +6366,7 @@ end
 """
     h5pl_remove(index::Cuint)
 
-See `libhdf5` documentation for [`H5PLremove`]($(_hdf5_func_doc_url("H5PLremove"))).
+See `libhdf5` documentation for [`H5PLremove`]($(HDF5DocURLs.func_url("H5PLremove"))).
 """
 function h5pl_remove(index)
     lock(liblock)
@@ -6382,7 +6382,7 @@ end
 """
     h5pl_get(index::Cuint, path_buf::Ptr{Cchar}, buf_size::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5PLget`]($(_hdf5_func_doc_url("H5PLget"))).
+See `libhdf5` documentation for [`H5PLget`]($(HDF5DocURLs.func_url("H5PLget"))).
 """
 function h5pl_get(index, path_buf, buf_size)
     lock(liblock)
@@ -6398,7 +6398,7 @@ end
 """
     h5pl_size(num_paths::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5PLsize`]($(_hdf5_func_doc_url("H5PLsize"))).
+See `libhdf5` documentation for [`H5PLsize`]($(HDF5DocURLs.func_url("H5PLsize"))).
 """
 function h5pl_size(num_paths)
     lock(liblock)
@@ -6414,7 +6414,7 @@ end
 """
     h5r_create(ref::Ptr{Cvoid}, loc_id::hid_t, pathname::Cstring, ref_type::Cint, space_id::hid_t)
 
-See `libhdf5` documentation for [`H5Rcreate`]($(_hdf5_func_doc_url("H5Rcreate"))).
+See `libhdf5` documentation for [`H5Rcreate`]($(HDF5DocURLs.func_url("H5Rcreate"))).
 """
 function h5r_create(ref, loc_id, pathname, ref_type, space_id)
     lock(liblock)
@@ -6430,7 +6430,7 @@ end
 """
     h5r_dereference(obj_id::hid_t, oapl_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid}) -> hid_t
 
-See `libhdf5` documentation for [`H5Rdereference2`]($(_hdf5_func_doc_url("H5Rdereference2"))).
+See `libhdf5` documentation for [`H5Rdereference2`]($(HDF5DocURLs.func_url("H5Rdereference2"))).
 """
 function h5r_dereference(obj_id, oapl_id, ref_type, ref)
     lock(liblock)
@@ -6446,7 +6446,7 @@ end
 """
     h5r_get_obj_type(loc_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid}, obj_type::Ptr{Cint})
 
-See `libhdf5` documentation for [`H5Rget_obj_type2`]($(_hdf5_func_doc_url("H5Rget_obj_type2"))).
+See `libhdf5` documentation for [`H5Rget_obj_type2`]($(HDF5DocURLs.func_url("H5Rget_obj_type2"))).
 """
 function h5r_get_obj_type(loc_id, ref_type, ref, obj_type)
     lock(liblock)
@@ -6462,7 +6462,7 @@ end
 """
     h5r_get_region(loc_id::hid_t, ref_type::Cint, ref::Ptr{Cvoid}) -> hid_t
 
-See `libhdf5` documentation for [`H5Rget_region`]($(_hdf5_func_doc_url("H5Rget_region"))).
+See `libhdf5` documentation for [`H5Rget_region`]($(HDF5DocURLs.func_url("H5Rget_region"))).
 """
 function h5r_get_region(loc_id, ref_type, ref)
     lock(liblock)
@@ -6478,7 +6478,7 @@ end
 """
     h5s_close(space_id::hid_t)
 
-See `libhdf5` documentation for [`H5Sclose`]($(_hdf5_func_doc_url("H5Sclose"))).
+See `libhdf5` documentation for [`H5Sclose`]($(HDF5DocURLs.func_url("H5Sclose"))).
 """
 function h5s_close(space_id)
     lock(liblock)
@@ -6494,7 +6494,7 @@ end
 """
     h5s_combine_hyperslab(dspace_id::hid_t, seloper::H5S_seloper_t, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Scombine_hyperslab`]($(_hdf5_func_doc_url("H5Scombine_hyperslab"))).
+See `libhdf5` documentation for [`H5Scombine_hyperslab`]($(HDF5DocURLs.func_url("H5Scombine_hyperslab"))).
 """
 function h5s_combine_hyperslab(dspace_id, seloper, start, stride, count, block)
     lock(liblock)
@@ -6511,7 +6511,7 @@ end
     @doc """
         h5s_combine_select(space1_id::hid_t, op::H5S_seloper_t, space2_id::hid_t) -> hid_t
 
-    See `libhdf5` documentation for [`H5Scombine_select`]($(_hdf5_func_doc_url("H5Scombine_select"))).
+    See `libhdf5` documentation for [`H5Scombine_select`]($(HDF5DocURLs.func_url("H5Scombine_select"))).
     """
     function h5s_combine_select(space1_id, op, space2_id)
         lock(liblock)
@@ -6528,7 +6528,7 @@ end
 """
     h5s_copy(space_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Scopy`]($(_hdf5_func_doc_url("H5Scopy"))).
+See `libhdf5` documentation for [`H5Scopy`]($(HDF5DocURLs.func_url("H5Scopy"))).
 """
 function h5s_copy(space_id)
     lock(liblock)
@@ -6544,7 +6544,7 @@ end
 """
     h5s_create(class::Cint) -> hid_t
 
-See `libhdf5` documentation for [`H5Screate`]($(_hdf5_func_doc_url("H5Screate"))).
+See `libhdf5` documentation for [`H5Screate`]($(HDF5DocURLs.func_url("H5Screate"))).
 """
 function h5s_create(class)
     lock(liblock)
@@ -6560,7 +6560,7 @@ end
 """
     h5s_create_simple(rank::Cint, current_dims::Ptr{hsize_t}, maximum_dims::Ptr{hsize_t}) -> hid_t
 
-See `libhdf5` documentation for [`H5Screate_simple`]($(_hdf5_func_doc_url("H5Screate_simple"))).
+See `libhdf5` documentation for [`H5Screate_simple`]($(HDF5DocURLs.func_url("H5Screate_simple"))).
 """
 function h5s_create_simple(rank, current_dims, maximum_dims)
     lock(liblock)
@@ -6576,7 +6576,7 @@ end
 """
     h5s_extent_copy(dst::hid_t, src::hid_t)
 
-See `libhdf5` documentation for [`H5Sextent_copy`]($(_hdf5_func_doc_url("H5Sextent_copy"))).
+See `libhdf5` documentation for [`H5Sextent_copy`]($(HDF5DocURLs.func_url("H5Sextent_copy"))).
 """
 function h5s_extent_copy(dst, src)
     lock(liblock)
@@ -6592,7 +6592,7 @@ end
 """
     h5s_extent_equal(space1_id::hid_t, space2_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Sextent_equal`]($(_hdf5_func_doc_url("H5Sextent_equal"))).
+See `libhdf5` documentation for [`H5Sextent_equal`]($(HDF5DocURLs.func_url("H5Sextent_equal"))).
 """
 function h5s_extent_equal(space1_id, space2_id)
     lock(liblock)
@@ -6608,7 +6608,7 @@ end
 """
     h5s_get_regular_hyperslab(space_id::hid_t, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Sget_regular_hyperslab`]($(_hdf5_func_doc_url("H5Sget_regular_hyperslab"))).
+See `libhdf5` documentation for [`H5Sget_regular_hyperslab`]($(HDF5DocURLs.func_url("H5Sget_regular_hyperslab"))).
 """
 function h5s_get_regular_hyperslab(space_id, start, stride, count, block)
     lock(liblock)
@@ -6624,7 +6624,7 @@ end
 """
     h5s_get_select_bounds(space_id::hid_t, starts::Ptr{hsize_t}, ends::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Sget_select_bounds`]($(_hdf5_func_doc_url("H5Sget_select_bounds"))).
+See `libhdf5` documentation for [`H5Sget_select_bounds`]($(HDF5DocURLs.func_url("H5Sget_select_bounds"))).
 """
 function h5s_get_select_bounds(space_id, starts, ends)
     lock(liblock)
@@ -6640,7 +6640,7 @@ end
 """
     h5s_get_select_elem_npoints(space_id::hid_t) -> hssize_t
 
-See `libhdf5` documentation for [`H5Sget_select_elem_npoints`]($(_hdf5_func_doc_url("H5Sget_select_elem_npoints"))).
+See `libhdf5` documentation for [`H5Sget_select_elem_npoints`]($(HDF5DocURLs.func_url("H5Sget_select_elem_npoints"))).
 """
 function h5s_get_select_elem_npoints(space_id)
     lock(liblock)
@@ -6656,7 +6656,7 @@ end
 """
     h5s_get_select_elem_pointlist(space_id::hid_t, startpoint::hsize_t, numpoints::hsize_t, buf::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Sget_select_elem_pointlist`]($(_hdf5_func_doc_url("H5Sget_select_elem_pointlist"))).
+See `libhdf5` documentation for [`H5Sget_select_elem_pointlist`]($(HDF5DocURLs.func_url("H5Sget_select_elem_pointlist"))).
 """
 function h5s_get_select_elem_pointlist(space_id, startpoint, numpoints, buf)
     lock(liblock)
@@ -6672,7 +6672,7 @@ end
 """
     h5s_get_select_hyper_blocklist(space_id::hid_t, startblock::hsize_t, numblocks::hsize_t, buf::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Sget_select_hyper_blocklist`]($(_hdf5_func_doc_url("H5Sget_select_hyper_blocklist"))).
+See `libhdf5` documentation for [`H5Sget_select_hyper_blocklist`]($(HDF5DocURLs.func_url("H5Sget_select_hyper_blocklist"))).
 """
 function h5s_get_select_hyper_blocklist(space_id, startblock, numblocks, buf)
     lock(liblock)
@@ -6688,7 +6688,7 @@ end
 """
     h5s_get_select_hyper_nblocks(space_id::hid_t) -> hssize_t
 
-See `libhdf5` documentation for [`H5Sget_select_hyper_nblocks`]($(_hdf5_func_doc_url("H5Sget_select_hyper_nblocks"))).
+See `libhdf5` documentation for [`H5Sget_select_hyper_nblocks`]($(HDF5DocURLs.func_url("H5Sget_select_hyper_nblocks"))).
 """
 function h5s_get_select_hyper_nblocks(space_id)
     lock(liblock)
@@ -6704,7 +6704,7 @@ end
 """
     h5s_get_select_npoints(space_id::hid_t) -> hsize_t
 
-See `libhdf5` documentation for [`H5Sget_select_npoints`]($(_hdf5_func_doc_url("H5Sget_select_npoints"))).
+See `libhdf5` documentation for [`H5Sget_select_npoints`]($(HDF5DocURLs.func_url("H5Sget_select_npoints"))).
 """
 function h5s_get_select_npoints(space_id)
     lock(liblock)
@@ -6720,7 +6720,7 @@ end
 """
     h5s_get_select_type(space_id::hid_t) -> H5S_sel_type
 
-See `libhdf5` documentation for [`H5Sget_select_type`]($(_hdf5_func_doc_url("H5Sget_select_type"))).
+See `libhdf5` documentation for [`H5Sget_select_type`]($(HDF5DocURLs.func_url("H5Sget_select_type"))).
 """
 function h5s_get_select_type(space_id)
     lock(liblock)
@@ -6736,7 +6736,7 @@ end
 """
     h5s_get_simple_extent_dims(space_id::hid_t, dims::Ptr{hsize_t}, maxdims::Ptr{hsize_t}) -> Int
 
-See `libhdf5` documentation for [`H5Sget_simple_extent_dims`]($(_hdf5_func_doc_url("H5Sget_simple_extent_dims"))).
+See `libhdf5` documentation for [`H5Sget_simple_extent_dims`]($(HDF5DocURLs.func_url("H5Sget_simple_extent_dims"))).
 """
 function h5s_get_simple_extent_dims(space_id, dims, maxdims)
     lock(liblock)
@@ -6752,7 +6752,7 @@ end
 """
     h5s_get_simple_extent_ndims(space_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Sget_simple_extent_ndims`]($(_hdf5_func_doc_url("H5Sget_simple_extent_ndims"))).
+See `libhdf5` documentation for [`H5Sget_simple_extent_ndims`]($(HDF5DocURLs.func_url("H5Sget_simple_extent_ndims"))).
 """
 function h5s_get_simple_extent_ndims(space_id)
     lock(liblock)
@@ -6768,7 +6768,7 @@ end
 """
     h5s_get_simple_extent_type(space_id::hid_t) -> H5S_class_t
 
-See `libhdf5` documentation for [`H5Sget_simple_extent_type`]($(_hdf5_func_doc_url("H5Sget_simple_extent_type"))).
+See `libhdf5` documentation for [`H5Sget_simple_extent_type`]($(HDF5DocURLs.func_url("H5Sget_simple_extent_type"))).
 """
 function h5s_get_simple_extent_type(space_id)
     lock(liblock)
@@ -6784,7 +6784,7 @@ end
 """
     h5s_is_regular_hyperslab(space_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Sis_regular_hyperslab`]($(_hdf5_func_doc_url("H5Sis_regular_hyperslab"))).
+See `libhdf5` documentation for [`H5Sis_regular_hyperslab`]($(HDF5DocURLs.func_url("H5Sis_regular_hyperslab"))).
 """
 function h5s_is_regular_hyperslab(space_id)
     lock(liblock)
@@ -6800,7 +6800,7 @@ end
 """
     h5s_is_simple(space_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Sis_simple`]($(_hdf5_func_doc_url("H5Sis_simple"))).
+See `libhdf5` documentation for [`H5Sis_simple`]($(HDF5DocURLs.func_url("H5Sis_simple"))).
 """
 function h5s_is_simple(space_id)
     lock(liblock)
@@ -6816,7 +6816,7 @@ end
 """
     h5s_modify_select(space_id::hid_t, op::H5S_seloper_t, space2_id::hid_t)
 
-See `libhdf5` documentation for [`H5Smodify_select`]($(_hdf5_func_doc_url("H5Smodify_select"))).
+See `libhdf5` documentation for [`H5Smodify_select`]($(HDF5DocURLs.func_url("H5Smodify_select"))).
 """
 function h5s_modify_select(space_id, op, space2_id)
     lock(liblock)
@@ -6832,7 +6832,7 @@ end
 """
     h5s_offset_simple(space_id::hid_t, offset::Ptr{hssize_t})
 
-See `libhdf5` documentation for [`H5Soffset_simple`]($(_hdf5_func_doc_url("H5Soffset_simple"))).
+See `libhdf5` documentation for [`H5Soffset_simple`]($(HDF5DocURLs.func_url("H5Soffset_simple"))).
 """
 function h5s_offset_simple(space_id, offset)
     lock(liblock)
@@ -6848,7 +6848,7 @@ end
 """
     h5s_select_adjust(space_id::hid_t, offset::Ptr{hssize_t})
 
-See `libhdf5` documentation for [`H5Sselect_adjust`]($(_hdf5_func_doc_url("H5Sselect_adjust"))).
+See `libhdf5` documentation for [`H5Sselect_adjust`]($(HDF5DocURLs.func_url("H5Sselect_adjust"))).
 """
 function h5s_select_adjust(space_id, offset)
     lock(liblock)
@@ -6864,7 +6864,7 @@ end
 """
     h5s_select_all(space_id::hid_t)
 
-See `libhdf5` documentation for [`H5Sselect_all`]($(_hdf5_func_doc_url("H5Sselect_all"))).
+See `libhdf5` documentation for [`H5Sselect_all`]($(HDF5DocURLs.func_url("H5Sselect_all"))).
 """
 function h5s_select_all(space_id)
     lock(liblock)
@@ -6880,7 +6880,7 @@ end
 """
     h5s_select_copy(dst::hid_t, src::hid_t)
 
-See `libhdf5` documentation for [`H5Sselect_copy`]($(_hdf5_func_doc_url("H5Sselect_copy"))).
+See `libhdf5` documentation for [`H5Sselect_copy`]($(HDF5DocURLs.func_url("H5Sselect_copy"))).
 """
 function h5s_select_copy(dst, src)
     lock(liblock)
@@ -6896,7 +6896,7 @@ end
 """
     h5s_select_elements(space_id::hid_t, op::H5S_seloper_t, num_elem::Csize_t, coord::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Sselect_elements`]($(_hdf5_func_doc_url("H5Sselect_elements"))).
+See `libhdf5` documentation for [`H5Sselect_elements`]($(HDF5DocURLs.func_url("H5Sselect_elements"))).
 """
 function h5s_select_elements(space_id, op, num_elem, coord)
     lock(liblock)
@@ -6912,7 +6912,7 @@ end
 """
     h5s_select_hyperslab(dspace_id::hid_t, seloper::H5S_seloper_t, start::Ptr{hsize_t}, stride::Ptr{hsize_t}, count::Ptr{hsize_t}, block::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Sselect_hyperslab`]($(_hdf5_func_doc_url("H5Sselect_hyperslab"))).
+See `libhdf5` documentation for [`H5Sselect_hyperslab`]($(HDF5DocURLs.func_url("H5Sselect_hyperslab"))).
 """
 function h5s_select_hyperslab(dspace_id, seloper, start, stride, count, block)
     lock(liblock)
@@ -6928,7 +6928,7 @@ end
 """
     h5s_select_intersect_block(space_id::hid_t, starts::Ptr{hsize_t}, ends::Ptr{hsize_t}) -> Bool
 
-See `libhdf5` documentation for [`H5Sselect_intersect_block`]($(_hdf5_func_doc_url("H5Sselect_intersect_block"))).
+See `libhdf5` documentation for [`H5Sselect_intersect_block`]($(HDF5DocURLs.func_url("H5Sselect_intersect_block"))).
 """
 function h5s_select_intersect_block(space_id, starts, ends)
     lock(liblock)
@@ -6944,7 +6944,7 @@ end
 """
     h5s_select_shape_same(space1_id::hid_t, space2_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Sselect_shape_same`]($(_hdf5_func_doc_url("H5Sselect_shape_same"))).
+See `libhdf5` documentation for [`H5Sselect_shape_same`]($(HDF5DocURLs.func_url("H5Sselect_shape_same"))).
 """
 function h5s_select_shape_same(space1_id, space2_id)
     lock(liblock)
@@ -6960,7 +6960,7 @@ end
 """
     h5s_select_valid(spaceid::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Sselect_valid`]($(_hdf5_func_doc_url("H5Sselect_valid"))).
+See `libhdf5` documentation for [`H5Sselect_valid`]($(HDF5DocURLs.func_url("H5Sselect_valid"))).
 """
 function h5s_select_valid(spaceid)
     lock(liblock)
@@ -6976,7 +6976,7 @@ end
 """
     h5s_set_extent_none(space_id::hid_t)
 
-See `libhdf5` documentation for [`H5Sset_extent_none`]($(_hdf5_func_doc_url("H5Sset_extent_none"))).
+See `libhdf5` documentation for [`H5Sset_extent_none`]($(HDF5DocURLs.func_url("H5Sset_extent_none"))).
 """
 function h5s_set_extent_none(space_id)
     lock(liblock)
@@ -6992,7 +6992,7 @@ end
 """
     h5s_set_extent_simple(dspace_id::hid_t, rank::Cint, current_size::Ptr{hsize_t}, maximum_size::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5Sset_extent_simple`]($(_hdf5_func_doc_url("H5Sset_extent_simple"))).
+See `libhdf5` documentation for [`H5Sset_extent_simple`]($(HDF5DocURLs.func_url("H5Sset_extent_simple"))).
 """
 function h5s_set_extent_simple(dspace_id, rank, current_size, maximum_size)
     lock(liblock)
@@ -7008,7 +7008,7 @@ end
 """
     h5t_array_create(basetype_id::hid_t, ndims::Cuint, sz::Ptr{hsize_t}) -> hid_t
 
-See `libhdf5` documentation for [`H5Tarray_create2`]($(_hdf5_func_doc_url("H5Tarray_create2"))).
+See `libhdf5` documentation for [`H5Tarray_create2`]($(HDF5DocURLs.func_url("H5Tarray_create2"))).
 """
 function h5t_array_create(basetype_id, ndims, sz)
     lock(liblock)
@@ -7024,7 +7024,7 @@ end
 """
     h5t_close(dtype_id::hid_t)
 
-See `libhdf5` documentation for [`H5Tclose`]($(_hdf5_func_doc_url("H5Tclose"))).
+See `libhdf5` documentation for [`H5Tclose`]($(HDF5DocURLs.func_url("H5Tclose"))).
 """
 function h5t_close(dtype_id)
     lock(liblock)
@@ -7040,7 +7040,7 @@ end
 """
     h5t_committed(dtype_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Tcommitted`]($(_hdf5_func_doc_url("H5Tcommitted"))).
+See `libhdf5` documentation for [`H5Tcommitted`]($(HDF5DocURLs.func_url("H5Tcommitted"))).
 """
 function h5t_committed(dtype_id)
     lock(liblock)
@@ -7056,7 +7056,7 @@ end
 """
     h5t_commit(loc_id::hid_t, name::Cstring, dtype_id::hid_t, lcpl_id::hid_t, tcpl_id::hid_t, tapl_id::hid_t)
 
-See `libhdf5` documentation for [`H5Tcommit2`]($(_hdf5_func_doc_url("H5Tcommit2"))).
+See `libhdf5` documentation for [`H5Tcommit2`]($(HDF5DocURLs.func_url("H5Tcommit2"))).
 """
 function h5t_commit(loc_id, name, dtype_id, lcpl_id, tcpl_id, tapl_id)
     lock(liblock)
@@ -7072,7 +7072,7 @@ end
 """
     h5t_copy(dtype_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Tcopy`]($(_hdf5_func_doc_url("H5Tcopy"))).
+See `libhdf5` documentation for [`H5Tcopy`]($(HDF5DocURLs.func_url("H5Tcopy"))).
 """
 function h5t_copy(dtype_id)
     lock(liblock)
@@ -7088,7 +7088,7 @@ end
 """
     h5t_create(class_id::Cint, sz::Csize_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Tcreate`]($(_hdf5_func_doc_url("H5Tcreate"))).
+See `libhdf5` documentation for [`H5Tcreate`]($(HDF5DocURLs.func_url("H5Tcreate"))).
 """
 function h5t_create(class_id, sz)
     lock(liblock)
@@ -7104,7 +7104,7 @@ end
 """
     h5t_enum_insert(dtype_id::hid_t, name::Cstring, value::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5Tenum_insert`]($(_hdf5_func_doc_url("H5Tenum_insert"))).
+See `libhdf5` documentation for [`H5Tenum_insert`]($(HDF5DocURLs.func_url("H5Tenum_insert"))).
 """
 function h5t_enum_insert(dtype_id, name, value)
     lock(liblock)
@@ -7120,7 +7120,7 @@ end
 """
     h5t_equal(dtype_id1::hid_t, dtype_id2::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Tequal`]($(_hdf5_func_doc_url("H5Tequal"))).
+See `libhdf5` documentation for [`H5Tequal`]($(HDF5DocURLs.func_url("H5Tequal"))).
 """
 function h5t_equal(dtype_id1, dtype_id2)
     lock(liblock)
@@ -7136,7 +7136,7 @@ end
 """
     h5t_get_array_dims(dtype_id::hid_t, dims::Ptr{hsize_t}) -> Int
 
-See `libhdf5` documentation for [`H5Tget_array_dims2`]($(_hdf5_func_doc_url("H5Tget_array_dims2"))).
+See `libhdf5` documentation for [`H5Tget_array_dims2`]($(HDF5DocURLs.func_url("H5Tget_array_dims2"))).
 """
 function h5t_get_array_dims(dtype_id, dims)
     lock(liblock)
@@ -7152,7 +7152,7 @@ end
 """
     h5t_get_array_ndims(dtype_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Tget_array_ndims`]($(_hdf5_func_doc_url("H5Tget_array_ndims"))).
+See `libhdf5` documentation for [`H5Tget_array_ndims`]($(HDF5DocURLs.func_url("H5Tget_array_ndims"))).
 """
 function h5t_get_array_ndims(dtype_id)
     lock(liblock)
@@ -7168,7 +7168,7 @@ end
 """
     h5t_get_class(dtype_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Tget_class`]($(_hdf5_func_doc_url("H5Tget_class"))).
+See `libhdf5` documentation for [`H5Tget_class`]($(HDF5DocURLs.func_url("H5Tget_class"))).
 """
 function h5t_get_class(dtype_id)
     lock(liblock)
@@ -7184,7 +7184,7 @@ end
 """
     h5t_get_cset(dtype_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Tget_cset`]($(_hdf5_func_doc_url("H5Tget_cset"))).
+See `libhdf5` documentation for [`H5Tget_cset`]($(HDF5DocURLs.func_url("H5Tget_cset"))).
 """
 function h5t_get_cset(dtype_id)
     lock(liblock)
@@ -7200,7 +7200,7 @@ end
 """
     h5t_get_ebias(dtype_id::hid_t) -> Csize_t
 
-See `libhdf5` documentation for [`H5Tget_ebias`]($(_hdf5_func_doc_url("H5Tget_ebias"))).
+See `libhdf5` documentation for [`H5Tget_ebias`]($(HDF5DocURLs.func_url("H5Tget_ebias"))).
 """
 function h5t_get_ebias(dtype_id)
     lock(liblock)
@@ -7216,7 +7216,7 @@ end
 """
     h5t_get_fields(dtype_id::hid_t, spos::Ref{Csize_t}, epos::Ref{Csize_t}, esize::Ref{Csize_t}, mpos::Ref{Csize_t}, msize::Ref{Csize_t})
 
-See `libhdf5` documentation for [`H5Tget_fields`]($(_hdf5_func_doc_url("H5Tget_fields"))).
+See `libhdf5` documentation for [`H5Tget_fields`]($(HDF5DocURLs.func_url("H5Tget_fields"))).
 """
 function h5t_get_fields(dtype_id, spos, epos, esize, mpos, msize)
     lock(liblock)
@@ -7232,7 +7232,7 @@ end
 """
     h5t_get_member_class(dtype_id::hid_t, index::Cuint) -> Int
 
-See `libhdf5` documentation for [`H5Tget_member_class`]($(_hdf5_func_doc_url("H5Tget_member_class"))).
+See `libhdf5` documentation for [`H5Tget_member_class`]($(HDF5DocURLs.func_url("H5Tget_member_class"))).
 """
 function h5t_get_member_class(dtype_id, index)
     lock(liblock)
@@ -7248,7 +7248,7 @@ end
 """
     h5t_get_member_index(dtype_id::hid_t, membername::Cstring) -> Int
 
-See `libhdf5` documentation for [`H5Tget_member_index`]($(_hdf5_func_doc_url("H5Tget_member_index"))).
+See `libhdf5` documentation for [`H5Tget_member_index`]($(HDF5DocURLs.func_url("H5Tget_member_index"))).
 """
 function h5t_get_member_index(dtype_id, membername)
     lock(liblock)
@@ -7264,7 +7264,7 @@ end
 """
     h5t_get_member_offset(dtype_id::hid_t, index::Cuint) -> Csize_t
 
-See `libhdf5` documentation for [`H5Tget_member_offset`]($(_hdf5_func_doc_url("H5Tget_member_offset"))).
+See `libhdf5` documentation for [`H5Tget_member_offset`]($(HDF5DocURLs.func_url("H5Tget_member_offset"))).
 """
 function h5t_get_member_offset(dtype_id, index)
     lock(liblock)
@@ -7280,7 +7280,7 @@ end
 """
     h5t_get_member_type(dtype_id::hid_t, index::Cuint) -> hid_t
 
-See `libhdf5` documentation for [`H5Tget_member_type`]($(_hdf5_func_doc_url("H5Tget_member_type"))).
+See `libhdf5` documentation for [`H5Tget_member_type`]($(HDF5DocURLs.func_url("H5Tget_member_type"))).
 """
 function h5t_get_member_type(dtype_id, index)
     lock(liblock)
@@ -7296,7 +7296,7 @@ end
 """
     h5t_get_native_type(dtype_id::hid_t, direction::Cint) -> hid_t
 
-See `libhdf5` documentation for [`H5Tget_native_type`]($(_hdf5_func_doc_url("H5Tget_native_type"))).
+See `libhdf5` documentation for [`H5Tget_native_type`]($(HDF5DocURLs.func_url("H5Tget_native_type"))).
 """
 function h5t_get_native_type(dtype_id, direction)
     lock(liblock)
@@ -7312,7 +7312,7 @@ end
 """
     h5t_get_nmembers(dtype_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Tget_nmembers`]($(_hdf5_func_doc_url("H5Tget_nmembers"))).
+See `libhdf5` documentation for [`H5Tget_nmembers`]($(HDF5DocURLs.func_url("H5Tget_nmembers"))).
 """
 function h5t_get_nmembers(dtype_id)
     lock(liblock)
@@ -7328,7 +7328,7 @@ end
 """
     h5t_get_offset(dtype_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Tget_offset`]($(_hdf5_func_doc_url("H5Tget_offset"))).
+See `libhdf5` documentation for [`H5Tget_offset`]($(HDF5DocURLs.func_url("H5Tget_offset"))).
 """
 function h5t_get_offset(dtype_id)
     lock(liblock)
@@ -7344,7 +7344,7 @@ end
 """
     h5t_get_order(dtype_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Tget_order`]($(_hdf5_func_doc_url("H5Tget_order"))).
+See `libhdf5` documentation for [`H5Tget_order`]($(HDF5DocURLs.func_url("H5Tget_order"))).
 """
 function h5t_get_order(dtype_id)
     lock(liblock)
@@ -7360,7 +7360,7 @@ end
 """
     h5t_get_precision(dtype_id::hid_t) -> Csize_t
 
-See `libhdf5` documentation for [`H5Tget_precision`]($(_hdf5_func_doc_url("H5Tget_precision"))).
+See `libhdf5` documentation for [`H5Tget_precision`]($(HDF5DocURLs.func_url("H5Tget_precision"))).
 """
 function h5t_get_precision(dtype_id)
     lock(liblock)
@@ -7376,7 +7376,7 @@ end
 """
     h5t_get_sign(dtype_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Tget_sign`]($(_hdf5_func_doc_url("H5Tget_sign"))).
+See `libhdf5` documentation for [`H5Tget_sign`]($(HDF5DocURLs.func_url("H5Tget_sign"))).
 """
 function h5t_get_sign(dtype_id)
     lock(liblock)
@@ -7392,7 +7392,7 @@ end
 """
     h5t_get_size(dtype_id::hid_t) -> Csize_t
 
-See `libhdf5` documentation for [`H5Tget_size`]($(_hdf5_func_doc_url("H5Tget_size"))).
+See `libhdf5` documentation for [`H5Tget_size`]($(HDF5DocURLs.func_url("H5Tget_size"))).
 """
 function h5t_get_size(dtype_id)
     lock(liblock)
@@ -7408,7 +7408,7 @@ end
 """
     h5t_get_strpad(dtype_id::hid_t) -> Int
 
-See `libhdf5` documentation for [`H5Tget_strpad`]($(_hdf5_func_doc_url("H5Tget_strpad"))).
+See `libhdf5` documentation for [`H5Tget_strpad`]($(HDF5DocURLs.func_url("H5Tget_strpad"))).
 """
 function h5t_get_strpad(dtype_id)
     lock(liblock)
@@ -7424,7 +7424,7 @@ end
 """
     h5t_get_super(dtype_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Tget_super`]($(_hdf5_func_doc_url("H5Tget_super"))).
+See `libhdf5` documentation for [`H5Tget_super`]($(HDF5DocURLs.func_url("H5Tget_super"))).
 """
 function h5t_get_super(dtype_id)
     lock(liblock)
@@ -7440,7 +7440,7 @@ end
 """
     h5t_insert(dtype_id::hid_t, fieldname::Cstring, offset::Csize_t, field_id::hid_t)
 
-See `libhdf5` documentation for [`H5Tinsert`]($(_hdf5_func_doc_url("H5Tinsert"))).
+See `libhdf5` documentation for [`H5Tinsert`]($(HDF5DocURLs.func_url("H5Tinsert"))).
 """
 function h5t_insert(dtype_id, fieldname, offset, field_id)
     lock(liblock)
@@ -7456,7 +7456,7 @@ end
 """
     h5t_is_variable_str(type_id::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5Tis_variable_str`]($(_hdf5_func_doc_url("H5Tis_variable_str"))).
+See `libhdf5` documentation for [`H5Tis_variable_str`]($(HDF5DocURLs.func_url("H5Tis_variable_str"))).
 """
 function h5t_is_variable_str(type_id)
     lock(liblock)
@@ -7472,7 +7472,7 @@ end
 """
     h5t_lock(type_id::hid_t)
 
-See `libhdf5` documentation for [`H5Tlock`]($(_hdf5_func_doc_url("H5Tlock"))).
+See `libhdf5` documentation for [`H5Tlock`]($(HDF5DocURLs.func_url("H5Tlock"))).
 """
 function h5t_lock(type_id)
     lock(liblock)
@@ -7488,7 +7488,7 @@ end
 """
     h5t_open(loc_id::hid_t, name::Cstring, tapl_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Topen2`]($(_hdf5_func_doc_url("H5Topen2"))).
+See `libhdf5` documentation for [`H5Topen2`]($(HDF5DocURLs.func_url("H5Topen2"))).
 """
 function h5t_open(loc_id, name, tapl_id)
     lock(liblock)
@@ -7504,7 +7504,7 @@ end
 """
     h5t_set_cset(dtype_id::hid_t, cset::Cint)
 
-See `libhdf5` documentation for [`H5Tset_cset`]($(_hdf5_func_doc_url("H5Tset_cset"))).
+See `libhdf5` documentation for [`H5Tset_cset`]($(HDF5DocURLs.func_url("H5Tset_cset"))).
 """
 function h5t_set_cset(dtype_id, cset)
     lock(liblock)
@@ -7520,7 +7520,7 @@ end
 """
     h5t_set_ebias(dtype_id::hid_t, ebias::Csize_t)
 
-See `libhdf5` documentation for [`H5Tset_ebias`]($(_hdf5_func_doc_url("H5Tset_ebias"))).
+See `libhdf5` documentation for [`H5Tset_ebias`]($(HDF5DocURLs.func_url("H5Tset_ebias"))).
 """
 function h5t_set_ebias(dtype_id, ebias)
     lock(liblock)
@@ -7536,7 +7536,7 @@ end
 """
     h5t_set_fields(dtype_id::hid_t, spos::Csize_t, epos::Csize_t, esize::Csize_t, mpos::Csize_t, msize::Csize_t)
 
-See `libhdf5` documentation for [`H5Tset_fields`]($(_hdf5_func_doc_url("H5Tset_fields"))).
+See `libhdf5` documentation for [`H5Tset_fields`]($(HDF5DocURLs.func_url("H5Tset_fields"))).
 """
 function h5t_set_fields(dtype_id, spos, epos, esize, mpos, msize)
     lock(liblock)
@@ -7552,7 +7552,7 @@ end
 """
     h5t_set_offset(dtype_id::hid_t, offset::Csize_t)
 
-See `libhdf5` documentation for [`H5Tset_offset`]($(_hdf5_func_doc_url("H5Tset_offset"))).
+See `libhdf5` documentation for [`H5Tset_offset`]($(HDF5DocURLs.func_url("H5Tset_offset"))).
 """
 function h5t_set_offset(dtype_id, offset)
     lock(liblock)
@@ -7568,7 +7568,7 @@ end
 """
     h5t_set_order(dtype_id::hid_t, order::Cint)
 
-See `libhdf5` documentation for [`H5Tset_order`]($(_hdf5_func_doc_url("H5Tset_order"))).
+See `libhdf5` documentation for [`H5Tset_order`]($(HDF5DocURLs.func_url("H5Tset_order"))).
 """
 function h5t_set_order(dtype_id, order)
     lock(liblock)
@@ -7584,7 +7584,7 @@ end
 """
     h5t_set_precision(dtype_id::hid_t, sz::Csize_t)
 
-See `libhdf5` documentation for [`H5Tset_precision`]($(_hdf5_func_doc_url("H5Tset_precision"))).
+See `libhdf5` documentation for [`H5Tset_precision`]($(HDF5DocURLs.func_url("H5Tset_precision"))).
 """
 function h5t_set_precision(dtype_id, sz)
     lock(liblock)
@@ -7600,7 +7600,7 @@ end
 """
     h5t_set_size(dtype_id::hid_t, sz::Csize_t)
 
-See `libhdf5` documentation for [`H5Tset_size`]($(_hdf5_func_doc_url("H5Tset_size"))).
+See `libhdf5` documentation for [`H5Tset_size`]($(HDF5DocURLs.func_url("H5Tset_size"))).
 """
 function h5t_set_size(dtype_id, sz)
     lock(liblock)
@@ -7616,7 +7616,7 @@ end
 """
     h5t_set_strpad(dtype_id::hid_t, sz::Cint)
 
-See `libhdf5` documentation for [`H5Tset_strpad`]($(_hdf5_func_doc_url("H5Tset_strpad"))).
+See `libhdf5` documentation for [`H5Tset_strpad`]($(HDF5DocURLs.func_url("H5Tset_strpad"))).
 """
 function h5t_set_strpad(dtype_id, sz)
     lock(liblock)
@@ -7632,7 +7632,7 @@ end
 """
     h5t_set_tag(dtype_id::hid_t, tag::Cstring)
 
-See `libhdf5` documentation for [`H5Tset_tag`]($(_hdf5_func_doc_url("H5Tset_tag"))).
+See `libhdf5` documentation for [`H5Tset_tag`]($(HDF5DocURLs.func_url("H5Tset_tag"))).
 """
 function h5t_set_tag(dtype_id, tag)
     lock(liblock)
@@ -7648,7 +7648,7 @@ end
 """
     h5t_vlen_create(base_type_id::hid_t) -> hid_t
 
-See `libhdf5` documentation for [`H5Tvlen_create`]($(_hdf5_func_doc_url("H5Tvlen_create"))).
+See `libhdf5` documentation for [`H5Tvlen_create`]($(HDF5DocURLs.func_url("H5Tvlen_create"))).
 """
 function h5t_vlen_create(base_type_id)
     lock(liblock)
@@ -7664,7 +7664,7 @@ end
 """
     h5do_append(dset_id::hid_t, dxpl_id::hid_t, index::Cuint, num_elem::hsize_t, memtype::hid_t, buffer::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5DOappend`]($(_hdf5_func_doc_url("H5DOappend"))).
+See `libhdf5` documentation for [`H5DOappend`]($(HDF5DocURLs.func_url("H5DOappend"))).
 """
 function h5do_append(dset_id, dxpl_id, index, num_elem, memtype, buffer)
     lock(liblock)
@@ -7680,7 +7680,7 @@ end
 """
     h5do_write_chunk(dset_id::hid_t, dxpl_id::hid_t, filter_mask::UInt32, offset::Ptr{hsize_t}, bufsize::Csize_t, buf::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5DOwrite_chunk`]($(_hdf5_func_doc_url("H5DOwrite_chunk"))).
+See `libhdf5` documentation for [`H5DOwrite_chunk`]($(HDF5DocURLs.func_url("H5DOwrite_chunk"))).
 """
 function h5do_write_chunk(dset_id, dxpl_id, filter_mask, offset, bufsize, buf)
     lock(liblock)
@@ -7696,7 +7696,7 @@ end
 """
     h5ds_attach_scale(did::hid_t, dsid::hid_t, idx::Cuint)
 
-See `libhdf5` documentation for [`H5DSattach_scale`]($(_hdf5_func_doc_url("H5DSattach_scale"))).
+See `libhdf5` documentation for [`H5DSattach_scale`]($(HDF5DocURLs.func_url("H5DSattach_scale"))).
 """
 function h5ds_attach_scale(did, dsid, idx)
     lock(liblock)
@@ -7712,7 +7712,7 @@ end
 """
     h5ds_detach_scale(did::hid_t, dsid::hid_t, idx::Cuint)
 
-See `libhdf5` documentation for [`H5DSdetach_scale`]($(_hdf5_func_doc_url("H5DSdetach_scale"))).
+See `libhdf5` documentation for [`H5DSdetach_scale`]($(HDF5DocURLs.func_url("H5DSdetach_scale"))).
 """
 function h5ds_detach_scale(did, dsid, idx)
     lock(liblock)
@@ -7728,7 +7728,7 @@ end
 """
     h5ds_get_label(did::hid_t, idx::Cuint, label::Ptr{UInt8}, size::hsize_t)
 
-See `libhdf5` documentation for [`H5DSget_label`]($(_hdf5_func_doc_url("H5DSget_label"))).
+See `libhdf5` documentation for [`H5DSget_label`]($(HDF5DocURLs.func_url("H5DSget_label"))).
 """
 function h5ds_get_label(did, idx, label, size)
     lock(liblock)
@@ -7744,7 +7744,7 @@ end
 """
     h5ds_get_num_scales(did::hid_t, idx::Cuint) -> Int
 
-See `libhdf5` documentation for [`H5DSget_num_scales`]($(_hdf5_func_doc_url("H5DSget_num_scales"))).
+See `libhdf5` documentation for [`H5DSget_num_scales`]($(HDF5DocURLs.func_url("H5DSget_num_scales"))).
 """
 function h5ds_get_num_scales(did, idx)
     lock(liblock)
@@ -7760,7 +7760,7 @@ end
 """
     h5ds_get_scale_name(did::hid_t, name::Ptr{UInt8}, size::Csize_t) -> Cssize_t
 
-See `libhdf5` documentation for [`H5DSget_scale_name`]($(_hdf5_func_doc_url("H5DSget_scale_name"))).
+See `libhdf5` documentation for [`H5DSget_scale_name`]($(HDF5DocURLs.func_url("H5DSget_scale_name"))).
 """
 function h5ds_get_scale_name(did, name, size)
     lock(liblock)
@@ -7776,7 +7776,7 @@ end
 """
     h5ds_is_attached(did::hid_t, dsid::hid_t, idx::Cuint) -> Bool
 
-See `libhdf5` documentation for [`H5DSis_attached`]($(_hdf5_func_doc_url("H5DSis_attached"))).
+See `libhdf5` documentation for [`H5DSis_attached`]($(HDF5DocURLs.func_url("H5DSis_attached"))).
 """
 function h5ds_is_attached(did, dsid, idx)
     lock(liblock)
@@ -7792,7 +7792,7 @@ end
 """
     h5ds_is_scale(did::hid_t) -> Bool
 
-See `libhdf5` documentation for [`H5DSis_scale`]($(_hdf5_func_doc_url("H5DSis_scale"))).
+See `libhdf5` documentation for [`H5DSis_scale`]($(HDF5DocURLs.func_url("H5DSis_scale"))).
 """
 function h5ds_is_scale(did)
     lock(liblock)
@@ -7808,7 +7808,7 @@ end
 """
     h5ds_set_label(did::hid_t, idx::Cuint, label::Ref{UInt8})
 
-See `libhdf5` documentation for [`H5DSset_label`]($(_hdf5_func_doc_url("H5DSset_label"))).
+See `libhdf5` documentation for [`H5DSset_label`]($(HDF5DocURLs.func_url("H5DSset_label"))).
 """
 function h5ds_set_label(did, idx, label)
     lock(liblock)
@@ -7824,7 +7824,7 @@ end
 """
     h5ds_set_scale(dsid::hid_t, dimname::Cstring)
 
-See `libhdf5` documentation for [`H5DSset_scale`]($(_hdf5_func_doc_url("H5DSset_scale"))).
+See `libhdf5` documentation for [`H5DSset_scale`]($(HDF5DocURLs.func_url("H5DSset_scale"))).
 """
 function h5ds_set_scale(dsid, dimname)
     lock(liblock)
@@ -7840,7 +7840,7 @@ end
 """
     h5lt_dtype_to_text(datatype::hid_t, str::Ptr{UInt8}, lang_type::Cint, len::Ref{Csize_t})
 
-See `libhdf5` documentation for [`H5LTdtype_to_text`]($(_hdf5_func_doc_url("H5LTdtype_to_text"))).
+See `libhdf5` documentation for [`H5LTdtype_to_text`]($(HDF5DocURLs.func_url("H5LTdtype_to_text"))).
 """
 function h5lt_dtype_to_text(datatype, str, lang_type, len)
     lock(liblock)
@@ -7856,7 +7856,7 @@ end
 """
     h5tb_append_records(loc_id::hid_t, dset_name::Cstring, nrecords::hsize_t, type_size::Csize_t, field_offset::Ptr{Csize_t}, field_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5TBappend_records`]($(_hdf5_func_doc_url("H5TBappend_records"))).
+See `libhdf5` documentation for [`H5TBappend_records`]($(HDF5DocURLs.func_url("H5TBappend_records"))).
 """
 function h5tb_append_records(loc_id, dset_name, nrecords, type_size, field_offset, field_sizes, data)
     lock(liblock)
@@ -7872,7 +7872,7 @@ end
 """
     h5tb_get_field_info(loc_id::hid_t, table_name::Cstring, field_names::Ptr{Ptr{UInt8}}, field_sizes::Ptr{Csize_t}, field_offsets::Ptr{Csize_t}, type_size::Ptr{Csize_t})
 
-See `libhdf5` documentation for [`H5TBget_field_info`]($(_hdf5_func_doc_url("H5TBget_field_info"))).
+See `libhdf5` documentation for [`H5TBget_field_info`]($(HDF5DocURLs.func_url("H5TBget_field_info"))).
 """
 function h5tb_get_field_info(loc_id, table_name, field_names, field_sizes, field_offsets, type_size)
     lock(liblock)
@@ -7888,7 +7888,7 @@ end
 """
     h5tb_get_table_info(loc_id::hid_t, table_name::Cstring, nfields::Ptr{hsize_t}, nrecords::Ptr{hsize_t})
 
-See `libhdf5` documentation for [`H5TBget_table_info`]($(_hdf5_func_doc_url("H5TBget_table_info"))).
+See `libhdf5` documentation for [`H5TBget_table_info`]($(HDF5DocURLs.func_url("H5TBget_table_info"))).
 """
 function h5tb_get_table_info(loc_id, table_name, nfields, nrecords)
     lock(liblock)
@@ -7904,7 +7904,7 @@ end
 """
     h5tb_make_table(table_title::Cstring, loc_id::hid_t, dset_name::Cstring, nfields::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_names::Ptr{Cstring}, field_offset::Ptr{Csize_t}, field_types::Ptr{hid_t}, chunk_size::hsize_t, fill_data::Ptr{Cvoid}, compress::Cint, data::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5TBmake_table`]($(_hdf5_func_doc_url("H5TBmake_table"))).
+See `libhdf5` documentation for [`H5TBmake_table`]($(HDF5DocURLs.func_url("H5TBmake_table"))).
 """
 function h5tb_make_table(table_title, loc_id, dset_name, nfields, nrecords, type_size, field_names, field_offset, field_types, chunk_size, fill_data, compress, data)
     lock(liblock)
@@ -7920,7 +7920,7 @@ end
 """
     h5tb_read_records(loc_id::hid_t, table_name::Cstring, start::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_offsets::Ptr{Csize_t}, dst_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5TBread_records`]($(_hdf5_func_doc_url("H5TBread_records"))).
+See `libhdf5` documentation for [`H5TBread_records`]($(HDF5DocURLs.func_url("H5TBread_records"))).
 """
 function h5tb_read_records(loc_id, table_name, start, nrecords, type_size, field_offsets, dst_sizes, data)
     lock(liblock)
@@ -7936,7 +7936,7 @@ end
 """
     h5tb_read_table(loc_id::hid_t, table_name::Cstring, dst_size::Csize_t, dst_offset::Ptr{Csize_t}, dst_sizes::Ptr{Csize_t}, dst_buf::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5TBread_table`]($(_hdf5_func_doc_url("H5TBread_table"))).
+See `libhdf5` documentation for [`H5TBread_table`]($(HDF5DocURLs.func_url("H5TBread_table"))).
 """
 function h5tb_read_table(loc_id, table_name, dst_size, dst_offset, dst_sizes, dst_buf)
     lock(liblock)
@@ -7952,7 +7952,7 @@ end
 """
     h5tb_write_records(loc_id::hid_t, table_name::Cstring, start::hsize_t, nrecords::hsize_t, type_size::Csize_t, field_offsets::Ptr{Csize_t}, field_sizes::Ptr{Csize_t}, data::Ptr{Cvoid})
 
-See `libhdf5` documentation for [`H5TBwrite_records`]($(_hdf5_func_doc_url("H5TBwrite_records"))).
+See `libhdf5` documentation for [`H5TBwrite_records`]($(HDF5DocURLs.func_url("H5TBwrite_records"))).
 """
 function h5tb_write_records(loc_id, table_name, start, nrecords, type_size, field_offsets, field_sizes, data)
     lock(liblock)
@@ -7968,7 +7968,7 @@ end
 """
     h5z_register(filter_class::Ref{H5Z_class_t})
 
-See `libhdf5` documentation for [`H5Zregister`]($(_hdf5_func_doc_url("H5Zregister"))).
+See `libhdf5` documentation for [`H5Zregister`]($(HDF5DocURLs.func_url("H5Zregister"))).
 """
 function h5z_register(filter_class)
     lock(liblock)
@@ -7984,7 +7984,7 @@ end
 """
     h5z_unregister(id::H5Z_filter_t)
 
-See `libhdf5` documentation for [`H5Zunregister`]($(_hdf5_func_doc_url("H5Zunregister"))).
+See `libhdf5` documentation for [`H5Zunregister`]($(HDF5DocURLs.func_url("H5Zunregister"))).
 """
 function h5z_unregister(id)
     lock(liblock)
@@ -8000,7 +8000,7 @@ end
 """
     h5z_filter_avail(id::H5Z_filter_t) -> Bool
 
-See `libhdf5` documentation for [`H5Zfilter_avail`]($(_hdf5_func_doc_url("H5Zfilter_avail"))).
+See `libhdf5` documentation for [`H5Zfilter_avail`]($(HDF5DocURLs.func_url("H5Zfilter_avail"))).
 """
 function h5z_filter_avail(id)
     lock(liblock)
@@ -8016,7 +8016,7 @@ end
 """
     h5z_get_filter_info(filter::H5Z_filter_t, filter_config_flags::Ptr{Cuint})
 
-See `libhdf5` documentation for [`H5Zget_filter_info`]($(_hdf5_func_doc_url("H5Zget_filter_info"))).
+See `libhdf5` documentation for [`H5Zget_filter_info`]($(HDF5DocURLs.func_url("H5Zget_filter_info"))).
 """
 function h5z_get_filter_info(filter, filter_config_flags)
     lock(liblock)
@@ -8032,7 +8032,7 @@ end
 """
     h5fd_core_init() -> hid_t
 
-This function is exposed in `libhdf5` as the macro `H5FD_CORE`. See `libhdf5` documentation for [`H5Pget_driver`]($(_hdf5_func_doc_url("H5Pget_driver"))).
+This function is exposed in `libhdf5` as the macro `H5FD_CORE`. See `libhdf5` documentation for [`H5Pget_driver`]($(HDF5DocURLs.func_url("H5Pget_driver"))).
 """
 function h5fd_core_init()
     lock(liblock)
@@ -8048,7 +8048,7 @@ end
 """
     h5fd_family_init() -> hid_t
 
-This function is exposed in `libhdf5` as the macro `H5FD_FAMILY`. See `libhdf5` documentation for [`H5Pget_driver`]($(_hdf5_func_doc_url("H5Pget_driver"))).
+This function is exposed in `libhdf5` as the macro `H5FD_FAMILY`. See `libhdf5` documentation for [`H5Pget_driver`]($(HDF5DocURLs.func_url("H5Pget_driver"))).
 """
 function h5fd_family_init()
     lock(liblock)
@@ -8064,7 +8064,7 @@ end
 """
     h5fd_log_init() -> hid_t
 
-This function is exposed in `libhdf5` as the macro `H5FD_LOG`. See `libhdf5` documentation for [`H5Pget_driver`]($(_hdf5_func_doc_url("H5Pget_driver"))).
+This function is exposed in `libhdf5` as the macro `H5FD_LOG`. See `libhdf5` documentation for [`H5Pget_driver`]($(HDF5DocURLs.func_url("H5Pget_driver"))).
 """
 function h5fd_log_init()
     lock(liblock)
@@ -8080,7 +8080,7 @@ end
 """
     h5fd_mpio_init() -> hid_t
 
-This function is exposed in `libhdf5` as the macro `H5FD_MPIO`. See `libhdf5` documentation for [`H5Pget_driver`]($(_hdf5_func_doc_url("H5Pget_driver"))).
+This function is exposed in `libhdf5` as the macro `H5FD_MPIO`. See `libhdf5` documentation for [`H5Pget_driver`]($(HDF5DocURLs.func_url("H5Pget_driver"))).
 """
 function h5fd_mpio_init()
     lock(liblock)
@@ -8096,7 +8096,7 @@ end
 """
     h5fd_multi_init() -> hid_t
 
-This function is exposed in `libhdf5` as the macro `H5FD_MULTI`. See `libhdf5` documentation for [`H5Pget_driver`]($(_hdf5_func_doc_url("H5Pget_driver"))).
+This function is exposed in `libhdf5` as the macro `H5FD_MULTI`. See `libhdf5` documentation for [`H5Pget_driver`]($(HDF5DocURLs.func_url("H5Pget_driver"))).
 """
 function h5fd_multi_init()
     lock(liblock)
@@ -8112,7 +8112,7 @@ end
 """
     h5fd_sec2_init() -> hid_t
 
-This function is exposed in `libhdf5` as the macro `H5FD_SEC2`. See `libhdf5` documentation for [`H5Pget_driver`]($(_hdf5_func_doc_url("H5Pget_driver"))).
+This function is exposed in `libhdf5` as the macro `H5FD_SEC2`. See `libhdf5` documentation for [`H5Pget_driver`]($(HDF5DocURLs.func_url("H5Pget_driver"))).
 """
 function h5fd_sec2_init()
     lock(liblock)
@@ -8128,7 +8128,7 @@ end
 """
     h5fd_stdio_init() -> hid_t
 
-This function is exposed in `libhdf5` as the macro `H5FD_STDIO`. See `libhdf5` documentation for [`H5Pget_driver`]($(_hdf5_func_doc_url("H5Pget_driver"))).
+This function is exposed in `libhdf5` as the macro `H5FD_STDIO`. See `libhdf5` documentation for [`H5Pget_driver`]($(HDF5DocURLs.func_url("H5Pget_driver"))).
 """
 function h5fd_stdio_init()
     lock(liblock)
