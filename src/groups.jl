@@ -78,7 +78,9 @@ Base.isempty(x::Union{Group,File}) = length(x) == 0
 # filename and name
 name(obj::Union{File,Group,Dataset,Datatype}) = API.h5i_get_name(checkvalid(obj))
 
-# iteration by objects
+# iteration as an AbstractDict: yields `name => object` pairs (required by AbstractDict's
+# contract - `pairs(d) = d`, and `==`/`in`/`values` all iterate expecting pairs). This is a
+# breaking change from the previous behavior of yielding the bare object - see HISTORY.md.
 function Base.iterate(parent::Union{File,Group}, iter=(1, nothing))
     n, prev_obj = iter
     prev_obj ≢ nothing && close(prev_obj)
@@ -89,7 +91,8 @@ function Base.iterate(parent::Union{File,Group}, iter=(1, nothing))
         ),
         parent
     )
-    return (obj, (n + 1, obj))
+    key = String(split(name(obj), "/")[end])
+    return (key => obj, (n + 1, obj))
 end
 
 function Base.parent(obj::Union{File,Group,Dataset})
@@ -170,6 +173,9 @@ delete_object(
     lapl::LinkAccessProperties=LinkAccessProperties()
 ) = API.h5l_delete(checkvalid(parent), path, lapl)
 delete_object(obj::Object) = delete_object(parent(obj), ascii(split(name(obj), "/")[end])) # FIXME: remove ascii?
+
+# AbstractDict `delete!` contract: returns the dict itself.
+Base.delete!(parent::Union{File,Group}, path::AbstractString) = (delete_object(parent, path); parent)
 
 # Move links
 move_link(
