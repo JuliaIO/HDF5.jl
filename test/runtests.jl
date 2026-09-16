@@ -78,6 +78,8 @@ end
     include("filter.jl")
     @debug "chunkstorage"
     include("chunkstorage.jl")
+    @debug "diskarrays"
+    include("diskarrays.jl")
     @debug "fileio"
     include("fileio.jl")
     @debug "nonallocating"

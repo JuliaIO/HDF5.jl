@@ -257,7 +257,8 @@ function get_jl_type(obj)
     end
 end
 
-Base.eltype(dset::Union{Dataset,Attribute}) = get_jl_type(dset)
+Base.eltype(::Dataset{T}) where {T} = T
+Base.eltype(attr::Attribute) = get_jl_type(attr)
 
 function get_mem_compatible_jl_type(obj_type::Datatype)
     class_id = API.h5t_get_class(obj_type)
@@ -441,6 +442,26 @@ do_normalize(::Type{NamedTuple{T,U}}) where {U,T} =
     any(i -> do_normalize(fieldtype(U, i)), 1:fieldcount(U))
 do_normalize(::Type{T}) where {T<:Union{Cstring,FixedString,FixedArray,VariableArray}} =
     true
+
+"""
+    normalized_jl_type(::Type{T})
+
+The Julia type actually returned by `read`/`getindex` for a value whose memory-compatible
+type (as computed by [`get_mem_compatible_jl_type`](@ref)) is `T`. This mirrors
+[`_normalize_types`](@ref)/[`do_normalize`](@ref)'s runtime conversions at the type level,
+e.g. `Cstring`/`FixedString` normalize to `String`. Used to determine `Dataset{T,N}`'s
+element type `T`, which must match what reads actually produce for `Dataset` to correctly
+implement the `AbstractArray`/`DiskArrays.AbstractDiskArray` interface.
+"""
+normalized_jl_type(::Type{T}) where {T} = T
+normalized_jl_type(::Type{<:Union{Cstring,FixedString}}) = String
+normalized_jl_type(::Type{VariableArray{T}}) where {T} = Vector{normalized_jl_type(T)}
+normalized_jl_type(::Type{FixedArray{T,dims,L}}) where {T,dims,L} =
+    Array{normalized_jl_type(T),length(dims)}
+function normalized_jl_type(::Type{NamedTuple{K,U}}) where {K,U}
+    do_normalize(NamedTuple{K,U}) || return NamedTuple{K,U}
+    return NamedTuple{K,Tuple{ntuple(i -> normalized_jl_type(fieldtype(U, i)), fieldcount(U))...}}
+end
 
 do_reclaim(::Type{T}) where {T} = false
 do_reclaim(::Type{NamedTuple{T,U}}) where {U,T} =

@@ -88,7 +88,7 @@ function create_dataset(
             checkvalid(parent), path, dtype, dspace, _link_properties(path), dcpl, dapl
         )
     end
-    Dataset(ds, file(parent), dxpl)
+    Dataset{normalized_jl_type(get_jl_type(dtype)),ndims(dspace)}(ds, file(parent), dxpl)
 end
 create_dataset(
     parent::Union{File,Group},
@@ -327,7 +327,7 @@ Base.axes(dset::Dataset, d::Integer) = Base.OneTo(size(dset, d))
 # Write to a subset of a dataset using array slices: dataset[:,:,10] = array
 
 const IndexType = Union{AbstractRange{Int},Int,Colon}
-function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where {T}
+function _setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where {T}
     !isconcretetype(T) && error("type $T is not concrete")
     U = get_jl_type(dset)
 
@@ -364,7 +364,7 @@ function Base.setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where {T}
     return X
 end
 
-function Base.setindex!(
+function _setindex!(
     dset::Dataset, X::Array{S}, I::IndexType...
 ) where {S<:AbstractString}
     !isconcretetype(S) && error("type $S is not concrete")
@@ -397,22 +397,6 @@ function Base.setindex!(
     end
 
     return X
-end
-
-function Base.setindex!(dset::Dataset, x, I::IndexType...)
-    indices = Base.to_indices(dset, I)
-    X = fill(x, map(length, indices))
-    Base.setindex!(dset, X, indices...)
-end
-
-function Base.setindex!(dset::Dataset, x::T, I::IndexType...) where {T<:AbstractString}
-    indices = Base.to_indices(dset, I)
-    X = fill(x, map(length, indices))
-    Base.setindex!(dset, X, indices...)
-end
-
-function Base.setindex!(dset::Dataset, X::AbstractArray, I::IndexType...)
-    Base.setindex!(dset, Array(X), I...)
 end
 
 """

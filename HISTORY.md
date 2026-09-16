@@ -7,6 +7,7 @@ Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases)
 * Convert filter packages into package extensions (#1160)
 * Julia 1.9 is the minimum supported Julia version (#1176)
 * Support HDF5 2.0
+* `Dataset` now implements the [DiskArrays.jl](https://github.com/JuliaIO/DiskArrays.jl) interface (`Dataset{T,N} <: DiskArrays.AbstractDiskArray{T,N}`), adding `DiskArrays` as a new hard dependency. This gains fancy/boolean-mask indexing, `view`, and chunk-aware broadcast/reduce for free. **Breaking**: `Dataset` is now a parametric type; opening a dataset (`open_dataset`, indexing into a `File`/`Group`) now always queries its datatype/dataspace up front to determine `T`/`N`, so datatype-mapping errors surface at open time rather than at first read.
 
 ## v0.17.2
 * Fix variable length strings as attributes (#1130)

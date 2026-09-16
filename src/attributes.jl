@@ -432,5 +432,10 @@ function Base.getindex(dset::Dataset, name::AbstractString)
     open_attribute(dset, name)
 end
 Base.setindex!(dset::Dataset, val, name::AbstractString) = write_attribute(dset, name, val)
+# Disambiguates against DiskArrays.jl's `setindex!(a::AbstractDiskArray, v::AbstractArray, i...)`
+# now that `Dataset <: DiskArrays.AbstractDiskArray`: `dset["attrname"] = arrayval` should
+# still set an attribute, not be treated as (invalid) array-data assignment.
+Base.setindex!(dset::Dataset, val::AbstractArray, name::AbstractString) =
+    write_attribute(dset, name, val)
 Base.haskey(dset::Union{Dataset,Datatype}, path::AbstractString) =
     API.h5a_exists(checkvalid(dset), path)
