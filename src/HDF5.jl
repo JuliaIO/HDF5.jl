@@ -6,6 +6,7 @@ using Mmap: Mmap
 using Compat
 using UUIDs: uuid4
 using Printf: @sprintf
+import DiskArrays
 
 ### PUBLIC API ###
 
@@ -99,6 +100,7 @@ include("readwrite.jl")
 include("references.jl")
 include("show.jl")
 include("api_midlevel.jl")
+include("diskarrays.jl")
 include("highlevel.jl")
 
 # Functions that require special handling

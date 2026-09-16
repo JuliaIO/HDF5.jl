@@ -258,7 +258,7 @@ end
 
 _tree_icon(::Type{Attribute}) = SHOW_TREE_ICONS[] ? "🏷️" : "[A]"
 _tree_icon(::Type{Group})     = SHOW_TREE_ICONS[] ? "📂" : "[G]"
-_tree_icon(::Type{Dataset})   = SHOW_TREE_ICONS[] ? "🔢" : "[D]"
+_tree_icon(::Type{<:Dataset}) = SHOW_TREE_ICONS[] ? "🔢" : "[D]"
 _tree_icon(::Type{Datatype})  = SHOW_TREE_ICONS[] ? "📄" : "[T]"
 _tree_icon(::Type{File})      = SHOW_TREE_ICONS[] ? "🗂️" : "[F]"
 _tree_icon(::Type)            = SHOW_TREE_ICONS[] ? "❓" : "[?]"

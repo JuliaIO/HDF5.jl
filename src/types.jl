@@ -73,17 +73,36 @@ Base.unsafe_convert(::Type{API.hid_t}, g::Group) = g.id
 
 A mutable wrapper for a HDF5 Dataset `HDF5.API.hid_t`.
 """
-mutable struct Dataset
+mutable struct Dataset{T,N} <: DiskArrays.AbstractDiskArray{T,N}
     id::API.hid_t
     file::File
     xfer::DatasetTransferProperties
 
-    function Dataset(id, file, xfer=DatasetTransferProperties())
-        dset = new(id, file, xfer)
+    function Dataset{T,N}(id, file, xfer=DatasetTransferProperties()) where {T,N}
+        dset = new{T,N}(id, file, xfer)
         finalizer(API.try_close_finalizer, dset)
         dset
     end
 end
+
+# Infer the element type and dimensionality from the dataset's own datatype/dataspace,
+# so existing call sites (`Dataset(id, file, xfer)`) keep working unchanged.
+function Dataset(id::API.hid_t, file::File, xfer::DatasetTransferProperties=DatasetTransferProperties())
+    dtype = Datatype(API.h5d_get_type(id), file)
+    T = try
+        normalized_jl_type(get_jl_type(dtype))
+    finally
+        close(dtype)
+    end
+    dspace = Dataspace(API.h5d_get_space(id))
+    N = try
+        ndims(dspace)
+    finally
+        close(dspace)
+    end
+    return Dataset{T,N}(id, file, xfer)
+end
+
 Base.cconvert(::Type{API.hid_t}, dset::Dataset) = dset
 Base.unsafe_convert(::Type{API.hid_t}, dset::Dataset) = dset.id
 

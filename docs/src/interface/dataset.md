@@ -6,6 +6,10 @@ CurrentModule = HDF5
 
 Many dataset operations are available through the indexing interface, which is aliased to the functional interface. Below describes the functional interface.
 
+## DiskArrays.jl conformance
+
+`Dataset` implements the [DiskArrays.jl](https://github.com/JuliaIO/DiskArrays.jl) interface: `Dataset{T,N} <: DiskArrays.AbstractDiskArray{T,N}`. This means a `Dataset` is a regular Julia `AbstractArray`, supporting fancy indexing (boolean masks, `CartesianIndex` vectors), `view`, and chunk-aware broadcasting/reduction, in addition to HDF5.jl's existing indexing/read/write functions. `DiskArrays.eachchunk`/`DiskArrays.haschunks` reflect the dataset's actual HDF5 chunk layout when chunked.
+
 ```@docs
 Dataset
 create_dataset

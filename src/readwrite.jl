@@ -53,12 +53,40 @@ function Base.read(obj::DatasetOrAttribute)
     return val
 end
 
-function Base.getindex(obj::DatasetOrAttribute, I...)
+function Base.getindex(obj::Attribute, I...)
     dtype = datatype(obj)
     T = get_jl_type(dtype)
     val = generic_read(obj, dtype, T, I...)
     close(dtype)
     return val
+end
+# For most index shapes, `Dataset`'s `getindex` is provided generically by DiskArrays.jl
+# (built on `DiskArrays.readblock!`, see `src/diskarrays.jl`) now that `Dataset <:
+# DiskArrays.AbstractDiskArray`. Two cases still need explicit handling here:
+#
+# `dset[]` is an established HDF5.jl idiom meaning "read the whole dataset" (equivalent to
+# `read(dset)`), regardless of its size/shape -- unlike Base's standard zero-arg `A[]`, which
+# is only valid for length-1 arrays. Must be an explicit 0-arg method (not folded into the
+# `Vararg` method below) so it takes precedence as the more specific/exact-arity match.
+Base.getindex(dset::Dataset) = read(dset)
+
+# `BlockRange` (strided/blocked hyperslab selections) is more general than DiskArrays'
+# `readblock!` contract (`Vararg{AbstractUnitRange,N}`) can express, and isn't understood by
+# DiskArrays' internal chunk-batching machinery, so bypass DiskArrays entirely whenever any
+# index is a `BlockRange`, reading directly via the existing hyperslab-selection code. Plain
+# Int/AbstractRange/Colon-only calls still go through DiskArrays unchanged.
+function Base.getindex(dset::Dataset, I::Vararg{Union{BlockRange,AbstractRange{Int},Int,Colon}})
+    if any(i -> i isa BlockRange, I)
+        dtype = datatype(dset)
+        T = get_jl_type(dtype)
+        try
+            return generic_read(dset, dtype, T, I...)
+        finally
+            close(dtype)
+        end
+    else
+        return invoke(Base.getindex, Tuple{DiskArrays.AbstractDiskArray,Vararg{Any}}, dset, I...)
+    end
 end
 
 function Base.read(obj::DatasetOrAttribute, ::Type{T}, I...) where {T}
@@ -85,9 +113,7 @@ end
 Copy [part of] a HDF5 dataset or attribute to a preallocated output buffer.
 The output buffer must be convertible to a pointer and have a contiguous layout.
 """
-function Base.copyto!(
-    output_buffer::AbstractArray{T}, obj::DatasetOrAttribute, I...
-) where {T}
+function _copyto!(output_buffer::AbstractArray{T}, obj::DatasetOrAttribute, I...) where {T}
     dtype = datatype(obj)
     val = nothing
     try
@@ -97,6 +123,17 @@ function Base.copyto!(
     end
     return val
 end
+Base.copyto!(output_buffer::AbstractArray{T}, dset::Dataset, I...) where {T} =
+    _copyto!(output_buffer, dset, I...)
+# Disambiguate against DiskArrays.jl's own `copyto!` methods for `AbstractDiskArray`
+# destinations/`PermutedDimsArray` wrappers thereof, now that `Dataset <: DiskArrays.AbstractDiskArray`.
+# Those destination types don't satisfy this method's "plain contiguous memory buffer"
+# assumption, so fall back to a straightforward elementwise broadcast copy instead.
+Base.copyto!(dest::PermutedDimsArray{T,N}, src::Dataset{T,N}) where {T,N} = (dest .= src; dest)
+Base.copyto!(dest::PermutedDimsArray, src::Dataset) = (dest .= src; dest)
+Base.copyto!(dest::DiskArrays.AbstractDiskArray, src::Dataset) = (dest .= src; dest)
+Base.copyto!(output_buffer::AbstractArray{T}, attr::Attribute, I...) where {T} =
+    _copyto!(output_buffer, attr, I...)
 
 # Special handling for reading OPAQUE datasets and attributes
 function generic_read!(
@@ -221,9 +258,7 @@ Return a `Array{T}` or `Matrix{UInt8}` to that can contain [part of] the dataset
 
 The `normalize` keyword will normalize the buffer for string and array datatypes.
 """
-function Base.similar(
-    obj::DatasetOrAttribute, ::Type{T}, dims::Dims; normalize::Bool=true
-) where {T}
+function _similar(obj::DatasetOrAttribute, ::Type{T}, dims::Dims; normalize::Bool=true) where {T}
     filetype = datatype(obj)
     try
         return similar(obj, filetype, T, dims; normalize=normalize)
@@ -231,12 +266,17 @@ function Base.similar(
         close(filetype)
     end
 end
-Base.similar(
-    obj::DatasetOrAttribute, ::Type{T}, dims::Integer...; normalize::Bool=true
-) where {T} = similar(obj, T, Int.(dims); normalize=normalize)
+Base.similar(obj::Dataset, ::Type{T}, dims::Dims; normalize::Bool=true) where {T} =
+    _similar(obj, T, dims; normalize=normalize)
+Base.similar(obj::Attribute, ::Type{T}, dims::Dims; normalize::Bool=true) where {T} =
+    _similar(obj, T, dims; normalize=normalize)
+Base.similar(obj::Dataset, ::Type{T}, dims::Integer...; normalize::Bool=true) where {T} =
+    similar(obj, T, Int.(dims); normalize=normalize)
+Base.similar(obj::Attribute, ::Type{T}, dims::Integer...; normalize::Bool=true) where {T} =
+    similar(obj, T, Int.(dims); normalize=normalize)
 
 # Base.similar without specifying the Julia type
-function Base.similar(obj::DatasetOrAttribute, dims::Dims; normalize::Bool=true)
+function _similar(obj::DatasetOrAttribute, dims::Dims; normalize::Bool=true)
     filetype = datatype(obj)
     try
         T = get_jl_type(filetype)
@@ -245,7 +285,11 @@ function Base.similar(obj::DatasetOrAttribute, dims::Dims; normalize::Bool=true)
         close(filetype)
     end
 end
-Base.similar(obj::DatasetOrAttribute, dims::Integer...; normalize::Bool=true) =
+Base.similar(obj::Dataset, dims::Dims; normalize::Bool=true) = _similar(obj, dims; normalize=normalize)
+Base.similar(obj::Attribute, dims::Dims; normalize::Bool=true) = _similar(obj, dims; normalize=normalize)
+Base.similar(obj::Dataset, dims::Integer...; normalize::Bool=true) =
+    similar(obj, Int.(dims); normalize=normalize)
+Base.similar(obj::Attribute, dims::Integer...; normalize::Bool=true) =
     similar(obj, Int.(dims); normalize=normalize)
 
 # Opaque types
