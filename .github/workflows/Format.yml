@@ -1,32 +1,13 @@
-name: format
-
+name: Format suggestions
 on:
-  push:
-    branches:
-      - 'master'
-      - 'release-'
-    tags: '*'
   pull_request:
-
+    # this argument is not required if you don't use the `suggestion-label` input
+    types: [ opened, reopened, synchronize, labeled, unlabeled ]
 jobs:
-  check:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        julia-version: ['1']
-        julia-arch: [x64]
-        os: [ubuntu-latest]
+  code-style:
+    runs-on: ubuntu-latest
     steps:
-      - uses: julia-actions/setup-julia@v3
+      - uses: julia-actions/julia-format@v4
         with:
-          version: ${{ matrix.julia-version }}
-
-      - uses: actions/checkout@v6
-      - name: Install JuliaFormatter and format
-        run: |
-          julia -e 'using Pkg; Pkg.add(PackageSpec(name="JuliaFormatter"))'
-          julia -e 'using JuliaFormatter; format(["src", "test", "ext", "filters", "gen"], verbose=true)'
-
-      - name: Format check
-        run: |
-          git diff --color=always --exit-code
+          version: '1' # Set `version` to '1.0.54' if you need to use JuliaFormatter.jl v1.0.54 (default: '1')
+          suggestion-label: 'format-suggest' # leave this unset or empty to show suggestions for all PRs
