@@ -12,10 +12,3 @@ docstring expressions are evaluated while `HDF5.API` is loaded (i.e. during
 docstring lookup.
 """
 _hdf5_func_doc_url(cfuncname::AbstractString) = HDF5DocURLs.func_url(cfuncname)
-
-"""
-    _hdf5_group_doc_url(groupname::AbstractString) -> String
-
-Analogous to [`_hdf5_func_doc_url`](@ref) for an HDF5 module/group name (e.g. `"H5F"`).
-"""
-_hdf5_group_doc_url(groupname::AbstractString) = HDF5DocURLs.group_url(groupname)
