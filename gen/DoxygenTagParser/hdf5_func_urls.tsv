@@ -518,6 +518,7 @@ H5Pget_fapl_mpio	https://support.hdfgroup.org/documentation/hdf5/latest/group___
 H5Pget_fapl_multi	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gab72fe4184a465d8e0c30d95d3961125d
 H5Pget_fapl_onion	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gaedf8b83d7571bfffb7336a8e11a98107
 H5Pget_fapl_ros3	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gaee5e0b8373b4b493b0cd2616938d601e
+H5Pget_fapl_ros3_block_caching	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gaed71cb2871386af97a40873d40b88a82
 H5Pget_fapl_ros3_endpoint	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga24b1d9fd0e33117b735635a9d198becb
 H5Pget_fapl_ros3_token	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga255ea505c742118f8fd25b1eb948f8fb
 H5Pget_fapl_splitter	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga6e850a0319dc6839e2dd06a0522b3831
@@ -537,6 +538,7 @@ H5Pget_filter_by_id1	https://support.hdfgroup.org/documentation/hdf5/latest/grou
 H5Pget_filter_by_id2	https://support.hdfgroup.org/documentation/hdf5/latest/group___o_c_p_l.html#ga2d5e9df5f0e93abae11ee5edd82fcec3
 H5Pget_gc_references	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gaaa81d8427b419d80eff6e1d216d99b71
 H5Pget_hyper_vector_size	https://support.hdfgroup.org/documentation/hdf5/latest/group___d_x_p_l.html#gaa55e7a6dd26a8df51b331febfeeb376b
+H5Pget_io_threads	https://support.hdfgroup.org/documentation/hdf5/latest/group___d_x_p_l.html#ga1fcf8cc91370586ea0a949fd4117b988
 H5Pget_istore_k	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_c_p_l.html#ga2179b032be5d2efbca63d8f82a292ec1
 H5Pget_layout	https://support.hdfgroup.org/documentation/hdf5/latest/group___d_c_p_l.html#ga655530b0f40990507fedeef6b3068db3
 H5Pget_libver_bounds	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gad5d7e671c3a06bcee64bc25841aaf607
@@ -651,6 +653,7 @@ H5Pset_fapl_mpio	https://support.hdfgroup.org/documentation/hdf5/latest/group___
 H5Pset_fapl_multi	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga5d9096f3413a7b66b28afcbf15d05396
 H5Pset_fapl_onion	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gade8995b5e2d1ea53861501d98129d762
 H5Pset_fapl_ros3	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga9dd7950acea860b716831488dd87ae8f
+H5Pset_fapl_ros3_block_caching	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gac257c8f9fc42c4ba3dfc69df7b7b91b7
 H5Pset_fapl_ros3_endpoint	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga316f9801b3b0a02916fd4a721532aeda
 H5Pset_fapl_ros3_token	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga74d2ae62171700a1a50c9fd76713cf4d
 H5Pset_fapl_sec2	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga737e9a4df38fafbe672b4b989851b3db
@@ -673,6 +676,7 @@ H5Pset_filter_callback	https://support.hdfgroup.org/documentation/hdf5/latest/gr
 H5Pset_fletcher32	https://support.hdfgroup.org/documentation/hdf5/latest/group___o_c_p_l.html#ga8bc81abfbd0393b0a46e121f817a3f81
 H5Pset_gc_references	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#ga61f01a12d5392ccf1321168f3c28f36f
 H5Pset_hyper_vector_size	https://support.hdfgroup.org/documentation/hdf5/latest/group___d_x_p_l.html#gad8c1582c86e3316c70b0658b3b8e2071
+H5Pset_io_threads	https://support.hdfgroup.org/documentation/hdf5/latest/group___d_x_p_l.html#ga137c71367b2b24d05c4820b99708f4d0
 H5Pset_istore_k	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_c_p_l.html#ga84a72f59d17841c37ab34674bf22a10c
 H5Pset_layout	https://support.hdfgroup.org/documentation/hdf5/latest/group___d_c_p_l.html#ga75d80991a8f467e0d454c53a383ae7f9
 H5Pset_libver_bounds	https://support.hdfgroup.org/documentation/hdf5/latest/group___f_a_p_l.html#gacbe1724e7f70cd17ed687417a1d2a910
@@ -803,6 +807,7 @@ H5TBread_table	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5
 H5TBwrite_fields_index	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_t_b.html#ga0b956c26a0e5257dbde15c3e69ac31ee
 H5TBwrite_fields_name	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_t_b.html#ga1284baf9489d596c76fa0458c7b3def6
 H5TBwrite_records	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_t_b.html#ga55943628b2dfa001c679822bff0423b1
+H5TSset_internal_threads	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_t_s.html#ga820be65780a76c15f23a17252c237d09
 H5Tarray_create1	https://support.hdfgroup.org/documentation/hdf5/latest/group___a_r_r_a_y.html#gaa0dc45417b2d45cc6810a1831f117e80
 H5Tarray_create2	https://support.hdfgroup.org/documentation/hdf5/latest/group___a_r_r_a_y.html#ga9d9aea590106fdab7a2c07c04346f618
 H5Tclose	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_t.html#gafcba4db244f6a4d71e99c6e72b8678f0
