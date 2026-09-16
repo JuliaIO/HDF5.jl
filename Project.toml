@@ -4,6 +4,7 @@ version = "0.18.0"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
+HDF5DocURLs = "0e5da7e1-19d7-4335-8622-7e669b619c15"
 HDF5_jll = "0234f1f7-429e-5d53-9886-15a909be8d59"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 MPIPreferences = "3da0fdf6-3ccc-4f1b-acd9-58baa6c99267"
@@ -23,6 +24,9 @@ MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"
 OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 bitshuffle_jll = "228fe19c-1b83-5282-a626-13744502a320"
 
+[sources]
+HDF5DocURLs = {rev = "main", url = "https://github.com/mkitti/HDF5DocURLs.jl"}
+
 [extensions]
 BloscExt = "Blosc"
 CodecBzip2Ext = "CodecBzip2"
@@ -40,6 +44,7 @@ CodecLz4 = "0.4"
 CodecZstd = "0.7, 0.8"
 Compat = "3.1.0, 4"
 FileIO = "1"
+HDF5DocURLs = "1"
 HDF5_jll = "~1.10.5, ~1.12.0, ~1.14.0, 2"
 MPI = "0.20"
 MPIPreferences = "0.1.7"

@@ -62,6 +62,7 @@ end
 include("lock.jl")
 include("types.jl")
 include("error.jl")
+include("docurls.jl")
 include("functions.jl") # core API ccall wrappers
 include("helpers.jl")
 
