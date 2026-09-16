@@ -9,7 +9,7 @@ Fallback documentation URL prefix returned by [`func_url`](@ref)/[`group_url`](@
 when a name is not found in this package's bundled data (e.g. a C function or
 module added to `libhdf5` after this package's `hdf5.tag` snapshot was taken).
 """
-const DEFAULT_URL = "https://docs.hdfgroup.org/hdf5/v1_14/"
+const DEFAULT_URL = "https://support.hdfgroup.org/documentation/hdf5/latest/"
 
 const _DATA_DIR = joinpath(dirname(@__DIR__), "data")
 const _FUNC_URLS_PATH = joinpath(_DATA_DIR, "hdf5_func_urls.tsv")
