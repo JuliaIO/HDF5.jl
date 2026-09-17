@@ -2,7 +2,7 @@
 
 A small companion data package for [HDF5.jl](https://github.com/JuliaIO/HDF5.jl) that maps HDF5 C API function and module/group names to their documentation URLs on `support.hdfgroup.org`.
 
-HDF5.jl's generated docstrings resolve these URLs once, at HDF5.jl's own precompile time, via [`func_url`](@ref)/[`group_url`](@ref). Because this package can be released independently of HDF5.jl, doc-link refreshes (or fixes for renamed/moved pages) can ship to every HDF5.jl release line that depends on it — without a new HDF5.jl release.
+HDF5.jl's generated docstrings resolve these URLs once, at HDF5.jl's own precompile time, via `func_url`/`group_url`. Because this package can be released independently of HDF5.jl, doc-link refreshes (or fixes for renamed/moved pages) can ship to every HDF5.jl release line that depends on it — without a new HDF5.jl release.
 
 ## Usage
 

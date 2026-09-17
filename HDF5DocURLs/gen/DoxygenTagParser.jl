@@ -21,6 +21,24 @@ end
 const DEFAULT_URL_PREFIX = "https://support.hdfgroup.org/documentation/hdf5/latest/"
 
 """
+Bare, unnumbered HDF5 C API names that libhdf5 later split into numbered
+variants (e.g. `H5Literate` -> `H5Literate1`/`H5Literate2`). The current
+Doxygen tag file only documents the numbered variants as real `function`
+members; the bare name appears solely as a `#define` compatibility macro
+(aliasing to whichever numbered variant is selected via `H5_VERSION_GE`),
+which this parser otherwise ignores (see `parse_tag_file`), leaving the bare
+name to fall back to the generic docs root. HDF5.jl binds the bare C symbol
+directly for the libhdf5 releases that predate the split (see the version
+tuples in `gen/api_defs.jl`), so alias it here to the corresponding
+version-1 symbol's documentation.
+"""
+const COMPAT_MACRO_ALIASES = Dict(
+    "H5Dread_chunk" => "H5Dread_chunk1",
+    "H5Lget_info" => "H5Lget_info1",
+    "H5Literate" => "H5Literate1",
+)
+
+"""
 To refresh hdf5.tag, either download it directly from
 `"\$(DEFAULT_URL_PREFIX)hdf5.tag"` (HDF Group's continuously-updated tag file
 for the latest HDF5 docs), or generate it from the HDF5 source code by
@@ -94,6 +112,11 @@ function parse_tag_file(hdf5_tag_url=HDF5_TAG_URL)
             groupdict[group_name] = HDF5GroupInfo(group_name, group_title, group_filename)
         end
     end
+    for (alias, target) in COMPAT_MACRO_ALIASES
+        if !haskey(funcdict, alias) && haskey(funcdict, target)
+            funcdict[alias] = funcdict[target]
+        end
+    end
     return funcdict, groupdict
 end
 
@@ -113,7 +136,7 @@ end
 """
     save_to_tab_separated_values
 
-Save the function names and documentation URLs to a file, separated by a time, with one function per line.
+Save the function names and documentation URLs to a file, separated by a tab, with one function per line.
 """
 function save_to_tab_separated_values(
     func_filename::AbstractString=joinpath(@__DIR__, "..", "data", "hdf5_func_urls.tsv"),

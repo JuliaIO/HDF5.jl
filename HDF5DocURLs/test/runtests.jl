@@ -20,4 +20,15 @@ using Test
         @test length(HDF5DocURLs.FUNC_URLS) > 1000
         @test length(HDF5DocURLs.GROUP_URLS) > 100
     end
+
+    @testset "compatibility-macro aliases resolve to a function-specific URL" begin
+        # These bare, unnumbered C API names are the ones HDF5.jl binds directly for
+        # pre-split libhdf5 releases (see the version tuples in gen/api_defs.jl); the
+        # vendored tag file only documents their numbered successors as real functions.
+        for (alias, target) in
+            ("H5Dread_chunk" => "H5Dread_chunk1", "H5Lget_info" => "H5Lget_info1", "H5Literate" => "H5Literate1")
+            @test func_url(alias) == func_url(target)
+            @test func_url(alias) != HDF5DocURLs.DEFAULT_URL
+        end
+    end
 end

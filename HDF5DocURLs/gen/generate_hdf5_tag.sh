@@ -17,7 +17,7 @@
 # The resulting tag file is written to ./hdf5.tag, which is where
 # DoxygenTagParser.jl looks for it by default (see HDF5_TAG_URL). After
 # refreshing hdf5.tag, re-run `julia --project -m DoxygenTagParser` from this
-# directory to regenerate ../data/hdf5_func_urls.tsv and hdf5_group_urls.tsv.
+# directory to regenerate ../data/hdf5_func_urls.tsv and ../data/hdf5_group_urls.tsv.
 
 set -euo pipefail
 
