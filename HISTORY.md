@@ -7,6 +7,13 @@ Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases)
 * Convert filter packages into package extensions (#1160)
 * Julia 1.9 is the minimum supported Julia version (#1176)
 * Support HDF5 2.0
+* `HDF5.H5DataStore` (supertype of `File`/`Group`) is now `<: AbstractDict{String,Any}`,
+  enabling native Julia REPL tab-completion for `store["path<TAB>"]`. **Breaking**:
+  `for x in group` now yields `name => object` pairs instead of the bare object (use
+  `for (name, x) in group` or `for x in values(group)`). `copy(store)` and `empty(store)`
+  now throw an informative error instead of silently doing something unrelated to a real
+  HDF5 copy (use `copy_object` to copy an HDF5 object). `delete!(store, path)` is now
+  supported as an alias for `delete_object`. `==`/`hash` remain identity-based as before.
 
 ## v0.17.2
 * Fix variable length strings as attributes (#1130)

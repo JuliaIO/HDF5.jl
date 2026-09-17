@@ -78,18 +78,22 @@ Base.isempty(x::Union{Group,File}) = length(x) == 0
 # filename and name
 name(obj::Union{File,Group,Dataset,Datatype}) = API.h5i_get_name(checkvalid(obj))
 
-# iteration by objects
-function Base.iterate(parent::Union{File,Group}, iter=(1, nothing))
-    n, prev_obj = iter
-    prev_obj ≢ nothing && close(prev_obj)
-    n > length(parent) && return nothing
-    obj = h5object(
-        API.h5o_open_by_idx(
-            checkvalid(parent), ".", idx_type(parent), order(parent), n - 1, API.H5P_DEFAULT
-        ),
-        parent
-    )
-    return (obj, (n + 1, obj))
+# iteration as an AbstractDict: yields `name => object` pairs (required by AbstractDict's
+# contract - `pairs(d) = d`, and `==`/`in`/`values` all iterate expecting pairs). This is a
+# breaking change from the previous behavior of yielding the bare object - see HISTORY.md.
+#
+# Iterates over a snapshot of `keys(parent)` taken up front, looking up each child by name,
+# rather than walking HDF5's own by-index enumeration directly: the latter re-numbers
+# remaining objects after a deletion, which would silently skip an object if the store is
+# mutated during iteration (e.g. inside `filter!`). Does NOT close the previously-yielded
+# object between steps either - the caller owns any handle it's given (e.g. `collect(values(store))`
+# must not have every-but-the-last entry closed out from under it); closing is left to the
+# existing finalizers or explicit `close` calls.
+function Base.iterate(parent::Union{File,Group}, state=nothing)
+    ks, i = state === nothing ? (keys(parent), 1) : state
+    i > length(ks) && return nothing
+    k = ks[i]
+    return k => parent[k], (ks, i + 1)
 end
 
 function Base.parent(obj::Union{File,Group,Dataset})
@@ -170,6 +174,13 @@ delete_object(
     lapl::LinkAccessProperties=LinkAccessProperties()
 ) = API.h5l_delete(checkvalid(parent), path, lapl)
 delete_object(obj::Object) = delete_object(parent(obj), ascii(split(name(obj), "/")[end])) # FIXME: remove ascii?
+
+# AbstractDict `delete!` contract: returns the dict itself, and is a no-op (not an error)
+# when the key is absent.
+function Base.delete!(parent::Union{File,Group}, path::AbstractString)
+    haskey(parent, path) && delete_object(parent, path)
+    return parent
+end
 
 # Move links
 move_link(
