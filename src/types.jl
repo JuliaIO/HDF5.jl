@@ -7,10 +7,20 @@
 # H5DataStore is `<: AbstractDict{String,Any}` so that Julia's REPL dict-key completion
 # (which requires `isa(obj, AbstractDict)`, see `REPLCompletions.dict_eval`) works natively
 # for `store["path<TAB>"]`. The generic fallback/safety-net methods below apply to every
-# H5DataStore implementor (including downstream packages like JLD.jl/MAT.jl), expressed only
-# in terms of the already-required `read`/`keys` contract or Julia builtins (`===`/`objectid`),
-# so they need no type-specific internals and are safe defaults even for implementors that
-# supply none of their own `AbstractDict` methods.
+# H5DataStore implementor that supplies none of its own more-specific `AbstractDict` methods
+# (e.g. MAT.jl's `Matlabv5File`/`MatlabHDF5File`, which only define `keys`/`haskey`),
+# expressed only in terms of the already-required `read`/`keys` contract or Julia builtins
+# (`===`/`objectid`), so they need no type-specific internals.
+#
+# Caveat: this does NOT retroactively fix implementors that already define their OWN
+# more-specific, non-conforming method that overrides one of these fallbacks by dispatch.
+# As of this writing, JLD.jl defines `Base.iterate(::Union{JldFile,JldGroup})` that yields
+# bare stored objects rather than `key => value` pairs -- since that method is more specific
+# than the fallback below, `isa(x, AbstractDict)` becomes `true` for JLD.jl's types without
+# their iteration actually conforming to the `AbstractDict` contract (so generic operations
+# built on `iterate`, e.g. `Dict(jldfile)`/`==`/`pairs`, would misbehave for JLD.jl objects).
+# Fixing this requires a coordinated change in JLD.jl itself, not something achievable from
+# HDF5.jl's side alone.
 abstract type H5DataStore <: AbstractDict{String,Any} end
 
 """
@@ -41,9 +51,15 @@ end
 # more efficient versions of these that take precedence by dispatch (see groups.jl).
 Base.getindex(store::H5DataStore, name::AbstractString) = read(store, name)
 Base.length(store::H5DataStore) = length(keys(store))
-function Base.iterate(store::H5DataStore, state=(keys(store), 1))
-    ks, i = state
-    return i > length(ks) ? nothing : (ks[i] => store[ks[i]], (ks, i + 1))
+# Advance `keys(store)` via Julia's iterator protocol rather than assuming it supports
+# integer indexing: e.g. MAT.jl's `Matlabv4File`/`Matlabv5File` return a `KeySet` (from
+# `keys(getvarnames(matfile))`), which has no `getindex` method.
+function Base.iterate(store::H5DataStore, state=nothing)
+    ks, kstate = state === nothing ? (keys(store), nothing) : state
+    it = kstate === nothing ? iterate(ks) : iterate(ks, kstate)
+    it === nothing && return nothing
+    k, next_kstate = it
+    return k => store[k], (ks, next_kstate)
 end
 
 # `get(d, k, default)`: Base provides no generic `AbstractDict` fallback for this (verified;
@@ -69,8 +85,18 @@ Base.empty(store::H5DataStore, ::Type=String, ::Type=Any) =
 # (neither has a custom `==` today, so Julia's default already is `===` for mutable structs);
 # it just prevents `AbstractDict`'s generic *content*-based `==`/`hash` (which would
 # recursively open and compare every child) from silently taking over.
-Base.:(==)(a::T, b::T) where {T<:H5DataStore} = a === b
+#
+# Must cover H5DataStore-vs-AbstractDict comparisons explicitly, not just same-concrete-type
+# pairs: a same-type-only method (`::T, ::T where {T<:H5DataStore}`) leaves e.g. `File ==
+# Group` or `File == Dict()` to fall through to `AbstractDict`'s generic *content*-based `==`,
+# which could compare `true` for two empty stores of different types while `hash` (below)
+# differs for them — violating the `==`/`hash` contract.
+Base.:(==)(a::H5DataStore, b::H5DataStore) = a === b
+Base.:(==)(a::H5DataStore, b::AbstractDict) = false
+Base.:(==)(a::AbstractDict, b::H5DataStore) = false
 Base.isequal(a::H5DataStore, b::H5DataStore) = a === b
+Base.isequal(a::H5DataStore, b::AbstractDict) = false
+Base.isequal(a::AbstractDict, b::H5DataStore) = false
 Base.hash(a::H5DataStore, h::UInt) = hash(objectid(a), h)
 
 ### Base HDF5 structs ###

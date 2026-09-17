@@ -48,6 +48,18 @@ using HDF5
         # delete!
         @test delete!(h5f, "NewDataset") === h5f
         @test !haskey(h5f, "NewDataset")
+        # no-op (not an error) when the key doesn't exist, matching AbstractDict's contract
+        @test delete!(h5f, "still_does_not_exist") === h5f
+
+        # iterate must not close previously-yielded objects out from under the caller: e.g.
+        # collecting all values and reading them only afterward must still work, since the
+        # collection may be the only thing keeping some of them referenced during the loop.
+        collected = collect(values(h5f))
+        @test length(collected) == length(h5f)
+        for v in collected
+            read(v) # would throw if already closed
+            close(v)
+        end
 
         # copy/empty are explicitly unsupported
         @test_throws ArgumentError copy(h5f)
@@ -65,6 +77,12 @@ using HDF5
         h5open(fn, "r") do h5f2
             @test h5f != h5f2 # distinct File objects, even same file on disk
         end
+        # cross-type/cross-kind comparisons must not fall through to AbstractDict's generic
+        # content-based `==` (which could wrongly compare `true` for e.g. two empty stores
+        # of different concrete types, while `hash` differs for them)
+        @test h5f != g
+        @test g != Dict{String,Any}()
+        @test Dict{String,Any}() != g
 
         close(g)
     end
