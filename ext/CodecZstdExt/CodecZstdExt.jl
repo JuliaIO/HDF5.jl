@@ -64,7 +64,9 @@ function H5Z_filter_zstd(
                 aggression = Cint(CodecZstd.LibZstd.ZSTD_CLEVEL_DEFAULT)
             end
 
-            aggression = clamp(aggression, LibZstd.ZSTD_minCLevel(), LibZstd.ZSTD_maxCLevel())
+            aggression = clamp(
+                aggression, LibZstd.ZSTD_minCLevel(), LibZstd.ZSTD_maxCLevel()
+            )
 
             compSize = LibZstd.ZSTD_compressBound(origSize)
             outbuf = Libc.malloc(compSize)
