@@ -56,16 +56,15 @@ function H5Z_filter_zstd(
             # compression
 
             if cd_nelmts > 0
-                aggression = Cint(unsafe_load(cd_values))
+                # the level is stored as an unsigned integer; reinterpret it so
+                # that negative levels (faster at the cost of compression) are
+                # preserved, as the C plugin does with `(int)cd_values[0]`
+                aggression = unsafe_load(cd_values) % Cint
             else
-                aggression = CodecZstd.LibZstd.ZSTD_CLEVEL_DEFAULT
+                aggression = Cint(CodecZstd.LibZstd.ZSTD_CLEVEL_DEFAULT)
             end
 
-            if aggression < 1
-                aggression = 1 # ZSTD_minCLevel()
-            elseif aggression > LibZstd.ZSTD_maxCLevel()
-                aggression = LibZstd.ZSTD_maxCLevel()
-            end
+            aggression = clamp(aggression, LibZstd.ZSTD_minCLevel(), LibZstd.ZSTD_maxCLevel())
 
             compSize = LibZstd.ZSTD_compressBound(origSize)
             outbuf = Libc.malloc(compSize)
@@ -101,16 +100,21 @@ end
 """
     ZstdFilter(clevel)
 
-Zstandard compression filter. `clevel` determines the compression level.
+Zstandard compression filter. `clevel` determines the compression level:
+regular levels are 1 (fastest) to 22 (smallest); negative levels are faster
+still at the cost of compression. Like the C plugin, the level is stored as
+an unsigned integer, so `clevel % Cint` recovers a negative level.
 
 # External Links
 * [Zstandard HDF5 Filter ID 32015](https://portal.hdfgroup.org/display/support/Filters#Filters-32015)
-* [Zstandard HDF5 Plugin Repository (C code)](https://github.com/aparamon/HDF5Plugin-Zstandard)
+* [Zstandard HDF5 Plugin Repository (C code)](https://github.com/HDFGroup/hdf5_plugins/tree/master/ZSTD)
 """
 struct ZstdFilter <: Filter
     clevel::Cuint
+    ZstdFilter(clevel::Integer) = new(clevel % Cuint)
 end
 ZstdFilter() = ZstdFilter(CodecZstd.LibZstd.ZSTD_CLEVEL_DEFAULT)
+Base.show(io::IO, f::ZstdFilter) = print(io, "ZstdFilter(", f.clevel % Cint, ")")
 
 filterid(::Type{ZstdFilter}) = H5Z_FILTER_ZSTD
 filtername(::Type{ZstdFilter}) = zstd_name
