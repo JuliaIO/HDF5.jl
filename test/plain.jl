@@ -288,7 +288,8 @@ end
     @test Asub == A[sel...]
     close(Aref)
     # Test iteration, name, and parent
-    for obj in fr
+    for (k, obj) in fr
+        @test k isa String
         @test HDF5.filename(obj) == fn
         n = HDF5.name(obj)
         p = parent(obj)

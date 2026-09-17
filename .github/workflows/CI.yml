@@ -106,6 +106,42 @@ jobs:
         with:
           files: lcov.info
 
+  HDF5TreeCompletion:
+    name: HDF5TreeCompletion - julia ${{ matrix.version }} - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1.10'
+          - '1'
+        os:
+          - ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/cache@v3
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: ${{ matrix.version }}
+      - name: Pkg.develop this checkout's HDF5 into HDF5TreeCompletion
+        # Julia 1.10's bundled Pkg doesn't honor HDF5TreeCompletion/Project.toml's
+        # `[sources] HDF5 = {path = ".."}` override, so with only the registry to
+        # fall back on (HDF5 0.18 unreleased), resolution fails. `Pkg.develop`
+        # writes an explicit path-based Manifest entry instead, which every
+        # supported Julia version honors regardless of [sources] support.
+        # TODO: remove once HDF5.jl v0.18 is released and this becomes unnecessary.
+        shell: julia --project=HDF5TreeCompletion {0}
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path="."))
+      - uses: julia-actions/julia-buildpkg@v1
+        with:
+          project: HDF5TreeCompletion
+      - uses: julia-actions/julia-runtest@v1
+        with:
+          project: HDF5TreeCompletion
+
   integration:
     name: ${{ matrix.package.repo }} - julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
