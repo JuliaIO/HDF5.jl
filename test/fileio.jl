@@ -30,6 +30,28 @@ using HDF5, OrderedCollections, FileIO, Test
     close(fr)
 
     rm(fn)
+
+    # Now that File/Group are AbstractDict, saving one directly must keep raising this
+    # explicit guard rather than silently matching the generic `dict::AbstractDict` method
+    # (see ext/FileIOExt.jl) -- regression test for a method-specificity change routing
+    # File/Group back into the generic saver.
+    h5open(fn, "w") do hfile
+        hfile["A"] = 1.0
+        g = create_group(hfile, "G")
+        # FileIO's own `save` wraps whatever `fileio_save` throws in a `CapturedException`.
+        for x in (hfile, g)
+            err = try
+                save(fn, x)
+                nothing
+            catch e
+                e
+            end
+            @test err isa Base.CapturedException
+            @test err.ex isa ArgumentError
+        end
+        close(g)
+    end
+    rm(fn)
 end
 
 @testset "track order" begin

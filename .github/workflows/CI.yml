@@ -106,6 +106,31 @@ jobs:
         with:
           files: lcov.info
 
+  HDF5TreeCompletion:
+    name: HDF5TreeCompletion - julia ${{ matrix.version }} - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1.10'
+          - '1'
+        os:
+          - ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/cache@v3
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: ${{ matrix.version }}
+      - uses: julia-actions/julia-buildpkg@v1
+        with:
+          project: HDF5TreeCompletion
+      - uses: julia-actions/julia-runtest@v1
+        with:
+          project: HDF5TreeCompletion
+
   integration:
     name: ${{ matrix.package.repo }} - julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
