@@ -27,10 +27,28 @@ Doxygen tag file only documents the numbered variants as real `function`
 members; the bare name appears solely as a `#define` compatibility macro
 (aliasing to whichever numbered variant is selected via `H5_VERSION_GE`),
 which this parser otherwise ignores (see `parse_tag_file`), leaving the bare
-name to fall back to the generic docs root. HDF5.jl binds the bare C symbol
-directly for the libhdf5 releases that predate the split (see the version
-tuples in `gen/api_defs.jl`), so alias it here to the corresponding
-version-1 symbol's documentation.
+name to fall back to the generic docs root.
+
+Each target below is picked to match the exact version HDF5.jl itself binds
+the bare C symbol to (verified against both `gen/api_defs.jl`'s version
+tuples/comments and the tag file's `arglist` for each numbered variant):
+  - `H5Dread_chunk` -> `H5Dread_chunk1`: `gen/api_defs.jl`'s `h5d_read_chunk`
+    binds the bare symbol for libhdf5 `< v"2.0"` ("The function was renamed
+    to H5Dread_chunk1 in v2.0"); `H5Dread_chunk1`'s 5-argument arglist
+    matches, `H5Dread_chunk2`'s added `buf_size` parameter does not.
+  - `H5Lget_info` -> `H5Lget_info1`: `h5l_get_info` binds the bare symbol
+    unconditionally (all supported libhdf5 versions) using HDF5.jl's single
+    `H5L_info_t` struct; `H5Lget_info1`'s arglist takes `H5L_info1_t*`
+    (matching field-for-field), `H5Lget_info2`'s takes the newer
+    `H5L_info2_t*`.
+  - `H5Literate` -> `H5Literate1`: `h5l_iterate` binds the bare symbol for
+    libhdf5 `< v"1.12"` ("libhdf5 v1.10 provides the name H5Literate...v1.12
+    provides the same under H5Literate1"); `H5Literate1`'s arglist takes the
+    matching `H5L_iterate1_t` callback type, `H5Literate2`'s takes the newer
+    `H5L_iterate2_t`.
+
+None of the newer `*2` variants above are bound by HDF5.jl at all yet; see
+https://github.com/JuliaIO/HDF5.jl/issues/1248 (opened to track adding them).
 """
 const COMPAT_MACRO_ALIASES = Dict(
     "H5Dread_chunk" => "H5Dread_chunk1",
@@ -113,9 +131,13 @@ function parse_tag_file(hdf5_tag_url=HDF5_TAG_URL)
         end
     end
     for (alias, target) in COMPAT_MACRO_ALIASES
-        if !haskey(funcdict, alias) && haskey(funcdict, target)
-            funcdict[alias] = funcdict[target]
-        end
+        haskey(funcdict, alias) && continue  # tag file now documents this name directly
+        haskey(funcdict, target) || error(
+            "COMPAT_MACRO_ALIASES: target `$target` for alias `$alias` was not found " *
+            "in the parsed tag file. Either the tag file is stale/corrupt, or `$target` " *
+            "has been renamed/removed upstream -- update COMPAT_MACRO_ALIASES to match.",
+        )
+        funcdict[alias] = funcdict[target]
     end
     return funcdict, groupdict
 end
