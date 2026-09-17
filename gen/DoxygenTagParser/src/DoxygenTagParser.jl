@@ -21,9 +21,12 @@ end
 const DEFAULT_URL_PREFIX = "https://support.hdfgroup.org/documentation/hdf5/latest/"
 
 """
-To generate hdf5.tag from the HDF5 source code, run `scripts/generate_hdf5_tag.sh`
-(see that script for setup requirements). It writes the tag file to
-`joinpath(dirname(@__DIR__), "hdf5.tag")`, i.e. `HDF5_TAG_URL` below.
+To refresh hdf5.tag, either download it directly from
+`"\$(DEFAULT_URL_PREFIX)hdf5.tag"` (HDF Group's continuously-updated tag file
+for the latest HDF5 docs), or generate it from the HDF5 source code by
+running `scripts/generate_hdf5_tag.sh` (see that script for setup
+requirements). Either way, overwrite `joinpath(dirname(@__DIR__), "hdf5.tag")`,
+i.e. `HDF5_TAG_URL` below.
 """
 const HDF5_TAG_URL = joinpath(dirname(@__DIR__), "hdf5.tag")
 
