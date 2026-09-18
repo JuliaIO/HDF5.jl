@@ -1,0 +1,12 @@
+name = "HDF5DocURLs"
+uuid = "0e5da7e1-19d7-4335-8622-7e669b619c15"
+version = "1.0.0"
+
+[compat]
+julia = "1.6"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

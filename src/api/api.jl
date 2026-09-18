@@ -62,6 +62,7 @@ end
 include("lock.jl")
 include("types.jl")
 include("error.jl")
+import HDF5DocURLs # doc URLs for functions.jl/helpers.jl docstrings, resolved at precompile time
 include("functions.jl") # core API ccall wrappers
 include("helpers.jl")
 
