@@ -190,7 +190,8 @@ from `hdf5.tag` (or the paths/URL given as ARGS) by default.
 function (@main)(ARGS)
     nargs = length(ARGS)
     tsv_file = nargs > 0 ? ARGS[1] : joinpath(@__DIR__, "..", "data", "hdf5_func_urls.tsv")
-    group_file = nargs > 1 ? ARGS[2] : joinpath(@__DIR__, "..", "data", "hdf5_group_urls.tsv")
+    group_file =
+        nargs > 1 ? ARGS[2] : joinpath(@__DIR__, "..", "data", "hdf5_group_urls.tsv")
     tag_file = nargs > 2 ? ARGS[3] : HDF5_TAG_URL
     info = parse_tag_file(tag_file)
     save_to_tab_separated_values(tsv_file, group_file, info)
