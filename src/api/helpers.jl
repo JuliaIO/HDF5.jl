@@ -623,7 +623,7 @@ end
 
 Deprecated HDF5 function. Use [`h5o_get_info`](@ref) or [`h5o_get_native_info`](@ref) if possible.
 
-See `libhdf5` documentation for [`H5Oget_info1`](https://portal.hdfgroup.org/display/HDF5/H5O_GET_INFO1).
+See `libhdf5` documentation for [`H5Oget_info1`]($(HDF5DocURLs.func_url("H5Oget_info1"))).
 """
 function h5o_get_info1(object_id, buf)
     lock(liblock)
@@ -867,7 +867,7 @@ end
 """
     h5p_get_class_name(pcid::hid_t) -> String
 
-See `libhdf5` documentation for [`H5P_GET_CLASS_NAME`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_CLASS_NAME).
+See `libhdf5` documentation for [`H5Pget_class_name`]($(HDF5DocURLs.func_url("H5Pget_class_name"))).
 """
 function h5p_get_class_name(pcid)
     lock(liblock)
@@ -983,7 +983,7 @@ end
 """
     h5t_get_member_name(type_id::hid_t, index::Cuint) -> String
 
-See `libhdf5` documentation for [`H5Oopen`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_MEMBER_NAME).
+See `libhdf5` documentation for [`H5Tget_member_name`]($(HDF5DocURLs.func_url("H5Tget_member_name"))).
 """
 function h5t_get_member_name(type_id, index)
     lock(liblock)
@@ -1003,7 +1003,7 @@ end
 """
     h5t_get_tag(type_id::hid_t) -> String
 
-See `libhdf5` documentation for [`H5Oopen`](https://portal.hdfgroup.org/display/HDF5/H5T_GET_TAG).
+See `libhdf5` documentation for [`H5Tget_tag`]($(HDF5DocURLs.func_url("H5Tget_tag"))).
 """
 function h5t_get_tag(type_id)
     lock(liblock)
@@ -1087,13 +1087,13 @@ end
 """
     h5p_get_fapl_mpio(fapl_id::hid_t, comm::Ptr{MPI.MPI_Comm}, info::Ptr{MPI.MPI_Info})
 
-See `libhdf5` documentation for [`H5Pget_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_FAPL_MPIO32).
+See `libhdf5` documentation for [`H5Pget_fapl_mpio`]($(HDF5DocURLs.func_url("H5Pget_fapl_mpio"))).
 """
 function h5p_get_fapl_mpio end
 
 """
     h5p_set_fapl_mpio(fapl_id::hid_t, comm::MPI.MPI_Comm, info::MPI.MPI_Info)
 
-See `libhdf5` documentation for [`H5Pset_fapl_mpio`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MPIO32).
+See `libhdf5` documentation for [`H5Pset_fapl_mpio`]($(HDF5DocURLs.func_url("H5Pset_fapl_mpio"))).
 """
 function h5p_set_fapl_mpio end

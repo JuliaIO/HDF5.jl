@@ -21,14 +21,50 @@ end
 const DEFAULT_URL_PREFIX = "https://support.hdfgroup.org/documentation/hdf5/latest/"
 
 """
+Bare, unnumbered HDF5 C API names that libhdf5 later split into numbered
+variants (e.g. `H5Literate` -> `H5Literate1`/`H5Literate2`). The current
+Doxygen tag file only documents the numbered variants as real `function`
+members; the bare name appears solely as a `#define` compatibility macro
+(aliasing to whichever numbered variant is selected via `H5_VERSION_GE`),
+which this parser otherwise ignores (see `parse_tag_file`), leaving the bare
+name to fall back to the generic docs root.
+
+Each target below is picked to match the exact version HDF5.jl itself binds
+the bare C symbol to (verified against both `gen/api_defs.jl`'s version
+tuples/comments and the tag file's `arglist` for each numbered variant):
+  - `H5Dread_chunk` -> `H5Dread_chunk1`: `gen/api_defs.jl`'s `h5d_read_chunk`
+    binds the bare symbol for libhdf5 `< v"2.0"` ("The function was renamed
+    to H5Dread_chunk1 in v2.0"); `H5Dread_chunk1`'s 5-argument arglist
+    matches, `H5Dread_chunk2`'s added `buf_size` parameter does not.
+  - `H5Lget_info` -> `H5Lget_info1`: `h5l_get_info` binds the bare symbol
+    unconditionally (all supported libhdf5 versions) using HDF5.jl's single
+    `H5L_info_t` struct; `H5Lget_info1`'s arglist takes `H5L_info1_t*`
+    (matching field-for-field), `H5Lget_info2`'s takes the newer
+    `H5L_info2_t*`.
+  - `H5Literate` -> `H5Literate1`: `h5l_iterate` binds the bare symbol for
+    libhdf5 `< v"1.12"` ("libhdf5 v1.10 provides the name H5Literate...v1.12
+    provides the same under H5Literate1"); `H5Literate1`'s arglist takes the
+    matching `H5L_iterate1_t` callback type, `H5Literate2`'s takes the newer
+    `H5L_iterate2_t`.
+
+None of the newer `*2` variants above are bound by HDF5.jl at all yet; see
+https://github.com/JuliaIO/HDF5.jl/issues/1248 (opened to track adding them).
+"""
+const COMPAT_MACRO_ALIASES = Dict(
+    "H5Dread_chunk" => "H5Dread_chunk1",
+    "H5Lget_info" => "H5Lget_info1",
+    "H5Literate" => "H5Literate1",
+)
+
+"""
 To refresh hdf5.tag, either download it directly from
 `"\$(DEFAULT_URL_PREFIX)hdf5.tag"` (HDF Group's continuously-updated tag file
 for the latest HDF5 docs), or generate it from the HDF5 source code by
-running `scripts/generate_hdf5_tag.sh` (see that script for setup
-requirements). Either way, overwrite `joinpath(dirname(@__DIR__), "hdf5.tag")`,
-i.e. `HDF5_TAG_URL` below.
+running `generate_hdf5_tag.sh` (see that script for setup requirements).
+Either way, overwrite `joinpath(@__DIR__, "hdf5.tag")`, i.e. `HDF5_TAG_URL`
+below.
 """
-const HDF5_TAG_URL = joinpath(dirname(@__DIR__), "hdf5.tag")
+const HDF5_TAG_URL = joinpath(@__DIR__, "hdf5.tag")
 
 """
     parse_tag_file(url)
@@ -94,6 +130,15 @@ function parse_tag_file(hdf5_tag_url=HDF5_TAG_URL)
             groupdict[group_name] = HDF5GroupInfo(group_name, group_title, group_filename)
         end
     end
+    for (alias, target) in COMPAT_MACRO_ALIASES
+        haskey(funcdict, alias) && continue  # tag file now documents this name directly
+        haskey(funcdict, target) || error(
+            "COMPAT_MACRO_ALIASES: target `$target` for alias `$alias` was not found " *
+            "in the parsed tag file. Either the tag file is stale/corrupt, or `$target` " *
+            "has been renamed/removed upstream -- update COMPAT_MACRO_ALIASES to match.",
+        )
+        funcdict[alias] = funcdict[target]
+    end
     return funcdict, groupdict
 end
 
@@ -113,11 +158,11 @@ end
 """
     save_to_tab_separated_values
 
-Save the function names and documentation URLs to a file, separated by a time, with one function per line.
+Save the function names and documentation URLs to a file, separated by a tab, with one function per line.
 """
 function save_to_tab_separated_values(
-    func_filename::AbstractString="hdf5_func_urls.tsv",
-    group_filename::AbstractString="hdf5_group_urls.tsv",
+    func_filename::AbstractString=joinpath(@__DIR__, "..", "data", "hdf5_func_urls.tsv"),
+    group_filename::AbstractString=joinpath(@__DIR__, "..", "data", "hdf5_group_urls.tsv"),
     info::Tuple{Dict{String,HDF5FunctionInfo},Dict{String,HDF5GroupInfo}}=parse_tag_file()
 )
     funcinfo, groupinfo = info
@@ -139,11 +184,14 @@ end
     main()
 
 Executed when `julia --project -m DoxygenTagParser` is run from the shell.
+Regenerates `../data/hdf5_func_urls.tsv` and `../data/hdf5_group_urls.tsv`
+from `hdf5.tag` (or the paths/URL given as ARGS) by default.
 """
 function (@main)(ARGS)
     nargs = length(ARGS)
-    tsv_file = nargs > 0 ? ARGS[1] : "hdf5_func_urls.tsv"
-    group_file = nargs > 1 ? ARGS[2] : "hdf5_group_urls.tsv"
+    tsv_file = nargs > 0 ? ARGS[1] : joinpath(@__DIR__, "..", "data", "hdf5_func_urls.tsv")
+    group_file =
+        nargs > 1 ? ARGS[2] : joinpath(@__DIR__, "..", "data", "hdf5_group_urls.tsv")
     tag_file = nargs > 2 ? ARGS[3] : HDF5_TAG_URL
     info = parse_tag_file(tag_file)
     save_to_tab_separated_values(tsv_file, group_file, info)

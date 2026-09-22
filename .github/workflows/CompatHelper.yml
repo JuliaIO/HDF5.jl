@@ -37,7 +37,7 @@ jobs:
       - name: "Run CompatHelper"
         run: |
           import CompatHelper
-          CompatHelper.main(subdirs=["", "filters/H5Zbitshuffle", "filters/H5Zblosc", "filters/H5Zbzip2", "filters/H5Zlz4", "filters/H5Zzstd"])
+          CompatHelper.main(subdirs=["", "HDF5DocURLs", "filters/H5Zbitshuffle", "filters/H5Zblosc", "filters/H5Zbzip2", "filters/H5Zlz4", "filters/H5Zzstd"])
         shell: julia --color=yes {0}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
