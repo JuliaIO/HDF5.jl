@@ -111,9 +111,7 @@ function Base.read(obj::DatasetOrAttribute, ::Type{String}, I...)
     return val
 end
 
-# Implements `copyto!(output_buffer::AbstractArray{T}, obj::Union{DatasetOrAttribute}) where T`:
-# copy [part of] a HDF5 dataset or attribute to a preallocated output buffer.
-# The output buffer must be convertible to a pointer and have a contiguous layout.
+# internal implementation shared by the Base.copyto! methods below
 function _copyto!(output_buffer::AbstractArray{T}, obj::DatasetOrAttribute, I...) where {T}
     dtype = datatype(obj)
     val = nothing
@@ -124,6 +122,12 @@ function _copyto!(output_buffer::AbstractArray{T}, obj::DatasetOrAttribute, I...
     end
     return val
 end
+"""
+    copyto!(output_buffer::AbstractArray{T}, obj::Union{DatasetOrAttribute}) where T
+
+Copy [part of] a HDF5 dataset or attribute to a preallocated output buffer.
+The output buffer must be convertible to a pointer and have a contiguous layout.
+"""
 Base.copyto!(output_buffer::AbstractArray{T}, dset::Dataset, I...) where {T} =
     _copyto!(output_buffer, dset, I...)
 # Disambiguate against DiskArrays.jl's own `copyto!` methods for `AbstractDiskArray`
@@ -254,9 +258,7 @@ function _generic_read(
     end
 end
 
-# Implements `similar(obj::DatasetOrAttribute, [::Type{T}], [dims::Integer...]; normalize = true)`:
-# return an `Array{T}` or `Matrix{UInt8}` that can contain [part of] the dataset.
-# The `normalize` keyword will normalize the buffer for string and array datatypes.
+# internal implementation shared by the Base.similar methods below
 function _similar(
     obj::DatasetOrAttribute, ::Type{T}, dims::Dims; normalize::Bool=true
 ) where {T}
@@ -267,6 +269,13 @@ function _similar(
         close(filetype)
     end
 end
+"""
+    similar(obj::DatasetOrAttribute, [::Type{T}], [dims::Integer...]; normalize = true)
+
+Return a `Array{T}` or `Matrix{UInt8}` to that can contain [part of] the dataset.
+
+The `normalize` keyword will normalize the buffer for string and array datatypes.
+"""
 Base.similar(obj::Dataset, ::Type{T}, dims::Dims; normalize::Bool=true) where {T} =
     _similar(obj, T, dims; normalize=normalize)
 Base.similar(obj::Attribute, ::Type{T}, dims::Dims; normalize::Bool=true) where {T} =
