@@ -133,6 +133,7 @@ H5TOOL_RP_UG	https://support.hdfgroup.org/documentation/hdf5/latest/_h5_t_o_o_l_
 H5TOOL_RT_UG	https://support.hdfgroup.org/documentation/hdf5/latest/_h5_t_o_o_l__r_t__u_g.html
 H5TOOL_ST_UG	https://support.hdfgroup.org/documentation/hdf5/latest/_h5_t_o_o_l__s_t__u_g.html
 H5TOOL_WH_UG	https://support.hdfgroup.org/documentation/hdf5/latest/_h5_t_o_o_l__w_h__u_g.html
+H5TS	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_t_s.html
 H5T_UG	https://support.hdfgroup.org/documentation/hdf5/latest/_h5_t__u_g.html
 H5VFD	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_v_f_d.html
 H5VL	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_v_l.html
@@ -257,10 +258,10 @@ hdf5_chunking	https://support.hdfgroup.org/documentation/hdf5/latest/hdf5_chunki
 improve_compressed_perf	https://support.hdfgroup.org/documentation/hdf5/latest/improve_compressed_perf.html
 index	https://support.hdfgroup.org/documentation/hdf5/latest/index.html
 maybe_metadata_reads	https://support.hdfgroup.org/documentation/hdf5/latest/maybe_metadata_reads.html
-md_doxygen_2examples_2menus_2core__menu	https://support.hdfgroup.org/documentation/hdf5/latest/md_doxygen_2examples_2menus_2core__menu.html
-md_doxygen_2examples_2menus_2fortran__menu	https://support.hdfgroup.org/documentation/hdf5/latest/md_doxygen_2examples_2menus_2fortran__menu.html
-md_doxygen_2examples_2menus_2high__level__menu	https://support.hdfgroup.org/documentation/hdf5/latest/md_doxygen_2examples_2menus_2high__level__menu.html
-md_doxygen_2examples_2menus_2java__menu	https://support.hdfgroup.org/documentation/hdf5/latest/md_doxygen_2examples_2menus_2java__menu.html
+md_docs_2doxygen_2examples_2menus_2core__menu	https://support.hdfgroup.org/documentation/hdf5/latest/md_docs_2doxygen_2examples_2menus_2core__menu.html
+md_docs_2doxygen_2examples_2menus_2fortran__menu	https://support.hdfgroup.org/documentation/hdf5/latest/md_docs_2doxygen_2examples_2menus_2fortran__menu.html
+md_docs_2doxygen_2examples_2menus_2high__level__menu	https://support.hdfgroup.org/documentation/hdf5/latest/md_docs_2doxygen_2examples_2menus_2high__level__menu.html
+md_docs_2doxygen_2examples_2menus_2java__menu	https://support.hdfgroup.org/documentation/hdf5/latest/md_docs_2doxygen_2examples_2menus_2java__menu.html
 mod_region_writes	https://support.hdfgroup.org/documentation/hdf5/latest/mod_region_writes.html
 predefined_datatypes_tables	https://support.hdfgroup.org/documentation/hdf5/latest/predefined_datatypes_tables.html
 rel_spec_110	https://support.hdfgroup.org/documentation/hdf5/latest/rel_spec_110.html

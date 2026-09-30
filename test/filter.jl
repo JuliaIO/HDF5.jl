@@ -87,6 +87,17 @@ using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenab
         write(ds, data)
     end
 
+    # negative Zstandard levels are faster at the cost of compression
+    ds = create_dataset(
+        f,
+        "zstd_negative",
+        datatype(data),
+        dataspace(data);
+        chunk=(100, 100),
+        filters=ZstdFilter(-3)
+    )
+    write(ds, data)
+
     ds = create_dataset(
         f,
         "blosc_bitshuffle",
@@ -151,6 +162,10 @@ using HDF5.Filters: ExternalFilter, isavailable, isencoderenabled, isdecoderenab
                 if startswith(name, "shuffle+")
                     @test filters[1] isa Shuffle
                     @test filters[2] isa compressionFilters[name[9:end]]
+                elseif name == "zstd_negative"
+                    @test filters[1] isa ZstdFilter
+                    @test filters[ZstdFilter].clevel % Cint == -3
+                    @test repr(filters[ZstdFilter]) == "ZstdFilter(-3)"
                 elseif haskey(compressionFilters, name) || name == "blosc_bitshuffle"
                     name = replace(name, r"_.*" => "")
                     @test filters[1] isa compressionFilters[name]
