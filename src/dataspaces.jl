@@ -146,13 +146,15 @@ end
 function Base.ndims(dspace::Dataspace)
     API.h5s_get_simple_extent_ndims(checkvalid(dspace))
 end
-Base.ndims(obj::Union{Dataset,Attribute}) = dataspace(ndims, obj)
+Base.ndims(dset::Dataset) = dataspace(ndims, dset)
+Base.ndims(attr::Attribute) = dataspace(ndims, attr)
 
 function Base.size(dspace::Dataspace)
     h5_dims = API.h5s_get_simple_extent_dims(checkvalid(dspace), nothing)
     return _from_h5_dims(h5_dims)
 end
-Base.size(obj::Union{Dataset,Attribute}) = dataspace(size, obj)
+Base.size(dset::Dataset) = dataspace(size, dset)
+Base.size(attr::Attribute) = dataspace(size, attr)
 
 function Base.size(dspace::Dataspace, d::Integer)
     d > 0 || throw(ArgumentError("invalid dimension d; must be positive integer"))
@@ -161,17 +163,20 @@ function Base.size(dspace::Dataspace, d::Integer)
     h5_dims = API.h5s_get_simple_extent_dims(dspace, nothing)
     return @inbounds Int(h5_dims[N - d + 1])
 end
-Base.size(obj::Union{Dataset,Attribute}, d::Integer) = dataspace(size, obj, d)
+Base.size(dset::Dataset, d::Integer) = dataspace(size, dset, d)
+Base.size(attr::Attribute, d::Integer) = dataspace(size, attr, d)
 
 function Base.length(dspace::Dataspace)
     isnull(dspace) && return 0
     h5_dims = API.h5s_get_simple_extent_dims(checkvalid(dspace), nothing)
     return Int(prod(h5_dims))
 end
-Base.length(obj::Union{Dataset,Attribute}) = dataspace(length, obj)
+Base.length(dset::Dataset) = dataspace(length, dset)
+Base.length(attr::Attribute) = dataspace(length, attr)
 
 Base.isempty(dspace::Dataspace) = length(dspace) == 0
-Base.isempty(obj::Union{Dataset,Attribute}) = dataspace(isempty, obj)
+Base.isempty(dset::Dataset) = dataspace(isempty, dset)
+Base.isempty(attr::Attribute) = dataspace(isempty, attr)
 
 """
     isnull(dspace::Union{HDF5.Dataspace, HDF5.Dataset, HDF5.Attribute})
@@ -251,6 +256,15 @@ struct BlockRange
     stride::API.hsize_t
     count::API.hsize_t
     block::API.hsize_t
+end
+
+# `BlockRange` is not an `AbstractRange`/`AbstractArray`, so Base's generic bounds-checking
+# machinery (invoked by DiskArrays.jl's generic `getindex`/`setindex!` now that `Dataset <:
+# DiskArrays.AbstractDiskArray`) doesn't know how to validate it out of the box.
+function Base.checkindex(::Type{Bool}, inds::AbstractUnitRange, r::BlockRange)
+    (r.count == 0 || r.count == API.H5S_UNLIMITED) && return true
+    last0 = r.start0 + (r.count - 1) * r.stride + r.block - 1
+    return Base.checkindex(Bool, inds, (Int(r.start0) + 1):(Int(last0) + 1))
 end
 
 """
