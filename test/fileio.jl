@@ -30,6 +30,21 @@ using HDF5, OrderedCollections, FileIO, Test
     close(fr)
 
     rm(fn)
+
+    # saving an open File/Group directly (rather than a plain Dict-like collection) is not
+    # supported: without this guard, since File/Group are AbstractDict, this would otherwise
+    # silently match the generic `dict::AbstractDict` fileio_save method and fail deeper and
+    # more confusingly (write_dataset isn't designed for open Dataset/Group values).
+    # FileIO wraps the ArgumentError in a CapturedException, so match on message instead of type.
+    h5open(fn, "w") do h5f
+        h5f["A"] = 1.0
+        g = create_group(h5f, "G")
+        @test_throws "not supported" save(fn, h5f)
+        @test_throws "not supported" save(fn, g)
+        close(g)
+    end
+
+    rm(fn)
 end
 
 @testset "track order" begin
