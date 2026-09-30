@@ -5,6 +5,7 @@ CurrentModule = HDF5
 ```
 
 ```@docs
+File
 h5open
 ishdf5
 Base.isopen
