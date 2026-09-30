@@ -13,37 +13,37 @@ Examine `REGISTERED_FILTERS`, a `Dict{H5Z_filter_t, Function}`, for a list of
 filter functions contained within this module, which are exported.
 
 ```jldoctest
-julia> println.(values(HDF5.Filters.Registered.REGISTERED_FILTERS));
-FCIDECOMPFilter
-LZOFilter
-BitGroomFilter
-SZ3Filter
-Delta_RiceFilter
-fpzipFilter
-LPC_RiceFilter
-LZFFilter
-FLACFilter
-VBZFilter
-FAPECFilter
-zfpFilter
-CBFFilter
-JPEG_XRFilter
-LZ4Filter
+julia> foreach(println, sort(collect(values(HDF5.Filters.Registered.REGISTERED_FILTERS)); by=string));
+APAXFilter
 BLOSC2Filter
-ZstandardFilter
-SZFilter
+BLOSCFilter
+BZIP2Filter
+BitGroomFilter
+B³DFilter
+CBFFilter
+CCSDS_123Filter
+Delta_RiceFilter
+FAPECFilter
+FCIDECOMPFilter
+FLACFilter
 Granular_BitRoundFilter
 JPEGFilter
-SnappyFilter
-B³DFilter
-APAXFilter
-BLOSCFilter
-SPDPFilter
-bitshuffleFilter
-MAFISCFilter
-BZIP2Filter
-CCSDS_123Filter
 JPEG_LSFilter
+JPEG_XRFilter
+LPC_RiceFilter
+LZ4Filter
+LZFFilter
+LZOFilter
+MAFISCFilter
+SPDPFilter
+SZ3Filter
+SZFilter
+SnappyFilter
+VBZFilter
+ZstandardFilter
+bitshuffleFilter
+fpzipFilter
+zfpFilter
 ```
 
 """
