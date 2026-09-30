@@ -112,3 +112,63 @@ using HDF5
         @test !occursin("Dict{String", str)
     end
 end
+
+# The generic fallbacks in src/types.jl (getindex/get/iterate) are never actually exercised
+# by File/Group above, since those define their own more specific methods. Test them
+# directly against a minimal mock implementor that (like MAT.jl's Matlabv4File/Matlabv5File/
+# MatlabHDF5File) supplies only the documented required contract (read/keys/haskey), all
+# declared for concrete `String` only.
+@testset "H5DataStore generic AbstractDict fallbacks" begin
+    struct MockStore <: HDF5.H5DataStore
+        data::Dict{String,Any}
+    end
+    Base.keys(store::MockStore) = collect(keys(store.data))
+    Base.haskey(store::MockStore, name::String) = haskey(store.data, name)
+    Base.read(store::MockStore, name::String) = store.data[name]
+
+    store = MockStore(Dict("a" => 1, "b" => 2))
+
+    # getindex/get must normalize an AbstractString key to String before dispatching to
+    # read/haskey (declared for concrete String only above): otherwise a SubString misses
+    # those methods and falls through to the generic vararg `read(::H5DataStore,
+    # ::AbstractString...)` fallback, which calls itself with the same non-String argument
+    # -- infinite recursion/StackOverflowError instead of a clean lookup.
+    key = SubString("xax", 2, 2) # value "a", but typed as SubString, not String
+    @test store[key] == 1
+    @test get(store, key, :default) == 1
+    @test get(store, SubString("xzx", 2, 2), :default) === :default
+
+    @test sort(collect(pairs(store))) == sort(collect(pairs(store.data)))
+
+    # iterate: a `keys(store)` iterator whose own state protocol legitimately uses `nothing`
+    # as a non-terminal state (not just "start over") must still be advanced correctly, not
+    # restarted from the beginning forever.
+    struct WeirdKeys
+        data::Vector{String}
+    end
+    Base.iterate(wk::WeirdKeys) = isempty(wk.data) ? nothing : (wk.data[1], nothing)
+    Base.iterate(wk::WeirdKeys, ::Nothing) =
+        length(wk.data) < 2 ? nothing : (wk.data[2], :final)
+    Base.iterate(wk::WeirdKeys, ::Symbol) = nothing
+
+    struct WeirdStore <: HDF5.H5DataStore
+        data::Dict{String,Int}
+    end
+    Base.keys(store::WeirdStore) = WeirdKeys(collect(keys(store.data)))
+    Base.haskey(store::WeirdStore, name::String) = haskey(store.data, name)
+    Base.read(store::WeirdStore, name::String) = store.data[name]
+
+    wstore = WeirdStore(Dict("a" => 1, "b" => 2))
+    # Drive `iterate` directly (not e.g. `Iterators.take`/`collect`, which would call the
+    # generic `length` fallback -- itself `length(keys(store))`, unrelated to what's being
+    # tested here) with an explicit bound, so a regression to the old restart-forever
+    # behavior fails the count check below instead of hanging the test suite.
+    visited = String[]
+    state = iterate(wstore)
+    while state !== nothing && length(visited) < 10
+        (k, _v), st = state
+        push!(visited, k)
+        state = iterate(wstore, st)
+    end
+    @test sort(visited) == ["a", "b"]
+end
