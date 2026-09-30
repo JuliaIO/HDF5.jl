@@ -1,6 +1,6 @@
 name = "H5Zbitshuffle"
 uuid = "51b4e782-877f-4ccf-958a-27bf628210da"
-authors = ["James.Hester <jxh@ansto.gov.au>"]
+authors = ["James.Hester <jxh@ansto.gov.au>", "HDF5.jl contributors: https://github.com/JuliaIO/HDF5.jl/contributors"]
 version = "0.1.4"
 
 [deps]

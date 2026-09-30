@@ -117,11 +117,20 @@ function H5Z_filter_bitshuffle(
         major = unsafe_load(cd_values, 1)
         minor = unsafe_load(cd_values, 2)
         elem_size = unsafe_load(cd_values, 3)
-        comp_lvl = unsafe_load(cd_values, 6)
-        compress_flag = unsafe_load(cd_values, 5)
+        compress_flag = zero(Cuint)
+        comp_lvl = Cint(0)
 
         if cd_nelmts > 3
             block_size = unsafe_load(cd_values, 4)
+        end
+        if cd_nelmts > 4
+            compress_flag = unsafe_load(cd_values, 5)
+        end
+        if cd_nelmts > 5
+            # the zstd level is stored as an unsigned integer; reinterpret it so
+            # that negative levels (faster at the cost of compression) are
+            # preserved, as the C plugin does with `(int)cd_values[5]`
+            comp_lvl = unsafe_load(cd_values, 6) % Cint
         end
 
         @debug "Major,minor:" major minor
@@ -270,7 +279,7 @@ function H5Z_filter_bitshuffle(
                         size,
                         elem_size,
                         block_size,
-                        Cint(comp_lvl)
+                        comp_lvl
                     )
                 end
 
@@ -342,15 +351,23 @@ struct BitshuffleFilter <: Filter
     typesize::Cuint
     blocksize::Cuint
     compression::Cuint
-    comp_level::Cuint #Zstd only
+    comp_level::Cuint #Zstd only; negative levels stored via `% Cuint`, recovered via `% Cint`
+    function BitshuffleFilter(
+        major, minor, typesize, blocksize, compression, comp_level::Integer
+    )
+        new(major, minor, typesize, blocksize, compression, comp_level % Cuint)
+    end
 end
 
 """
     BitshuffleFilter(blocksize=0,compressor=:none,comp_level=0)
 
-The Bitshuffle filter can optionally include compression :lz4 or :zstd. For :zstd
-comp_level can be provided. This is ignored for :lz4 compression. If `blocksize`
-is zero the default bitshuffle blocksize is used.
+The Bitshuffle filter can optionally include compression :lz4 or :zstd. For :zstd,
+`comp_level` determines the compression level: regular levels are 1 (fastest) to 22
+(smallest); negative levels are faster still at the cost of compression. This is
+ignored for :lz4 compression. Like the C plugin, the level is stored as an unsigned
+integer, so `comp_level % Cint` recovers a negative level. If `blocksize` is zero the
+default bitshuffle blocksize is used.
 """
 function BitshuffleFilter(; blocksize=0, compressor=:none, comp_level=0)
     compressor in (:lz4, :zstd, :none) ||
