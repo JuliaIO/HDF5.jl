@@ -67,7 +67,11 @@ end
 # and more confusingly (write_dataset isn't designed for open Dataset/Group values). Keep the
 # previous clean-MethodError-style UX with an explicit, informative error instead.
 function fileio_save(::FileIO.File{FileIO.format"HDF5"}, x::Union{File,Group}; kwargs...)
-    throw(ArgumentError("saving an HDF5.$(nameof(typeof(x))) directly via FileIO is not supported"))
+    throw(
+        ArgumentError(
+            "saving an HDF5.$(nameof(typeof(x))) directly via FileIO is not supported"
+        )
+    )
 end
 
 # save all the key-value pairs in the dict as top-level variables

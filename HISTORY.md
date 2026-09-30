@@ -7,6 +7,7 @@ Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases)
 * Convert filter packages into package extensions (#1160)
 * Julia 1.9 is the minimum supported Julia version (#1176)
 * Support HDF5 2.0
+* Support negative compression levels in `ZstdFilter`, as the C plugin does
 * `HDF5.H5DataStore` (supertype of `File`/`Group`) is now `<: AbstractDict{String,Any}`,
   enabling native Julia REPL tab-completion for `store["path<TAB>"]`. **Breaking**:
   `for x in group` now yields `name => object` pairs instead of the bare object (use

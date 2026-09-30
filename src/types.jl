@@ -65,7 +65,8 @@ end
 # `get(d, k, default)`: Base provides no generic `AbstractDict` fallback for this (verified;
 # only concrete dict types like `Dict`/`IdDict` define their own), so without this method
 # `get`/`==`/`in` (which call `get` internally) would `MethodError`.
-Base.get(store::H5DataStore, path::AbstractString, default) = haskey(store, path) ? store[path] : default
+Base.get(store::H5DataStore, path::AbstractString, default) =
+    haskey(store, path) ? store[path] : default
 
 # `copy`: the generic `AbstractDict` fallback `copy(a) = merge!(empty(a), a)` succeeds
 # silently, eagerly opening every child object into a throwaway plain `Dict` — this collides
@@ -112,7 +113,15 @@ Base.hash(a::H5DataStore, h::UInt) = hash(objectid(a), h)
 # that occur when passing a freshly-created file to some other
 # application).
 
-# This defines an "unformatted" HDF5 data file. Formatted files are defined in separate modules.
+"""
+    File
+
+A handle to an open HDF5 file, as returned by [`h5open`](@ref). `File <: H5DataStore
+<: AbstractDict{String,Any}`, so groups, datasets, and attributes stored at the file's
+root can be accessed with `file["path"]`, `keys(file)`, `haskey(file, "path")`, and so on.
+
+This defines an "unformatted" HDF5 data file; formatted files are defined in separate modules.
+"""
 mutable struct File <: H5DataStore
     id::API.hid_t
     filename::String
