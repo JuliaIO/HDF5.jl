@@ -49,14 +49,33 @@ end
 # (e.g. MAT.jl's `Matlabv5File`/`MatlabHDF5File`, which only define `keys`/`haskey`) full
 # `AbstractDict` conformance for free. HDF5.jl's own `File`/`Group` define more specific,
 # more efficient versions of these that take precedence by dispatch (see groups.jl).
-Base.getindex(store::H5DataStore, name::AbstractString) = read(store, name)
+#
+# Normalize to `String` before dispatching to `read`/`haskey`: downstream implementors
+# (e.g. MAT.jl's Matlabv4File/Matlabv5File/MatlabHDF5File) declare these for concrete
+# `String` only, not `AbstractString`. Without normalizing, an `AbstractString` that isn't
+# a `String` (e.g. a `SubString`) would miss those concrete methods and fall through to the
+# generic vararg `read(::H5DataStore, ::AbstractString...)` fallback instead, which calls
+# itself with the same non-`String` argument -- infinite recursion/`StackOverflowError`
+# instead of a clean dispatch to the real implementation.
+Base.getindex(store::H5DataStore, name::AbstractString) = read(store, String(name))
 Base.length(store::H5DataStore) = length(keys(store))
 # Advance `keys(store)` via Julia's iterator protocol rather than assuming it supports
 # integer indexing: e.g. MAT.jl's `Matlabv4File`/`Matlabv5File` return a `KeySet` (from
 # `keys(getvarnames(matfile))`), which has no `getindex` method.
-function Base.iterate(store::H5DataStore, state=nothing)
-    ks, kstate = state === nothing ? (keys(store), nothing) : state
-    it = kstate === nothing ? iterate(ks) : iterate(ks, kstate)
+#
+# Two separate methods (rather than one with a `state=nothing` default) so that `nothing`
+# unambiguously means "just starting": a `keys(store)` iterator whose own state protocol
+# legitimately uses `nothing` as a non-terminal state would otherwise be indistinguishable
+# from "start over", restarting iteration forever instead of advancing.
+function Base.iterate(store::H5DataStore)
+    ks = keys(store)
+    it = iterate(ks)
+    it === nothing && return nothing
+    k, kstate = it
+    return k => store[k], (ks, kstate)
+end
+function Base.iterate(store::H5DataStore, (ks, kstate))
+    it = iterate(ks, kstate)
     it === nothing && return nothing
     k, next_kstate = it
     return k => store[k], (ks, next_kstate)
@@ -65,8 +84,12 @@ end
 # `get(d, k, default)`: Base provides no generic `AbstractDict` fallback for this (verified;
 # only concrete dict types like `Dict`/`IdDict` define their own), so without this method
 # `get`/`==`/`in` (which call `get` internally) would `MethodError`.
-Base.get(store::H5DataStore, path::AbstractString, default) =
-    haskey(store, path) ? store[path] : default
+# Normalize to `String` before both `haskey`/`getindex`, for the same reason as `getindex`
+# above -- downstream `haskey` implementations are also declared for concrete `String` only.
+function Base.get(store::H5DataStore, path::AbstractString, default)
+    path = String(path)
+    return haskey(store, path) ? store[path] : default
+end
 
 # `copy`: the generic `AbstractDict` fallback `copy(a) = merge!(empty(a), a)` succeeds
 # silently, eagerly opening every child object into a throwaway plain `Dict` — this collides
@@ -117,8 +140,9 @@ Base.hash(a::H5DataStore, h::UInt) = hash(objectid(a), h)
     File
 
 A handle to an open HDF5 file, as returned by [`h5open`](@ref). `File <: H5DataStore
-<: AbstractDict{String,Any}`, so groups, datasets, and attributes stored at the file's
-root can be accessed with `file["path"]`, `keys(file)`, `haskey(file, "path")`, and so on.
+<: AbstractDict{String,Any}`, so groups and datasets stored at the file's root can be
+accessed with `file["path"]`, `keys(file)`, `haskey(file, "path")`, and so on. Attributes
+are a separate namespace, accessed via `attrs(file)["name"]`/`attributes(file)["name"]`.
 
 This defines an "unformatted" HDF5 data file; formatted files are defined in separate modules.
 """
