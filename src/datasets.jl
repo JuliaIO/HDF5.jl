@@ -364,9 +364,7 @@ function _setindex!(dset::Dataset, X::Array{T}, I::IndexType...) where {T}
     return X
 end
 
-function _setindex!(
-    dset::Dataset, X::Array{S}, I::IndexType...
-) where {S<:AbstractString}
+function _setindex!(dset::Dataset, X::Array{S}, I::IndexType...) where {S<:AbstractString}
     !isconcretetype(S) && error("type $S is not concrete")
     U = get_jl_type(dset)
 

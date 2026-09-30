@@ -117,7 +117,9 @@ import DiskArrays
         # `append!(::Filters.FilterPipeline, ...)` methods (src/deprecated.jl,
         # src/filters/filters.jl) that predates and is unrelated to the DiskArrays.jl
         # integration in this file.
-        new_ambs = filter(((m1, m2),) -> !(m1.name === :append! && m2.name === :append!), ambs)
+        new_ambs = filter(
+            ((m1, m2),) -> !(m1.name === :append! && m2.name === :append!), ambs
+        )
         @test isempty(new_ambs)
     end
 end

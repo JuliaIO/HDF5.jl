@@ -1,6 +1,8 @@
 ### DiskArrays.jl interface for HDF5.Dataset ###
 
-function DiskArrays.readblock!(dset::Dataset{T,N}, aout, r::Vararg{AbstractUnitRange,N}) where {T,N}
+function DiskArrays.readblock!(
+    dset::Dataset{T,N}, aout, r::Vararg{AbstractUnitRange,N}
+) where {T,N}
     if N == 0
         aout[] = read(dset)
     else
@@ -19,7 +21,9 @@ function DiskArrays.readblock!(dset::Dataset{T,N}, aout, r::Vararg{AbstractUnitR
     return aout
 end
 
-function DiskArrays.writeblock!(dset::Dataset{T,N}, ain, r::Vararg{AbstractUnitRange,N}) where {T,N}
+function DiskArrays.writeblock!(
+    dset::Dataset{T,N}, ain, r::Vararg{AbstractUnitRange,N}
+) where {T,N}
     if N == 0
         write(dset, ain[])
     else
@@ -34,7 +38,8 @@ function DiskArrays.writeblock!(dset::Dataset{T,N}, ain, r::Vararg{AbstractUnitR
     return ain
 end
 
-DiskArrays.haschunks(dset::Dataset) = ischunked(dset) ? DiskArrays.Chunked() : DiskArrays.Unchunked()
+DiskArrays.haschunks(dset::Dataset) =
+    ischunked(dset) ? DiskArrays.Chunked() : DiskArrays.Unchunked()
 
 function DiskArrays.eachchunk(dset::Dataset)
     if ischunked(dset)

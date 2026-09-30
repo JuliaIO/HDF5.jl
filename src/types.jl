@@ -87,7 +87,9 @@ end
 
 # Infer the element type and dimensionality from the dataset's own datatype/dataspace,
 # so existing call sites (`Dataset(id, file, xfer)`) keep working unchanged.
-function Dataset(id::API.hid_t, file::File, xfer::DatasetTransferProperties=DatasetTransferProperties())
+function Dataset(
+    id::API.hid_t, file::File, xfer::DatasetTransferProperties=DatasetTransferProperties()
+)
     dtype = Datatype(API.h5d_get_type(id), file)
     T = try
         normalized_jl_type(get_jl_type(dtype))
