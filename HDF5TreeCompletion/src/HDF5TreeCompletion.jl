@@ -33,7 +33,9 @@ if isdefined(REPL.REPLCompletions, :find_dict_matches)
     whole method definition is skipped, via the surrounding `isdefined` guard, if the
     function it extends no longer exists).
     """
-    function REPL.REPLCompletions.find_dict_matches(store::HandleStore, partial_key::AbstractString)
+    function REPL.REPLCompletions.find_dict_matches(
+        store::HandleStore, partial_key::AbstractString
+    )
         startswith(partial_key, "\"") || return String[]
         raw = partial_key[2:end] # drop the leading quote; repr() adds it back below
         slash = findlast('/', raw)
