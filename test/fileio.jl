@@ -51,6 +51,7 @@ using HDF5, OrderedCollections, FileIO, Test
         end
         close(g)
     end
+
     rm(fn)
 end
 
