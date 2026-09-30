@@ -45,7 +45,8 @@ f = h5open(fn, "r")
 @eval Main f = $f
 
 complete(str) = REPL.REPLCompletions.completions(str, lastindex(str), Main)[1]
-completion_texts(str) = sort!([REPL.REPLCompletions.completion_text(c) for c in complete(str)])
+completion_texts(str) =
+    sort!([REPL.REPLCompletions.completion_text(c) for c in complete(str)])
 
 @testset "HDF5TreeCompletion" begin
     @testset "top-level" begin
