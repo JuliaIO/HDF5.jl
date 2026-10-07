@@ -86,6 +86,8 @@ end
     include("filters/FilterTestUtils.jl")
     @debug "objects"
     include("objects.jl")
+    @debug "dict interface"
+    include("dict_interface.jl")
     # `h5d_get_space` seems to be broken for virtual datasets for libhdf5 1.10,
     # see https://github.com/JuliaIO/HDF5.jl/pull/1061#issuecomment-1571009149
     if HDF5.API.h5_get_libversion() >= v"1.12"
