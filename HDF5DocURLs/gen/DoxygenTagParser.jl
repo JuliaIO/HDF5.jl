@@ -80,6 +80,7 @@ function parse_tag_file(hdf5_tag_url=HDF5_TAG_URL)
     end
     funcdict = Dict{String,HDF5FunctionInfo}()
     groupdict = Dict{String,HDF5GroupInfo}()
+    anchordict = Dict{String,String}() # section anchor id => "file.html#id"
     parsed = LightXML.parse_file(filename)
     tag_root = root(parsed)
     for compound_element in child_elements(tag_root)
@@ -122,6 +123,13 @@ function parse_tag_file(hdf5_tag_url=HDF5_TAG_URL)
                     end
                 elseif name(compound_child) == "filename"
                     group_filename = content(compound_child)
+                elseif name(compound_child) == "docanchor"
+                    # section anchors within pages, e.g. `subsec_dataspace_select`
+                    anchor_file = attribute(compound_child, "file")
+                    if anchor_file !== nothing && !startswith(anchor_file, "_java")
+                        anchordict[content(compound_child)] =
+                            anchor_file * "#" * content(compound_child)
+                    end
                 end
             end
             if startswith(group_title, "Java")
@@ -139,7 +147,7 @@ function parse_tag_file(hdf5_tag_url=HDF5_TAG_URL)
         )
         funcdict[alias] = funcdict[target]
     end
-    return funcdict, groupdict
+    return funcdict, groupdict, anchordict
 end
 
 """
@@ -155,6 +163,8 @@ function hdf5_group_url(info::HDF5GroupInfo; prefix=DEFAULT_URL_PREFIX)
     return prefix * info.filename
 end
 
+hdf5_anchor_url(fileanchor::AbstractString; prefix=DEFAULT_URL_PREFIX) = prefix * fileanchor
+
 """
     save_to_tab_separated_values
 
@@ -163,9 +173,12 @@ Save the function names and documentation URLs to a file, separated by a tab, wi
 function save_to_tab_separated_values(
     func_filename::AbstractString=joinpath(@__DIR__, "..", "data", "hdf5_func_urls.tsv"),
     group_filename::AbstractString=joinpath(@__DIR__, "..", "data", "hdf5_group_urls.tsv"),
-    info::Tuple{Dict{String,HDF5FunctionInfo},Dict{String,HDF5GroupInfo}}=parse_tag_file()
+    anchor_filename::AbstractString=joinpath(@__DIR__, "..", "data", "hdf5_anchor_urls.tsv"),
+    info::Tuple{
+        Dict{String,HDF5FunctionInfo},Dict{String,HDF5GroupInfo},Dict{String,String}
+    }=parse_tag_file()
 )
-    funcinfo, groupinfo = info
+    funcinfo, groupinfo, anchorinfo = info
     open(func_filename, "w") do f
         sorted_funcs = sort!(collect(keys(funcinfo)))
         for func in sorted_funcs
@@ -178,13 +191,19 @@ function save_to_tab_separated_values(
             println(f, group, "\t", hdf5_group_url(groupinfo[group]))
         end
     end
+    open(anchor_filename, "w") do f
+        for anchor in sort!(collect(keys(anchorinfo)))
+            println(f, anchor, "\t", hdf5_anchor_url(anchorinfo[anchor]))
+        end
+    end
 end
 
 """
     main()
 
 Executed when `julia --project -m DoxygenTagParser` is run from the shell.
-Regenerates `../data/hdf5_func_urls.tsv` and `../data/hdf5_group_urls.tsv`
+Regenerates `../data/hdf5_func_urls.tsv`, `../data/hdf5_group_urls.tsv` and
+`../data/hdf5_anchor_urls.tsv`
 from `hdf5.tag` (or the paths/URL given as ARGS) by default.
 """
 function (@main)(ARGS)
@@ -192,9 +211,11 @@ function (@main)(ARGS)
     tsv_file = nargs > 0 ? ARGS[1] : joinpath(@__DIR__, "..", "data", "hdf5_func_urls.tsv")
     group_file =
         nargs > 1 ? ARGS[2] : joinpath(@__DIR__, "..", "data", "hdf5_group_urls.tsv")
-    tag_file = nargs > 2 ? ARGS[3] : HDF5_TAG_URL
+    anchor_file =
+        nargs > 2 ? ARGS[3] : joinpath(@__DIR__, "..", "data", "hdf5_anchor_urls.tsv")
+    tag_file = nargs > 3 ? ARGS[4] : HDF5_TAG_URL
     info = parse_tag_file(tag_file)
-    save_to_tab_separated_values(tsv_file, group_file, info)
+    save_to_tab_separated_values(tsv_file, group_file, anchor_file, info)
 end
 
 end
