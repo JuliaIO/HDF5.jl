@@ -3,7 +3,7 @@ using Test
 
 @testset "external" begin
 
-    # roughly following https://www.hdfgroup.org/ftp/HDF5/current/src/unpacked/examples/h5_extlink.c
+    # roughly following the HDF5 external link example h5_extlink.c
     fn1 = tempname()
     fn2 = tempname()
 

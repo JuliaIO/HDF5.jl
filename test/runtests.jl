@@ -84,6 +84,8 @@ end
     include("nonallocating.jl")
     @debug "filter test utils"
     include("filters/FilterTestUtils.jl")
+    @debug "doc urls"
+    include("doc_urls.jl")
     @debug "objects"
     include("objects.jl")
     @debug "dict interface"

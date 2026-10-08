@@ -3,6 +3,7 @@ module BloscExt
 
 import Blosc
 using HDF5.API
+import HDF5: h5doc_filter
 import HDF5.Filters: Filter, FilterPipeline
 import HDF5.Filters:
     filterid,
@@ -152,7 +153,7 @@ The Blosc compression filter, using [Blosc.jl](https://github.com/JuliaIO/Blosc.
 
 # External links
 * [What Is Blosc?](https://www.blosc.org/pages/blosc-in-depth/)
-* [Blosc HDF5 Filter ID 32001](https://portal.hdfgroup.org/display/support/Filters#Filters-32001)
+* $(h5doc_filter(32001, "Blosc HDF5 Filter ID 32001"))
 * [Blosc HDF5 Plugin Repository (C code)](https://github.com/Blosc/hdf5-blosc)
 """
 struct BloscFilter <: Filter

@@ -4,15 +4,12 @@ bshuf_h5filter.c by Kiyoshi Masui, see
 https://github.com/kiyo-masui/bitshuffle.
 Originally authored by "James.Hester <jxh@ansto.gov.au>" as H5Zbitshuffle
 ==#
-"""
-The bitshuffle filter for HDF5. See https://portal.hdfgroup.org/display/support/Filters#Filters-32008
-and https://github.com/kiyo-masui/bitshuffle for details.
-"""
 module bitshuffle_jll_ext
 
 using bitshuffle_jll
 
 using HDF5.API
+import HDF5: h5doc_filter
 import HDF5.Filters:
     Filter,
     filterid,
@@ -25,6 +22,11 @@ import HDF5.Filters:
 
 export BSHUF_H5_COMPRESS_LZ4,
     BSHUF_H5_COMPRESS_ZSTD, BitshuffleFilter, H5Z_filter_bitshuffle
+
+@doc """
+The bitshuffle filter for HDF5. See $(h5doc_filter(32008, "the HDF5 registered filter list"))
+and https://github.com/kiyo-masui/bitshuffle for details.
+""" bitshuffle_jll_ext
 
 # From bshuf_h5filter.h
 

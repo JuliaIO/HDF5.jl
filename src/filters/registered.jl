@@ -2,7 +2,7 @@
     HDF5.Filters.Registered
 
 Module containing convenience methods to create `ExternalFilter` instances
-of [HDF5 registered filters](https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins).
+of $(h5doc_external(:registered_filters, "HDF5 registered filters")).
 
 This module does not implement any filter or guarantee filter availability.
 Rather the functions within this module create `ExternalFilter` instances for convenience.
@@ -52,6 +52,7 @@ module Registered
 using HDF5.Filters:
     Filters, Filter, ExternalFilter, EXTERNAL_FILTER_JULIA_PACKAGES, isavailable
 using HDF5.API: API, H5Z_filter_t, H5Z_FLAG_MANDATORY
+import HDF5: h5doc_external
 
 const _REGISTERED_FILTERIDS_DICT = Dict{H5Z_filter_t,Symbol}(
     305 => :LZO,

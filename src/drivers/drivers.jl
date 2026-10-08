@@ -3,7 +3,7 @@ module Drivers
 export POSIX, ROS3
 
 import ..API
-import ..HDF5: HDF5, Properties, h5doc
+import ..HDF5: HDF5, Properties, h5doc, h5doc_group
 
 using Libdl: dlopen, dlsym
 
@@ -111,8 +111,8 @@ built with MPI support.
 
 # External links
 
-- $(h5doc("H5P_SET_FAPL_MPIO"))
-- [Parallel HDF5](https://portal.hdfgroup.org/display/HDF5/Parallel+HDF5)
+- $(h5doc("H5Pset_fapl_mpio"))
+- $(h5doc_group("IntroParHDF5", "Parallel HDF5"))
 """
 function MPIO end
 
