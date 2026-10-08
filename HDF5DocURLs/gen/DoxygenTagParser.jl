@@ -173,7 +173,9 @@ Save the function names and documentation URLs to a file, separated by a tab, wi
 function save_to_tab_separated_values(
     func_filename::AbstractString=joinpath(@__DIR__, "..", "data", "hdf5_func_urls.tsv"),
     group_filename::AbstractString=joinpath(@__DIR__, "..", "data", "hdf5_group_urls.tsv"),
-    anchor_filename::AbstractString=joinpath(@__DIR__, "..", "data", "hdf5_anchor_urls.tsv"),
+    anchor_filename::AbstractString=joinpath(
+        @__DIR__, "..", "data", "hdf5_anchor_urls.tsv"
+    ),
     info::Tuple{
         Dict{String,HDF5FunctionInfo},Dict{String,HDF5GroupInfo},Dict{String,String}
     }=parse_tag_file()

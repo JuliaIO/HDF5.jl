@@ -230,9 +230,7 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
             "See `libhdf5` documentation for \$(h5doc(\"H5Pget_driver\"))" *
             ".\n"
     else
-        docstr *=
-            "\n\nSee `libhdf5` documentation for \$(h5doc(\"$cfuncname\"))" *
-            ".\n"
+        docstr *= "\n\nSee `libhdf5` documentation for \$(h5doc(\"$cfuncname\"))" * ".\n"
     end
     # Then assemble the pieces. Doing it through explicit Expr() objects
     # avoids inserting the line number nodes for the macro --- the call site
