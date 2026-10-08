@@ -100,8 +100,15 @@ end
     # basic MPI tests, for actual parallel tests we need to run in MPI mode
     include("mpio.jl")
 
-    if HDF5.has_ros3()
-        include("ros3.jl")
+    # The ROS3 tests read from a public S3 bucket, so they need network access and
+    # depend on how the libhdf5 build handles S3 requests. They are opt-in: set
+    # HDF5_TEST_ROS3=true to run them (done for selected jobs in .github/workflows/CI.yml).
+    if get(ENV, "HDF5_TEST_ROS3", "false") == "true"
+        if HDF5.has_ros3()
+            include("ros3.jl")
+        else
+            @warn "HDF5_TEST_ROS3=true, but this libhdf5 was built without ROS3 support"
+        end
     end
 
     # Clean up after all resources
