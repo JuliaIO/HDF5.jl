@@ -238,7 +238,7 @@ Properties used when creating a new object. Available options:
 
 - `obj_track_times :: Bool`: governs the recording of times associated with an
   object. If set to `true`, time data will be recorded. See
-  $(h5doc("H5P_SET_OBJ_TRACK_TIMES")).
+  $(h5doc("H5Pset_obj_track_times")).
 
 A function argument passed via `do` will be given an initialized property list
 that will be closed.
@@ -281,7 +281,7 @@ Properties used when creating a new `Group`. Inherits from
 [`ObjectCreateProperties`](@ref), with additional options:
 
 - `local_heap_size_hint :: Integer`: the anticipated maximum local heap size in
-  bytes. See $(h5doc("H5P_SET_LOCAL_HEAP_SIZE_HINT")).
+  bytes. See $(h5doc("H5Pset_local_heap_size_hint")).
 - `track_order :: Bool`: tracks the group creation order.
 
 A function argument passed via `do` will be given an initialized property list
@@ -314,7 +314,7 @@ Properties used when creating a new `File`. Inherits from
 
 - `userblock :: Integer`: user block size in bytes. The default user block size
   is 0; it may be set to any power of 2 equal to 512 or greater (512, 1024,
-  2048, etc.). See $(h5doc("H5P_SET_USERBLOCK")).
+  2048, etc.). See $(h5doc("H5Pset_userblock")).
 - `track_order :: Bool`: tracks the file creation order.
 
 A function argument passed via `do` will be given an initialized property list
@@ -401,20 +401,20 @@ Properties used when creating a new `Dataset`. Inherits from
 
    - `:late`: Allocate all space when data is first written to the dataset.
 
-  See $(h5doc("H5P_SET_ALLOC_TIME")).
+  See $(h5doc("H5Pset_alloc_time")).
 
 - `fill_time`: the timing of when the dataset should be filled; one of:
    - `:alloc`: Fill when allocated
    - `:never`: Never fill
    - `:ifset`: Fill if a value is set
 
-- `fill_value`: the fill value for a dataset. See $(h5doc("H5P_SET_FILL_VALUE")).
+- `fill_value`: the fill value for a dataset. See $(h5doc("H5Pset_fill_value")).
 
 - `chunk`: a tuple containing the size of the chunks to store each dimension.
-  See $(h5doc("H5P_SET_CHUNK")) (note that this uses Julia's column-major
+  See $(h5doc("H5Pset_chunk")) (note that this uses Julia's column-major
   ordering).
 
-- `external`: A tuple of `(name,offset,size)`, See $(h5doc("H5P_SET_EXTERNAL")).
+- `external`: A tuple of `(name,offset,size)`, See $(h5doc("H5Pset_external")).
 
 - `filters` (only valid when `layout=:chunked`): a filter or vector of filters
   that are applied to applied to each chunk of a dataset, see [Filters](@ref).
@@ -436,12 +436,12 @@ Properties used when creating a new `Dataset`. Inherits from
    - `:virtual`:  Draw raw data from multiple datasets in different files. See
      the `virtual` property below.
 
-  See $(h5doc("H5P_SET_LAYOUT")).
+  See $(h5doc("H5Pset_layout")).
 
 - `no_attrs_hint`: Minimize the space for dataset metadata by hinting that no
    attributes will be added if set to `true`. Attributes can still be added but
    may exist elsewhere within the file. See
-   $(h5doc("H5P_SET_DSET_NO_ATTRS_HINT")).
+   $(h5doc("H5Pset_dset_no_attrs_hint")).
 
 - `virtual`: when specified, creates a virtual dataset (VDS). The argument
   should be a "virtuala collection of [`VirtualMapping`](@ref) objects for
@@ -486,7 +486,7 @@ set_chunk!(p::Properties, dims) = API.h5p_set_chunk(p, length(dims), API.hsize_t
     :chunked    => API.H5D_CHUNKED,
     :virtual    => API.H5D_VIRTUAL)
 
-# See https://portal.hdfgroup.org/display/HDF5/H5P_SET_FILL_TIME
+# See H5Pset_fill_time
 @enum_property(fill_time,
     :alloc => API.H5D_FILL_TIME_ALLOC,
     :never => API.H5D_FILL_TIME_NEVER,
@@ -671,7 +671,7 @@ Properties used when accessing files.
   versions that the library will use when creating objects in the file; `high`
   sets the latest format versions that the library will be allowed to use when
   creating objects in the file. Values can be a `VersionNumber` for the hdf5
-  library, `:earliest`, or `:latest` . See $(h5doc("H5P_SET_LIBVER_BOUNDS"))
+  library, `:earliest`, or `:latest` . See $(h5doc("H5Pset_libver_bounds"))
 
 A function argument passed via `do` will be given an initialized property list
 that will be closed.
@@ -818,7 +818,7 @@ Properties that control access to data in external, virtual, and chunked dataset
 A function argument passed via `do` will be given an initialized property list
 that will be closed.
 
-See [Dataset Access Properties](https://portal.hdfgroup.org/display/HDF5/Dataset+Access+Properties)
+See the $(h5doc_group("H5P")) Property List Interface
 """
 @propertyclass DatasetAccessProperties API.H5P_DATASET_ACCESS
 superclass(::Type{DatasetAccessProperties}) = LinkAccessProperties

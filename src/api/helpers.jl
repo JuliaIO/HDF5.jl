@@ -623,7 +623,7 @@ end
 
 Deprecated HDF5 function. Use [`h5o_get_info`](@ref) or [`h5o_get_native_info`](@ref) if possible.
 
-See `libhdf5` documentation for [`H5Oget_info1`]($(HDF5DocURLs.func_url("H5Oget_info1"))).
+See `libhdf5` documentation for $(h5doc("H5Oget_info1")).
 """
 function h5o_get_info1(object_id, buf)
     var"#status#" = ccall(
@@ -864,7 +864,7 @@ end
 """
     h5p_get_class_name(pcid::hid_t) -> String
 
-See `libhdf5` documentation for [`H5Pget_class_name`]($(HDF5DocURLs.func_url("H5Pget_class_name"))).
+See `libhdf5` documentation for $(h5doc("H5Pget_class_name")).
 """
 function h5p_get_class_name(pcid)
     pc = ccall((:H5Pget_class_name, libhdf5), Ptr{UInt8}, (hid_t,), pcid)
@@ -975,7 +975,7 @@ end
 """
     h5t_get_member_name(type_id::hid_t, index::Cuint) -> String
 
-See `libhdf5` documentation for [`H5Tget_member_name`]($(HDF5DocURLs.func_url("H5Tget_member_name"))).
+See `libhdf5` documentation for $(h5doc("H5Tget_member_name")).
 """
 function h5t_get_member_name(type_id, index)
     pn = ccall((:H5Tget_member_name, libhdf5), Ptr{UInt8}, (hid_t, Cuint), type_id, index)
@@ -990,7 +990,7 @@ end
 """
     h5t_get_tag(type_id::hid_t) -> String
 
-See `libhdf5` documentation for [`H5Tget_tag`]($(HDF5DocURLs.func_url("H5Tget_tag"))).
+See `libhdf5` documentation for $(h5doc("H5Tget_tag")).
 """
 function h5t_get_tag(type_id)
     pc = ccall((:H5Tget_tag, libhdf5), Ptr{UInt8}, (hid_t,), type_id)
@@ -1069,13 +1069,13 @@ end
 """
     h5p_get_fapl_mpio(fapl_id::hid_t, comm::Ptr{MPI.MPI_Comm}, info::Ptr{MPI.MPI_Info})
 
-See `libhdf5` documentation for [`H5Pget_fapl_mpio`]($(HDF5DocURLs.func_url("H5Pget_fapl_mpio"))).
+See `libhdf5` documentation for $(h5doc("H5Pget_fapl_mpio")).
 """
 function h5p_get_fapl_mpio end
 
 """
     h5p_set_fapl_mpio(fapl_id::hid_t, comm::MPI.MPI_Comm, info::MPI.MPI_Info)
 
-See `libhdf5` documentation for [`H5Pset_fapl_mpio`]($(HDF5DocURLs.func_url("H5Pset_fapl_mpio"))).
+See `libhdf5` documentation for $(h5doc("H5Pset_fapl_mpio")).
 """
 function h5p_set_fapl_mpio end

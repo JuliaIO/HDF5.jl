@@ -148,7 +148,7 @@ The Blosc compression filter, using [Blosc.jl](https://github.com/JuliaIO/Blosc.
 
 # External links
 * [What Is Blosc?](https://www.blosc.org/pages/blosc-in-depth/)
-* [Blosc HDF5 Filter ID 32001](https://portal.hdfgroup.org/display/support/Filters#Filters-32001)
+* [Blosc HDF5 Filter ID 32001](https://github.com/HDFGroup/hdf5_plugins/blob/master/docs/RegisteredFilterPlugins.md#blosc)
 * [Blosc HDF5 Plugin Repository (C code)](https://github.com/Blosc/hdf5-blosc)
 """
 struct BloscFilter <: Filter

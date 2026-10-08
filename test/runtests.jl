@@ -80,6 +80,8 @@ end
     include("nonallocating.jl")
     @debug "filter test utils"
     include("filters/FilterTestUtils.jl")
+    @debug "doc urls"
+    include("doc_urls.jl")
     @debug "objects"
     include("objects.jl")
     # `h5d_get_space` seems to be broken for virtual datasets for libhdf5 1.10,

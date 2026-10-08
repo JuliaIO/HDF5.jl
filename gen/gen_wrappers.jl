@@ -2,6 +2,7 @@
 # Run `julia --project=.. gen_wrappers.jl` to execute this script
 
 import HDF5DocURLs
+include(joinpath(@__DIR__, "..", "src", "docurls.jl")) # h5doc, h5doc_group
 
 include(joinpath(@__DIR__, "bind_generator.jl"))
 
@@ -124,7 +125,7 @@ for (mod, desc, urltail) in (
     apidocs *= """
         ---
 
-        ## [[`$mod`]($(HDF5DocURLs.group_url(mod))) — $desc](@id $mod)
+        ## [$(h5doc_group(mod)) — $desc](@id $mod)
         $index
         ```@docs
         $funcs
