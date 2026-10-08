@@ -1,0 +1,21 @@
+name = "HDF5TreeCompletion"
+uuid = "fa6f421b-2462-44f9-9c95-253f78cd23c2"
+version = "0.1.0"
+
+[deps]
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
+
+[sources]
+# TODO: remove once HDF5.jl v0.18 (with H5DataStore <: AbstractDict) is released.
+HDF5 = {path = ".."}
+
+[compat]
+HDF5 = "0.18"
+julia = "1.10"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
