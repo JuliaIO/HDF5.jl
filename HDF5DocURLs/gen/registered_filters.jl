@@ -8,12 +8,17 @@ const REGISTRY_MD_URL = "https://raw.githubusercontent.com/HDFGroup/hdf5_plugins
 const REGISTRY_PAGE_URL = "https://github.com/HDFGroup/hdf5_plugins/blob/master/docs/RegisteredFilterPlugins.md"
 
 function main(src=REGISTRY_MD_URL)
-    md = startswith(src, "https://") ? String(take!(Downloads.download(src, IOBuffer()))) : read(src, String)
+    md = if startswith(src, "https://")
+        String(take!(Downloads.download(src, IOBuffer())))
+    else
+        read(src, String)
+    end
     # Summary table rows look like:
     #   |`307`     |<a href="#bzip2">BZIP2</a>   |BZIP2 lossless compression ...|
     rx = r"^\|`(\d+)`\s*\|<a href=\"#([^\"]+)\">([^<]+)</a>"m
     rows = [(parse(Int, m[1]), String(m[3]), String(m[2])) for m in eachmatch(rx, md)]
-    isempty(rows) && error("no registered filters found in $src; has the table format changed?")
+    isempty(rows) &&
+        error("no registered filters found in $src; has the table format changed?")
     sort!(rows)
     open(joinpath(@__DIR__, "..", "data", "hdf5_filter_urls.tsv"), "w") do io
         for (id, name, anchor) in rows

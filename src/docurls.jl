@@ -18,8 +18,7 @@ Markdown link to the documentation for the HDF5 C API module or documentation
 page `groupname`, e.g. `h5doc_group("H5P")` or `h5doc_group("IntroParHDF5")`.
 Resolved via `HDF5DocURLs.group_url`.
 """
-h5doc_group(groupname, text="`$groupname`") =
-    "[$text]($(HDF5DocURLs.group_url(groupname)))"
+h5doc_group(groupname, text="`$groupname`") = "[$text]($(HDF5DocURLs.group_url(groupname)))"
 
 """
     h5doc_anchor(anchor, text="`\$anchor`")

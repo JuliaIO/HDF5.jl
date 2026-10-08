@@ -176,8 +176,11 @@ $(join(("`:$k`" for k in sort!(collect(keys(EXTERNAL_URLS)))), ", ")).
 Throws an `ArgumentError` for an unknown `name`.
 """
 function external_url(name::Symbol)
-    haskey(EXTERNAL_URLS, name) ||
-        throw(ArgumentError("unknown external URL `:$name`; known: $(sort!(collect(keys(EXTERNAL_URLS))))"))
+    haskey(EXTERNAL_URLS, name) || throw(
+        ArgumentError(
+            "unknown external URL `:$name`; known: $(sort!(collect(keys(EXTERNAL_URLS))))"
+        )
+    )
     return EXTERNAL_URLS[name]
 end
 

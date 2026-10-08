@@ -34,7 +34,7 @@ using Test
     end
     filter!(f -> abspath(f) != thisfile, jlfiles)
     # Source files are part of the checkout; skip when running from a bare test directory
-    isempty(filter(f -> startswith(relpath(f, root), "src"), jlfiles)) && return
+    isempty(filter(f -> startswith(relpath(f, root), "src"), jlfiles)) && return nothing
 
     @testset "Julia sources" begin
         offenders = String[]
@@ -50,14 +50,18 @@ using Test
         end
         @test isempty(offenders)
         isempty(offenders) ||
-            @info "Raw HDF Group URLs; use HDF5DocURLs (see src/docurls.jl):\n" * join(offenders, "\n")
+            @info "Raw HDF Group URLs; use HDF5DocURLs (see src/docurls.jl):\n" *
+                join(offenders, "\n")
     end
 
     @testset "retired portal.hdfgroup.org links" begin
         # This site no longer serves the pages. Also applies to Markdown, which
         # cannot call HDF5DocURLs and so has to link to a current page by hand.
         offenders = String[]
-        mdfiles = [files(joinpath(root, "docs"), ".md"); files(joinpath(root, "ext"), ".md")]
+        mdfiles = [
+            files(joinpath(root, "docs"), ".md")
+            files(joinpath(root, "ext"), ".md")
+        ]
         isfile(joinpath(root, "README.md")) && push!(mdfiles, joinpath(root, "README.md"))
         for file in [jlfiles; mdfiles]
             for (n, line) in enumerate(eachline(file))
