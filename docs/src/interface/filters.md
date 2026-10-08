@@ -236,7 +236,7 @@ Modules = [Registered]
 
 ## External Links
 
-* A [list of registered filter plugins](https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins) can be found on the HDF Group website.
-* [See the HDF5 Documentation of HDF5 Filter Plugins for details.](https://portal.hdfgroup.org/display/support/HDF5+Filter+Plugins)
+* A [list of registered filter plugins](https://github.com/HDFGroup/hdf5_plugins/blob/master/docs/RegisteredFilterPlugins.md) can be found on the HDF Group website.
+* [See the HDF5 Documentation of HDF5 Filter Plugins for details.](https://support.hdfgroup.org/documentation/hdf5/latest/_h5_p_l__u_g.html#sec_filter_plugins)
 * The source code for many external plugins have been collected in the [HDFGroup hdf5_plugins repository](https://github.com/HDFGroup/hdf5_plugins).
-* [Compiled binaries of dynamically downloaded plugins](https://portal.hdfgroup.org/display/support/Downloads) by downloaded from HDF5 Group.
+* [Compiled binaries of dynamically downloaded plugins](https://github.com/HDFGroup/hdf5_plugins/releases) by downloaded from HDF5 Group.

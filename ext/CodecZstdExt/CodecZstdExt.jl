@@ -10,6 +10,7 @@ module CodecZstdExt
 using CodecZstd
 import CodecZstd.LibZstd
 using HDF5.API
+import HDF5: h5doc_filter, h5doc_external
 import HDF5.Filters:
     Filter, filterid, register_filter, filterid, filtername, filter_func, filter_cfunc
 
@@ -108,8 +109,8 @@ still at the cost of compression. Like the C plugin, the level is stored as
 an unsigned integer, so `clevel % Cint` recovers a negative level.
 
 # External Links
-* [Zstandard HDF5 Filter ID 32015](https://portal.hdfgroup.org/display/support/Filters#Filters-32015)
-* [Zstandard HDF5 Plugin Repository (C code)](https://github.com/HDFGroup/hdf5_plugins/tree/master/ZSTD)
+* $(h5doc_filter(32015, "Zstandard HDF5 Filter ID 32015"))
+* $(h5doc_external(:plugins_zstd, "Zstandard HDF5 Plugin Repository (C code)"))
 """
 struct ZstdFilter <: Filter
     clevel::Cuint

@@ -14,6 +14,7 @@ module CodecBzip2Ext
 using CodecBzip2
 import CodecBzip2: libbzip2
 using HDF5.API
+import HDF5: h5doc_filter
 import HDF5.Filters:
     Filter, filterid, register_filter, filtername, filter_func, filter_cfunc
 
@@ -215,7 +216,7 @@ end
 Apply Bzip2 compression. The filter id is $H5Z_FILTER_BZIP2.
 
 # External Links
-* [BZIP2 HDF5 Filter ID 307](https://portal.hdfgroup.org/display/support/Filters#Filters-307)
+* $(h5doc_filter(307, "BZIP2 HDF5 Filter ID 307"))
 * [PyTables Repository (C code)](https://github.com/PyTables/PyTables)
 """
 struct Bzip2Filter <: Filter

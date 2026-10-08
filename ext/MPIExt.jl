@@ -83,7 +83,7 @@ Equivalent to `h5open(filename, mode; fapl_mpio=(comm, info), pv...)`.
 Throws an informative error if the loaded HDF5 libraries do not include parallel
 support.
 
-See the [HDF5 docs](https://portal.hdfgroup.org/display/HDF5/H5P_SET_FAPL_MPIO)
+See $(h5doc("H5Pset_fapl_mpio"))
 for details on the `comm` and `info` arguments.
 """
 function HDF5.h5open(

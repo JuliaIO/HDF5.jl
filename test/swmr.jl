@@ -1,5 +1,4 @@
-# following https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-StartSwmrWrite
-# and https://support.hdfgroup.org/HDF5/docNewFeatures/SWMR/HDF5_SWMR_Users_Guide.pdf
+# following the HDF5 documentation of H5Fstart_swmr_write and the SWMR user guide (see HDF5DocURLs.group_url("SWMRTN"))
 using HDF5
 using Test
 using Distributed

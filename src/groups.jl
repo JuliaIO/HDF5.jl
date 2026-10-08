@@ -1,8 +1,8 @@
 """
     HDF5.Group
 
-An object representing a [HDF5
-group](https://docs.hdfgroup.org/hdf5/develop/_h5_d_m__u_g.html#subsubsec_data_model_abstract_group).
+An object representing a $(h5doc_anchor("subsubsec_data_model_abstract_group", "HDF5
+group")).
 A group is analagous to a file system directory, in that, except for the root
 group, every object must be a member of at least one group.
 
@@ -131,7 +131,7 @@ function Base.haskey(
     lapl::LinkAccessProperties=LinkAccessProperties()
 )
     # recursively check each step of the path exists
-    # see https://portal.hdfgroup.org/display/HDF5/H5L_EXISTS
+    # see H5Lexists in the HDF5 documentation
     checkvalid(parent)
     first, rest = split1(path)
     if first == "/"

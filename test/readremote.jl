@@ -7,7 +7,7 @@ using LinearAlgebra: norm
     # check that we can read the official HDF5 example files
 
     # download and save test file via:
-    # urlbase = "https://support.hdfgroup.org/ftp/HDF5/examples/files/exbyapi/"
+    # urlbase = HDF5.HDF5DocURLs.external_url(:example_files)
     test_files = joinpath(@__DIR__, "test_files")
     # if !isdir(test_files)
     #     mkdir(test_files)

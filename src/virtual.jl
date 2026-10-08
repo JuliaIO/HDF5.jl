@@ -15,7 +15,7 @@ Both `srcfile` and `srcdset` support "printf"-style formats with `%b` being
 replaced by the block count of the selection.
 
 For more details on how source file resolution works, see
-[`H5P_SET_VIRTUAL`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_VIRTUAL).
+$(h5doc("H5Pset_virtual")).
 """
 struct VirtualMapping
     vspace::Dataspace
