@@ -18,6 +18,10 @@ MPIPreferences = "3da0fdf6-3ccc-4f1b-acd9-58baa6c99267"
 [weakdeps]
 MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"
 
+[sources]
+# TODO: remove once HDF5DocURLs is registered in General with subdir="HDF5DocURLs"
+HDF5DocURLs = {path = "HDF5DocURLs"}
+
 [extensions]
 MPIExt = "MPI"
 

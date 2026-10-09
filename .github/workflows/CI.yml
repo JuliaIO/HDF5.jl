@@ -93,6 +93,12 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      - name: Pkg.develop HDF5DocURLs (Julia 1.10 doesn't honor [sources])
+        # TODO: remove once HDF5DocURLs is registered in General with subdir="HDF5DocURLs"
+        shell: julia --project=@. {0}
+        run: |
+          using Pkg
+          isdir("HDF5DocURLs") && Pkg.develop(PackageSpec(path="HDF5DocURLs"))
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         env:
