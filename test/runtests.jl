@@ -16,19 +16,15 @@ filter_path = joinpath(dirname(pathof(HDF5)), "..", "filters")
 if !Base.BinaryPlatforms.CPUID.test_cpu_feature(Base.BinaryPlatforms.CPUID.JL_X86_avx2)
     Pkg.add(PackageSpec(; name="Blosc_jll", version=v"1.21.2+0"))
 end
-@static if VERSION >= v"1.9"
-    Pkg.develop([
-        PackageSpec(; path=joinpath(filter_path, "H5Zblosc")),
-        PackageSpec(; path=joinpath(filter_path, "H5Zbzip2")),
-        PackageSpec(; path=joinpath(filter_path, "H5Zlz4")),
-        PackageSpec(; path=joinpath(filter_path, "H5Zzstd")),
-        PackageSpec(; path=joinpath(filter_path, "H5Zbitshuffle")),
-    ])
-elseif VERSION >= v"1.6"
-    Pkg.add(["H5Zblosc", "H5Zbzip2", "H5Zlz4", "H5Zzstd", "H5Zbitshuffle"])
-else
-    Pkg.add(["H5Zblosc", "H5Zbzip2", "H5Zlz4", "H5Zzstd"])
-end
+Pkg.develop([
+    PackageSpec(; path=joinpath(filter_path, "H5Zblosc")),
+    PackageSpec(; path=joinpath(filter_path, "H5Zbzip2")),
+    PackageSpec(; path=joinpath(filter_path, "H5Zlz4")),
+    PackageSpec(; path=joinpath(filter_path, "H5Zzstd")),
+    PackageSpec(; path=joinpath(filter_path, "H5Zbitshuffle")),
+    PackageSpec(; path=joinpath(filter_path, "H5ZChunkCodecZstd")),
+    PackageSpec(; path=joinpath(filter_path, "H5ZChunkCodecBzip2")),
+])
 
 @info "libhdf5 v$(HDF5.API.h5_get_libversion())"
 
@@ -76,6 +72,8 @@ end
     include("table.jl")
     @debug "filter"
     include("filter.jl")
+    @debug "filter implementations"
+    include("filter_implementations.jl")
     @debug "chunkstorage"
     include("chunkstorage.jl")
     @debug "fileio"

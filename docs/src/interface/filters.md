@@ -46,22 +46,6 @@ The
 [H5Zzstd.jl](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5Zzstd) packages are maintained as
 independent subdirectory packages within the HDF5.jl repository.
 
-### Extension packages
-
-For Julia 1.9 and greater, the external filter packages listed above at version 0.2 and greater are loose wrappers around extension packages. The filter extension packages currently implemented are as follows:
-* bitshuffle_jll_ext
-* H5Zblosc_ext
-* H5Zbzip2_ext
-* H5Zlz4_ext
-* H5Zzstd_ext
-
-```
-using HDF5, CodecZstd
-const CodecZstdExt = Base.get_extension(HDF5, :CodecZstdExt)
-using .CodecZstdExt
-filter = ZstdFilter(5)
-```
-
 ### H5Zblosc.jl
 
 ```@meta
@@ -100,7 +84,6 @@ CurrentModule = H5Zzstd
 
 ```@docs
 ZstdFilter
-H5Zzstd
 ```
 
 ### H5Zbitshuffle
@@ -112,7 +95,106 @@ CurrentModule = H5Zbitshuffle
 ```@docs
 BitshuffleFilter
 H5Zbitshuffle
-bitshuffle_jll_ext
+```
+
+### H5ZChunkCodecZstd.jl and H5ZChunkCodecBzip2.jl
+
+[H5ZChunkCodecZstd.jl](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5ZChunkCodecZstd) and
+[H5ZChunkCodecBzip2.jl](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5ZChunkCodecBzip2) implement the
+Zstandard and Bzip2 filters with [ChunkCodecs.jl](https://github.com/JuliaIO/ChunkCodecs.jl). They are alternatives to
+H5Zzstd.jl and H5Zbzip2.jl; see [Multiple implementations of a filter](@ref) below.
+
+```@meta
+CurrentModule = H5ZChunkCodecZstd
+```
+
+```@docs
+ChunkCodecZstdFilter
+H5ZChunkCodecZstd
+```
+
+```@meta
+CurrentModule = H5ZChunkCodecBzip2
+```
+
+```@docs
+ChunkCodecBzip2Filter
+H5ZChunkCodecBzip2
+```
+
+## Multiple implementations of a filter
+
+```@meta
+CurrentModule = HDF5.Filters
+```
+
+libhdf5 holds a single function for each filter id, but a filter id may be implemented in several ways:
+by different Julia packages (for example H5Zzstd.jl, which uses CodecZstd.jl, and H5ZChunkCodecZstd.jl, which uses
+ChunkCodecs.jl) or by a native plugin that libhdf5 loads itself from the `HDF5_PLUGIN_PATH`
+(for example plugins built from [hdf5_plugins](https://github.com/HDFGroup/hdf5_plugins) or distributed with NetCDF).
+All of these implementations can be loaded together. HDF5.jl keeps track of each implementation (a *provider*, named
+after its package, e.g. `:H5Zzstd`, or `:native`) and registers the one with the highest priority with libhdf5.
+The data written is the same regardless of which implementation runs, so files remain interchangeable.
+
+By default, the implementation that was loaded first is used. A filter type such as `ZstdFilter` only describes the
+parameters of the filter; the implementation that runs is whichever is currently active for the filter id.
+
+```julia
+using HDF5, H5Zzstd, H5ZChunkCodecZstd
+using HDF5.Filters
+
+Filters.implementations(:zstd)       # H5Zzstd and H5ZChunkCodecZstd
+Filters.active_implementation(:zstd) # :H5Zzstd
+Filters.set_priority!(:zstd, :H5ZChunkCodecZstd, :H5Zzstd)
+Filters.active_implementation(:zstd) # :H5ZChunkCodecZstd
+Filters.set_priority!(:zstd, :native, :H5ZChunkCodecZstd) # prefer a plugin on HDF5_PLUGIN_PATH, if there is one
+```
+
+Filters can be referred to by id, by filter type, or by a name: `:bzip2`, `:blosc`, `:lz4`, `:bitshuffle`, or `:zstd`.
+A provider that is listed but unavailable is skipped, so a priority list may end with a fallback.
+Providers that are not listed are used after the listed ones, in the order they were loaded.
+
+### Configuration with Preferences.jl
+
+The priorities can be set persistently with [Preferences.jl](https://github.com/JuliaPackaging/Preferences.jl)
+in the `LocalPreferences.toml` of the active project:
+
+```toml
+[HDF5]
+# Which implementation to use, highest priority first. Keys are filter ids or names,
+# "default" applies to every filter without its own entry.
+filter_priority = { zstd = ["H5ZChunkCodecZstd", "H5Zzstd"], "32001" = ["native", "H5Zblosc"] }
+# Providers that are never selected automatically
+filter_disabled = ["H5Zbzip2"]
+# Set to false to stop packages from registering their filters with libhdf5 when they are loaded.
+# Nothing is registered until `Filters.activate_all!()` or `Filters.activate!` is called.
+filter_auto_register = false
+```
+
+The same can be done from Julia with `Preferences.set_preferences!(HDF5, "filter_priority" => Dict("zstd" => ["H5ZChunkCodecZstd"]))`.
+The preferences are read when HDF5.jl is loaded; `Filters.load_preferences!()` reads them again.
+Priorities set with `Filters.set_priority!` or `Filters.activate!` take precedence over the preferences.
+
+### Writing a filter package
+
+A filter package defines a subtype of [`Filter`](@ref) and calls [`register_filter`](@ref) from its `__init__`.
+This records the filter as an implementation, with the name of the package defining the type as its provider, and registers it
+with libhdf5 unless another implementation takes priority. Use the `provider` keyword to choose another name.
+
+```@docs
+implementations
+active_implementation
+priority
+set_priority!
+reset_priority!
+activate!
+activate_all!
+select_implementation!
+load_preferences!
+filter_id
+FILTER_NAMES
+NATIVE
+Implementation
 ```
 
 ## Other External Filters
