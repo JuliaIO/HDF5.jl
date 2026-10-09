@@ -61,9 +61,12 @@ using Test
         mdfiles = [
             files(joinpath(root, "docs"), ".md")
             files(joinpath(root, "ext"), ".md")
+            files(joinpath(root, "filters"), ".md")
         ]
         isfile(joinpath(root, "README.md")) && push!(mdfiles, joinpath(root, "README.md"))
-        for file in [jlfiles; mdfiles]
+        # The filter packages keep their sources (and links) under filters/
+        filterjlfiles = files(joinpath(root, "filters"), ".jl")
+        for file in [jlfiles; filterjlfiles; mdfiles]
             for (n, line) in enumerate(eachline(file))
                 occursin("portal.hdfgroup.org", line) &&
                     push!(offenders, "$(relpath(file, root)):$n")
