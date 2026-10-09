@@ -104,8 +104,8 @@ jobs:
         env:
           JULIA_DEBUG: Main
           # The ROS3 tests need network access, and hang with the latest HDF5_jll
-          # (see JuliaIO/HDF5.jl#1260), so only run them with a pinned HDF5_jll.
-          HDF5_TEST_ROS3: ${{ matrix.hdf5_jll != 'latest' }}
+          # (see JuliaIO/HDF5.jl#1260). This branch's matrix does not pin HDF5_jll,
+          # so HDF5_TEST_ROS3 is left unset and the ROS3 tests are skipped.
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v5
         with:
