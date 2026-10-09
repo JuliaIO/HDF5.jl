@@ -125,6 +125,26 @@ Base.length(str::FixedString) = length(typeof(str))
 pad(::Type{FixedString{N,PAD}}) where {N,PAD} = PAD
 pad(x::T) where {T<:FixedString} = pad(T)
 
+# Fixed-size arrays map to H5T_ARRAY. HDF5 dimensions are in row-major order, the reverse
+# of the column-major order recorded in `D` (see `get_mem_compatible_jl_type`).
+function hdf5_type_id(::Type{FixedArray{T,D,L}}, isstruct::Val{true}) where {T,D,L}
+    eltype_id = hdf5_type_id(T)
+    try
+        return API.h5t_array_create(eltype_id, length(D), collect(API.hsize_t, reverse(D)))
+    finally
+        # native scalar types are immutable and shared; only close types created above
+        API.h5t_get_class(eltype_id) in (API.H5T_COMPOUND, API.H5T_ARRAY, API.H5T_STRING) &&
+            API.h5t_close(eltype_id)
+    end
+end
+# Fixed-length strings map to H5T_STRING with the given size and padding.
+function hdf5_type_id(::Type{FixedString{N,PAD}}, isstruct::Val{true}) where {N,PAD}
+    dtype = API.h5t_copy(API.H5T_C_S1)
+    API.h5t_set_size(dtype, N)
+    API.h5t_set_strpad(dtype, PAD)
+    return dtype
+end
+
 struct VariableArray{T}
     len::Csize_t
     p::Ptr{Cvoid}

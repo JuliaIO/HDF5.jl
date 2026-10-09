@@ -1523,6 +1523,53 @@ end
 
         close(fid)
     end
+
+    # FixedArray and FixedString can be used to write H5T_ARRAY and fixed-length string
+    # members of compound types
+    FA = HDF5.FixedArray{Float64,(3,),3}
+    FM = HDF5.FixedArray{Int32,(2, 3),6}
+    FS = HDF5.FixedString{4,HDF5.API.H5T_STR_NULLPAD}
+    let dt = datatype(FM)
+        @test HDF5.API.h5t_get_class(dt) == HDF5.API.H5T_ARRAY
+        # HDF5 dimensions are the reverse of the Julia dimensions
+        @test HDF5.API.h5t_get_array_dims(dt) == [3, 2]
+        close(dt)
+    end
+    let dt = datatype(FS)
+        @test HDF5.API.h5t_get_class(dt) == HDF5.API.H5T_STRING
+        @test sizeof(dt) == 4
+        @test HDF5.API.h5t_get_strpad(dt) == HDF5.API.H5T_STR_NULLPAD
+        close(dt)
+    end
+    T = @NamedTuple{n::Int64, x::FA, m::FM, s::FS}
+    rows = [
+        T((
+            1,
+            FA((0.0, 0.0, 0.0)),
+            FM(ntuple(Int32, 6)),
+            FS((UInt8('a'), UInt8('b'), 0, 0)),
+        )),
+        T((2, FA((1.0, 2.0, 3.0)), FM(ntuple(i -> Int32(10i), 6)), FS((b"wxyz"...,)))),
+    ]
+    mktemp() do path, io
+        close(io)
+        h5open(path, "w") do fid
+            fid["rows"] = rows
+            dt = datatype(fid["rows"])
+            @test HDF5.API.h5t_get_member_class(dt, 1) == HDF5.API.H5T_ARRAY
+            @test HDF5.API.h5t_get_member_class(dt, 2) == HDF5.API.H5T_ARRAY
+            @test HDF5.API.h5t_get_member_class(dt, 3) == HDF5.API.H5T_STRING
+            close(dt)
+        end
+        h5open(path, "r") do fid
+            r = read(fid["rows"])
+            @test getfield.(r, :n) == [1, 2]
+            @test getfield.(r, :x) == [[0.0, 0.0, 0.0], [1.0, 2.0, 3.0]]
+            @test getfield.(r, :m) ==
+                [reshape(Int32.(1:6), 2, 3), reshape(Int32.(10:10:60), 2, 3)]
+            @test getfield.(r, :s) == ["ab", "wxyz"]
+        end
+    end
 end
 
 @testset "Object Exists" begin
