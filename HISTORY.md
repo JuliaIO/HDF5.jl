@@ -8,6 +8,10 @@ Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases)
 * Julia 1.9 is the minimum supported Julia version (#1176)
 * Support HDF5 2.0
 
+## v0.17.5
+* Resolve HDF5 documentation URLs through the new HDF5DocURLs.jl subpackage (#1244, #1251)
+* Make ROS3 tests opt-in and specify the AWS region (#1260)
+
 ## v0.17.3
 * Support HDF5 2.0
 
