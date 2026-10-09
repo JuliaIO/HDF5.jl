@@ -410,6 +410,10 @@ HDF5.Datatype: H5T_COMPOUND {
    }
 ```
 
+Struct fields of type `HDF5.FixedArray{T,D,L}` and `HDF5.FixedString{N,PAD}` are stored as HDF5 array (`H5T_ARRAY`) and fixed-length string members, respectively. These are the types used when reading such members, and they are `isbits`, so a struct (or `NamedTuple`) containing them can be written back.
+`D` is the Julia (column-major) size and `L` is the total number of elements, e.g. `HDF5.FixedArray{Float64,(3,),3}((0.0, 0.0, 0.0))`.
+A plain `Vector` or `String` field is not `isbits` and can not be written as part of a compound type.
+
 For `Array`s, note that the array dimensionality is preserved, including 0-length
 dimensions:
 
