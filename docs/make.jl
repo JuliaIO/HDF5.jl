@@ -5,14 +5,24 @@ using H5Zbzip2
 using H5Zlz4
 using H5Zzstd
 using H5Zbitshuffle
-using H5Zchunkcodecs
+using H5ZChunkCodecBzip2
+using H5ZChunkCodecZstd
 using MPI  # needed to generate docs for parallel HDF5 API
 
 DocMeta.setdocmeta!(HDF5, :DocTestSetup, :(using HDF5); recursive=true)
 
 makedocs(;
     sitename="HDF5.jl",
-    modules=[HDF5, H5Zblosc, H5Zbzip2, H5Zlz4, H5Zzstd, H5Zbitshuffle, H5Zchunkcodecs],
+    modules=[
+        HDF5,
+        H5Zblosc,
+        H5Zbzip2,
+        H5Zlz4,
+        H5Zzstd,
+        H5Zbitshuffle,
+        H5ZChunkCodecBzip2,
+        H5ZChunkCodecZstd
+    ],
     authors="Mustafa Mohamad <mus-m@outlook.com> and contributors",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",

@@ -1,17 +1,15 @@
-name = "H5Zchunkcodecs"
-uuid = "5517d130-9445-4426-8fe9-99d20925409a"
+name = "H5ZChunkCodecZstd"
+uuid = "2e5a33b2-85c6-4c1d-ba34-96c24d360dce"
 authors = ["HDF5.jl contributors: https://github.com/JuliaIO/HDF5.jl/contributors"]
 version = "0.1.0"
 
 [deps]
 ChunkCodecCore = "0b6fb165-00bc-4d37-ab8b-79f91016dbe1"
-ChunkCodecLibBzip2 = "2b723af9-f480-4e8d-a1e4-4a9f5a906122"
 ChunkCodecLibZstd = "55437552-ac27-4d47-9aa3-63184e8fd398"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 
 [compat]
 ChunkCodecCore = "0.4, 0.5, 1"
-ChunkCodecLibBzip2 = "0.1, 0.2, 0.3"
 ChunkCodecLibZstd = "0.1, 0.2"
 HDF5 = "0.17, 0.18"
 julia = "1.10"

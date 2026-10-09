@@ -22,7 +22,8 @@ Pkg.develop([
     PackageSpec(; path=joinpath(filter_path, "H5Zlz4")),
     PackageSpec(; path=joinpath(filter_path, "H5Zzstd")),
     PackageSpec(; path=joinpath(filter_path, "H5Zbitshuffle")),
-    PackageSpec(; path=joinpath(filter_path, "H5Zchunkcodecs")),
+    PackageSpec(; path=joinpath(filter_path, "H5ZChunkCodecZstd")),
+    PackageSpec(; path=joinpath(filter_path, "H5ZChunkCodecBzip2")),
 ])
 
 @info "libhdf5 v$(HDF5.API.h5_get_libversion())"

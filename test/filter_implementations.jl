@@ -4,7 +4,7 @@ using HDF5.API
 using Test
 using Preferences
 using Libdl
-using H5Zzstd, H5Zbzip2, H5Zchunkcodecs
+using H5Zzstd, H5Zbzip2, H5ZChunkCodecZstd, H5ZChunkCodecBzip2
 
 # Filter implementations used to exercise the registry without depending on any codec.
 # They XOR every byte with a constant; the constant tells us which implementation ran.
@@ -101,22 +101,24 @@ end
 
     @testset "implementations coexist" begin
         zstd = Filters.implementations(:zstd)
-        @test [:H5Zzstd, :H5Zchunkcodecs] ⊆ [i.provider for i in zstd]
+        @test [:H5Zzstd, :H5ZChunkCodecZstd] ⊆ [i.provider for i in zstd]
         bzip2 = Filters.implementations(:bzip2)
-        @test [:H5Zbzip2, :H5Zchunkcodecs] ⊆ [i.provider for i in bzip2]
+        @test [:H5Zbzip2, :H5ZChunkCodecBzip2] ⊆ [i.provider for i in bzip2]
         # The package loaded first is active by default
-        @test Filters.active_implementation(:zstd) in (:H5Zzstd, :H5Zchunkcodecs)
+        @test Filters.active_implementation(:zstd) in (:H5Zzstd, :H5ZChunkCodecZstd)
         @test HDF5.API.h5z_filter_avail(32015)
         @test HDF5.API.h5z_filter_avail(307)
     end
 
     @testset "priority selects implementation and data is interchangeable" begin
         fdata = rand(Float32, 200, 100)
-        zstdfilters = (H5Zzstd.ZstdFilter(7), H5Zchunkcodecs.ChunkCodecZstdFilter(7))
-        bzip2filters = (H5Zbzip2.Bzip2Filter(4), H5Zchunkcodecs.ChunkCodecBzip2Filter(4))
+        zstdfilters = (H5Zzstd.ZstdFilter(7), H5ZChunkCodecZstd.ChunkCodecZstdFilter(7))
+        bzip2filters = (
+            H5Zbzip2.Bzip2Filter(4), H5ZChunkCodecBzip2.ChunkCodecBzip2Filter(4)
+        )
         for (name, filters) in ((:zstd, zstdfilters), (:bzip2, bzip2filters)),
-            writer in (:H5Zchunkcodecs, Symbol(parentmodule(typeof(filters[1])))),
-            reader in (:H5Zchunkcodecs, Symbol(parentmodule(typeof(filters[1]))))
+            writer in Symbol.(parentmodule.(typeof.(filters))),
+            reader in Symbol.(parentmodule.(typeof.(filters)))
 
             fn = tempname()
             try
@@ -148,14 +150,14 @@ end
         # Compression levels survive in both implementations, including negative zstd levels
         fn = tempname()
         try
-            Filters.set_priority!(:zstd, :H5Zchunkcodecs)
+            Filters.set_priority!(:zstd, :H5ZChunkCodecZstd)
             h5open(fn, "w") do f
                 write_dataset(
                     f,
                     "d",
                     fdata;
                     chunk=(50, 50),
-                    filters=H5Zchunkcodecs.ChunkCodecZstdFilter(-3)
+                    filters=H5ZChunkCodecZstd.ChunkCodecZstdFilter(-3)
                 )
             end
             h5open(fn) do f
@@ -171,18 +173,18 @@ end
     end
 
     @testset "unlisted and unknown providers" begin
-        Filters.set_priority!(:zstd, :NoSuchProvider, :H5Zchunkcodecs)
-        @test Filters.active_implementation(:zstd) == :H5Zchunkcodecs
+        Filters.set_priority!(:zstd, :NoSuchProvider, :H5ZChunkCodecZstd)
+        @test Filters.active_implementation(:zstd) == :H5ZChunkCodecZstd
         Filters.set_priority!(:zstd, :NoSuchProvider)
         # unlisted providers are still used when nothing listed is available
-        @test Filters.active_implementation(:zstd) in (:H5Zzstd, :H5Zchunkcodecs)
+        @test Filters.active_implementation(:zstd) in (:H5Zzstd, :H5ZChunkCodecZstd)
         @test_throws ErrorException Filters.activate!(:zstd, :NoSuchProvider)
         Filters.reset_priority!(:zstd)
     end
 
     @testset "activate!" begin
-        Filters.activate!(H5Zchunkcodecs.ChunkCodecZstdFilter)
-        @test Filters.active_implementation(:zstd) == :H5Zchunkcodecs
+        Filters.activate!(H5ZChunkCodecZstd.ChunkCodecZstdFilter)
+        @test Filters.active_implementation(:zstd) == :H5ZChunkCodecZstd
         Filters.activate!(:zstd, :H5Zzstd)
         @test Filters.active_implementation(:zstd) == :H5Zzstd
         Filters.reset_priority!(:zstd)
@@ -213,13 +215,13 @@ end
         set_preferences!(
             HDF5,
             "filter_priority" =>
-                Dict("301" => ["XorB", "XorA"], "bzip2" => ["H5Zchunkcodecs"]);
+                Dict("301" => ["XorB", "XorA"], "bzip2" => ["H5ZChunkCodecBzip2"]);
             force=true
         )
         Filters.load_preferences!()
         @test Filters.priority(XOR_ID) == [:XorB, :XorA]
         @test Filters.active_implementation(XOR_ID) == :XorB
-        @test Filters.active_implementation(:bzip2) == :H5Zchunkcodecs
+        @test Filters.active_implementation(:bzip2) == :H5ZChunkCodecBzip2
         # runtime settings override preferences
         Filters.set_priority!(XOR_ID, :XorA)
         @test Filters.active_implementation(XOR_ID) == :XorA
@@ -266,7 +268,7 @@ end
             @test HDF5.API.h5z_filter_avail(XOR_AUTO_ID)
             @test raw_chunk(XOR_AUTO_ID, data) == xor.(data, 0x77)
             # existing registrations are left alone
-            @test Filters.active_implementation(32015) in (:H5Zzstd, :H5Zchunkcodecs)
+            @test Filters.active_implementation(32015) in (:H5Zzstd, :H5ZChunkCodecZstd)
         finally
             reset_filter_settings()
         end

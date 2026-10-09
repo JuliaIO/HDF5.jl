@@ -98,20 +98,29 @@ BitshuffleFilter
 H5Zbitshuffle
 ```
 
-### H5Zchunkcodecs.jl
+### H5ZChunkCodecZstd.jl and H5ZChunkCodecBzip2.jl
+
+[H5ZChunkCodecZstd.jl](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5ZChunkCodecZstd) and
+[H5ZChunkCodecBzip2.jl](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5ZChunkCodecBzip2) implement the
+Zstandard and Bzip2 filters with [ChunkCodecs.jl](https://github.com/JuliaIO/ChunkCodecs.jl). They are alternatives to
+H5Zzstd.jl and H5Zbzip2.jl; see [Multiple implementations of a filter](@ref) below.
 
 ```@meta
-CurrentModule = H5Zchunkcodecs
+CurrentModule = H5ZChunkCodecZstd
 ```
-
-[H5Zchunkcodecs.jl](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5Zchunkcodecs) implements the Zstandard and Bzip2 filters
-with [ChunkCodecs.jl](https://github.com/JuliaIO/ChunkCodecs.jl). It is an alternative to H5Zzstd.jl and H5Zbzip2.jl;
-see [Multiple implementations of a filter](@ref) below.
 
 ```@docs
 ChunkCodecZstdFilter
+H5ZChunkCodecZstd
+```
+
+```@meta
+CurrentModule = H5ZChunkCodecBzip2
+```
+
+```@docs
 ChunkCodecBzip2Filter
-H5Zchunkcodecs
+H5ZChunkCodecBzip2
 ```
 
 ## Multiple implementations of a filter
@@ -121,7 +130,7 @@ CurrentModule = HDF5.Filters
 ```
 
 libhdf5 holds a single function for each filter id, but a filter id may be implemented in several ways:
-by different Julia packages (for example H5Zzstd.jl, which uses CodecZstd.jl, and H5Zchunkcodecs.jl, which uses
+by different Julia packages (for example H5Zzstd.jl, which uses CodecZstd.jl, and H5ZChunkCodecZstd.jl, which uses
 ChunkCodecs.jl) or by a native plugin that libhdf5 loads itself from the `HDF5_PLUGIN_PATH`
 (for example plugins built from [hdf5_plugins](https://github.com/HDFGroup/hdf5_plugins) or distributed with NetCDF).
 All of these implementations can be loaded together. HDF5.jl keeps track of each implementation (a *provider*, named
@@ -132,14 +141,14 @@ By default, the implementation that was loaded first is used. A filter type such
 parameters of the filter; the implementation that runs is whichever is currently active for the filter id.
 
 ```julia
-using HDF5, H5Zzstd, H5Zchunkcodecs
+using HDF5, H5Zzstd, H5ZChunkCodecZstd
 using HDF5.Filters
 
-Filters.implementations(:zstd)       # H5Zzstd and H5Zchunkcodecs
+Filters.implementations(:zstd)       # H5Zzstd and H5ZChunkCodecZstd
 Filters.active_implementation(:zstd) # :H5Zzstd
-Filters.set_priority!(:zstd, :H5Zchunkcodecs, :H5Zzstd)
-Filters.active_implementation(:zstd) # :H5Zchunkcodecs
-Filters.set_priority!(:zstd, :native, :H5Zchunkcodecs) # prefer a plugin on HDF5_PLUGIN_PATH, if there is one
+Filters.set_priority!(:zstd, :H5ZChunkCodecZstd, :H5Zzstd)
+Filters.active_implementation(:zstd) # :H5ZChunkCodecZstd
+Filters.set_priority!(:zstd, :native, :H5ZChunkCodecZstd) # prefer a plugin on HDF5_PLUGIN_PATH, if there is one
 ```
 
 Filters can be referred to by id, by filter type, or by a name: `:bzip2`, `:blosc`, `:lz4`, `:bitshuffle`, or `:zstd`.
@@ -155,7 +164,7 @@ in the `LocalPreferences.toml` of the active project:
 [HDF5]
 # Which implementation to use, highest priority first. Keys are filter ids or names,
 # "default" applies to every filter without its own entry.
-filter_priority = { zstd = ["H5Zchunkcodecs", "H5Zzstd"], "32001" = ["native", "H5Zblosc"] }
+filter_priority = { zstd = ["H5ZChunkCodecZstd", "H5Zzstd"], "32001" = ["native", "H5Zblosc"] }
 # Providers that are never selected automatically
 filter_disabled = ["H5Zbzip2"]
 # Set to false to stop packages from registering their filters with libhdf5 when they are loaded.
@@ -163,7 +172,7 @@ filter_disabled = ["H5Zbzip2"]
 filter_auto_register = false
 ```
 
-The same can be done from Julia with `Preferences.set_preferences!(HDF5, "filter_priority" => Dict("zstd" => ["H5Zchunkcodecs"]))`.
+The same can be done from Julia with `Preferences.set_preferences!(HDF5, "filter_priority" => Dict("zstd" => ["H5ZChunkCodecZstd"]))`.
 The preferences are read when HDF5.jl is loaded; `Filters.load_preferences!()` reads them again.
 Priorities set with `Filters.set_priority!` or `Filters.activate!` take precedence over the preferences.
 

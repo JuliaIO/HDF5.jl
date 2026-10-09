@@ -8,7 +8,7 @@ Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases)
   packages, as in v0.17, instead of being converted into package extensions (#1160). Their
   fixes made on master (negative `ZstdFilter` levels, guarded `malloc`s) are included.
 * Multiple implementations of the same filter id can now be loaded together (for example
-  `H5Zzstd` and the new `H5Zchunkcodecs`, which is based on ChunkCodecs.jl, or a native plugin on
+  `H5Zzstd` and the new `H5ZChunkCodecZstd`, which is based on ChunkCodecs.jl, or a native plugin on
   `HDF5_PLUGIN_PATH`). `HDF5.Filters.set_priority!`, `activate!`, and the `filter_priority`,
   `filter_disabled`, and `filter_auto_register` Preferences.jl settings choose which one
   libhdf5 uses. `HDF5.Filters.register_filter` now records the implementation and registers

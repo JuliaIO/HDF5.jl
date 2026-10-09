@@ -92,7 +92,7 @@ every filter id that has been registered. The recognized preferences of HDF5.jl 
   automatically, e.g. `["H5Zbzip2"]`.
 - `filter_priority` (table): Maps a filter id, a name from [`FILTER_NAMES`](@ref), or
   `"default"` to a list of provider names in decreasing priority, e.g.
-  `zstd = ["H5Zchunkcodecs", "H5Zzstd"]`. Use `"native"` to refer to a plugin found by
+  `zstd = ["H5ZChunkCodecZstd", "H5Zzstd"]`. Use `"native"` to refer to a plugin found by
   libhdf5 on `HDF5_PLUGIN_PATH`.
 
 Set them with, for example,
@@ -158,7 +158,7 @@ end
     set_priority!(id, providers...)
 
 Prefer the implementations of the filter `id` (a filter id, type or name such as `:zstd`)
-in the order given by `providers`, e.g. `set_priority!(:zstd, :H5Zchunkcodecs, :native)`,
+in the order given by `providers`, e.g. `set_priority!(:zstd, :H5ZChunkCodecZstd, :native)`,
 and select the implementation accordingly. Use `:native` for plugins found by libhdf5
 on `HDF5_PLUGIN_PATH`. This overrides the `filter_priority` preference until
 [`reset_priority!`](@ref).
