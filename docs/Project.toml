@@ -4,6 +4,7 @@ Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 H5Zbitshuffle = "51b4e782-877f-4ccf-958a-27bf628210da"
 H5Zblosc = "c8ec2601-a99c-407f-b158-e79c03c2f5f7"
 H5Zbzip2 = "094576f2-1e46-4c84-8e32-c46c042eaaa2"
+H5Zchunkcodecs = "5517d130-9445-4426-8fe9-99d20925409a"
 H5Zlz4 = "eb20ec05-5464-47b5-ba41-098e3c1068a3"
 H5Zzstd = "f6f2d980-1ec6-471c-a70d-0270e22f1103"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
@@ -16,6 +17,7 @@ Documenter = "1"
 H5Zbitshuffle = {path = "../filters/H5Zbitshuffle"}
 H5Zblosc = {path = "../filters/H5Zblosc"}
 H5Zbzip2 = {path = "../filters/H5Zbzip2"}
+H5Zchunkcodecs = {path = "../filters/H5Zchunkcodecs"}
 H5Zlz4 = {path = "../filters/H5Zlz4"}
 H5Zzstd = {path = "../filters/H5Zzstd"}
 HDF5 = {path = ".."}

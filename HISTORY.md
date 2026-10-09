@@ -4,7 +4,16 @@ Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases)
 
 ## v0.18.0 (in development)
 * Refactor Dataspaces (#1104)
-* Convert filter packages into package extensions (#1160)
+* Filter packages (`H5Zblosc`, `H5Zbzip2`, `H5Zlz4`, `H5Zzstd`, `H5Zbitshuffle`) remain discrete
+  packages, as in v0.17, instead of being converted into package extensions (#1160). Their
+  fixes made on master (negative `ZstdFilter` levels, guarded `malloc`s) are included.
+* Multiple implementations of the same filter id can now be loaded together (for example
+  `H5Zzstd` and the new `H5Zchunkcodecs`, which is based on ChunkCodecs.jl, or a native plugin on
+  `HDF5_PLUGIN_PATH`). `HDF5.Filters.set_priority!`, `activate!`, and the `filter_priority`,
+  `filter_disabled`, and `filter_auto_register` Preferences.jl settings choose which one
+  libhdf5 uses. `HDF5.Filters.register_filter` now records the implementation and registers
+  the highest priority one; filter types that need special registration extend
+  `HDF5.Filters.register_with_hdf5`.
 * Julia 1.9 is the minimum supported Julia version (#1176)
 * Support HDF5 2.0
 * Support negative compression levels in `ZstdFilter`, as the C plugin does

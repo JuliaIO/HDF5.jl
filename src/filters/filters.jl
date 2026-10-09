@@ -79,7 +79,7 @@ See [`API.h5z_register`](@ref) for details.
 * `can_apply_cfunc` - Defaults to wrapping @cfunction around the result of `can_apply_func`
 * `set_local_cfunc` - Defaults to wrapping @cfunction around the result of `set_local_func`
 * `filter_cfunc` - Defaults to wrapping @cfunction around the result of `filter_func`
-* `register_filter` - Defaults to using the above functions to register the filter
+* `register_with_hdf5` - Defaults to using the above functions to register the filter with libhdf5. [`register_filter`](@ref) records the filter as an implementation and selects the one to register; see [`set_priority!`](@ref).
 
 Implement the Advanced Methods to avoid @cfunction from generating a runtime closure which may not work on all systems.
 """
@@ -212,39 +212,6 @@ function filter_cfunc(::Type{F}) where {F<:Filter}
         $func, Csize_t, (Cuint, Csize_t, Ptr{Cuint}, Csize_t, Ptr{Csize_t}, Ptr{Ptr{Cvoid}})
     )
     return c_filter_func
-end
-
-# Generic implementation of register_filter
-"""
-    register_filter(::Type{F}) where F <: Filter
-
-Register the filter with the HDF5 library via [`API.h5z_register`](@ref).
-Also add F to the FILTERS dictionary.
-"""
-function register_filter(::Type{F}) where {F<:Filter}
-    id = filterid(F)
-    encoder = encoder_present(F)
-    decoder = decoder_present(F)
-    name = filtername(F)
-    can_apply = can_apply_cfunc(F)
-    set_local = set_local_cfunc(F)
-    func = filter_cfunc(F)
-    GC.@preserve name begin
-        API.h5z_register(
-            API.H5Z_class_t(
-                API.H5Z_CLASS_T_VERS,
-                id,
-                encoder,
-                decoder,
-                pointer(name),
-                can_apply,
-                set_local,
-                func
-            )
-        )
-    end
-    FILTERS[id] = F
-    return nothing
 end
 
 """
@@ -480,6 +447,7 @@ function ensure_filters_available(f::FilterPipeline)
     error("unreachable")
 end
 
+include("implementations.jl")
 include("builtin.jl")
 include("filters_midlevel.jl")
 include("registered.jl")

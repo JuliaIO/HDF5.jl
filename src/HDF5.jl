@@ -139,6 +139,9 @@ function __init__()
     ASCII_ATTRIBUTE_PROPERTIES.char_encoding = :ascii
     UTF8_ATTRIBUTE_PROPERTIES.char_encoding = :utf8
 
+    # Read filter implementation settings before any filter package registers itself
+    Filters.load_preferences!()
+
     return nothing
 end
 
