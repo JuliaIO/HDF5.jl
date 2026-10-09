@@ -215,7 +215,7 @@ end
 Apply Bzip2 compression. The filter id is $H5Z_FILTER_BZIP2.
 
 # External Links
-* [BZIP2 HDF5 Filter ID 307](https://portal.hdfgroup.org/display/support/Filters#Filters-307)
+* [BZIP2 HDF5 Filter ID 307](https://github.com/HDFGroup/hdf5_plugins/blob/master/docs/RegisteredFilterPlugins.md#bzip2)
 * [PyTables Repository (C code)](https://github.com/PyTables/PyTables)
 """
 struct Bzip2Filter <: Filter

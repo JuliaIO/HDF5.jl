@@ -6,7 +6,7 @@ inclusive, denoting the compression level, with 0 being no compression, 9 being 
 highest compression (but slowest speed).
 
 # External links
-- $(h5doc("H5P_SET_DEFLATE"))
+- $(h5doc("H5Pset_deflate"))
 - [_Deflate_ on Wikipedia](https://en.wikipedia.org/wiki/Deflate)
 """
 struct Deflate <: Filter
@@ -42,7 +42,7 @@ filter, the compression ratio achieved is often superior to that achieved by the
 compression filter without the shuffle filter.
 
 # External links
-- $(h5doc("H5P_SET_SHUFFLE"))
+- $(h5doc("H5Pset_shuffle"))
 """
 struct Shuffle <: Filter end
 filterid(::Type{Shuffle}) = API.H5Z_FILTER_SHUFFLE
@@ -61,7 +61,7 @@ The Fletcher32 checksum filter. This doesn't perform compression, but instead ch
 This should be applied _after_ any lossy filters have been applied.
 
 # External links
-- $(h5doc("H5P_SET_FLETCHER32"))
+- $(h5doc("H5Pset_fletcher32"))
 - [_Fletcher's checksum_ on Wikipedia](https://en.wikipedia.org/wiki/Fletcher's_checksum)
 """
 struct Fletcher32 <: Filter end
@@ -83,8 +83,8 @@ Szip compression lossless filter. Options:
   8, 10, 16, or 32)
 
 # External links
-- $(h5doc("H5P_SET_SZIP"))
-- [Szip Compression in HDF Products](https://support.hdfgroup.org/doc_resource/SZIP/)
+- $(h5doc("H5Pset_szip"))
+- $(h5doc_anchor("subsubsec_dataset_filters_szip", "Szip Compression in HDF5"))
 """
 struct Szip <: Filter
     options_mask::Cuint
@@ -124,7 +124,7 @@ end
 The N-Bit filter.
 
 # External links
-- $(h5doc("H5P_SET_NBIT"))
+- $(h5doc("H5Pset_nbit"))
 """
 struct NBit <: Filter end
 filterid(::Type{NBit}) = API.H5Z_FILTER_NBIT
@@ -140,7 +140,7 @@ end
 The scale-offset filter.
 
 # External links
-- $(h5doc("H5P_SET_SCALEOFFSET"))
+- $(h5doc("H5Pset_scaleoffset"))
 """
 struct ScaleOffset <: Filter
     scale_type::Cint

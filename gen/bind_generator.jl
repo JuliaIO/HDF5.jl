@@ -227,14 +227,10 @@ function _bind(__module__, __source__, sig::Expr, err::Union{String,Expr,Nothing
         drivername = rest[1:(end - 5)]
         docstr *=
             "\n\nThis function is exposed in `libhdf5` as the macro `H5FD_$(uppercase(drivername))`. " *
-            "See `libhdf5` documentation for [`H5Pget_driver`]" *
-            "(\$(HDF5DocURLs.func_url(\"H5Pget_driver\")))" *
+            "See `libhdf5` documentation for \$(h5doc(\"H5Pget_driver\"))" *
             ".\n"
     else
-        docstr *=
-            "\n\nSee `libhdf5` documentation for [`$cfuncname`]" *
-            "(\$(HDF5DocURLs.func_url(\"$cfuncname\")))" *
-            ".\n"
+        docstr *= "\n\nSee `libhdf5` documentation for \$(h5doc(\"$cfuncname\"))" * ".\n"
     end
     # Then assemble the pieces. Doing it through explicit Expr() objects
     # avoids inserting the line number nodes for the macro --- the call site

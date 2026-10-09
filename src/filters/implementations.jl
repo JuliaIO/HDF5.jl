@@ -26,7 +26,7 @@ end
 
 The reserved provider name `:native`. It stands for the filter plugins that libhdf5
 loads itself from `HDF5_PLUGIN_PATH` (for example plugins built from
-[hdf5_plugins](https://github.com/HDFGroup/hdf5_plugins) or shipped with `NetCDF_jll`).
+$(h5doc_external(:plugins_repo, "hdf5_plugins")) or shipped with `NetCDF_jll`).
 Place `:native` in a priority list to prefer such a plugin over a Julia implementation.
 """
 const NATIVE = :native

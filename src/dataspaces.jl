@@ -270,7 +270,7 @@ selecting multiple contiguous blocks.
 - `block`: the number of elements in each block.
 
 # External links
-- [HDF5 User Guide, section 7.4.2.1 "Selecting Hyperslabs"](https://support.hdfgroup.org/HDF5/doc/UG/HDF5_Users_Guide-Responsive%20HTML5/index.html#t=HDF5_Users_Guide%2FDataspaces%2FHDF5_Dataspaces_and_Partial_I_O.htm%23TOC_7_4_2_Programming_Modelbc-8&rhtocid=7.2.0_2)
+- $(h5doc_anchor("subsec_dataspace_select", "HDF5 User Guide: Dataspace Selection Operations and Data Transfer"))
 """
 function BlockRange(; start::Integer, stride::Integer=1, count::Integer=1, block::Integer=1)
     if count == UNLIMITED

@@ -5,7 +5,7 @@ https://github.com/kiyo-masui/bitshuffle.
 Originally authored by "James.Hester <jxh@ansto.gov.au>" as H5Zbitshuffle
 ==#
 """
-The bitshuffle filter for HDF5. See https://portal.hdfgroup.org/display/support/Filters#Filters-32008
+The bitshuffle filter for HDF5. See https://github.com/HDFGroup/hdf5_plugins/blob/master/docs/RegisteredFilterPlugins.md#bitshuffle
 and https://github.com/kiyo-masui/bitshuffle for details.
 """
 module H5Zbitshuffle

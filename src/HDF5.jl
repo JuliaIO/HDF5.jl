@@ -80,7 +80,8 @@ end
 # H5DataStore, Attribute, File, Group, Dataset, Datatype, Opaque,
 # Dataspace, Object, Properties, VLen, ChunkStorage, Reference
 
-h5doc(name) = "[`$name`](https://portal.hdfgroup.org/display/HDF5/$(name))"
+import HDF5DocURLs # doc URLs for docstrings, resolved at precompile time
+include("docurls.jl") # h5doc, h5doc_group
 
 include("api/api.jl")
 include("properties.jl")

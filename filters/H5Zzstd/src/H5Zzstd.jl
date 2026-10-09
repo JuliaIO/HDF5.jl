@@ -108,7 +108,7 @@ still at the cost of compression. Like the C plugin, the level is stored as
 an unsigned integer, so `clevel % Cint` recovers a negative level.
 
 # External Links
-* [Zstandard HDF5 Filter ID 32015](https://portal.hdfgroup.org/display/support/Filters#Filters-32015)
+* [Zstandard HDF5 Filter ID 32015](https://github.com/HDFGroup/hdf5_plugins/blob/master/docs/RegisteredFilterPlugins.md#zstandard)
 * [Zstandard HDF5 Plugin Repository (C code)](https://github.com/HDFGroup/hdf5_plugins/tree/master/ZSTD)
 """
 struct ZstdFilter <: Filter

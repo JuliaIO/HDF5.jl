@@ -1,7 +1,7 @@
 # Parallel HDF5
 
 It is possible to read and write [parallel
-HDF5](https://portal.hdfgroup.org/display/HDF5/Parallel+HDF5) files using MPI.
+HDF5](https://support.hdfgroup.org/documentation/hdf5/latest/_intro_par_h_d_f5.html) files using MPI.
 For this, the HDF5 binaries loaded by HDF5.jl must have been compiled with
 parallel support, and linked to the specific MPI implementation that will be used for parallel I/O.
 
@@ -113,7 +113,7 @@ dset = create_dataset(ff, "/data", eltype(A), dims)
 dset[:, myrank + 1] = A
 ```
 
-Note that metadata operations, such as `create_dataset`, must be called _collectively_ (on all processes at the same time, with the same arguments), but the actual writing to the dataset may be done independently. See [Collective Calling Requirements in Parallel HDF5 Applications](https://portal.hdfgroup.org/display/HDF5/Collective+Calling+Requirements+in+Parallel+HDF5+Applications) for the exact requirements.
+Note that metadata operations, such as `create_dataset`, must be called _collectively_ (on all processes at the same time, with the same arguments), but the actual writing to the dataset may be done independently. See [Collective Calling Requirements in Parallel HDF5 Applications](https://support.hdfgroup.org/documentation/hdf5/latest/collective_calls.html) for the exact requirements.
 
 Sometimes, it may be more efficient to write data in chunks, so that each
 process writes to a separate chunk of the file.
@@ -122,10 +122,10 @@ processes.
 In this example, this can be achieved by passing `chunk=(M, 1)` to `create_dataset`.
 
 For better performance, it is sometimes preferable to perform [collective
-I/O](https://portal.hdfgroup.org/display/HDF5/Introduction+to+Parallel+HDF5)
+I/O](https://support.hdfgroup.org/documentation/hdf5/latest/_intro_par_h_d_f5.html)
 when reading and writing datasets in parallel.
 This is achieved by passing `dxpl_mpio=:collective` to `create_dataset`.
-See also the [HDF5 docs](https://portal.hdfgroup.org/display/HDF5/H5P_SET_DXPL_MPIO).
+See also the [HDF5 docs](https://support.hdfgroup.org/documentation/hdf5/latest/group___d_x_p_l.html#ga22837d8504dc1f87f175b46b348ce0e5).
 
 A few more examples are available in [`test/mpio.jl`](https://github.com/JuliaIO/HDF5.jl/blob/master/test/mpio.jl).
 
