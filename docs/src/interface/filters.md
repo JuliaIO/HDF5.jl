@@ -84,7 +84,6 @@ CurrentModule = H5Zzstd
 
 ```@docs
 ZstdFilter
-H5Zzstd
 ```
 
 ### H5Zbitshuffle
@@ -183,7 +182,6 @@ This records the filter as an implementation, with the name of the package defin
 with libhdf5 unless another implementation takes priority. Use the `provider` keyword to choose another name.
 
 ```@docs
-register_filter
 implementations
 active_implementation
 priority
@@ -191,6 +189,7 @@ set_priority!
 reset_priority!
 activate!
 activate_all!
+select_implementation!
 load_preferences!
 filter_id
 FILTER_NAMES
