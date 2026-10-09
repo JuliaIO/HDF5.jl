@@ -48,7 +48,7 @@ module Filters
 # builtin filters
 export Deflate, Shuffle, Fletcher32, Szip, NBit, ScaleOffset, ExternalFilter
 
-import ..HDF5: Properties, h5doc, API
+import ..HDF5: Properties, h5doc, h5doc_anchor, h5doc_external, HDF5DocURLs, API
 
 """
     Filter
@@ -266,8 +266,8 @@ Users are instead encouraged to define subtypes on `HDF5.Filters.Filter`.
 
 # See also:
 * [`API.h5p_set_filter`](@ref)
-* [`H5Z_GET_FILTER_INFO`](https://portal.hdfgroup.org/display/HDF5/H5Z_GET_FILTER_INFO).
-* [Registered Filter Plugins](https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins)
+* $(h5doc("H5Zget_filter_info")).
+* $(h5doc_external(:registered_filters, "Registered Filter Plugins"))
 `flags` bits
 * `API.H5Z_FLAG_OPTIONAL`
 * `API.H5Z_FLAG_MANDATORY`
@@ -468,7 +468,7 @@ function ensure_filters_available(f::FilterPipeline)
                         """
                         filter missing, filter id: $filter_id name: $filter_name
                         This filter is not currently available as a Julia package.
-                        For more information, see https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins
+                        For more information, see $(HDF5DocURLs.external_url(:registered_filters))
                         """
                     )
                 end

@@ -253,7 +253,7 @@ The naming of the properties generally follows that of HDF5, i.e. the key
 `fapl_mpio` returns the HDF5 functions `h5pget/set_fapl_mpio` and their
 corresponding property list type `H5P_FILE_ACCESS`.
 The complete list if routines and their interfaces is available at the
-[H5P: Property List Interface](https://portal.hdfgroup.org/display/HDF5/Property+Lists)
+[H5P: Property List Interface](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_p.html)
 documentation. Note that not all properties are available. When searching
 for a property check whether the corresponding `h5pget/set` functions are
 available.
@@ -324,7 +324,7 @@ Note that `readmmap` returns an `Array` rather than an HDF5 object.
 This is in contrast to standard HDF5 datasets, where closing the file prevents further access to any of the datasets, but the file is also detached and can safely be rewritten immediately.
 
 Under the default
-[allocation-time policy](https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALLOC_TIME),
+[allocation-time policy](https://support.hdfgroup.org/documentation/hdf5/latest/group___d_c_p_l.html#ga85faefca58387bba409b65c470d7d851),
 a newly added `ismmappable` dataset can only be memory mapped after it has been written
 to.
 The following fails:

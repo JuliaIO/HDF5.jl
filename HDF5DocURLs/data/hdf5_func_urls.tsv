@@ -84,6 +84,7 @@ H5Dopen2	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.htm
 H5Dopen_async	https://support.hdfgroup.org/documentation/hdf5/latest/group___a_s_y_n_c.html#ga6df171aded96ec4926cd46000bf94f7d
 H5Dread	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html#ga8287d5a7be7b8e55ffeff68f7d26811c
 H5Dread_async	https://support.hdfgroup.org/documentation/hdf5/latest/group___a_s_y_n_c.html#ga32856023e22cb8ed2ffa74b1651037b6
+H5Dread_chunk	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html#gad3b9b3024ca4ab7eb7fe6872088398f3
 H5Dread_chunk1	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html#gad3b9b3024ca4ab7eb7fe6872088398f3
 H5Dread_chunk2	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html#ga217c9d411dfd4c0732213c7cbd98164c
 H5Dread_multi	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html#ga8eb1c838aff79a17de385d0707709915
@@ -340,6 +341,7 @@ H5Ldelete_by_idx	https://support.hdfgroup.org/documentation/hdf5/latest/group___
 H5Ldelete_by_idx_async	https://support.hdfgroup.org/documentation/hdf5/latest/group___a_s_y_n_c.html#ga7dc3198d8cfaeb6a780863af8d0af253
 H5Lexists	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_l.html#ga171be6e41dc1a464edc402df0ebdf801
 H5Lexists_async	https://support.hdfgroup.org/documentation/hdf5/latest/group___a_s_y_n_c.html#ga4fddab130acbcef4dd8c7ccf75a31b2c
+H5Lget_info	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_l.html#gacc2ad7f2b402c4bf9bb122d7f43b98dc
 H5Lget_info1	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_l.html#gacc2ad7f2b402c4bf9bb122d7f43b98dc
 H5Lget_info2	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_l.html#ga65e63c6e880fd0183c40486d6748e400
 H5Lget_info_by_idx1	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_l.html#ga7ed207f47e0e0f768f0d540c73e37e2a
@@ -348,6 +350,7 @@ H5Lget_name_by_idx	https://support.hdfgroup.org/documentation/hdf5/latest/group_
 H5Lget_val	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_l.html#ga8eaacc372afc314e44521dfc1f66dcf4
 H5Lget_val_by_idx	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_l.html#gaf7be56de947e09a8d084e9d13a90bf3c
 H5Lis_registered	https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_l_a.html#ga02c1cf38efea97d18e5e2f65df3f08a2
+H5Literate	https://support.hdfgroup.org/documentation/hdf5/latest/group___t_r_a_v.html#ga1e7c0a8cf17699563c02e128f27042f1
 H5Literate1	https://support.hdfgroup.org/documentation/hdf5/latest/group___t_r_a_v.html#ga1e7c0a8cf17699563c02e128f27042f1
 H5Literate2	https://support.hdfgroup.org/documentation/hdf5/latest/group___t_r_a_v.html#gad7ca4206f06b5ada85b6ec5867ec6c73
 H5Literate_async	https://support.hdfgroup.org/documentation/hdf5/latest/group___a_s_y_n_c.html#ga0f56b7243d036cdeb5280d8c41f2436e

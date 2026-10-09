@@ -5,3 +5,4 @@
 /docs/build/
 Manifest.toml
 LocalPreferences.toml
+/HDF5DocURLs/gen/hdf5/
