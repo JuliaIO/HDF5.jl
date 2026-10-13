@@ -6,8 +6,18 @@ using Preferences
 using Libdl
 using H5Zzstd, H5Zbzip2, H5ZChunkCodecZstd, H5ZChunkCodecBzip2
 
+# H5ZzstdC_jll packages a native Zstandard plugin written in C. It is built against one
+# HDF5_jll, so it is an optional test dependency; see test/runtests.jl.
+const H5ZZSTDC_JLL = Base.PkgId(
+    Base.UUID("996c3049-0d2e-5a3a-8ce7-87fe32987799"), "H5ZzstdC_jll"
+)
+const H5ZzstdC_jll =
+    Base.locate_package(H5ZZSTDC_JLL) === nothing ? nothing : Base.require(H5ZZSTDC_JLL)
+
 # Filter implementations used to exercise the registry without depending on any codec.
 # They XOR every byte with a constant; the constant tells us which implementation ran.
+# The filter ids are in the range 256-511, which the HDF Group designates for testing in
+# RegisteredFilterPlugins.md of the hdf5_plugins repository.
 const XOR_ID = API.H5Z_filter_t(301)
 const XOR_AUTO_ID = API.H5Z_filter_t(302)
 
@@ -326,6 +336,52 @@ end
         @test Filters.active_implementation(32015) == :H5Zzstd
         @test_throws ErrorException Filters.activate!(32015, :native)
         Filters.reset_priority!(32015)
+    end
+
+    @testset "native Zstandard plugin (H5ZzstdC_jll)" begin
+        if HDF5.API.h5_get_libversion() < v"1.14"
+            @info "Skipping H5ZzstdC_jll test: requires libhdf5 1.14 or later"
+        elseif H5ZzstdC_jll === nothing
+            @info "Skipping H5ZzstdC_jll test: H5ZzstdC_jll is not installed"
+        else
+            HDF5.API.h5pl_append(dirname(H5ZzstdC_jll.libh5zstd_path))
+            zdata = rand(Float32, 200, 100)
+            providers = (:native, :H5Zzstd, :H5ZChunkCodecZstd)
+            # The filter only describes the compression level; the implementation that
+            # runs is the active one. The C plugin reads the level as a signed integer.
+            filters = (H5Zzstd.ZstdFilter(5), H5Zzstd.ZstdFilter(-3), H5Zzstd.ZstdFilter())
+
+            Filters.set_priority!(:zstd, :native, :H5Zzstd)
+            @test Filters.active_implementation(:zstd) == :native
+            # The Julia implementations were unregistered when the plugin was selected,
+            # so libhdf5 itself must have loaded the plugin.
+            @test HDF5.API.h5z_filter_avail(32015)
+
+            for writer in providers, reader in providers, filter in filters
+                fn = tempname()
+                try
+                    Filters.set_priority!(:zstd, writer, :H5Zzstd)
+                    @test Filters.active_implementation(:zstd) == writer
+                    h5open(fn, "w") do f
+                        write_dataset(f, "d", zdata; chunk=(50, 50), filters=filter)
+                    end
+                    Filters.set_priority!(:zstd, reader, :H5Zzstd)
+                    @test Filters.active_implementation(:zstd) == reader
+                    h5open(fn) do f
+                        @test read(f["d"]) == zdata
+                        # the dataset is filtered with zstd at the level that was requested
+                        pipeline = Filters.FilterPipeline(
+                            HDF5.get_create_properties(f["d"])
+                        )
+                        @test Filters.filterid(typeof(only(pipeline))) == 32015
+                        @test only(pipeline).clevel == filter.clevel
+                    end
+                finally
+                    rm(fn; force=true)
+                end
+            end
+            reset_filter_settings()
+        end
     end
 
     reset_filter_settings()

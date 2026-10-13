@@ -3,7 +3,8 @@
  * HDF5.jl can prefer a plugin that libhdf5 loads itself (from HDF5_PLUGIN_PATH) over
  * a Julia implementation of the same filter id.
  *
- * The filter XORs every byte with 0x5a and has the experimental filter id 301.
+ * The filter XORs every byte with 0x5a. Its filter id, 301, is in the range 256-511 that
+ * the HDF Group designates for testing.
  * It is declared without the HDF5 headers so that building it needs only a C compiler.
  */
 #include <stddef.h>

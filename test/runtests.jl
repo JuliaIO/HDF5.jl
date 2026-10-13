@@ -25,6 +25,15 @@ Pkg.develop([
     PackageSpec(; path=joinpath(filter_path, "H5ZChunkCodecZstd")),
     PackageSpec(; path=joinpath(filter_path, "H5ZChunkCodecBzip2")),
 ])
+# H5ZzstdC_jll is a native Zstandard plugin used to test preferring a native plugin over a
+# Julia implementation. It depends on a specific HDF5_jll, so it cannot be installed
+# when the HDF5_jll is pinned to another version; the test skips in that case.
+try
+    Pkg.add("H5ZzstdC_jll")
+catch err
+    @info "H5ZzstdC_jll is not available for this HDF5_jll; skipping its test" exception =
+        err
+end
 
 @info "libhdf5 v$(HDF5.API.h5_get_libversion())"
 
