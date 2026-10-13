@@ -6,13 +6,11 @@ using Preferences
 using Libdl
 using H5Zzstd, H5Zbzip2, H5ZChunkCodecZstd, H5ZChunkCodecBzip2
 
-# H5ZzstdC_jll packages a native Zstandard plugin written in C. It is built against one
-# HDF5_jll, so it is an optional test dependency; see test/runtests.jl.
-const H5ZZSTDC_JLL = Base.PkgId(
-    Base.UUID("996c3049-0d2e-5a3a-8ce7-87fe32987799"), "H5ZzstdC_jll"
-)
-const H5ZzstdC_jll =
-    Base.locate_package(H5ZZSTDC_JLL) === nothing ? nothing : Base.require(H5ZZSTDC_JLL)
+# H5ZzstdC registers the native Zstandard plugin that H5ZzstdC_jll packages. The plugin is
+# built against one HDF5_jll, so H5ZzstdC is an optional test dependency; see test/runtests.jl.
+const H5ZZSTDC = Base.PkgId(Base.UUID("5d173fe8-36d8-48cf-84f5-62a4ee20ff3e"), "H5ZzstdC")
+const H5ZzstdC =
+    Base.locate_package(H5ZZSTDC) === nothing ? nothing : Base.require(H5ZZSTDC)
 
 # Filter implementations used to exercise the registry without depending on any codec.
 # They XOR every byte with a constant; the constant tells us which implementation ran.
@@ -338,22 +336,28 @@ end
         Filters.reset_priority!(32015)
     end
 
-    @testset "native Zstandard plugin (H5ZzstdC_jll)" begin
+    @testset "native Zstandard plugin (H5ZzstdC)" begin
         if HDF5.API.h5_get_libversion() < v"1.14"
-            @info "Skipping H5ZzstdC_jll test: requires libhdf5 1.14 or later"
-        elseif H5ZzstdC_jll === nothing
-            @info "Skipping H5ZzstdC_jll test: H5ZzstdC_jll is not installed"
+            @info "Skipping H5ZzstdC test: requires libhdf5 1.14 or later"
+        elseif H5ZzstdC === nothing
+            @info "Skipping H5ZzstdC test: H5ZzstdC is not installed"
         else
-            HDF5.API.h5pl_append(dirname(H5ZzstdC_jll.libh5zstd_path))
+            # The same plugin is used in two ways: registered by H5ZzstdC, and found by
+            # libhdf5 on its plugin search path as the :native provider.
+            HDF5.API.h5pl_append(dirname(H5ZzstdC.plugin_path()))
             zdata = rand(Float32, 200, 100)
-            providers = (:native, :H5Zzstd, :H5ZChunkCodecZstd)
+            providers = (:native, :H5ZzstdC, :H5Zzstd, :H5ZChunkCodecZstd)
             # The filter only describes the compression level; the implementation that
             # runs is the active one. The C plugin reads the level as a signed integer.
             filters = (H5Zzstd.ZstdFilter(5), H5Zzstd.ZstdFilter(-3), H5Zzstd.ZstdFilter())
 
+            @test :H5ZzstdC in [i.provider for i in Filters.implementations(:zstd)]
+            Filters.set_priority!(:zstd, :H5ZzstdC, :H5Zzstd)
+            @test Filters.active_implementation(:zstd) == :H5ZzstdC
+            @test Filters.FILTERS[32015] === H5ZzstdC.ZstdCFilter
             Filters.set_priority!(:zstd, :native, :H5Zzstd)
             @test Filters.active_implementation(:zstd) == :native
-            # The Julia implementations were unregistered when the plugin was selected,
+            # The other implementations were unregistered when the plugin was selected,
             # so libhdf5 itself must have loaded the plugin.
             @test HDF5.API.h5z_filter_avail(32015)
 

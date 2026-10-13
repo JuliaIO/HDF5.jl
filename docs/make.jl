@@ -7,6 +7,7 @@ using H5Zzstd
 using H5Zbitshuffle
 using H5ZChunkCodecBzip2
 using H5ZChunkCodecZstd
+using H5ZzstdC
 using MPI  # needed to generate docs for parallel HDF5 API
 
 DocMeta.setdocmeta!(HDF5, :DocTestSetup, :(using HDF5); recursive=true)
@@ -21,7 +22,8 @@ makedocs(;
         H5Zzstd,
         H5Zbitshuffle,
         H5ZChunkCodecBzip2,
-        H5ZChunkCodecZstd
+        H5ZChunkCodecZstd,
+        H5ZzstdC
     ],
     authors="Mustafa Mohamad <mus-m@outlook.com> and contributors",
     format=Documenter.HTML(;

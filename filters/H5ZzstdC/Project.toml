@@ -1,0 +1,15 @@
+name = "H5ZzstdC"
+uuid = "5d173fe8-36d8-48cf-84f5-62a4ee20ff3e"
+authors = ["HDF5.jl contributors: https://github.com/JuliaIO/HDF5.jl/contributors"]
+version = "0.1.0"
+
+[deps]
+H5ZzstdC_jll = "996c3049-0d2e-5a3a-8ce7-87fe32987799"
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+
+[compat]
+H5ZzstdC_jll = "2.2"
+HDF5 = "0.18"
+Libdl = "1"
+julia = "1.10"

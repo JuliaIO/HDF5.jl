@@ -122,6 +122,23 @@ ChunkCodecBzip2Filter
 H5ZChunkCodecBzip2
 ```
 
+### H5ZzstdC.jl
+
+```@meta
+CurrentModule = H5ZzstdC
+```
+
+[H5ZzstdC.jl](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5ZzstdC) registers the native C implementation of the
+Zstandard filter, which is packaged as [H5ZzstdC_jll](https://github.com/JuliaBinaryWrappers/H5ZzstdC_jll.jl), as an alternative
+to H5Zzstd.jl. The plugin is built against a specific HDF5\_jll, so this package can only be installed with that version.
+See [Multiple implementations of a filter](@ref) below.
+
+```@docs
+ZstdCFilter
+plugin_path
+H5ZzstdC
+```
+
 ## Multiple implementations of a filter
 
 ```@meta
@@ -129,7 +146,7 @@ CurrentModule = HDF5.Filters
 ```
 
 libhdf5 holds a single function for each filter id, but a filter id may be implemented in several ways:
-by different Julia packages (for example H5Zzstd.jl, which uses CodecZstd.jl, and H5ZChunkCodecZstd.jl, which uses
+by different Julia packages (for example H5Zzstd.jl, which uses CodecZstd.jl, H5ZzstdC.jl, which uses a C plugin, and H5ZChunkCodecZstd.jl, which uses
 ChunkCodecs.jl) or by a native plugin that libhdf5 loads itself from the `HDF5_PLUGIN_PATH`
 (for example plugins built from [hdf5_plugins](https://github.com/HDFGroup/hdf5_plugins) or distributed with NetCDF).
 All of these implementations can be loaded together. HDF5.jl keeps track of each implementation (a *provider*, named
