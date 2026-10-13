@@ -805,12 +805,9 @@ function get_chunk_info_all(dataset, dxpl=API.H5P_DEFAULT)
     end
 end
 
-"""
-    ChunkInfoBuffers
-
-Preallocated storage that the `@cfunction` of [`_get_chunk_info_all_by_iter`](@ref) fills, one
-column or element per chunk. Offsets are stored already reversed to F-order.
-"""
+# Preallocated storage that the @cfunction of _get_chunk_info_all_by_iter fills, one column or
+# element per chunk. Offsets are stored already reversed to F-order. (A comment rather than a
+# docstring: Documenter requires every docstring to appear in the manual, and this is internal.)
 mutable struct ChunkInfoBuffers
     const ndims::Int
     const capacity::Int
