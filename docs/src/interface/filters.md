@@ -154,6 +154,9 @@ Filters can be referred to by id, by filter type, or by a name: `:bzip2`, `:blos
 A provider that is listed but unavailable is skipped, so a priority list may end with a fallback.
 Providers that are not listed are used after the listed ones, in the order they were loaded.
 
+The `:native` provider relies on libhdf5 loading a plugin when it is asked whether a filter is available,
+which requires libhdf5 1.14 or later. With older libraries `:native` is never found, and the next provider is used.
+
 ### Configuration with Preferences.jl
 
 The priorities can be set persistently with [Preferences.jl](https://github.com/JuliaPackaging/Preferences.jl)

@@ -277,15 +277,27 @@ end
     @testset "native plugin" begin
         plugin_src = joinpath(@__DIR__, "filters", "native_xor_plugin.c")
         cc = Sys.which("cc")
-        if cc === nothing || Sys.iswindows()
+        if HDF5.API.h5_get_libversion() < v"1.14"
+            # libhdf5 1.12 does not load a plugin when asked if a filter is available
+            @info "Skipping native plugin test: requires libhdf5 1.14 or later"
+        elseif cc === nothing || Sys.iswindows()
             @info "Skipping native plugin test: no C compiler"
         else
             mktempdir() do dir
                 lib = joinpath(dir, "libnativexor.so")
                 flags = Sys.isapple() ? ["-undefined", "dynamic_lookup"] : String[]
                 ok = success(`$cc -shared -fPIC -O1 $flags -o $lib $plugin_src`)
+                # A 32-bit Julia cannot load a plugin built by a 64-bit compiler
+                loadable = ok && try
+                    Libdl.dlclose(Libdl.dlopen(lib))
+                    true
+                catch
+                    false
+                end
                 if !ok
                     @info "Skipping native plugin test: could not compile plugin"
+                elseif !loadable
+                    @info "Skipping native plugin test: compiled plugin cannot be loaded"
                 else
                     try
                         HDF5.API.h5pl_append(dir)

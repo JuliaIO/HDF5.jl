@@ -28,6 +28,8 @@ The reserved provider name `:native`. It stands for the filter plugins that libh
 loads itself from `HDF5_PLUGIN_PATH` (for example plugins built from
 $(h5doc_external(:plugins_repo, "hdf5_plugins")) or shipped with `NetCDF_jll`).
 Place `:native` in a priority list to prefer such a plugin over a Julia implementation.
+This requires libhdf5 1.14 or later, which loads a plugin when it is asked whether a filter is
+available.
 """
 const NATIVE = :native
 
