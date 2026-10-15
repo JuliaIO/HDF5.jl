@@ -29,7 +29,9 @@
         # OSXSAVE (CPUID.1:ECX bit 27): `xrstor` is enabled by the OS
         (_cpuid_ecx1() >> 27) & 0x1 == 0x1 || return nothing
         # 512-byte legacy region + 64-byte XSAVE header, zeroed (XSTATE_BV = 0,
-        # XCOMP_BV = 0: standard format), aligned to 64 bytes
+        # XCOMP_BV = 0: standard format), aligned to 64 bytes. The address is passed to the
+        # assembly as an integer, since Julia v1.10 (LLVM with typed pointers) does not
+        # know the `ptr` type.
         buf = zeros(UInt8, 576 + 64)
         GC.@preserve buf begin
             p = (UInt(pointer(buf)) + 63) & ~UInt(63)
@@ -37,8 +39,7 @@
                 (
                     """
                     define void @entry(i64 %p) #0 {
-                    %ptr = inttoptr i64 %p to ptr
-                    call void asm sideeffect "xrstor64 (\$0)", "r,{ax},{dx},~{memory},~{fpsr},~{dirflag}"(ptr %ptr, i32 1, i32 0)
+                    call void asm sideeffect "xrstor64 (\$0)", "r,{ax},{dx},~{memory},~{fpsr},~{dirflag}"(i64 %p, i32 1, i32 0)
                     ret void }
                     attributes #0 = { alwaysinline }
                     """,
