@@ -43,31 +43,29 @@ using HDF5, Test
             @test Base.invokelatest(xinuse) & 0x1 == 0
             # Loading HDF5 in a new process leaves the x87 state of the loading thread in
             # its initial configuration (`HDF5.API.__init__` calls `reset_x87_state!`).
-            # `xinuse` is compiled before loading HDF5, so that nothing else runs between
-            # loading HDF5 and reading the state. The state at start and after a later
-            # reset are printed as well, to tell apart an environment (e.g. a virtual
-            # machine) that marks the x87 state as in use on its own.
+            # `xinuse` is compiled before loading HDF5, so that little else runs between
+            # loading HDF5 and reading the state. Some environments mark the x87 state as
+            # in use on their own (e.g. it is in use at start on Windows, and in any Julia
+            # process on some Intel CI machines, where it is also set again later), so this
+            # is only checked if the state is clean in a bare process.
             code = """
             xinuse() = Base.llvmcall(($(repr(XGETBV1_IR)), "entry"), Int64, Tuple{})
             start = xinuse() & 0x1
             using HDF5
             after_load = xinuse() & 0x1
-            HDF5.API.reset_x87_state!()
-            after_reset = xinuse() & 0x1
-            sleep(1)
-            after_sleep = xinuse() & 0x1
-            print(start, after_load, after_reset, after_sleep)
+            print(start, after_load)
             """
             cmd = `$(Base.julia_cmd()) --startup-file=no --project=$(Base.active_project()) -e $code`
             states = read(cmd, String)
-            # The state in a bare process (no project, no packages), for comparison
             bare_code = """
             xinuse() = Base.llvmcall(($(repr(XGETBV1_IR)), "entry"), Int64, Tuple{})
             print(xinuse() & 0x1)
             """
             bare = read(`$(Base.julia_cmd()) --startup-file=no -e $bare_code`, String)
-            @info "x87 in use (start, after loading HDF5, after reset, after sleep)" states bare VERSION Sys.cpu_info()[1].model
-            @test states[2] == '0'
+            @info "x87 state in use (start, after loading HDF5)" states bare
+            if bare == "0"
+                @test states == "00"
+            end
         end
     end
 end
