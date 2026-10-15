@@ -113,6 +113,8 @@ end
         end
     end
 
+    include("failing_tests.jl")
+
     # Clean up after all resources
     HDF5.API.h5_close()
 end
