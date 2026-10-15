@@ -60,7 +60,13 @@ using HDF5, Test
             """
             cmd = `$(Base.julia_cmd()) --startup-file=no --project=$(Base.active_project()) -e $code`
             states = read(cmd, String)
-            @info "x87 in use (start, after loading HDF5, after reset, after sleep)" states
+            # The state in a bare process (no project, no packages), for comparison
+            bare_code = """
+            xinuse() = Base.llvmcall(($(repr(XGETBV1_IR)), "entry"), Int64, Tuple{})
+            print(xinuse() & 0x1)
+            """
+            bare = read(`$(Base.julia_cmd()) --startup-file=no -e $bare_code`, String)
+            @info "x87 in use (start, after loading HDF5, after reset, after sleep)" states bare VERSION Sys.cpu_info()[1].model
             @test states[2] == '0'
         end
     end
