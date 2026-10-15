@@ -39,8 +39,12 @@ using HDF5, Test
         osxsave = (HDF5.API._cpuid_ecx1() >> 27) & 0x1 == 0x1
         if osxsave && cpuid(0x0, 0x0) >= 0xd && (cpuid(0xd, 0x1) >> 2) & 0x1 == 0x1
             @eval xinuse() = Base.llvmcall(($XGETBV1_IR, "entry"), Int64, Tuple{})
-            # The x87 state of this thread is in its initial configuration again
-            @test Base.invokelatest(xinuse) & 0x1 == 0
+            # Compile everything before the reset: on some Intel CI machines, generating
+            # code marks the x87 state as in use again
+            check_reset() = (HDF5.API.reset_x87_state!(); xinuse() & 0x1)
+            Base.invokelatest(check_reset)
+            # The x87 state of this thread is in its initial configuration after a reset
+            @test Base.invokelatest(check_reset) == 0
             # Loading HDF5 in a new process leaves the x87 state of the loading thread in
             # its initial configuration (`HDF5.API.__init__` calls `reset_x87_state!`).
             # `xinuse` is compiled before loading HDF5, so that little else runs between
