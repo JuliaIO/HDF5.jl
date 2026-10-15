@@ -1,10 +1,13 @@
-# Initializing the HDF5 library (`H5open`) executes x87 instructions, e.g., while
-# determining the properties of the native floating-point types (`long double`). This
-# leaves the x87 state component of the calling thread "in use" (XINUSE[0] = 1) for the
-# rest of the session; `fninit` and `emms` do not undo that. On some CPUs (measured on AMD
-# Zen 3), floating-point heavy code then often runs 1.5-2% slower on this thread (more
-# dispatch stalls on a full floating-point register file), and parallel loops wait for
-# it. An `xrstor` that requests only the x87 component from a save area whose XSTATE_BV
+# Initializing the HDF5 library (`H5open`) uses the x87 FPU of the calling thread:
+# `H5T__init_native_float_types` (`src/H5Tinit_float.c`, since HDFGroup/hdf5#3104)
+# detects the format of `long double` at run time with x87 arithmetic (`long double` is
+# the 80-bit x87 format on x86_64), and it restores the floating-point environment with
+# `feupdateenv`, which also loads the x87 environment (`fldenv`). This leaves the x87
+# state component of the calling thread "in use" (XINUSE[0] = 1) for the rest of the
+# session; `fninit` and `emms` do not undo that. On some CPUs (measured on AMD Zen 3),
+# floating-point heavy code then often runs 1.5-2% slower on this thread (more dispatch
+# stalls on a full floating-point register file), and parallel loops wait for it.
+# An `xrstor` that requests only the x87 component from a save area whose XSTATE_BV
 # header has the x87 bit clear puts the x87 state back into its initial configuration
 # and clears XINUSE[0]. SSE/AVX state (including MXCSR) is not touched.
 @static if Sys.ARCH === :x86_64
