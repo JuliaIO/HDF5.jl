@@ -85,8 +85,8 @@ include("docurls.jl") # h5doc, h5doc_group
 
 include("api/api.jl")
 include("properties.jl")
-include("context.jl")
 include("types.jl")
+include("context.jl")
 include("file.jl")
 include("objects.jl")
 include("groups.jl")
