@@ -805,65 +805,37 @@ function get_chunk_info_all(dataset, dxpl=API.H5P_DEFAULT)
     end
 end
 
-# Preallocated storage that the @cfunction of _get_chunk_info_all_by_iter fills, one column or
-# element per chunk. Offsets are stored already reversed to F-order. (A comment rather than a
-# docstring: Documenter requires every docstring to appear in the manual, and this is internal.)
-mutable struct ChunkInfoBuffers
-    const ndims::Int
-    const capacity::Int
-    count::Int
-    const offsets::Matrix{API.hsize_t}
-    const filter_mask::Vector{Cuint}
-    const addr::Vector{API.haddr_t}
-    const size::Vector{API.hsize_t}
-    function ChunkInfoBuffers(ndims::Integer, capacity::Integer)
-        return new(
-            ndims,
-            capacity,
-            0,
-            Matrix{API.hsize_t}(undef, ndims, capacity),
-            Vector{Cuint}(undef, capacity),
-            Vector{API.haddr_t}(undef, capacity),
-            Vector{API.hsize_t}(undef, capacity)
-        )
-    end
-end
+# The H5D_chunk_iter_op_t callback, specialized on the dataset rank N so that it can append to a
+# Vector{ChunkInfo{N}} (passed as op_data) with no dynamic dispatch. A @cfunction signature cannot
+# carry N, so N lives in the type of a callable struct that is interpolated into the @cfunction.
+struct ChunkInfoCollector{N} end
 
-# The H5D_chunk_iter_op_t callback. Everything here is type-stable and allocation-free.
-function _chunk_info_collect(
+function (::ChunkInfoCollector{N})(
     offset::Ptr{API.hsize_t},
     filter_mask::Cuint,
     addr::API.haddr_t,
     size::API.hsize_t,
     op_data::Ptr{Cvoid}
-)::API.H5_iter_t
-    buffers = unsafe_pointer_to_objref(op_data)::ChunkInfoBuffers
-    i = buffers.count + 1
-    # More chunks than get_num_chunks reported: should not happen, but never write past the end.
-    i > buffers.capacity && return API.H5_ITER_ERROR
-    nd = buffers.ndims
-    @inbounds for d in 1:nd
-        buffers.offsets[nd - d + 1, i] = unsafe_load(offset, d)
-    end
-    @inbounds begin
-        buffers.filter_mask[i] = filter_mask
-        buffers.addr[i] = addr
-        buffers.size[i] = size
-    end
-    buffers.count = i
+)::API.H5_iter_t where {N}
+    info = unsafe_pointer_to_objref(op_data)::Vector{ChunkInfo{N}}
+    # offset is in C order; ChunkInfo stores F-order
+    _offset = ntuple(d -> Int(unsafe_load(offset, N - d + 1)), Val(N))
+    push!(info, ChunkInfo{N}(_offset, filter_mask, addr, size))
     return API.H5_ITER_CONT
 end
 
-# Function barrier: N is only known at run time, so build the typed result behind Val(N).
-function _chunk_infos(::Val{N}, buffers::ChunkInfoBuffers) where {N}
-    count = buffers.count
-    info = Vector{ChunkInfo{N}}(undef, count)
-    @inbounds for i in 1:count
-        offset = ntuple(d -> Int(buffers.offsets[d, i]), Val(N))
-        info[i] = ChunkInfo{N}(
-            offset, buffers.filter_mask[i], buffers.addr[i], buffers.size[i]
-        )
-    end
+# Function barrier: N is only known at run time.
+function _get_chunk_info_all_by_iter(dataset, dxpl, ::Val{N}) where {N}
+    info = ChunkInfo{N}[]
+    sizehint!(info, get_num_chunks(dataset))
+    cfun = @cfunction(
+        $(ChunkInfoCollector{N}()),
+        API.H5_iter_t,
+        (Ptr{API.hsize_t}, Cuint, API.haddr_t, API.hsize_t, Ptr{Cvoid})
+    )
+    # `info` is passed as `Any`, so the ccall keeps it alive and the callback gets a pointer to
+    # the object itself. The same goes for `cfun`, which the ccall converts to a function pointer.
+    API.h5d_chunk_iter(dataset, dxpl, cfun, info)
     return info
 end
 
@@ -874,24 +846,13 @@ Implementation of [`get_chunk_info_all`](@ref) via [`HDF5.API.h5d_chunk_iter`](@
 We expect this will be faster, O(N), than using `h5d_get_chunk_info` since this allows us to iterate
 through the chunks once.
 
-The callback is a plain `@cfunction` writing into preallocated arrays, which keeps the per-chunk
-cost at the cost of the upcall itself. Passing a closure through `API.h5d_chunk_iter(f, ...)`
-instead costs about 25x more per chunk (a dynamic call, a `try` block and a `push!`), which for
+The callback is a plain `@cfunction`, specialized on the dataset rank, appending to a
+`Vector{ChunkInfo{N}}`, which keeps the per-chunk cost close to the cost of the upcall itself.
+Passing a closure through `API.h5d_chunk_iter(f, ...)` instead costs about 25x more per chunk (a dynamic call, a `try` block and a `push!`), which for
 large datasets dominates the time HDF5 itself needs to visit a chunk.
 """
 @inline function _get_chunk_info_all_by_iter(dataset, dxpl=API.H5P_DEFAULT)
-    N = ndims(dataset)
-    num_chunks = get_num_chunks(dataset)
-    buffers = ChunkInfoBuffers(N, num_chunks)
-    fptr = @cfunction(
-        _chunk_info_collect,
-        API.H5_iter_t,
-        (Ptr{API.hsize_t}, Cuint, API.haddr_t, API.hsize_t, Ptr{Cvoid})
-    )
-    # `buffers` is passed as `Any`, so the ccall keeps it alive and the callback gets a pointer
-    # to the object itself.
-    API.h5d_chunk_iter(dataset, dxpl, fptr, buffers)
-    return _chunk_infos(Val(N), buffers)
+    return _get_chunk_info_all_by_iter(dataset, dxpl, Val(ndims(dataset)))
 end
 
 """
