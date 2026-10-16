@@ -798,7 +798,7 @@ Obtain information on all the chunks in a dataset. Returns a
 * `size` - `hsize_t`, size of the chunk in bytes
 """
 function get_chunk_info_all(dataset, dxpl=API.H5P_DEFAULT)
-    @static if hasmethod(API.h5d_chunk_iter, Tuple{API.hid_t})
+    @static if hasmethod(API.h5d_chunk_iter, Tuple{API.hid_t,API.hid_t,Ptr{Cvoid},Any})
         return _get_chunk_info_all_by_iter(dataset, dxpl)
     else
         return _get_chunk_info_all_by_index(dataset, dxpl)
