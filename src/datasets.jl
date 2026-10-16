@@ -817,17 +817,21 @@ function (::ChunkInfoCollector{N})(
     size::API.hsize_t,
     op_data::Ptr{Cvoid}
 )::API.H5_iter_t where {N}
-    info = unsafe_pointer_to_objref(op_data)::Vector{ChunkInfo{N}}
+    count, info =
+        unsafe_pointer_to_objref(op_data)::Tuple{Base.RefValue{Int},Vector{ChunkInfo{N}}}
+    i = count[] + 1
+    i > length(info) && return API.H5_ITER_ERROR
     # offset is in C order; ChunkInfo stores F-order
     _offset = ntuple(d -> Int(unsafe_load(offset, N - d + 1)), Val(N))
-    push!(info, ChunkInfo{N}(_offset, filter_mask, addr, size))
+    @inbounds info[i] = ChunkInfo{N}(_offset, filter_mask, addr, size)
+    count[] = i
     return API.H5_ITER_CONT
 end
 
 # Function barrier: N is only known at run time.
 function _get_chunk_info_all_by_iter(dataset, dxpl, ::Val{N}) where {N}
-    info = ChunkInfo{N}[]
-    sizehint!(info, get_num_chunks(dataset))
+    info = Vector{ChunkInfo{N}}(undef, get_num_chunks(dataset))
+    count = Ref(0)
     cfun = @cfunction(
         $(ChunkInfoCollector{N}()),
         API.H5_iter_t,
@@ -835,7 +839,9 @@ function _get_chunk_info_all_by_iter(dataset, dxpl, ::Val{N}) where {N}
     )
     # `info` is passed as `Any`, so the ccall keeps it alive and the callback gets a pointer to
     # the object itself. The same goes for `cfun`, which the ccall converts to a function pointer.
-    API.h5d_chunk_iter(dataset, dxpl, cfun, info)
+    API.h5d_chunk_iter(dataset, dxpl, cfun, (count, info))
+    count[] == length(info) ||
+        error("Expected $(length(info)) chunks, iterated over $(count[])")
     return info
 end
 
