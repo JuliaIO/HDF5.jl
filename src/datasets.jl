@@ -861,6 +861,18 @@ large datasets dominates the time HDF5 itself needs to visit a chunk.
     return _get_chunk_info_all_by_iter(dataset, dxpl, Val(ndims(dataset)))
 end
 
+# Compile the rank-specialized methods for the common ranks ahead of time, so that the first call
+# for a dataset of rank 1 to 5 does not pay for inference and code generation.
+@static if hasmethod(API.h5d_chunk_iter, Tuple{API.hid_t,API.hid_t,Ptr{Cvoid},Any})
+    for N in 1:5
+        precompile(_get_chunk_info_all_by_iter, (Dataset, API.hid_t, Val{N}))
+        precompile(
+            ChunkInfoCollector{N}(),
+            (Ptr{API.hsize_t}, Cuint, API.haddr_t, API.hsize_t, Ptr{Cvoid})
+        )
+    end
+end
+
 """
     _get_chunk_info_all_by_index(dataset, [dxpl])
 
