@@ -9,6 +9,7 @@ Please also see the [release notes](https://github.com/JuliaIO/HDF5.jl/releases)
 * Support HDF5 2.0
 
 ## v0.17.5
+* Fix a leaked datatype identifier in `read_dataset`/`write_dataset` that was never released once the file was closed (#1270)
 * Resolve HDF5 documentation URLs through the new HDF5DocURLs.jl subpackage (#1244, #1251)
 * Make ROS3 tests opt-in and specify the AWS region (#1260)
 
