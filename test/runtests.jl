@@ -64,6 +64,8 @@ end
     include("extend_test.jl")
     @debug "gc"
     include("gc.jl")
+    @debug "handle_leak"
+    include("handle_leak.jl")
     @debug "external"
     include("external.jl")
     @debug "swmr"
