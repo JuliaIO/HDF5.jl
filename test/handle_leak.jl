@@ -36,6 +36,25 @@ n_open_datatypes() = HDF5.API.h5f_get_obj_count(HDF5.API.H5F_OBJ_ALL, HDF5.API.H
             @test n_open_datatypes() == before
         end
 
+        @testset "VLen string datatype keeps no base type open" begin
+            strs = ["a", "bc", "def"]
+            before = n_open_datatypes()
+            for _ in 1:100
+                close(HDF5.datatype(HDF5.VLen(strs)))
+            end
+            @test n_open_datatypes() == before
+
+            h5open(fn, "w") do f
+                g = create_group(f, "g")
+                before = n_open_datatypes()
+                for i in 1:100
+                    write_attribute(g, "fields$i", HDF5.VLen(strs))
+                end
+                @test n_open_datatypes() == before
+                close(g)
+            end
+        end
+
         rm(fn; force=true)
     finally
         GC.enable(true)
