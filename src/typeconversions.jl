@@ -55,9 +55,14 @@ end
 datatype(A::VLen{T}) where {T<:ScalarType} = Datatype(API.h5t_vlen_create(hdf5_type_id(T)))
 function datatype(str::VLen{C}) where {C<:CharType}
     type_id = API.h5t_copy(hdf5_type_id(C))
-    API.h5t_set_size(type_id, 1)
-    API.h5t_set_cset(type_id, cset(C))
-    Datatype(API.h5t_vlen_create(type_id))
+    try
+        API.h5t_set_size(type_id, 1)
+        API.h5t_set_cset(type_id, cset(C))
+        # h5t_vlen_create copies the base type, so the copy above must be closed
+        Datatype(API.h5t_vlen_create(type_id))
+    finally
+        API.h5t_close(type_id)
+    end
 end
 
 # Compound types
