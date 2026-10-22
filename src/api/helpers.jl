@@ -249,6 +249,27 @@ h5d_chunk_iter() = nothing
             rethrow(h5err)
         end
     end
+    # Method for a callback built by `@cfunction`. `op_data` is passed as `Any` and is not
+    # specialized on, so callers that pass a differently typed `op_data` for each dataset rank
+    # share one compiled method, instead of each paying to compile their own copy.
+    function h5d_chunk_iter(dset_id, dxpl_id, cb::Base.CFunction, @nospecialize(op_data))
+        lock(liblock)
+        var"#status#" = try
+            ccall(
+                (:H5Dchunk_iter, libhdf5),
+                herr_t,
+                (hid_t, hid_t, Ptr{Nothing}, Any),
+                dset_id,
+                dxpl_id,
+                cb,
+                op_data
+            )
+        finally
+            unlock(liblock)
+        end
+        var"#status#" < herr_t(0) && @h5error("Error iterating over chunks")
+        return nothing
+    end
 end
 
 """

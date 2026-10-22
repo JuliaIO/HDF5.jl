@@ -234,4 +234,50 @@ using Test
         end
     end
     rm(fn)
+
+    # The two chunk info methods must agree on a non-square dataset with partial edge chunks,
+    # where a wrong offset order or element count would show.
+    if v"1.12.3" ≤ HDF5.API._libhdf5_build_ver
+        h5open(fn, "w") do f
+            d = create_dataset(
+                f,
+                "dataset",
+                datatype(UInt8),
+                (6, 4, 10);
+                chunk=(4, 2, 3),
+                alloc_time=:early
+            )
+            write(d, UInt8.(reshape(1:240, 6, 4, 10)))
+            infos_by_iter = HDF5._get_chunk_info_all_by_iter(d)
+            infos_by_index = HDF5._get_chunk_info_all_by_index(d)
+            @test length(infos_by_iter) == 2 * 2 * 4
+            @test infos_by_iter == infos_by_index
+            @test Set(info.offset for info in infos_by_iter) ==
+                Set((i, j, k) for i in (0, 4), j in (0, 2), k in (0, 3, 6, 9))
+            @test all(info.size == 4 * 2 * 3 for info in infos_by_iter)
+            @test all(info.filter_mask == 0 for info in infos_by_iter)
+            # The default get_chunk_info_all uses the iterator on this library version.
+            @test HDF5.get_chunk_info_all(d) == infos_by_iter
+        end
+        rm(fn)
+
+        # get_chunk_info_all must use the O(N) iterator and not the O(N^2) per-index method. With
+        # 4096 chunks the per-index method takes hundreds of milliseconds, the iterator under a
+        # millisecond, so a generous margin keeps this robust on a slow machine.
+        h5open(fn, "w") do f
+            d = create_dataset(
+                f,
+                "dataset",
+                datatype(UInt8),
+                (1024, 1024);
+                chunk=(16, 16),
+                alloc_time=:early
+            )
+            HDF5.get_chunk_info_all(d) # compile
+            t_default = minimum(@elapsed(HDF5.get_chunk_info_all(d)) for _ in 1:3)
+            t_iter = minimum(@elapsed(HDF5._get_chunk_info_all_by_iter(d)) for _ in 1:3)
+            @test t_default < 20 * t_iter + 0.005
+        end
+        rm(fn)
+    end
 end # testset "Raw Chunk I/O"

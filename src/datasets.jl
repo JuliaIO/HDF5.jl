@@ -798,33 +798,79 @@ Obtain information on all the chunks in a dataset. Returns a
 * `size` - `hsize_t`, size of the chunk in bytes
 """
 function get_chunk_info_all(dataset, dxpl=API.H5P_DEFAULT)
-    @static if hasmethod(API.h5d_chunk_iter, Tuple{API.hid_t})
+    @static if hasmethod(API.h5d_chunk_iter, Tuple{API.hid_t,API.hid_t,Ptr{Cvoid},Any})
         return _get_chunk_info_all_by_iter(dataset, dxpl)
     else
         return _get_chunk_info_all_by_index(dataset, dxpl)
     end
 end
 
+# The H5D_chunk_iter_op_t callback, specialized on the dataset rank N so that it can append to a
+# Vector{ChunkInfo{N}} (passed as op_data) with no dynamic dispatch. A @cfunction signature cannot
+# carry N, so N lives in the type of a callable struct that is interpolated into the @cfunction.
+struct ChunkInfoCollector{N} end
+
+function (::ChunkInfoCollector{N})(
+    offset::Ptr{API.hsize_t},
+    filter_mask::Cuint,
+    addr::API.haddr_t,
+    size::API.hsize_t,
+    op_data::Ptr{Cvoid}
+)::API.H5_iter_t where {N}
+    count, info =
+        unsafe_pointer_to_objref(op_data)::Tuple{Base.RefValue{Int},Vector{ChunkInfo{N}}}
+    i = count[] + 1
+    i > length(info) && return API.H5_ITER_ERROR
+    # offset is in C order; ChunkInfo stores F-order
+    _offset = ntuple(d -> Int(unsafe_load(offset, N - d + 1)), Val(N))
+    @inbounds info[i] = ChunkInfo{N}(_offset, filter_mask, addr, size)
+    count[] = i
+    return API.H5_ITER_CONT
+end
+
+# Function barrier: N is only known at run time.
+function _get_chunk_info_all_by_iter(dataset, dxpl, ::Val{N}) where {N}
+    info = Vector{ChunkInfo{N}}(undef, get_num_chunks(dataset))
+    count = Ref(0)
+    cfun = @cfunction(
+        $(ChunkInfoCollector{N}()),
+        API.H5_iter_t,
+        (Ptr{API.hsize_t}, Cuint, API.haddr_t, API.hsize_t, Ptr{Cvoid})
+    )
+    # `info` is passed as `Any`, so the ccall keeps it alive and the callback gets a pointer to
+    # the object itself. The same goes for `cfun`, which the ccall converts to a function pointer.
+    API.h5d_chunk_iter(dataset, dxpl, cfun, (count, info))
+    count[] == length(info) ||
+        error("Expected $(length(info)) chunks, iterated over $(count[])")
+    return info
+end
+
 """
     _get_chunk_info_all_by_iter(dataset, [dxpl])
 
 Implementation of [`get_chunk_info_all`](@ref) via [`HDF5.API.h5d_chunk_iter`](@ref).
-
 We expect this will be faster, O(N), than using `h5d_get_chunk_info` since this allows us to iterate
 through the chunks once.
+
+The callback is a plain `@cfunction`, specialized on the dataset rank, appending to a
+`Vector{ChunkInfo{N}}`, which keeps the per-chunk cost close to the cost of the upcall itself.
+Passing a closure through `API.h5d_chunk_iter(f, ...)` instead costs about 25x more per chunk (a dynamic call, a `try` block and a `push!`), which for
+large datasets dominates the time HDF5 itself needs to visit a chunk.
 """
 @inline function _get_chunk_info_all_by_iter(dataset, dxpl=API.H5P_DEFAULT)
-    ds = dataspace(dataset)
-    N = ndims(ds)
-    info = ChunkInfo{N}[]
-    num_chunks = get_num_chunks(dataset)
-    sizehint!(info, num_chunks)
-    API.h5d_chunk_iter(dataset, dxpl) do offset, filter_mask, addr, size
-        _offset = reverse(unsafe_load(Ptr{NTuple{N,API.hsize_t}}(offset)))
-        push!(info, ChunkInfo{N}(_offset, filter_mask, addr, size))
-        return HDF5.API.H5_ITER_CONT
+    return _get_chunk_info_all_by_iter(dataset, dxpl, Val(ndims(dataset)))
+end
+
+# Compile the rank-specialized methods for the common ranks ahead of time, so that the first call
+# for a dataset of rank 1 to 5 does not pay for inference and code generation.
+@static if hasmethod(API.h5d_chunk_iter, Tuple{API.hid_t,API.hid_t,Ptr{Cvoid},Any})
+    for N in 1:5
+        precompile(_get_chunk_info_all_by_iter, (Dataset, API.hid_t, Val{N}))
+        precompile(
+            ChunkInfoCollector{N}(),
+            (Ptr{API.hsize_t}, Cuint, API.haddr_t, API.hsize_t, Ptr{Cvoid})
+        )
     end
-    return info
 end
 
 """
