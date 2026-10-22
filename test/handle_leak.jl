@@ -2,7 +2,8 @@ using HDF5
 using Test
 
 # Number of open datatype identifiers across all files
-n_open_datatypes() = HDF5.API.h5f_get_obj_count(HDF5.API.H5F_OBJ_ALL, HDF5.API.H5F_OBJ_DATATYPE)
+n_open_datatypes() =
+    HDF5.API.h5f_get_obj_count(HDF5.API.H5F_OBJ_ALL, HDF5.API.H5F_OBJ_DATATYPE)
 
 @testset "handle leak" begin
     # Disable GC so that finalizers cannot hide a leaked identifier
