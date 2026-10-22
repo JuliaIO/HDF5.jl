@@ -185,6 +185,8 @@ jobs:
                 PackageSpec(path="./filters/H5Zbitshuffle"),
                 PackageSpec(path="./filters/H5Zblosc"),
                 PackageSpec(path="./filters/H5Zbzip2"),
+                PackageSpec(path="./filters/H5ZChunkCodecBzip2"),
+                PackageSpec(path="./filters/H5ZChunkCodecZstd"),
                 PackageSpec(path="./filters/H5Zlz4"),
                 PackageSpec(path="./filters/H5Zzstd"),
               ])

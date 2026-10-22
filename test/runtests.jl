@@ -16,18 +16,22 @@ filter_path = joinpath(dirname(pathof(HDF5)), "..", "filters")
 if !Base.BinaryPlatforms.CPUID.test_cpu_feature(Base.BinaryPlatforms.CPUID.JL_X86_avx2)
     Pkg.add(PackageSpec(; name="Blosc_jll", version=v"1.21.2+0"))
 end
-@static if VERSION >= v"1.9"
-    Pkg.develop([
-        PackageSpec(; path=joinpath(filter_path, "H5Zblosc")),
-        PackageSpec(; path=joinpath(filter_path, "H5Zbzip2")),
-        PackageSpec(; path=joinpath(filter_path, "H5Zlz4")),
-        PackageSpec(; path=joinpath(filter_path, "H5Zzstd")),
-        PackageSpec(; path=joinpath(filter_path, "H5Zbitshuffle")),
-    ])
-elseif VERSION >= v"1.6"
-    Pkg.add(["H5Zblosc", "H5Zbzip2", "H5Zlz4", "H5Zzstd", "H5Zbitshuffle"])
-else
-    Pkg.add(["H5Zblosc", "H5Zbzip2", "H5Zlz4", "H5Zzstd"])
+Pkg.develop([
+    PackageSpec(; path=joinpath(filter_path, "H5Zblosc")),
+    PackageSpec(; path=joinpath(filter_path, "H5Zbzip2")),
+    PackageSpec(; path=joinpath(filter_path, "H5Zlz4")),
+    PackageSpec(; path=joinpath(filter_path, "H5Zzstd")),
+    PackageSpec(; path=joinpath(filter_path, "H5Zbitshuffle")),
+    PackageSpec(; path=joinpath(filter_path, "H5ZChunkCodecZstd")),
+    PackageSpec(; path=joinpath(filter_path, "H5ZChunkCodecBzip2")),
+])
+# H5ZzstdC registers a native Zstandard plugin, packaged as H5ZzstdC_jll, as an alternative
+# to H5Zzstd. The plugin is built against a specific HDF5_jll, so H5ZzstdC cannot be
+# installed when the HDF5_jll is pinned to another version; its test skips in that case.
+try
+    Pkg.develop(PackageSpec(; path=joinpath(filter_path, "H5ZzstdC")))
+catch err
+    @info "H5ZzstdC is not available for this HDF5_jll; skipping its test" exception = err
 end
 
 @info "libhdf5 v$(HDF5.API.h5_get_libversion())"
@@ -76,6 +80,8 @@ end
     include("table.jl")
     @debug "filter"
     include("filter.jl")
+    @debug "filter implementations"
+    include("filter_implementations.jl")
     @debug "chunkstorage"
     include("chunkstorage.jl")
     @debug "fileio"
