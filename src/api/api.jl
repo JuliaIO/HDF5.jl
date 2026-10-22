@@ -65,6 +65,7 @@ include("error.jl")
 import ..HDF5: h5doc # doc URLs for functions.jl/helpers.jl docstrings, resolved at precompile time
 include("functions.jl") # core API ccall wrappers
 include("helpers.jl")
+include("x87.jl")
 
 function __init__()
     # HDF5.API.__init__() is run before HDF5.__init__()
@@ -91,6 +92,10 @@ function __init__()
 
     # use our own error handling machinery (i.e. turn off automatic error printing)
     h5e_set_auto(API.H5E_DEFAULT, C_NULL, C_NULL)
+
+    # The library initialization above leaves the x87 state of this thread in use, which
+    # slows down floating-point code on this thread on some CPUs (see `reset_x87_state!`)
+    reset_x87_state!()
 end
 
 end # module API
