@@ -491,7 +491,14 @@ write_dataset(
 
 # type-specific behaviors
 function _check_invalid(dataset::Dataset, buf::AbstractArray)
-    num_bytes_dset = Base.checked_mul(sizeof(datatype(dataset)), length(dataset))
+    # Close the datatype explicitly: its finalizer cannot release the handle once the
+    # file has been closed, so relying on GC leaks one HDF5 identifier per call
+    filetype = datatype(dataset)
+    num_bytes_dset = try
+        Base.checked_mul(sizeof(filetype), length(dataset))
+    finally
+        close(filetype)
+    end
     num_bytes_buf = Base.checked_mul(sizeof(eltype(buf)), length(buf))
     num_bytes_buf == num_bytes_dset || throw(
         ArgumentError(
