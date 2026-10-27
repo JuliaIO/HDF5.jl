@@ -1,0 +1,75 @@
+using HDF5, Test
+
+@testset "x87 state" begin
+    # Calling it again is harmless, and it does not touch the SSE state (MXCSR)
+    rounding_before = rounding(Float64)
+    subnormals_before = get_zero_subnormals()
+    HDF5.API.reset_x87_state!()
+    @test rounding(Float64) == rounding_before
+    @test get_zero_subnormals() == subnormals_before
+    @test 1.0 / 3.0 == 0.3333333333333333
+
+    @static if Sys.ARCH === :x86_64
+        # LLVM IR of `xgetbv` with ECX = 1, which returns XINUSE
+        XGETBV1_IR = """
+        define i64 @entry() #0 {
+        %r = call {i32, i32} asm sideeffect "xgetbv", "={ax},={dx},{cx}"(i32 1)
+        %a = extractvalue {i32, i32} %r, 0
+        %z = zext i32 %a to i64
+        ret i64 %z }
+        attributes #0 = { alwaysinline }
+        """
+        cpuid(leaf, subleaf) = Base.llvmcall(
+            (
+                """
+                define i32 @entry(i32 %l, i32 %s) #0 {
+                %r = call {i32, i32, i32, i32} asm sideeffect "cpuid", "={ax},={bx},={cx},={dx},{ax},{cx}"(i32 %l, i32 %s)
+                %a = extractvalue {i32, i32, i32, i32} %r, 0
+                ret i32 %a }
+                attributes #0 = { alwaysinline }
+                """,
+                "entry"
+            ),
+            UInt32,
+            Tuple{UInt32,UInt32},
+            UInt32(leaf),
+            UInt32(subleaf)
+        )
+        # XGETBV with ECX = 1 returns XINUSE if CPUID.(EAX=0DH,ECX=1):EAX[2] is set
+        osxsave = (HDF5.API._cpuid_ecx1() >> 27) & 0x1 == 0x1
+        if osxsave && cpuid(0x0, 0x0) >= 0xd && (cpuid(0xd, 0x1) >> 2) & 0x1 == 0x1
+            @eval xinuse() = Base.llvmcall(($XGETBV1_IR, "entry"), Int64, Tuple{})
+            # Compile everything before the reset: on some Intel CI machines, generating
+            # code marks the x87 state as in use again
+            check_reset() = (HDF5.API.reset_x87_state!(); xinuse() & 0x1)
+            Base.invokelatest(check_reset)
+            # The x87 state of this thread is in its initial configuration after a reset
+            @test Base.invokelatest(check_reset) == 0
+            # Loading HDF5 in a new process leaves the x87 state of the loading thread in
+            # its initial configuration (`HDF5.API.__init__` calls `reset_x87_state!`).
+            # `xinuse` is compiled before loading HDF5, so that little else runs between
+            # loading HDF5 and reading the state. Some environments mark the x87 state as
+            # in use on their own (e.g. it is in use at start on Windows, and in any Julia
+            # process on some Intel CI machines, where it is also set again later), so this
+            # is only checked if the state is clean in a bare process.
+            code = """
+            xinuse() = Base.llvmcall(($(repr(XGETBV1_IR)), "entry"), Int64, Tuple{})
+            start = xinuse() & 0x1
+            using HDF5
+            after_load = xinuse() & 0x1
+            print(start, after_load)
+            """
+            cmd = `$(Base.julia_cmd()) --startup-file=no --project=$(Base.active_project()) -e $code`
+            states = read(cmd, String)
+            bare_code = """
+            xinuse() = Base.llvmcall(($(repr(XGETBV1_IR)), "entry"), Int64, Tuple{})
+            print(xinuse() & 0x1)
+            """
+            bare = read(`$(Base.julia_cmd()) --startup-file=no -e $bare_code`, String)
+            @info "x87 state in use (start, after loading HDF5)" states bare
+            if bare == "0"
+                @test states == "00"
+            end
+        end
+    end
+end

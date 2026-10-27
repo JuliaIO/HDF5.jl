@@ -48,6 +48,8 @@ end
     include("strings.jl")
     @debug "api"
     include("api.jl")
+    @debug "x87"
+    include("x87.jl")
     @debug "compound"
     include("compound.jl")
     @debug "custom"
